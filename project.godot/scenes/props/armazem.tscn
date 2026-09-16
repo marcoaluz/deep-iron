@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://h3b62xw5yax3"]
+
+[ext_resource type="Script" uid="uid://bhhrrqoeld1bd" path="res://scripts/props/armazem.gd" id="1_7i0eb"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3ucvb"]
+size = Vector2(32, 32)
+
+[node name="Armazem" type="Area2D" unique_id=758176732]
+script = ExtResource("1_7i0eb")
+
+[node name="Visual" type="ColorRect" parent="." unique_id=1999697889]
+offset_right = 32.0
+offset_bottom = 32.0
+offset_transform_position = Vector2(-16, -16)
+color = Color(0.23137255, 0.50980395, 0.9647059, 1)
+
+[node name="Shape" type="CollisionShape2D" parent="." unique_id=1909831375]
+shape = SubResource("RectangleShape2D_3ucvb")
+
+[node name="AmountLabel" type="Label" parent="." unique_id=982493430]
+offset_right = 40.0
+offset_bottom = 23.0
+offset_transform_position = Vector2(-20, -38)
+text = "Minério: 0"

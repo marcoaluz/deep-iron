@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://jc5mskwsjdq5"]
+
+[ext_resource type="Script" uid="uid://gtf8rvr8gq0v" path="res://scripts/props/mineral_node.gd" id="1_4eitv"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3ucvb"]
+size = Vector2(28, 28)
+
+[node name="MineralNode" type="Area2D" unique_id=1887962547]
+script = ExtResource("1_4eitv")
+
+[node name="Visual" type="ColorRect" parent="." unique_id=265305279]
+offset_right = 28.0
+offset_bottom = 28.0
+offset_transform_position = Vector2(-14, -14)
+color = Color(0.47058824, 0.44313726, 0.42352942, 1)
+
+[node name="Shape" type="CollisionShape2D" parent="." unique_id=323873678]
+shape = SubResource("RectangleShape2D_3ucvb")
+
+[node name="AmountLabel" type="Label" parent="." unique_id=920572572]
+offset_right = 40.0
+offset_bottom = 23.0
+offset_transform_position = Vector2(-16, -34)
+text = "200"
