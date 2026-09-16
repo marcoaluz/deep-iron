@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://chwuwjnlojuky"]
+
+[ext_resource type="Script" uid="uid://d1ts8ispqfkds" path="res://scripts/core/camera_controller.gd" id="1_llaio"]
+
+[node name="Main" type="Node2D" unique_id=1762750082]
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=768909553]
+script = ExtResource("1_llaio")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1873448415]
+offset_left = -100.0
+offset_top = -100.0
+offset_right = 100.0
+offset_bottom = 100.0
+color = Color(0.7053966, 0.7050026, 3.85046e-07, 1)
