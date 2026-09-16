@@ -3,11 +3,22 @@
 [ext_resource type="Script" uid="uid://d1ts8ispqfkds" path="res://scripts/core/camera_controller.gd" id="1_llaio"]
 [ext_resource type="Script" uid="uid://ci5yfroke2j33" path="res://scripts/core/main.gd" id="1_yd8kv"]
 [ext_resource type="PackedScene" uid="uid://decsw7bb3n8f2" path="res://scenes/characters/Ipezinho.tscn" id="2_oekm8"]
+[ext_resource type="PackedScene" uid="uid://cjmviden6vp81" path="res://scenes/props/comedouro.tscn" id="2_uaf1y"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
+
+[node name="Comedouro" parent="." unique_id=1804145103 instance=ExtResource("2_uaf1y")]
+position = Vector2(200, 0)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=768909553]
 script = ExtResource("1_llaio")
 
 [node name="Ipezinho" parent="." unique_id=1756047734 instance=ExtResource("2_oekm8")]
+
+[node name="HungerLabel" type="Label" parent="Ipezinho" unique_id=302272358]
+offset_left = -20.0
+offset_top = -50.0
+offset_right = 20.0
+offset_bottom = -27.0
+text = "100"
