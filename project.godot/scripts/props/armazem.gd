@@ -1,6 +1,6 @@
 extends Area2D
 
-const DEPOSIT_RATE := 8.0
+@export var DEPOSIT_RATE :float = 10.0
 var total_stored: float = 0.0
 
 @onready var _label: Label = $AmountLabel

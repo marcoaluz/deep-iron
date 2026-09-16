@@ -1,7 +1,9 @@
 extends Area2D
 
-const MINE_RATE := 5.0
-var ore_remaining: float = 200.0
+@export var MINE_RATE: float = 4.0
+@export var ore_total: float = 200.0
+
+var ore_remaining: float = ore_total
 
 @onready var _label: Label = $AmountLabel
 var _mining_bodies: Array[Node2D] = []

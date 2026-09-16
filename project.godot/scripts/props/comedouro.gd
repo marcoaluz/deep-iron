@@ -1,6 +1,6 @@
 extends Area2D
 
-const FEED_RATE := 25.0  # quanto restaura de fome por segundo
+@export var FEED_RATE: float = 12.0  # quanto restaura de fome por segundo
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
