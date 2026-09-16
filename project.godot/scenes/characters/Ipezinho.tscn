@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://decsw7bb3n8f2"]
+
+[ext_resource type="Script" uid="uid://dvflasxbub1yx" path="res://scripts/workers/ipezinho.gd" id="1_8k1jj"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3ucvb"]
+size = Vector2(16, 32)
+
+[node name="Ipezinho" type="CharacterBody2D" unique_id=991647890]
+script = ExtResource("1_8k1jj")
+
+[node name="Body" type="ColorRect" parent="." unique_id=907998624]
+offset_left = -8.0
+offset_top = -32.0
+offset_right = 8.0
+color = Color(0.9607843, 0.61960787, 0.043137256, 1)
+
+[node name="Shape" type="CollisionShape2D" parent="." unique_id=637327843]
+shape = SubResource("RectangleShape2D_3ucvb")
