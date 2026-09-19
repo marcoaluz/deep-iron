@@ -5,6 +5,10 @@ extends CharacterBody2D
 @export var hunger_decay: float = 0.7
 @export var cargo_capacity: float = 20.0
 @export var loaded_speed_penalty: float = 0.35  # 0.35 = até 35% mais lento com carga cheia
+@export var auto_mode: bool = true  # true = IA decide sozinha; false = só controle manual por clique
+@export var hunger_threshold: float = 30.0  # abaixo disso, prioridade vira comer
+
+const DECISION_INTERVAL := 1.0  # a cada quantos segundos a IA reavalia o que fazer
 
 @onready var _hunger_label: Label = $HungerLabel
 @onready var _cargo_label: Label = $CargoLabel
@@ -13,6 +17,8 @@ var _target  : Vector2 = Vector2.ZERO
 var _moving  : bool    = false
 var hunger   : float   = 100.0
 var carrying : float   = 0.0
+var _ai_state: String  = "idle"  # idle | eating | mining | storing
+var _decision_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("ipezinhos")
@@ -47,6 +53,57 @@ func _process(delta: float) -> void:
 	_update_hunger_label()
 	if hunger <= 0.0:
 		_on_starving()
+
+	if auto_mode:
+		_decision_timer -= delta
+		if _decision_timer <= 0.0:
+			_decision_timer = DECISION_INTERVAL
+			_decide_next_action()
+
+func _decide_next_action() -> void:
+	# Prioridade 1: comer, se a fome estiver baixa. Só troca de estado quando
+	# realmente precisa, e só sai desse estado quando a fome estiver recheia.
+	if hunger < hunger_threshold and _ai_state != "eating":
+		_ai_state = "eating"
+		var comedouro := _closest_in_group("comedouros")
+		if comedouro:
+			move_to(comedouro.global_position)
+		return
+
+	if _ai_state == "eating":
+		if hunger < hunger_max:
+			return  # ainda a caminho ou comendo, não decide de novo ainda
+		_ai_state = "idle"
+
+	# Prioridade 2: depositar, se a carga estiver cheia (ou já estiver indo depositar
+	# e ainda tiver carga, pra não desistir no meio do caminho)
+	if carrying >= cargo_capacity or _ai_state == "storing":
+		if carrying <= 0.0:
+			_ai_state = "idle"
+		else:
+			_ai_state = "storing"
+			var armazem := _closest_in_group("armazens")
+			if armazem:
+				move_to(armazem.global_position)
+			return
+
+	# Prioridade 3: minerar
+	var minerio := _closest_in_group("minerios")
+	if minerio and minerio.ore_remaining > 0.0:
+		_ai_state = "mining"
+		move_to(minerio.global_position)
+	else:
+		_ai_state = "idle"
+
+func _closest_in_group(group_name: String) -> Node2D:
+	var closest: Node2D = null
+	var closest_dist := INF
+	for node in get_tree().get_nodes_in_group(group_name):
+		var dist := global_position.distance_to(node.global_position)
+		if dist < closest_dist:
+			closest_dist = dist
+			closest = node
+	return closest
 
 func _update_hunger_label() -> void:
 	_hunger_label.text = str(int(hunger))

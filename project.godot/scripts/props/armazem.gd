@@ -7,6 +7,7 @@ var total_stored: float = 0.0
 var _depositing_bodies: Array[Node2D] = []
 
 func _ready() -> void:
+	add_to_group("armazens")
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	_update_label()

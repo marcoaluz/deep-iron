@@ -18,21 +18,33 @@ script = ExtResource("1_llaio")
 
 [node name="Ipezinho" parent="." unique_id=1756047734 instance=ExtResource("2_oekm8")]
 
-[node name="HungerLabel" type="Label" parent="Ipezinho" unique_id=302272358]
-offset_left = -20.0
-offset_top = -50.0
-offset_right = 20.0
-offset_bottom = -27.0
-text = "100"
-
-[node name="CargoLabel" type="Label" parent="Ipezinho" unique_id=2131005534]
-offset_right = 40.0
-offset_bottom = 23.0
-offset_transform_position = Vector2(-20, -65)
-text = "0"
-
 [node name="MineralNode" parent="." unique_id=1887962547 instance=ExtResource("5_j7lav")]
 position = Vector2(-200, -100)
 
 [node name="Armazem" parent="." unique_id=758176732 instance=ExtResource("6_g38uy")]
 position = Vector2(-200, 100)
+
+[node name="Ipezinho2" parent="." unique_id=1911002234 instance=ExtResource("2_oekm8")]
+position = Vector2(60, 0)
+
+[node name="Ipezinho3" parent="." unique_id=1911002235 instance=ExtResource("2_oekm8")]
+position = Vector2(-60, 0)
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="HUD"]
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 280.0
+offset_bottom = 170.0
+
+[node name="VBox" type="VBoxContainer" parent="HUD/Panel"]
+layout_mode = 2
+
+[node name="StorageLabel" type="Label" parent="HUD/Panel/VBox"]
+layout_mode = 2
+text = "Minério armazenado: 0"
+
+[node name="WorkersLabel" type="Label" parent="HUD/Panel/VBox"]
+layout_mode = 2
+text = ""

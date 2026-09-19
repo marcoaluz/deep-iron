@@ -3,6 +3,7 @@ extends Area2D
 @export var FEED_RATE: float = 12.0  # quanto restaura de fome por segundo
 
 func _ready() -> void:
+	add_to_group("comedouros")
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 
