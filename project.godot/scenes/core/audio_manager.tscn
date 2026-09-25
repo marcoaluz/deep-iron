@@ -1,0 +1,35 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/core/audio_manager.gd" id="1_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/music_loop.wav" id="2_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/cave_ambience.wav" id="3_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/pick_0.wav" id="4_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/pick_1.wav" id="5_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/pick_2.wav" id="6_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/step_0.wav" id="7_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/step_1.wav" id="8_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/step_2.wav" id="9_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/step_3.wav" id="10_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/deposit_0.wav" id="11_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/deposit_1.wav" id="12_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/deposit_2.wav" id="13_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/eat_0.wav" id="14_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/eat_1.wav" id="15_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/eat_2.wav" id="16_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/sell.wav" id="17_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/recruit.wav" id="18_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/click.wav" id="19_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/error.wav" id="20_a"]
+
+[node name="Audio" type="Node"]
+script = ExtResource("1_a")
+music = ExtResource("2_a")
+ambience = ExtResource("3_a")
+pick_sounds = Array[AudioStream]([ExtResource("4_a"), ExtResource("5_a"), ExtResource("6_a")])
+step_sounds = Array[AudioStream]([ExtResource("7_a"), ExtResource("8_a"), ExtResource("9_a"), ExtResource("10_a")])
+deposit_sounds = Array[AudioStream]([ExtResource("11_a"), ExtResource("12_a"), ExtResource("13_a")])
+eat_sounds = Array[AudioStream]([ExtResource("14_a"), ExtResource("15_a"), ExtResource("16_a")])
+sell_sound = ExtResource("17_a")
+recruit_sound = ExtResource("18_a")
+click_sound = ExtResource("19_a")
+error_sound = ExtResource("20_a")

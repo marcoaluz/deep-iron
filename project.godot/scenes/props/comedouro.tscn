@@ -9,8 +9,11 @@ radius = 46.0
 [node name="Comedouro" type="Area2D" unique_id=1804145103]
 script = ExtResource("1_bsr0i")
 slot_count = 3
-slot_radius = Vector2(36, 24)
+slot_radius = Vector2(42, 28)
 slot_arc_deg = 150.0
+obstacle_size = Vector2(28, 7)
+obstacle_offset = Vector2(0, -1)
+obstacle_is_rect = true
 
 [node name="Visual" type="Sprite2D" parent="." unique_id=1522328408]
 scale = Vector2(2, 2)

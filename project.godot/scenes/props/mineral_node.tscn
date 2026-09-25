@@ -13,6 +13,8 @@ script = ExtResource("1_4eitv")
 textures = Array[Texture2D]([ExtResource("2_ore0"), ExtResource("3_ore1"), ExtResource("4_ore2")])
 slot_count = 3
 slot_radius = Vector2(26, 18)
+obstacle_size = Vector2(12, 7)
+obstacle_offset = Vector2(0, -4)
 
 [node name="Visual" type="Sprite2D" parent="." unique_id=265305279]
 scale = Vector2(2, 2)

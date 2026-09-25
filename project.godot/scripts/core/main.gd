@@ -12,6 +12,7 @@ var _marker_timer := 0.0
 
 @onready var _camera: Camera2D = $Camera2D
 @onready var _environment: Node2D = $World/Environment
+@onready var _economy: Node = $Economy
 
 
 func _ready() -> void:
@@ -41,6 +42,14 @@ func _unhandled_input(event: InputEvent) -> void:
 					_camera.follow_target = null if _camera.follow_target == selected else selected
 			KEY_ESCAPE:
 				select(null)
+			KEY_V:
+				_economy.sell_all()
+			KEY_R:
+				var worker: Node2D = _economy.recruit()
+				if worker:
+					_camera.focus_on(worker.global_position)
+			KEY_M:
+				Audio.toggle_music()
 
 
 func _find_ipezinho_at(pos: Vector2) -> Node2D:

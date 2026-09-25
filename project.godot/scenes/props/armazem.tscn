@@ -11,8 +11,11 @@ radius = 52.0
 [node name="Armazem" type="Area2D" unique_id=758176732]
 script = ExtResource("1_7i0eb")
 slot_count = 3
-slot_radius = Vector2(46, 34)
+slot_radius = Vector2(52, 36)
 slot_arc_deg = 140.0
+obstacle_size = Vector2(36, 16)
+obstacle_offset = Vector2(0, -2)
+obstacle_is_rect = true
 
 [node name="Visual" type="Sprite2D" parent="." unique_id=1999697889]
 position = Vector2(0, 16)

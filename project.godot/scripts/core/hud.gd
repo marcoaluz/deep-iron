@@ -20,13 +20,24 @@ const STATE_COLORS := {
 }
 
 @export var ore_icon: Texture2D
+@export var coin_icon: Texture2D
+## Altura máxima da lista de ipezinhos antes de virar rolagem.
+@export var worker_list_max_height: float = 300.0
 ## Atualizações do HUD por segundo.
 @export var refresh_rate: float = 10.0
 
 var _main: Node
+var _economy: Node
 var _stored_label: Label
 var _deposits_label: Label
+var _credits_label: Label
+var _sell_button: Button
+var _auto_sell_check: CheckBox
+var _recruit_button: Button
+var _workers_count_label: Label
+var _rows_scroll: ScrollContainer
 var _rows_box: VBoxContainer
+var _last_credits: float = -1.0
 var _rows: Dictionary = {}  # ipezinho -> {panel, name, state, hunger, cargo}
 var _refresh_timer := 0.0
 var _style_row := _row_style(false)
@@ -35,6 +46,7 @@ var _style_row_selected := _row_style(true)
 
 func _ready() -> void:
 	_main = get_parent()
+	_economy = get_tree().get_first_node_in_group("economy")
 	_build()
 	if _main.has_signal("selection_changed"):
 		_main.selection_changed.connect(func(_u): _refresh())
@@ -82,17 +94,31 @@ func _build() -> void:
 	_deposits_label = _label("", 13, COLOR_DIM)
 	vbox.add_child(_deposits_label)
 
-	vbox.add_child(HSeparator.new())
-	vbox.add_child(_label("IPEZINHOS", 12, COLOR_DIM))
+	if _economy:
+		_build_economy(vbox)
 
+	vbox.add_child(HSeparator.new())
+	var header := HBoxContainer.new()
+	vbox.add_child(header)
+	var workers_title := _label("IPEZINHOS", 12, COLOR_DIM)
+	workers_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(workers_title)
+	_workers_count_label = _label("", 12, COLOR_DIM)
+	header.add_child(_workers_count_label)
+
+	_rows_scroll = ScrollContainer.new()
+	_rows_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox.add_child(_rows_scroll)
 	_rows_box = VBoxContainer.new()
 	_rows_box.add_theme_constant_override("separation", 4)
-	vbox.add_child(_rows_box)
+	_rows_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_rows_scroll.add_child(_rows_box)
 
 	# dica de controles no canto inferior esquerdo
 	var hint := _label(
 		"Clique: selecionar / mover   •   Botão dir. / Esc: soltar   •   Tab: próximo   •   F: seguir\n"
-		+ "Roda: zoom   •   Botão do meio / WASD / setas: mover câmera   •   Home: centralizar",
+		+ "Roda: zoom   •   Botão do meio / WASD / setas: mover câmera   •   Home: centralizar\n"
+		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música",
 		12, Color(0.85, 0.8, 0.72, 0.75))
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	hint.grow_vertical = Control.GROW_DIRECTION_BEGIN
@@ -102,6 +128,64 @@ func _build() -> void:
 	hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	hint.add_theme_constant_override("outline_size", 3)
 	add_child(hint)
+
+
+func _build_economy(vbox: VBoxContainer) -> void:
+	var credits_row := HBoxContainer.new()
+	credits_row.add_theme_constant_override("separation", 8)
+	vbox.add_child(credits_row)
+	if coin_icon:
+		var icon := TextureRect.new()
+		icon.texture = coin_icon
+		icon.custom_minimum_size = Vector2(20, 20)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		credits_row.add_child(icon)
+	_credits_label = _label("0", 18, COLOR_TITLE)
+	credits_row.add_child(_credits_label)
+	credits_row.add_child(_label("créditos", 13, COLOR_DIM))
+
+	var sell_row := HBoxContainer.new()
+	sell_row.add_theme_constant_override("separation", 6)
+	vbox.add_child(sell_row)
+	_sell_button = _button("Vender minério")
+	_sell_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_sell_button.pressed.connect(_on_sell_pressed)
+	sell_row.add_child(_sell_button)
+	_auto_sell_check = CheckBox.new()
+	_auto_sell_check.text = "auto"
+	_auto_sell_check.focus_mode = Control.FOCUS_NONE
+	_auto_sell_check.tooltip_text = "Vende sozinho o que chegar no armazém"
+	_auto_sell_check.add_theme_font_size_override("font_size", 12)
+	_auto_sell_check.button_pressed = _economy.auto_sell
+	_auto_sell_check.toggled.connect(_on_auto_sell_toggled)
+	sell_row.add_child(_auto_sell_check)
+
+	_recruit_button = _button("Recrutar ipezinho")
+	_recruit_button.pressed.connect(_on_recruit_pressed)
+	vbox.add_child(_recruit_button)
+
+
+func _on_sell_pressed() -> void:
+	Audio.click()
+	_economy.sell_all()
+	_refresh()
+
+
+func _on_auto_sell_toggled(on: bool) -> void:
+	Audio.click()
+	_economy.auto_sell = on
+
+
+func _on_recruit_pressed() -> void:
+	Audio.click()
+	var worker: Node2D = _economy.recruit()
+	if worker:
+		var cam := _main.get_node_or_null("Camera2D")
+		if cam:
+			cam.focus_on(worker.global_position)
+	_refresh()
 
 
 func _make_row(worker: Node) -> Dictionary:
@@ -164,6 +248,8 @@ func _refresh() -> void:
 	_deposits_label.text = "Jazidas: %d/%d ativas  •  %d de minério restante" % [active, nodes.size(), int(ore_left)]
 
 	var workers := get_tree().get_nodes_in_group("ipezinhos")
+	if _economy:
+		_refresh_economy(workers.size())
 	# cria/remove linhas se entrar ou sair ipezinho
 	for w in workers:
 		if not _rows.has(w):
@@ -172,6 +258,9 @@ func _refresh() -> void:
 		if not is_instance_valid(w) or not workers.has(w):
 			_rows[w].panel.queue_free()
 			_rows.erase(w)
+
+	# a lista cresce até worker_list_max_height e depois rola
+	_rows_scroll.custom_minimum_size.y = minf(_rows_box.get_combined_minimum_size().y, worker_list_max_height)
 
 	var selected = _main.get("selected")
 	for w in workers:
@@ -194,7 +283,56 @@ func _refresh() -> void:
 		row.panel.add_theme_stylebox_override("panel", _style_row_selected if w == selected else _style_row)
 
 
+func _refresh_economy(worker_count: int) -> void:
+	var credits: float = _economy.credits
+	_credits_label.text = str(int(credits))
+	if _last_credits >= 0.0 and not is_equal_approx(credits, _last_credits):
+		_credits_label.modulate = Color(1.6, 1.6, 1.6) if credits > _last_credits else Color(1.5, 0.6, 0.6)
+		create_tween().tween_property(_credits_label, "modulate", Color.WHITE, 0.5)
+	_last_credits = credits
+
+	var value: int = _economy.sale_value()
+	_sell_button.text = "Vender minério  (+%d cr)" % value
+	_sell_button.disabled = value <= 0
+
+	var cost: int = _economy.recruit_cost()
+	var at_max: bool = worker_count >= _economy.max_workers
+	_recruit_button.text = "Limite de ipezinhos atingido" if at_max else "Recrutar ipezinho  (%d cr)" % cost
+	_recruit_button.disabled = not _economy.can_recruit()
+	_workers_count_label.text = "%d / %d" % [worker_count, _economy.max_workers]
+	if _auto_sell_check.button_pressed != _economy.auto_sell:
+		_auto_sell_check.set_pressed_no_signal(_economy.auto_sell)
+
+
 # ------------------------------------------------------------ helpers de estilo
+func _button(text: String) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.focus_mode = Control.FOCUS_NONE
+	b.add_theme_font_size_override("font_size", 13)
+	b.add_theme_color_override("font_color", COLOR_TEXT)
+	b.add_theme_color_override("font_disabled_color", Color(0.5, 0.46, 0.42))
+	var states := {
+		"normal": Color(0.3, 0.2, 0.1),
+		"hover": Color(0.42, 0.28, 0.12),
+		"pressed": Color(0.22, 0.14, 0.07),
+		"disabled": Color(0.16, 0.14, 0.13),
+	}
+	for state in states:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = states[state]
+		sb.border_color = COLOR_BORDER if state != "disabled" else Color(0.3, 0.27, 0.24)
+		sb.set_border_width_all(1)
+		sb.set_corner_radius_all(3)
+		sb.content_margin_left = 8
+		sb.content_margin_right = 8
+		sb.content_margin_top = 4
+		sb.content_margin_bottom = 4
+		b.add_theme_stylebox_override(state, sb)
+	return b
+
+
+
 func _label(text: String, size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text

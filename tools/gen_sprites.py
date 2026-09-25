@@ -452,7 +452,28 @@ def build_support():
     save(outline(pad(img), OUTLINE_WOOD), "support_beam.png")
 
 
+def build_coin():
+    rows = [
+        "..DDDD..",
+        ".DyyyYD.",
+        "DyyYYYYD",
+        "DyYyYYoD",
+        "DyYyYYoD",
+        "DYYYYooD",
+        ".DYoooD.",
+        "..DDDD..",
+    ]
+    pal = {
+        "y": (255, 236, 140, 255),
+        "Y": (240, 190, 60, 255),
+        "o": (200, 140, 40, 255),
+        "D": (120, 74, 20, 255),
+    }
+    save(from_rows(rows, pal), "coin.png")
+
+
 if __name__ == "__main__":
+    build_coin()
     build_ipezinho()
     build_pickaxe()
     build_ores()

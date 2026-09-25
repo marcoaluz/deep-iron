@@ -20,11 +20,13 @@ const STATE_GROUP := {
 @export var loaded_speed_penalty: float = 0.35  # 0.35 = até 35% mais lento com carga cheia
 ## Multiplicador de velocidade quando a fome chega a zero.
 @export var starving_speed_mult: float = 0.5
-## Distância em que os ipezinhos começam a se afastar um do outro.
-@export var separation_radius: float = 18.0
-## Força do afastamento entre ipezinhos (0 = desliga).
-@export var separation_strength: float = 0.7
-@export var arrive_distance: float = 3.0
+@export var arrive_distance: float = 4.0
+
+@export_group("Navegação")
+## Desvio entre ipezinhos (RVO do NavigationAgent2D). Desligado = atravessam uns aos outros.
+@export var avoidance_enabled: bool = true
+## Raio do ipezinho para o desvio entre agentes.
+@export var avoidance_radius: float = 7.0
 
 @export_group("Fome")
 @export var hunger_max: float = 100.0
@@ -63,6 +65,9 @@ var _work_timer: float = 0.0  # > 0 enquanto está efetivamente minerando
 var _anim_time: float = 0.0
 var _swing_time: float = 0.0
 var _facing: float = 1.0
+var _prev_swing: float = 0.0
+var _swing_rising: bool = false
+var _last_hunger_int: int = -1
 
 @onready var _hunger_label: Label = $HungerLabel
 @onready var _cargo_label: Label = $CargoLabel
@@ -70,6 +75,7 @@ var _facing: float = 1.0
 @onready var _tool: Sprite2D = $Tool
 @onready var _carry_icon: Sprite2D = $CarryIcon
 @onready var _lamp: PointLight2D = $HeadLamp
+@onready var _agent: NavigationAgent2D = $Agent
 
 
 func _ready() -> void:
@@ -78,6 +84,11 @@ func _ready() -> void:
 	hunger = hunger_max
 	_decision_timer = randf_range(0.1, decision_interval)  # dessincroniza os ipezinhos
 	_lamp.enabled = head_lamp_enabled
+	_lamp.add_to_group("cullable_lights")
+	_agent.avoidance_enabled = avoidance_enabled
+	_agent.radius = avoidance_radius
+	_agent.max_speed = speed * 1.2
+	_agent.velocity_computed.connect(_on_velocity_computed)
 	_update_hunger_label()
 	_update_cargo_label()
 
@@ -98,6 +109,7 @@ func move_to(pos: Vector2) -> void:
 func _go_to(pos: Vector2) -> void:
 	_target = pos
 	_moving = true
+	_agent.target_position = pos
 
 
 func get_state() -> String:
@@ -120,48 +132,36 @@ func can_work_at(station: Node) -> bool:
 
 # ------------------------------------------------------------ movimento
 func _physics_process(delta: float) -> void:
-	var vel := Vector2.ZERO
-	var dist_to_target := 0.0
+	var desired := Vector2.ZERO
 	if _moving:
-		var to_target := _target - global_position
-		dist_to_target = to_target.length()
-		if dist_to_target <= arrive_distance:
+		var dist_to_target := global_position.distance_to(_target)
+		if dist_to_target <= arrive_distance or _agent.is_navigation_finished():
 			_moving = false
 		else:
-			var spd := _get_effective_speed()
-			vel = to_target / dist_to_target * minf(spd, dist_to_target / delta)
+			var next := _agent.get_next_path_position()
+			var to_next := next - global_position
+			var d := to_next.length()
+			if d > 0.01:
+				var spd := minf(_get_effective_speed(), dist_to_target / delta)
+				desired = to_next / d * spd
 
-	var push := _separation()
-	if push != Vector2.ZERO:
-		var k := speed * separation_strength
-		if _moving:
-			k *= clampf(dist_to_target / 24.0, 0.0, 1.0)  # perto do destino não empurra
-		elif _station != null:
-			k *= 0.15  # trabalhando no slot: quase não sai do lugar
-		vel += push * k
-
-	velocity = vel
-	if velocity.length_squared() > 0.5:
-		move_and_slide()
+	if _agent.avoidance_enabled:
+		# parado (trabalhando/esperando) tem prioridade: quem está andando desvia dele
+		_agent.avoidance_priority = 0.5 if _moving else 1.0
+		_agent.velocity = desired  # a resposta chega em _on_velocity_computed
+	else:
+		_apply_velocity(desired)
 	_update_animation(delta)
 
 
-func _separation() -> Vector2:
-	if separation_strength <= 0.0:
-		return Vector2.ZERO
-	var push := Vector2.ZERO
-	for other in get_tree().get_nodes_in_group("ipezinhos"):
-		if other == self:
-			continue
-		var d: Vector2 = global_position - other.global_position
-		var l := d.length()
-		if l >= separation_radius:
-			continue
-		if l < 0.01:
-			d = Vector2.RIGHT.rotated(float(get_instance_id() % 628) / 100.0)
-			l = 0.01
-		push += d / l * (1.0 - l / separation_radius)
-	return push
+func _on_velocity_computed(safe_velocity: Vector2) -> void:
+	_apply_velocity(safe_velocity if _moving else Vector2.ZERO)
+
+
+func _apply_velocity(v: Vector2) -> void:
+	velocity = v
+	if velocity.length_squared() > 0.5:
+		move_and_slide()
 
 
 func _get_effective_speed() -> float:
@@ -177,7 +177,8 @@ func _get_effective_speed() -> float:
 func _process(delta: float) -> void:
 	var was_starving := hunger <= 0.0
 	hunger = maxf(hunger - hunger_decay * delta, 0.0)
-	_update_hunger_label()
+	if int(hunger) != _last_hunger_int:
+		_update_hunger_label()
 	if hunger <= 0.0 and not was_starving:
 		_on_starving()
 
@@ -336,7 +337,10 @@ func _update_animation(delta: float) -> void:
 	var spd := velocity.length()
 	if spd > 5.0:
 		_anim_time += delta * walk_anim_fps * clampf(spd / speed, 0.5, 1.3)
-		_body.frame = int(_anim_time) % _body.hframes
+		var new_frame := int(_anim_time) % _body.hframes
+		if new_frame != _body.frame and new_frame % 2 == 0:
+			Audio.step(global_position)  # pé tocando o chão (quadros 0 e 2)
+		_body.frame = new_frame
 		if absf(velocity.x) > 3.0:
 			_facing = signf(velocity.x)
 	else:
@@ -353,8 +357,16 @@ func _update_animation(delta: float) -> void:
 		_swing_time += delta
 		var swing := (sin(_swing_time * 12.0) * 0.5 + 0.5)  # 0..1
 		_tool.rotation = _facing * lerpf(-0.9, 1.4, swing * swing)
+		# impacto = ponto mais baixo do golpe (a curva para de subir)
+		var rising := swing > _prev_swing
+		if _swing_rising and not rising:
+			Audio.pick(global_position)
+		_swing_rising = rising
+		_prev_swing = swing
 	else:
 		_swing_time = 0.0
+		_prev_swing = 0.0
+		_swing_rising = false
 		_tool.rotation = _facing * -0.35
 
 	# pedrinha de minério em cima da cabeça, maior quanto mais carga
@@ -369,7 +381,8 @@ func _update_animation(delta: float) -> void:
 
 
 func _update_hunger_label() -> void:
-	_hunger_label.text = str(int(hunger))
+	_last_hunger_int = int(hunger)
+	_hunger_label.text = str(_last_hunger_int)
 
 
 func _update_cargo_label() -> void:

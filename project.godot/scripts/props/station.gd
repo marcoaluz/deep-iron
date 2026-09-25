@@ -21,6 +21,13 @@ extends Area2D
 @export var auto_fit_area: bool = true
 @export var area_margin: float = 12.0
 
+@export_group("Obstáculo (navegação)")
+## Meia-largura/meia-altura da "base" que bloqueia a passagem. Zero = não bloqueia.
+@export var obstacle_size: Vector2 = Vector2.ZERO
+@export var obstacle_offset: Vector2 = Vector2.ZERO
+## true = retângulo; false = elipse.
+@export var obstacle_is_rect: bool = false
+
 var _slot_owners: Array = []
 var _bodies: Array[Node2D] = []
 
@@ -40,6 +47,22 @@ func _fit_area() -> void:
 	var circle := shape_node.shape.duplicate() as CircleShape2D
 	circle.radius = maxf(slot_radius.x, slot_radius.y) + area_margin
 	shape_node.shape = circle
+
+
+## Contorno (em coordenadas globais) que a malha de navegação deve contornar.
+func get_obstacle_outline() -> PackedVector2Array:
+	var outline := PackedVector2Array()
+	if obstacle_size.x <= 0.0 or obstacle_size.y <= 0.0:
+		return outline
+	var c := global_position + obstacle_offset
+	if obstacle_is_rect:
+		var s := obstacle_size
+		outline.append_array([c + Vector2(-s.x, -s.y), c + Vector2(s.x, -s.y), c + Vector2(s.x, s.y), c + Vector2(-s.x, s.y)])
+	else:
+		for i in 12:
+			var a := TAU * i / 12.0
+			outline.append(c + Vector2(cos(a) * obstacle_size.x, sin(a) * obstacle_size.y))
+	return outline
 
 
 ## Sobrescrito pelas estações: esse corpo sabe usar a estação? (duck typing)

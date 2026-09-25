@@ -1,8 +1,15 @@
 extends Node2D
-## Monta o visual da caverna: chão, parede de rocha em volta, pedras, cristais,
-## tochas (com luz tremulando) e escoras de madeira. Tudo decorativo — não
-## bloqueia ninguém. A distribuição é sorteada a partir de `map_seed`, então
-## o mapa é sempre igual até você trocar a seed.
+## Monta a caverna: chão, parede de rocha em volta, pedras, cristais, tochas
+## (com luz tremulando) e escoras de madeira. A distribuição é sorteada a partir
+## de `map_seed`, então o mapa é sempre igual até você trocar a seed.
+##
+## Depois de posicionar tudo, "assa" a malha de navegação (NavigationRegion2D):
+## a borda do mapa, as pedras grandes, os cristais, as tochas e a base de cada
+## estação viram obstáculos que os ipezinhos contornam.
+##
+## Também desliga as luzes que estão fora da câmera (grupo "cullable_lights").
+
+signal navigation_ready
 
 @export_group("Mapa")
 @export var map_rect: Rect2 = Rect2(-720, -440, 1440, 880)
@@ -27,6 +34,14 @@ extends Node2D
 @export var torch_texture: Texture2D
 @export var support_texture: Texture2D
 
+@export_group("Navegação")
+## Raio usado pra afastar o caminho das paredes/obstáculos (≈ raio do ipezinho).
+@export var nav_agent_radius: float = 7.0
+## Quanto a área andável fica pra dentro da borda do mapa (cobre a base das pedras da borda).
+@export var nav_edge_inset: float = 36.0
+## Pedras e cristais bloqueiam a passagem.
+@export var decorations_block: bool = true
+
 @export_group("Luz")
 @export var light_texture: Texture2D
 @export var torch_light_color: Color = Color(1.0, 0.68, 0.34)
@@ -35,11 +50,20 @@ extends Node2D
 @export var crystal_light_color: Color = Color(0.45, 0.75, 1.0)
 @export var crystal_light_energy: float = 0.7
 @export var flicker_amount: float = 0.15
+## Liga/desliga luzes conforme estejam perto da área visível da câmera.
+@export var cull_lights: bool = true
+## Folga (px do mundo) além da tela antes de desligar uma luz — ~ raio da luz.
+@export var light_cull_margin: float = 260.0
+@export var light_cull_interval: float = 0.2
+
+var navigation_region: NavigationRegion2D
 
 var _rng := RandomNumberGenerator.new()
 var _placed: Array[Vector2] = []
+var _obstacles: Array[PackedVector2Array] = []
 var _torch_lights: Array[PointLight2D] = []
 var _time: float = 0.0
+var _cull_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -52,14 +76,69 @@ func _ready() -> void:
 	_scatter(boulder_count, boulder_textures, 40.0, 1.0, _add_boulder)
 	_scatter(crystal_count, crystal_textures, 50.0, 1.0, _add_crystal)
 	_scatter(torch_count, [torch_texture], 60.0, 0.6, _add_torch)
+	_build_navigation()
 
 
 func _process(delta: float) -> void:
 	_time += delta
 	for i in _torch_lights.size():
 		var light := _torch_lights[i]
+		if not light.visible:
+			continue
 		var f := sin(_time * 9.0 + i * 1.7) * 0.5 + sin(_time * 23.0 + i * 3.1) * 0.5
 		light.energy = torch_light_energy * (1.0 + f * flicker_amount)
+
+	if cull_lights:
+		_cull_timer -= delta
+		if _cull_timer <= 0.0:
+			_cull_timer = light_cull_interval
+			_cull_offscreen_lights()
+
+
+# ------------------------------------------------------------ performance: luzes
+func _cull_offscreen_lights() -> void:
+	var vp := get_viewport()
+	var view := vp.get_canvas_transform().affine_inverse() * vp.get_visible_rect()
+	view = view.grow(light_cull_margin)
+	for light in get_tree().get_nodes_in_group("cullable_lights"):
+		light.visible = view.has_point(light.global_position)
+
+
+# ------------------------------------------------------------ navegação
+func _build_navigation() -> void:
+	var nav_poly := NavigationPolygon.new()
+	nav_poly.agent_radius = nav_agent_radius
+	var source := NavigationMeshSourceGeometryData2D.new()
+	source.add_traversable_outline(_rect_outline(map_rect.grow(-nav_edge_inset)))
+	if decorations_block:
+		for o in _obstacles:
+			source.add_obstruction_outline(o)
+	for group in ["minerios", "comedouros", "armazens"]:
+		for node in get_tree().get_nodes_in_group(group):
+			if node.has_method("get_obstacle_outline"):
+				var outline: PackedVector2Array = node.get_obstacle_outline()
+				if outline.size() >= 3:
+					source.add_obstruction_outline(outline)
+	NavigationServer2D.bake_from_source_geometry_data(nav_poly, source)
+
+	navigation_region = NavigationRegion2D.new()
+	navigation_region.name = "NavigationRegion"
+	navigation_region.navigation_polygon = nav_poly
+	add_child(navigation_region)
+	navigation_ready.emit()
+
+
+func _rect_outline(r: Rect2) -> PackedVector2Array:
+	return PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
+
+
+## Registra a "base" de uma decoração como obstáculo (elipse).
+func _add_obstacle(center: Vector2, radius: Vector2) -> void:
+	var outline := PackedVector2Array()
+	for i in 8:
+		var a := TAU * i / 8.0
+		outline.append(center + Vector2(cos(a) * radius.x, sin(a) * radius.y))
+	_obstacles.append(outline)
 
 
 # ------------------------------------------------------------ chão e paredes
@@ -101,9 +180,11 @@ func _build_edges() -> void:
 		y += edge_boulder_spacing
 	for p in points:
 		var jitter := Vector2(_rng.randf_range(-10, 10), _rng.randf_range(-8, 8))
+		var k := _rng.randf_range(1.1, 1.8)
 		var sprite := _deco_sprite(boulder_textures[_rng.randi() % boulder_textures.size()], p + jitter)
-		sprite.scale = Vector2.ONE * pixel_scale * _rng.randf_range(1.1, 1.8)
+		sprite.scale = Vector2.ONE * pixel_scale * k
 		sprite.flip_h = _rng.randf() < 0.5
+		# sem obstáculo individual: nav_edge_inset já mantém todo mundo longe da borda
 
 	# escoras de madeira ao longo da parede de cima, como entradas de túnel
 	if support_texture:
@@ -113,6 +194,11 @@ func _build_edges() -> void:
 			_deco_sprite(support_texture, pos)
 			_placed.append(pos)
 			sx += _rng.randf_range(260.0, 380.0)
+
+
+## Base de uma pedra de 16px desenhada com a escala `s` (a origem fica no pé).
+func _add_boulder_obstacle(p: Vector2, s: float) -> void:
+	_add_obstacle(p + Vector2(0, -3.5 * s), Vector2(6.0 * s, 3.5 * s))
 
 
 # ------------------------------------------------------------ decoração espalhada
@@ -151,14 +237,18 @@ func _add_pebble(tex: Texture2D, p: Vector2) -> void:
 
 func _add_boulder(tex: Texture2D, p: Vector2) -> void:
 	var s := _deco_sprite(tex, p)
-	s.scale = Vector2.ONE * pixel_scale * _rng.randf_range(0.8, 1.3)
+	var k := _rng.randf_range(0.8, 1.3)
+	s.scale = Vector2.ONE * pixel_scale * k
 	s.flip_h = _rng.randf() < 0.5
+	_add_boulder_obstacle(p, pixel_scale * k)
 
 
 func _add_crystal(tex: Texture2D, p: Vector2) -> void:
 	var s := _deco_sprite(tex, p)
-	s.scale = Vector2.ONE * _rng.randf_range(1.0, 1.4)  # cristais já são 32px
+	var k := _rng.randf_range(1.0, 1.4)  # cristais já são 32px
+	s.scale = Vector2.ONE * k
 	s.flip_h = _rng.randf() < 0.5
+	_add_obstacle(p + Vector2(0, -3.0 * k), Vector2(tex.get_width() * 0.4 * k, 4.0 * k))
 	if light_texture:
 		var light := PointLight2D.new()
 		light.texture = light_texture
@@ -166,11 +256,13 @@ func _add_crystal(tex: Texture2D, p: Vector2) -> void:
 		light.energy = crystal_light_energy
 		light.texture_scale = 0.6
 		light.position = Vector2(0, -tex.get_height() * 0.5)
+		light.add_to_group("cullable_lights")
 		s.add_child(light)
 
 
 func _add_torch(tex: Texture2D, p: Vector2) -> void:
 	var s := _deco_sprite(tex, p)
+	_add_obstacle(p + Vector2(0, -2), Vector2(5, 3))
 	if light_texture:
 		var light := PointLight2D.new()
 		light.texture = light_texture
@@ -178,6 +270,7 @@ func _add_torch(tex: Texture2D, p: Vector2) -> void:
 		light.energy = torch_light_energy
 		light.texture_scale = torch_light_scale / pixel_scale  # compensa a escala do sprite
 		light.position = Vector2(0, -tex.get_height() + 2)
+		light.add_to_group("cullable_lights")
 		s.add_child(light)
 		_torch_lights.append(light)
 

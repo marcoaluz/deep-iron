@@ -40,6 +40,17 @@ energy = 0.55
 texture = ExtResource("5_light")
 texture_scale = 0.45
 
+[node name="Agent" type="NavigationAgent2D" parent="." unique_id=907998628]
+path_desired_distance = 6.0
+target_desired_distance = 4.0
+path_max_distance = 40.0
+avoidance_enabled = true
+radius = 7.0
+neighbor_distance = 60.0
+max_neighbors = 8
+time_horizon_agents = 0.8
+max_speed = 144.0
+
 [node name="Shape" type="CollisionShape2D" parent="." unique_id=637327843]
 position = Vector2(0, -5)
 shape = SubResource("RectangleShape2D_3ucvb")

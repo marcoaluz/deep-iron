@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 PhantomCameraManager="*uid://duq6jhf6unyis"
 DialogueManager="*uid://c3rodes2l3gxb"
+Audio="*res://scenes/core/audio_manager.tscn"
 
 [display]
 
@@ -37,3 +38,4 @@ enabled=PackedStringArray("res://addons/dialogue_manager/plugin.cfg", "res://add
 
 rendering_device/driver.windows="d3d12"
 textures/canvas_textures/default_texture_filter=0
+

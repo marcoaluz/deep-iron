@@ -7,10 +7,13 @@ signal stored_changed(total: float)
 @export var pile_thresholds: Array[float] = [1.0, 60.0, 200.0]
 ## Intervalo entre os textos flutuantes "+N".
 @export var popup_interval: float = 0.8
+## Intervalo entre os sons de minério caindo na pilha enquanto alguém deposita.
+@export var deposit_sound_interval: float = 0.5
 
 var total_stored: float = 0.0
 var _pending_popup: float = 0.0
 var _popup_timer: float = 0.0
+var _sound_timer: float = 0.0
 
 @onready var _label: Label = $AmountLabel
 @onready var _visual: Sprite2D = $Visual
@@ -20,6 +23,7 @@ var _popup_timer: float = 0.0
 func _ready() -> void:
 	super()
 	add_to_group("armazens")
+	$WindowLight.add_to_group("cullable_lights")
 	_update_label()
 
 
@@ -31,18 +35,31 @@ func _process(delta: float) -> void:
 	var received := 0.0
 	for body in _working_bodies():
 		received += body.deposit(DEPOSIT_RATE * delta)
+	_sound_timer -= delta
 	if received > 0.0:
 		total_stored += received
 		_pending_popup += received
 		_update_label()
 		stored_changed.emit(total_stored)
+		if _sound_timer <= 0.0:
+			_sound_timer = deposit_sound_interval
+			Audio.deposit(global_position)
 
 	_popup_timer -= delta
 	var finished_batch := _popup_timer <= 0.0 and _pending_popup >= 1.0 and received <= 0.0
 	if finished_batch or _pending_popup >= 20.0:
-		_spawn_popup(int(_pending_popup))
+		show_popup("+%d" % int(_pending_popup), Color(1.0, 0.85, 0.35))
 		_pending_popup -= int(_pending_popup)
 		_popup_timer = popup_interval
+
+
+## Tira todo o minério do armazém (usado na venda). Retorna quanto saiu.
+func take_all() -> float:
+	var amount := floorf(total_stored)
+	total_stored -= amount
+	_update_label()
+	stored_changed.emit(total_stored)
+	return amount
 
 
 func _update_label() -> void:
@@ -54,20 +71,20 @@ func _update_label() -> void:
 	_pile.frame = clampi(stage, 0, _pile.hframes - 1)
 
 
-func _spawn_popup(amount: int) -> void:
+## Texto flutuante acima do prédio + "pulinho".
+func show_popup(text: String, color: Color) -> void:
 	var popup := Label.new()
-	popup.text = "+%d" % amount
-	popup.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35))
+	popup.text = text
+	popup.add_theme_color_override("font_color", color)
 	popup.add_theme_color_override("font_outline_color", Color(0.1, 0.06, 0.03))
 	popup.add_theme_constant_override("outline_size", 4)
-	popup.position = Vector2(-12, -76)
+	popup.position = Vector2(-16, -76)
 	popup.z_index = 20
 	add_child(popup)
 	var tween := popup.create_tween().set_parallel()
 	tween.tween_property(popup, "position:y", popup.position.y - 26.0, 1.0).set_ease(Tween.EASE_OUT)
 	tween.tween_property(popup, "modulate:a", 0.0, 1.0).set_delay(0.3)
 	tween.chain().tween_callback(popup.queue_free)
-	# "pulinho" do prédio
 	var bump := create_tween()
 	bump.tween_property(_visual, "scale", Vector2(2.1, 1.9), 0.08)
 	bump.tween_property(_visual, "scale", Vector2(2, 2), 0.12)

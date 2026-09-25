@@ -27,6 +27,8 @@
 [ext_resource type="Texture2D" path="res://assets/game/support_beam.png" id="25_support"]
 [ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="26_light"]
 [ext_resource type="Texture2D" path="res://assets/game/ore_chunk.png" id="27_chunk"]
+[ext_resource type="Script" path="res://scripts/core/economy.gd" id="28_eco"]
+[ext_resource type="Texture2D" path="res://assets/game/coin.png" id="29_coin"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
@@ -84,9 +86,14 @@ position = Vector2(50, -50)
 [node name="Ipezinho3" parent="World" unique_id=1911002235 instance=ExtResource("2_oekm8")]
 position = Vector2(-50, -50)
 
+[node name="Economy" type="Node" parent="."]
+script = ExtResource("28_eco")
+worker_scene = ExtResource("2_oekm8")
+
 [node name="Camera2D" type="Camera2D" parent="." unique_id=768909553]
 script = ExtResource("1_llaio")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource("8_hud")
 ore_icon = ExtResource("27_chunk")
+coin_icon = ExtResource("29_coin")
