@@ -1,18 +1,32 @@
 [gd_scene format=3 uid="uid://cjmviden6vp81"]
 
 [ext_resource type="Script" uid="uid://b8t1t7kb4px58" path="res://scripts/props/comedouro.gd" id="1_bsr0i"]
+[ext_resource type="Texture2D" path="res://assets/game/comedouro.png" id="2_sprite"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_3ucvb"]
-size = Vector2(24, 24)
+[sub_resource type="CircleShape2D" id="CircleShape2D_food"]
+radius = 46.0
 
 [node name="Comedouro" type="Area2D" unique_id=1804145103]
 script = ExtResource("1_bsr0i")
+slot_count = 3
+slot_radius = Vector2(36, 24)
+slot_arc_deg = 150.0
 
-[node name="Visual" type="ColorRect" parent="." unique_id=1522328408]
-offset_right = 24.0
-offset_bottom = 24.0
-offset_transform_position = Vector2(-12, -12)
-color = Color(0.13333334, 0.77254903, 0.36862746, 1)
+[node name="Visual" type="Sprite2D" parent="." unique_id=1522328408]
+scale = Vector2(2, 2)
+texture = ExtResource("2_sprite")
+offset = Vector2(0, -6)
 
 [node name="Shape" type="CollisionShape2D" parent="." unique_id=626278914]
-shape = SubResource("RectangleShape2D_3ucvb")
+shape = SubResource("CircleShape2D_food")
+
+[node name="NameLabel" type="Label" parent="." unique_id=626278915]
+offset_left = -40.0
+offset_top = -46.0
+offset_right = 40.0
+offset_bottom = -28.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+text = "Comedouro"
+horizontal_alignment = 1

@@ -1,24 +1,48 @@
 [gd_scene format=3 uid="uid://jc5mskwsjdq5"]
 
 [ext_resource type="Script" uid="uid://gtf8rvr8gq0v" path="res://scripts/props/mineral_node.gd" id="1_4eitv"]
+[ext_resource type="Texture2D" path="res://assets/game/ore_iron_0.png" id="2_ore0"]
+[ext_resource type="Texture2D" path="res://assets/game/ore_iron_1.png" id="3_ore1"]
+[ext_resource type="Texture2D" path="res://assets/game/ore_iron_2.png" id="4_ore2"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_3ucvb"]
-size = Vector2(28, 28)
+[sub_resource type="CircleShape2D" id="CircleShape2D_ore"]
+radius = 38.0
 
 [node name="MineralNode" type="Area2D" unique_id=1887962547]
 script = ExtResource("1_4eitv")
+textures = Array[Texture2D]([ExtResource("2_ore0"), ExtResource("3_ore1"), ExtResource("4_ore2")])
+slot_count = 3
+slot_radius = Vector2(26, 18)
 
-[node name="Visual" type="ColorRect" parent="." unique_id=265305279]
-offset_right = 28.0
-offset_bottom = 28.0
-offset_transform_position = Vector2(-14, -14)
-color = Color(0.47058824, 0.44313726, 0.42352942, 1)
+[node name="Visual" type="Sprite2D" parent="." unique_id=265305279]
+scale = Vector2(2, 2)
+texture = ExtResource("2_ore0")
+offset = Vector2(0, -7)
+
+[node name="Chips" type="CPUParticles2D" parent="." unique_id=265305280]
+position = Vector2(0, -14)
+emitting = false
+amount = 10
+lifetime = 0.5
+direction = Vector2(0, -1)
+spread = 70.0
+gravity = Vector2(0, 280)
+initial_velocity_min = 50.0
+initial_velocity_max = 90.0
+scale_amount_min = 2.0
+scale_amount_max = 3.0
+color = Color(0.62, 0.34, 0.22, 1)
 
 [node name="Shape" type="CollisionShape2D" parent="." unique_id=323873678]
-shape = SubResource("RectangleShape2D_3ucvb")
+shape = SubResource("CircleShape2D_ore")
 
 [node name="AmountLabel" type="Label" parent="." unique_id=920572572]
+offset_left = -40.0
+offset_top = -52.0
 offset_right = 40.0
-offset_bottom = 23.0
-offset_transform_position = Vector2(-16, -34)
+offset_bottom = -34.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
 text = "200"
+horizontal_alignment = 1

@@ -6,45 +6,87 @@
 [ext_resource type="PackedScene" uid="uid://cjmviden6vp81" path="res://scenes/props/comedouro.tscn" id="2_uaf1y"]
 [ext_resource type="PackedScene" uid="uid://jc5mskwsjdq5" path="res://scenes/props/mineral_node.tscn" id="5_j7lav"]
 [ext_resource type="PackedScene" uid="uid://h3b62xw5yax3" path="res://scenes/props/armazem.tscn" id="6_g38uy"]
+[ext_resource type="Script" path="res://scripts/core/environment.gd" id="7_env"]
+[ext_resource type="Script" path="res://scripts/core/hud.gd" id="8_hud"]
+[ext_resource type="Texture2D" path="res://assets/game/floor_cave.png" id="9_floor"]
+[ext_resource type="Texture2D" path="res://assets/game/wall_rock.png" id="10_wall"]
+[ext_resource type="Texture2D" path="res://assets/game/boulder_0.png" id="11_b0"]
+[ext_resource type="Texture2D" path="res://assets/game/boulder_1.png" id="12_b1"]
+[ext_resource type="Texture2D" path="res://assets/game/boulder_2.png" id="13_b2"]
+[ext_resource type="Texture2D" path="res://assets/game/boulder_3.png" id="14_b3"]
+[ext_resource type="Texture2D" path="res://assets/game/boulder_4.png" id="15_b4"]
+[ext_resource type="Texture2D" path="res://assets/game/pebble_0.png" id="16_p0"]
+[ext_resource type="Texture2D" path="res://assets/game/pebble_1.png" id="17_p1"]
+[ext_resource type="Texture2D" path="res://assets/game/pebble_2.png" id="18_p2"]
+[ext_resource type="Texture2D" path="res://assets/game/pebble_3.png" id="19_p3"]
+[ext_resource type="Texture2D" path="res://assets/game/crystal_0.png" id="20_c0"]
+[ext_resource type="Texture2D" path="res://assets/game/crystal_1.png" id="21_c1"]
+[ext_resource type="Texture2D" path="res://assets/game/crystal_2.png" id="22_c2"]
+[ext_resource type="Texture2D" path="res://assets/game/crystal_3.png" id="23_c3"]
+[ext_resource type="Texture2D" path="res://assets/game/torch.png" id="24_torch"]
+[ext_resource type="Texture2D" path="res://assets/game/support_beam.png" id="25_support"]
+[ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="26_light"]
+[ext_resource type="Texture2D" path="res://assets/game/ore_chunk.png" id="27_chunk"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
 
-[node name="Comedouro" parent="." unique_id=1804145103 instance=ExtResource("2_uaf1y")]
-position = Vector2(200, 0)
+[node name="Ambient" type="CanvasModulate" parent="."]
+color = Color(0.52, 0.49, 0.58, 1)
+
+[node name="World" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Environment" type="Node2D" parent="World"]
+y_sort_enabled = true
+script = ExtResource("7_env")
+floor_texture = ExtResource("9_floor")
+wall_texture = ExtResource("10_wall")
+boulder_textures = Array[Texture2D]([ExtResource("11_b0"), ExtResource("12_b1"), ExtResource("13_b2"), ExtResource("14_b3"), ExtResource("15_b4")])
+pebble_textures = Array[Texture2D]([ExtResource("16_p0"), ExtResource("17_p1"), ExtResource("18_p2"), ExtResource("19_p3")])
+crystal_textures = Array[Texture2D]([ExtResource("20_c0"), ExtResource("21_c1"), ExtResource("22_c2"), ExtResource("23_c3")])
+torch_texture = ExtResource("24_torch")
+support_texture = ExtResource("25_support")
+light_texture = ExtResource("26_light")
+
+[node name="Armazem" parent="World" unique_id=758176732 instance=ExtResource("6_g38uy")]
+position = Vector2(-30, 40)
+
+[node name="Comedouro" parent="World" unique_id=1804145103 instance=ExtResource("2_uaf1y")]
+position = Vector2(170, 70)
+
+[node name="MineralNode" parent="World" unique_id=1887962547 instance=ExtResource("5_j7lav")]
+position = Vector2(-360, -190)
+
+[node name="MineralNode2" parent="World" instance=ExtResource("5_j7lav")]
+position = Vector2(-470, 170)
+
+[node name="MineralNode3" parent="World" instance=ExtResource("5_j7lav")]
+position = Vector2(320, -220)
+
+[node name="MineralNode4" parent="World" instance=ExtResource("5_j7lav")]
+position = Vector2(500, 200)
+
+[node name="MineralNode5" parent="World" instance=ExtResource("5_j7lav")]
+position = Vector2(-20, -310)
+ore_total = 350.0
+
+[node name="MineralNode6" parent="World" instance=ExtResource("5_j7lav")]
+position = Vector2(110, 320)
+ore_total = 120.0
+
+[node name="Ipezinho" parent="World" unique_id=1756047734 instance=ExtResource("2_oekm8")]
+position = Vector2(0, -60)
+
+[node name="Ipezinho2" parent="World" unique_id=1911002234 instance=ExtResource("2_oekm8")]
+position = Vector2(50, -50)
+
+[node name="Ipezinho3" parent="World" unique_id=1911002235 instance=ExtResource("2_oekm8")]
+position = Vector2(-50, -50)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=768909553]
 script = ExtResource("1_llaio")
 
-[node name="Ipezinho" parent="." unique_id=1756047734 instance=ExtResource("2_oekm8")]
-
-[node name="MineralNode" parent="." unique_id=1887962547 instance=ExtResource("5_j7lav")]
-position = Vector2(-200, -100)
-
-[node name="Armazem" parent="." unique_id=758176732 instance=ExtResource("6_g38uy")]
-position = Vector2(-200, 100)
-
-[node name="Ipezinho2" parent="." unique_id=1911002234 instance=ExtResource("2_oekm8")]
-position = Vector2(60, 0)
-
-[node name="Ipezinho3" parent="." unique_id=1911002235 instance=ExtResource("2_oekm8")]
-position = Vector2(-60, 0)
-
 [node name="HUD" type="CanvasLayer" parent="."]
-
-[node name="Panel" type="PanelContainer" parent="HUD"]
-offset_left = 12.0
-offset_top = 12.0
-offset_right = 280.0
-offset_bottom = 170.0
-
-[node name="VBox" type="VBoxContainer" parent="HUD/Panel"]
-layout_mode = 2
-
-[node name="StorageLabel" type="Label" parent="HUD/Panel/VBox"]
-layout_mode = 2
-text = "Minério armazenado: 0"
-
-[node name="WorkersLabel" type="Label" parent="HUD/Panel/VBox"]
-layout_mode = 2
-text = ""
+script = ExtResource("8_hud")
+ore_icon = ExtResource("27_chunk")
