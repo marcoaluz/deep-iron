@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b8t1t7kb4px58" path="res://scripts/props/comedouro.gd" id="1_bsr0i"]
 [ext_resource type="Texture2D" path="res://assets/game/comedouro.png" id="2_sprite"]
+[ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="3_shadow"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_food"]
 radius = 46.0
@@ -14,6 +15,12 @@ slot_arc_deg = 150.0
 obstacle_size = Vector2(28, 7)
 obstacle_offset = Vector2(0, -1)
 obstacle_is_rect = true
+
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -4
+position = Vector2(3, 7)
+scale = Vector2(2.8, 1.6)
+texture = ExtResource("3_shadow")
 
 [node name="Visual" type="Sprite2D" parent="." unique_id=1522328408]
 scale = Vector2(2, 2)

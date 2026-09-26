@@ -33,6 +33,8 @@ signal navigation_ready
 @export var crystal_textures: Array[Texture2D] = []
 @export var torch_texture: Texture2D
 @export var support_texture: Texture2D
+## Sombra projetada no chão (elipse com borda em xadrez) posta sob pedras, cristais, tochas e escoras.
+@export var shadow_texture: Texture2D
 
 @export_group("Navegação")
 ## Raio usado pra afastar o caminho das paredes/obstáculos (≈ raio do ipezinho).
@@ -44,8 +46,8 @@ signal navigation_ready
 
 @export_group("Luz")
 @export var light_texture: Texture2D
-@export var torch_light_color: Color = Color(1.0, 0.68, 0.34)
-@export var torch_light_energy: float = 1.1
+@export var torch_light_color: Color = Color(1.0, 0.6, 0.26)
+@export var torch_light_energy: float = 1.25
 @export var torch_light_scale: float = 1.4
 @export var crystal_light_color: Color = Color(0.45, 0.75, 1.0)
 @export var crystal_light_energy: float = 0.7
@@ -184,6 +186,7 @@ func _build_edges() -> void:
 		var sprite := _deco_sprite(boulder_textures[_rng.randi() % boulder_textures.size()], p + jitter)
 		sprite.scale = Vector2.ONE * pixel_scale * k
 		sprite.flip_h = _rng.randf() < 0.5
+		_add_shadow(sprite, 1.2)
 		# sem obstáculo individual: nav_edge_inset já mantém todo mundo longe da borda
 
 	# escoras de madeira ao longo da parede de cima, como entradas de túnel
@@ -191,7 +194,7 @@ func _build_edges() -> void:
 		var sx := r.position.x + 140.0
 		while sx < r.end.x - 100.0:
 			var pos := Vector2(sx + _rng.randf_range(-30, 30), r.position.y + 18.0)
-			_deco_sprite(support_texture, pos)
+			_add_shadow(_deco_sprite(support_texture, pos), 1.1)
 			_placed.append(pos)
 			sx += _rng.randf_range(260.0, 380.0)
 
@@ -240,6 +243,7 @@ func _add_boulder(tex: Texture2D, p: Vector2) -> void:
 	var k := _rng.randf_range(0.8, 1.3)
 	s.scale = Vector2.ONE * pixel_scale * k
 	s.flip_h = _rng.randf() < 0.5
+	_add_shadow(s, 1.2)
 	_add_boulder_obstacle(p, pixel_scale * k)
 
 
@@ -248,6 +252,7 @@ func _add_crystal(tex: Texture2D, p: Vector2) -> void:
 	var k := _rng.randf_range(1.0, 1.4)  # cristais já são 32px
 	s.scale = Vector2.ONE * k
 	s.flip_h = _rng.randf() < 0.5
+	_add_shadow(s, 0.9)
 	_add_obstacle(p + Vector2(0, -3.0 * k), Vector2(tex.get_width() * 0.4 * k, 4.0 * k))
 	if light_texture:
 		var light := PointLight2D.new()
@@ -262,6 +267,7 @@ func _add_crystal(tex: Texture2D, p: Vector2) -> void:
 
 func _add_torch(tex: Texture2D, p: Vector2) -> void:
 	var s := _deco_sprite(tex, p)
+	_add_shadow(s, 1.4)
 	_add_obstacle(p + Vector2(0, -2), Vector2(5, 3))
 	if light_texture:
 		var light := PointLight2D.new()
@@ -273,6 +279,20 @@ func _add_torch(tex: Texture2D, p: Vector2) -> void:
 		light.add_to_group("cullable_lights")
 		s.add_child(light)
 		_torch_lights.append(light)
+
+
+## Sombra no pé de uma decoração, um pouco deslocada pra baixo/direita (sombra "longa").
+## `width_factor` é a largura da sombra em relação à largura do sprite.
+func _add_shadow(s: Sprite2D, width_factor: float) -> void:
+	if shadow_texture == null:
+		return
+	var shadow := Sprite2D.new()
+	shadow.texture = shadow_texture
+	shadow.z_index = -4  # acima do chão e das pedrinhas, abaixo de tudo que fica em pé
+	var k := s.texture.get_width() * width_factor / shadow_texture.get_width()
+	shadow.scale = Vector2(k, k * 0.8)
+	shadow.position = Vector2(s.texture.get_width() * 0.08, 0.5)
+	s.add_child(shadow)
 
 
 ## Sprite com a origem no "pé" (base da imagem), pro y-sort funcionar direito.

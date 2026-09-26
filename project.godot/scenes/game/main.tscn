@@ -29,12 +29,13 @@
 [ext_resource type="Texture2D" path="res://assets/game/ore_chunk.png" id="27_chunk"]
 [ext_resource type="Script" path="res://scripts/core/economy.gd" id="28_eco"]
 [ext_resource type="Texture2D" path="res://assets/game/coin.png" id="29_coin"]
+[ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="30_shadow"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
 
 [node name="Ambient" type="CanvasModulate" parent="."]
-color = Color(0.52, 0.49, 0.58, 1)
+color = Color(0.4, 0.42, 0.54, 1)
 
 [node name="World" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -50,6 +51,7 @@ crystal_textures = Array[Texture2D]([ExtResource("20_c0"), ExtResource("21_c1"),
 torch_texture = ExtResource("24_torch")
 support_texture = ExtResource("25_support")
 light_texture = ExtResource("26_light")
+shadow_texture = ExtResource("30_shadow")
 
 [node name="Armazem" parent="World" unique_id=758176732 instance=ExtResource("6_g38uy")]
 position = Vector2(-30, 40)

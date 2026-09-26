@@ -35,8 +35,8 @@ texture = ExtResource("4_chunk")
 
 [node name="HeadLamp" type="PointLight2D" parent="." unique_id=907998627]
 position = Vector2(0, -30)
-color = Color(1, 0.94, 0.78, 1)
-energy = 0.55
+color = Color(1, 0.82, 0.48, 1)
+energy = 0.75
 texture = ExtResource("5_light")
 texture_scale = 0.45
 

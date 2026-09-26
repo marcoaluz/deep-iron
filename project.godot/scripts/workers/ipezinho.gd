@@ -397,6 +397,6 @@ func set_selected(is_selected: bool) -> void:
 func _draw() -> void:
 	# sombra + anel de seleção (elipses no pé do personagem)
 	draw_set_transform(Vector2(0, 0), 0.0, Vector2(1.0, 0.45))
-	draw_circle(Vector2.ZERO, 11.0, Color(0, 0, 0, 0.35))
+	draw_circle(Vector2(1.5, 0.5), 12.0, Color(0.02, 0.02, 0.05, 0.5))
 	if selected:
 		draw_arc(Vector2.ZERO, 17.0, 0.0, TAU, 32, Color(1.0, 0.84, 0.25), 2.5)
