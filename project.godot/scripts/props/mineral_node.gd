@@ -6,6 +6,7 @@ extends "res://scripts/props/station.gd"
 ## Oficina fabricar a ferramenta certa.
 
 const Ores := preload("res://scripts/core/ores.gd")
+const SaveUtil := preload("res://scripts/core/save_util.gd")
 
 signal depleted
 signal replenished
@@ -13,10 +14,11 @@ signal replenished
 @export_group("Mineração")
 ## Tipo de minério desta jazida: "ferro", "cobre" ou "carvao".
 @export_enum("ferro", "cobre", "carvao") var ore_type: String = "ferro"
-@export var MINE_RATE: float = 4.0
+## Minério tirado por segundo por ipezinho (ritmo: era 4.0).
+@export var MINE_RATE: float = 3.0
 @export var ore_total: float = 200.0
 ## Minério regenerado por segundo (0 = não regenera).
-@export var regen_rate: float = 0.6
+@export var regen_rate: float = 0.45
 ## Segundos "morta" depois de esgotar, antes de começar a regenerar.
 @export var depleted_cooldown: float = 20.0
 ## Abaixo disso a jazida não atrai novos ipezinhos (quem já está minerando continua).
@@ -77,13 +79,13 @@ func get_value_weight() -> float:
 	return eco.price_of(ore_type) / maxf(eco.price_of("ferro"), 0.01)
 
 
-## Chamado pela Oficina quando uma ferramenta fica pronta.
-func on_unlock_changed() -> void:
+## Chamado pela Oficina quando uma ferramenta fica pronta (animate = false ao carregar save).
+func on_unlock_changed(animate: bool = true) -> void:
 	var oficina := get_tree().get_first_node_in_group("oficina")
 	var was := _unlocked
 	# sem Oficina no mapa, nada fica bloqueado
 	_unlocked = oficina == null or oficina.is_ore_unlocked(ore_type)
-	if _unlocked and not was:
+	if _unlocked and not was and animate:
 		var pop := create_tween()
 		_visual.scale = _base_scale * 1.25
 		pop.tween_property(_visual, "scale", _base_scale, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -147,3 +149,23 @@ func _update_visual() -> void:
 		_visual.modulate = Color.WHITE
 		_label.text = str(int(ore_remaining))
 		_label.modulate = Color(1, 1, 1, 0.9) if is_usable() else Color(1, 0.8, 0.4)
+
+
+# ------------------------------------------------------------ save/load (SaveManager)
+func get_save_data() -> Dictionary:
+	return {
+		"ore_remaining": ore_remaining,
+		"cooldown": _cooldown,
+		"variant": textures.find(_visual.texture),
+		"flip": _visual.flip_h,
+	}
+
+
+func load_save_data(d: Dictionary) -> void:
+	ore_remaining = clampf(SaveUtil.num(d, "ore_remaining", ore_remaining), 0.0, ore_total)
+	_cooldown = maxf(SaveUtil.num(d, "cooldown", 0.0), 0.0)
+	var variant := SaveUtil.integer(d, "variant", -1)
+	if variant >= 0 and variant < textures.size():
+		_visual.texture = textures[variant]
+	_visual.flip_h = SaveUtil.boolean(d, "flip", _visual.flip_h)
+	on_unlock_changed(false)

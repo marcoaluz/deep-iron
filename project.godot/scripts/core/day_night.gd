@@ -15,6 +15,8 @@ extends Node
 signal phase_changed(is_night: bool)
 signal day_started(day: int)
 
+const SaveUtil := preload("res://scripts/core/save_util.gd")
+
 @export_group("Duração (segundos reais)")
 @export var day_duration: float = 180.0
 @export var night_duration: float = 60.0
@@ -114,3 +116,15 @@ func _update_ambient() -> void:
 		var t := 1.0 - left / transition_time  # 0 -> 1 ao longo da transição
 		c = from.lerp(twilight_color, t * 2.0) if t < 0.5 else twilight_color.lerp(to, t * 2.0 - 1.0)
 	_ambient.color = c
+
+
+# ------------------------------------------------------------ save/load (SaveManager)
+func get_save_data() -> Dictionary:
+	return {"day": day, "time": time}
+
+
+func load_save_data(d: Dictionary) -> void:
+	day = maxi(SaveUtil.integer(d, "day", day), 1)
+	time = clampf(SaveUtil.num(d, "time", time), 0.0, cycle_length() - 0.01)
+	_night = time >= day_duration  # sem anunciar: os ipezinhos decidem sozinhos no próximo tick
+	_update_ambient()

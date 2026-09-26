@@ -51,6 +51,7 @@ var _sell_button: Button
 var _auto_sell_check: CheckBox
 var _recruit_button: Button
 var _workers_count_label: Label
+var _workers_title: Label
 var _rows_scroll: ScrollContainer
 var _rows_box: VBoxContainer
 var _last_credits: float = -1.0
@@ -72,6 +73,11 @@ func _ready() -> void:
 			show_banner("ESCAVADEIRA CONCLUÍDA!",
 				"Conquista: Deep Iron — a vila montou a grande escavadeira."))
 	_build()
+	SaveManager.saved.connect(func(reason: String):
+		show_toast("Jogo salvo (%s)" % reason))
+	SaveManager.save_failed.connect(func(msg: String):
+		show_toast("Falha ao salvar: %s" % msg, COLOR_HUNGER_BAD))
+	SaveManager.loaded.connect(func(): show_toast("Save carregado"))
 	if _main.has_signal("selection_changed"):
 		_main.selection_changed.connect(func(_u): _refresh())
 
@@ -150,9 +156,9 @@ func _build() -> void:
 	vbox.add_child(HSeparator.new())
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var workers_title := _label("IPEZINHOS", 12, COLOR_DIM)
-	workers_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(workers_title)
+	_workers_title = _label("IPEZINHOS", 12, COLOR_DIM)
+	_workers_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(_workers_title)
 	_workers_count_label = _label("", 12, COLOR_DIM)
 	header.add_child(_workers_count_label)
 
@@ -166,10 +172,10 @@ func _build() -> void:
 
 	# dica de controles no canto inferior esquerdo
 	var hint := _label(
-		"Clique: selecionar / mover   •   Botão dir. / Esc: soltar   •   Tab: próximo   •   F: seguir\n"
+		"Clique: selecionar   •   Arrastar: selecionar vários   •   Shift+clique: somar/tirar   •   Botão dir.: mover / minerar (jazida)   •   Esc: soltar   •   Tab: próximo   •   F: seguir\n"
 		+ "Roda: zoom   •   Botão do meio / WASD / setas: mover câmera   •   Home: centralizar\n"
 		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste)\n"
-		+ "U: Centro da Vila   •   E: Escavadeira   •   O: Oficina   •   ou clique no prédio",
+		+ "U: Centro da Vila   •   E: Escavadeira   •   O: Oficina   •   ou clique no prédio   •   F5: salvar   •   F9: carregar",
 		12, Color(0.85, 0.8, 0.72, 0.75))
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	hint.grow_vertical = Control.GROW_DIRECTION_BEGIN
@@ -278,6 +284,23 @@ func toggle_panel(id: String) -> void:
 		open_panel(id)
 
 
+## Aviso curto no canto inferior direito (ex.: "Jogo salvo").
+func show_toast(text: String, color: Color = COLOR_TITLE) -> void:
+	var l := _label(text, 14, color)
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	l.add_theme_constant_override("outline_size", 4)
+	l.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	l.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	l.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	l.offset_right = -16.0
+	l.offset_bottom = -12.0
+	add_child(l)
+	var tween := l.create_tween()
+	tween.tween_interval(2.0)
+	tween.tween_property(l, "modulate:a", 0.0, 0.8)
+	tween.tween_callback(l.queue_free)
+
+
 ## Faixa de conquista no topo da tela (some sozinha).
 func show_banner(title: String, subtitle: String) -> void:
 	var panel := PanelContainer.new()
@@ -368,6 +391,9 @@ func _make_row(worker: Node) -> Dictionary:
 
 func _on_row_input(event: InputEvent, worker: Node2D) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.shift_pressed:
+			_main.toggle_selected(worker)  # Shift na lista também soma/tira do grupo
+			return
 		_main.select(worker)
 		var cam := _main.get_node_or_null("Camera2D")
 		if cam:
@@ -419,7 +445,9 @@ func _refresh() -> void:
 	var max_h := clampf(room, 80.0, worker_list_max_height)
 	_rows_scroll.custom_minimum_size.y = minf(_rows_box.get_combined_minimum_size().y, max_h)
 
-	var selected = _main.get("selected")
+	var picked: int = _main.selection.size()
+	_workers_title.text = "IPEZINHOS  —  %d selecionados" % picked if picked > 1 else "IPEZINHOS"
+	_workers_title.add_theme_color_override("font_color", COLOR_TITLE if picked > 1 else COLOR_DIM)
 	for w in workers:
 		var row: Dictionary = _rows[w]
 		var hunger_ratio: float = w.hunger / w.hunger_max
@@ -442,7 +470,7 @@ func _refresh() -> void:
 		elif w.injured:
 			state_color = COLOR_INJURED
 		row.state.add_theme_color_override("font_color", state_color)
-		row.panel.add_theme_stylebox_override("panel", _style_row_selected if w == selected else _style_row)
+		row.panel.add_theme_stylebox_override("panel", _style_row_selected if _main.is_selected(w) else _style_row)
 
 
 ## "ferro 120 • cobre 30 • carvão 0" — só mostra tipos já liberados ou com estoque.

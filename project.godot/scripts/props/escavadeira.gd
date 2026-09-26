@@ -15,6 +15,7 @@ signal part_started(id: String)
 signal part_installed(id: String)
 signal completed
 
+const SaveUtil := preload("res://scripts/core/save_util.gd")
 const PART_IDS := ["estrutura", "motor", "hidraulica", "cabine", "broca"]
 const PART_NAMES := {
 	"estrutura": "Estrutura",
@@ -36,11 +37,11 @@ const GHOST_COLOR := Color(0.75, 1.0, 1.5, 0.4)
 @export_group("Peças (na ordem de PART_IDS)")
 ## Custo de cada peça: x = créditos, y = minério do armazém, z = segundos de fabricação.
 @export var part_costs: Array[Vector3i] = [
-	Vector3i(400, 150, 30),   # estrutura
-	Vector3i(700, 250, 40),   # motor
-	Vector3i(600, 300, 35),   # hidráulica
-	Vector3i(500, 200, 30),   # cabine
-	Vector3i(1200, 500, 60),  # broca
+	Vector3i(500, 190, 45),   # estrutura
+	Vector3i(875, 310, 60),   # motor
+	Vector3i(750, 375, 50),   # hidráulica
+	Vector3i(625, 250, 45),   # cabine
+	Vector3i(1500, 625, 90),  # broca
 ]
 ## Estágio mínimo da vila pra fabricar cada peça.
 @export var part_min_stage: Array[int] = [2, 3, 3, 3, 4]
@@ -251,3 +252,21 @@ func _popup(text: String, color: Color) -> void:
 	tween.tween_property(popup, "position:y", popup.position.y - 30.0, 1.8).set_ease(Tween.EASE_OUT)
 	tween.tween_property(popup, "modulate:a", 0.0, 1.0).set_delay(1.0)
 	tween.chain().tween_callback(popup.queue_free)
+
+
+# ------------------------------------------------------------ save/load (SaveManager)
+func get_save_data() -> Dictionary:
+	return {"installed": installed.duplicate(), "fabricating": fabricating, "fab_left": fab_left}
+
+
+## Carregar uma escavadeira pronta NÃO repete a fanfarra nem o banner de conquista.
+func load_save_data(d: Dictionary) -> void:
+	var saved := SaveUtil.dict(d, "installed")
+	for id in PART_IDS:
+		installed[id] = SaveUtil.boolean(saved, id, false)
+	fabricating = SaveUtil.text(d, "fabricating", "")
+	if fabricating not in PART_IDS or installed[fabricating]:
+		fabricating = ""
+	fab_left = maxf(SaveUtil.num(d, "fab_left", 0.0), 0.0) if fabricating != "" else 0.0
+	complete = installed_count() == PART_IDS.size()
+	_update_visual()

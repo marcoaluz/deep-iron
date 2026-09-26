@@ -14,6 +14,7 @@ const STATE_LABELS := {
 ## Distância da porta/cama a partir da qual o ipezinho "chega" em casa.
 const REST_REACH := 12.0
 const Ores := preload("res://scripts/core/ores.gd")
+const SaveUtil := preload("res://scripts/core/save_util.gd")
 const STEEL_PICKAXE := preload("res://assets/game/pickaxe_aco.png")
 const STATE_GROUP := {
 	"eating": "comedouros",
@@ -36,7 +37,8 @@ const STATE_GROUP := {
 
 @export_group("Fome")
 @export var hunger_max: float = 100.0
-@export var hunger_decay: float = 0.7
+## Fome gasta por segundo (ritmo: era 0.7).
+@export var hunger_decay: float = 0.8
 @export var hunger_threshold: float = 30.0  # abaixo disso, prioridade vira comer
 ## Come até atingir essa fração da fome máxima.
 @export_range(0.5, 1.0) var eat_until_ratio: float = 0.95
@@ -50,20 +52,23 @@ const STATE_GROUP := {
 @export_group("Acidentes")
 ## Chance de se machucar a cada ciclo de mineração (0.04 = 4%).
 @export_range(0.0, 1.0) var injury_chance: float = 0.04
-## Minério extraído que conta como um "ciclo de mineração" (20 = uma carga cheia).
-@export var mining_cycle_amount: float = 20.0
+## Minério extraído que conta como um "ciclo de mineração" (16 = uma carga cheia).
+@export var mining_cycle_amount: float = 16.0
 ## Segundos DESCANSANDO em casa até curar (o caminho até lá não conta).
 @export var recovery_time: float = 30.0
 ## Multiplicador de velocidade enquanto está machucado (mancando).
-@export var injured_speed_mult: float = 0.55
+## 0.73 -> pior caso (machucado + carga cheia) ≈ 120 x 0.65 x 0.73 ≈ 57 px/s.
+@export var injured_speed_mult: float = 0.73
 
 @export_group("Carga")
-@export var cargo_capacity: float = 20.0
+## Minério por viagem (ritmo: era 20).
+@export var cargo_capacity: float = 16.0
 
 @export_group("IA")
 @export var auto_mode: bool = true  # true = IA decide sozinha; false = só controle manual por clique
 @export var decision_interval: float = 1.0  # a cada quantos segundos a IA reavalia o que fazer
-## Segundos que a IA espera depois de uma ordem manual (clique) antes de voltar a decidir.
+## Segundos que a IA espera depois de uma ordem manual antes de voltar a decidir.
+## Só começa a contar quando ele CHEGA no destino (a caminhada não gasta esse tempo).
 @export var manual_override_time: float = 6.0
 ## Distância máxima de um passeio aleatório quando está ocioso.
 @export var idle_wander_radius: float = 50.0
@@ -102,6 +107,10 @@ var injured: bool = false
 var _recovery_left: float = 0.0
 var _mined_since_roll: float = 0.0
 var _hub_node: Node = null
+## Preenchido pelo SaveManager antes de entrar na árvore (ipezinho vindo do save).
+var pending_save_data: Dictionary = {}
+var _saved_home: String = ""  # nome da casa salva (a cama volta pro mesmo dono)
+var _saved_home_slot: int = -1
 
 @onready var _hunger_label: Label = $HungerLabel
 @onready var _cargo_label: Label = $CargoLabel
@@ -125,6 +134,9 @@ func _ready() -> void:
 	_agent.max_speed = speed * 1.2
 	_agent.velocity_computed.connect(_on_velocity_computed)
 	_body_base_y = _body.position.y
+	if not pending_save_data.is_empty():
+		load_save_data(pending_save_data)
+		pending_save_data = {}
 	_claim_home.call_deferred()  # as casas precisam estar nos grupos
 	_sync_tool_visual.call_deferred()  # recrutado depois da picareta de aço já nasce com ela
 	_update_hunger_label()
@@ -250,7 +262,7 @@ func _process(delta: float) -> void:
 		_recovery_left -= delta
 		if _recovery_left <= 0.0:
 			_heal()
-	if _manual_timer > 0.0:
+	if _manual_timer > 0.0 and not (_ai_state == "manual" and _moving):
 		_manual_timer -= delta
 
 	if auto_mode and _manual_timer <= 0.0 and not (_ai_state == "manual" and _moving):
@@ -411,17 +423,33 @@ func has_home() -> bool:
 	return _home != null and is_instance_valid(_home)
 
 
-## Pega a cama livre mais próxima (se ainda não tem casa).
+## Pega uma cama (se ainda não tem casa). Vindo do save, tenta a mesma cama de antes;
+## senão escolhe a casa com MAIS camas livres (empate: a mais perto), pra espalhar
+## os ipezinhos pela vila em vez de empilhar todo mundo na casa mais próxima.
 func _claim_home() -> void:
 	if has_home():
 		return
+	if _saved_home != "":
+		for casa in get_tree().get_nodes_in_group("casas"):
+			if String(casa.name) == _saved_home:
+				var bed: int = casa.claim_specific_bed(self, _saved_home_slot)
+				if bed >= 0:
+					_home = casa
+					_home_slot = bed
+				break
+		_saved_home = ""
+		if has_home():
+			return
 	var best: Node2D = null
+	var best_free := 0
 	var best_dist := INF
 	for casa in get_tree().get_nodes_in_group("casas"):
 		if not casa.has_free_slot_for(self):
 			continue
+		var free: int = casa.free_slot_count()
 		var d := global_position.distance_to(casa.global_position)
-		if d < best_dist:
+		if free > best_free or (free == best_free and d < best_dist):
+			best_free = free
 			best_dist = d
 			best = casa
 	if best:
@@ -674,3 +702,40 @@ func _draw() -> void:
 		draw_circle(Vector2(1.5, 0.5), 12.0, Color(0.02, 0.02, 0.05, 0.5))
 	if selected:
 		draw_arc(Vector2.ZERO, 17.0, 0.0, TAU, 32, Color(1.0, 0.84, 0.25), 2.5)
+
+
+# ------------------------------------------------------------ save/load (SaveManager)
+func get_save_data() -> Dictionary:
+	return {
+		"name": String(name),
+		"position": SaveUtil.vec2_to_array(global_position),
+		"hunger": hunger,
+		"carrying": carrying,
+		"cargo_type": cargo_type,
+		"injured": injured,
+		"recovery_left": _recovery_left,
+		"mined_since_roll": _mined_since_roll,
+		"facing": _facing,
+		"home": String(_home.name) if has_home() else "",
+		"home_slot": _home_slot if has_home() else -1,
+	}
+
+
+## Aplicado no _ready (via pending_save_data). A IA recomeça do zero e decide sozinha.
+func load_save_data(d: Dictionary) -> void:
+	hunger = clampf(SaveUtil.num(d, "hunger", hunger_max), 0.0, hunger_max)
+	carrying = clampf(SaveUtil.num(d, "carrying", 0.0), 0.0, cargo_capacity)
+	var t := SaveUtil.text(d, "cargo_type", "ferro")
+	cargo_type = t if Ores.NAMES.has(t) else "ferro"
+	_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
+	injured = SaveUtil.boolean(d, "injured", false)
+	_recovery_left = maxf(SaveUtil.num(d, "recovery_left", 0.0), 0.0) if injured else 0.0
+	if injured and _recovery_left <= 0.0:
+		_recovery_left = get_recovery_time()
+	_mined_since_roll = maxf(SaveUtil.num(d, "mined_since_roll", 0.0), 0.0)
+	_facing = -1.0 if SaveUtil.num(d, "facing", 1.0) < 0.0 else 1.0
+	_saved_home = SaveUtil.text(d, "home", "")
+	_saved_home_slot = SaveUtil.integer(d, "home_slot", -1)
+	_target = global_position
+	_update_hunger_label()
+	_update_cargo_label()

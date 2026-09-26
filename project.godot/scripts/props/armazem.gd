@@ -2,7 +2,10 @@ extends "res://scripts/props/station.gd"
 
 signal stored_changed(total: float)
 
-@export var DEPOSIT_RATE: float = 10.0
+@export_group("Ritmo")
+## Minério descarregado por segundo por ipezinho (era 10.0).
+@export var DEPOSIT_RATE: float = 8.0
+@export_group("Visual e som")
 ## Quantidade armazenada para cada estágio da pilha de minério (1, 2, 3).
 @export var pile_thresholds: Array[float] = [1.0, 60.0, 200.0]
 ## Intervalo entre os textos flutuantes "+N".
@@ -11,6 +14,7 @@ signal stored_changed(total: float)
 @export var deposit_sound_interval: float = 0.5
 
 const Ores := preload("res://scripts/core/ores.gd")
+const SaveUtil := preload("res://scripts/core/save_util.gd")
 
 ## Soma de todos os tipos (a pilha e o texto usam isso).
 var total_stored: float = 0.0
@@ -122,3 +126,16 @@ func show_popup(text: String, color: Color) -> void:
 	var bump := create_tween()
 	bump.tween_property(_visual, "scale", Vector2(2.1, 1.9), 0.08)
 	bump.tween_property(_visual, "scale", Vector2(2, 2), 0.12)
+
+
+# ------------------------------------------------------------ save/load (SaveManager)
+func get_save_data() -> Dictionary:
+	return {"stock": stock.duplicate(), "lifetime_stored": lifetime_stored}
+
+
+func load_save_data(d: Dictionary) -> void:
+	var saved := SaveUtil.dict(d, "stock")
+	for t in Ores.TYPES:
+		stock[t] = maxf(SaveUtil.num(saved, t, 0.0), 0.0)
+	lifetime_stored = maxf(SaveUtil.num(d, "lifetime_stored", lifetime_stored), 0.0)
+	_recount()

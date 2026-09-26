@@ -18,6 +18,7 @@ extends "res://scripts/props/station.gd"
 signal level_changed(level: int)
 signal upgrade_bought(id: String, new_level: int)
 
+const SaveUtil := preload("res://scripts/core/save_util.gd")
 const STAGE_NAMES := ["Acampamento", "Vilarejo", "Vila", "Vila Mineira", "Cidade Mineira"]
 const UPGRADE_IDS := ["moradias", "enfermaria", "trilhas"]
 const UPGRADE_NAMES := {
@@ -28,22 +29,22 @@ const UPGRADE_NAMES := {
 
 @export_group("Estágios da vila")
 ## Minério coletado no total pra chegar em cada estágio (índice 0 = estágio 1).
-@export var level_ore_required: Array[int] = [0, 300, 1000, 2500, 5000]
+@export var level_ore_required: Array[int] = [0, 375, 1250, 3100, 6250]
 ## Créditos pra expandir pra cada estágio (índice 0 = estágio 1, não usado).
-@export var level_credit_cost: Array[int] = [0, 150, 500, 1200, 2500]
+@export var level_credit_cost: Array[int] = [0, 190, 625, 1500, 3100]
 
 @export_group("Melhoria: Moradias")
 ## Custo de cada nível: x = créditos, y = minério do armazém.
-@export var moradias_costs: Array[Vector2i] = [Vector2i(150, 0), Vector2i(300, 40), Vector2i(600, 120), Vector2i(1000, 250)]
+@export var moradias_costs: Array[Vector2i] = [Vector2i(190, 0), Vector2i(375, 50), Vector2i(750, 150), Vector2i(1250, 310)]
 @export var workers_per_moradia: int = 4
 
 @export_group("Melhoria: Enfermaria")
-@export var enfermaria_costs: Array[Vector2i] = [Vector2i(100, 20), Vector2i(250, 60), Vector2i(500, 150)]
+@export var enfermaria_costs: Array[Vector2i] = [Vector2i(125, 25), Vector2i(310, 75), Vector2i(625, 190)]
 ## Fração do tempo de cura cortada por nível (0.2 = -20% por nível).
 @export_range(0.0, 0.3) var recovery_cut_per_level: float = 0.2
 
 @export_group("Melhoria: Trilhas batidas")
-@export var trilhas_costs: Array[Vector2i] = [Vector2i(120, 20), Vector2i(300, 80), Vector2i(650, 200)]
+@export var trilhas_costs: Array[Vector2i] = [Vector2i(150, 25), Vector2i(375, 100), Vector2i(810, 250)]
 ## Velocidade extra por nível (0.1 = +10% por nível).
 @export var speed_bonus_per_level: float = 0.1
 
@@ -275,3 +276,18 @@ func _popup(text: String, color: Color) -> void:
 	var bump := create_tween()
 	bump.tween_property(_visual, "scale", Vector2(2.1, 1.9), 0.08)
 	bump.tween_property(_visual, "scale", Vector2(2, 2), 0.14)
+
+
+# ------------------------------------------------------------ save/load (SaveManager)
+## O efeito das melhorias NÃO é reaplicado aqui: max_workers vem salvo na
+## economia e as casas construídas vêm salvas em cada casa.
+func get_save_data() -> Dictionary:
+	return {"level": level, "upgrades": upgrades.duplicate()}
+
+
+func load_save_data(d: Dictionary) -> void:
+	level = clampi(SaveUtil.integer(d, "level", level), 1, max_level())
+	var saved := SaveUtil.dict(d, "upgrades")
+	for id in UPGRADE_IDS:
+		upgrades[id] = clampi(SaveUtil.integer(saved, id, upgrades[id]), 0, upgrade_max(id))
+	_update_visual()

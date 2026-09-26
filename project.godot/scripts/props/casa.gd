@@ -11,6 +11,7 @@ extends "res://scripts/props/station.gd"
 
 signal built_changed
 
+const SaveUtil := preload("res://scripts/core/save_util.gd")
 const FRAME_EMPTY := 0
 const FRAME_LIT := 1
 const FRAME_LOT := 2
@@ -56,6 +57,14 @@ func claim_bed(worker: Node2D) -> int:
 	return reserve_slot(worker)
 
 
+## Reserva uma cama específica (ao carregar o save). -1 se estiver ocupada/não existir.
+func claim_specific_bed(worker: Node2D, bed: int) -> int:
+	if not built or bed < 0 or bed >= slot_count or _slot_taken(bed):
+		return -1
+	_slot_owners[bed] = worker
+	return bed
+
+
 func beds_total() -> int:
 	return slot_count if built else 0
 
@@ -95,3 +104,13 @@ func _update_visual() -> void:
 	_sleep_label.modulate = Color.WHITE
 	if occupied:
 		_sleep_label.text = "Zz  %d" % sleeping_count()
+
+
+# ------------------------------------------------------------ save/load (SaveManager)
+func get_save_data() -> Dictionary:
+	return {"built": built}
+
+
+func load_save_data(d: Dictionary) -> void:
+	built = SaveUtil.boolean(d, "built", built)
+	_update_visual()

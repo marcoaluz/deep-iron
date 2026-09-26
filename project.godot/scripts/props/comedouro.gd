@@ -1,6 +1,8 @@
 extends "res://scripts/props/station.gd"
 
+@export_group("Ritmo")
 @export var FEED_RATE: float = 12.0  # quanto restaura de fome por segundo
+@export_group("Som")
 ## Intervalo entre os sons de mastigar enquanto alguém come.
 @export var eat_sound_interval: float = 0.9
 

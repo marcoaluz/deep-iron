@@ -1,14 +1,44 @@
 extends Node2D
+## Cena principal: entrada do jogador (seleção, ordens, atalhos) e início da partida.
+##
+## Seleção (estilo RTS):
+##   clique esquerdo num ipezinho   -> seleciona só ele
+##   clique esquerdo no chão vazio  -> solta a seleção
+##   arrastar com o esquerdo        -> seleciona todos dentro do retângulo
+##   Shift + clique / arrasto       -> soma/tira da seleção atual sem perder os outros
+## Ordens (botão direito, pra todos os selecionados, usando a ordem manual de cada um):
+##   numa jazida  -> todos vão minerar lá, espalhados em volta dela
+##   no chão      -> todos andam pra lá em formação (sem empilhar no mesmo pixel)
 
 signal selection_changed(unit: Node2D)
 
 const SELECT_RADIUS := 22.0
 const MARKER_TIME := 0.6
+## Quanto (px de tela) o mouse precisa andar com o botão apertado pra virar arrasto.
+const DRAG_THRESHOLD := 6.0
+## Distância entre ipezinhos na formação de uma ordem de grupo.
+const FORMATION_SPACING := 18.0
+## Raio (px do mundo) em volta de uma jazida que conta como "clicou na jazida".
+const ORE_CLICK_RADIUS := 30.0
 
-var selected: Node2D = null
+## Ipezinhos selecionados (a ordem importa pro Tab no modo grupo).
+var selection: Array[Node2D] = []
+## Selecionado "principal" (o único, ou o primeiro do grupo): F segue ele.
+var selected: Node2D:
+	get:
+		_prune_selection()
+		return selection[0] if not selection.is_empty() else null
 
 var _marker_pos := Vector2.ZERO
 var _marker_timer := 0.0
+var _lmb_down := false
+var _dragging := false
+var _press_screen := Vector2.ZERO
+var _press_world := Vector2.ZERO
+var _drag_world := Vector2.ZERO  # ponto atual do arrasto (mundo)
+var _additive := false  # Shift segurado no clique/arrasto atual
+var _box_drawer: Node2D
+var _group_focus := 0  # Tab no modo grupo: qual deles a câmera mostra
 
 @onready var _camera: Camera2D = $Camera2D
 @onready var _environment: Node2D = $World/Environment
@@ -18,28 +48,43 @@ var _marker_timer := 0.0
 
 
 func _ready() -> void:
+	add_to_group("game_main")
 	_camera.bounds = _environment.map_rect
+	# retângulo da seleção por arrasto: desenhado por cima de tudo do mundo
+	_box_drawer = Node2D.new()
+	_box_drawer.name = "SelectionBox"
+	_box_drawer.z_index = 50
+	_box_drawer.draw.connect(_draw_box)
+	add_child(_box_drawer)
+	SaveManager.register_game(self)
+	if SaveManager.pending_load:
+		# espera o ambiente montar (1 frame + navegação) e as estruturas entrarem nos grupos
+		await _environment.navigation_ready
+		SaveManager.apply_pending(self)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed:
+	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			var click_pos := get_global_mouse_position()
-			if _find_ipezinho_at(click_pos) == null:
-				for building in get_tree().get_nodes_in_group("clickable"):
-					if building.contains_point(click_pos):
-						_hud.open_panel_for(building)
-						return
-			var clicked_unit := _find_ipezinho_at(click_pos)
-			if clicked_unit:
-				select(clicked_unit)
-			elif selected:
-				var target := click_pos.clamp(_environment.map_rect.position, _environment.map_rect.end)
-				selected.move_to(target)
-				_marker_pos = target
-				_marker_timer = MARKER_TIME
-		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			select(null)
+			if event.pressed:
+				_lmb_down = true
+				_dragging = false
+				_press_screen = event.position
+				_press_world = _to_world(event.position)
+				_drag_world = _press_world
+				_additive = event.shift_pressed
+			elif _lmb_down:
+				_drag_world = _to_world(event.position)
+				_additive = _additive or event.shift_pressed
+				_finish_left_click()
+		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			_give_order(_to_world(event.position))
+	elif event is InputEventMouseMotion and _lmb_down:
+		_drag_world = _to_world(event.position)
+		if not _dragging and event.position.distance_to(_press_screen) > DRAG_THRESHOLD:
+			_dragging = true
+		if _dragging:
+			_box_drawer.queue_redraw()
 	elif event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
 			KEY_TAB:
@@ -64,13 +109,139 @@ func _unhandled_input(event: InputEvent) -> void:
 					_camera.focus_on(worker.global_position)
 			KEY_M:
 				Audio.toggle_music()
+			KEY_F5:
+				SaveManager.save_game("manual")
+			KEY_F9:
+				if SaveManager.has_save():
+					SaveManager.load_game()
+				else:
+					Audio.error()
 			KEY_N:
 				_day_night.skip_phase()
 			KEY_K:
-				if selected:
-					selected.hurt()
+				for unit in selection.duplicate():
+					if is_instance_valid(unit):
+						unit.hurt()
 
 
+# ------------------------------------------------------------ clique / arrasto (botão esquerdo)
+func _finish_left_click() -> void:
+	_lmb_down = false
+	var additive := _additive or Input.is_key_pressed(KEY_SHIFT)
+	if _dragging:
+		_dragging = false
+		_box_drawer.queue_redraw()
+		_box_select(_selection_rect(), additive)
+		return
+
+	var click_pos := _press_world
+	var clicked_unit := _find_ipezinho_at(click_pos)
+	if clicked_unit:
+		if additive:
+			toggle_selected(clicked_unit)
+		else:
+			select(clicked_unit)
+		return
+	if not additive:
+		for building in get_tree().get_nodes_in_group("clickable"):
+			if building.contains_point(click_pos):
+				_hud.open_panel_for(building)
+				return
+		select(null)  # chão vazio: solta todo mundo
+
+
+func _selection_rect() -> Rect2:
+	return Rect2(_press_world, _drag_world - _press_world).abs()
+
+
+## Posição de um evento de mouse (tela) -> mundo, levando em conta câmera e zoom.
+func _to_world(screen_pos: Vector2) -> Vector2:
+	return get_viewport().get_canvas_transform().affine_inverse() * screen_pos
+
+
+func _box_select(rect: Rect2, additive: bool) -> void:
+	var picked: Array[Node2D] = []
+	if additive:
+		picked.assign(selection)
+	for ip in get_tree().get_nodes_in_group("ipezinhos"):
+		# conta o meio do corpo (a origem fica no pé), igual ao clique
+		if rect.has_point(ip.global_position + Vector2(0, -14)) and not picked.has(ip):
+			picked.append(ip)
+	set_selection(picked)
+
+
+func _draw_box() -> void:
+	if not _dragging:
+		return
+	var r := _selection_rect()
+	var w := 1.5 / _camera.zoom.x  # linha com a mesma espessura em qualquer zoom
+	_box_drawer.draw_rect(r, Color(1.0, 0.84, 0.25, 0.12), true)
+	_box_drawer.draw_rect(r, Color(1.0, 0.84, 0.25, 0.9), false, w)
+
+
+# ------------------------------------------------------------ ordens (botão direito)
+func _give_order(pos: Vector2) -> void:
+	_prune_selection()
+	if selection.is_empty():
+		return
+	var ore := _find_ore_at(pos)
+	if ore:
+		_order_mine(ore)
+	else:
+		_order_move(pos.clamp(_environment.map_rect.position, _environment.map_rect.end))
+
+
+## Todos vão pra jazida, cada um num ponto diferente da elipse em volta dela
+## (dentro da área de trabalho: quem para ali minera enquanto dura a ordem manual).
+func _order_mine(ore: Node2D) -> void:
+	var n := selection.size()
+	var radius: Vector2 = ore.slot_radius
+	# começa pelo lado de onde o grupo vem, pra ninguém dar a volta na pedra à toa
+	var center := Vector2.ZERO
+	for unit in selection:
+		center += unit.global_position
+	var start := (center / n - ore.global_position).angle()
+	var per_ring := 8
+	for i in n:
+		var ring := int(float(i) / per_ring)
+		var count := mini(per_ring, n - ring * per_ring)
+		var a := start + TAU * float(i % per_ring) / float(count) + ring * 0.4
+		var r := radius * (1.0 + ring * 0.35)
+		selection[i].move_to(ore.global_position + Vector2(cos(a) * r.x, sin(a) * r.y))
+	_show_marker(ore.global_position)
+
+
+## Todos andam pro ponto em formação espiral: o mais perto do destino fica no centro.
+func _order_move(target: Vector2) -> void:
+	var units := selection.duplicate()
+	units.sort_custom(func(a, b): return a.global_position.distance_squared_to(target) < b.global_position.distance_squared_to(target))
+	for i in units.size():
+		var offset := Vector2.ZERO
+		if i > 0:
+			# espiral de "girassol": pontos bem distribuídos sem grade
+			offset = Vector2.RIGHT.rotated(i * 2.39996) * FORMATION_SPACING * sqrt(float(i))
+		var p: Vector2 = (target + offset).clamp(_environment.map_rect.position, _environment.map_rect.end)
+		units[i].move_to(p)
+	_show_marker(target)
+
+
+func _find_ore_at(pos: Vector2) -> Node2D:
+	var best: Node2D = null
+	var best_dist := ORE_CLICK_RADIUS
+	for node in get_tree().get_nodes_in_group("minerios"):
+		var d: float = (node.global_position + Vector2(0, -10)).distance_to(pos)
+		if d <= best_dist:
+			best_dist = d
+			best = node
+	return best
+
+
+func _show_marker(pos: Vector2) -> void:
+	_marker_pos = pos
+	_marker_timer = MARKER_TIME
+
+
+# ------------------------------------------------------------ seleção
 func _find_ipezinho_at(pos: Vector2) -> Node2D:
 	var best: Node2D = null
 	var best_dist := SELECT_RADIUS
@@ -83,18 +254,54 @@ func _find_ipezinho_at(pos: Vector2) -> Node2D:
 	return best
 
 
+## Seleciona só este (null = solta todo mundo). Mantém a API antiga.
 func select(unit: Node2D) -> void:
-	if selected and is_instance_valid(selected):
-		selected.set_selected(false)
-	if unit == null and _camera.follow_target == selected:
+	set_selection([unit] if unit else [])
+
+
+func set_selection(units: Array) -> void:
+	for unit in selection:
+		if is_instance_valid(unit) and not units.has(unit):
+			unit.set_selected(false)
+	selection.clear()
+	for unit in units:
+		if is_instance_valid(unit) and not selection.has(unit):
+			selection.append(unit)
+			unit.set_selected(true)
+	if _camera.follow_target and not selection.has(_camera.follow_target):
 		_camera.follow_target = null
-	selected = unit
-	if selected:
-		selected.set_selected(true)
+	_group_focus = 0
 	selection_changed.emit(selected)
 
 
+## Shift+clique: tira se já estava, põe se não estava.
+func toggle_selected(unit: Node2D) -> void:
+	var units: Array = selection.duplicate()
+	if units.has(unit):
+		units.erase(unit)
+	else:
+		units.append(unit)
+	set_selection(units)
+
+
+func is_selected(unit: Node) -> bool:
+	return selection.has(unit)
+
+
+func _prune_selection() -> void:
+	for i in range(selection.size() - 1, -1, -1):
+		if not is_instance_valid(selection[i]) or not selection[i].is_inside_tree():
+			selection.remove_at(i)
+
+
+## Tab: sem grupo, seleciona o próximo ipezinho (como sempre foi);
+## com grupo, só leva a câmera de um selecionado pro outro, sem desfazer o grupo.
 func _select_next() -> void:
+	_prune_selection()
+	if selection.size() > 1:
+		_group_focus = (_group_focus + 1) % selection.size()
+		_camera.focus_on(selection[_group_focus].global_position)
+		return
 	var workers := get_tree().get_nodes_in_group("ipezinhos")
 	if workers.is_empty():
 		return
@@ -108,6 +315,11 @@ func _process(delta: float) -> void:
 	if _marker_timer > 0.0:
 		_marker_timer -= delta
 		queue_redraw()
+	if _dragging:
+		_box_drawer.queue_redraw()  # acompanha o mouse mesmo passando por cima do HUD
+	# soltou o botão fora do jogo (em cima do HUD, fora da janela): fecha o clique/arrasto
+	if _lmb_down and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		_finish_left_click()
 
 
 func _draw() -> void:

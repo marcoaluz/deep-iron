@@ -5,6 +5,7 @@ extends Node
 signal credits_changed(credits: float)
 
 const Ores := preload("res://scripts/core/ores.gd")
+const SaveUtil := preload("res://scripts/core/save_util.gd")
 signal ore_sold(amount: float, earned: float)
 signal worker_recruited(worker: Node2D, cost: int)
 
@@ -22,7 +23,7 @@ signal worker_recruited(worker: Node2D, cost: int)
 
 @export_group("Recrutamento")
 @export var worker_scene: PackedScene
-@export var recruit_base_cost: float = 120.0
+@export var recruit_base_cost: float = 150.0
 ## Multiplica o custo a cada ipezinho recrutado (1.5 = +50%).
 @export var recruit_cost_growth: float = 1.5
 ## Limite inicial; a melhoria "Moradias" do Centro da Vila aumenta.
@@ -179,3 +180,23 @@ func _next_worker_name() -> String:
 	while parent and parent.has_node("Ipezinho%d" % n):
 		n += 1
 	return "Ipezinho%d" % n
+
+
+# ------------------------------------------------------------ save/load (SaveManager)
+func get_save_data() -> Dictionary:
+	return {
+		"credits": credits,
+		"recruited_count": recruited_count,
+		"total_earned": total_earned,
+		"max_workers": max_workers,
+		"auto_sell": auto_sell,
+	}
+
+
+func load_save_data(d: Dictionary) -> void:
+	credits = maxf(SaveUtil.num(d, "credits", credits), 0.0)
+	recruited_count = maxi(SaveUtil.integer(d, "recruited_count", recruited_count), 0)
+	total_earned = SaveUtil.num(d, "total_earned", total_earned)
+	max_workers = maxi(SaveUtil.integer(d, "max_workers", max_workers), 1)
+	auto_sell = SaveUtil.boolean(d, "auto_sell", auto_sell)
+	credits_changed.emit(credits)

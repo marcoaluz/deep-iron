@@ -13,6 +13,7 @@ signal tool_started(id: String)
 signal tool_crafted(id: String)
 
 const Ores := preload("res://scripts/core/ores.gd")
+const SaveUtil := preload("res://scripts/core/save_util.gd")
 const TOOL_IDS := ["picareta_aco", "lampiao"]
 const TOOL_NAMES := {
 	"picareta_aco": "Picareta de aço temperado",
@@ -31,8 +32,8 @@ const TOOL_UNLOCKS := {
 @export_group("Ferramentas (na ordem de TOOL_IDS)")
 ## x = créditos, y = quantidade de minério, z = segundos na forja.
 @export var tool_costs: Array[Vector3i] = [
-	Vector3i(250, 120, 20),  # picareta de aço
-	Vector3i(450, 100, 30),  # lampião
+	Vector3i(310, 150, 30),  # picareta de aço
+	Vector3i(560, 125, 45),  # lampião
 ]
 ## Tipo do minério gasto em cada ferramenta.
 @export var tool_ore_types: Array[String] = ["ferro", "cobre"]
@@ -215,3 +216,26 @@ func _popup(text: String, color: Color) -> void:
 	tween.tween_property(popup, "position:y", popup.position.y - 30.0, 1.8).set_ease(Tween.EASE_OUT)
 	tween.tween_property(popup, "modulate:a", 0.0, 1.0).set_delay(1.2)
 	tween.chain().tween_callback(popup.queue_free)
+
+
+# ------------------------------------------------------------ save/load (SaveManager)
+func get_save_data() -> Dictionary:
+	return {"crafted": crafted.duplicate(), "crafting": crafting, "craft_left": craft_left}
+
+
+func load_save_data(d: Dictionary) -> void:
+	var saved := SaveUtil.dict(d, "crafted")
+	for id in TOOL_IDS:
+		crafted[id] = SaveUtil.boolean(saved, id, false)
+	crafting = SaveUtil.text(d, "crafting", "")
+	if crafting not in TOOL_IDS or has_tool(crafting):
+		crafting = ""
+	craft_left = maxf(SaveUtil.num(d, "craft_left", 0.0), 0.0) if crafting != "" else 0.0
+	_update_visual()
+	for node in get_tree().get_nodes_in_group("minerios"):
+		if node.has_method("on_unlock_changed"):
+			node.on_unlock_changed(false)
+	for worker in get_tree().get_nodes_in_group("ipezinhos"):
+		for id in TOOL_IDS:
+			if has_tool(id) and worker.has_method("on_tool_crafted"):
+				worker.on_tool_crafted(id)
