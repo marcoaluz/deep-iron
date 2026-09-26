@@ -24,6 +24,7 @@
 [ext_resource type="Texture2D" path="res://assets/game/crystal_2.png" id="22_c2"]
 [ext_resource type="Texture2D" path="res://assets/game/crystal_3.png" id="23_c3"]
 [ext_resource type="Texture2D" path="res://assets/game/torch.png" id="24_torch"]
+[ext_resource type="Texture2D" path="res://assets/game/torch_unlit.png" id="24_torch_unlit"]
 [ext_resource type="Texture2D" path="res://assets/game/support_beam.png" id="25_support"]
 [ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="26_light"]
 [ext_resource type="Texture2D" path="res://assets/game/ore_chunk.png" id="27_chunk"]
@@ -59,6 +60,7 @@ boulder_textures = Array[Texture2D]([ExtResource("11_b0"), ExtResource("12_b1"),
 pebble_textures = Array[Texture2D]([ExtResource("16_p0"), ExtResource("17_p1"), ExtResource("18_p2"), ExtResource("19_p3")])
 crystal_textures = Array[Texture2D]([ExtResource("20_c0"), ExtResource("21_c1"), ExtResource("22_c2"), ExtResource("23_c3")])
 torch_texture = ExtResource("24_torch")
+torch_unlit_texture = ExtResource("24_torch_unlit")
 support_texture = ExtResource("25_support")
 light_texture = ExtResource("26_light")
 shadow_texture = ExtResource("30_shadow")

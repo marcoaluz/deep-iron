@@ -1633,6 +1633,16 @@ def build_torch():
                 img.putpixel((x, y), TORCH_EMBER)
     save(img, "torch.png")
 
+    # tocha apagada (de dia): mesma moldura, ponta de pano carbonizado no lugar da chama.
+    # No jogo a chama acesa é desenhada POR CIMA desta, com transparência (fade).
+    unlit = ["......"] * 4 + [
+        "..cd..",
+        ".cddc.",
+        "..cc..",
+    ] + rows[7:]
+    pal_unlit = {**pal, "c": STONE_BLACK, "d": WOOD_ROT}
+    save(outline(pad(from_rows(unlit, pal_unlit)), 0.5), "torch_unlit.png")
+
 
 def build_support():
     W, H = 26, 28

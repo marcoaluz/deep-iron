@@ -34,7 +34,10 @@ const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village
 @export var boulder_textures: Array[Texture2D] = []
 @export var pebble_textures: Array[Texture2D] = []
 @export var crystal_textures: Array[Texture2D] = []
+## Tocha acesa (a chama é desenhada por cima da apagada e some de dia).
 @export var torch_texture: Texture2D
+## Tocha apagada (base). Sem ela, a tocha fica sempre com a chama.
+@export var torch_unlit_texture: Texture2D
 @export var support_texture: Texture2D
 ## Sombra projetada no chão (elipse com borda em xadrez) posta sob pedras, cristais, tochas e escoras.
 @export var shadow_texture: Texture2D
@@ -67,6 +70,8 @@ var _rng := RandomNumberGenerator.new()
 var _placed: Array[Vector2] = []
 var _obstacles: Array[PackedVector2Array] = []
 var _torch_lights: Array[PointLight2D] = []
+var _torch_flames: Array[Sprite2D] = []
+var _day_night: Node = null
 var _time: float = 0.0
 var _cull_timer: float = 0.0
 
@@ -86,12 +91,17 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	# tochas acendem/apagam com a escuridão do DayNight (fade suave)
+	var level := _torch_level()
+	for flame in _torch_flames:
+		flame.modulate.a = level
 	for i in _torch_lights.size():
 		var light := _torch_lights[i]
-		if not light.visible:
+		light.enabled = level > 0.005
+		if not light.visible or not light.enabled:
 			continue
 		var f := sin(_time * 9.0 + i * 1.7) * 0.5 + sin(_time * 23.0 + i * 3.1) * 0.5
-		light.energy = torch_light_energy * (1.0 + f * flicker_amount)
+		light.energy = torch_light_energy * level * (1.0 + f * flicker_amount)
 
 	if cull_lights:
 		_cull_timer -= delta
@@ -273,8 +283,23 @@ func _add_crystal(tex: Texture2D, p: Vector2) -> void:
 		s.add_child(light)
 
 
+## 0..1 de quanto as tochas estão acesas (1 se não houver DayNight na cena).
+func _torch_level() -> float:
+	if _day_night == null or not is_instance_valid(_day_night):
+		_day_night = get_tree().get_first_node_in_group("day_night")
+	return _day_night.torch_level() if _day_night else 1.0
+
+
 func _add_torch(tex: Texture2D, p: Vector2) -> void:
-	var s := _deco_sprite(tex, p)
+	# base = tocha apagada; a chama (sprite aceso inteiro) vai por cima e faz o fade
+	var s := _deco_sprite(torch_unlit_texture if torch_unlit_texture else tex, p)
+	s.add_to_group("tochas")
+	if torch_unlit_texture:
+		var flame := Sprite2D.new()
+		flame.texture = tex
+		flame.offset = s.offset
+		s.add_child(flame)
+		_torch_flames.append(flame)
 	_add_shadow(s, 1.4)
 	_add_obstacle(p + Vector2(0, -2), Vector2(5, 3))
 	if light_texture:
