@@ -30,12 +30,17 @@
 [ext_resource type="Script" path="res://scripts/core/economy.gd" id="28_eco"]
 [ext_resource type="Texture2D" path="res://assets/game/coin.png" id="29_coin"]
 [ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="30_shadow"]
+[ext_resource type="PackedScene" path="res://scenes/props/casa.tscn" id="31_casa"]
+[ext_resource type="Script" path="res://scripts/core/day_night.gd" id="32_daynight"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
 
 [node name="Ambient" type="CanvasModulate" parent="."]
 color = Color(0.4, 0.42, 0.54, 1)
+
+[node name="DayNight" type="Node" parent="."]
+script = ExtResource("32_daynight")
 
 [node name="World" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -78,6 +83,15 @@ ore_total = 350.0
 [node name="MineralNode6" parent="World" instance=ExtResource("5_j7lav")]
 position = Vector2(110, 320)
 ore_total = 120.0
+
+[node name="Casa" parent="World" instance=ExtResource("31_casa")]
+position = Vector2(-310, 300)
+
+[node name="Casa2" parent="World" instance=ExtResource("31_casa")]
+position = Vector2(-200, 340)
+
+[node name="Casa3" parent="World" instance=ExtResource("31_casa")]
+position = Vector2(-420, 345)
 
 [node name="Ipezinho" parent="World" unique_id=1756047734 instance=ExtResource("2_oekm8")]
 position = Vector2(0, -60)

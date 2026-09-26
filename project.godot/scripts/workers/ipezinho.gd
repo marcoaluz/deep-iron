@@ -8,7 +8,10 @@ const STATE_LABELS := {
 	"mining": "minerando",
 	"storing": "armazenando",
 	"manual": "ordem manual",
+	"home": "indo pra casa",
 }
+## Distância da porta/cama a partir da qual o ipezinho "chega" em casa.
+const REST_REACH := 12.0
 const STATE_GROUP := {
 	"eating": "comedouros",
 	"mining": "minerios",
@@ -34,6 +37,12 @@ const STATE_GROUP := {
 @export var hunger_threshold: float = 30.0  # abaixo disso, prioridade vira comer
 ## Come até atingir essa fração da fome máxima.
 @export_range(0.5, 1.0) var eat_until_ratio: float = 0.95
+
+@export_group("Turno / casa")
+## Fração do gasto normal de fome enquanto dorme (0.2 = gasta 20%). Andando pra casa gasta normal.
+@export_range(0.0, 1.0) var sleep_hunger_mult: float = 0.2
+## Atraso máximo (s) pra reagir ao anoitecer/amanhecer, pra não saírem todos no mesmo frame.
+@export var phase_react_delay: float = 1.5
 
 @export_group("Carga")
 @export var cargo_capacity: float = 20.0
@@ -68,6 +77,12 @@ var _facing: float = 1.0
 var _prev_swing: float = 0.0
 var _swing_rising: bool = false
 var _last_hunger_int: int = -1
+var _home: Node2D = null  # casa com a cama fixa deste ipezinho (null = sem teto)
+var _home_slot: int = -1
+var _resting: bool = false  # chegou e está dormindo
+var _inside: bool = false  # dormindo DENTRO de casa (fica invisível)
+var _camp_pos: Variant = null  # onde dorme ao relento quando não tem cama
+var _body_base_y: float = 0.0
 
 @onready var _hunger_label: Label = $HungerLabel
 @onready var _cargo_label: Label = $CargoLabel
@@ -89,12 +104,18 @@ func _ready() -> void:
 	_agent.radius = avoidance_radius
 	_agent.max_speed = speed * 1.2
 	_agent.velocity_computed.connect(_on_velocity_computed)
+	_body_base_y = _body.position.y
+	_claim_home.call_deferred()  # as casas precisam estar nos grupos
 	_update_hunger_label()
 	_update_cargo_label()
 
 
 func _exit_tree() -> void:
 	_release_station()
+	if _home != null and is_instance_valid(_home):
+		_home.set_inside(self, false)
+		_home.release_slot(self)
+	_home = null
 
 
 # ------------------------------------------------------------ comandos
@@ -117,6 +138,8 @@ func get_state() -> String:
 
 
 func get_state_label() -> String:
+	if _ai_state == "home" and _resting:
+		return "dormindo" if _inside else "dormindo ao relento"
 	var label: String = STATE_LABELS.get(_ai_state, _ai_state)
 	if _station == null and STATE_GROUP.has(_ai_state):
 		label += " (esperando)"
@@ -176,7 +199,8 @@ func _get_effective_speed() -> float:
 # ------------------------------------------------------------ fome / IA
 func _process(delta: float) -> void:
 	var was_starving := hunger <= 0.0
-	hunger = maxf(hunger - hunger_decay * delta, 0.0)
+	var decay := hunger_decay * (sleep_hunger_mult if _resting else 1.0)
+	hunger = maxf(hunger - decay * delta, 0.0)
 	if int(hunger) != _last_hunger_int:
 		_update_hunger_label()
 	if hunger <= 0.0 and not was_starving:
@@ -192,8 +216,16 @@ func _process(delta: float) -> void:
 			_decision_timer = decision_interval * randf_range(0.85, 1.15)
 			_decide_next_action()
 
+	# chegou na porta de casa (ou no cantinho onde dorme ao relento)
+	if _ai_state == "home" and not _resting and not _moving:
+		if global_position.distance_to(_rest_position()) <= REST_REACH:
+			_start_resting()
+
 
 func _choose_state() -> String:
+	# Prioridade 0: de noite o turno acabou — todo mundo pra casa, mesmo com fome ou carga.
+	if _is_night():
+		return "home"
 	# Prioridade 1: comer. Quem já está comendo só sai quando estiver quase cheio.
 	if _ai_state == "eating" and hunger < hunger_max * eat_until_ratio:
 		return "eating"
@@ -217,6 +249,12 @@ func _choose_state() -> String:
 
 func _decide_next_action() -> void:
 	var desired := _choose_state()
+
+	if desired == "home":
+		_release_station()
+		_set_state("home")
+		_go_home()
+		return
 
 	if desired == _ai_state and _station_ok_for(desired):
 		# Continua o que está fazendo; se foi empurrado pra fora do slot, volta.
@@ -294,8 +332,88 @@ func _release_station() -> void:
 func _set_state(new_state: String) -> void:
 	if new_state == _ai_state:
 		return
+	if _ai_state == "home":
+		_stop_resting()
 	_ai_state = new_state
 	state_changed.emit(new_state)
+
+
+# ------------------------------------------------------------ turno / casa
+func _is_night() -> bool:
+	var cycle := get_tree().get_first_node_in_group("day_night")
+	return cycle != null and cycle.is_night()
+
+
+## Chamado pelo DayNight na virada de fase: reage logo (com um atraso aleatório curto).
+func on_phase_changed(_night: bool) -> void:
+	if auto_mode and _ai_state != "manual":
+		_decision_timer = randf_range(0.05, phase_react_delay)
+
+
+func has_home() -> bool:
+	return _home != null and is_instance_valid(_home)
+
+
+## Pega a cama livre mais próxima (se ainda não tem casa).
+func _claim_home() -> void:
+	if has_home():
+		return
+	var best: Node2D = null
+	var best_dist := INF
+	for casa in get_tree().get_nodes_in_group("casas"):
+		if not casa.has_free_slot_for(self):
+			continue
+		var d := global_position.distance_to(casa.global_position)
+		if d < best_dist:
+			best_dist = d
+			best = casa
+	if best:
+		_home = best
+		_home_slot = best.claim_bed(self)
+
+
+func _rest_position() -> Vector2:
+	if has_home():
+		return _home.get_slot_position(_home_slot)
+	if _camp_pos == null:
+		# sem cama: dorme do lado de fora da casa mais próxima (ou do armazém)
+		var near := _closest_in_group("casas")
+		if near == null:
+			near = _closest_in_group("armazens")
+		_camp_pos = near.get_wait_position(self) if near else global_position
+	return _camp_pos
+
+
+func _go_home() -> void:
+	if not has_home():
+		_claim_home()  # pode ter sobrado cama (alguém saiu / casa nova)
+	if _resting:
+		return
+	var dest := _rest_position()
+	if global_position.distance_to(dest) <= REST_REACH:
+		_start_resting()
+	elif not _moving or _target.distance_to(dest) > 1.0:
+		_go_to(dest)
+
+
+func _start_resting() -> void:
+	_resting = true
+	_moving = false
+	_inside = has_home()
+	if _inside:
+		_home.set_inside(self, true)
+		_agent.avoidance_enabled = false  # "dentro de casa": não atrapalha quem passa na porta
+	queue_redraw()
+
+
+func _stop_resting() -> void:
+	if _inside and has_home():
+		_home.set_inside(self, false)
+	_resting = false
+	_inside = false
+	_camp_pos = null
+	_agent.avoidance_enabled = avoidance_enabled
+	queue_redraw()
 
 
 # ------------------------------------------------------------ interações (duck typing)
@@ -369,8 +487,16 @@ func _update_animation(delta: float) -> void:
 		_swing_rising = false
 		_tool.rotation = _facing * -0.35
 
+	# dormindo: dentro de casa some; ao relento fica deitado no chão
+	_body.visible = not _inside
+	_tool.visible = not _resting
+	_lamp.enabled = head_lamp_enabled and not _resting
+	var lying := _resting and not _inside
+	_body.rotation = -PI * 0.5 * _facing if lying else 0.0
+	_body.position.y = _body_base_y + (9.0 if lying else 0.0)
+
 	# pedrinha de minério em cima da cabeça, maior quanto mais carga
-	_carry_icon.visible = carrying > 0.0
+	_carry_icon.visible = carrying > 0.0 and not _resting
 	if _carry_icon.visible:
 		var r := carrying / cargo_capacity
 		_carry_icon.scale = Vector2.ONE * lerpf(1.0, 2.0, r)
@@ -397,6 +523,7 @@ func set_selected(is_selected: bool) -> void:
 func _draw() -> void:
 	# sombra + anel de seleção (elipses no pé do personagem)
 	draw_set_transform(Vector2(0, 0), 0.0, Vector2(1.0, 0.45))
-	draw_circle(Vector2(1.5, 0.5), 12.0, Color(0.02, 0.02, 0.05, 0.5))
+	if not _inside:
+		draw_circle(Vector2(1.5, 0.5), 12.0, Color(0.02, 0.02, 0.05, 0.5))
 	if selected:
 		draw_arc(Vector2.ZERO, 17.0, 0.0, TAU, 32, Color(1.0, 0.84, 0.25), 2.5)

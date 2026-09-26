@@ -13,6 +13,7 @@ var _marker_timer := 0.0
 @onready var _camera: Camera2D = $Camera2D
 @onready var _environment: Node2D = $World/Environment
 @onready var _economy: Node = $Economy
+@onready var _day_night: Node = $DayNight
 
 
 func _ready() -> void:
@@ -50,6 +51,8 @@ func _unhandled_input(event: InputEvent) -> void:
 					_camera.focus_on(worker.global_position)
 			KEY_M:
 				Audio.toggle_music()
+			KEY_N:
+				_day_night.skip_phase()
 
 
 func _find_ipezinho_at(pos: Vector2) -> Node2D:

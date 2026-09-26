@@ -11,12 +11,15 @@ const COLOR_HUNGER_OK := Color(0.45, 0.8, 0.35)
 const COLOR_HUNGER_LOW := Color(0.95, 0.75, 0.2)
 const COLOR_HUNGER_BAD := Color(0.9, 0.25, 0.2)
 const COLOR_CARGO := Color(0.78, 0.45, 0.25)
+const COLOR_DAY := Color(1.0, 0.78, 0.4)
+const COLOR_NIGHT := Color(0.55, 0.62, 1.0)
 const STATE_COLORS := {
 	"idle": Color(0.65, 0.6, 0.55),
 	"eating": Color(0.5, 0.85, 0.4),
 	"mining": Color(0.95, 0.6, 0.3),
 	"storing": Color(0.45, 0.7, 1.0),
 	"manual": Color(1.0, 0.84, 0.25),
+	"home": Color(0.55, 0.62, 1.0),
 }
 
 @export var ore_icon: Texture2D
@@ -28,6 +31,11 @@ const STATE_COLORS := {
 
 var _main: Node
 var _economy: Node
+var _day_night: Node
+var _phase_label: Label
+var _phase_time_label: Label
+var _phase_bar: ProgressBar
+var _village_label: Label
 var _stored_label: Label
 var _deposits_label: Label
 var _credits_label: Label
@@ -47,6 +55,7 @@ var _style_row_selected := _row_style(true)
 func _ready() -> void:
 	_main = get_parent()
 	_economy = get_tree().get_first_node_in_group("economy")
+	_day_night = get_tree().get_first_node_in_group("day_night")
 	_build()
 	if _main.has_signal("selection_changed"):
 		_main.selection_changed.connect(func(_u): _refresh())
@@ -76,6 +85,21 @@ func _build() -> void:
 	title.add_theme_constant_override("outline_size", 4)
 	vbox.add_child(title)
 
+	if _day_night:
+		var phase_row := HBoxContainer.new()
+		phase_row.add_theme_constant_override("separation", 8)
+		vbox.add_child(phase_row)
+		_phase_label = _label("", 15, COLOR_DAY)
+		phase_row.add_child(_phase_label)
+		_phase_time_label = _label("", 12, COLOR_DIM)
+		_phase_time_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_phase_time_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		phase_row.add_child(_phase_time_label)
+		_phase_bar = _bar(COLOR_DAY)
+		_phase_bar.custom_minimum_size.y = 5
+		_phase_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		vbox.add_child(_phase_bar)
+
 	var res_row := HBoxContainer.new()
 	res_row.add_theme_constant_override("separation", 8)
 	vbox.add_child(res_row)
@@ -93,6 +117,8 @@ func _build() -> void:
 
 	_deposits_label = _label("", 13, COLOR_DIM)
 	vbox.add_child(_deposits_label)
+	_village_label = _label("", 13, COLOR_DIM)
+	vbox.add_child(_village_label)
 
 	if _economy:
 		_build_economy(vbox)
@@ -118,7 +144,7 @@ func _build() -> void:
 	var hint := _label(
 		"Clique: selecionar / mover   •   Botão dir. / Esc: soltar   •   Tab: próximo   •   F: seguir\n"
 		+ "Roda: zoom   •   Botão do meio / WASD / setas: mover câmera   •   Home: centralizar\n"
-		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música",
+		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular pra próxima fase (teste)",
 		12, Color(0.85, 0.8, 0.72, 0.75))
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	hint.grow_vertical = Control.GROW_DIRECTION_BEGIN
@@ -248,6 +274,8 @@ func _refresh() -> void:
 	_deposits_label.text = "Jazidas: %d/%d ativas  •  %d de minério restante" % [active, nodes.size(), int(ore_left)]
 
 	var workers := get_tree().get_nodes_in_group("ipezinhos")
+	_refresh_phase()
+	_refresh_village(workers)
 	if _economy:
 		_refresh_economy(workers.size())
 	# cria/remove linhas se entrar ou sair ipezinho
@@ -281,6 +309,40 @@ func _refresh() -> void:
 		row.state.add_theme_color_override("font_color",
 			STATE_COLORS.get(state, COLOR_DIM) if w.hunger > 0.0 else COLOR_HUNGER_BAD)
 		row.panel.add_theme_stylebox_override("panel", _style_row_selected if w == selected else _style_row)
+
+
+func _refresh_phase() -> void:
+	if _day_night == null:
+		return
+	var night: bool = _day_night.is_night()
+	var color := COLOR_NIGHT if night else COLOR_DAY
+	_phase_label.text = ("NOITE %d" if night else "DIA %d") % _day_night.day
+	_phase_label.add_theme_color_override("font_color", color)
+	var left := ceili(_day_night.time_left_in_phase())
+	_phase_time_label.text = ("amanhece em %d:%02d" if night else "anoitece em %d:%02d") % [left / 60, left % 60]
+	_phase_bar.value = _day_night.phase_progress() * 100.0
+	(_phase_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = color
+
+
+func _refresh_village(workers: Array) -> void:
+	var beds := 0
+	var taken := 0
+	var sleeping := 0
+	for casa in get_tree().get_nodes_in_group("casas"):
+		beds += casa.beds_total()
+		taken += casa.beds_taken()
+		sleeping += casa.sleeping_count()
+	var homeless := 0
+	for w in workers:
+		if w.has_method("has_home") and not w.has_home():
+			homeless += 1
+	var text := "Casas: %d/%d camas" % [taken, beds]
+	if sleeping > 0:
+		text += "  •  %d dormindo" % sleeping
+	if homeless > 0:
+		text += "  •  %d sem teto" % homeless
+	_village_label.text = text
+	_village_label.add_theme_color_override("font_color", COLOR_HUNGER_LOW if homeless > 0 else COLOR_DIM)
 
 
 func _refresh_economy(worker_count: int) -> void:

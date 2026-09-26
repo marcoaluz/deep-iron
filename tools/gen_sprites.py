@@ -735,6 +735,99 @@ def build_armazem():
     save(outline(pad(img), 0.5), "armazem.png")
 
 
+# ------------------------------------------------------------ casa da vila
+def build_casa():
+    """Casinha de pedra e tábua com telhado de ardósia. 2 quadros lado a lado:
+    0 = vazia (janelas escuras), 1 = alguém dormindo (janelas acesas)."""
+    W, H = 28, 24
+    rnd = random.Random(28)
+    base = new(W, H)
+
+    # chaminé de pedra (atrás do telhado)
+    for y in range(0, 7):
+        for x in range(19, 23):
+            base.putpixel((x, y), dither(STONE_RAMP, 0.6 - (x - 19) * 0.12, x, y))
+    rect(base, 18, 0, 23, 0, STONE_LIGHT)
+
+    # telhado de ardósia em fileiras, com musgo
+    for y in range(2, 11):
+        inset = round((10 - y) * 6 / 8)
+        for x in range(inset, W - inset):
+            row = (y - 2) // 2
+            t = 0.55 - (y - 2) * 0.03
+            if (y - 2) % 2 == 1:
+                t -= 0.18  # borda de baixo de cada fileira de telhas
+            elif (x + row * 2) % 4 == 0:
+                t = 0.12  # junta entre telhas
+            c = dither(STONE_RAMP, t, x, y)
+            if rnd.random() < 0.12 + (y - 2) * 0.02:
+                c = dither(MOSS_RAMP, t + 0.1, x, y)
+            base.putpixel((x, y), c)
+    rect(base, 6, 1, W - 7, 1, STONE_SHADOW)  # cumeeira
+    rect(base, 0, 10, W - 1, 10, STONE_BLACK)  # beiral
+
+    # paredes: tábuas em cima, pedra embaixo
+    for y in range(11, 22):
+        for x in range(2, W - 2):
+            if y >= 18:
+                t = 0.5 if (x + (y % 2) * 2) % 5 else 0.1
+                c = dither(STONE_RAMP, t - (y - 18) * 0.06, x, y)
+            elif (x - 2) % 3 == 0:
+                c = WOOD_ROT
+            else:
+                c = dither(WOOD_RAMP, 0.55 - ((x - 2) % 3 - 1) * 0.12, x, y)
+            base.putpixel((x, y), c)
+    for x in range(2, W - 2):  # sombra do beiral (dithered)
+        px(base, x, 11, WOOD_ROT)
+        if x & 1:
+            px(base, x, 12, WOOD_DARK)
+
+    # porta arredondada
+    for y in range(13, 22):
+        for x in range(11, 17):
+            if y == 13 and x in (11, 16):
+                continue
+            t = 0.45 if x < 14 else 0.3
+            px(base, x, y, dither(WOOD_RAMP, t, x, y))
+    rect(base, 13, 14, 13, 21, WOOD_ROT)
+    px(base, 15, 17, BRASS)
+    rect(base, 11, 21, 16, 21, (WOOD_ROT, STONE_BLACK))
+    # degrau
+    rect(base, 10, 22, 17, 22, STONE_LIGHT)
+    rect(base, 10, 23, 17, 23, STONE_DARK)
+    # fundação
+    for x in range(1, W - 1):
+        if not 10 <= x <= 17:
+            px(base, x, 22, dither(STONE_RAMP, 0.3, x, 22))
+
+    frames = []
+    for lit in (False, True):
+        img = base.copy()
+        for wx in (4, 19):
+            rect(img, wx, 13, wx + 4, 17, WOOD_ROT)
+            if lit:
+                rect(img, wx + 1, 14, wx + 3, 16, WINDOW_LIT)
+                px(img, wx + 1, 14, WINDOW_BRIGHT)
+                rect(img, wx + 1, 16, wx + 3, 16, WINDOW_DIM)
+            else:
+                rect(img, wx + 1, 14, wx + 3, 16, WALL_VOID)
+                px(img, wx + 1, 14, WALL_WET)  # reflexo no vidro
+            px(img, wx + 2, 14, WOOD_DARK)
+            px(img, wx + 2, 15, WOOD_DARK)
+            px(img, wx + 2, 16, WOOD_DARK)
+            rect(img, wx, 17, wx + 4, 17, WOOD_LIGHT)  # peitoril
+            if lit:
+                for x in range(wx, wx + 5):
+                    if x & 1:
+                        px(img, x, 18, shade(WINDOW_DIM, 0.55))
+        frames.append(outline(pad(img), 0.5))
+
+    sheet = new(frames[0].width * 2, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "casa.png")
+
+
 # ------------------------------------------------------------ comedouro
 def build_comedouro():
     W, H = 30, 18
@@ -971,6 +1064,7 @@ if __name__ == "__main__":
     build_crystals()
     build_shadow()
     build_armazem()
+    build_casa()
     build_comedouro()
     build_floor()
     build_wall()

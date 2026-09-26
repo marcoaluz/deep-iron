@@ -11,6 +11,9 @@ extends Node2D
 
 signal navigation_ready
 
+## Grupos de estruturas que bloqueiam a navegação e afastam a decoração.
+const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas"]
+
 @export_group("Mapa")
 @export var map_rect: Rect2 = Rect2(-720, -440, 1440, 880)
 @export var map_seed: int = 1337
@@ -115,7 +118,7 @@ func _build_navigation() -> void:
 	if decorations_block:
 		for o in _obstacles:
 			source.add_obstruction_outline(o)
-	for group in ["minerios", "comedouros", "armazens"]:
+	for group in STATION_GROUPS:
 		for node in get_tree().get_nodes_in_group(group):
 			if node.has_method("get_obstacle_outline"):
 				var outline: PackedVector2Array = node.get_obstacle_outline()
@@ -221,7 +224,7 @@ func _scatter(count: int, textures: Array, min_spacing: float, clear_factor: flo
 
 
 func _is_free(p: Vector2, min_spacing: float, clear_radius: float) -> bool:
-	for group in ["minerios", "comedouros", "armazens"]:
+	for group in STATION_GROUPS:
 		for node in get_tree().get_nodes_in_group(group):
 			if p.distance_to(node.global_position) < clear_radius:
 				return false
