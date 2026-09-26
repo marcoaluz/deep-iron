@@ -1,6 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
 .nomedia
+*.TMP
 
 # Godot-specific ignores
 .import/
