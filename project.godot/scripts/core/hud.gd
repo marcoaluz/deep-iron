@@ -13,6 +13,8 @@ const COLOR_HUNGER_BAD := Color(0.9, 0.25, 0.2)
 const COLOR_CARGO := Color(0.78, 0.45, 0.25)
 const COLOR_DAY := Color(1.0, 0.78, 0.4)
 const COLOR_NIGHT := Color(0.55, 0.62, 1.0)
+const COLOR_INJURED := Color(1.0, 0.5, 0.45)
+const Ores := preload("res://scripts/core/ores.gd")
 const STATE_COLORS := {
 	"idle": Color(0.65, 0.6, 0.55),
 	"eating": Color(0.5, 0.85, 0.4),
@@ -36,8 +38,14 @@ var _phase_label: Label
 var _phase_time_label: Label
 var _phase_bar: ProgressBar
 var _village_label: Label
+var _hub: Node
+var _dig: Node
+var _panels: Dictionary = {}  # id ("hub", "escavadeira", ...) -> janela
+var _panel_buttons: Dictionary = {}  # id -> botão no painel principal
 var _stored_label: Label
 var _deposits_label: Label
+var _stock_label: RichTextLabel
+var _oficina: Node
 var _credits_label: Label
 var _sell_button: Button
 var _auto_sell_check: CheckBox
@@ -56,6 +64,13 @@ func _ready() -> void:
 	_main = get_parent()
 	_economy = get_tree().get_first_node_in_group("economy")
 	_day_night = get_tree().get_first_node_in_group("day_night")
+	_hub = get_tree().get_first_node_in_group("village_hub")
+	_dig = get_tree().get_first_node_in_group("escavadeira")
+	_oficina = get_tree().get_first_node_in_group("oficina")
+	if _dig:
+		_dig.completed.connect(func():
+			show_banner("ESCAVADEIRA CONCLUÍDA!",
+				"Conquista: Deep Iron — a vila montou a grande escavadeira."))
 	_build()
 	if _main.has_signal("selection_changed"):
 		_main.selection_changed.connect(func(_u): _refresh())
@@ -114,6 +129,15 @@ func _build() -> void:
 	_stored_label = _label("0", 18, COLOR_TEXT)
 	res_row.add_child(_stored_label)
 	res_row.add_child(_label("minério armazenado", 13, COLOR_DIM))
+	# estoque por tipo, cada um na sua cor
+	_stock_label = RichTextLabel.new()
+	_stock_label.bbcode_enabled = true
+	_stock_label.fit_content = true
+	_stock_label.scroll_active = false
+	_stock_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_stock_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stock_label.add_theme_font_size_override("normal_font_size", 13)
+	vbox.add_child(_stock_label)
 
 	_deposits_label = _label("", 13, COLOR_DIM)
 	vbox.add_child(_deposits_label)
@@ -144,7 +168,8 @@ func _build() -> void:
 	var hint := _label(
 		"Clique: selecionar / mover   •   Botão dir. / Esc: soltar   •   Tab: próximo   •   F: seguir\n"
 		+ "Roda: zoom   •   Botão do meio / WASD / setas: mover câmera   •   Home: centralizar\n"
-		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular pra próxima fase (teste)",
+		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste)\n"
+		+ "U: Centro da Vila   •   E: Escavadeira   •   O: Oficina   •   ou clique no prédio",
 		12, Color(0.85, 0.8, 0.72, 0.75))
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	hint.grow_vertical = Control.GROW_DIRECTION_BEGIN
@@ -191,6 +216,98 @@ func _build_economy(vbox: VBoxContainer) -> void:
 	_recruit_button = _button("Recrutar ipezinho")
 	_recruit_button.pressed.connect(_on_recruit_pressed)
 	vbox.add_child(_recruit_button)
+
+	if _hub:
+		_add_panel("hub", preload("res://scripts/core/hub_panel.gd"), _hub, vbox)
+	if _dig:
+		_add_panel("escavadeira", preload("res://scripts/core/escavadeira_panel.gd"), _dig, vbox)
+	if _oficina:
+		_add_panel("oficina", preload("res://scripts/core/oficina_panel.gd"), _oficina, vbox)
+
+
+# ------------------------------------------------------------ janelas das estruturas
+## Cada janela é um PanelContainer com setup(hud, alvo, economia), refresh(),
+## button_text() e has_available_action().
+func _add_panel(id: String, script: GDScript, target: Node, vbox: VBoxContainer) -> void:
+	var button := _button("")
+	button.pressed.connect(func():
+		Audio.click()
+		toggle_panel(id))
+	vbox.add_child(button)
+	var panel: PanelContainer = script.new()
+	add_child(panel)
+	panel.setup(self, target, _economy)
+	_panels[id] = panel
+	_panel_buttons[id] = button
+
+
+func open_panel(id: String) -> void:
+	if not _panels.has(id):
+		return
+	for other in _panels:
+		if other != id:
+			_panels[other].visible = false
+	var panel: PanelContainer = _panels[id]
+	if not panel.visible:
+		Audio.click()
+	panel.visible = true
+	panel.refresh()
+
+
+## Abre a janela da estrutura clicada no mapa (ela diz qual pelo panel_id).
+func open_panel_for(node: Node) -> void:
+	open_panel(node.get("panel_id"))
+
+
+## Fecha a janela aberta. Retorna true se havia alguma (pro Esc não soltar a seleção junto).
+func close_panels() -> bool:
+	var closed := false
+	for id in _panels:
+		if _panels[id].visible:
+			_panels[id].visible = false
+			closed = true
+	if closed:
+		Audio.click()
+	return closed
+
+
+func toggle_panel(id: String) -> void:
+	if _panels.has(id) and _panels[id].visible:
+		close_panels()
+	else:
+		open_panel(id)
+
+
+## Faixa de conquista no topo da tela (some sozinha).
+func show_banner(title: String, subtitle: String) -> void:
+	var panel := PanelContainer.new()
+	var style := _panel_style()
+	style.border_color = COLOR_TITLE
+	style.set_content_margin_all(16)
+	panel.add_theme_stylebox_override("panel", style)
+	panel.anchor_left = 0.5
+	panel.anchor_right = 0.5
+	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	panel.offset_top = 70.0
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var v := VBoxContainer.new()
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(v)
+	var t := _label(title, 26, COLOR_TITLE)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.add_theme_color_override("font_outline_color", Color(0.25, 0.12, 0.03))
+	t.add_theme_constant_override("outline_size", 5)
+	v.add_child(t)
+	var st := _label(subtitle, 14, COLOR_TEXT)
+	st.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(st)
+	add_child(panel)
+	panel.modulate.a = 0.0
+	var tween := panel.create_tween()
+	tween.tween_property(panel, "modulate:a", 1.0, 0.5)
+	tween.tween_interval(6.0)
+	tween.tween_property(panel, "modulate:a", 0.0, 1.0)
+	tween.tween_callback(panel.queue_free)
 
 
 func _on_sell_pressed() -> void:
@@ -263,19 +380,28 @@ func _refresh() -> void:
 	for a in get_tree().get_nodes_in_group("armazens"):
 		total += a.total_stored
 	_stored_label.text = str(int(total))
+	_refresh_stock()
 
 	var ore_left := 0.0
 	var active := 0
+	var locked := 0
 	var nodes := get_tree().get_nodes_in_group("minerios")
 	for m in nodes:
+		if m.has_method("is_unlocked") and not m.is_unlocked():
+			locked += 1
+			continue
 		ore_left += m.ore_remaining
 		if m.is_usable():
 			active += 1
-	_deposits_label.text = "Jazidas: %d/%d ativas  •  %d de minério restante" % [active, nodes.size(), int(ore_left)]
+	var text := "Jazidas: %d/%d ativas" % [active, nodes.size() - locked]
+	if locked > 0:
+		text += " (+%d bloq.)" % locked
+	_deposits_label.text = text + "  •  %d restante" % int(ore_left)
 
 	var workers := get_tree().get_nodes_in_group("ipezinhos")
 	_refresh_phase()
 	_refresh_village(workers)
+	_refresh_panels()
 	if _economy:
 		_refresh_economy(workers.size())
 	# cria/remove linhas se entrar ou sair ipezinho
@@ -288,7 +414,10 @@ func _refresh() -> void:
 			_rows.erase(w)
 
 	# a lista cresce até worker_list_max_height e depois rola
-	_rows_scroll.custom_minimum_size.y = minf(_rows_box.get_combined_minimum_size().y, worker_list_max_height)
+	# ...mas nunca além da tela (deixa espaço pras dicas de controle embaixo)
+	var room := get_viewport().get_visible_rect().size.y - _rows_scroll.global_position.y - 110.0
+	var max_h := clampf(room, 80.0, worker_list_max_height)
+	_rows_scroll.custom_minimum_size.y = minf(_rows_box.get_combined_minimum_size().y, max_h)
 
 	var selected = _main.get("selected")
 	for w in workers:
@@ -304,11 +433,29 @@ func _refresh() -> void:
 		(row.hunger.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = fill
 		row.cargo.max_value = w.cargo_capacity
 		row.cargo.value = w.carrying
+		(row.cargo.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = Ores.UI_COLORS.get(w.cargo_type, COLOR_CARGO)
 		var state: String = w.get_state()
 		row.state.text = w.get_state_label() if w.hunger > 0.0 else "FAMINTO!"
-		row.state.add_theme_color_override("font_color",
-			STATE_COLORS.get(state, COLOR_DIM) if w.hunger > 0.0 else COLOR_HUNGER_BAD)
+		var state_color: Color = STATE_COLORS.get(state, COLOR_DIM)
+		if w.hunger <= 0.0:
+			state_color = COLOR_HUNGER_BAD
+		elif w.injured:
+			state_color = COLOR_INJURED
+		row.state.add_theme_color_override("font_color", state_color)
 		row.panel.add_theme_stylebox_override("panel", _style_row_selected if w == selected else _style_row)
+
+
+## "ferro 120 • cobre 30 • carvão 0" — só mostra tipos já liberados ou com estoque.
+func _refresh_stock() -> void:
+	var economy := _economy
+	var parts: Array[String] = []
+	for t in Ores.TYPES:
+		var amount: float = economy.stored_ore(t) if economy else 0.0
+		var unlocked: bool = _oficina == null or _oficina.is_ore_unlocked(t)
+		if not unlocked and amount <= 0.0:
+			continue
+		parts.append("[color=#%s]%s %d[/color]" % [Ores.UI_COLORS[t].to_html(false), Ores.display_name(t).to_lower(), int(amount)])
+	_stock_label.text = "   •   ".join(parts)
 
 
 func _refresh_phase() -> void:
@@ -333,16 +480,36 @@ func _refresh_village(workers: Array) -> void:
 		taken += casa.beds_taken()
 		sleeping += casa.sleeping_count()
 	var homeless := 0
+	var injured := 0
 	for w in workers:
 		if w.has_method("has_home") and not w.has_home():
 			homeless += 1
+		if w.get("injured"):
+			injured += 1
 	var text := "Casas: %d/%d camas" % [taken, beds]
 	if sleeping > 0:
 		text += "  •  %d dormindo" % sleeping
 	if homeless > 0:
 		text += "  •  %d sem teto" % homeless
+	if injured > 0:
+		text += "  •  %d machucado%s" % [injured, "s" if injured > 1 else ""]
 	_village_label.text = text
-	_village_label.add_theme_color_override("font_color", COLOR_HUNGER_LOW if homeless > 0 else COLOR_DIM)
+	var color := COLOR_DIM
+	if injured > 0:
+		color = COLOR_INJURED
+	elif homeless > 0:
+		color = COLOR_HUNGER_LOW
+	_village_label.add_theme_color_override("font_color", color)
+
+
+func _refresh_panels() -> void:
+	for id in _panels:
+		var panel: PanelContainer = _panels[id]
+		var button: Button = _panel_buttons[id]
+		button.text = panel.button_text()
+		# destaca o botão quando dá pra comprar/fabricar alguma coisa
+		button.add_theme_color_override("font_color", COLOR_TITLE if panel.has_available_action() else COLOR_TEXT)
+		panel.refresh()
 
 
 func _refresh_economy(worker_count: int) -> void:

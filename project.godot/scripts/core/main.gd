@@ -14,6 +14,7 @@ var _marker_timer := 0.0
 @onready var _environment: Node2D = $World/Environment
 @onready var _economy: Node = $Economy
 @onready var _day_night: Node = $DayNight
+@onready var _hud: CanvasLayer = $HUD
 
 
 func _ready() -> void:
@@ -24,6 +25,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			var click_pos := get_global_mouse_position()
+			if _find_ipezinho_at(click_pos) == null:
+				for building in get_tree().get_nodes_in_group("clickable"):
+					if building.contains_point(click_pos):
+						_hud.open_panel_for(building)
+						return
 			var clicked_unit := _find_ipezinho_at(click_pos)
 			if clicked_unit:
 				select(clicked_unit)
@@ -42,7 +48,14 @@ func _unhandled_input(event: InputEvent) -> void:
 				if selected:
 					_camera.follow_target = null if _camera.follow_target == selected else selected
 			KEY_ESCAPE:
-				select(null)
+				if not _hud.close_panels():
+					select(null)
+			KEY_U:
+				_hud.toggle_panel("hub")
+			KEY_E:
+				_hud.toggle_panel("escavadeira")
+			KEY_O:
+				_hud.toggle_panel("oficina")
 			KEY_V:
 				_economy.sell_all()
 			KEY_R:
@@ -53,6 +66,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				Audio.toggle_music()
 			KEY_N:
 				_day_night.skip_phase()
+			KEY_K:
+				if selected:
+					selected.hurt()
 
 
 func _find_ipezinho_at(pos: Vector2) -> Node2D:

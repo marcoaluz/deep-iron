@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 signal state_changed(new_state: String)
+signal injured_changed(is_injured: bool)
 
 const STATE_LABELS := {
 	"idle": "ocioso",
@@ -12,6 +13,8 @@ const STATE_LABELS := {
 }
 ## Distância da porta/cama a partir da qual o ipezinho "chega" em casa.
 const REST_REACH := 12.0
+const Ores := preload("res://scripts/core/ores.gd")
+const STEEL_PICKAXE := preload("res://assets/game/pickaxe_aco.png")
 const STATE_GROUP := {
 	"eating": "comedouros",
 	"mining": "minerios",
@@ -44,6 +47,16 @@ const STATE_GROUP := {
 ## Atraso máximo (s) pra reagir ao anoitecer/amanhecer, pra não saírem todos no mesmo frame.
 @export var phase_react_delay: float = 1.5
 
+@export_group("Acidentes")
+## Chance de se machucar a cada ciclo de mineração (0.04 = 4%).
+@export_range(0.0, 1.0) var injury_chance: float = 0.04
+## Minério extraído que conta como um "ciclo de mineração" (20 = uma carga cheia).
+@export var mining_cycle_amount: float = 20.0
+## Segundos DESCANSANDO em casa até curar (o caminho até lá não conta).
+@export var recovery_time: float = 30.0
+## Multiplicador de velocidade enquanto está machucado (mancando).
+@export var injured_speed_mult: float = 0.55
+
 @export_group("Carga")
 @export var cargo_capacity: float = 20.0
 
@@ -61,6 +74,8 @@ const STATE_GROUP := {
 
 var hunger: float = 100.0
 var carrying: float = 0.0
+## Tipo do minério carregado (um tipo por vez; vale só com carrying > 0).
+var cargo_type: String = "ferro"
 var selected: bool = false
 
 var _target: Vector2 = Vector2.ZERO
@@ -83,12 +98,17 @@ var _resting: bool = false  # chegou e está dormindo
 var _inside: bool = false  # dormindo DENTRO de casa (fica invisível)
 var _camp_pos: Variant = null  # onde dorme ao relento quando não tem cama
 var _body_base_y: float = 0.0
+var injured: bool = false
+var _recovery_left: float = 0.0
+var _mined_since_roll: float = 0.0
+var _hub_node: Node = null
 
 @onready var _hunger_label: Label = $HungerLabel
 @onready var _cargo_label: Label = $CargoLabel
 @onready var _body: Sprite2D = $Body
 @onready var _tool: Sprite2D = $Tool
 @onready var _carry_icon: Sprite2D = $CarryIcon
+@onready var _injury_icon: Sprite2D = $InjuryIcon
 @onready var _lamp: PointLight2D = $HeadLamp
 @onready var _agent: NavigationAgent2D = $Agent
 
@@ -106,6 +126,7 @@ func _ready() -> void:
 	_agent.velocity_computed.connect(_on_velocity_computed)
 	_body_base_y = _body.position.y
 	_claim_home.call_deferred()  # as casas precisam estar nos grupos
+	_sync_tool_visual.call_deferred()  # recrutado depois da picareta de aço já nasce com ela
 	_update_hunger_label()
 	_update_cargo_label()
 
@@ -138,6 +159,8 @@ func get_state() -> String:
 
 
 func get_state_label() -> String:
+	if injured and _ai_state == "home":
+		return "curando (%ds)" % ceili(_recovery_left) if _resting else "machucado, indo pra casa"
 	if _ai_state == "home" and _resting:
 		return "dormindo" if _inside else "dormindo ao relento"
 	var label: String = STATE_LABELS.get(_ai_state, _ai_state)
@@ -155,6 +178,7 @@ func can_work_at(station: Node) -> bool:
 
 # ------------------------------------------------------------ movimento
 func _physics_process(delta: float) -> void:
+	_agent.max_speed = speed * _speed_bonus() * 1.2  # o desvio (RVO) limita a velocidade nisso
 	var desired := Vector2.ZERO
 	if _moving:
 		var dist_to_target := global_position.distance_to(_target)
@@ -193,7 +217,21 @@ func _get_effective_speed() -> float:
 	var s := speed * penalty
 	if hunger <= 0.0:
 		s *= starving_speed_mult
-	return s
+	if injured:
+		s *= injured_speed_mult
+	return s * _speed_bonus()
+
+
+## Bônus de velocidade das "Trilhas batidas" do Centro da Vila.
+func _speed_bonus() -> float:
+	var hub := _village_hub()
+	return hub.speed_mult() if hub else 1.0
+
+
+func _village_hub() -> Node:
+	if _hub_node == null or not is_instance_valid(_hub_node):
+		_hub_node = get_tree().get_first_node_in_group("village_hub")
+	return _hub_node
 
 
 # ------------------------------------------------------------ fome / IA
@@ -207,6 +245,11 @@ func _process(delta: float) -> void:
 		_on_starving()
 
 	_work_timer = maxf(_work_timer - delta, 0.0)
+	# só cura descansando (em casa ou ao relento)
+	if injured and _resting:
+		_recovery_left -= delta
+		if _recovery_left <= 0.0:
+			_heal()
 	if _manual_timer > 0.0:
 		_manual_timer -= delta
 
@@ -225,6 +268,9 @@ func _process(delta: float) -> void:
 func _choose_state() -> String:
 	# Prioridade 0: de noite o turno acabou — todo mundo pra casa, mesmo com fome ou carga.
 	if _is_night():
+		return "home"
+	# Machucado: vai pra casa descansar, mesmo de dia (antes dos outros).
+	if injured:
 		return "home"
 	# Prioridade 1: comer. Quem já está comendo só sai quando estiver quase cheio.
 	if _ai_state == "eating" and hunger < hunger_max * eat_until_ratio:
@@ -302,9 +348,14 @@ func _find_best_station(group_name: String) -> Node2D:
 			continue
 		if node.has_method("has_free_slot_for") and not node.has_free_slot_for(self):
 			continue
+		if node.has_method("accepts_worker") and not node.accepts_worker(self) and node != _station:
+			continue
 		var score := global_position.distance_to(node.global_position)
 		if node.has_method("occupied_slot_count") and node != _station:
 			score += node.occupied_slot_count() * 40.0
+		# minério mais valioso "parece mais perto" (cobre vale 2x o ferro -> distância pela metade)
+		if node.has_method("get_value_weight"):
+			score /= maxf(node.get_value_weight(), 0.1)
 		if score < best_score:
 			best_score = score
 			best = node
@@ -339,6 +390,12 @@ func _set_state(new_state: String) -> void:
 
 
 # ------------------------------------------------------------ turno / casa
+func _sync_tool_visual() -> void:
+	var oficina := get_tree().get_first_node_in_group("oficina")
+	if oficina and oficina.has_tool("picareta_aco"):
+		on_tool_crafted("picareta_aco")
+
+
 func _is_night() -> bool:
 	var cycle := get_tree().get_first_node_in_group("day_night")
 	return cycle != null and cycle.is_night()
@@ -416,6 +473,73 @@ func _stop_resting() -> void:
 	queue_redraw()
 
 
+# ------------------------------------------------------------ ferramentas (Oficina)
+## Chamado pela Oficina: a picareta de aço troca o visual da ferramenta.
+func on_tool_crafted(id: String) -> void:
+	if id == "picareta_aco":
+		_tool.texture = STEEL_PICKAXE
+
+
+# ------------------------------------------------------------ acidentes
+## Machuca o ipezinho (chamado pelo sorteio na mineração; tecla K testa no selecionado).
+func hurt() -> void:
+	if injured:
+		return
+	injured = true
+	_recovery_left = get_recovery_time()
+	_work_timer = 0.0
+	_decision_timer = 0.0  # larga a picareta e vai pra casa já
+	_popup("Ai!", Color(1.0, 0.4, 0.35))
+	Audio.hurt(global_position)
+	var flash := create_tween()
+	flash.tween_property(_body, "self_modulate", Color(2.0, 0.5, 0.5), 0.06)
+	flash.tween_property(_body, "self_modulate", Color.WHITE, 0.3)
+	injured_changed.emit(true)
+
+
+## Tempo total de recuperação (a Enfermaria do Centro da Vila reduz).
+func get_recovery_time() -> float:
+	var hub := _village_hub()
+	return recovery_time * (hub.recovery_mult() if hub else 1.0)
+
+
+func _heal() -> void:
+	injured = false
+	_recovery_left = 0.0
+	_popup("Curado!", Color(0.55, 1.0, 0.5))
+	Audio.heal(global_position)
+	# de dia volta ao trabalho logo; de noite continua dormindo
+	_decision_timer = randf_range(0.05, phase_react_delay)
+	injured_changed.emit(false)
+
+
+## Sorteia o acidente a cada mining_cycle_amount de minério extraído.
+func _roll_injury(mined: float) -> void:
+	_mined_since_roll += mined
+	while _mined_since_roll >= mining_cycle_amount:
+		_mined_since_roll -= mining_cycle_amount
+		if randf() < injury_chance:
+			hurt()
+			return
+
+
+## Texto flutuante acima da cabeça.
+func _popup(text: String, color: Color) -> void:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_color_override("font_color", color)
+	label.add_theme_color_override("font_outline_color", Color(0.08, 0.04, 0.04))
+	label.add_theme_constant_override("outline_size", 4)
+	label.add_theme_font_size_override("font_size", 13)
+	label.position = Vector2(-18, -62)
+	label.z_index = 20
+	add_child(label)
+	var tween := label.create_tween().set_parallel()
+	tween.tween_property(label, "position:y", label.position.y - 22.0, 1.0).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "modulate:a", 0.0, 0.9).set_delay(0.4)
+	tween.chain().tween_callback(label.queue_free)
+
+
 # ------------------------------------------------------------ interações (duck typing)
 func _on_starving() -> void:
 	_hunger_label.modulate = Color.RED
@@ -428,12 +552,20 @@ func feed(amount: float) -> void:
 		_decision_timer = 0.0  # satisfeito: decide o próximo passo já
 
 
-func mine(amount: float) -> float:
+func mine(amount: float, ore_type: String = "ferro") -> float:
+	if injured:
+		return 0.0  # machucado não consegue minerar
+	if carrying > 0.0 and ore_type != cargo_type:
+		return 0.0  # não mistura minérios na mesma carga
+	if carrying <= 0.0 and ore_type != cargo_type:
+		cargo_type = ore_type
+		_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
 	var space := cargo_capacity - carrying
 	var taken: float = minf(amount, space)
 	carrying += taken
 	if taken > 0.0:
 		_work_timer = 0.2
+		_roll_injury(taken)
 	if carrying >= cargo_capacity - 0.01:
 		_decision_timer = 0.0  # cheio: vai depositar sem esperar o próximo tick
 	_update_cargo_label()
@@ -492,8 +624,18 @@ func _update_animation(delta: float) -> void:
 	_tool.visible = not _resting
 	_lamp.enabled = head_lamp_enabled and not _resting
 	var lying := _resting and not _inside
-	_body.rotation = -PI * 0.5 * _facing if lying else 0.0
-	_body.position.y = _body_base_y + (9.0 if lying else 0.0)
+	var limp := injured and spd > 5.0
+	if lying:
+		_body.rotation = -PI * 0.5 * _facing
+	elif limp:
+		_body.rotation = sin(_anim_time * PI) * 0.12  # mancando: tomba pra um lado a cada passo
+	else:
+		_body.rotation = 0.0
+	var bob := absf(sin(_anim_time * PI * 0.5)) * 2.0 if limp else 0.0
+	_body.position.y = _body_base_y + (9.0 if lying else 0.0) + bob
+	_injury_icon.visible = injured and not _inside
+	if _injury_icon.visible:
+		_injury_icon.position.y = -40.0 + sin(Time.get_ticks_msec() * 0.005) * 1.5
 
 	# pedrinha de minério em cima da cabeça, maior quanto mais carga
 	_carry_icon.visible = carrying > 0.0 and not _resting
@@ -502,8 +644,13 @@ func _update_animation(delta: float) -> void:
 		_carry_icon.scale = Vector2.ONE * lerpf(1.0, 2.0, r)
 		_carry_icon.position.y = -44.0 - (2.0 if _body.frame % 2 == 1 else 0.0)
 
-	# vermelho de fome
-	_body.modulate = Color(1.0, 0.6, 0.6) if hunger <= 0.0 else Color.WHITE
+	# vermelho de fome / rosado de machucado
+	if hunger <= 0.0:
+		_body.modulate = Color(1.0, 0.6, 0.6)
+	elif injured:
+		_body.modulate = Color(1.0, 0.78, 0.74)
+	else:
+		_body.modulate = Color.WHITE
 
 
 func _update_hunger_label() -> void:

@@ -4,6 +4,19 @@ extends "res://scripts/props/station.gd"
 ##
 ## À noite o ipezinho vai até a porta (posição da cama dele) e "entra": some do
 ## mapa até amanhecer. Com alguém dentro, a janela acende e sai fumaça da chaminé.
+##
+## Com built = false a casa é só um LOTE (estacas, madeira, pedras): não tem
+## camas e espera a melhoria "Moradias" do Centro da Vila chamar build().
+## O lote já ocupa o espaço na navegação, então construir não precisa refazer a malha.
+
+signal built_changed
+
+const FRAME_EMPTY := 0
+const FRAME_LIT := 1
+const FRAME_LOT := 2
+
+## false = lote vazio, construído depois pelo Centro da Vila.
+@export var built: bool = true
 
 var _inside: Array[Node] = []
 
@@ -20,17 +33,35 @@ func _ready() -> void:
 	_update_visual()
 
 
+## Constrói a casa no lote (chamado pelo Centro da Vila).
+func build() -> void:
+	if built:
+		return
+	built = true
+	_update_visual()
+	var pop := create_tween()
+	_visual.scale = Vector2(2.3, 1.6)
+	pop.tween_property(_visual, "scale", Vector2(2, 2), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	built_changed.emit()
+
+
+func has_free_slot_for(worker: Node) -> bool:
+	return built and super(worker)
+
+
 ## Reserva uma cama permanente. Retorna o índice ou -1 se a casa estiver cheia.
 func claim_bed(worker: Node2D) -> int:
+	if not built:
+		return -1
 	return reserve_slot(worker)
 
 
 func beds_total() -> int:
-	return slot_count
+	return slot_count if built else 0
 
 
 func beds_taken() -> int:
-	return occupied_slot_count()
+	return occupied_slot_count() if built else 0
 
 
 ## Chamado pelo ipezinho ao entrar/sair de casa.
@@ -48,10 +79,19 @@ func sleeping_count() -> int:
 
 
 func _update_visual() -> void:
+	if not built:
+		_visual.frame = FRAME_LOT
+		_window_light.enabled = false
+		_smoke.emitting = false
+		_sleep_label.visible = true
+		_sleep_label.text = "lote vazio"
+		_sleep_label.modulate = Color(1, 1, 1, 0.5)
+		return
 	var occupied := sleeping_count() > 0
-	_visual.frame = 1 if occupied else 0  # quadro 1 = janelas acesas
+	_visual.frame = FRAME_LIT if occupied else FRAME_EMPTY
 	_window_light.enabled = occupied
 	_smoke.emitting = occupied
 	_sleep_label.visible = occupied
+	_sleep_label.modulate = Color.WHITE
 	if occupied:
 		_sleep_label.text = "Zz  %d" % sleeping_count()

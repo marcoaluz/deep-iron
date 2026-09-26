@@ -10,7 +10,14 @@ signal stored_changed(total: float)
 ## Intervalo entre os sons de minério caindo na pilha enquanto alguém deposita.
 @export var deposit_sound_interval: float = 0.5
 
+const Ores := preload("res://scripts/core/ores.gd")
+
+## Soma de todos os tipos (a pilha e o texto usam isso).
 var total_stored: float = 0.0
+## Estoque por tipo de minério ("ferro", "cobre", "carvao").
+var stock: Dictionary = {"ferro": 0.0, "cobre": 0.0, "carvao": 0.0}
+## Tudo que já entrou neste armazém desde o começo (não diminui com venda/gasto).
+var lifetime_stored: float = 0.0
 var _pending_popup: float = 0.0
 var _popup_timer: float = 0.0
 var _sound_timer: float = 0.0
@@ -34,10 +41,17 @@ func _accepts(body: Node2D) -> bool:
 func _process(delta: float) -> void:
 	var received := 0.0
 	for body in _working_bodies():
-		received += body.deposit(DEPOSIT_RATE * delta)
+		var got: float = body.deposit(DEPOSIT_RATE * delta)
+		if got > 0.0:
+			var t: String = body.cargo_type
+			stock[t] = stock.get(t, 0.0) + got
+			received += got
 	_sound_timer -= delta
 	if received > 0.0:
-		total_stored += received
+		total_stored = 0.0
+		for t in stock:
+			total_stored += stock[t]
+		lifetime_stored += received
 		_pending_popup += received
 		_update_label()
 		stored_changed.emit(total_stored)
@@ -54,12 +68,32 @@ func _process(delta: float) -> void:
 
 
 ## Tira todo o minério do armazém (usado na venda). Retorna quanto saiu.
-func take_all() -> float:
-	var amount := floorf(total_stored)
-	total_stored -= amount
+## Tira todo o minério inteiro de cada tipo (venda). Retorna {tipo: quantidade}.
+func take_all() -> Dictionary:
+	var taken := {}
+	for t in stock:
+		var amount := floorf(stock[t])
+		if amount > 0.0:
+			stock[t] -= amount
+			taken[t] = amount
+	_recount()
+	return taken
+
+
+## Tira até `amount` de minério do tipo `ore_type` (custos). Retorna quanto saiu.
+func take(amount: float, ore_type: String) -> float:
+	var taken := minf(amount, stock.get(ore_type, 0.0))
+	stock[ore_type] = stock.get(ore_type, 0.0) - taken
+	_recount()
+	return taken
+
+
+func _recount() -> void:
+	total_stored = 0.0
+	for t in stock:
+		total_stored += stock[t]
 	_update_label()
 	stored_changed.emit(total_stored)
-	return amount
 
 
 func _update_label() -> void:

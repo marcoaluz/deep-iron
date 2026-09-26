@@ -32,6 +32,11 @@
 [ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="30_shadow"]
 [ext_resource type="PackedScene" path="res://scenes/props/casa.tscn" id="31_casa"]
 [ext_resource type="Script" path="res://scripts/core/day_night.gd" id="32_daynight"]
+[ext_resource type="PackedScene" path="res://scenes/props/centro_vila.tscn" id="33_hub"]
+[ext_resource type="PackedScene" path="res://scenes/props/escavadeira.tscn" id="34_dig"]
+[ext_resource type="PackedScene" path="res://scenes/props/oficina.tscn" id="35_oficina"]
+[ext_resource type="PackedScene" path="res://scenes/props/jazida_cobre.tscn" id="36_cobre"]
+[ext_resource type="PackedScene" path="res://scenes/props/jazida_carvao.tscn" id="37_carvao"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
@@ -92,6 +97,43 @@ position = Vector2(-200, 340)
 
 [node name="Casa3" parent="World" instance=ExtResource("31_casa")]
 position = Vector2(-420, 345)
+
+[node name="CentroVila" parent="World" instance=ExtResource("33_hub")]
+position = Vector2(-300, 190)
+
+[node name="Escavadeira" parent="World" instance=ExtResource("34_dig")]
+position = Vector2(560, -60)
+
+[node name="Oficina" parent="World" instance=ExtResource("35_oficina")]
+position = Vector2(160, -120)
+
+[node name="JazidaCobre" parent="World" instance=ExtResource("36_cobre")]
+position = Vector2(-560, -300)
+
+[node name="JazidaCobre2" parent="World" instance=ExtResource("36_cobre")]
+position = Vector2(260, 360)
+
+[node name="JazidaCarvao" parent="World" instance=ExtResource("37_carvao")]
+position = Vector2(-200, -380)
+
+[node name="JazidaCarvao2" parent="World" instance=ExtResource("37_carvao")]
+position = Vector2(390, -370)
+
+[node name="Lote1" parent="World" instance=ExtResource("31_casa")]
+position = Vector2(-170, 245)
+built = false
+
+[node name="Lote2" parent="World" instance=ExtResource("31_casa")]
+position = Vector2(-530, 300)
+built = false
+
+[node name="Lote3" parent="World" instance=ExtResource("31_casa")]
+position = Vector2(-80, 370)
+built = false
+
+[node name="Lote4" parent="World" instance=ExtResource("31_casa")]
+position = Vector2(-640, 365)
+built = false
 
 [node name="Ipezinho" parent="World" unique_id=1756047734 instance=ExtResource("2_oekm8")]
 position = Vector2(0, -60)

@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" path="res://assets/game/pickaxe.png" id="3_pick"]
 [ext_resource type="Texture2D" path="res://assets/game/ore_chunk.png" id="4_chunk"]
 [ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="5_light"]
+[ext_resource type="Texture2D" path="res://assets/game/bandage.png" id="6_bandage"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3ucvb"]
 size = Vector2(12, 10)
@@ -32,6 +33,13 @@ offset = Vector2(-5.5, -12.5)
 visible = false
 position = Vector2(0, -44)
 texture = ExtResource("4_chunk")
+
+[node name="InjuryIcon" type="Sprite2D" parent="." unique_id=907998629]
+visible = false
+z_index = 5
+position = Vector2(-9, -40)
+scale = Vector2(2, 2)
+texture = ExtResource("6_bandage")
 
 [node name="HeadLamp" type="PointLight2D" parent="." unique_id=907998627]
 position = Vector2(0, -30)

@@ -28,12 +28,20 @@ extends Node
 @export var recruit_sound: AudioStream
 @export var click_sound: AudioStream
 @export var error_sound: AudioStream
+@export var hurt_sound: AudioStream
+@export var heal_sound: AudioStream
+@export var forge_sound: AudioStream
+@export var fanfare_sound: AudioStream
 
 @export_group("Mixagem dos efeitos (dB)")
 @export var pick_db: float = -7.0
 @export var step_db: float = -22.0
 @export var deposit_db: float = -9.0
 @export var eat_db: float = -11.0
+@export var hurt_db: float = -4.0
+@export var heal_db: float = -8.0
+@export var forge_db: float = -10.0
+@export var fanfare_db: float = -4.0
 @export var ui_db: float = -6.0
 ## Variação aleatória de pitch (0.08 = ±8%), pra não soar repetitivo.
 @export var pitch_variation: float = 0.08
@@ -144,6 +152,25 @@ func deposit(pos: Vector2) -> void:
 
 func eat(pos: Vector2) -> void:
 	play_at(&"eat", eat_sounds, pos, eat_db)
+
+
+func hurt(pos: Vector2) -> void:
+	if hurt_sound:
+		play_at(&"hurt", [hurt_sound], pos, hurt_db)
+
+
+func heal(pos: Vector2) -> void:
+	if heal_sound:
+		play_at(&"heal", [heal_sound], pos, heal_db, 0.0)
+
+
+func forge(pos: Vector2) -> void:
+	if forge_sound:
+		play_at(&"forge", [forge_sound], pos, forge_db, 0.12)
+
+
+func fanfare() -> void:
+	play_ui(fanfare_sound, fanfare_db)
 
 
 func sell() -> void:

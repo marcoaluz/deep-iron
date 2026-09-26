@@ -12,7 +12,7 @@ extends Node2D
 signal navigation_ready
 
 ## Grupos de estruturas que bloqueiam a navegação e afastam a decoração.
-const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas"]
+const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village_hub", "escavadeira", "oficina"]
 
 @export_group("Mapa")
 @export var map_rect: Rect2 = Rect2(-720, -440, 1440, 880)
@@ -226,7 +226,12 @@ func _scatter(count: int, textures: Array, min_spacing: float, clear_factor: flo
 func _is_free(p: Vector2, min_spacing: float, clear_radius: float) -> bool:
 	for group in STATION_GROUPS:
 		for node in get_tree().get_nodes_in_group(group):
-			if p.distance_to(node.global_position) < clear_radius:
+			# estruturas grandes informam o próprio centro/raio livre
+			var center: Vector2 = node.get_clear_center() if node.has_method("get_clear_center") else node.global_position
+			var r := clear_radius
+			if node.has_method("get_clear_radius"):
+				r = maxf(r, node.get_clear_radius())
+			if p.distance_to(center) < r:
 				return false
 	for q in _placed:
 		if p.distance_to(q) < min_spacing:

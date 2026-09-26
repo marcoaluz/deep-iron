@@ -30,7 +30,7 @@ texture = ExtResource("3_shadow")
 [node name="Visual" type="Sprite2D" parent="."]
 scale = Vector2(2, 2)
 texture = ExtResource("2_sprite")
-hframes = 2
+hframes = 3
 offset = Vector2(0, -13)
 
 [node name="Smoke" type="CPUParticles2D" parent="."]

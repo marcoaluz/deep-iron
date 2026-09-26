@@ -180,6 +180,69 @@ def error():
     save("error.wav", fade(padded_filter(x, hi=1200)), 0.4)
 
 
+def hurt():
+    """Ipezinho se machucando: pedrinha caindo + um "uff!" curto (voz sintética)."""
+    dur = 0.42
+    out = np.zeros(int(dur * SR))
+    tt = t_axis(0.3)
+    # "uff": pulso glotal (dente de serra) com pitch caindo, filtrado nos formantes de "ó"
+    f = np.linspace(260, 150, len(tt))
+    saw = 2 * ((np.cumsum(f) / SR) % 1.0) - 1
+    env = np.sin(np.pi * np.clip(tt / 0.26, 0, 1)) ** 0.6 * np.exp(-tt * 4)
+    voice = padded_filter(saw, lo=350, hi=700) + 0.5 * padded_filter(saw, lo=900, hi=1300)
+    place(out, 0.06, voice * env * 1.4)
+    # pancada de pedra no começo
+    td = t_axis(0.12)
+    thud = padded_filter(noise(0.12), hi=500) * np.exp(-td * 40) * 2.0
+    thud += padded_filter(noise(0.12), lo=1500) * np.exp(-td * 120) * 0.4
+    place(out, 0.0, thud)
+    save("hurt.wav", fade(out), 0.75)
+
+
+def heal():
+    """Curado: duas notas suaves subindo (sino abafado)."""
+    dur = 0.8
+    out = np.zeros(int(dur * SR))
+    for k, n in enumerate((79, 84)):  # G5 C6
+        tt = t_axis(dur - k * 0.12)
+        fq = midi(n)
+        bell = (np.sin(2 * np.pi * fq * tt) + 0.25 * np.sin(2 * np.pi * fq * 3.01 * tt)) * np.exp(-tt * 7)
+        place(out, k * 0.12, bell * (0.8 if k == 0 else 1.0))
+    save("heal.wav", fade(padded_filter(out, hi=3500)), 0.55)
+
+
+def forge():
+    """Martelada na bigorna (fabricação de peça da escavadeira)."""
+    dur = 0.6
+    t = t_axis(dur)
+    f0 = 620.0
+    ring = sum(a * np.sin(2 * np.pi * f0 * r * t) * np.exp(-t * k)
+               for r, a, k in ((1.0, 1.0, 9), (2.32, 0.6, 12), (3.91, 0.4, 16), (5.8, 0.25, 22)))
+    hit = padded_filter(noise(dur), lo=1800) * exp_env(dur, 90, 0.0005) * 0.8
+    body = padded_filter(noise(dur), hi=350) * exp_env(dur, 40, 0.001) * 1.2
+    save("forge.wav", fade(0.35 * ring + hit + body), 0.75)
+
+
+def fanfare():
+    """Fanfarra de conquista (escavadeira pronta): arpejo de metais + acorde final."""
+    dur = 2.6
+    out = np.zeros(int(dur * SR))
+
+    def brass(freq, length):
+        tt = t_axis(length)
+        env = np.minimum(1.0, tt / 0.04) * np.exp(-tt * 1.2)
+        saw = sum(np.sin(2 * np.pi * freq * h * tt) / h for h in range(1, 7))
+        return padded_filter(saw, hi=2400) * env
+
+    for k, n in enumerate((60, 64, 67)):  # C E G
+        place(out, k * 0.16, brass(midi(n), 0.3) * 0.8)
+    for n in (60, 64, 67, 72):  # acorde final segurado
+        place(out, 0.5, brass(midi(n), 2.0) * 0.5)
+    tt = t_axis(0.4)
+    place(out, 0.5, padded_filter(noise(0.4), hi=200) * np.exp(-tt * 8) * 1.5)  # bumbo
+    save("fanfare.wav", fade(out, fout=0.2), 0.8)
+
+
 # ----------------------------------------------------------------- loops
 def cave_ambience():
     dur = 24.0
@@ -288,3 +351,8 @@ if __name__ == "__main__":
     error()
     cave_ambience()
     music()
+    # sons novos entram sempre no fim: o rng tem seed fixa, então os anteriores não mudam
+    hurt()
+    heal()
+    forge()
+    fanfare()

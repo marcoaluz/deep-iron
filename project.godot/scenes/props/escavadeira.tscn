@@ -1,0 +1,142 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/escavadeira.gd" id="1_dig"]
+[ext_resource type="Texture2D" path="res://assets/game/escavadeira_base.png" id="2_base"]
+[ext_resource type="Texture2D" path="res://assets/game/escavadeira_estrutura.png" id="3_estrutura"]
+[ext_resource type="Texture2D" path="res://assets/game/escavadeira_hidraulica.png" id="4_hidraulica"]
+[ext_resource type="Texture2D" path="res://assets/game/escavadeira_motor.png" id="5_motor"]
+[ext_resource type="Texture2D" path="res://assets/game/escavadeira_broca.png" id="6_broca"]
+[ext_resource type="Texture2D" path="res://assets/game/escavadeira_cabine.png" id="7_cabine"]
+[ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="8_shadow"]
+[ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="9_light"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_dig"]
+radius = 60.0
+
+[sub_resource type="Gradient" id="Gradient_sparks"]
+offsets = PackedFloat32Array(0, 0.4, 1)
+colors = PackedColorArray(1, 0.95, 0.7, 1, 1, 0.6, 0.15, 1, 0.6, 0.15, 0.05, 0)
+
+[sub_resource type="Gradient" id="Gradient_dust"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(0.45, 0.44, 0.48, 0.7, 0.3, 0.29, 0.33, 0)
+
+[node name="Escavadeira" type="Area2D"]
+script = ExtResource("1_dig")
+slot_count = 0
+auto_fit_area = false
+obstacle_size = Vector2(76, 10)
+obstacle_offset = Vector2(0, -15)
+obstacle_is_rect = true
+
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -4
+position = Vector2(8, -4)
+scale = Vector2(7.2, 2.4)
+texture = ExtResource("8_shadow")
+
+[node name="Base" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("2_base")
+offset = Vector2(0, -48)
+
+[node name="Estrutura" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("3_estrutura")
+offset = Vector2(0, -48)
+
+[node name="Hidraulica" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("4_hidraulica")
+offset = Vector2(0, -48)
+
+[node name="Motor" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("5_motor")
+offset = Vector2(0, -48)
+
+[node name="Broca" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("6_broca")
+hframes = 2
+offset = Vector2(0, -48)
+
+[node name="Cabine" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("7_cabine")
+hframes = 2
+offset = Vector2(0, -48)
+
+[node name="Sparks" type="CPUParticles2D" parent="."]
+position = Vector2(-10, -84)
+emitting = false
+amount = 18
+lifetime = 0.6
+explosiveness = 0.3
+emission_shape = 3
+emission_rect_extents = Vector2(40, 6)
+direction = Vector2(0, -1)
+spread = 70.0
+gravity = Vector2(0, 320)
+initial_velocity_min = 60.0
+initial_velocity_max = 130.0
+scale_amount_min = 1.5
+scale_amount_max = 2.5
+color_ramp = SubResource("Gradient_sparks")
+
+[node name="Dust" type="CPUParticles2D" parent="."]
+position = Vector2(0, -40)
+emitting = false
+amount = 40
+lifetime = 1.2
+one_shot = true
+explosiveness = 0.9
+emission_shape = 3
+emission_rect_extents = Vector2(70, 40)
+direction = Vector2(0, -1)
+spread = 180.0
+gravity = Vector2(0, -10)
+initial_velocity_min = 10.0
+initial_velocity_max = 40.0
+scale_amount_min = 3.0
+scale_amount_max = 6.0
+color_ramp = SubResource("Gradient_dust")
+
+[node name="WorkLight" type="PointLight2D" parent="."]
+position = Vector2(0, -90)
+enabled = false
+color = Color(1, 0.7, 0.35, 1)
+energy = 0.9
+texture = ExtResource("9_light")
+texture_scale = 0.8
+
+[node name="Beacon" type="PointLight2D" parent="."]
+position = Vector2(53, -135)
+enabled = false
+color = Color(1, 0.42, 0.12, 1)
+energy = 1.2
+texture = ExtResource("9_light")
+texture_scale = 0.5
+
+[node name="CabLight" type="PointLight2D" parent="."]
+position = Vector2(53, -113)
+enabled = false
+color = Color(1, 0.72, 0.38, 1)
+energy = 0.7
+texture = ExtResource("9_light")
+texture_scale = 0.55
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_dig")
+
+[node name="StatusLabel" type="Label" parent="."]
+offset_left = -80.0
+offset_top = -232.0
+offset_right = 80.0
+offset_bottom = -196.0
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.03, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 13
+text = "Escavadeira
+0/5 peças"
+horizontal_alignment = 1

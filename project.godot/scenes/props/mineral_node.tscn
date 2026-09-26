@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://assets/game/ore_iron_0.png" id="2_ore0"]
 [ext_resource type="Texture2D" path="res://assets/game/ore_iron_1.png" id="3_ore1"]
 [ext_resource type="Texture2D" path="res://assets/game/ore_iron_2.png" id="4_ore2"]
+[ext_resource type="Texture2D" path="res://assets/game/cadeado.png" id="6_lock"]
 [ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="5_shadow"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ore"]
@@ -42,16 +43,24 @@ scale_amount_min = 2.0
 scale_amount_max = 3.0
 color = Color(0.62, 0.34, 0.22, 1)
 
+[node name="Padlock" type="Sprite2D" parent="."]
+visible = false
+z_index = 5
+position = Vector2(0, -16)
+scale = Vector2(2, 2)
+texture = ExtResource("6_lock")
+
 [node name="Shape" type="CollisionShape2D" parent="." unique_id=323873678]
 shape = SubResource("CircleShape2D_ore")
 
 [node name="AmountLabel" type="Label" parent="." unique_id=920572572]
-offset_left = -40.0
-offset_top = -52.0
-offset_right = 40.0
+offset_left = -100.0
+offset_top = -70.0
+offset_right = 100.0
 offset_bottom = -34.0
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 12
 text = "200"
 horizontal_alignment = 1
+vertical_alignment = 2

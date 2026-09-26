@@ -20,6 +20,10 @@
 [ext_resource type="AudioStream" path="res://assets/audio/recruit.wav" id="18_a"]
 [ext_resource type="AudioStream" path="res://assets/audio/click.wav" id="19_a"]
 [ext_resource type="AudioStream" path="res://assets/audio/error.wav" id="20_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/hurt.wav" id="21_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/heal.wav" id="22_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/forge.wav" id="23_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/fanfare.wav" id="24_a"]
 
 [node name="Audio" type="Node"]
 script = ExtResource("1_a")
@@ -33,3 +37,7 @@ sell_sound = ExtResource("17_a")
 recruit_sound = ExtResource("18_a")
 click_sound = ExtResource("19_a")
 error_sound = ExtResource("20_a")
+hurt_sound = ExtResource("21_a")
+heal_sound = ExtResource("22_a")
+forge_sound = ExtResource("23_a")
+fanfare_sound = ExtResource("24_a")
