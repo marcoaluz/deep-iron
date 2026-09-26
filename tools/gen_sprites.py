@@ -111,7 +111,9 @@ IRON_RAMP = (IRON_SHADOW, IRON_DARK, IRON, IRON_LIGHT, IRON_HIGHLIGHT)
 SHADOW_INK = (6, 6, 12, 255)
 BANDAGE = (214, 204, 184, 255)  # curativo (ícone de ipezinho machucado)
 BANDAGE_SHADOW = (168, 156, 140, 255)
-BLOOD = (178, 38, 40, 255)  # sinal de alerta: saturado de propósito  # sombra projetada no chão (usada com alpha)
+BLOOD = (178, 38, 40, 255)  # sinal de alerta: saturado de propósito
+ANGER = (224, 58, 46, 255)  # "veia saltando" do ipezinho zangado (alerta: saturado)
+ANGER_DARK = (138, 26, 30, 255)  # sombra projetada no chão (usada com alpha)
 
 # --- ipezinho ----------------------------------------------------------------
 SKIN_SHADOW = (128, 84, 74, 255)
@@ -1688,6 +1690,20 @@ def build_bandage():
     save(outline(pad(from_rows(rows, pal)), 0.5), "bandage.png")
 
 
+def build_anger():
+    """Símbolo de zanga (a "veia saltando" dos quadrinhos) sobre o ipezinho irritado/furioso."""
+    rows = [
+        ".r...r.",
+        "rRr.rRr",
+        ".rR.Rr.",
+        ".......",
+        ".rR.Rr.",
+        "rRr.rRr",
+        ".r...r.",
+    ]
+    save(outline(pad(from_rows(rows, {"r": ANGER_DARK, "R": ANGER})), 0.5), "anger.png")
+
+
 def build_coin():
     rows = [
         "..DDDD..",
@@ -1706,6 +1722,7 @@ def build_coin():
 if __name__ == "__main__":
     build_coin()
     build_bandage()
+    build_anger()
     build_ipezinho()
     build_pickaxe()
     build_ores()

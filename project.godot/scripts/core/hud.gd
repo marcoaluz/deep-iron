@@ -14,6 +14,9 @@ const COLOR_CARGO := Color(0.78, 0.45, 0.25)
 const COLOR_DAY := Color(1.0, 0.78, 0.4)
 const COLOR_NIGHT := Color(0.55, 0.62, 1.0)
 const COLOR_INJURED := Color(1.0, 0.5, 0.45)
+const COLOR_OVERTIME := Color(0.6, 0.7, 1.0)
+const COLOR_IRRITATED := Color(1.0, 0.72, 0.35)
+const COLOR_FURIOUS := Color(1.0, 0.35, 0.28)
 const Ores := preload("res://scripts/core/ores.gd")
 const STATE_COLORS := {
 	"idle": Color(0.65, 0.6, 0.55),
@@ -50,6 +53,7 @@ var _credits_label: Label
 var _sell_button: Button
 var _auto_sell_check: CheckBox
 var _recruit_button: Button
+var _overtime_button: Button
 var _workers_count_label: Label
 var _workers_title: Label
 var _rows_scroll: ScrollContainer
@@ -174,7 +178,7 @@ func _build() -> void:
 	var hint := _label(
 		"Clique: selecionar   •   Arrastar: selecionar vários   •   Shift+clique: somar/tirar   •   Botão dir.: mover / minerar (jazida)   •   Esc: soltar   •   Tab: próximo   •   F: seguir\n"
 		+ "Roda: zoom   •   Botão do meio / WASD / setas: mover câmera   •   Home: centralizar\n"
-		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste)\n"
+		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste)   •   T: turno extra\n"
 		+ "U: Centro da Vila   •   E: Escavadeira   •   O: Oficina   •   ou clique no prédio   •   F5: salvar   •   F9: carregar",
 		12, Color(0.85, 0.8, 0.72, 0.75))
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
@@ -222,6 +226,11 @@ func _build_economy(vbox: VBoxContainer) -> void:
 	_recruit_button = _button("Recrutar ipezinho")
 	_recruit_button.pressed.connect(_on_recruit_pressed)
 	vbox.add_child(_recruit_button)
+
+	_overtime_button = _button("Turno extra  (T)")
+	_overtime_button.tooltip_text = "Os selecionados continuam trabalhando à noite (e vão ficando zangados)"
+	_overtime_button.pressed.connect(func(): _main.toggle_overtime())
+	vbox.add_child(_overtime_button)
 
 	if _hub:
 		_add_panel("hub", preload("res://scripts/core/hub_panel.gd"), _hub, vbox)
@@ -372,6 +381,8 @@ func _make_row(worker: Node) -> Dictionary:
 	var name_label := _label(worker.name, 14, COLOR_TEXT)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_label)
+	var tag_label := _label("", 11, COLOR_DIM)  # "turno extra" / "irritado" / "FURIOSO"
+	top.add_child(tag_label)
 	var state_label := _label("", 12, COLOR_DIM)
 	top.add_child(state_label)
 
@@ -386,7 +397,7 @@ func _make_row(worker: Node) -> Dictionary:
 	var cargo_bar := _bar(COLOR_CARGO)
 	bars.add_child(cargo_bar)
 
-	return {"panel": row_panel, "state": state_label, "hunger": hunger_bar, "cargo": cargo_bar}
+	return {"panel": row_panel, "state": state_label, "tag": tag_label, "hunger": hunger_bar, "cargo": cargo_bar}
 
 
 func _on_row_input(event: InputEvent, worker: Node2D) -> void:
@@ -446,6 +457,10 @@ func _refresh() -> void:
 	_rows_scroll.custom_minimum_size.y = minf(_rows_box.get_combined_minimum_size().y, max_h)
 
 	var picked: int = _main.selection.size()
+	if _overtime_button:
+		var all_overtime: bool = picked > 0 and _main.selection.all(func(u): return is_instance_valid(u) and u.overtime)
+		_overtime_button.text = "Desligar turno extra  (T)" if all_overtime else "Turno extra pros selecionados  (T)"
+		_overtime_button.disabled = picked == 0
 	_workers_title.text = "IPEZINHOS  —  %d selecionados" % picked if picked > 1 else "IPEZINHOS"
 	_workers_title.add_theme_color_override("font_color", COLOR_TITLE if picked > 1 else COLOR_DIM)
 	for w in workers:
@@ -470,6 +485,15 @@ func _refresh() -> void:
 		elif w.injured:
 			state_color = COLOR_INJURED
 		row.state.add_theme_color_override("font_color", state_color)
+		# etiqueta de turno extra / zanga (o humor tem prioridade de cor)
+		var tags: Array[String] = []
+		if w.overtime:
+			tags.append("turno extra")
+		if w.mood() > 0:
+			tags.append(w.mood_label())
+		row.tag.text = "  ".join(tags) + ("  " if not tags.is_empty() else "")
+		row.tag.add_theme_color_override("font_color",
+			[COLOR_OVERTIME, COLOR_IRRITATED, COLOR_FURIOUS][w.mood()])
 		row.panel.add_theme_stylebox_override("panel", _style_row_selected if _main.is_selected(w) else _style_row)
 
 

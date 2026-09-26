@@ -2,6 +2,7 @@ extends CharacterBody2D
 
 signal state_changed(new_state: String)
 signal injured_changed(is_injured: bool)
+signal mood_changed(level: int)  # 0 calmo, 1 irritado, 2 furioso
 
 const STATE_LABELS := {
 	"idle": "ocioso",
@@ -60,6 +61,25 @@ const STATE_GROUP := {
 ## 0.73 -> pior caso (machucado + carga cheia) ≈ 120 x 0.65 x 0.73 ≈ 57 px/s.
 @export var injured_speed_mult: float = 0.73
 
+@export_group("Turno extra / zanga")
+## Zanga ganha por segundo trabalhando à noite em turno extra (0.8 -> ~+48 por noite).
+@export var anger_gain_per_sec: float = 0.8
+## Zanga perdida por segundo DORMINDO (em casa, ao relento ou curando). De dia acordado não muda.
+@export var anger_decay_per_sec: float = 1.5
+## A partir dessa zanga fica "irritado"...
+@export_range(0.0, 100.0) var anger_irritated_at: float = 40.0
+## ...e a partir dessa, "furioso".
+@export_range(0.0, 100.0) var anger_furious_at: float = 75.0
+## Multiplica a chance de acidente (injury_chance) quando irritado / furioso.
+@export var irritated_injury_mult: float = 2.0
+@export var furious_injury_mult: float = 4.0
+## Multiplica quanto ele minera por segundo quando irritado / furioso.
+@export var irritated_work_mult: float = 0.8
+@export var furious_work_mult: float = 0.55
+## Multiplica a velocidade de caminhada (acumula com carga, fome e lesão).
+@export var irritated_speed_mult: float = 0.95
+@export var furious_speed_mult: float = 0.85
+
 @export_group("Carga")
 ## Minério por viagem (ritmo: era 20).
 @export var cargo_capacity: float = 16.0
@@ -104,6 +124,11 @@ var _inside: bool = false  # dormindo DENTRO de casa (fica invisível)
 var _camp_pos: Variant = null  # onde dorme ao relento quando não tem cama
 var _body_base_y: float = 0.0
 var injured: bool = false
+## Turno extra: de noite continua trabalhando em vez de ir pra cama (ligado pelo jogador).
+var overtime: bool = false
+## Zanga 0..100: sobe no turno extra da noite, desce dormindo.
+var anger: float = 0.0
+var _mood: int = 0
 var _recovery_left: float = 0.0
 var _mined_since_roll: float = 0.0
 var _hub_node: Node = null
@@ -118,6 +143,7 @@ var _saved_home_slot: int = -1
 @onready var _tool: Sprite2D = $Tool
 @onready var _carry_icon: Sprite2D = $CarryIcon
 @onready var _injury_icon: Sprite2D = $InjuryIcon
+@onready var _anger_icon: Sprite2D = $AngerIcon
 @onready var _lamp: PointLight2D = $HeadLamp
 @onready var _agent: NavigationAgent2D = $Agent
 
@@ -178,6 +204,8 @@ func get_state_label() -> String:
 	var label: String = STATE_LABELS.get(_ai_state, _ai_state)
 	if _station == null and STATE_GROUP.has(_ai_state):
 		label += " (esperando)"
+	if overtime and _is_night() and _ai_state != "home":
+		label += " (turno extra)"
 	return label
 
 
@@ -231,6 +259,7 @@ func _get_effective_speed() -> float:
 		s *= starving_speed_mult
 	if injured:
 		s *= injured_speed_mult
+	s *= [1.0, irritated_speed_mult, furious_speed_mult][_mood]  # zanga acumula com a lesão
 	return s * _speed_bonus()
 
 
@@ -257,6 +286,7 @@ func _process(delta: float) -> void:
 		_on_starving()
 
 	_work_timer = maxf(_work_timer - delta, 0.0)
+	_update_anger(delta)
 	# só cura descansando (em casa ou ao relento)
 	if injured and _resting:
 		_recovery_left -= delta
@@ -279,7 +309,8 @@ func _process(delta: float) -> void:
 
 func _choose_state() -> String:
 	# Prioridade 0: de noite o turno acabou — todo mundo pra casa, mesmo com fome ou carga.
-	if _is_night():
+	# Exceção: quem está em TURNO EXTRA continua trabalhando (e ficando zangado).
+	if _is_night() and not overtime:
 		return "home"
 	# Machucado: vai pra casa descansar, mesmo de dia (antes dos outros).
 	if injured:
@@ -482,6 +513,8 @@ func _go_home() -> void:
 
 
 func _start_resting() -> void:
+	if overtime:
+		set_overtime(false)  # foi dormir por conta própria (ex.: machucou): acabou o turno extra
 	_resting = true
 	_moving = false
 	_inside = has_home()
@@ -506,6 +539,57 @@ func _stop_resting() -> void:
 func on_tool_crafted(id: String) -> void:
 	if id == "picareta_aco":
 		_tool.texture = STEEL_PICKAXE
+
+
+# ------------------------------------------------------------ turno extra / zanga
+## Liga/desliga o turno extra (tecla T com o ipezinho selecionado).
+func set_overtime(on: bool) -> void:
+	if overtime == on:
+		return
+	overtime = on
+	if on:
+		_popup("Turno extra!", Color(0.6, 0.7, 1.0))
+	elif _is_night():
+		_popup("Hora de dormir", Color(0.6, 0.7, 1.0))
+	if auto_mode and _ai_state != "manual":
+		_decision_timer = randf_range(0.05, 0.4)  # de noite: acorda ou vai pra cama já
+
+
+## 0 = calmo, 1 = irritado, 2 = furioso.
+func mood() -> int:
+	return _mood
+
+
+func mood_label() -> String:
+	return ["", "irritado", "FURIOSO"][_mood]
+
+
+## Multiplicador da mineração pela zanga.
+func work_mult() -> float:
+	return [1.0, irritated_work_mult, furious_work_mult][_mood]
+
+
+func _update_anger(delta: float) -> void:
+	if overtime and not _resting and _is_night():
+		anger = minf(anger + anger_gain_per_sec * delta, 100.0)
+	elif _resting:
+		anger = maxf(anger - anger_decay_per_sec * delta, 0.0)
+	_refresh_mood()
+
+
+func _refresh_mood(announce: bool = true) -> void:
+	var m := 0
+	if anger >= anger_furious_at:
+		m = 2
+	elif anger >= anger_irritated_at:
+		m = 1
+	if m == _mood:
+		return
+	var worse := m > _mood
+	_mood = m
+	if announce and worse:
+		_popup("Grrr!" if m == 2 else "Hmpf...", Color(1.0, 0.45, 0.3) if m == 2 else Color(1.0, 0.75, 0.4))
+	mood_changed.emit(m)
 
 
 # ------------------------------------------------------------ acidentes
@@ -546,7 +630,7 @@ func _roll_injury(mined: float) -> void:
 	_mined_since_roll += mined
 	while _mined_since_roll >= mining_cycle_amount:
 		_mined_since_roll -= mining_cycle_amount
-		if randf() < injury_chance:
+		if randf() < injury_chance * [1.0, irritated_injury_mult, furious_injury_mult][_mood]:
 			hurt()
 			return
 
@@ -589,7 +673,7 @@ func mine(amount: float, ore_type: String = "ferro") -> float:
 		cargo_type = ore_type
 		_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
 	var space := cargo_capacity - carrying
-	var taken: float = minf(amount, space)
+	var taken: float = minf(amount * work_mult(), space)  # zangado minera menos
 	carrying += taken
 	if taken > 0.0:
 		_work_timer = 0.2
@@ -664,6 +748,17 @@ func _update_animation(delta: float) -> void:
 	_injury_icon.visible = injured and not _inside
 	if _injury_icon.visible:
 		_injury_icon.position.y = -40.0 + sin(Time.get_ticks_msec() * 0.005) * 1.5
+	# zanga: "veia saltando" pulsando (mais rápida e maior quando furioso) + tremidinha
+	_anger_icon.visible = _mood > 0 and not _inside
+	if _anger_icon.visible:
+		var ms := Time.get_ticks_msec()
+		var pulse := 1.0 + 0.18 * sin(ms * (0.018 if _mood == 2 else 0.008))
+		_anger_icon.scale = Vector2.ONE * (2.0 if _mood == 2 else 1.5) * pulse
+		_anger_icon.modulate = Color.WHITE if _mood == 2 else Color(1.0, 0.8, 0.55)
+	if _mood == 2 and not lying:
+		_body.position.x = sin(Time.get_ticks_msec() * 0.09) * 0.6
+	else:
+		_body.position.x = 0.0
 
 	# pedrinha de minério em cima da cabeça, maior quanto mais carga
 	_carry_icon.visible = carrying > 0.0 and not _resting
@@ -718,6 +813,8 @@ func get_save_data() -> Dictionary:
 		"facing": _facing,
 		"home": String(_home.name) if has_home() else "",
 		"home_slot": _home_slot if has_home() else -1,
+		"anger": anger,
+		"overtime": overtime,
 	}
 
 
@@ -736,6 +833,9 @@ func load_save_data(d: Dictionary) -> void:
 	_facing = -1.0 if SaveUtil.num(d, "facing", 1.0) < 0.0 else 1.0
 	_saved_home = SaveUtil.text(d, "home", "")
 	_saved_home_slot = SaveUtil.integer(d, "home_slot", -1)
+	anger = clampf(SaveUtil.num(d, "anger", 0.0), 0.0, 100.0)
+	overtime = SaveUtil.boolean(d, "overtime", false)
+	_refresh_mood(false)
 	_target = global_position
 	_update_hunger_label()
 	_update_cargo_label()

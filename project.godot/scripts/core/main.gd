@@ -118,6 +118,8 @@ func _unhandled_input(event: InputEvent) -> void:
 					Audio.error()
 			KEY_N:
 				_day_night.skip_phase()
+			KEY_T:
+				toggle_overtime()
 			KEY_K:
 				for unit in selection.duplicate():
 					if is_instance_valid(unit):
@@ -282,6 +284,23 @@ func toggle_selected(unit: Node2D) -> void:
 	else:
 		units.append(unit)
 	set_selection(units)
+
+
+## T / botão do HUD: liga o turno extra pros selecionados (se algum ainda não
+## estiver); se todos já estiverem, desliga pra todos.
+func toggle_overtime() -> void:
+	_prune_selection()
+	if selection.is_empty():
+		Audio.error()
+		_hud.show_toast("Selecione ipezinhos pra dar turno extra", Color(1.0, 0.6, 0.45))
+		return
+	var turn_on := selection.any(func(w): return not w.overtime)
+	for unit in selection:
+		unit.set_overtime(turn_on)
+	Audio.click()
+	_hud.show_toast("Turno extra %s: %d ipezinho%s" % [
+		"LIGADO" if turn_on else "desligado", selection.size(), "s" if selection.size() > 1 else ""],
+		Color(0.6, 0.7, 1.0))
 
 
 func is_selected(unit: Node) -> bool:
