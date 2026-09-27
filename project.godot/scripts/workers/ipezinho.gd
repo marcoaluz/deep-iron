@@ -209,6 +209,7 @@ func _ready() -> void:
 	_agent.radius = avoidance_radius
 	_agent.max_speed = speed * 1.2
 	_agent.velocity_computed.connect(_on_velocity_computed)
+	_agent.link_reached.connect(_on_link_reached)
 	_body_base_y = _body.position.y
 	_default_tool = _tool.texture
 	if not pending_save_data.is_empty():
@@ -477,6 +478,24 @@ func _station_ok_for(state: String) -> bool:
 	if state == "hauling":
 		return wood_carrying > 0.0
 	return true
+
+
+## Chegou na gaiola do elevador (NavigationLink2D): desce/sobe na hora.
+func _on_link_reached(details: Dictionary) -> void:
+	var link = details.get("owner")
+	if not (link is Node) or not link.get_parent() or not link.get_parent().is_in_group("elevador"):
+		return
+	var exit: Vector2 = details.get("link_exit_position", global_position)
+	global_position = exit
+	Audio.deposit(exit)  # "clanc" da gaiola
+	_body.modulate.a = 0.0
+	create_tween().tween_property(_body, "modulate:a", 1.0, 0.35)
+
+
+## Multiplicador de acidente pela profundidade (nível 2 = mais perigoso).
+func depth_danger() -> float:
+	var env := get_tree().get_first_node_in_group("environment")
+	return env.danger_mult_at(global_position) if env else 1.0
 
 
 ## Existe alguma estação do grupo REALMENTE disponível agora? (Diferente de
@@ -840,7 +859,8 @@ func _roll_injury(mined: float) -> void:
 	_mined_since_roll += mined
 	while _mined_since_roll >= mining_cycle_amount:
 		_mined_since_roll -= mining_cycle_amount
-		if randf() < injury_chance * [1.0, irritated_injury_mult, furious_injury_mult][_mood]:
+		# zanga x profundidade: os dois multiplicadores se acumulam
+		if randf() < injury_chance * [1.0, irritated_injury_mult, furious_injury_mult][_mood] * depth_danger():
 			hurt()
 			return
 

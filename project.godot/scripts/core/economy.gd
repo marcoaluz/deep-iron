@@ -16,6 +16,8 @@ signal worker_recruited(worker: Node2D, cost: int)
 @export var copper_price: float = 4.0
 ## Créditos por unidade de carvão.
 @export var coal_price: float = 3.0
+## Créditos por unidade de prata (nível 2: mais perigoso, paga mais).
+@export var silver_price: float = 8.0
 @export var starting_credits: float = 0.0
 ## Vende sozinho o que estiver no armazém a cada auto_sell_interval segundos.
 @export var auto_sell: bool = false
@@ -70,6 +72,8 @@ func price_of(ore_type: String) -> float:
 			return copper_price
 		"carvao":
 			return coal_price
+		"prata":
+			return silver_price
 	return ore_price
 
 

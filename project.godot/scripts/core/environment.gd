@@ -36,6 +36,18 @@ const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village
 @export var sun_color: Color = Color(1.0, 0.92, 0.72)
 @export var sun_energy: float = 0.9
 
+@export_group("Nível 2 (fundo)")
+## Área do nível 2, abaixo (ao sul) da mina; a descida é o elevador da escavadeira.
+@export var deep_rect: Rect2 = Rect2(-560, 700, 1120, 620)
+@export var deep_floor_texture: Texture2D
+## Chance de acidente multiplicada por isso minerando no nível 2 (acumula com a zanga).
+@export var deep_injury_mult: float = 2.5
+@export var deep_boulder_count: int = 12
+@export var deep_crystal_count: int = 7
+@export var deep_pebble_count: int = 40
+## Tom da decoração do fundo (mais escuro e frio que a mina).
+@export var deep_tint: Color = Color(0.7, 0.72, 0.88)
+
 @export_group("Decoração")
 @export var boulder_count: int = 14
 @export var pebble_count: int = 70
@@ -103,6 +115,7 @@ func _ready() -> void:
 	_scatter(crystal_count, crystal_textures, 50.0, 1.0, _add_crystal)
 	_scatter(torch_count, [torch_texture], 60.0, 0.6, _add_torch)
 	_build_clearing()  # depois de toda a decoração da mina: tem sorteio próprio
+	_build_deep()
 	_build_navigation()
 
 
@@ -161,6 +174,9 @@ func _bake_navigation() -> NavigationPolygon:
 	if clearing_rect.has_area():
 		source.add_traversable_outline(_rect_outline(clearing_rect.grow(-30.0)))
 		source.add_traversable_outline(_rect_outline(_tunnel_nav_rect()))
+	if deep_rect.has_area():
+		# ilha separada: só liga com a mina pelo elevador (NavigationLink2D)
+		source.add_traversable_outline(_rect_outline(deep_rect.grow(-nav_edge_inset)))
 	if decorations_block:
 		for o in _obstacles:
 			source.add_obstruction_outline(o)
@@ -181,7 +197,22 @@ func walkable_rect() -> Rect2:
 
 ## Mapa inteiro, mina + clareira (câmera e ordens de mover).
 func world_rect() -> Rect2:
-	return map_rect.merge(clearing_rect) if clearing_rect.has_area() else map_rect
+	var r := map_rect
+	if clearing_rect.has_area():
+		r = r.merge(clearing_rect)
+	if deep_rect.has_area():
+		r = r.merge(deep_rect)
+	return r
+
+
+## Esse ponto é no nível 2?
+func is_deep(pos: Vector2) -> bool:
+	return deep_rect.has_area() and deep_rect.has_point(pos)
+
+
+## Multiplicador de acidente por profundidade (1 na mina/clareira).
+func danger_mult_at(pos: Vector2) -> float:
+	return deep_injury_mult if is_deep(pos) else 1.0
 
 
 ## Faixa andável do túnel (entra um pouco na mina e na clareira pra emendar).
@@ -190,6 +221,76 @@ func _tunnel_nav_rect() -> Rect2:
 	var top := clearing_rect.end.y - 40.0
 	var bottom := map_rect.position.y + nav_edge_inset + 14.0
 	return Rect2(tunnel_x - half, top, half * 2.0, bottom - top)
+
+
+# ------------------------------------------------------------ nível 2
+func _build_deep() -> void:
+	if not deep_rect.has_area():
+		return
+	var drng := RandomNumberGenerator.new()
+	drng.seed = map_seed + 13  # sorteio próprio: não mexe na mina nem na clareira
+	if deep_floor_texture:
+		_tiled_sprite(deep_floor_texture, deep_rect, -10)
+	# pedras grandes na borda
+	var r := deep_rect
+	var edge: Array[Vector2] = []
+	var x := r.position.x
+	while x <= r.end.x:
+		edge.append(Vector2(x, r.position.y))
+		edge.append(Vector2(x, r.end.y))
+		x += edge_boulder_spacing
+	var y := r.position.y + edge_boulder_spacing
+	while y < r.end.y:
+		edge.append(Vector2(r.position.x, y))
+		edge.append(Vector2(r.end.x, y))
+		y += edge_boulder_spacing
+	for p in edge:
+		if boulder_textures.is_empty():
+			break
+		var s := _deco_sprite(boulder_textures[drng.randi() % boulder_textures.size()],
+			p + Vector2(drng.randf_range(-10, 10), drng.randf_range(-8, 8)))
+		s.scale = Vector2.ONE * pixel_scale * drng.randf_range(1.2, 1.9)
+		s.flip_h = drng.randf() < 0.5
+		s.modulate = deep_tint
+	# decoração espalhada (longe das jazidas do fundo e da gaiola de chegada)
+	var avoid: Array[Vector2] = []
+	var shaft := get_tree().get_first_node_in_group("elevador")
+	if shaft:
+		avoid.append(shaft.bottom_position)
+	var placed: Array[Vector2] = []
+	var inner := deep_rect.grow(-50.0)
+	for job in [[deep_pebble_count, pebble_textures, 10.0, _add_pebble], [deep_boulder_count, boulder_textures, 45.0, _add_boulder],
+			[deep_crystal_count, crystal_textures, 55.0, _add_crystal]]:
+		var textures: Array = job[1]
+		if textures.is_empty():
+			continue
+		for i in int(job[0]):
+			for attempt in 30:
+				var p := Vector2(drng.randf_range(inner.position.x, inner.end.x), drng.randf_range(inner.position.y, inner.end.y))
+				if not _deep_spot_free(p, job[2], placed, avoid):
+					continue
+				placed.append(p)
+				var before := get_child_count()
+				job[3].call(textures[drng.randi() % textures.size()], p)
+				for c in range(before, get_child_count()):
+					var sprite := get_child(c) as Sprite2D
+					if sprite:
+						sprite.modulate *= deep_tint
+				break
+
+
+func _deep_spot_free(p: Vector2, spacing: float, placed: Array[Vector2], avoid: Array[Vector2]) -> bool:
+	for group in STATION_GROUPS:
+		for node in get_tree().get_nodes_in_group(group):
+			if p.distance_to(node.global_position) < keep_clear_radius:
+				return false
+	for a in avoid:
+		if p.distance_to(a) < 90.0:
+			return false
+	for q in placed:
+		if p.distance_to(q) < spacing:
+			return false
+	return true
 
 
 # ------------------------------------------------------------ clareira

@@ -54,6 +54,8 @@ extends Node
 ##     save antigo sem esses campos sorteia uma vez e passa a guardar.
 ##   Bloco 13: armazem.gd wood_stored; tree_node.gd (cada árvore da clareira)
 ##     wood_remaining + _cooldown; ipezinho.gd role "lenhador" + wood_carrying.
+##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
+##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   camera_controller.gd (Camera2D)
 ##     posição e zoom (conforto: volta a olhar pro mesmo lugar).
 ##
@@ -248,6 +250,7 @@ func _collect() -> Dictionary:
 		"village": "village_hub",
 		"oficina": "oficina",
 		"escavadeira": "escavadeira",
+		"elevador": "elevador",
 	}
 	for key in singles:
 		var node := tree.get_first_node_in_group(singles[key])
@@ -312,11 +315,15 @@ func apply_pending(main: Node) -> void:
 	_apply_group("casas", SaveUtil.dict(data, "casas"))
 	_apply_group("armazens", SaveUtil.dict(data, "armazens"))
 	_apply_single("oficina", SaveUtil.dict(data, "oficina"))
+	_apply_single("elevador", SaveUtil.dict(data, "elevador"))  # antes das jazidas (fundo tranca)
 	_apply_group("minerios", SaveUtil.dict(data, "minerios"))
 	_apply_group("comedouros", SaveUtil.dict(data, "comedouros"))
 	_apply_group("coleta_comida", SaveUtil.dict(data, "coleta_comida"))
 	_apply_group("arvores", SaveUtil.dict(data, "arvores"))
 	_apply_single("escavadeira", SaveUtil.dict(data, "escavadeira"))
+	var shaft := get_tree().get_first_node_in_group("elevador")
+	if shaft:
+		shaft.sync_state()  # escavadeira pronta => descida aberta (save antigo sem "elevador")
 	if data.has("workers") and typeof(data.workers) == TYPE_ARRAY:
 		_apply_workers(main, data.workers)
 

@@ -96,6 +96,13 @@ COAL_GLINT = (150, 158, 180, 255)
 COAL_RAMP = (COAL_DARK, COAL, COAL, COAL_SHINE)
 COAL_ROCK_RAMP = (COAL_DARK, COAL, (36, 38, 48, 255), (54, 58, 72, 255), COAL_SHINE, COAL_GLINT)  # rocha de carvão inteira
 
+SILVER_DARK = (104, 112, 132, 255)  # prata: branca-azulada, o brilho mais forte da mina
+SILVER = (156, 164, 182, 255)
+SILVER_LIGHT = (206, 212, 226, 255)
+SILVER_GLINT = (240, 244, 252, 255)
+SILVER_RAMP = (SILVER_DARK, SILVER, SILVER_LIGHT, SILVER_GLINT)
+DEEP_RAMP = ((14, 16, 24, 255), (22, 25, 36, 255), (31, 35, 48, 255), (42, 47, 62, 255), (56, 62, 80, 255))  # rocha do nível 2
+
 STEEL_DARK = (66, 76, 96, 255)  # aço temperado (picareta nova)
 STEEL = (104, 118, 138, 255)
 STEEL_LIGHT = (160, 178, 196, 255)
@@ -360,6 +367,7 @@ LIGHT_DIR = (-0.5, -0.72, 0.48)  # luz vindo de cima/esquerda, meio de frente
 
 IRON_VEIN = (RUST_ACCENT, RUST_LIGHT, RUST, RUST_DARK, RUST_GLINT)
 COPPER_VEIN = (COPPER_LIGHT, COPPER, COPPER, COPPER_DARK, COPPER_GLINT)
+SILVER_VEIN = (SILVER_GLINT, SILVER_LIGHT, SILVER, SILVER_DARK, SILVER_GLINT)
 COAL_VEIN = (COAL_GLINT, COAL_SHINE, COAL_DARK, COAL_DARK, (200, 208, 226, 255))  # facetas vítreas
 
 
@@ -677,6 +685,11 @@ def build_ores():
     for i, (seed, n) in enumerate(((501, 4), (502, 5), (503, 4))):
         save(rock(16, 16, seed, ramp=COAL_ROCK_RAMP, ore=n, cracks=2, bright=-0.05, vein=COAL_VEIN), f"ore_carvao_{i}.png")
     save(trim(ore_chunk(9, 8, 7, ramp=COAL_RAMP, speck=COAL_DARK, glint=COAL_GLINT)), "chunk_carvao.png")
+    # prata (nível 2): rocha funda e escura com veios brancos brilhantes
+    for i, (seed, n) in enumerate(((601, 5), (602, 6), (603, 5))):
+        save(rock(16, 16, seed, ramp=DEEP_RAMP, ore=n, cracks=2, bright=0.08, vein=SILVER_VEIN,
+                  specks=(SILVER_LIGHT,)), f"ore_prata_{i}.png")
+    save(trim(ore_chunk(9, 8, 8, ramp=SILVER_RAMP, speck=SILVER_DARK, glint=SILVER_GLINT)), "chunk_prata.png")
 
     for i, (seed, moss, cracks) in enumerate(((11, 0.0, 1), (12, 0.45, 1), (13, 0.0, 2), (14, 0.6, 0), (15, 0.25, 1))):
         save(rock(16, 16, seed, moss=moss, cracks=cracks), f"boulder_{i}.png")
@@ -1597,6 +1610,58 @@ def build_floor_clareira():
     save(img, "floor_clareira.png")
 
 
+def build_floor_deep():
+    """Chão do nível 2: rocha mais escura e fria, com pontinhos de mineral brilhando."""
+    size = 64
+    rnd = random.Random(128)
+    field = seamless_noise(size, 90, 31, (3, 9))
+    img = new(size, size)
+    for y in range(size):
+        for x in range(size):
+            v = field[y][x] + rnd.uniform(-0.2, 0.2)
+            img.putpixel((x, y), dither(DEEP_RAMP, 0.45 + v * 0.25, x, y, mode="bayer"))
+    for _ in range(14):  # rachaduras fundas
+        x, y = rnd.randrange(size), rnd.randrange(size)
+        for _ in range(rnd.randint(4, 8)):
+            img.putpixel((x % size, y % size), DEEP_RAMP[0])
+            x += rnd.choice((1, 1, 0))
+            y += rnd.choice((1, 0, -1))
+    for _ in range(10):  # pontinhos de prata/cristal
+        x, y = rnd.randrange(size), rnd.randrange(size)
+        img.putpixel((x, y), rnd.choice((SILVER, WALL_WET, (70, 110, 140, 255))))
+    save(img, "floor_deep.png")
+
+
+def build_elevador():
+    """Elevador (gaiola de ferro com polia) que desce pro nível 2."""
+    W, H = 24, 30
+    img = new(W, H)
+    for x0 in (2, W - 4):  # colunas
+        for y in range(3, H - 1):
+            px(img, x0, y, IRON_LIGHT)
+            px(img, x0 + 1, y, IRON_DARK)
+    rect(img, 1, 2, W - 2, 4, IRON)  # viga de cima
+    rect(img, 1, 2, W - 2, 2, IRON_LIGHT)
+    for y in range(0, 5):  # polia
+        for x in range(9, 15):
+            if (x - 11.5) ** 2 + (y - 2) ** 2 <= 6:
+                px(img, x, y, RUST_LIGHT if y < 2 else RUST)
+    px(img, 11, 2, IRON_SHADOW)
+    for y in range(5, 18):  # correntes
+        px(img, 8, y, IRON_HIGHLIGHT if y % 2 else IRON)
+        px(img, 15, y, IRON_HIGHLIGHT if y % 2 else IRON)
+    rect(img, 4, 17, W - 5, 18, WOOD_LIGHT)  # plataforma de tábua
+    rect(img, 4, 19, W - 5, 19, WOOD_DARK)
+    for x in range(4, W - 4, 2):  # grade da gaiola
+        rect(img, x, 20, x, 24, IRON_DARK)
+    rect(img, 4, 25, W - 5, 25, IRON)
+    for y in range(26, H - 1):  # poço escuro embaixo
+        for x in range(4, W - 4):
+            px(img, x, y, (WALL_VOID, STONE_BLACK))
+    rect(img, 5, 21, 6, 22, LAMP_GLOW)  # lanterninha de sinal
+    save(outline(img, 0.5), "elevador.png")
+
+
 def build_axe():
     """Machado do lenhador: mesmo layout 11x13 da picareta (encaixa na mão igual)."""
     rows = [
@@ -2011,6 +2076,8 @@ if __name__ == "__main__":
     build_arvore()
     build_floor_clareira()
     build_axe()
+    build_floor_deep()
+    build_elevador()
     build_log()
     build_food_icons()
     build_floor()

@@ -69,7 +69,7 @@ func _build() -> void:
 	_fab_bar.custom_minimum_size.y = 6
 	vbox.add_child(_fab_bar)
 
-	_done_label = _hud._label("A escavadeira está PRONTA! (a próxima fase do jogo começa daqui)", 14, _hud.COLOR_TITLE)
+	_done_label = _hud._label("A escavadeira está PRONTA! A descida pro NÍVEL 2 abriu ao lado dela.", 14, _hud.COLOR_TITLE)
 	_done_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_done_label)
 

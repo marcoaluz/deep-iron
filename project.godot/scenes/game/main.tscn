@@ -42,6 +42,9 @@
 [ext_resource type="PackedScene" path="res://scenes/props/arvore.tscn" id="39_arvore"]
 [ext_resource type="Texture2D" path="res://assets/game/floor_clareira.png" id="40_floor_clareira"]
 [ext_resource type="Texture2D" path="res://assets/game/arvore.png" id="41_arvore_tex"]
+[ext_resource type="PackedScene" path="res://scenes/props/elevador.tscn" id="42_elevador"]
+[ext_resource type="PackedScene" path="res://scenes/props/jazida_prata.tscn" id="43_prata"]
+[ext_resource type="Texture2D" path="res://assets/game/floor_deep.png" id="44_floor_deep"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
@@ -67,6 +70,7 @@ torch_texture = ExtResource("24_torch")
 torch_unlit_texture = ExtResource("24_torch_unlit")
 clearing_floor_texture = ExtResource("40_floor_clareira")
 clearing_tree_texture = ExtResource("41_arvore_tex")
+deep_floor_texture = ExtResource("44_floor_deep")
 support_texture = ExtResource("25_support")
 light_texture = ExtResource("26_light")
 shadow_texture = ExtResource("30_shadow")
@@ -144,6 +148,25 @@ position = Vector2(-200, -600)
 
 [node name="Arvore6" parent="World" instance=ExtResource("39_arvore")]
 position = Vector2(60, -590)
+
+[node name="Elevador" parent="World" instance=ExtResource("42_elevador")]
+position = Vector2(500, 25)
+bottom_position = Vector2(440, 790)
+
+[node name="JazidaPrata" parent="World" instance=ExtResource("43_prata")]
+position = Vector2(-380, 880)
+
+[node name="JazidaPrata2" parent="World" instance=ExtResource("43_prata")]
+position = Vector2(60, 1060)
+
+[node name="JazidaPrata3" parent="World" instance=ExtResource("43_prata")]
+position = Vector2(330, 1180)
+
+[node name="JazidaCobreFundo" parent="World" instance=ExtResource("36_cobre")]
+position = Vector2(-220, 1180)
+
+[node name="JazidaCarvaoFundo" parent="World" instance=ExtResource("37_carvao")]
+position = Vector2(200, 890)
 
 [node name="Horta" parent="World" instance=ExtResource("38_horta")]
 position = Vector2(320, 60)

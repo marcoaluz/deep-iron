@@ -13,7 +13,7 @@ signal replenished
 
 @export_group("Mineração")
 ## Tipo de minério desta jazida: "ferro", "cobre" ou "carvao".
-@export_enum("ferro", "cobre", "carvao") var ore_type: String = "ferro"
+@export_enum("ferro", "cobre", "carvao", "prata") var ore_type: String = "ferro"
 ## Minério tirado por segundo por ipezinho (ritmo: era 4.0).
 @export var MINE_RATE: float = 3.0
 @export var ore_total: float = 200.0
@@ -34,6 +34,7 @@ var _cooldown: float = 0.0
 var _hit_time: float = 0.0
 var _base_scale: Vector2
 var _unlocked: bool = true
+var _needs_descent: bool = false  # trancada porque o nível 2 ainda não abriu
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _label: Label = $AmountLabel
@@ -84,7 +85,12 @@ func on_unlock_changed(animate: bool = true) -> void:
 	var oficina := get_tree().get_first_node_in_group("oficina")
 	var was := _unlocked
 	# sem Oficina no mapa, nada fica bloqueado
-	_unlocked = oficina == null or oficina.is_ore_unlocked(ore_type)
+	var tool_ok: bool = oficina == null or oficina.is_ore_unlocked(ore_type)
+	# no nível 2, também precisa da descida aberta (escavadeira pronta)
+	var env := get_tree().get_first_node_in_group("environment")
+	var shaft := get_tree().get_first_node_in_group("elevador")
+	_needs_descent = env != null and env.is_deep(global_position) and not (shaft != null and shaft.unlocked)
+	_unlocked = tool_ok and not _needs_descent
 	if _unlocked and not was and animate:
 		var pop := create_tween()
 		_visual.scale = _base_scale * 1.25
@@ -138,7 +144,10 @@ func _update_visual() -> void:
 		_visual.modulate = Color(0.42, 0.42, 0.5)
 		var oficina := get_tree().get_first_node_in_group("oficina")
 		var tool: String = oficina.tool_for_ore(ore_type) if oficina else ""
-		_label.text = "%s: precisa de\n%s" % [Ores.display_name(ore_type), oficina.TOOL_NAMES[tool] if tool != "" else "?"]
+		if _needs_descent:
+			_label.text = "%s: fechado até a\nescavadeira ficar pronta" % Ores.display_name(ore_type)
+		else:
+			_label.text = "%s: precisa de\n%s" % [Ores.display_name(ore_type), oficina.TOOL_NAMES[tool] if tool != "" else "?"]
 		_label.modulate = Color(0.75, 0.75, 0.85, 0.8)
 		_padlock.position.y = -16.0 + sin(Time.get_ticks_msec() * 0.003) * 1.5
 	elif _cooldown > 0.0:

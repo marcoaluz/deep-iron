@@ -1,0 +1,77 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/deep_shaft.gd" id="1_shaft"]
+[ext_resource type="Texture2D" path="res://assets/game/elevador.png" id="2_sprite"]
+[ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="3_shadow"]
+[ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="4_light"]
+
+[node name="Elevador" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_shaft")
+
+[node name="Top" type="Node2D" parent="."]
+visible = false
+
+[node name="Shadow" type="Sprite2D" parent="Top"]
+z_index = -4
+position = Vector2(3, 0)
+scale = Vector2(2.2, 1.6)
+texture = ExtResource("3_shadow")
+
+[node name="Sprite" type="Sprite2D" parent="Top"]
+scale = Vector2(2, 2)
+texture = ExtResource("2_sprite")
+offset = Vector2(0, -15)
+
+[node name="Lamp" type="PointLight2D" parent="Top"]
+position = Vector2(-11, -18)
+color = Color(1, 0.7, 0.35, 1)
+energy = 0.6
+texture = ExtResource("4_light")
+texture_scale = 0.35
+
+[node name="Label" type="Label" parent="Top"]
+offset_left = -80.0
+offset_top = -84.0
+offset_right = 80.0
+offset_bottom = -64.0
+theme_override_colors/font_color = Color(0.75, 0.8, 1, 0.95)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+text = "descida pro nível 2"
+horizontal_alignment = 1
+
+[node name="Bottom" type="Node2D" parent="."]
+
+[node name="Shadow" type="Sprite2D" parent="Bottom"]
+z_index = -4
+position = Vector2(3, 0)
+scale = Vector2(2.2, 1.6)
+texture = ExtResource("3_shadow")
+
+[node name="Sprite" type="Sprite2D" parent="Bottom"]
+scale = Vector2(2, 2)
+texture = ExtResource("2_sprite")
+offset = Vector2(0, -15)
+
+[node name="Lamp" type="PointLight2D" parent="Bottom"]
+position = Vector2(-11, -18)
+color = Color(1, 0.7, 0.35, 1)
+energy = 0.7
+texture = ExtResource("4_light")
+texture_scale = 0.5
+
+[node name="Label" type="Label" parent="Bottom"]
+offset_left = -140.0
+offset_top = -84.0
+offset_right = 140.0
+offset_bottom = -64.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+text = "Nível 2"
+horizontal_alignment = 1
+
+[node name="Link" type="NavigationLink2D" parent="."]
+enabled = false

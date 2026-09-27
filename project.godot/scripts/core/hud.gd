@@ -86,7 +86,7 @@ func _ready() -> void:
 	if _dig:
 		_dig.completed.connect(func():
 			show_banner("ESCAVADEIRA CONCLUÍDA!",
-				"Conquista: Deep Iron — a vila montou a grande escavadeira."))
+				"Conquista: Deep Iron — a descida pro nível 2 abriu ao lado da escavadeira."))
 	_build()
 	SaveManager.saved.connect(func(reason: String):
 		show_toast("Jogo salvo (%s)" % reason))
