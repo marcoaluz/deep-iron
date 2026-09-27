@@ -120,6 +120,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				_day_night.skip_phase()
 			KEY_T:
 				toggle_overtime()
+			KEY_C:
+				toggle_cook()
 			KEY_K:
 				for unit in selection.duplicate():
 					if is_instance_valid(unit):
@@ -301,6 +303,23 @@ func toggle_overtime() -> void:
 	_hud.show_toast("Turno extra %s: %d ipezinho%s" % [
 		"LIGADO" if turn_on else "desligado", selection.size(), "s" if selection.size() > 1 else ""],
 		Color(0.6, 0.7, 1.0))
+
+
+## C / botão do HUD: torna os selecionados cozinheiros (se algum ainda não for);
+## se todos já forem, voltam a fazer de tudo.
+func toggle_cook() -> void:
+	_prune_selection()
+	if selection.is_empty():
+		Audio.error()
+		_hud.show_toast("Selecione ipezinhos pra virar cozinheiro", Color(1.0, 0.6, 0.45))
+		return
+	var make_cook := selection.any(func(w): return not w.is_cook())
+	for unit in selection:
+		unit.set_role(unit.ROLE_COOK if make_cook else "")
+	Audio.click()
+	_hud.show_toast("%s: %d ipezinho%s" % [
+		"Cozinheiro" if make_cook else "De volta à mina", selection.size(), "s" if selection.size() > 1 else ""],
+		Color(0.95, 0.9, 0.6))
 
 
 func is_selected(unit: Node) -> bool:

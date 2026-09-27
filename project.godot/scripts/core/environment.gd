@@ -12,7 +12,7 @@ extends Node2D
 signal navigation_ready
 
 ## Grupos de estruturas que bloqueiam a navegação e afastam a decoração.
-const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village_hub", "escavadeira", "oficina"]
+const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village_hub", "escavadeira", "oficina", "coleta_comida"]
 
 @export_group("Mapa")
 @export var map_rect: Rect2 = Rect2(-720, -440, 1440, 880)

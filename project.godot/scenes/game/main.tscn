@@ -38,6 +38,7 @@
 [ext_resource type="PackedScene" path="res://scenes/props/oficina.tscn" id="35_oficina"]
 [ext_resource type="PackedScene" path="res://scenes/props/jazida_cobre.tscn" id="36_cobre"]
 [ext_resource type="PackedScene" path="res://scenes/props/jazida_carvao.tscn" id="37_carvao"]
+[ext_resource type="PackedScene" path="res://scenes/props/horta.tscn" id="38_horta"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
@@ -120,6 +121,9 @@ position = Vector2(-200, -380)
 
 [node name="JazidaCarvao2" parent="World" instance=ExtResource("37_carvao")]
 position = Vector2(390, -370)
+
+[node name="Horta" parent="World" instance=ExtResource("38_horta")]
+position = Vector2(320, 60)
 
 [node name="Lote1" parent="World" instance=ExtResource("31_casa")]
 position = Vector2(-170, 245)

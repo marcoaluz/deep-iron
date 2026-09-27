@@ -25,15 +25,16 @@ texture = ExtResource("3_shadow")
 [node name="Visual" type="Sprite2D" parent="." unique_id=1522328408]
 scale = Vector2(2, 2)
 texture = ExtResource("2_sprite")
+hframes = 3
 offset = Vector2(0, -6)
 
 [node name="Shape" type="CollisionShape2D" parent="." unique_id=626278914]
 shape = SubResource("CircleShape2D_food")
 
 [node name="NameLabel" type="Label" parent="." unique_id=626278915]
-offset_left = -40.0
-offset_top = -46.0
-offset_right = 40.0
+offset_left = -60.0
+offset_top = -64.0
+offset_right = 60.0
 offset_bottom = -28.0
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4

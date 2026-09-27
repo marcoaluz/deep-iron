@@ -11,17 +11,24 @@ const STATE_LABELS := {
 	"storing": "armazenando",
 	"manual": "ordem manual",
 	"home": "indo pra casa",
+	"gathering": "colhendo comida",
+	"delivering": "levando comida",
 }
 ## Distância da porta/cama a partir da qual o ipezinho "chega" em casa.
 const REST_REACH := 12.0
 const Ores := preload("res://scripts/core/ores.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const STEEL_PICKAXE := preload("res://assets/game/pickaxe_aco.png")
+const FOOD_BASKET := preload("res://assets/game/food_basket.png")
 const STATE_GROUP := {
 	"eating": "comedouros",
 	"mining": "minerios",
 	"storing": "armazens",
+	"gathering": "coleta_comida",
+	"delivering": "comedouros",
 }
+## Função fixa (designada pelo jogador). "" = faz de tudo (minerar etc.).
+const ROLE_COOK := "cozinheiro"
 
 @export_group("Movimento")
 @export var speed: float = 120.0
@@ -80,6 +87,10 @@ const STATE_GROUP := {
 @export var irritated_speed_mult: float = 0.95
 @export var furious_speed_mult: float = 0.85
 
+@export_group("Cozinheiro")
+## Comida que o cozinheiro carrega por viagem (horta -> comedouro).
+@export var cook_carry: float = 12.0
+
 @export_group("Carga")
 ## Minério por viagem (ritmo: era 20).
 @export var cargo_capacity: float = 16.0
@@ -126,6 +137,10 @@ var _body_base_y: float = 0.0
 var injured: bool = false
 ## Turno extra: de noite continua trabalhando em vez de ir pra cama (ligado pelo jogador).
 var overtime: bool = false
+## Função: "" (faz de tudo) ou ROLE_COOK (só busca comida pro comedouro).
+var role: String = ""
+## Comida na cesta (só o cozinheiro colhe; qualquer um que tenha na mão entrega).
+var food_carrying: float = 0.0
 ## Zanga 0..100: sobe no turno extra da noite, desce dormindo.
 var anger: float = 0.0
 var _mood: int = 0
@@ -144,6 +159,7 @@ var _saved_home_slot: int = -1
 @onready var _carry_icon: Sprite2D = $CarryIcon
 @onready var _injury_icon: Sprite2D = $InjuryIcon
 @onready var _anger_icon: Sprite2D = $AngerIcon
+@onready var _cook_icon: Sprite2D = $CookIcon
 @onready var _lamp: PointLight2D = $HeadLamp
 @onready var _agent: NavigationAgent2D = $Agent
 
@@ -316,10 +332,27 @@ func _choose_state() -> String:
 	if injured:
 		return "home"
 	# Prioridade 1: comer. Quem já está comendo só sai quando estiver quase cheio.
-	if _ai_state == "eating" and hunger < hunger_max * eat_until_ratio:
+	# Sem comida no comedouro não adianta esperar lá: segue trabalhando (com fome).
+	var food_ok := _food_available()
+	if _ai_state == "eating" and hunger < hunger_max * eat_until_ratio and food_ok:
 		return "eating"
-	if hunger < hunger_threshold:
+	if hunger < hunger_threshold and food_ok:
 		return "eating"
+	# Comida na cesta: leva pro comedouro (cozinheiro com a cesta cheia, sem horta
+	# disponível, ou quem deixou de ser cozinheiro com comida na mão).
+	if food_carrying > 0.0:
+		var basket_full := food_carrying >= cook_carry - 0.01
+		if not is_cook() or basket_full or _ai_state == "delivering" or _find_best_station("coleta_comida") == null:
+			return "delivering"
+	# Cozinheiro: larga o minério que tiver e passa a só colher e levar comida.
+	if is_cook():
+		if carrying > 0.0:
+			return "storing"
+		if _ai_state == "gathering" and _station_ok_for("gathering"):
+			return "gathering"
+		if _find_best_station("coleta_comida") != null:
+			return "gathering"
+		return "idle"
 	# Prioridade 2: depositar carga cheia (e não desistir no meio do caminho).
 	if carrying >= cargo_capacity - 0.01:
 		return "storing"
@@ -379,6 +412,12 @@ func _station_ok_for(state: String) -> bool:
 		return false
 	if state == "mining":
 		return _station.has_ore() and carrying < cargo_capacity
+	if state == "gathering":
+		return _station.has_food() and food_carrying < cook_carry - 0.01
+	if state == "delivering":
+		return food_carrying > 0.0 and _station.space_left() > 0.5
+	if state == "eating":
+		return _station.has_food()
 	return true
 
 
@@ -539,6 +578,53 @@ func _stop_resting() -> void:
 func on_tool_crafted(id: String) -> void:
 	if id == "picareta_aco":
 		_tool.texture = STEEL_PICKAXE
+
+
+# ------------------------------------------------------------ cozinheiro
+func is_cook() -> bool:
+	return role == ROLE_COOK
+
+
+## Designa/tira a função de cozinheiro (tecla C com o ipezinho selecionado).
+func set_role(new_role: String) -> void:
+	if role == new_role:
+		return
+	role = new_role
+	_popup("Cozinheiro!" if is_cook() else "De volta à mina", Color(0.95, 0.9, 0.6))
+	if auto_mode and _ai_state != "manual":
+		_decision_timer = randf_range(0.05, 0.4)  # troca de tarefa já
+
+
+## Horta chama: o cozinheiro põe comida na cesta. Retorna quanto pegou.
+func harvest(amount: float) -> float:
+	if not is_cook() or injured or _ai_state != "gathering":
+		return 0.0
+	var taken := minf(amount, cook_carry - food_carrying)
+	if taken <= 0.0:
+		return 0.0
+	food_carrying += taken
+	_work_timer = 0.2
+	if food_carrying >= cook_carry - 0.01:
+		_decision_timer = 0.0  # cesta cheia: vai pro comedouro já
+	return taken
+
+
+## Comedouro chama: descarrega comida da cesta. Retorna quanto entregou.
+func deliver_food(amount: float) -> float:
+	var given := minf(amount, food_carrying)
+	food_carrying -= given
+	if food_carrying <= 0.001:
+		food_carrying = 0.0
+		_decision_timer = 0.0
+	return given
+
+
+## Algum comedouro com comida?
+func _food_available() -> bool:
+	for c in get_tree().get_nodes_in_group("comedouros"):
+		if not c.has_method("has_food") or c.has_food():
+			return true
+	return false
 
 
 # ------------------------------------------------------------ turno extra / zanga
@@ -722,7 +808,8 @@ func _update_animation(delta: float) -> void:
 		# impacto = ponto mais baixo do golpe (a curva para de subir)
 		var rising := swing > _prev_swing
 		if _swing_rising and not rising:
-			Audio.pick(global_position)
+			if _ai_state != "gathering":
+				Audio.pick(global_position)
 		_swing_rising = rising
 		_prev_swing = swing
 	else:
@@ -761,11 +848,16 @@ func _update_animation(delta: float) -> void:
 		_body.position.x = 0.0
 
 	# pedrinha de minério em cima da cabeça, maior quanto mais carga
-	_carry_icon.visible = carrying > 0.0 and not _resting
+	_cook_icon.visible = is_cook() and not _inside
+	_carry_icon.visible = (carrying > 0.0 or food_carrying > 0.0) and not _resting
+	if food_carrying > 0.0:
+		_carry_icon.texture = FOOD_BASKET
+	elif carrying > 0.0 and _carry_icon.texture == FOOD_BASKET:
+		_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
 	if _carry_icon.visible:
-		var r := carrying / cargo_capacity
+		var r := food_carrying / cook_carry if food_carrying > 0.0 else carrying / cargo_capacity
 		_carry_icon.scale = Vector2.ONE * lerpf(1.0, 2.0, r)
-		_carry_icon.position.y = -44.0 - (2.0 if _body.frame % 2 == 1 else 0.0)
+		_carry_icon.position.y = -44.0 - (8.0 if is_cook() else 0.0) - (2.0 if _body.frame % 2 == 1 else 0.0)
 
 	# vermelho de fome / rosado de machucado
 	if hunger <= 0.0:
@@ -815,6 +907,8 @@ func get_save_data() -> Dictionary:
 		"home_slot": _home_slot if has_home() else -1,
 		"anger": anger,
 		"overtime": overtime,
+		"role": role,
+		"food_carrying": food_carrying,
 	}
 
 
@@ -835,6 +929,9 @@ func load_save_data(d: Dictionary) -> void:
 	_saved_home_slot = SaveUtil.integer(d, "home_slot", -1)
 	anger = clampf(SaveUtil.num(d, "anger", 0.0), 0.0, 100.0)
 	overtime = SaveUtil.boolean(d, "overtime", false)
+	var r := SaveUtil.text(d, "role", "")
+	role = r if r == ROLE_COOK else ""
+	food_carrying = clampf(SaveUtil.num(d, "food_carrying", 0.0), 0.0, cook_carry)
 	_refresh_mood(false)
 	_target = global_position
 	_update_hunger_label()

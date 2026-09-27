@@ -1485,10 +1485,29 @@ def build_comedouro():
     # musgo na quina
     for x, y in ((2, 13), (3, 12), (W - 4, 13), (W - 3, 13), (W - 3, 12)):
         px(img, x, y, (MOSS_DARK, MOSS))
+
+    # 3 quadros pelo estoque: 0 = cheio, 1 = pela metade, 2 = vazio (só farelo)
+    frames = []
+    for level in (2, 1, 0):
+        f = img.copy()
+        _comedouro_food(f, level, W)
+        frames.append(outline(pad(f), 0.5))
+    sheet = new(frames[0].width * 3, frames[0].height)
+    for i, fr in enumerate(frames):
+        sheet.alpha_composite(fr, (i * fr.width, 0))
+    save(sheet, "comedouro.png")
+
+
+def _comedouro_food(img, level, W):
+    """Comida em cima do cocho. level 2 = cheio, 1 = metade, 0 = vazio."""
+    if level == 0:
+        for x, y in ((6, 6), (12, 6), (19, 6), (25, 6)):  # farelo
+            px(img, x, y, BREAD_DARK)
+        return
     # "papa" da comida no topo
     rect(img, 2, 6, W - 3, 6, (BREAD_DARK, WOOD_DARK))
     # pães
-    for bx in (3, 16):
+    for bx in ((3, 16) if level == 2 else (3,)):
         rect(img, bx, 3, bx + 5, 5, BREAD)
         rect(img, bx + 1, 2, bx + 4, 2, BREAD_LIGHT)
         rect(img, bx + 1, 3, bx + 3, 3, BREAD_HIGHLIGHT)
@@ -1496,12 +1515,14 @@ def build_comedouro():
         px(img, bx + 2, 4, BREAD_DARK)
         px(img, bx + 4, 3, BREAD_DARK)
     # maçãs
-    for ax, ay in ((10, 4), (13, 3)):
+    for ax, ay in (((10, 4), (13, 3)) if level == 2 else ((10, 4),)):
         rect(img, ax, ay, ax + 2, ay + 2, APPLE)
         px(img, ax + 2, ay + 2, APPLE_DARK)
         px(img, ax + 1, ay + 2, (APPLE, APPLE_DARK))
         px(img, ax, ay, APPLE_LIGHT)
         px(img, ax + 1, ay - 1, WOOD_DARK)
+    if level < 2:
+        return
     # cogumelo da caverna
     rect(img, 23, 1, 27, 3, SHROOM)
     rect(img, 24, 0, 26, 0, SHROOM)
@@ -1514,7 +1535,81 @@ def build_comedouro():
     # folhas (musgo/ervas da caverna)
     for x, y in ((9, 6), (10, 5), (14, 6), (15, 5), (22, 5), (22, 6)):
         px(img, x, y, MOSS_LIGHT if y == 5 else MOSS)
-    save(outline(pad(img), 0.5), "comedouro.png")
+
+
+# ------------------------------------------------------------ horta de cogumelos (ponto de coleta)
+def _mushroom(img, x, y, big, red):
+    """Cogumelo com o pé em (x, y). big = chapéu de 5px, senão 3px."""
+    cap, cap_dark = (SHROOM, SHROOM_DARK) if red else (SHROOM_STEM, shade(SHROOM_STEM, 0.7))
+    h = 3 if big else 2
+    for yy in range(y - h + 1, y + 1):
+        px(img, x, yy, SHROOM_STEM if yy < y else shade(SHROOM_STEM, 0.8))
+    w = 2 if big else 1
+    top = y - h
+    rect(img, x - w, top, x + w, top, cap)
+    rect(img, x - w + 1, top - 1, x + w - 1, top - 1, cap)
+    px(img, x + w, top, cap_dark)
+    if big:
+        px(img, x - 1, top - 1, SHROOM_SPOT if red else SHROOM_SPOT)
+        px(img, x + 1, top, SHROOM_SPOT if red else cap_dark)
+
+
+def build_horta():
+    """Canteiro de cogumelos de caverna. 3 quadros: cheio, pela metade, colhido."""
+    W, H = 24, 14
+    rnd = random.Random(24)
+    base = new(W, H)
+    # monte de terra escura e úmida
+    for y in range(5, H - 1):
+        for x in range(1, W - 1):
+            if ((x - (W - 1) / 2) / ((W - 2) / 2)) ** 2 + ((y - 9) / 4.2) ** 2 <= 1.0:
+                t = 0.7 - (y - 5) * 0.08
+                c = dither(EARTH_RAMP, t, x, y)
+                if rnd.random() < 0.12:
+                    c = dither(MOSS_RAMP, 0.4, x, y)
+                px(base, x, y, c)
+    # bordinha de pedras
+    for x in range(2, W - 2, 3):
+        px(base, x, H - 3, STONE_LIGHT)
+        px(base, x + 1, H - 3, STONE_DARK)
+    spots = [(5, 8, True, True), (11, 7, True, False), (17, 8, True, True), (8, 11, False, True),
+             (14, 11, False, False), (20, 11, False, True), (3, 11, False, False)]
+    frames = []
+    for n in (len(spots), 3, 0):
+        img = base.copy()
+        for i, (x, y, big, red) in enumerate(spots):
+            if i < n:
+                _mushroom(img, x, y, big, red)
+            else:
+                px(img, x, y, shade(SHROOM_STEM, 0.6))  # toco colhido
+        frames.append(outline(pad(img), 0.5))
+    sheet = new(frames[0].width * 3, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "horta.png")
+
+
+def build_food_icons():
+    """Cesta de comida (carga do cozinheiro) e chapéu de cozinheiro."""
+    basket = [
+        ".r.W...",
+        "rRrWWw.",
+        "wwwwwww",
+        "BbBbBbB",
+        "bBbBbBb",
+        ".BbBbB.",
+    ]
+    pal = {"r": SHROOM_DARK, "R": SHROOM, "W": SHROOM_STEM, "w": shade(SHROOM_STEM, 0.75),
+           "B": WOOD_LIGHT, "b": WOOD_DARK}
+    save(outline(pad(from_rows(basket, pal)), 0.5), "food_basket.png")
+    hat = [
+        ".wWw.",
+        "wWWWw",
+        "wWWWW",
+        ".WWW.",
+        ".sss.",
+    ]
+    save(outline(pad(from_rows(hat, {"W": BANDAGE, "w": BANDAGE_SHADOW, "s": BANDAGE_SHADOW})), 0.5), "cook_hat.png")
 
 
 # ------------------------------------------------------------ ambiente
@@ -1736,6 +1831,8 @@ if __name__ == "__main__":
     build_pickaxe_steel()
     build_padlock()
     build_comedouro()
+    build_horta()
+    build_food_icons()
     build_floor()
     build_wall()
     build_torch()

@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="5_light"]
 [ext_resource type="Texture2D" path="res://assets/game/bandage.png" id="6_bandage"]
 [ext_resource type="Texture2D" path="res://assets/game/anger.png" id="7_anger"]
+[ext_resource type="Texture2D" path="res://assets/game/cook_hat.png" id="8_hat"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3ucvb"]
 size = Vector2(12, 10)
@@ -48,6 +49,13 @@ z_index = 5
 position = Vector2(9, -38)
 scale = Vector2(1.5, 1.5)
 texture = ExtResource("7_anger")
+
+[node name="CookIcon" type="Sprite2D" parent="."]
+visible = false
+z_index = 4
+position = Vector2(0, -36)
+scale = Vector2(2, 2)
+texture = ExtResource("8_hat")
 
 [node name="HeadLamp" type="PointLight2D" parent="." unique_id=907998627]
 position = Vector2(0, -30)

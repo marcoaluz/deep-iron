@@ -15,6 +15,7 @@ const COLOR_DAY := Color(1.0, 0.78, 0.4)
 const COLOR_NIGHT := Color(0.55, 0.62, 1.0)
 const COLOR_INJURED := Color(1.0, 0.5, 0.45)
 const COLOR_OVERTIME := Color(0.6, 0.7, 1.0)
+const COLOR_COOK := Color(0.95, 0.9, 0.6)
 const COLOR_IRRITATED := Color(1.0, 0.72, 0.35)
 const COLOR_FURIOUS := Color(1.0, 0.35, 0.28)
 const Ores := preload("res://scripts/core/ores.gd")
@@ -25,6 +26,8 @@ const STATE_COLORS := {
 	"storing": Color(0.45, 0.7, 1.0),
 	"manual": Color(1.0, 0.84, 0.25),
 	"home": Color(0.55, 0.62, 1.0),
+	"gathering": Color(0.75, 0.9, 0.5),
+	"delivering": Color(0.95, 0.85, 0.5),
 }
 
 @export var ore_icon: Texture2D
@@ -54,6 +57,8 @@ var _sell_button: Button
 var _auto_sell_check: CheckBox
 var _recruit_button: Button
 var _overtime_button: Button
+var _cook_button: Button
+var _food_label: Label
 var _workers_count_label: Label
 var _workers_title: Label
 var _rows_scroll: ScrollContainer
@@ -153,6 +158,8 @@ func _build() -> void:
 	vbox.add_child(_deposits_label)
 	_village_label = _label("", 13, COLOR_DIM)
 	vbox.add_child(_village_label)
+	_food_label = _label("", 13, COLOR_DIM)
+	vbox.add_child(_food_label)
 
 	if _economy:
 		_build_economy(vbox)
@@ -178,7 +185,7 @@ func _build() -> void:
 	var hint := _label(
 		"Clique: selecionar   •   Arrastar: selecionar vários   •   Shift+clique: somar/tirar   •   Botão dir.: mover / minerar (jazida)   •   Esc: soltar   •   Tab: próximo   •   F: seguir\n"
 		+ "Roda: zoom   •   Botão do meio / WASD / setas: mover câmera   •   Home: centralizar\n"
-		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste)   •   T: turno extra\n"
+		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste)   •   T: turno extra   •   C: cozinheiro\n"
 		+ "U: Centro da Vila   •   E: Escavadeira   •   O: Oficina   •   ou clique no prédio   •   F5: salvar   •   F9: carregar",
 		12, Color(0.85, 0.8, 0.72, 0.75))
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
@@ -227,10 +234,20 @@ func _build_economy(vbox: VBoxContainer) -> void:
 	_recruit_button.pressed.connect(_on_recruit_pressed)
 	vbox.add_child(_recruit_button)
 
+	# ordens pros selecionados: lado a lado pra economizar altura
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 6)
+	vbox.add_child(actions)
 	_overtime_button = _button("Turno extra  (T)")
 	_overtime_button.tooltip_text = "Os selecionados continuam trabalhando à noite (e vão ficando zangados)"
+	_overtime_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_overtime_button.pressed.connect(func(): _main.toggle_overtime())
-	vbox.add_child(_overtime_button)
+	actions.add_child(_overtime_button)
+	_cook_button = _button("Cozinheiro  (C)")
+	_cook_button.tooltip_text = "Os selecionados param de minerar e passam a buscar comida na horta pro comedouro"
+	_cook_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_cook_button.pressed.connect(func(): _main.toggle_cook())
+	actions.add_child(_cook_button)
 
 	if _hub:
 		_add_panel("hub", preload("res://scripts/core/hub_panel.gd"), _hub, vbox)
@@ -438,6 +455,7 @@ func _refresh() -> void:
 	var workers := get_tree().get_nodes_in_group("ipezinhos")
 	_refresh_phase()
 	_refresh_village(workers)
+	_refresh_food(workers)
 	_refresh_panels()
 	if _economy:
 		_refresh_economy(workers.size())
@@ -459,8 +477,12 @@ func _refresh() -> void:
 	var picked: int = _main.selection.size()
 	if _overtime_button:
 		var all_overtime: bool = picked > 0 and _main.selection.all(func(u): return is_instance_valid(u) and u.overtime)
-		_overtime_button.text = "Desligar turno extra  (T)" if all_overtime else "Turno extra pros selecionados  (T)"
+		_overtime_button.text = "Tirar turno extra  (T)" if all_overtime else "Turno extra  (T)"
 		_overtime_button.disabled = picked == 0
+	if _cook_button:
+		var all_cooks: bool = picked > 0 and _main.selection.all(func(u): return is_instance_valid(u) and u.is_cook())
+		_cook_button.text = "Voltar a minerar  (C)" if all_cooks else "Cozinheiro  (C)"
+		_cook_button.disabled = picked == 0
 	_workers_title.text = "IPEZINHOS  —  %d selecionados" % picked if picked > 1 else "IPEZINHOS"
 	_workers_title.add_theme_color_override("font_color", COLOR_TITLE if picked > 1 else COLOR_DIM)
 	for w in workers:
@@ -487,13 +509,17 @@ func _refresh() -> void:
 		row.state.add_theme_color_override("font_color", state_color)
 		# etiqueta de turno extra / zanga (o humor tem prioridade de cor)
 		var tags: Array[String] = []
+		if w.is_cook():
+			tags.append("cozinheiro")
 		if w.overtime:
 			tags.append("turno extra")
 		if w.mood() > 0:
 			tags.append(w.mood_label())
 		row.tag.text = "  ".join(tags) + ("  " if not tags.is_empty() else "")
-		row.tag.add_theme_color_override("font_color",
-			[COLOR_OVERTIME, COLOR_IRRITATED, COLOR_FURIOUS][w.mood()])
+		var tag_color: Color = [COLOR_OVERTIME, COLOR_IRRITATED, COLOR_FURIOUS][w.mood()]
+		if w.mood() == 0 and w.is_cook():
+			tag_color = COLOR_COOK
+		row.tag.add_theme_color_override("font_color", tag_color)
 		row.panel.add_theme_stylebox_override("panel", _style_row_selected if _main.is_selected(w) else _style_row)
 
 
@@ -508,6 +534,29 @@ func _refresh_stock() -> void:
 			continue
 		parts.append("[color=#%s]%s %d[/color]" % [Ores.UI_COLORS[t].to_html(false), Ores.display_name(t).to_lower(), int(amount)])
 	_stock_label.text = "   •   ".join(parts)
+
+
+## "Comida: 45/120 no comedouro • horta 150 • 1 cozinheiro"
+func _refresh_food(workers: Array) -> void:
+	var stock := 0.0
+	var capacity := 0.0
+	for c in get_tree().get_nodes_in_group("comedouros"):
+		stock += c.food_stock
+		capacity += c.food_capacity
+	var garden := 0.0
+	for h in get_tree().get_nodes_in_group("coleta_comida"):
+		garden += h.food_remaining
+	var cooks := workers.filter(func(w): return w.has_method("is_cook") and w.is_cook()).size()
+	var text := "Comida: %s no comedouro  •  horta %d  •  " % [
+		"ACABOU" if stock <= 0.0 else "%d/%d" % [int(stock), int(capacity)], int(garden)]
+	text += "%d cozinheiro%s" % [cooks, "s" if cooks != 1 else ""] if cooks > 0 else "sem cozinheiro"
+	_food_label.text = text
+	var color := COLOR_DIM
+	if stock <= 0.0:
+		color = COLOR_HUNGER_BAD
+	elif capacity > 0.0 and stock / capacity < 0.25 or cooks == 0:
+		color = COLOR_HUNGER_LOW
+	_food_label.add_theme_color_override("font_color", color)
 
 
 func _refresh_phase() -> void:

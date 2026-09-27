@@ -43,6 +43,11 @@ extends Node
 ##     _mined_since_roll, _facing, casa (nome do nó) + cama (_home_slot).
 ##     Estado da IA (_ai_state, estação reservada, ordem manual) NÃO é salvo:
 ##     ao carregar cada um decide de novo o que fazer (de noite volta pra cama).
+##   comedouro.gd (cada comedouro, pelo nome do nó) — Bloco 10
+##     food_stock.
+##   food_source.gd (horta de cogumelos, pelo nome do nó) — Bloco 10
+##     food_remaining, _cooldown.
+##   ipezinho.gd — Blocos 9 e 10: anger, overtime, role (cozinheiro), food_carrying.
 ##   camera_controller.gd (Camera2D)
 ##     posição e zoom (conforto: volta a olhar pro mesmo lugar).
 ##
@@ -235,7 +240,7 @@ func _collect() -> Dictionary:
 		var node := tree.get_first_node_in_group(singles[key])
 		if node and node.has_method("get_save_data"):
 			data[key] = node.get_save_data()
-	for key in ["casas", "armazens", "minerios"]:
+	for key in ["casas", "armazens", "minerios", "comedouros", "coleta_comida"]:
 		data[key] = _collect_group(key)
 	var workers := []
 	for w in tree.get_nodes_in_group("ipezinhos"):
@@ -289,6 +294,8 @@ func apply_pending(main: Node) -> void:
 	_apply_group("armazens", SaveUtil.dict(data, "armazens"))
 	_apply_single("oficina", SaveUtil.dict(data, "oficina"))
 	_apply_group("minerios", SaveUtil.dict(data, "minerios"))
+	_apply_group("comedouros", SaveUtil.dict(data, "comedouros"))
+	_apply_group("coleta_comida", SaveUtil.dict(data, "coleta_comida"))
 	_apply_single("escavadeira", SaveUtil.dict(data, "escavadeira"))
 	if data.has("workers") and typeof(data.workers) == TYPE_ARRAY:
 		_apply_workers(main, data.workers)
