@@ -20,6 +20,21 @@ const Ores := preload("res://scripts/core/ores.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const STEEL_PICKAXE := preload("res://assets/game/pickaxe_aco.png")
 const FOOD_BASKET := preload("res://assets/game/food_basket.png")
+## Visual do corpo por gênero: 3 variações de cor de roupa/cabelo cada (tools/gen_sprites.py).
+## Todas têm o mesmo layout de 4 quadros e o mesmo capacete, então os ícones por cima
+## (carga, chapéu de cozinheiro, zanga, curativo) encaixam igual.
+const BODY_TEXTURES := {
+	"menino": [
+		preload("res://assets/game/ipezinho_m0.png"),
+		preload("res://assets/game/ipezinho_m1.png"),
+		preload("res://assets/game/ipezinho_m2.png"),
+	],
+	"menina": [
+		preload("res://assets/game/ipezinho_f0.png"),
+		preload("res://assets/game/ipezinho_f1.png"),
+		preload("res://assets/game/ipezinho_f2.png"),
+	],
+}
 const STATE_GROUP := {
 	"eating": "comedouros",
 	"mining": "minerios",
@@ -139,6 +154,10 @@ var injured: bool = false
 var overtime: bool = false
 ## Função: "" (faz de tudo) ou ROLE_COOK (só busca comida pro comedouro).
 var role: String = ""
+## "menino" ou "menina": sorteado ao nascer (jogo novo / recrutamento), fixo depois.
+var gender: String = ""
+## Variação de cor de roupa/cabelo dentro do gênero (índice em BODY_TEXTURES).
+var look: int = -1
 ## Comida na cesta (só o cozinheiro colhe; qualquer um que tenha na mão entrega).
 var food_carrying: float = 0.0
 ## Zanga 0..100: sobe no turno extra da noite, desce dormindo.
@@ -179,6 +198,7 @@ func _ready() -> void:
 	if not pending_save_data.is_empty():
 		load_save_data(pending_save_data)
 		pending_save_data = {}
+	_ensure_appearance()
 	_claim_home.call_deferred()  # as casas precisam estar nos grupos
 	_sync_tool_visual.call_deferred()  # recrutado depois da picareta de aço já nasce com ela
 	_update_hunger_label()
@@ -580,6 +600,17 @@ func on_tool_crafted(id: String) -> void:
 		_tool.texture = STEEL_PICKAXE
 
 
+# ------------------------------------------------------------ visual: menino/menina
+## Sorteia gênero e variação se ainda não tiver (ou se vier inválido do save) e aplica.
+func _ensure_appearance() -> void:
+	if not BODY_TEXTURES.has(gender):
+		gender = "menino" if randf() < 0.5 else "menina"
+	var options: Array = BODY_TEXTURES[gender]
+	if look < 0 or look >= options.size():
+		look = randi() % options.size()
+	_body.texture = options[look]
+
+
 # ------------------------------------------------------------ cozinheiro
 func is_cook() -> bool:
 	return role == ROLE_COOK
@@ -909,6 +940,8 @@ func get_save_data() -> Dictionary:
 		"overtime": overtime,
 		"role": role,
 		"food_carrying": food_carrying,
+		"gender": gender,
+		"look": look,
 	}
 
 
@@ -932,6 +965,9 @@ func load_save_data(d: Dictionary) -> void:
 	var r := SaveUtil.text(d, "role", "")
 	role = r if r == ROLE_COOK else ""
 	food_carrying = clampf(SaveUtil.num(d, "food_carrying", 0.0), 0.0, cook_carry)
+	# save antigo (sem visual) ou valor inválido: _ensure_appearance sorteia e o próximo save guarda
+	gender = SaveUtil.text(d, "gender", "")
+	look = SaveUtil.integer(d, "look", -1)
 	_refresh_mood(false)
 	_target = global_position
 	_update_hunger_label()

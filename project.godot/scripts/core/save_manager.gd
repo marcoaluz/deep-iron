@@ -48,6 +48,8 @@ extends Node
 ##   food_source.gd (horta de cogumelos, pelo nome do nó) — Bloco 10
 ##     food_remaining, _cooldown.
 ##   ipezinho.gd — Blocos 9 e 10: anger, overtime, role (cozinheiro), food_carrying.
+##   ipezinho.gd — Bloco 11: gender ("menino"/"menina") e look (variação de roupa);
+##     save antigo sem esses campos sorteia uma vez e passa a guardar.
 ##   camera_controller.gd (Camera2D)
 ##     posição e zoom (conforto: volta a olhar pro mesmo lugar).
 ##

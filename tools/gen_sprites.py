@@ -137,6 +137,21 @@ FLANNEL_DARK = (78, 42, 44, 255)  # camisa de flanela gasta
 FLANNEL = (110, 58, 52, 255)
 FLANNEL_LIGHT = (138, 80, 64, 255)
 
+# roupas extras (variações dos ipezinhos) — mesmas regras: dessaturadas, gastas
+SHIRT_MOSS = ((46, 64, 52, 255), (64, 86, 64, 255), (86, 108, 80, 255))  # (escuro, médio, claro)
+SHIRT_OCHRE = ((106, 80, 44, 255), (142, 110, 58, 255), (172, 138, 78, 255))
+BLOUSE_PLUM = ((72, 44, 62, 255), (100, 62, 82, 255), (128, 86, 104, 255))
+BLOUSE_TEAL = ((40, 68, 72, 255), (56, 94, 96, 255), (78, 120, 118, 255))
+BLOUSE_ROSE = ((114, 68, 68, 255), (146, 94, 90, 255), (174, 122, 112, 255))
+CLOTH_DENIM = ((52, 62, 79, 255), (70, 84, 101, 255))  # (escuro, médio) — calça/saia
+CLOTH_CANVAS = ((70, 54, 42, 255), (96, 76, 56, 255))
+CLOTH_SLATE = ((56, 60, 72, 255), (78, 84, 96, 255))
+CLOTH_MOSS = ((38, 52, 44, 255), (54, 72, 58, 255))
+HAIR_BROWN = ((50, 34, 30, 255), (82, 56, 42, 255))  # (escuro, claro)
+HAIR_BLACK = ((24, 22, 28, 255), (44, 40, 50, 255))
+HAIR_AUBURN = ((84, 38, 30, 255), (122, 62, 42, 255))
+HAIR_BLONDE = ((128, 104, 68, 255), (166, 138, 92, 255))
+
 LEATHER_DARK = (44, 33, 31, 255)
 LEATHER = (66, 47, 39, 255)
 LEATHER_LIGHT = (90, 65, 49, 255)
@@ -437,14 +452,19 @@ def rock(w, h, seed, ramp=STONE_RAMP, ore=0, moss=0.0, cracks=1, bright=0.0, vei
 
 # =================================================================== sprites
 # ------------------------------------------------------------ ipezinho
-IPEZINHO_UPPER = [  # 16 colunas; linha 0 fica livre pro contorno
+# Capacete, lanterna e rosto são IGUAIS nos dois (equipamento de mineração);
+# muda o cabelo que aparece por baixo do capacete e a roupa.
+IPEZINHO_HELMET = [  # 16 colunas; linha 0 fica livre pro contorno
     "................",
     "......kkHh......",
     "....kkHHHHXh....",
     "...kHHgYYgHHh...",
     "...kHHgWYgHXh...",
     "..hhhhhgghhhhh..",
-    "...ssssssssss...",
+]
+# menino: costeletas curtas sob a aba, camisa + macacão, cinto com fivela
+IPEZINHO_UPPER = IPEZINHO_HELMET + [
+    "...assssssssa...",
     "...SSeSSSSeSs...",
     "...SSeSSSSeSs...",
     "...SrSSmmSSrs...",
@@ -455,6 +475,19 @@ IPEZINHO_UPPER = [  # 16 colunas; linha 0 fica livre pro contorno
 ]
 IPEZINHO_LEG = "....cCc..cCc...."
 IPEZINHO_FOOT = "...LLLl..LLLl..."
+# menina: tranças caindo dos lados do rosto até os ombros (fitinha na ponta),
+# vestido de trabalho com avental e saia rodada comprida até as botas
+IPEZINHA_UPPER = IPEZINHO_HELMET + [
+    "..aAssssssssAa..",
+    "..ASSeSSSSeSsA..",
+    "..ASSeSSSSeSsa..",
+    "..aSrSSmmSSrsa..",
+    "..AFFCCCCCCFFa..",
+    "..tFFcCCCCcFFt..",
+    "..SsuZCCCCZuSs..",
+    "..cCCCZZZZCCCc..",
+]
+IPEZINHA_LEG = "...cCCc..cCCc..."  # barra da saia (balança com o passo)
 IPEZINHO_PAL = {
     "k": HELMET_HIGHLIGHT, "H": HELMET_LIGHT, "h": HELMET_DARK, "X": (HELMET_LIGHT, HELMET),
     "g": IRON_DARK, "Y": LAMP_GLOW, "W": LAMP_CORE,
@@ -466,10 +499,46 @@ IPEZINHO_PAL = {
 }
 
 
+# Variações de cor por gênero: (camisa/blusa, calça/saia, cabelo, fita)
+IPEZINHO_LOOKS = {
+    "m": [
+        ((FLANNEL_DARK, FLANNEL, FLANNEL_LIGHT), CLOTH_DENIM, HAIR_BROWN, None),
+        (SHIRT_MOSS, CLOTH_CANVAS, HAIR_BLACK, None),
+        (SHIRT_OCHRE, CLOTH_SLATE, HAIR_AUBURN, None),
+    ],
+    "f": [
+        (BLOUSE_PLUM, CLOTH_DENIM, HAIR_AUBURN, SHROOM),
+        (BLOUSE_TEAL, CLOTH_CANVAS, HAIR_BLONDE, BRASS),
+        (BLOUSE_ROSE, CLOTH_MOSS, HAIR_BLACK, FLANNEL_LIGHT),
+    ],
+}
+
+
 def build_ipezinho():
-    upper = from_rows(IPEZINHO_UPPER, IPEZINHO_PAL)
-    leg = from_rows([IPEZINHO_LEG], IPEZINHO_PAL)
-    foot = from_rows([IPEZINHO_FOOT], IPEZINHO_PAL)
+    """Gera ipezinho_m0..2.png (meninos) e ipezinho_f0..2.png (meninas): mesmo layout de
+    4 quadros de caminhada, só troca a textura. ipezinho_walk.png = m0 (padrão da cena)."""
+    for gender, looks in IPEZINHO_LOOKS.items():
+        for i, (shirt, cloth, hair, ribbon) in enumerate(looks):
+            pal = {
+                **IPEZINHO_PAL,
+                "u": shirt[0], "f": shirt[1], "F": shirt[2],
+                "c": cloth[0], "C": cloth[1], "Z": (cloth[1], cloth[0]),
+                "a": hair[0], "A": hair[1],
+                "t": ribbon or hair[0],
+            }
+            if gender == "m":
+                sheet = ipezinho_sheet(IPEZINHO_UPPER, IPEZINHO_LEG, IPEZINHO_FOOT, pal)
+            else:
+                sheet = ipezinho_sheet(IPEZINHA_UPPER, IPEZINHA_LEG, IPEZINHO_FOOT, pal)
+            save(sheet, f"ipezinho_{gender}{i}.png")
+            if gender == "m" and i == 0:
+                save(sheet, "ipezinho_walk.png")
+
+
+def ipezinho_sheet(upper_rows, leg_row, foot_row, pal):
+    upper = from_rows(upper_rows, pal)
+    leg = from_rows([leg_row], pal)
+    foot = from_rows([foot_row], pal)
 
     def frame(lift, left_up, right_up):
         out = new(16, 17)
@@ -493,7 +562,7 @@ def build_ipezinho():
     sheet = new(16 * 4, 17)
     for i, f in enumerate(frames):
         sheet.alpha_composite(f, (i * 16, 0))
-    save(sheet, "ipezinho_walk.png")
+    return sheet
 
 
 def build_pickaxe_steel():
