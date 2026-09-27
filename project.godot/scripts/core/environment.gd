@@ -12,7 +12,7 @@ extends Node2D
 signal navigation_ready
 
 ## Grupos de estruturas que bloqueiam a navegação e afastam a decoração.
-const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village_hub", "escavadeira", "oficina", "coleta_comida"]
+const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village_hub", "escavadeira", "oficina", "coleta_comida", "arvores"]
 
 @export_group("Mapa")
 @export var map_rect: Rect2 = Rect2(-720, -440, 1440, 880)
@@ -21,6 +21,20 @@ const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village
 @export var pixel_scale: float = 2.0
 @export var floor_texture: Texture2D
 @export var wall_texture: Texture2D
+
+@export_group("Clareira (superfície)")
+## Área a céu aberto ao norte da mina, onde ficam as árvores (madeira).
+@export var clearing_rect: Rect2 = Rect2(-300, -900, 600, 420)
+## Túnel que liga a borda de cima da mina à clareira (centro x e largura).
+@export var tunnel_x: float = 0.0
+@export var tunnel_width: float = 88.0
+@export var clearing_floor_texture: Texture2D
+## Árvores de enfeite na borda da clareira (usa o quadro 0 da árvore).
+@export var clearing_tree_texture: Texture2D
+@export var clearing_tree_count: int = 16
+## Luz do sol na clareira (some à noite, junto com a escuridão do DayNight).
+@export var sun_color: Color = Color(1.0, 0.92, 0.72)
+@export var sun_energy: float = 0.9
 
 @export_group("Decoração")
 @export var boulder_count: int = 14
@@ -71,6 +85,7 @@ var _placed: Array[Vector2] = []
 var _obstacles: Array[PackedVector2Array] = []
 var _torch_lights: Array[PointLight2D] = []
 var _torch_flames: Array[Sprite2D] = []
+var _sun: PointLight2D
 var _day_night: Node = null
 var _time: float = 0.0
 var _cull_timer: float = 0.0
@@ -87,6 +102,7 @@ func _ready() -> void:
 	_scatter(boulder_count, boulder_textures, 40.0, 1.0, _add_boulder)
 	_scatter(crystal_count, crystal_textures, 50.0, 1.0, _add_crystal)
 	_scatter(torch_count, [torch_texture], 60.0, 0.6, _add_torch)
+	_build_clearing()  # depois de toda a decoração da mina: tem sorteio próprio
 	_build_navigation()
 
 
@@ -94,6 +110,8 @@ func _process(delta: float) -> void:
 	_time += delta
 	# tochas acendem/apagam com a escuridão do DayNight (fade suave)
 	var level := _torch_level()
+	if _sun and _day_night:
+		_sun.energy = sun_energy * (1.0 - _day_night.darkness())
 	for flame in _torch_flames:
 		flame.modulate.a = level
 	for i in _torch_lights.size():
@@ -140,6 +158,9 @@ func _bake_navigation() -> NavigationPolygon:
 	nav_poly.agent_radius = nav_agent_radius
 	var source := NavigationMeshSourceGeometryData2D.new()
 	source.add_traversable_outline(_rect_outline(walkable_rect()))
+	if clearing_rect.has_area():
+		source.add_traversable_outline(_rect_outline(clearing_rect.grow(-30.0)))
+		source.add_traversable_outline(_rect_outline(_tunnel_nav_rect()))
 	if decorations_block:
 		for o in _obstacles:
 			source.add_obstruction_outline(o)
@@ -153,9 +174,102 @@ func _bake_navigation() -> NavigationPolygon:
 	return nav_poly
 
 
-## Área onde dá pra andar (dentro da borda de pedras do mapa).
+## Área onde dá pra andar DENTRO DA MINA (dentro da borda de pedras). Casas só aqui.
 func walkable_rect() -> Rect2:
 	return map_rect.grow(-nav_edge_inset)
+
+
+## Mapa inteiro, mina + clareira (câmera e ordens de mover).
+func world_rect() -> Rect2:
+	return map_rect.merge(clearing_rect) if clearing_rect.has_area() else map_rect
+
+
+## Faixa andável do túnel (entra um pouco na mina e na clareira pra emendar).
+func _tunnel_nav_rect() -> Rect2:
+	var half := tunnel_width * 0.5 - 12.0
+	var top := clearing_rect.end.y - 40.0
+	var bottom := map_rect.position.y + nav_edge_inset + 14.0
+	return Rect2(tunnel_x - half, top, half * 2.0, bottom - top)
+
+
+# ------------------------------------------------------------ clareira
+func _build_clearing() -> void:
+	if not clearing_rect.has_area():
+		return
+	var crng := RandomNumberGenerator.new()
+	crng.seed = map_seed + 7  # sorteio próprio: não mexe na decoração da mina
+	if clearing_floor_texture:
+		_tiled_sprite(clearing_floor_texture, clearing_rect, -10)
+	# chão do túnel cortando a rocha entre a mina e a clareira
+	if floor_texture:
+		var tunnel := Rect2(tunnel_x - tunnel_width * 0.5, clearing_rect.end.y - 12.0,
+			tunnel_width, map_rect.position.y - clearing_rect.end.y + 30.0)
+		_tiled_sprite(floor_texture, tunnel, -10)
+	# escoras marcando a boca do túnel dos dois lados
+	if support_texture:
+		for pos in [Vector2(tunnel_x, map_rect.position.y + 20.0), Vector2(tunnel_x, clearing_rect.end.y + 4.0)]:
+			_add_shadow(_deco_sprite(support_texture, pos), 1.1)
+	# pedras na borda da clareira (menos na saída do túnel) e árvores de enfeite em volta
+	var r := clearing_rect
+	var edge_points: Array[Vector2] = []
+	var x := r.position.x
+	while x <= r.end.x:
+		edge_points.append(Vector2(x, r.position.y))
+		if absf(x - tunnel_x) > tunnel_width * 0.5 + 24.0:
+			edge_points.append(Vector2(x, r.end.y))
+		x += edge_boulder_spacing
+	var y := r.position.y + edge_boulder_spacing
+	while y < r.end.y:
+		edge_points.append(Vector2(r.position.x, y))
+		edge_points.append(Vector2(r.end.x, y))
+		y += edge_boulder_spacing
+	for p in edge_points:
+		if boulder_textures.is_empty():
+			break
+		var s := _deco_sprite(boulder_textures[crng.randi() % boulder_textures.size()],
+			p + Vector2(crng.randf_range(-10, 10), crng.randf_range(-8, 8)))
+		s.scale = Vector2.ONE * pixel_scale * crng.randf_range(1.1, 1.7)
+		s.flip_h = crng.randf() < 0.5
+	if clearing_tree_texture:
+		for i in clearing_tree_count:
+			# fileira de pinheiros atrás da borda de cima e dos lados (não bloqueiam: estão fora da área andável)
+			var t := float(i) / maxf(clearing_tree_count - 1, 1)
+			var p: Vector2
+			if i % 3 == 0:
+				p = Vector2(r.position.x - 12.0, lerpf(r.position.y + 40.0, r.end.y - 40.0, t))
+			elif i % 3 == 1:
+				p = Vector2(r.end.x + 12.0, lerpf(r.position.y + 40.0, r.end.y - 40.0, t))
+			else:
+				p = Vector2(lerpf(r.position.x + 20.0, r.end.x - 20.0, t), r.position.y - 6.0)
+			var tree := _deco_sprite(clearing_tree_texture, p + Vector2(crng.randf_range(-8, 8), crng.randf_range(-6, 6)))
+			tree.hframes = 3
+			tree.frame = 0
+			tree.offset = Vector2(0, -clearing_tree_texture.get_height() * 0.5)
+			tree.flip_h = crng.randf() < 0.5
+			tree.scale = Vector2.ONE * pixel_scale * crng.randf_range(0.9, 1.2)
+			_add_shadow(tree, 0.35)
+	# placa na boca do túnel, do lado da mina
+	var sign_label := Label.new()
+	sign_label.text = "saída pra clareira (madeira)"
+	sign_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sign_label.position = Vector2(tunnel_x - 90.0, map_rect.position.y + 42.0)
+	sign_label.size = Vector2(180, 20)
+	sign_label.add_theme_font_size_override("font_size", 11)
+	sign_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7, 0.8))
+	sign_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	sign_label.add_theme_constant_override("outline_size", 3)
+	sign_label.z_index = 5
+	add_child(sign_label)
+	# sol da superfície: luz grande e quente que some à noite (fica sempre ligado, sem cull)
+	if light_texture:
+		_sun = PointLight2D.new()
+		_sun.texture = light_texture
+		_sun.color = sun_color
+		_sun.energy = sun_energy
+		_sun.texture_scale = maxf(clearing_rect.size.x, clearing_rect.size.y) / light_texture.get_width() * 1.6
+		_sun.position = clearing_rect.get_center()
+		add_child(_sun)
+	_day_night = get_tree().get_first_node_in_group("day_night")
 
 
 ## Contornos dos obstáculos da decoração (pedras, cristais, tochas) — pra validar construção.
@@ -216,9 +330,14 @@ func _build_edges() -> void:
 	for p in points:
 		var jitter := Vector2(_rng.randf_range(-10, 10), _rng.randf_range(-8, 8))
 		var k := _rng.randf_range(1.1, 1.8)
-		var sprite := _deco_sprite(boulder_textures[_rng.randi() % boulder_textures.size()], p + jitter)
+		var tex: Texture2D = boulder_textures[_rng.randi() % boulder_textures.size()]
+		var flip := _rng.randf() < 0.5
+		# vão do túnel pra clareira: sorteia igual (a decoração da mina não muda), mas não põe pedra
+		if is_equal_approx(p.y, r.position.y) and absf(p.x - tunnel_x) < tunnel_width * 0.5 + 24.0:
+			continue
+		var sprite := _deco_sprite(tex, p + jitter)
 		sprite.scale = Vector2.ONE * pixel_scale * k
-		sprite.flip_h = _rng.randf() < 0.5
+		sprite.flip_h = flip
 		_add_shadow(sprite, 1.2)
 		# sem obstáculo individual: nav_edge_inset já mantém todo mundo longe da borda
 

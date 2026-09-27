@@ -95,8 +95,8 @@ func _make_tool_row(parent: VBoxContainer, id: String) -> Dictionary:
 	bottom.add_theme_constant_override("separation", 6)
 	v.add_child(bottom)
 	var cost: Vector3i = _oficina.tool_cost(id)
-	var cost_label: Label = _hud._label("%d cr + %d %s  •  %ds  •  vila nível %d" % [
-		cost.x, cost.y, Ores.display_name(_oficina.tool_ore_type(id)).to_lower(), cost.z, _oficina.tool_stage(id)],
+	var cost_label: Label = _hud._label("%d cr + %d %s + %d madeira  •  %ds  •  vila nível %d" % [
+		cost.x, cost.y, Ores.display_name(_oficina.tool_ore_type(id)).to_lower(), _oficina.tool_wood(id), cost.z, _oficina.tool_stage(id)],
 		12, _hud.COLOR_TEXT)
 	cost_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom.add_child(cost_label)

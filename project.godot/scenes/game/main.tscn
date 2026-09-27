@@ -39,6 +39,9 @@
 [ext_resource type="PackedScene" path="res://scenes/props/jazida_cobre.tscn" id="36_cobre"]
 [ext_resource type="PackedScene" path="res://scenes/props/jazida_carvao.tscn" id="37_carvao"]
 [ext_resource type="PackedScene" path="res://scenes/props/horta.tscn" id="38_horta"]
+[ext_resource type="PackedScene" path="res://scenes/props/arvore.tscn" id="39_arvore"]
+[ext_resource type="Texture2D" path="res://assets/game/floor_clareira.png" id="40_floor_clareira"]
+[ext_resource type="Texture2D" path="res://assets/game/arvore.png" id="41_arvore_tex"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
@@ -62,6 +65,8 @@ pebble_textures = Array[Texture2D]([ExtResource("16_p0"), ExtResource("17_p1"), 
 crystal_textures = Array[Texture2D]([ExtResource("20_c0"), ExtResource("21_c1"), ExtResource("22_c2"), ExtResource("23_c3")])
 torch_texture = ExtResource("24_torch")
 torch_unlit_texture = ExtResource("24_torch_unlit")
+clearing_floor_texture = ExtResource("40_floor_clareira")
+clearing_tree_texture = ExtResource("41_arvore_tex")
 support_texture = ExtResource("25_support")
 light_texture = ExtResource("26_light")
 shadow_texture = ExtResource("30_shadow")
@@ -121,6 +126,24 @@ position = Vector2(-200, -380)
 
 [node name="JazidaCarvao2" parent="World" instance=ExtResource("37_carvao")]
 position = Vector2(390, -370)
+
+[node name="Arvore" parent="World" instance=ExtResource("39_arvore")]
+position = Vector2(-190, -790)
+
+[node name="Arvore2" parent="World" instance=ExtResource("39_arvore")]
+position = Vector2(-60, -730)
+
+[node name="Arvore3" parent="World" instance=ExtResource("39_arvore")]
+position = Vector2(110, -800)
+
+[node name="Arvore4" parent="World" instance=ExtResource("39_arvore")]
+position = Vector2(200, -660)
+
+[node name="Arvore5" parent="World" instance=ExtResource("39_arvore")]
+position = Vector2(-200, -600)
+
+[node name="Arvore6" parent="World" instance=ExtResource("39_arvore")]
+position = Vector2(60, -590)
 
 [node name="Horta" parent="World" instance=ExtResource("38_horta")]
 position = Vector2(320, 60)

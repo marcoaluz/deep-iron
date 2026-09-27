@@ -37,6 +37,8 @@ const TOOL_UNLOCKS := {
 ]
 ## Tipo do minério gasto em cada ferramenta.
 @export var tool_ore_types: Array[String] = ["ferro", "cobre"]
+## Madeira gasta em cada ferramenta (cabo/estrutura) — referência: 1 madeira pra 5 minério.
+@export var tool_wood_costs: Array[int] = [30, 25]
 ## Estágio mínimo da vila (Centro da Vila) pra fabricar cada ferramenta.
 @export var tool_min_stage: Array[int] = [1, 2]
 
@@ -117,6 +119,11 @@ func tool_ore_type(id: String) -> String:
 	return tool_ore_types[TOOL_IDS.find(id)]
 
 
+func tool_wood(id: String) -> int:
+	var i := TOOL_IDS.find(id)
+	return tool_wood_costs[i] if i < tool_wood_costs.size() else 0
+
+
 func tool_stage(id: String) -> int:
 	return tool_min_stage[TOOL_IDS.find(id)]
 
@@ -141,8 +148,11 @@ func tool_block_reason(id: String) -> String:
 		return "requer vila nível %d" % tool_stage(id)
 	var cost := tool_cost(id)
 	var eco := get_tree().get_first_node_in_group("economy")
-	if eco == null or not eco.can_afford(cost.x, cost.y, tool_ore_type(id)):
+	if eco == null:
 		return "sem recursos"
+	var missing: String = eco.missing_text(cost.x, cost.y, tool_ore_type(id), tool_wood(id))
+	if missing != "":
+		return missing
 	return ""
 
 
@@ -152,7 +162,7 @@ func start_tool(id: String) -> bool:
 		Audio.error()
 		return false
 	var cost := tool_cost(id)
-	if not get_tree().get_first_node_in_group("economy").spend(cost.x, cost.y, tool_ore_type(id)):
+	if not get_tree().get_first_node_in_group("economy").spend(cost.x, cost.y, tool_ore_type(id), tool_wood(id)):
 		return false
 	crafting = id
 	craft_left = float(cost.z)

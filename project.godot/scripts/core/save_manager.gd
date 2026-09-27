@@ -52,6 +52,8 @@ extends Node
 ##   ipezinho.gd — Blocos 9 e 10: anger, overtime, role (cozinheiro), food_carrying.
 ##   ipezinho.gd — Bloco 11: gender ("menino"/"menina") e look (variação de roupa);
 ##     save antigo sem esses campos sorteia uma vez e passa a guardar.
+##   Bloco 13: armazem.gd wood_stored; tree_node.gd (cada árvore da clareira)
+##     wood_remaining + _cooldown; ipezinho.gd role "lenhador" + wood_carrying.
 ##   camera_controller.gd (Camera2D)
 ##     posição e zoom (conforto: volta a olhar pro mesmo lugar).
 ##
@@ -251,7 +253,7 @@ func _collect() -> Dictionary:
 		var node := tree.get_first_node_in_group(singles[key])
 		if node and node.has_method("get_save_data"):
 			data[key] = node.get_save_data()
-	for key in ["casas", "armazens", "minerios", "comedouros", "coleta_comida"]:
+	for key in ["casas", "armazens", "minerios", "comedouros", "coleta_comida", "arvores"]:
 		data[key] = _collect_group(key)
 	var workers := []
 	for w in tree.get_nodes_in_group("ipezinhos"):
@@ -313,6 +315,7 @@ func apply_pending(main: Node) -> void:
 	_apply_group("minerios", SaveUtil.dict(data, "minerios"))
 	_apply_group("comedouros", SaveUtil.dict(data, "comedouros"))
 	_apply_group("coleta_comida", SaveUtil.dict(data, "coleta_comida"))
+	_apply_group("arvores", SaveUtil.dict(data, "arvores"))
 	_apply_single("escavadeira", SaveUtil.dict(data, "escavadeira"))
 	if data.has("workers") and typeof(data.workers) == TYPE_ARRAY:
 		_apply_workers(main, data.workers)

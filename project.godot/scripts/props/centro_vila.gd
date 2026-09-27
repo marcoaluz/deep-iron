@@ -37,7 +37,13 @@ const UPGRADE_NAMES := {
 
 @export_group("Melhoria: Moradias")
 ## Custo de cada nível: x = créditos, y = minério do armazém.
-@export var moradias_costs: Array[Vector2i] = [Vector2i(190, 0), Vector2i(375, 50), Vector2i(750, 150), Vector2i(1250, 310)]
+## Casa = créditos (x) + PEDRA (y). "Pedra" = minério de ferro (Bloco 13: o jogo não tem
+## um recurso pedra separado; o ferro é a rocha que a mina já dá).
+@export var moradias_costs: Array[Vector2i] = [Vector2i(190, 40), Vector2i(375, 60), Vector2i(750, 150), Vector2i(1250, 310)]
+## Madeira de cada casa (por nível de Moradias).
+@export var moradias_wood: Array[int] = [20, 30, 45, 60]
+## Minério usado como "pedra" nas casas.
+@export var house_stone_ore: String = "ferro"
 @export var workers_per_moradia: int = 4
 
 @export_group("Melhoria: Enfermaria")
@@ -166,9 +172,27 @@ func upgrade_block_reason(id: String) -> String:
 		return "requer vila nível %d" % (lvl + 1)
 	var cost := upgrade_cost(id)
 	var eco := _economy()
-	if eco == null or not eco.can_afford(cost.x, cost.y):
+	if eco == null:
 		return "sem recursos"
-	return ""
+	var missing: String = eco.missing_text(cost.x, cost.y, upgrade_ore_type(id), upgrade_wood(id), upgrade_ore_label(id))
+	return missing
+
+
+## Madeira do próximo nível (só as casas usam).
+func upgrade_wood(id: String) -> int:
+	if id != "moradias":
+		return 0
+	var lvl: int = upgrades[id]
+	return moradias_wood[lvl] if lvl < moradias_wood.size() else 0
+
+
+## Tipo de minério gasto ("" = qualquer, o mais barato primeiro). Casas usam ferro como pedra.
+func upgrade_ore_type(id: String) -> String:
+	return house_stone_ore if id == "moradias" else ""
+
+
+func upgrade_ore_label(id: String) -> String:
+	return "pedra (%s)" % house_stone_ore if id == "moradias" else "minério"
 
 
 func buy_upgrade(id: String) -> bool:
@@ -203,7 +227,7 @@ func upgrade_effect_text(id: String, lvl: int) -> String:
 func upgrade_description(id: String) -> String:
 	match id:
 		"moradias":
-			return "+%d no limite de ipezinhos e uma casa nova (4 camas) — você escolhe onde." % workers_per_moradia
+			return "+%d no limite de ipezinhos e uma casa nova (4 camas) — você escolhe onde. Custa madeira e pedra." % workers_per_moradia
 		"enfermaria":
 			return "Ipezinhos machucados curam %d%% mais rápido por nível." % roundi(recovery_cut_per_level * 100.0)
 		"trilhas":
@@ -231,7 +255,7 @@ func _confirm_house(pos: Vector2) -> bool:
 		Audio.error()
 		return false
 	var cost := upgrade_cost("moradias")
-	if not _economy().spend(cost.x, cost.y):
+	if not _economy().spend(cost.x, cost.y, upgrade_ore_type("moradias"), upgrade_wood("moradias")):
 		return false
 	upgrades.moradias += 1
 	_economy().max_workers += workers_per_moradia

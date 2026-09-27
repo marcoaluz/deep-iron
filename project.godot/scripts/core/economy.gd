@@ -102,19 +102,50 @@ func sell_all() -> float:
 
 
 # ------------------------------------------------------------ gastos (Centro da Vila)
+## Madeira guardada nos armazéns (não é minério: não vende nem conta nos custos de "minério").
+func stored_wood() -> float:
+	var total := 0.0
+	for a in get_tree().get_nodes_in_group("armazens"):
+		total += a.wood_stored
+	return total
+
+
 ## ore_type = "" aceita qualquer minério (custos genéricos do Centro da Vila e da escavadeira).
-func can_afford(cost_credits: float, cost_ore: float, ore_type: String = "") -> bool:
-	return credits >= cost_credits and stored_ore(ore_type) >= cost_ore
+func can_afford(cost_credits: float, cost_ore: float, ore_type: String = "", cost_wood: float = 0.0) -> bool:
+	return credits >= cost_credits and stored_ore(ore_type) >= cost_ore and stored_wood() >= cost_wood
 
 
-## Paga em créditos + minério do armazém. Retorna false (e não gasta nada) se não der.
+## "" se dá pra pagar; senão "falta 12 madeira, 30 ferro" (aviso pros botões).
+## ore_label troca o nome do minério no texto (ex.: "pedra (ferro)" nas casas).
+func missing_text(cost_credits: float, cost_ore: float, ore_type: String = "", cost_wood: float = 0.0, ore_label: String = "") -> String:
+	var parts: Array[String] = []
+	if credits < cost_credits:
+		parts.append("%d cr" % ceili(cost_credits - credits))
+	var have_ore := stored_ore(ore_type)
+	if have_ore < cost_ore:
+		var label := ore_label
+		if label == "":
+			label = "minério" if ore_type == "" else Ores.display_name(ore_type).to_lower()
+		parts.append("%d %s" % [ceili(cost_ore - have_ore), label])
+	var have_wood := stored_wood()
+	if have_wood < cost_wood:
+		parts.append("%d madeira" % ceili(cost_wood - have_wood))
+	return "" if parts.is_empty() else "falta " + ", ".join(parts)
+
+
+## Paga em créditos + minério (+ madeira) do armazém. Retorna false (e não gasta nada) se não der.
 ## Com ore_type = "", gasta primeiro o minério mais barato.
-func spend(cost_credits: float, cost_ore: float, ore_type: String = "") -> bool:
-	if not can_afford(cost_credits, cost_ore, ore_type):
+func spend(cost_credits: float, cost_ore: float, ore_type: String = "", cost_wood: float = 0.0) -> bool:
+	if not can_afford(cost_credits, cost_ore, ore_type, cost_wood):
 		Audio.error()
 		return false
 	if cost_credits > 0.0:
 		_add_credits(-cost_credits)
+	var wood_left := cost_wood
+	for a in get_tree().get_nodes_in_group("armazens"):
+		if wood_left <= 0.0:
+			break
+		wood_left -= a.take_wood(wood_left)
 	var types: Array = [ore_type]
 	if ore_type == "":
 		types = Ores.TYPES.duplicate()

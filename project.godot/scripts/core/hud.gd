@@ -16,6 +16,8 @@ const COLOR_NIGHT := Color(0.55, 0.62, 1.0)
 const COLOR_INJURED := Color(1.0, 0.5, 0.45)
 const COLOR_OVERTIME := Color(0.6, 0.7, 1.0)
 const COLOR_COOK := Color(0.95, 0.9, 0.6)
+const COLOR_LUMBER := Color(0.85, 0.66, 0.45)
+const COLOR_WOOD := Color(0.78, 0.6, 0.4)
 const COLOR_IRRITATED := Color(1.0, 0.72, 0.35)
 const COLOR_FURIOUS := Color(1.0, 0.35, 0.28)
 const Ores := preload("res://scripts/core/ores.gd")
@@ -28,6 +30,8 @@ const STATE_COLORS := {
 	"home": Color(0.55, 0.62, 1.0),
 	"gathering": Color(0.75, 0.9, 0.5),
 	"delivering": Color(0.95, 0.85, 0.5),
+	"chopping": Color(0.85, 0.66, 0.45),
+	"hauling": Color(0.8, 0.7, 0.5),
 }
 
 @export var ore_icon: Texture2D
@@ -58,6 +62,7 @@ var _auto_sell_check: CheckBox
 var _recruit_button: Button
 var _overtime_button: Button
 var _cook_button: Button
+var _lumber_button: Button
 var _food_label: Label
 var _workers_count_label: Label
 var _workers_title: Label
@@ -186,7 +191,7 @@ func _build() -> void:
 	var hint := _label(
 		"Clique: selecionar   •   Arrastar: selecionar vários   •   Shift+clique: somar/tirar   •   Botão dir.: mover / minerar (jazida)   •   Esc: soltar   •   Tab: próximo   •   F: seguir\n"
 		+ "Roda: zoom   •   Botão do meio / WASD / setas: mover câmera   •   Home: centralizar\n"
-		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste)   •   T: turno extra   •   C: cozinheiro\n"
+		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste)   •   T: turno extra   •   C: cozinheiro   •   L: lenhador\n"
 		+ "U: Centro da Vila   •   E: Escavadeira   •   O: Oficina   •   ou clique no prédio   •   F5: salvar   •   F9: carregar",
 		12, Color(0.85, 0.8, 0.72, 0.75))
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
@@ -249,6 +254,13 @@ func _build_economy(vbox: VBoxContainer) -> void:
 	_cook_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_cook_button.pressed.connect(func(): _main.toggle_cook())
 	actions.add_child(_cook_button)
+	_lumber_button = _button("Lenhador  (L)")
+	_lumber_button.tooltip_text = "Os selecionados param de minerar e vão cortar madeira na clareira"
+	_lumber_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_lumber_button.pressed.connect(func(): _main.toggle_lumber())
+	actions.add_child(_lumber_button)
+	for b in [_overtime_button, _cook_button, _lumber_button]:
+		b.add_theme_font_size_override("font_size", 12)
 
 	if _hub:
 		_add_panel("hub", preload("res://scripts/core/hub_panel.gd"), _hub, vbox)
@@ -478,12 +490,16 @@ func _refresh() -> void:
 	var picked: int = _main.selection.size()
 	if _overtime_button:
 		var all_overtime: bool = picked > 0 and _main.selection.all(func(u): return is_instance_valid(u) and u.overtime)
-		_overtime_button.text = "Tirar turno extra  (T)" if all_overtime else "Turno extra  (T)"
+		_overtime_button.text = "Tirar turno (T)" if all_overtime else "Turno extra (T)"
 		_overtime_button.disabled = picked == 0
 	if _cook_button:
 		var all_cooks: bool = picked > 0 and _main.selection.all(func(u): return is_instance_valid(u) and u.is_cook())
-		_cook_button.text = "Voltar a minerar  (C)" if all_cooks else "Cozinheiro  (C)"
+		_cook_button.text = "Tirar cozinha (C)" if all_cooks else "Cozinheiro (C)"
 		_cook_button.disabled = picked == 0
+	if _lumber_button:
+		var all_lumber: bool = picked > 0 and _main.selection.all(func(u): return is_instance_valid(u) and u.is_lumber())
+		_lumber_button.text = "Tirar lenhador (L)" if all_lumber else "Lenhador (L)"
+		_lumber_button.disabled = picked == 0
 	_workers_title.text = "IPEZINHOS  —  %d selecionados" % picked if picked > 1 else "IPEZINHOS"
 	_workers_title.add_theme_color_override("font_color", COLOR_TITLE if picked > 1 else COLOR_DIM)
 	for w in workers:
@@ -512,6 +528,8 @@ func _refresh() -> void:
 		var tags: Array[String] = []
 		if w.is_cook():
 			tags.append("cozinheiro")
+		if w.is_lumber():
+			tags.append("lenhador")
 		if w.overtime:
 			tags.append("turno extra")
 		if w.mood() > 0:
@@ -520,6 +538,8 @@ func _refresh() -> void:
 		var tag_color: Color = [COLOR_OVERTIME, COLOR_IRRITATED, COLOR_FURIOUS][w.mood()]
 		if w.mood() == 0 and w.is_cook():
 			tag_color = COLOR_COOK
+		elif w.mood() == 0 and w.is_lumber():
+			tag_color = COLOR_LUMBER
 		row.tag.add_theme_color_override("font_color", tag_color)
 		row.panel.add_theme_stylebox_override("panel", _style_row_selected if _main.is_selected(w) else _style_row)
 
@@ -534,6 +554,8 @@ func _refresh_stock() -> void:
 		if not unlocked and amount <= 0.0:
 			continue
 		parts.append("[color=#%s]%s %d[/color]" % [Ores.UI_COLORS[t].to_html(false), Ores.display_name(t).to_lower(), int(amount)])
+	var wood: float = economy.stored_wood() if economy else 0.0
+	parts.append("[color=#%s]madeira %d[/color]" % [COLOR_WOOD.to_html(false), int(wood)])
 	_stock_label.text = "   •   ".join(parts)
 
 

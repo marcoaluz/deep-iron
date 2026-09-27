@@ -173,7 +173,10 @@ func refresh() -> void:
 			button.text = "Requer vila nível %d" % (cur + 1)
 		else:
 			var verb := "Construir casa" if id == "moradias" else "Melhorar"
-			button.text = "%s  (%s)" % [verb, cost_text(_hub.upgrade_cost(id))]
+			button.text = "%s  (%s)" % [verb, _cost_text(id)]
+			if reason.begins_with("falta"):
+				button.text = reason.substr(0, 1).to_upper() + reason.substr(1)
+			button.tooltip_text = "Custo: " + _cost_text(id)
 		button.disabled = reason != ""
 
 
@@ -188,6 +191,20 @@ func has_available_action() -> bool:
 		if _hub.upgrade_block_reason(id) == "":
 			return true
 	return false
+
+
+## Custo completo do próximo nível (créditos + minério/pedra + madeira).
+func _cost_text(id: String) -> String:
+	var t := cost_text(_hub.upgrade_cost(id))
+	if id == "moradias":
+		var cost: Vector2i = _hub.upgrade_cost(id)
+		t = "%d cr" % cost.x
+		if cost.y > 0:
+			t += " + %d %s" % [cost.y, _hub.upgrade_ore_label(id)]
+	var wood: int = _hub.upgrade_wood(id)
+	if wood > 0:
+		t += " + %d madeira" % wood
+	return t
 
 
 static func cost_text(cost: Vector2i) -> String:

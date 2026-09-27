@@ -13,6 +13,8 @@ const STATE_LABELS := {
 	"home": "indo pra casa",
 	"gathering": "colhendo comida",
 	"delivering": "levando comida",
+	"chopping": "cortando madeira",
+	"hauling": "levando madeira",
 }
 ## Distância da porta/cama a partir da qual o ipezinho "chega" em casa.
 const REST_REACH := 12.0
@@ -41,9 +43,14 @@ const STATE_GROUP := {
 	"storing": "armazens",
 	"gathering": "coleta_comida",
 	"delivering": "comedouros",
+	"chopping": "arvores",
+	"hauling": "armazens",
 }
 ## Função fixa (designada pelo jogador). "" = faz de tudo (minerar etc.).
 const ROLE_COOK := "cozinheiro"
+const ROLE_LUMBER := "lenhador"
+const AXE := preload("res://assets/game/axe.png")
+const WOOD_LOG := preload("res://assets/game/wood_log.png")
 
 @export_group("Movimento")
 @export var speed: float = 120.0
@@ -106,6 +113,10 @@ const ROLE_COOK := "cozinheiro"
 ## Comida que o cozinheiro carrega por viagem (horta -> comedouro).
 @export var cook_carry: float = 12.0
 
+@export_group("Lenhador")
+## Madeira que o lenhador carrega por viagem (árvore -> armazém).
+@export var lumber_carry: float = 8.0
+
 @export_group("Carga")
 ## Minério por viagem (ritmo: era 20).
 @export var cargo_capacity: float = 16.0
@@ -160,6 +171,10 @@ var gender: String = ""
 var look: int = -1
 ## Comida na cesta (só o cozinheiro colhe; qualquer um que tenha na mão entrega).
 var food_carrying: float = 0.0
+## Madeira nas costas (só o lenhador corta; qualquer um que tenha na mão leva pro armazém).
+var wood_carrying: float = 0.0
+var _default_tool: Texture2D
+var _has_steel_pickaxe := false
 ## Zanga 0..100: sobe no turno extra da noite, desce dormindo.
 var anger: float = 0.0
 var _mood: int = 0
@@ -195,6 +210,7 @@ func _ready() -> void:
 	_agent.max_speed = speed * 1.2
 	_agent.velocity_computed.connect(_on_velocity_computed)
 	_body_base_y = _body.position.y
+	_default_tool = _tool.texture
 	if not pending_save_data.is_empty():
 		load_save_data(pending_save_data)
 		pending_save_data = {}
@@ -362,15 +378,33 @@ func _choose_state() -> String:
 	# disponível, ou quem deixou de ser cozinheiro com comida na mão).
 	if food_carrying > 0.0:
 		var basket_full := food_carrying >= cook_carry - 0.01
-		if not is_cook() or basket_full or _ai_state == "delivering" or _find_best_station("coleta_comida") == null:
+		# (quem já está colhendo continua até a horta acabar; só depois vai entregar)
+		var keep_gathering := _ai_state == "gathering" and _station_ok_for("gathering")
+		if not is_cook() or basket_full or _ai_state == "delivering" or (not keep_gathering and not _has_usable_station("coleta_comida")):
 			return "delivering"
+	# Madeira nas costas: leva pro armazém (lenhador cheio / sem árvore, ou quem deixou de ser lenhador).
+	if wood_carrying > 0.0:
+		var wood_full := wood_carrying >= lumber_carry - 0.01
+		# (quem já está cortando continua até a árvore virar toco; só depois vai descarregar)
+		var keep_chopping := _ai_state == "chopping" and _station_ok_for("chopping")
+		if not is_lumber() or wood_full or _ai_state == "hauling" or (not keep_chopping and not _has_usable_station("arvores")):
+			return "hauling"
+	# Lenhador: larga o minério que tiver e passa a só cortar e levar madeira.
+	if is_lumber():
+		if carrying > 0.0:
+			return "storing"
+		if _ai_state == "chopping" and _station_ok_for("chopping"):
+			return "chopping"
+		if _has_usable_station("arvores"):
+			return "chopping"
+		return "idle"
 	# Cozinheiro: larga o minério que tiver e passa a só colher e levar comida.
 	if is_cook():
 		if carrying > 0.0:
 			return "storing"
 		if _ai_state == "gathering" and _station_ok_for("gathering"):
 			return "gathering"
-		if _find_best_station("coleta_comida") != null:
+		if _has_usable_station("coleta_comida"):
 			return "gathering"
 		return "idle"
 	# Prioridade 2: depositar carga cheia (e não desistir no meio do caminho).
@@ -438,7 +472,24 @@ func _station_ok_for(state: String) -> bool:
 		return food_carrying > 0.0 and _station.space_left() > 0.5
 	if state == "eating":
 		return _station.has_food()
+	if state == "chopping":
+		return _station.has_wood() and wood_carrying < lumber_carry - 0.01
+	if state == "hauling":
+		return wood_carrying > 0.0
 	return true
+
+
+## Existe alguma estação do grupo REALMENTE disponível agora? (Diferente de
+## _find_best_station, não aceita a estação atual só por ser a atual: árvore que
+## virou toco ou horta colhida não contam — aí o lenhador/cozinheiro vai descarregar.)
+func _has_usable_station(group_name: String) -> bool:
+	for node in get_tree().get_nodes_in_group(group_name):
+		if node.has_method("is_usable") and not node.is_usable():
+			continue
+		if node.has_method("has_free_slot_for") and not node.has_free_slot_for(self):
+			continue
+		return true
+	return false
 
 
 ## Estação com slot livre que compensa mais: perto e, de preferência, menos lotada.
@@ -496,6 +547,8 @@ func _sync_tool_visual() -> void:
 	var oficina := get_tree().get_first_node_in_group("oficina")
 	if oficina and oficina.has_tool("picareta_aco"):
 		on_tool_crafted("picareta_aco")
+	else:
+		_refresh_tool_texture()
 
 
 func _is_night() -> bool:
@@ -597,7 +650,18 @@ func _stop_resting() -> void:
 ## Chamado pela Oficina: a picareta de aço troca o visual da ferramenta.
 func on_tool_crafted(id: String) -> void:
 	if id == "picareta_aco":
+		_has_steel_pickaxe = true
+	_refresh_tool_texture()
+
+
+## Machado pro lenhador; picareta (de aço, se já existir) pros outros.
+func _refresh_tool_texture() -> void:
+	if is_lumber():
+		_tool.texture = AXE
+	elif _has_steel_pickaxe:
 		_tool.texture = STEEL_PICKAXE
+	elif _default_tool:
+		_tool.texture = _default_tool
 
 
 # ------------------------------------------------------------ visual: menino/menina
@@ -616,12 +680,17 @@ func is_cook() -> bool:
 	return role == ROLE_COOK
 
 
+func is_lumber() -> bool:
+	return role == ROLE_LUMBER
+
+
 ## Designa/tira a função de cozinheiro (tecla C com o ipezinho selecionado).
 func set_role(new_role: String) -> void:
 	if role == new_role:
 		return
 	role = new_role
-	_popup("Cozinheiro!" if is_cook() else "De volta à mina", Color(0.95, 0.9, 0.6))
+	_popup({ROLE_COOK: "Cozinheiro!", ROLE_LUMBER: "Lenhador!"}.get(role, "De volta à mina"), Color(0.95, 0.9, 0.6))
+	_refresh_tool_texture()
 	if auto_mode and _ai_state != "manual":
 		_decision_timer = randf_range(0.05, 0.4)  # troca de tarefa já
 
@@ -638,6 +707,30 @@ func harvest(amount: float) -> float:
 	if food_carrying >= cook_carry - 0.01:
 		_decision_timer = 0.0  # cesta cheia: vai pro comedouro já
 	return taken
+
+
+## Árvore chama: o lenhador põe madeira nas costas. Retorna quanto pegou.
+func chop(amount: float) -> float:
+	if not is_lumber() or injured or _ai_state != "chopping":
+		return 0.0
+	var taken := minf(amount * work_mult(), lumber_carry - wood_carrying)  # zangado corta menos
+	if taken <= 0.0:
+		return 0.0
+	wood_carrying += taken
+	_work_timer = 0.2
+	if wood_carrying >= lumber_carry - 0.01:
+		_decision_timer = 0.0  # carga cheia: vai pro armazém já
+	return taken
+
+
+## Armazém chama: descarrega a madeira. Retorna quanto entregou.
+func deliver_wood(amount: float) -> float:
+	var given := minf(amount, wood_carrying)
+	wood_carrying -= given
+	if wood_carrying <= 0.001:
+		wood_carrying = 0.0
+		_decision_timer = 0.0
+	return given
 
 
 ## Comedouro chama: descarrega comida da cesta. Retorna quanto entregou.
@@ -839,7 +932,7 @@ func _update_animation(delta: float) -> void:
 		# impacto = ponto mais baixo do golpe (a curva para de subir)
 		var rising := swing > _prev_swing
 		if _swing_rising and not rising:
-			if _ai_state != "gathering":
+			if _ai_state != "gathering" and _ai_state != "chopping":
 				Audio.pick(global_position)
 		_swing_rising = rising
 		_prev_swing = swing
@@ -880,13 +973,19 @@ func _update_animation(delta: float) -> void:
 
 	# pedrinha de minério em cima da cabeça, maior quanto mais carga
 	_cook_icon.visible = is_cook() and not _inside
-	_carry_icon.visible = (carrying > 0.0 or food_carrying > 0.0) and not _resting
-	if food_carrying > 0.0:
+	_carry_icon.visible = (carrying > 0.0 or food_carrying > 0.0 or wood_carrying > 0.0) and not _resting
+	if wood_carrying > 0.0:
+		_carry_icon.texture = WOOD_LOG
+	elif food_carrying > 0.0:
 		_carry_icon.texture = FOOD_BASKET
-	elif carrying > 0.0 and _carry_icon.texture == FOOD_BASKET:
+	elif carrying > 0.0 and (_carry_icon.texture == FOOD_BASKET or _carry_icon.texture == WOOD_LOG):
 		_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
 	if _carry_icon.visible:
-		var r := food_carrying / cook_carry if food_carrying > 0.0 else carrying / cargo_capacity
+		var r := carrying / cargo_capacity
+		if wood_carrying > 0.0:
+			r = wood_carrying / lumber_carry
+		elif food_carrying > 0.0:
+			r = food_carrying / cook_carry
 		_carry_icon.scale = Vector2.ONE * lerpf(1.0, 2.0, r)
 		_carry_icon.position.y = -44.0 - (8.0 if is_cook() else 0.0) - (2.0 if _body.frame % 2 == 1 else 0.0)
 
@@ -940,6 +1039,7 @@ func get_save_data() -> Dictionary:
 		"overtime": overtime,
 		"role": role,
 		"food_carrying": food_carrying,
+		"wood_carrying": wood_carrying,
 		"gender": gender,
 		"look": look,
 	}
@@ -963,7 +1063,8 @@ func load_save_data(d: Dictionary) -> void:
 	anger = clampf(SaveUtil.num(d, "anger", 0.0), 0.0, 100.0)
 	overtime = SaveUtil.boolean(d, "overtime", false)
 	var r := SaveUtil.text(d, "role", "")
-	role = r if r == ROLE_COOK else ""
+	role = r if r in [ROLE_COOK, ROLE_LUMBER] else ""
+	wood_carrying = clampf(SaveUtil.num(d, "wood_carrying", 0.0), 0.0, lumber_carry)
 	food_carrying = clampf(SaveUtil.num(d, "food_carrying", 0.0), 0.0, cook_carry)
 	# save antigo (sem visual) ou valor inválido: _ensure_appearance sorteia e o próximo save guarda
 	gender = SaveUtil.text(d, "gender", "")

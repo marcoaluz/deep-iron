@@ -49,7 +49,7 @@ var _group_focus := 0  # Tab no modo grupo: qual deles a câmera mostra
 
 func _ready() -> void:
 	add_to_group("game_main")
-	_camera.bounds = _environment.map_rect
+	_camera.bounds = _environment.world_rect()
 	# retângulo da seleção por arrasto: desenhado por cima de tudo do mundo
 	_box_drawer = Node2D.new()
 	_box_drawer.name = "SelectionBox"
@@ -124,6 +124,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				toggle_overtime()
 			KEY_C:
 				toggle_cook()
+			KEY_L:
+				toggle_lumber()
 			KEY_K:
 				for unit in selection.duplicate():
 					if is_instance_valid(unit):
@@ -194,7 +196,7 @@ func _give_order(pos: Vector2) -> void:
 	if ore:
 		_order_mine(ore)
 	else:
-		_order_move(pos.clamp(_environment.map_rect.position, _environment.map_rect.end))
+		_order_move(pos.clamp(_environment.world_rect().position, _environment.world_rect().end))
 
 
 ## Todos vão pra jazida, cada um num ponto diferente da elipse em volta dela
@@ -226,7 +228,7 @@ func _order_move(target: Vector2) -> void:
 		if i > 0:
 			# espiral de "girassol": pontos bem distribuídos sem grade
 			offset = Vector2.RIGHT.rotated(i * 2.39996) * FORMATION_SPACING * sqrt(float(i))
-		var p: Vector2 = (target + offset).clamp(_environment.map_rect.position, _environment.map_rect.end)
+		var p: Vector2 = (target + offset).clamp(_environment.world_rect().position, _environment.world_rect().end)
 		units[i].move_to(p)
 	_show_marker(target)
 
@@ -322,6 +324,23 @@ func toggle_cook() -> void:
 	_hud.show_toast("%s: %d ipezinho%s" % [
 		"Cozinheiro" if make_cook else "De volta à mina", selection.size(), "s" if selection.size() > 1 else ""],
 		Color(0.95, 0.9, 0.6))
+
+
+## L / botão do HUD: torna os selecionados lenhadores (se algum ainda não for);
+## se todos já forem, voltam a fazer de tudo.
+func toggle_lumber() -> void:
+	_prune_selection()
+	if selection.is_empty():
+		Audio.error()
+		_hud.show_toast("Selecione ipezinhos pra virar lenhador", Color(1.0, 0.6, 0.45))
+		return
+	var make := selection.any(func(w): return not w.is_lumber())
+	for unit in selection:
+		unit.set_role(unit.ROLE_LUMBER if make else "")
+	Audio.click()
+	_hud.show_toast("%s: %d ipezinho%s" % [
+		"Lenhador" if make else "De volta à mina", selection.size(), "s" if selection.size() > 1 else ""],
+		Color(0.85, 0.7, 0.5))
 
 
 func is_selected(unit: Node) -> bool:

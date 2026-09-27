@@ -22,6 +22,8 @@ var total_stored: float = 0.0
 var stock: Dictionary = {"ferro": 0.0, "cobre": 0.0, "carvao": 0.0}
 ## Tudo que já entrou neste armazém desde o começo (não diminui com venda/gasto).
 var lifetime_stored: float = 0.0
+## Madeira (coluna separada: não é minério, não vende, não conta nos marcos da vila).
+var wood_stored: float = 0.0
 var _pending_popup: float = 0.0
 var _popup_timer: float = 0.0
 var _sound_timer: float = 0.0
@@ -44,13 +46,25 @@ func _accepts(body: Node2D) -> bool:
 
 func _process(delta: float) -> void:
 	var received := 0.0
+	var wood_in := 0.0
 	for body in _working_bodies():
+		# lenhador descarregando madeira
+		if body.has_method("deliver_wood") and body.get_state() == "hauling":
+			var w: float = body.deliver_wood(DEPOSIT_RATE * delta)
+			wood_stored += w
+			wood_in += w
+			continue
 		var got: float = body.deposit(DEPOSIT_RATE * delta)
 		if got > 0.0:
 			var t: String = body.cargo_type
 			stock[t] = stock.get(t, 0.0) + got
 			received += got
 	_sound_timer -= delta
+	if wood_in > 0.0:
+		_update_label()
+		if received <= 0.0 and _sound_timer <= 0.0:  # madeira caindo na pilha também faz barulho
+			_sound_timer = deposit_sound_interval
+			Audio.deposit(global_position)
 	if received > 0.0:
 		total_stored = 0.0
 		for t in stock:
@@ -92,6 +106,14 @@ func take(amount: float, ore_type: String) -> float:
 	return taken
 
 
+## Tira até `amount` de madeira (custos). Retorna quanto saiu.
+func take_wood(amount: float) -> float:
+	var taken := minf(amount, wood_stored)
+	wood_stored -= taken
+	_update_label()
+	return taken
+
+
 func _recount() -> void:
 	total_stored = 0.0
 	for t in stock:
@@ -102,6 +124,8 @@ func _recount() -> void:
 
 func _update_label() -> void:
 	_label.text = "Minério: %d" % int(total_stored)
+	if wood_stored >= 1.0:
+		_label.text += "  •  madeira %d" % int(wood_stored)
 	var stage := 0
 	for t in pile_thresholds:
 		if total_stored >= t:
@@ -130,7 +154,7 @@ func show_popup(text: String, color: Color) -> void:
 
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
-	return {"stock": stock.duplicate(), "lifetime_stored": lifetime_stored}
+	return {"stock": stock.duplicate(), "lifetime_stored": lifetime_stored, "wood_stored": wood_stored}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -138,4 +162,5 @@ func load_save_data(d: Dictionary) -> void:
 	for t in Ores.TYPES:
 		stock[t] = maxf(SaveUtil.num(saved, t, 0.0), 0.0)
 	lifetime_stored = maxf(SaveUtil.num(d, "lifetime_stored", lifetime_stored), 0.0)
+	wood_stored = maxf(SaveUtil.num(d, "wood_stored", 0.0), 0.0)
 	_recount()

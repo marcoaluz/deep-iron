@@ -152,6 +152,12 @@ HAIR_BLACK = ((24, 22, 28, 255), (44, 40, 50, 255))
 HAIR_AUBURN = ((84, 38, 30, 255), (122, 62, 42, 255))
 HAIR_BLONDE = ((128, 104, 68, 255), (166, 138, 92, 255))
 
+# superfície (clareira): mato escuro e pinheiros, ainda dessaturados
+GRASS_RAMP = ((30, 40, 32, 255), (38, 52, 38, 255), (48, 64, 44, 255), (60, 78, 52, 255), (74, 92, 60, 255))
+PINE_RAMP = ((22, 36, 32, 255), (30, 48, 40, 255), (40, 62, 48, 255), (54, 78, 58, 255), (70, 94, 68, 255))
+BARK_RAMP = ((40, 30, 26, 255), (58, 42, 34, 255), (78, 58, 44, 255), (98, 74, 54, 255))
+WOOD_CUT = (170, 138, 96, 255)  # miolo claro da madeira cortada
+
 LEATHER_DARK = (44, 33, 31, 255)
 LEATHER = (66, 47, 39, 255)
 LEATHER_LIGHT = (90, 65, 49, 255)
@@ -1523,6 +1529,107 @@ def build_escavadeira():
         save(sheet, f"escavadeira_{name}.png")
 
 
+# ------------------------------------------------------------ clareira: árvore, chão, machado, tora
+def _tree_frame(stage):
+    """stage 0 = pinheiro cheio, 1 = metade dos galhos, 2 = toco."""
+    W, H = 22, 40
+    rnd = random.Random(90 + stage)
+    img = new(W, H)
+    cx = 10.5
+    trunk_top = 22 if stage < 2 else 31
+    for y in range(trunk_top, 38):  # tronco
+        for x in range(9, 13):
+            px(img, x, y, dither(BARK_RAMP, 0.8 - (x - 9) * 0.22, x, y))
+    for x in range(8, 14):  # raízes
+        px(img, x, 38, BARK_RAMP[1])
+    if stage == 2:
+        rect(img, 9, trunk_top, 12, trunk_top, WOOD_CUT)  # corte com anéis
+        px(img, 10, trunk_top, BARK_RAMP[3])
+        px(img, 8, 36, PINE_RAMP[2])
+        px(img, 13, 37, PINE_RAMP[1])
+        return img
+    # copa em "andares" triangulares, luz vindo da esquerda
+    tiers = [(2, 10, 5), (8, 17, 8), (14, 25, 10)]
+    if stage == 1:
+        tiers = [(8, 17, 6), (15, 25, 8)]  # menos galhos, mais magro
+    for top, bottom, half in tiers:
+        for y in range(top, bottom):
+            w = half * (y - top + 1) / (bottom - top)
+            for x in range(round(cx - w), round(cx + w) + 1):
+                u = (x - (cx - w)) / max(2 * w, 1)
+                t = 0.85 - u * 0.6 - (y - top) / (bottom - top) * 0.25
+                c = dither(PINE_RAMP, t, x, y)
+                if rnd.random() < 0.06:
+                    c = PINE_RAMP[0]
+                px(img, x, y, c)
+    return img
+
+
+def build_arvore():
+    frames = [outline(pad(_tree_frame(i)), 0.5) for i in range(3)]
+    sheet = new(frames[0].width * 3, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "arvore.png")
+
+
+def build_floor_clareira():
+    """Chão da clareira: mato escuro com trilhas de terra, emenda sem costura."""
+    size = 64
+    rnd = random.Random(64)
+    field = seamless_noise(size, 80, 17, (3, 9))
+    dirt = seamless_noise(size, 14, 23, (4, 10))
+    img = new(size, size)
+    for y in range(size):
+        for x in range(size):
+            v = field[y][x] + rnd.uniform(-0.2, 0.2)
+            c = dither(GRASS_RAMP, 0.5 + v * 0.25, x, y, mode="bayer")
+            if dirt[y][x] > 0.7 and BAYER4[y % 4][x % 4] < (dirt[y][x] - 0.7) * 30:
+                c = dither(EARTH_RAMP, 0.55 + v * 0.1, x, y, mode="bayer")
+            img.putpixel((x, y), c)
+    for _ in range(40):  # tufos de capim claro
+        x, y = rnd.randrange(size), rnd.randrange(size)
+        img.putpixel((x, y), GRASS_RAMP[4])
+        img.putpixel((x, (y + 1) % size), GRASS_RAMP[2])
+    for _ in range(6):  # florzinhas apagadas
+        x, y = rnd.randrange(size), rnd.randrange(size)
+        img.putpixel((x, y), rnd.choice((SHROOM_SPOT, BRASS, BLOUSE_ROSE[2])))
+    save(img, "floor_clareira.png")
+
+
+def build_axe():
+    """Machado do lenhador: mesmo layout 11x13 da picareta (encaixa na mão igual)."""
+    rows = [
+        ".....DLL...",
+        "....DLLGL..",
+        "....DLGGL..",
+        ".....Bdd...",
+        ".....Bb....",
+        ".....Bb....",
+        ".....Bb....",
+        ".....Bb....",
+        ".....Bb....",
+        ".....Bb....",
+        ".....ww....",
+        ".....Ww....",
+        ".....bb....",
+    ]
+    pal = {"L": IRON_HIGHLIGHT, "G": IRON_LIGHT, "D": IRON_DARK, "d": IRON,
+           "B": WOOD_HIGHLIGHT, "b": WOOD_DARK, "W": LEATHER_LIGHT, "w": LEATHER}
+    save(from_rows(rows, pal), "axe.png")
+
+
+def build_log():
+    """Tora de madeira (carga do lenhador)."""
+    rows = [
+        ".bBBBBbc.",
+        "bBBBBBbcC",
+        "bbbbbbbcc",
+    ]
+    pal = {"B": BARK_RAMP[3], "b": BARK_RAMP[1], "c": WOOD_CUT, "C": shade(WOOD_CUT, 1.1)}
+    save(outline(pad(from_rows(rows, pal)), 0.5), "wood_log.png")
+
+
 # ------------------------------------------------------------ comedouro
 def build_comedouro():
     W, H = 30, 18
@@ -1901,6 +2008,10 @@ if __name__ == "__main__":
     build_padlock()
     build_comedouro()
     build_horta()
+    build_arvore()
+    build_floor_clareira()
+    build_axe()
+    build_log()
     build_food_icons()
     build_floor()
     build_wall()

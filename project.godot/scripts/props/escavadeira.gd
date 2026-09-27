@@ -162,8 +162,11 @@ func part_block_reason(id: String) -> String:
 		return "requer vila nível %d" % part_stage(id)
 	var cost := part_cost(id)
 	var eco := get_tree().get_first_node_in_group("economy")
-	if eco == null or not eco.can_afford(cost.x, cost.y):
+	if eco == null:
 		return "sem recursos"
+	var missing: String = eco.missing_text(cost.x, cost.y)
+	if missing != "":
+		return missing
 	return ""
 
 
