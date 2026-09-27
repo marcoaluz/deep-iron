@@ -1684,6 +1684,724 @@ def build_axe():
     save(from_rows(rows, pal), "axe.png")
 
 
+def build_branch():
+    """Galho de pinheiro que cai na cabeça do lenhador (Bloco 16)."""
+    rows = [
+        "..n.n..n....",
+        ".nNnNnnNn.n.",
+        "bBBBBBBBBBBb",
+        ".nNnnNnNnn..",
+        "..n..n.n....",
+    ]
+    pal = {"b": BARK_RAMP[1], "B": BARK_RAMP[2], "n": PINE_RAMP[1], "N": PINE_RAMP[3]}
+    save(outline(pad(from_rows(rows, pal)), 0.5), "branch.png")
+
+
+def build_enfermaria():
+    """Enfermaria: casinha caiada (encardida) com placa da cruz vermelha e telhado de
+    ardósia. 2 quadros: 0 = vazia (janelas escuras), 1 = com pacientes (janelas acesas)."""
+    W, H = 32, 26
+    rnd = random.Random(32)
+    base = new(W, H)
+    wall_ramp = (STONE_DARK, STONE_LIGHT, BANDAGE_SHADOW, BANDAGE)  # reboco claro e sujo
+    for y in range(2, 11):  # telhado de ardósia
+        inset = round((10 - y) * 5 / 8)
+        for x in range(inset, W - inset):
+            t = 0.5 - (y - 2) * 0.03 - (0.18 if (y - 2) % 2 else 0.0)
+            c = dither(STONE_RAMP, t, x, y)
+            if rnd.random() < 0.08:
+                c = dither(MOSS_RAMP, 0.4, x, y)
+            base.putpixel((x, y), c)
+    rect(base, 5, 1, W - 6, 1, STONE_SHADOW)
+    rect(base, 0, 10, W - 1, 10, STONE_BLACK)
+    for y in range(11, 23):  # paredes caiadas, sujas embaixo
+        for x in range(2, W - 2):
+            t = 0.72 - (y - 11) * 0.025 - (0.15 if (x - 2) % 7 == 0 else 0.0)
+            if y > 19:
+                t -= 0.25
+            base.putpixel((x, y), dither(wall_ramp, t, x, y))
+    for x in range(2, W - 2):  # sombra do beiral
+        px(base, x, 11, STONE_DARK)
+        if x & 1:
+            px(base, x, 12, STONE_LIGHT)
+    for x in range(2, W - 2):  # manchas de umidade/musgo na base
+        if rnd.random() < 0.35:
+            px(base, x, 22, dither(MOSS_RAMP, 0.4, x, 22))
+    # placa com a cruz vermelha
+    rect(base, 12, 12, 19, 16, BANDAGE)
+    rect(base, 12, 16, 19, 16, BANDAGE_SHADOW)
+    rect(base, 15, 12, 16, 16, BLOOD)
+    rect(base, 13, 14, 18, 14, BLOOD)
+    # porta
+    rect(base, 13, 17, 18, 22, WOOD_DARK)
+    rect(base, 14, 18, 17, 22, (WOOD, WOOD_DARK))
+    px(base, 17, 20, BRASS)
+    # degrau e fundação
+    rect(base, 12, 23, 19, 23, STONE_LIGHT)
+    for x in range(1, W - 1):
+        if not 12 <= x <= 19:
+            px(base, x, 23, dither(STONE_RAMP, 0.3, x, 23))
+    frames = []
+    for lit in (False, True):
+        img = base.copy()
+        for wx in (4, 23):
+            rect(img, wx, 14, wx + 4, 18, WOOD_DARK)
+            if lit:
+                rect(img, wx + 1, 15, wx + 3, 17, WINDOW_LIT)
+                px(img, wx + 1, 15, WINDOW_BRIGHT)
+            else:
+                rect(img, wx + 1, 15, wx + 3, 17, WALL_VOID)
+                px(img, wx + 1, 15, WALL_WET)
+            px(img, wx + 2, 15, WOOD_DARK)
+            px(img, wx + 2, 16, WOOD_DARK)
+            px(img, wx + 2, 17, WOOD_DARK)
+        frames.append(outline(pad(img), 0.5))
+    sheet = new(frames[0].width * 2, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "enfermaria.png")
+
+
+def build_grave():
+    """Cruz de madeira sobre um montinho de terra (ipezinho que morreu)."""
+    rows = [
+        "...Bb....",
+        "...Bb....",
+        ".BBBBbb..",
+        ".bbBbbb..",
+        "...Bb....",
+        "...Bb..f.",
+        "...Bb.fFf",
+        ".sEEEEEs.",
+        "eEEEEEEEe",
+        ".eeeeeee.",
+    ]
+    pal = {"B": WOOD_LIGHT, "b": WOOD_DARK, "E": EARTH_HIGHLIGHT, "e": EARTH_DARK, "s": STONE_LIGHT,
+           "f": BLOUSE_ROSE[1], "F": BRASS}
+    save(outline(pad(from_rows(rows, pal)), 0.5), "grave.png")
+
+
+def build_taverna():
+    """Taverna: casa de tábuas quentes com telhado de telha de madeira, placa com uma
+    caneca pendurada, barril na porta. 2 quadros: 0 = vazia, 1 = com gente (janelas
+    acesas e lampião da porta aceso)."""
+    W, H = 34, 26
+    rnd = random.Random(34)
+    base = new(W, H)
+    # chaminé de pedra
+    for y in range(0, 6):
+        for x in range(24, 28):
+            base.putpixel((x, y), dither(STONE_RAMP, 0.6 - (x - 24) * 0.12, x, y))
+    # telhado de telhas de madeira (fileiras)
+    for y in range(2, 11):
+        inset = round((10 - y) * 6 / 8)
+        for x in range(inset, W - inset):
+            t = 0.55 - (y - 2) * 0.03
+            if (y - 2) % 2 == 1:
+                t -= 0.2
+            elif (x + (y // 2) * 3) % 5 == 0:
+                t = 0.1
+            c = dither(WOOD_RAMP, t, x, y)
+            if rnd.random() < 0.06:
+                c = dither(MOSS_RAMP, 0.4, x, y)
+            base.putpixel((x, y), c)
+    rect(base, 6, 1, W - 7, 1, WOOD_ROT)
+    rect(base, 0, 10, W - 1, 10, WOOD_ROT)
+    # paredes de tábua (verticais) com viga no meio
+    for y in range(11, 23):
+        for x in range(2, W - 2):
+            if (x - 2) % 4 == 0:
+                c = WOOD_ROT
+            else:
+                c = dither(WOOD_RAMP, 0.7 - ((x - 2) % 4) * 0.1 - (0.2 if y > 19 else 0.0), x, y)
+            base.putpixel((x, y), c)
+    for x in range(2, W - 2):
+        px(base, x, 11, WOOD_ROT)
+        if x & 1:
+            px(base, x, 12, WOOD_DARK)
+    rect(base, 2, 18, W - 3, 18, WOOD_DARK)
+    # porta dupla
+    rect(base, 14, 14, 20, 22, WOOD_ROT)
+    rect(base, 15, 15, 16, 22, WOOD_LIGHT)
+    rect(base, 18, 15, 19, 22, WOOD)
+    px(base, 16, 18, BRASS)
+    px(base, 18, 18, BRASS)
+    # degrau e fundação de pedra
+    rect(base, 13, 23, 21, 23, STONE_LIGHT)
+    for x in range(1, W - 1):
+        if not 13 <= x <= 21:
+            px(base, x, 23, dither(STONE_RAMP, 0.3, x, 23))
+    # braço da placa + placa com caneca (lado esquerdo)
+    rect(base, 0, 12, 5, 12, IRON_DARK)
+    rect(base, 0, 13, 5, 17, WOOD_LIGHT)
+    rect(base, 0, 17, 5, 17, WOOD_DARK)
+    rect(base, 2, 14, 3, 16, BRASS)
+    px(base, 4, 15, BRASS)
+    px(base, 2, 14, (230, 220, 190, 255))  # espuma
+    px(base, 3, 14, (230, 220, 190, 255))
+    # barril ao lado da porta
+    for y in range(19, 24):
+        for x in range(24, 29):
+            t = 0.7 - abs(x - 26) * 0.18
+            px(base, x, y, dither(WOOD_RAMP, t, x, y))
+    rect(base, 24, 20, 28, 20, IRON_DARK)
+    rect(base, 24, 22, 28, 22, IRON_DARK)
+    frames = []
+    for lit in (False, True):
+        img = base.copy()
+        for wx in (6, 23):
+            rect(img, wx, 13, wx + 4, 16, WOOD_ROT)
+            if lit:
+                rect(img, wx + 1, 14, wx + 3, 15, WINDOW_LIT)
+                px(img, wx + 1, 14, WINDOW_BRIGHT)
+            else:
+                rect(img, wx + 1, 14, wx + 3, 15, WALL_VOID)
+                px(img, wx + 1, 14, WALL_WET)
+            px(img, wx + 2, 14, WOOD_ROT)
+            px(img, wx + 2, 15, WOOD_ROT)
+        # lampião ao lado da porta
+        px(img, 12, 14, IRON_DARK)
+        px(img, 12, 15, WINDOW_BRIGHT if lit else IRON_LIGHT)
+        px(img, 12, 16, WINDOW_LIT if lit else IRON_DARK)
+        frames.append(outline(pad(img), 0.5))
+    sheet = new(frames[0].width * 2, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "taverna.png")
+
+
+def build_strike_sign():
+    """Plaquinha de protesto (ipezinho em greve): tábua num cabo, com um X vermelho."""
+    rows = [
+        "WWWWWWWWW",
+        "WwwwwwwwW",
+        "WwRwwwRwW",
+        "WwwRwRwwW",
+        "WwwwRwwwW",
+        "WwwRwRwwW",
+        "WwRwwwRwW",
+        "WWWWWWWWW",
+        "....s....",
+        "....s....",
+        "....S....",
+    ]
+    pal = {"W": WOOD_DARK, "w": BANDAGE, "R": ANGER, "s": WOOD_LIGHT, "S": WOOD}
+    save(outline(pad(from_rows(rows, pal)), 0.5), "strike_sign.png")
+
+
+def build_note():
+    """Notinha musical que sai da taverna quando tem gente se divertindo."""
+    rows = [
+        "..NNN",
+        "..N.N",
+        "..N.N",
+        "..N..",
+        "NNN..",
+        "NNN..",
+    ]
+    save(outline(pad(from_rows(rows, {"N": WINDOW_BRIGHT})), 0.5), "note.png")
+
+
+def build_robo():
+    """Robô antigo (um Ferrugento desligado): caixote enferrujado com cúpula e um olho
+    grande. 3 quadros: 0 = desligado (tombado, olho apagado, musgo), 1 e 2 = ligado
+    andando (pernas alternadas, olho aceso ciano)."""
+    W, H = 18, 20
+    frames = []
+    for mode in ("off", "a", "b"):
+        img = new(W, H)
+        rnd = random.Random(18)
+        # cúpula (cabeça)
+        for y in range(1, 7):
+            half = [3, 4, 5, 5, 5, 5][y - 1]
+            for x in range(9 - half, 9 + half):
+                t = 0.75 - (y - 1) * 0.06 - abs(x - 8) * 0.04
+                px(img, x, y, dither(IRON_RAMP, t, x, y))
+        # olho
+        eye = (60, 70, 78, 255) if mode == "off" else (120, 240, 230, 255)
+        rect(img, 7, 3, 10, 5, IRON_SHADOW)
+        rect(img, 8, 3, 9, 4, eye)
+        if mode != "off":
+            px(img, 8, 3, (220, 255, 250, 255))
+        # antena
+        px(img, 12, 0, RUST_ACCENT)
+        px(img, 12, 1, IRON_DARK)
+        # corpo (caixote) com ferrugem
+        for y in range(7, 15):
+            for x in range(3, 15):
+                t = 0.6 - (y - 7) * 0.04 - (0.2 if x >= 12 else 0.0)
+                c = dither(IRON_RAMP, t, x, y)
+                if rnd.random() < 0.28:
+                    c = dither(RUST_RAMP, 0.5, x, y)
+                px(img, x, y, c)
+        rect(img, 3, 7, 14, 7, IRON_LIGHT)
+        rect(img, 6, 9, 11, 12, IRON_SHADOW)  # painel
+        px(img, 7, 10, (200, 60, 50, 255) if mode == "off" else (120, 240, 230, 255))
+        px(img, 9, 10, BRASS)
+        px(img, 10, 11, BRASS)
+        # braços
+        rect(img, 1, 8, 2, 13, IRON_DARK)
+        rect(img, 15, 8, 16, 13, IRON_DARK)
+        px(img, 1, 13, RUST)
+        px(img, 16, 13, RUST)
+        # pernas
+        if mode == "off":
+            rect(img, 4, 15, 7, 16, IRON_DARK)
+            rect(img, 10, 15, 13, 16, IRON_DARK)
+        else:
+            up = 0 if mode == "a" else 1
+            rect(img, 5, 15, 7, 18 - up, IRON_DARK)
+            rect(img, 10, 15, 12, 17 + up, IRON_DARK)
+            rect(img, 4, 18 - up, 7, 18 - up, IRON_SHADOW)
+            rect(img, 10, 17 + up, 13, 17 + up, IRON_SHADOW)
+        if mode == "off":
+            for _ in range(10):  # musgo e ferrugem de décadas parado
+                x, y = rnd.randrange(3, 15), rnd.randrange(2, 15)
+                if opaque(img, x, y):
+                    px(img, x, y, dither(MOSS_RAMP, 0.5, x, y))
+            img = img.rotate(-12, resample=0, expand=False, center=(9, 16))
+        frames.append(outline(pad(img), 0.5))
+    sheet = new(frames[0].width * 3, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "robo.png")
+
+
+def build_find_icons():
+    """Ícones dos achados: peça rara (engrenagem), cristal ressonante, núcleo solar e
+    bobina de plasma (8x8, pro popup e pro painel)."""
+    gear = [
+        ".b.bb.b.",
+        "bbBBBBbb",
+        ".BBooBB.",
+        "bBo..oBb",
+        "bBo..oBb",
+        ".BBooBB.",
+        "bbBBBBbb",
+        ".b.bb.b.",
+    ]
+    save(outline(pad(from_rows(gear, {"B": BRASS, "b": RUST_ACCENT, "o": IRON_DARK})), 0.5), "find_peca.png")
+    crystal = [
+        "...cC...",
+        "..cCCc..",
+        "..cCWc..",
+        ".ccCCcc.",
+        ".cCCCCc.",
+        "..cCCc..",
+        "...cc...",
+        "..dddd..",
+    ]
+    save(outline(pad(from_rows(crystal, {"c": (150, 110, 220, 255), "C": (200, 170, 255, 255), "W": (245, 235, 255, 255), "d": STONE_DARK})), 0.5), "find_cristal.png")
+    solar = [
+        "..yYYy..",
+        ".yYWWYy.",
+        "yYWWWWYy",
+        "YWWWWWWY",
+        "YWWWWWWY",
+        "yYWWWWYy",
+        ".yYWWYy.",
+        "..yYYy..",
+    ]
+    save(outline(pad(from_rows(solar, {"y": (200, 110, 40, 255), "Y": (255, 180, 60, 255), "W": (255, 240, 170, 255)})), 0.5), "find_solar.png")
+    coil = [
+        "iiiiiiii",
+        ".cCcCcC.",
+        ".CcCcCc.",
+        ".cCcCcC.",
+        ".CcCcCc.",
+        ".cCcCcC.",
+        "iiiiiiii",
+        "..p..p..",
+    ]
+    save(outline(pad(from_rows(coil, {"i": IRON_DARK, "c": COPPER, "C": (120, 220, 255, 255), "p": COPPER_LIGHT})), 0.5), "find_bobina.png")
+
+
+# nível 3 (abismo): basalto quase preto com rachaduras incandescentes
+ABYSS_RAMP = ((12, 9, 11, 255), (20, 15, 17, 255), (29, 22, 24, 255), (40, 31, 32, 255), (54, 42, 41, 255))
+EMBER = (255, 132, 42, 255)
+EMBER_DARK = (170, 60, 24, 255)
+EMBER_GLINT = (255, 214, 120, 255)
+SOLAR_RAMP = (EMBER_DARK, (220, 96, 32, 255), EMBER, EMBER_GLINT)
+SOLAR_VEIN = (EMBER_GLINT, EMBER, EMBER, EMBER_DARK, (255, 240, 190, 255))
+
+
+def build_abyss():
+    """Nível 3: chão de basalto com rachaduras em brasa, minério de solarita (rocha
+    que guardou a energia da explosão solar) e a plataforma arruinada que desce."""
+    size = 64
+    rnd = random.Random(333)
+    field = seamless_noise(size, 90, 47, (3, 9))
+    img = new(size, size)
+    for y in range(size):
+        for x in range(size):
+            v = field[y][x] + rnd.uniform(-0.2, 0.2)
+            img.putpixel((x, y), dither(ABYSS_RAMP, 0.42 + v * 0.25, x, y, mode="bayer"))
+    for _ in range(4):  # rachaduras em brasa (com borda escura) — poucas, pra não virar padrão
+        x, y = rnd.randrange(size), rnd.randrange(size)
+        for _ in range(rnd.randint(4, 9)):
+            img.putpixel((x % size, y % size), EMBER_DARK if rnd.random() < 0.8 else EMBER)
+            img.putpixel(((x + 1) % size, y % size), ABYSS_RAMP[0])
+            x += rnd.choice((1, 1, 0))
+            y += rnd.choice((1, 0, -1))
+    for _ in range(4):
+        x, y = rnd.randrange(size), rnd.randrange(size)
+        img.putpixel((x, y), rnd.choice((EMBER_DARK, EMBER_DARK, EMBER)))
+    save(img, "floor_abyss.png")
+    # solarita
+    for i, (seed, n) in enumerate(((701, 5), (702, 6), (703, 5))):
+        save(rock(16, 16, seed, ramp=ABYSS_RAMP, ore=n, cracks=2, bright=0.1, vein=SOLAR_VEIN,
+                  specks=(EMBER_GLINT,)), f"ore_solarita_{i}.png")
+    save(trim(ore_chunk(9, 8, 9, ramp=SOLAR_RAMP, speck=EMBER_DARK, glint=EMBER_GLINT)), "chunk_solarita.png")
+    # plataforma arruinada: colunas tortas, viga caída, sem polia, tábuas quebradas
+    W, H = 24, 30
+    r = new(W, H)
+    for y in range(6, H - 1):
+        px(r, 2, y, IRON_LIGHT)
+        px(r, 3, y, IRON_DARK)
+    for y in range(12, H - 1):  # coluna da direita quebrada
+        px(r, W - 4 + (1 if y < 18 else 0), y, IRON_LIGHT)
+        px(r, W - 3 + (1 if y < 18 else 0), y, IRON_DARK)
+    for i in range(14):  # viga caída na diagonal
+        px(r, 3 + i, 6 + i // 2, RUST if i % 3 else RUST_DARK)
+        px(r, 3 + i, 7 + i // 2, RUST_DARK)
+    for x in range(4, W - 5):  # plataforma com buracos
+        if x in (9, 10, 15):
+            continue
+        px(r, x, 20, WOOD_LIGHT if x % 3 else WOOD_DARK)
+        px(r, x, 21, WOOD_DARK)
+    for y in range(22, H - 1):  # poço escuro com brasa lá no fundo
+        for x in range(4, W - 4):
+            px(r, x, y, (WALL_VOID, STONE_BLACK))
+    px(r, 11, 27, EMBER_DARK)
+    px(r, 12, 28, EMBER)
+    px(r, 7, 17, IRON_DARK)  # corrente solta
+    px(r, 7, 18, IRON)
+    px(r, 7, 19, IRON_DARK)
+    save(outline(r, 0.5), "elevador_ruina.png")
+
+
+LUMI_BODY = ((22, 16, 30, 255), (38, 28, 50, 255), (58, 44, 74, 255))
+LUMI_WING = ((96, 84, 128, 255), (140, 128, 176, 255), (190, 180, 222, 255))
+LUMI_EYE = (236, 240, 255, 255)
+
+
+def build_creatures():
+    """Lumívoro (bicho que come luz: corpo escuro, asas de membrana clara, olhos
+    brancos) e Ferrugento hostil (sucata-aranha enferrujada de olho vermelho).
+    2 quadros cada (bater de asas / passo)."""
+    frames = []
+    for up in (True, False):
+        img = new(18, 14)
+        # corpo
+        for y in range(4, 11):
+            for x in range(7, 11):
+                px(img, x, y, LUMI_BODY[2] if x == 7 else (LUMI_BODY[1] if y < 9 else LUMI_BODY[0]))
+        # antenas
+        px(img, 7, 3, LUMI_BODY[2])
+        px(img, 6, 2, LUMI_WING[1])
+        px(img, 10, 3, LUMI_BODY[2])
+        px(img, 11, 2, LUMI_WING[1])
+        # olhos (brancos, sem pupila)
+        px(img, 8, 5, LUMI_EYE)
+        px(img, 9, 5, LUMI_EYE)
+        # asas (duas poses)
+        if up:
+            for i in range(6):
+                for j in range(6 - i):
+                    px(img, 6 - j, 2 + i, LUMI_WING[1 if j < 2 else 0])
+                    px(img, 11 + j, 2 + i, LUMI_WING[1 if j < 2 else 0])
+            px(img, 2, 3, LUMI_WING[2])
+            px(img, 15, 3, LUMI_WING[2])
+        else:
+            for i in range(4):
+                for j in range(6):
+                    if j + i < 7:
+                        px(img, 6 - j, 7 + i, LUMI_WING[1 if j < 2 else 0])
+                        px(img, 11 + j, 7 + i, LUMI_WING[1 if j < 2 else 0])
+            px(img, 1, 8, LUMI_WING[2])
+            px(img, 16, 8, LUMI_WING[2])
+        px(img, 8, 11, LUMI_BODY[1])  # rabinho
+        px(img, 9, 12, LUMI_BODY[0])
+        frames.append(outline(pad(img), 0.5))
+    sheet = new(frames[0].width * 2, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "lumivoro.png")
+
+    frames = []
+    for step in (0, 1):
+        img = new(20, 14)
+        rnd = random.Random(20)
+        # carapaça de sucata
+        for y in range(3, 9):
+            half = [4, 6, 7, 7, 7, 6][y - 3]
+            for x in range(10 - half, 10 + half):
+                c = dither(IRON_RAMP, 0.55 - (y - 3) * 0.07, x, y)
+                if rnd.random() < 0.4:
+                    c = dither(RUST_RAMP, 0.45, x, y)
+                px(img, x, y, c)
+        rect(img, 7, 3, 12, 3, IRON_LIGHT)
+        # olho vermelho
+        rect(img, 8, 5, 11, 6, IRON_SHADOW)
+        px(img, 9, 5, (255, 60, 40, 255))
+        px(img, 10, 5, (255, 140, 110, 255))
+        # pernas (alternam)
+        legs = ((3, 8), (6, 9), (13, 9), (16, 8))
+        for k, (lx, ly) in enumerate(legs):
+            dy = 1 if (k + step) % 2 else 0
+            px(img, lx, ly, IRON_DARK)
+            px(img, lx + (-1 if lx < 10 else 1), ly + 1 + dy, IRON_DARK)
+            px(img, lx + (-1 if lx < 10 else 1), ly + 2 + dy, RUST_DARK)
+        frames.append(outline(pad(img), 0.5))
+    sheet = new(frames[0].width * 2, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "ferrugento.png")
+
+
+def build_defense():
+    """Barricada (4 quadros: 0 = só as estacas marcando o lugar, 1 = paliçada de
+    madeira, 2 = muro de pedra, 3 = portão de ferro), campo de treino e a lança."""
+    W, H = 36, 18
+    rnd = random.Random(36)
+    frames = []
+    # 0: estacas e corda no chão
+    img = new(W, H)
+    for x0 in (3, 17, 31):
+        rect(img, x0, 9, x0 + 1, 16, WOOD)
+        px(img, x0, 9, WOOD_LIGHT)
+    for x in range(4, 31):
+        px(img, x, 11 + (1 if 8 < x < 26 else 0), (150, 130, 90, 255))
+    frames.append(outline(pad(img), 0.5))
+    # 1: paliçada de estacas pontudas com vão no meio
+    img = new(W, H)
+    for x0 in list(range(1, 13, 3)) + list(range(24, 35, 3)):
+        h = rnd.randint(11, 14)
+        wood_post(img, x0, H - h, 3, h - 1, rnd)
+        px(img, x0 + 1, H - h - 1, WOOD_LIGHT)
+    rect(img, 1, 10, 13, 10, WOOD_DARK)
+    rect(img, 23, 10, 35, 10, WOOD_DARK)
+    frames.append(outline(pad(img), 0.5))
+    # 2: muro de pedra com portão de tábua
+    img = new(W, H)
+    for y in range(4, H - 1):
+        for x in range(0, W):
+            if 14 <= x <= 21:
+                continue
+            t = 0.6 - (y - 4) * 0.03 if (x + (y // 3) * 3) % 6 else 0.15
+            if y % 3 == 0:
+                t = 0.2
+            px(img, x, y, dither(STONE_RAMP, t, x, y))
+    for x in range(14, 22):
+        for y in range(7, H - 1):
+            px(img, x, y, dither(WOOD_RAMP, 0.55 - (0.2 if x % 2 else 0.0), x, y))
+    rect(img, 14, 6, 21, 6, IRON_DARK)
+    frames.append(outline(pad(img), 0.5))
+    # 3: portão de ferro rebitado entre torres de pedra
+    img = new(W, H)
+    for tx in (0, 28):
+        for y in range(1, H - 1):
+            for x in range(tx, tx + 8):
+                px(img, x, y, dither(STONE_RAMP, 0.65 - (y * 0.02) - (0.15 if x in (tx, tx + 7) else 0.0), x, y))
+        rect(img, tx, 1, tx + 7, 1, STONE_HIGHLIGHT)
+        px(img, tx + 3, 5, WINDOW_LIT)
+    for y in range(4, H - 1):
+        for x in range(8, 28):
+            c = dither(IRON_RAMP, 0.6 - (y - 4) * 0.02, x, y)
+            if x % 5 == 0:
+                c = IRON_SHADOW
+            px(img, x, y, c)
+    for x in range(9, 28, 5):
+        for y in (6, 11, 15):
+            px(img, x + 1, y, IRON_HIGHLIGHT)
+    rect(img, 8, 4, 27, 4, RUST)
+    frames.append(outline(pad(img), 0.5))
+    sheet = new(frames[0].width * 4, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "barricada.png")
+
+    # campo de treino: boneco de palha num poste + suporte de lanças + areia
+    W, H = 32, 22
+    img = new(W, H)
+    for y in range(16, 21):
+        for x in range(1, W - 1):
+            if (x - 16) ** 2 / 225 + (y - 18) ** 2 / 9 <= 1:
+                px(img, x, y, dither(EARTH_RAMP, 0.75, x, y))
+    rect(img, 9, 4, 10, 18, WOOD_DARK)  # poste do boneco
+    for y in range(5, 12):  # boneco de palha
+        for x in range(6, 14):
+            if abs(x - 9.5) + abs(y - 8) * 0.5 < 4.5:
+                px(img, x, y, dither(((150, 120, 60, 255), (196, 164, 88, 255), (226, 200, 120, 255)), 0.6, x, y))
+    rect(img, 7, 3, 12, 5, (196, 164, 88, 255))  # cabeça
+    px(img, 8, 4, BLOOD)
+    px(img, 11, 4, BLOOD)
+    rect(img, 4, 8, 15, 8, WOOD)  # braços
+    rect(img, 20, 6, 29, 6, WOOD_DARK)  # suporte de lanças
+    rect(img, 20, 13, 29, 13, WOOD_DARK)
+    rect(img, 21, 6, 21, 18, WOOD)
+    rect(img, 28, 6, 28, 18, WOOD)
+    for x in (23, 25, 27):
+        rect(img, x, 3, x, 16, WOOD_LIGHT)
+        px(img, x, 2, IRON_HIGHLIGHT)
+        px(img, x, 3, IRON_LIGHT)
+    save(outline(pad(img), 0.5), "campo_treino.png")
+
+    # lança (ferramenta do guarda)
+    rows = [
+        "..........hH",
+        ".........wHh",
+        "........w...",
+        ".......w....",
+        "......w.....",
+        ".....w......",
+        "....w.......",
+        "...w........",
+        "..w.........",
+        ".W..........",
+        "W...........",
+    ]
+    save(outline(pad(from_rows(rows, {"w": WOOD_LIGHT, "W": WOOD_DARK, "h": IRON_LIGHT, "H": IRON_HIGHLIGHT})), 0.5), "lanca.png")
+
+
+LAB_GLOW = (120, 230, 150, 255)
+LAB_GLOW_DIM = (60, 150, 100, 255)
+
+
+def build_lab():
+    """Laboratório: base de pedra, paredes de tábua, janelão com frascos borbulhando
+    (verde quando tem pesquisa) e uma antena. 2 quadros: 0 = parado, 1 = pesquisando.
+    Mais a antena parabólica do Satélite (aparece em cima quando é pesquisado)."""
+    W, H = 32, 28
+    rnd = random.Random(320)
+    base = new(W, H)
+    # antena
+    rect(base, 25, 0, 25, 8, IRON_LIGHT)
+    px(base, 24, 1, IRON)
+    px(base, 26, 1, IRON)
+    px(base, 25, 0, BLOOD)
+    # telhado de ferro corrugado
+    for y in range(5, 12):
+        inset = round((11 - y) * 4 / 6)
+        for x in range(inset, W - inset):
+            t = 0.55 - (y - 5) * 0.04 - (0.2 if x % 3 == 0 else 0.0)
+            c = dither(IRON_RAMP, t, x, y)
+            if rnd.random() < 0.15:
+                c = dither(RUST_RAMP, 0.5, x, y)
+            base.putpixel((x, y), c)
+    rect(base, 0, 11, W - 1, 11, IRON_SHADOW)
+    # paredes: tábua em cima, pedra embaixo
+    for y in range(12, 25):
+        for x in range(2, W - 2):
+            if y >= 21:
+                c = dither(STONE_RAMP, 0.5 if (x + (y % 2) * 2) % 5 else 0.15, x, y)
+            elif (x - 2) % 3 == 0:
+                c = WOOD_ROT
+            else:
+                c = dither(WOOD_RAMP, 0.55, x, y)
+            base.putpixel((x, y), c)
+    for x in range(2, W - 2):
+        px(base, x, 12, WOOD_ROT)
+    # porta
+    rect(base, 22, 15, 27, 24, WOOD_DARK)
+    rect(base, 23, 16, 26, 24, (WOOD, WOOD_DARK))
+    px(base, 25, 20, BRASS)
+    rect(base, 21, 25, 28, 25, STONE_LIGHT)
+    for x in range(1, W - 1):
+        if not 21 <= x <= 28:
+            px(base, x, 25, dither(STONE_RAMP, 0.3, x, 25))
+    frames = []
+    for on in (False, True):
+        img = base.copy()
+        rect(img, 4, 14, 19, 20, IRON_DARK)  # janelão
+        for x in range(5, 19):
+            for y in range(15, 20):
+                px(img, x, y, (LAB_GLOW_DIM if on else WALL_VOID) if (x + y) % 5 else (LAB_GLOW if on else WALL_WET))
+        for fx, fy in ((7, 17), (11, 16), (15, 17)):  # frascos
+            px(img, fx, fy, LAB_GLOW if on else STONE_LIGHT)
+            px(img, fx, fy + 1, LAB_GLOW if on else STONE_LIGHT)
+            px(img, fx, fy + 2, (200, 255, 210, 255) if on else STONE)
+            if on:
+                px(img, fx, fy - 2, (200, 255, 210, 255))
+        rect(img, 4, 20, 19, 20, WOOD_LIGHT)  # peitoril
+        frames.append(outline(pad(img), 0.5))
+    sheet = new(frames[0].width * 2, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "laboratorio.png")
+    rows = [
+        "..IIIII.......",
+        ".IiiiiiI......",
+        "Iii....iI.....",
+        "Ii......iI....",
+        "Ii...r...iI...",
+        ".Ii.....iI....",
+        "..IIi..iI.....",
+        "....IIII......",
+        ".....pp.......",
+        ".....pp.......",
+        "....pppp......",
+    ]
+    save(outline(pad(from_rows(rows, {"I": IRON_LIGHT, "i": IRON, "r": BLOOD, "p": IRON_DARK})), 0.5), "satelite.png")
+
+
+SHIELD_GLOW = (140, 220, 255, 255)
+SHIELD_GLOW_DIM = (70, 130, 190, 255)
+
+
+def build_escudo():
+    """Gerador do escudo solar em 5 quadros (obra): 0 = lote marcado, 1 = fundação de
+    pedra, 2 = + bobinas de cobre, 3 = + núcleo de solarita brilhando, 4 = pronto, com o
+    emissor e a cúpula de energia."""
+    W, H = 30, 36
+    frames = []
+    for stage in range(5):
+        img = new(W, H)
+        # lote: estacas e corda
+        for x0 in (2, 27):
+            rect(img, x0, 28, x0, 34, WOOD)
+        for x in range(3, 27):
+            px(img, x, 30, (150, 130, 90, 255))
+        if stage >= 1:  # fundação octogonal de pedra
+            for y in range(27, 35):
+                for x in range(3, 27):
+                    if abs(x - 14.5) + abs(y - 31) * 1.6 <= 14:
+                        px(img, x, y, dither(STONE_RAMP, 0.6 - (y - 27) * 0.05 - (0.2 if (x + y) % 5 == 0 else 0.0), x, y))
+            rect(img, 6, 27, 23, 27, STONE_HIGHLIGHT)
+        if stage >= 2:  # bobinas de cobre dos lados
+            for bx in (5, 21):
+                for y in range(16, 27):
+                    for x in range(bx, bx + 4):
+                        c = COPPER_LIGHT if (y % 2 == 0) else COPPER_DARK
+                        if x in (bx, bx + 3):
+                            c = IRON_DARK
+                        px(img, x, y, c)
+                rect(img, bx, 15, bx + 3, 15, IRON_LIGHT)
+        if stage >= 3:  # núcleo de solarita
+            for y in range(18, 27):
+                for x in range(11, 19):
+                    if abs(x - 14.5) + abs(y - 22.5) * 0.9 <= 4.5:
+                        px(img, x, y, EMBER_GLINT if abs(x - 14.5) + abs(y - 22.5) < 2 else EMBER)
+            rect(img, 10, 26, 19, 26, IRON_DARK)
+        if stage >= 4:  # emissor + cúpula
+            rect(img, 14, 5, 15, 17, IRON_LIGHT)
+            rect(img, 12, 5, 17, 5, IRON_HIGHLIGHT)
+            for y in range(0, 12):
+                for x in range(3, 27):
+                    d = ((x - 14.5) / 12) ** 2 + ((y - 11) / 11) ** 2
+                    if 0.8 <= d <= 1.0:
+                        px(img, x, y, SHIELD_GLOW)
+                    elif d < 0.8 and (x + y) % 4 == 0 and y < 10:
+                        px(img, x, y, SHIELD_GLOW_DIM)
+            px(img, 14, 4, (255, 255, 255, 255))
+            px(img, 15, 4, (255, 255, 255, 255))
+        frames.append(outline(pad(img), 0.5))
+    sheet = new(frames[0].width * 5, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "escudo.png")
+
+
 def build_log():
     """Tora de madeira (carga do lenhador)."""
     rows = [
@@ -2079,6 +2797,19 @@ if __name__ == "__main__":
     build_floor_deep()
     build_elevador()
     build_log()
+    build_branch()
+    build_enfermaria()
+    build_grave()
+    build_taverna()
+    build_strike_sign()
+    build_note()
+    build_robo()
+    build_find_icons()
+    build_abyss()
+    build_creatures()
+    build_defense()
+    build_lab()
+    build_escudo()
     build_food_icons()
     build_floor()
     build_wall()

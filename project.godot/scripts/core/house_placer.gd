@@ -1,5 +1,6 @@
 extends Node2D
 ## Modo de posicionamento de casa (grupo "house_placer"), criado pelo main.gd.
+## Também usado pra taverna: begin() aceita outra textura e outro nome.
 ##
 ## begin(on_confirm) liga o modo: um fantasma da casa segue o mouse, verde onde
 ## pode construir e vermelho onde não pode (com o motivo escrito no topo da tela).
@@ -29,6 +30,7 @@ var _blockers: Array = []  # [{rect: Rect2, name: String}]
 var _ghost: Sprite2D
 var _hint_layer: CanvasLayer
 var _hint: Label
+var _what := "a casa nova"
 
 
 func _ready() -> void:
@@ -59,8 +61,13 @@ func _ready() -> void:
 
 
 ## Liga o modo. on_confirm(pos: Vector2) -> bool constrói de fato (e paga).
-func begin(on_confirm: Callable) -> void:
+## texture/hframes/what trocam o fantasma e o texto (padrão: casa).
+func begin(on_confirm: Callable, texture: Texture2D = CASA_TEXTURE, hframes: int = 3, what: String = "a casa nova") -> void:
 	_on_confirm = on_confirm
+	_ghost.texture = texture
+	_ghost.hframes = hframes
+	_ghost.frame = 0
+	_what = what
 	active = true
 	_collect_blockers()
 	var hud := get_tree().get_first_node_in_group("hud")
@@ -151,7 +158,7 @@ func _refresh() -> void:
 	_ghost.position = _pos
 	_ghost.modulate = Color(COLOR_OK, 0.6) if _reason == "" else Color(COLOR_BAD, 0.6)
 	if _reason == "":
-		_hint.text = "Onde fica a casa nova?  Clique pra construir  •  Esc ou botão direito cancela"
+		_hint.text = "Onde fica %s?  Clique pra construir  •  Esc ou botão direito cancela" % _what
 		_hint.add_theme_color_override("font_color", Color(0.95, 0.9, 0.75))
 	else:
 		_hint.text = "Não dá pra construir aqui: %s\nEsc ou botão direito cancela" % _reason
@@ -173,7 +180,7 @@ func _draw() -> void:
 func _collect_blockers() -> void:
 	_blockers.clear()
 	var env := get_tree().get_first_node_in_group("environment")
-	var groups: Array = env.STATION_GROUPS if env else ["casas"]
+	var groups: Array = env.STATION_GROUPS + env.NAV_EXTRA_GROUPS if env else ["casas"]
 	for group in groups:
 		for node in get_tree().get_nodes_in_group(group):
 			var r := Rect2(node.global_position, Vector2.ZERO)

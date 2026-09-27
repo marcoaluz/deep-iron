@@ -10,7 +10,7 @@ extends "res://scripts/props/station.gd"
 ##     Moradias:         +workers_per_moradia no limite de ipezinhos e uma casa
 ##                       nova (4 camas) que o JOGADOR posiciona no mapa (HousePlacer).
 ##                       O custo só é pago quando ele confirma o lugar; Esc cancela.
-##     Enfermaria:       -recovery_cut_per_level no tempo de cura (por nível).
+##     Enfermaria:       +1 leito na Enfermaria e -recovery_cut_per_level no tempo de cura (por nível).
 ##     Trilhas batidas:  +speed_bonus_per_level na velocidade de caminhada (por nível).
 ##
 ## Os ipezinhos consultam recovery_mult() e speed_mult(); a economia guarda o limite.
@@ -218,7 +218,12 @@ func upgrade_effect_text(id: String, lvl: int) -> String:
 		"moradias":
 			return "limite %d ipezinhos" % (_base_max_workers() + workers_per_moradia * lvl)
 		"enfermaria":
-			return "cura em %ds" % roundi(_base_recovery_time() * maxf(0.1, 1.0 - recovery_cut_per_level * lvl))
+			var mult := maxf(0.1, 1.0 - recovery_cut_per_level * lvl)
+			var inf := get_tree().get_first_node_in_group("enfermarias")
+			if inf == null:
+				return "cura em %ds" % roundi(_base_recovery_time() * mult)
+			return "%d leitos, cura %ds/%ds" % [inf.base_beds + inf.beds_per_level * lvl,
+				roundi(inf.heal_time_leve * mult), roundi(inf.heal_time_grave * mult)]
 		"trilhas":
 			return "velocidade +%d%%" % roundi(speed_bonus_per_level * lvl * 100.0)
 	return ""
@@ -229,7 +234,7 @@ func upgrade_description(id: String) -> String:
 		"moradias":
 			return "+%d no limite de ipezinhos e uma casa nova (4 camas) — você escolhe onde. Custa madeira e pedra." % workers_per_moradia
 		"enfermaria":
-			return "Ipezinhos machucados curam %d%% mais rápido por nível." % roundi(recovery_cut_per_level * 100.0)
+			return "+1 leito na Enfermaria e cura %d%% mais rápida por nível. Machucado só se cura lá." % roundi(recovery_cut_per_level * 100.0)
 		"trilhas":
 			return "Todos os ipezinhos andam %d%% mais rápido por nível." % roundi(speed_bonus_per_level * 100.0)
 	return ""

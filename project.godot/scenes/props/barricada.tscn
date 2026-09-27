@@ -1,0 +1,40 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/barricada.gd" id="1_bar"]
+[ext_resource type="Texture2D" path="res://assets/game/barricada.png" id="2_sprite"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_bg"]
+bg_color = Color(0.05, 0.03, 0.03, 0.85)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_fill"]
+bg_color = Color(0.85, 0.35, 0.25, 1)
+
+[node name="Barricada" type="Node2D"]
+script = ExtResource("1_bar")
+
+[node name="Visual" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("2_sprite")
+hframes = 4
+offset = Vector2(0, -9)
+
+[node name="StatusLabel" type="Label" parent="."]
+offset_left = -90.0
+offset_top = 4.0
+offset_right = 90.0
+offset_bottom = 38.0
+theme_override_colors/font_outline_color = Color(0.03, 0.03, 0.03, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 11
+text = "Portão"
+horizontal_alignment = 1
+
+[node name="HpBar" type="ProgressBar" parent="."]
+visible = false
+offset_left = -24.0
+offset_top = -44.0
+offset_right = 24.0
+offset_bottom = -40.0
+theme_override_styles/background = SubResource("StyleBox_bg")
+theme_override_styles/fill = SubResource("StyleBox_fill")
+show_percentage = false

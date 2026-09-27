@@ -14,22 +14,25 @@ signal tool_crafted(id: String)
 
 const Ores := preload("res://scripts/core/ores.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
-const TOOL_IDS := ["picareta_aco", "lampiao", "broca"]
+const TOOL_IDS := ["picareta_aco", "lampiao", "broca", "traje"]
 const TOOL_NAMES := {
 	"picareta_aco": "Picareta de aço temperado",
 	"lampiao": "Lampião de segurança",
 	"broca": "Broca manual",
+	"traje": "Traje de chumbo",
 }
 const TOOL_DESCRIPTIONS := {
 	"picareta_aco": "Aço duro o bastante pra quebrar os veios de cobre.",
 	"lampiao": "Avisa do gás dos veios de carvão. Sem ele, ninguém entra lá.",
 	"broca": "Fura a rocha dura do nível 2, onde a prata se esconde.",
+	"traje": "Protege do calor e da energia da solarita, lá no abismo (nível 3).",
 }
 ## Tipo de minério que cada ferramenta libera.
 const TOOL_UNLOCKS := {
 	"picareta_aco": "cobre",
 	"lampiao": "carvao",
 	"broca": "prata",
+	"traje": "solarita",
 }
 
 @export_group("Ferramentas (na ordem de TOOL_IDS)")
@@ -38,13 +41,14 @@ const TOOL_UNLOCKS := {
 	Vector3i(310, 150, 30),  # picareta de aço
 	Vector3i(560, 125, 45),  # lampião
 	Vector3i(800, 150, 60),  # broca manual
+	Vector3i(1400, 120, 75),  # traje de chumbo
 ]
 ## Tipo do minério gasto em cada ferramenta.
-@export var tool_ore_types: Array[String] = ["ferro", "cobre", "carvao"]
+@export var tool_ore_types: Array[String] = ["ferro", "cobre", "carvao", "prata"]
 ## Madeira gasta em cada ferramenta (cabo/estrutura) — referência: 1 madeira pra 5 minério.
-@export var tool_wood_costs: Array[int] = [30, 25, 40]
+@export var tool_wood_costs: Array[int] = [30, 25, 40, 30]
 ## Estágio mínimo da vila (Centro da Vila) pra fabricar cada ferramenta.
-@export var tool_min_stage: Array[int] = [1, 2, 4]
+@export var tool_min_stage: Array[int] = [1, 2, 4, 4]
 
 @export_group("Efeitos")
 @export var forge_sound_interval: float = 0.7

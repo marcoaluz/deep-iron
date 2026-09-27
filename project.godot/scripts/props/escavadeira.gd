@@ -10,6 +10,11 @@ extends "res://scripts/props/station.gd"
 ## - No mapa, a escavadeira inteira aparece como "projeto" translúcido azulado;
 ##   cada peça pronta vira sólida. Com as 5, ela liga: a broca gira, a cabine e
 ##   o giroflex acendem e o sinal `completed` dispara (o HUD mostra a conquista).
+##
+## REATORES (Bloco 19): pronta, a escavadeira perfura sozinha e manda minério pro
+## armazém. O ritmo e o efeito colateral dependem do reator instalado (um por vez,
+## troca quando quiser). A Caldeira a vapor vem junto; os outros são construídos
+## com peças raras, e três deles precisam de um achado do fundo da mina (finds.gd).
 
 signal part_started(id: String)
 signal part_installed(id: String)
@@ -31,6 +36,32 @@ const PART_DESCRIPTIONS := {
 	"cabine": "Onde o operador controla a máquina.",
 	"broca": "A broca helicoidal gigante. A última peça do projeto.",
 }
+const REACTOR_IDS := ["vapor", "diesel", "cristal", "solar", "fusao"]
+const REACTOR_NAMES := {
+	"vapor": "Caldeira a vapor",
+	"diesel": "Motor a diesel",
+	"cristal": "Cristal ressonante",
+	"solar": "Núcleo solar",
+	"fusao": "Fusão improvisada",
+}
+const REACTOR_DESCRIPTIONS := {
+	"vapor": "Gasta carvão do armazém; sem carvão, a broca para.",
+	"diesel": "Não gasta nada, mas o barulho tira ânimo da vila.",
+	"cristal": "Fraco, mas a ressonância dobra a chance de achados.",
+	"solar": "Forte e sem combustível, mas vaza: mais acidentes na mina.",
+	"fusao": "O mais forte, mas instável: às vezes explode e machuca quem está perto.",
+}
+## Achado necessário pra construir o reator (finds.gd).
+const REACTOR_ITEM := {"cristal": "cristal", "solar": "solar", "fusao": "bobina"}
+## Que minério sai da broca com cada reator (pesos).
+const REACTOR_MIX := {
+	"vapor": {"ferro": 0.7, "cobre": 0.2, "carvao": 0.1},
+	"diesel": {"ferro": 0.7, "cobre": 0.2, "carvao": 0.1},
+	"cristal": {"ferro": 0.4, "cobre": 0.3, "prata": 0.3},
+	"solar": {"ferro": 0.5, "cobre": 0.3, "prata": 0.2},
+	"fusao": {"ferro": 0.5, "cobre": 0.25, "carvao": 0.1, "prata": 0.15},
+}
+
 ## "Planta" azulada das peças que ainda não foram feitas (valores > 1 brilham mesmo no escuro).
 const GHOST_COLOR := Color(0.75, 1.0, 1.5, 0.4)
 
@@ -46,6 +77,32 @@ const GHOST_COLOR := Color(0.75, 1.0, 1.5, 0.4)
 ## Estágio mínimo da vila pra fabricar cada peça.
 @export var part_min_stage: Array[int] = [2, 3, 3, 3, 4]
 
+@export_group("Reatores (na ordem de REACTOR_IDS)")
+## Minério por segundo que a broca manda pro armazém com cada reator.
+@export var reactor_rates: Array[float] = [0.3, 0.55, 0.35, 0.9, 1.5]
+## Construir: x = créditos, y = ferro, z = peças raras. (A Caldeira vem com a escavadeira.)
+@export var reactor_costs: Array[Vector3i] = [
+	Vector3i(0, 0, 0),
+	Vector3i(300, 60, 4),
+	Vector3i(200, 0, 3),
+	Vector3i(500, 80, 5),
+	Vector3i(800, 150, 8),
+]
+## Caldeira: carvão gasto por segundo.
+@export var vapor_coal_per_sec: float = 0.08
+## Diesel: ânimo a menos pra todos enquanto liga.
+@export var diesel_noise: float = 4.0
+## Cristal: multiplica a chance de achado.
+@export var cristal_find_mult: float = 2.0
+## Solar: multiplica a chance de acidente na mina.
+@export var solar_accident_mult: float = 1.5
+## Fusão: a cada fusao_check_interval s, fusao_meltdown_chance de pane.
+@export var fusao_check_interval: float = 60.0
+@export_range(0.0, 1.0) var fusao_meltdown_chance: float = 0.08
+## Segundos desligada depois da pane, e raio da explosão (machuca grave).
+@export var fusao_outage: float = 90.0
+@export var fusao_blast_radius: float = 150.0
+
 @export_group("Efeitos")
 ## Intervalo entre as marteladas enquanto fabrica.
 @export var forge_sound_interval: float = 0.8
@@ -58,6 +115,17 @@ var installed: Dictionary = {}
 var fabricating: String = ""
 var fab_left: float = 0.0
 var complete: bool = false
+## Reator instalado ("" antes de ficar pronta) e os que já foram construídos.
+var reactor: String = ""
+var built_reactors: Array = []
+var drill_on: bool = true
+## Segundos até voltar da pane (fusão).
+var outage_left: float = 0.0
+var no_fuel: bool = false
+var _drill_accum := 0.0
+var _fuel_accum := 0.0
+var _fuel_retry := 0.0
+var _fusao_timer := 0.0
 
 var _sound_timer: float = 0.0
 var _anim_time: float = 0.0
@@ -103,9 +171,12 @@ func _process(delta: float) -> void:
 			layer.modulate.a = 0.4 + 0.35 * (sin(Time.get_ticks_msec() * 0.006) * 0.5 + 0.5)
 		_update_label()
 	if complete:
-		_anim_time += delta
-		_layers.broca.frame = int(_anim_time * drill_fps) % 2
-		_beacon.energy = 0.9 + 0.6 * absf(sin(_anim_time * 3.0))  # giroflex piscando
+		_drill(delta)
+		if reactor_active():
+			_anim_time += delta
+			_layers.broca.frame = int(_anim_time * drill_fps) % 2
+		_beacon.energy = 0.9 + 0.6 * absf(sin(_anim_time * 3.0)) if reactor_active() else 0.3
+		_update_label()
 
 
 ## Área clicável (coordenadas globais).
@@ -206,6 +277,9 @@ func _install(id: String) -> void:
 
 func _complete() -> void:
 	complete = true
+	if built_reactors.is_empty():
+		built_reactors = ["vapor"]
+		reactor = "vapor"
 	_update_visual()
 	Audio.fanfare()
 	_popup("ESCAVADEIRA PRONTA!", Color(1.0, 0.85, 0.35))
@@ -227,8 +301,8 @@ func _update_visual() -> void:
 
 func _update_label() -> void:
 	if complete:
-		_label.text = "Escavadeira\nPRONTA"
-		_label.modulate = Color(1.0, 0.85, 0.4)
+		_label.text = "Escavadeira — %s\n%s" % [REACTOR_NAMES.get(reactor, "?"), drill_status()]
+		_label.modulate = Color(1.0, 0.85, 0.4) if reactor_active() else Color(1.0, 0.55, 0.45)
 	elif fabricating != "":
 		_label.text = "Escavadeira  %d/5\n%s  %d%%" % [installed_count(), PART_NAMES[fabricating], roundi(fab_progress() * 100.0)]
 		_label.modulate = Color(1.0, 0.8, 0.5)
@@ -257,9 +331,194 @@ func _popup(text: String, color: Color) -> void:
 	tween.chain().tween_callback(popup.queue_free)
 
 
+# ------------------------------------------------------------ reatores / perfuração
+func reactor_active() -> bool:
+	return complete and drill_on and reactor != "" and outage_left <= 0.0 and not no_fuel
+
+
+func reactor_rate(id: String = reactor) -> float:
+	var i := REACTOR_IDS.find(id)
+	return reactor_rates[i] if i >= 0 else 0.0
+
+
+func reactor_cost(id: String) -> Vector3i:
+	return reactor_costs[REACTOR_IDS.find(id)]
+
+
+## "ligada • 0.3 minério/s" / "SEM CARVÃO" / "PANE! 45s" / "desligada"
+func drill_status() -> String:
+	if not drill_on:
+		return "desligada"
+	if outage_left > 0.0:
+		return "PANE! volta em %ds" % ceili(outage_left)
+	if no_fuel:
+		return "SEM CARVÃO"
+	return "perfurando  %.2f minério/s" % reactor_rate()
+
+
+## Multiplicador da chance de achado (reator Cristal).
+func find_mult() -> float:
+	return cristal_find_mult if reactor_active() and reactor == "cristal" else 1.0
+
+
+## Multiplicador da chance de acidente na mina (reator Solar).
+func accident_mult() -> float:
+	return solar_accident_mult if reactor_active() and reactor == "solar" else 1.0
+
+
+## Ânimo a menos pra vila (reator Diesel).
+func noise_penalty() -> float:
+	return diesel_noise if reactor_active() and reactor == "diesel" else 0.0
+
+
+## "" = pode construir; "instalado" / "construído"; senão o que falta.
+func reactor_block_reason(id: String) -> String:
+	if not complete:
+		return "escavadeira não está pronta"
+	if id == reactor:
+		return "instalado"
+	if built_reactors.has(id):
+		return "construído"
+	var finds := get_tree().get_first_node_in_group("finds")
+	if REACTOR_ITEM.has(id) and (finds == null or not finds.has_item(REACTOR_ITEM[id])):
+		return "precisa achar: %s" % finds.ITEM_NAMES[REACTOR_ITEM[id]] if finds else "precisa de um achado"
+	var cost := reactor_cost(id)
+	var parts: Array[String] = []
+	if finds and finds.rare_parts < cost.z:
+		parts.append("%d peças raras" % (cost.z - finds.rare_parts))
+	var eco := get_tree().get_first_node_in_group("economy")
+	if eco:
+		var m: String = eco.missing_text(cost.x, cost.y, "ferro")
+		if m != "":
+			parts.append(m.trim_prefix("falta "))
+	return "falta " + ", ".join(parts) if not parts.is_empty() else ""
+
+
+## Constrói (paga) e já instala.
+func build_reactor(id: String) -> bool:
+	if reactor_block_reason(id) != "":
+		Audio.error()
+		return false
+	var cost := reactor_cost(id)
+	var eco := get_tree().get_first_node_in_group("economy")
+	if not eco.spend(cost.x, cost.y, "ferro"):
+		return false
+	get_tree().get_first_node_in_group("finds").spend_parts(cost.z)
+	built_reactors.append(id)
+	_popup("Reator novo: %s!" % REACTOR_NAMES[id], Color(0.55, 1.0, 0.5))
+	return install_reactor(id)
+
+
+## Troca pro reator (já construído).
+func install_reactor(id: String) -> bool:
+	if not built_reactors.has(id) or outage_left > 0.0:
+		Audio.error()
+		return false
+	reactor = id
+	no_fuel = false
+	_fusao_timer = 0.0
+	_dust.restart()
+	Audio.forge(global_position + Vector2(0, -90))
+	_update_label()
+	return true
+
+
+func toggle_drill() -> void:
+	drill_on = not drill_on
+	_update_label()
+
+
+func _drill(delta: float) -> void:
+	if outage_left > 0.0:
+		outage_left = maxf(outage_left - delta, 0.0)
+		return
+	if not drill_on or reactor == "":
+		return
+	if reactor == "vapor":
+		if no_fuel:
+			_fuel_retry -= delta
+			if _fuel_retry > 0.0:
+				return
+			_fuel_retry = 2.0
+			no_fuel = not _take_coal(1.0)
+			if no_fuel:
+				return
+		_fuel_accum += vapor_coal_per_sec * delta
+		while _fuel_accum >= 1.0:
+			_fuel_accum -= 1.0
+			if not _take_coal(1.0):
+				no_fuel = true
+				_fuel_retry = 2.0
+				return
+	_drill_accum += reactor_rate() * delta
+	while _drill_accum >= 1.0:
+		_drill_accum -= 1.0
+		_deliver_ore(_pick_ore())
+	if reactor == "fusao":
+		_fusao_timer += delta
+		if _fusao_timer >= fusao_check_interval:
+			_fusao_timer = 0.0
+			if randf() < fusao_meltdown_chance:
+				meltdown()
+
+
+func _take_coal(amount: float) -> bool:
+	var need := amount
+	for a in get_tree().get_nodes_in_group("armazens"):
+		if a.stock.get("carvao", 0.0) >= need:
+			a.take(need, "carvao")
+			return true
+	return false
+
+
+func _pick_ore() -> String:
+	var mix: Dictionary = REACTOR_MIX.get(reactor, {"ferro": 1.0})
+	var r := randf()
+	for t in mix:
+		r -= mix[t]
+		if r <= 0.0:
+			return t
+	return "ferro"
+
+
+func _deliver_ore(t: String) -> void:
+	var best: Node2D = null
+	var best_d := INF
+	for a in get_tree().get_nodes_in_group("armazens"):
+		var d := global_position.distance_to(a.global_position)
+		if d < best_d:
+			best_d = d
+			best = a
+	if best:
+		best.add_ore(1.0, t)
+
+
+## Pane do reator de fusão: explode, desliga e machuca (grave) quem estiver perto.
+func meltdown() -> void:
+	outage_left = fusao_outage
+	_dust.restart()
+	_sparks.restart()
+	Audio.boom(global_position)
+	var hurt_n := 0
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		if w.global_position.distance_to(global_position + Vector2(0, -20)) <= fusao_blast_radius and not w.injured:
+			w.hurt("explosao", "grave")
+			hurt_n += 1
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_banner("PANE NO REATOR DE FUSÃO!",
+			"A escavadeira explodiu e ficou %ds desligada. %s" % [roundi(fusao_outage),
+				"%d ipezinho%s se machucou feio." % [hurt_n, "s" if hurt_n > 1 else ""] if hurt_n > 0 else "Ninguém estava perto, ufa."])
+	_update_label()
+
+
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
-	return {"installed": installed.duplicate(), "fabricating": fabricating, "fab_left": fab_left}
+	return {
+		"installed": installed.duplicate(), "fabricating": fabricating, "fab_left": fab_left,
+		"reactor": reactor, "built_reactors": built_reactors.duplicate(), "drill_on": drill_on,
+		"outage_left": outage_left,
+	}
 
 
 ## Carregar uma escavadeira pronta NÃO repete a fanfarra nem o banner de conquista.
@@ -272,4 +531,15 @@ func load_save_data(d: Dictionary) -> void:
 		fabricating = ""
 	fab_left = maxf(SaveUtil.num(d, "fab_left", 0.0), 0.0) if fabricating != "" else 0.0
 	complete = installed_count() == PART_IDS.size()
+	built_reactors = []
+	for id in SaveUtil.array(d, "built_reactors"):
+		if id is String and id in REACTOR_IDS and not built_reactors.has(id):
+			built_reactors.append(id)
+	if complete and built_reactors.is_empty():
+		built_reactors = ["vapor"]  # save de antes dos reatores: vem a caldeira
+	var r := SaveUtil.text(d, "reactor", "vapor" if complete else "")
+	reactor = r if built_reactors.has(r) else ("vapor" if complete else "")
+	drill_on = SaveUtil.boolean(d, "drill_on", true)
+	outage_left = clampf(SaveUtil.num(d, "outage_left", 0.0), 0.0, fusao_outage)
+	no_fuel = false
 	_update_visual()

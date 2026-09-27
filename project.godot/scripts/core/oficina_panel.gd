@@ -148,12 +148,12 @@ func refresh() -> void:
 
 func button_text() -> String:
 	if _oficina.crafting != "":
-		return "Oficina — forjando %d%%  (O)" % roundi(_oficina.craft_progress() * 100.0)
+		return "Oficina %d%% (O)" % roundi(_oficina.craft_progress() * 100.0)
 	var done := 0
 	for id in _oficina.TOOL_IDS:
 		if _oficina.has_tool(id):
 			done += 1
-	return "Oficina — %d/%d ferramentas  (O)" % [done, _oficina.TOOL_IDS.size()]
+	return "Oficina %d/%d (O)" % [done, _oficina.TOOL_IDS.size()]
 
 
 func has_available_action() -> bool:

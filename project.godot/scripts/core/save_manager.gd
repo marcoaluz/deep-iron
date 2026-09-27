@@ -37,6 +37,33 @@ extends Node
 ##   oficina.gd (Oficina)
 ##     crafted {picareta_aco, lampiao}, crafting, craft_left.
 ##     Quais minérios estão liberados sai de crafted (TOOL_UNLOCKS).
+##   enfermaria.gd (Enfermaria, Bloco 17)
+##     memorial [{name, cause, severity, day, position}] — quem morreu; as cruzes
+##     são recriadas a partir dele. Leitos saem de upgrades.enfermaria do Centro da Vila;
+##     quem está internado não é salvo (volta andando pro leito ao carregar).
+##     No ipezinho: injury_severity ("leve"/"grave") e care_left (relógio sem leito).
+##   morale.gd (nó Morale, Bloco 18)
+##     on_strike, strike_left (ultimato), below_time, grief (luto), festa_left,
+##     last_festa_day e a taverna {position, level} (recriada antes dos ipezinhos).
+##     No ipezinho: happiness (save antigo começa em happiness_start).
+##   defense.gd (nó Defense, Bloco 21)
+##     weapons (forjadas), forging, forge_left, wave, warned_day e o campo de treino
+##     {posição}. Barricadas pelo nome do nó: level, hp. No ipezinho: combat_skill
+##     (e role "guarda"). Criaturas NÃO vão pro save (carregar de noite encerra a invasão).
+##   diary.gd (nó Diary): pages [{id, day}].
+##   sun.gd (nó Sun, Bloco 23): onda do dia (wave_today, wave_at, wave_left,
+##     wave_intensity, warned), won (vitória) e o gerador do escudo {posição, etapas}.
+##     A estação sai do dia (não precisa salvar).
+##   research.gd (nó Research, Bloco 22): done (pesquisadas), current, progress e o
+##     laboratório {posição}. Efeitos de capacidade são reaplicados ao carregar.
+##     No ipezinho: role "pesquisador".
+##   abyss_shaft.gd (ElevadorAbismo, Bloco 20)
+##     unlocked, repairing, repair_left. Jazidas do abismo (solarita) entram em
+##     "minerios"; o estoque de solarita no armazém; o Traje de chumbo na Oficina.
+##   finds.gd (nó Finds, Bloco 19)
+##     rare_parts, items {cristal, solar, bobina}, finds_total, deep_finds, robot_found
+##     e o robô {state, position, repair_left} (quem estava sendo carregado volta pro chão).
+##     Na escavadeira: reactor, built_reactors, drill_on, outage_left.
 ##   escavadeira.gd (Escavadeira)
 ##     installed {estrutura, motor, hidraulica, cabine, broca}, fabricating, fab_left.
 ##     complete é recalculado (todas instaladas) e NÃO repete a fanfarra/banner.
@@ -56,6 +83,7 @@ extends Node
 ##     wood_remaining + _cooldown; ipezinho.gd role "lenhador" + wood_carrying.
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
+##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   camera_controller.gd (Camera2D)
 ##     posição e zoom (conforto: volta a olhar pro mesmo lugar).
 ##
@@ -97,6 +125,8 @@ var _game: Node = null  # nó Main da partida em andamento
 var _autosave_timer: float = 0.0
 ## Já garantimos o backup do save antigo nesta partida nova?
 var _backup_checked: bool = false
+## Partida perdida (expulso pela greve): não salva mais nada até sair dela.
+var game_over: bool = false
 
 
 func _ready() -> void:
@@ -105,7 +135,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if not is_game_running() or autosave_interval <= 0.0:
+	if not is_game_running() or autosave_interval <= 0.0 or get_tree().paused:
 		return
 	_autosave_timer += delta
 	if _autosave_timer >= autosave_interval:
@@ -155,6 +185,7 @@ func save_summary() -> Dictionary:
 ## Chamado pelo main.gd no _ready de cada partida.
 func register_game(main: Node) -> void:
 	_game = main
+	game_over = false
 	_autosave_timer = 0.0
 	if not pending_load and has_save() and not _backup_checked:
 		# partida nova (ex.: rodando main.tscn direto no editor) com save antigo na pasta:
@@ -215,7 +246,7 @@ func quarantine_corrupt_save() -> void:
 
 # ------------------------------------------------------------ salvar
 func save_game(reason: String = "manual") -> bool:
-	if not is_game_running():
+	if not is_game_running() or game_over:
 		return false
 	var data := _collect()
 	var json := JSON.stringify(data, "\t")
@@ -251,12 +282,20 @@ func _collect() -> Dictionary:
 		"oficina": "oficina",
 		"escavadeira": "escavadeira",
 		"elevador": "elevador",
+		"abismo": "elevador_abismo",
+		"enfermaria": "enfermarias",
+		"morale": "morale",
+		"finds": "finds",
+		"defense": "defense",
+		"diary": "diary",
+		"research": "research",
+		"sun": "sun",
 	}
 	for key in singles:
 		var node := tree.get_first_node_in_group(singles[key])
 		if node and node.has_method("get_save_data"):
 			data[key] = node.get_save_data()
-	for key in ["casas", "armazens", "minerios", "comedouros", "coleta_comida", "arvores"]:
+	for key in ["casas", "armazens", "minerios", "comedouros", "coleta_comida", "arvores", "barricadas"]:
 		data[key] = _collect_group(key)
 	var workers := []
 	for w in tree.get_nodes_in_group("ipezinhos"):
@@ -312,15 +351,27 @@ func apply_pending(main: Node) -> void:
 	if not SaveUtil.dict(data, "economy").has("max_workers"):
 		_recompute_max_workers()
 	_spawn_placed_houses(SaveUtil.array(data, "placed_houses"))
+	_apply_single("morale", SaveUtil.dict(data, "morale"))  # recria a taverna (antes dos ipezinhos)
+	_apply_single("defense", SaveUtil.dict(data, "defense"))  # armas, ondas e o campo de treino
+	_apply_single("diary", SaveUtil.dict(data, "diary"))
+	_apply_single("research", SaveUtil.dict(data, "research"))  # recria o laboratório
+	_apply_single("sun", SaveUtil.dict(data, "sun"))  # ondas, vitória e o gerador do escudo
+	_apply_group("barricadas", SaveUtil.dict(data, "barricadas"))
 	_apply_group("casas", SaveUtil.dict(data, "casas"))
 	_apply_group("armazens", SaveUtil.dict(data, "armazens"))
 	_apply_single("oficina", SaveUtil.dict(data, "oficina"))
 	_apply_single("elevador", SaveUtil.dict(data, "elevador"))  # antes das jazidas (fundo tranca)
+	_apply_single("elevador_abismo", SaveUtil.dict(data, "abismo"))
 	_apply_group("minerios", SaveUtil.dict(data, "minerios"))
 	_apply_group("comedouros", SaveUtil.dict(data, "comedouros"))
 	_apply_group("coleta_comida", SaveUtil.dict(data, "coleta_comida"))
 	_apply_group("arvores", SaveUtil.dict(data, "arvores"))
 	_apply_single("escavadeira", SaveUtil.dict(data, "escavadeira"))
+	_apply_single("finds", SaveUtil.dict(data, "finds"))  # peças raras, achados e o robô
+	# sempre (mesmo save antigo sem a chave): limpa as cruzes da partida atual
+	var inf := get_tree().get_first_node_in_group("enfermarias")
+	if inf:
+		inf.load_save_data(SaveUtil.dict(data, "enfermaria"))
 	var shaft := get_tree().get_first_node_in_group("elevador")
 	if shaft:
 		shaft.sync_state()  # escavadeira pronta => descida aberta (save antigo sem "elevador")

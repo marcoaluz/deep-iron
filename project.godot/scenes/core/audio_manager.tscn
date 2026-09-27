@@ -24,6 +24,23 @@
 [ext_resource type="AudioStream" path="res://assets/audio/heal.wav" id="22_a"]
 [ext_resource type="AudioStream" path="res://assets/audio/forge.wav" id="23_a"]
 [ext_resource type="AudioStream" path="res://assets/audio/fanfare.wav" id="24_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/chop_0.wav" id="25_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/chop_1.wav" id="26_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/chop_2.wav" id="27_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/elevator.wav" id="28_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/branch.wav" id="29_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/toll.wav" id="30_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/cheers.wav" id="31_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/protest.wav" id="32_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/find.wav" id="33_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/robot.wav" id="34_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/boom.wav" id="35_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/alarm.wav" id="36_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/screech.wav" id="37_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/clank.wav" id="38_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/hit.wav" id="39_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/gate_break.wav" id="40_a"]
+[ext_resource type="AudioStream" path="res://assets/audio/solar.wav" id="41_a"]
 
 [node name="Audio" type="Node"]
 script = ExtResource("1_a")
@@ -41,3 +58,18 @@ hurt_sound = ExtResource("21_a")
 heal_sound = ExtResource("22_a")
 forge_sound = ExtResource("23_a")
 fanfare_sound = ExtResource("24_a")
+chop_sounds = Array[AudioStream]([ExtResource("25_a"), ExtResource("26_a"), ExtResource("27_a")])
+elevator_sound = ExtResource("28_a")
+branch_sound = ExtResource("29_a")
+toll_sound = ExtResource("30_a")
+cheers_sound = ExtResource("31_a")
+protest_sound = ExtResource("32_a")
+find_sound = ExtResource("33_a")
+robot_sound = ExtResource("34_a")
+boom_sound = ExtResource("35_a")
+alarm_sound = ExtResource("36_a")
+screech_sound = ExtResource("37_a")
+clank_sound = ExtResource("38_a")
+hit_sound = ExtResource("39_a")
+gate_break_sound = ExtResource("40_a")
+solar_sound = ExtResource("41_a")

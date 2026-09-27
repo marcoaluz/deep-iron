@@ -32,6 +32,26 @@ extends Node
 @export var heal_sound: AudioStream
 @export var forge_sound: AudioStream
 @export var fanfare_sound: AudioStream
+@export var chop_sounds: Array[AudioStream] = []
+@export var elevator_sound: AudioStream
+@export var branch_sound: AudioStream
+## Sino fúnebre: um ipezinho morreu.
+@export var toll_sound: AudioStream
+## Brinde na taverna / batucada da greve.
+@export var cheers_sound: AudioStream
+@export var protest_sound: AudioStream
+## Achado na mina / robô ligando / pane do reator.
+@export var find_sound: AudioStream
+@export var robot_sound: AudioStream
+@export var boom_sound: AudioStream
+## Invasão: berrante, Lumívoro, Ferrugento, golpe, barricada quebrando.
+@export var alarm_sound: AudioStream
+@export var screech_sound: AudioStream
+@export var clank_sound: AudioStream
+@export var hit_sound: AudioStream
+@export var gate_break_sound: AudioStream
+## Onda solar chegando.
+@export var solar_sound: AudioStream
 
 @export_group("Mixagem dos efeitos (dB)")
 @export var pick_db: float = -7.0
@@ -42,6 +62,21 @@ extends Node
 @export var heal_db: float = -8.0
 @export var forge_db: float = -10.0
 @export var fanfare_db: float = -4.0
+@export var chop_db: float = -9.0
+@export var elevator_db: float = -8.0
+@export var branch_db: float = -5.0
+@export var toll_db: float = -5.0
+@export var cheers_db: float = -12.0
+@export var protest_db: float = -9.0
+@export var find_db: float = -8.0
+@export var robot_db: float = -6.0
+@export var boom_db: float = -2.0
+@export var alarm_db: float = -4.0
+@export var screech_db: float = -12.0
+@export var clank_db: float = -10.0
+@export var hit_db: float = -9.0
+@export var gate_break_db: float = -4.0
+@export var solar_db: float = -3.0
 @export var ui_db: float = -6.0
 ## Variação aleatória de pitch (0.08 = ±8%), pra não soar repetitivo.
 @export var pitch_variation: float = 0.08
@@ -62,8 +97,12 @@ var _step_tokens := 0.0
 var _last_index := {}  # evita tocar a mesma variação duas vezes seguidas
 
 
+const Settings := preload("res://scripts/core/settings.gd")
+
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_load_settings()
 	apply_volumes()
 
 	for i in max_voices:
@@ -110,6 +149,21 @@ func toggle_music() -> void:
 		_fade_in(_music_player)
 	else:
 		_music_player.stop()
+	save_settings()
+
+
+## Volumes e música vêm de user://settings.cfg (o Inspector só dá o padrão da 1ª vez).
+func _load_settings() -> void:
+	master_volume = Settings.get_value("audio", "master_volume", master_volume)
+	music_volume = Settings.get_value("audio", "music_volume", music_volume)
+	ambience_volume = Settings.get_value("audio", "ambience_volume", ambience_volume)
+	sfx_volume = Settings.get_value("audio", "sfx_volume", sfx_volume)
+	music_enabled = Settings.get_value("audio", "music_enabled", music_enabled)
+
+
+func save_settings() -> void:
+	for key in ["master_volume", "music_volume", "ambience_volume", "sfx_volume", "music_enabled"]:
+		Settings.set_value("audio", key, get(key))
 
 
 func _make_loop_player(stream: AudioStream, bus_name: StringName) -> AudioStreamPlayer:
@@ -169,8 +223,79 @@ func forge(pos: Vector2) -> void:
 		play_at(&"forge", [forge_sound], pos, forge_db, 0.12)
 
 
+func chop(pos: Vector2) -> void:
+	play_at(&"chop", chop_sounds, pos, chop_db)
+
+
+func elevator(pos: Vector2) -> void:
+	if elevator_sound:
+		play_at(&"elevator", [elevator_sound], pos, elevator_db, 0.05)
+
+
+func branch(pos: Vector2) -> void:
+	if branch_sound:
+		play_at(&"branch", [branch_sound], pos, branch_db)
+
+
 func fanfare() -> void:
 	play_ui(fanfare_sound, fanfare_db)
+
+
+func toll() -> void:
+	play_ui(toll_sound, toll_db)
+
+
+func cheers(pos: Vector2) -> void:
+	if cheers_sound:
+		play_at(&"cheers", [cheers_sound], pos, cheers_db)
+
+
+func find(pos: Vector2) -> void:
+	if find_sound:
+		play_at(&"find", [find_sound], pos, find_db, 0.02)
+
+
+func robot(pos: Vector2) -> void:
+	if robot_sound:
+		play_at(&"robot", [robot_sound], pos, robot_db, 0.0)
+
+
+func boom(pos: Vector2) -> void:
+	if boom_sound:
+		play_at(&"boom", [boom_sound], pos, boom_db, 0.05)
+
+
+func alarm() -> void:
+	play_ui(alarm_sound, alarm_db)
+
+
+func solar() -> void:
+	play_ui(solar_sound, solar_db)
+
+
+func screech(pos: Vector2) -> void:
+	if screech_sound:
+		play_at(&"screech", [screech_sound], pos, screech_db, 0.12)
+
+
+func clank(pos: Vector2) -> void:
+	if clank_sound:
+		play_at(&"clank", [clank_sound], pos, clank_db, 0.1)
+
+
+func hit(pos: Vector2) -> void:
+	if hit_sound:
+		play_at(&"hit", [hit_sound], pos, hit_db, 0.12)
+
+
+func gate_break(pos: Vector2) -> void:
+	if gate_break_sound:
+		play_at(&"gate_break", [gate_break_sound], pos, gate_break_db, 0.05)
+
+
+func protest(pos: Vector2) -> void:
+	if protest_sound:
+		play_at(&"protest", [protest_sound], pos, protest_db, 0.03)
 
 
 func sell() -> void:

@@ -13,7 +13,7 @@ signal replenished
 
 @export_group("Mineração")
 ## Tipo de minério desta jazida: "ferro", "cobre" ou "carvao".
-@export_enum("ferro", "cobre", "carvao", "prata") var ore_type: String = "ferro"
+@export_enum("ferro", "cobre", "carvao", "prata", "solarita") var ore_type: String = "ferro"
 ## Minério tirado por segundo por ipezinho (ritmo: era 4.0).
 @export var MINE_RATE: float = 3.0
 @export var ore_total: float = 200.0
@@ -90,6 +90,10 @@ func on_unlock_changed(animate: bool = true) -> void:
 	var env := get_tree().get_first_node_in_group("environment")
 	var shaft := get_tree().get_first_node_in_group("elevador")
 	_needs_descent = env != null and env.is_deep(global_position) and not (shaft != null and shaft.unlocked)
+	# no abismo (nível 3), também precisa da plataforma consertada
+	if env != null and env.has_method("is_abyss") and env.is_abyss(global_position):
+		var abyss := get_tree().get_first_node_in_group("elevador_abismo")
+		_needs_descent = _needs_descent or not (abyss != null and abyss.unlocked)
 	_unlocked = tool_ok and not _needs_descent
 	if _unlocked and not was and animate:
 		var pop := create_tween()

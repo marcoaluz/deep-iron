@@ -3,6 +3,7 @@ extends CharacterBody2D
 signal state_changed(new_state: String)
 signal injured_changed(is_injured: bool)
 signal mood_changed(level: int)  # 0 calmo, 1 irritado, 2 furioso
+signal died(worker_name: String)
 
 const STATE_LABELS := {
 	"idle": "ocioso",
@@ -15,6 +16,13 @@ const STATE_LABELS := {
 	"delivering": "levando comida",
 	"chopping": "cortando madeira",
 	"hauling": "levando madeira",
+	"infirmary": "indo pra enfermaria",
+	"leisure": "indo pra taverna",
+	"strike": "em greve!",
+	"robot": "indo buscar o robô",
+	"guard": "de guarda",
+	"training": "treinando",
+	"research": "pesquisando",
 }
 ## Distância da porta/cama a partir da qual o ipezinho "chega" em casa.
 const REST_REACH := 12.0
@@ -25,6 +33,11 @@ const FOOD_BASKET := preload("res://assets/game/food_basket.png")
 ## Visual do corpo por gênero: 3 variações de cor de roupa/cabelo cada (tools/gen_sprites.py).
 ## Todas têm o mesmo layout de 4 quadros e o mesmo capacete, então os ícones por cima
 ## (carga, chapéu de cozinheiro, zanga, curativo) encaixam igual.
+## Nomes sorteados (sem repetir enquanto houver nome livre).
+const NAMES_BOY := ["Tião", "Zé", "Juca", "Chico", "Bento", "Dito", "Tonho", "Neco",
+	"Quim", "Bira", "Tuco", "Lalo", "Nando", "Beto", "Vavá", "Duda"]
+const NAMES_GIRL := ["Zefa", "Lia", "Nina", "Cida", "Bia", "Tuca", "Dora", "Rosinha",
+	"Mel", "Tita", "Lulu", "Nena", "Fifi", "Jana", "Didi", "Cacá"]
 const BODY_TEXTURES := {
 	"menino": [
 		preload("res://assets/game/ipezinho_m0.png"),
@@ -45,12 +58,20 @@ const STATE_GROUP := {
 	"delivering": "comedouros",
 	"chopping": "arvores",
 	"hauling": "armazens",
+	"infirmary": "enfermarias",
+	"leisure": "tavernas",
+	"training": "campos",
+	"research": "laboratorios",
 }
 ## Função fixa (designada pelo jogador). "" = faz de tudo (minerar etc.).
 const ROLE_COOK := "cozinheiro"
 const ROLE_LUMBER := "lenhador"
+const ROLE_GUARD := "guarda"
+const ROLE_RESEARCH := "pesquisador"
+const LANCA := preload("res://assets/game/lanca.png")
 const AXE := preload("res://assets/game/axe.png")
 const WOOD_LOG := preload("res://assets/game/wood_log.png")
+const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 
 @export_group("Movimento")
 @export var speed: float = 120.0
@@ -84,11 +105,33 @@ const WOOD_LOG := preload("res://assets/game/wood_log.png")
 @export_range(0.0, 1.0) var injury_chance: float = 0.04
 ## Minério extraído que conta como um "ciclo de mineração" (16 = uma carga cheia).
 @export var mining_cycle_amount: float = 16.0
-## Segundos DESCANSANDO em casa até curar (o caminho até lá não conta).
+## Só sem Enfermaria na cena (fallback antigo): segundos descansando em casa até curar.
+## Com enfermaria, o tempo de leito vem dela (heal_time_leve / heal_time_grave).
 @export var recovery_time: float = 30.0
 ## Multiplicador de velocidade enquanto está machucado (mancando).
 ## 0.73 -> pior caso (machucado + carga cheia) ≈ 120 x 0.65 x 0.73 ≈ 57 px/s.
 @export var injured_speed_mult: float = 0.73
+## Clareira: chance de um galho cair no lenhador a cada ciclo de corte (0.05 = 5%).
+@export_range(0.0, 1.0) var branch_injury_chance: float = 0.05
+## Madeira cortada que conta como um "ciclo de corte" (8 = uma carga cheia do lenhador).
+@export var chop_cycle_amount: float = 8.0
+## Cortar de noite (turno extra, clareira escura) multiplica a chance da queda de galho.
+@export var night_chop_injury_mult: float = 2.0
+
+@export_group("Gravidade / enfermaria")
+## Chance do acidente ser GRAVE: na mina / queda de galho...
+@export_range(0.0, 1.0) var grave_chance_mine: float = 0.2
+@export_range(0.0, 1.0) var grave_chance_branch: float = 0.4
+## ...e quanto soma no nível 2 (mais fundo, mais feio).
+@export_range(0.0, 1.0) var deep_grave_bonus: float = 0.3
+## No abismo (nível 3) soma mais essa em cima da do nível 2.
+@export_range(0.0, 1.0) var abyss_grave_bonus: float = 0.2
+## Segundos SEM LEITO até o machucado LEVE piorar pra grave...
+@export var leve_untreated_time: float = 150.0
+## ...e até o GRAVE morrer. (O relógio pausa enquanto está deitado num leito.)
+@export var grave_untreated_time: float = 75.0
+## Aviso no HUD quando faltar isso pro grave morrer.
+@export var death_warning_time: float = 25.0
 
 @export_group("Turno extra / zanga")
 ## Zanga ganha por segundo trabalhando à noite em turno extra (0.8 -> ~+48 por noite).
@@ -108,6 +151,39 @@ const WOOD_LOG := preload("res://assets/game/wood_log.png")
 ## Multiplica a velocidade de caminhada (acumula com carga, fome e lesão).
 @export var irritated_speed_mult: float = 0.95
 @export var furious_speed_mult: float = 0.85
+
+@export_group("Felicidade")
+## Felicidade de quem nasce (jogo novo / recrutado).
+@export_range(0.0, 100.0) var happiness_start: float = 70.0
+## Ponto de partida do alvo, antes de somar os motivos (cama, fome, zanga...).
+@export var happiness_base: float = 60.0
+## Quanto a felicidade anda por segundo em direção ao alvo.
+@export var happiness_drift: float = 0.25
+## Abaixo disso vai pra taverna (se existir) e fica lá até leisure_until.
+@export_range(0.0, 100.0) var leisure_below: float = 40.0
+@export_range(0.0, 100.0) var leisure_until: float = 85.0
+## Faixas: feliz >= happy_at; triste < sad_below; revoltado < miserable_below.
+@export_range(0.0, 100.0) var happy_at: float = 75.0
+@export_range(0.0, 100.0) var sad_below: float = 40.0
+@export_range(0.0, 100.0) var miserable_below: float = 25.0
+## Multiplica a produção (minerar/cortar) em cada faixa.
+@export var happy_work_mult: float = 1.1
+@export var sad_work_mult: float = 0.8
+@export var miserable_work_mult: float = 0.6
+
+@export_group("Guarda")
+## Vida na luta = base + por_habilidade x habilidade (0..1). Zerou: machuca e sai da luta.
+@export var guard_base_hp: float = 30.0
+@export var guard_hp_per_skill: float = 20.0
+## Distância em que o guarda vê uma criatura e parte pra cima.
+@export var guard_aggro: float = 200.0
+@export var guard_attack_interval: float = 1.0
+## Sem treino o guarda bate com metade da força (habilidade 0 -> x0.5, 100% -> x1).
+@export_range(0.0, 1.0) var untrained_damage_mult: float = 0.5
+
+@export_group("Robô antigo")
+## Carregando o robô anda nessa fração da velocidade.
+@export_range(0.1, 1.0) var carry_robot_speed_mult: float = 0.6
 
 @export_group("Cozinheiro")
 ## Comida que o cozinheiro carrega por viagem (horta -> comedouro).
@@ -165,6 +241,8 @@ var injured: bool = false
 var overtime: bool = false
 ## Função: "" (faz de tudo) ou ROLE_COOK (só busca comida pro comedouro).
 var role: String = ""
+## Nome próprio mostrado no HUD (o nome do NÓ continua "IpezinhoN": é a chave do save).
+var display_name: String = ""
 ## "menino" ou "menina": sorteado ao nascer (jogo novo / recrutamento), fixo depois.
 var gender: String = ""
 ## Variação de cor de roupa/cabelo dentro do gênero (índice em BODY_TEXTURES).
@@ -180,6 +258,33 @@ var anger: float = 0.0
 var _mood: int = 0
 var _recovery_left: float = 0.0
 var _mined_since_roll: float = 0.0
+var _chopped_since_roll: float = 0.0
+## Causa do machucado atual: "mina" (acidente minerando) ou "galho" (queda na clareira).
+var injury_cause: String = ""
+## Gravidade do machucado atual: "leve" ou "grave" ("" = não machucado).
+var injury_severity: String = ""
+## Segundos que ainda aguenta SEM LEITO (leve -> piora, grave -> morre). Pausa no leito.
+var _care_left: float = 0.0
+## Deitado num leito da enfermaria (fica lá dentro, invisível).
+var _admitted: bool = false
+var _ward: Node = null  # enfermaria onde está internado
+var _death_warned := false
+## Felicidade 0..100 (-1 = ainda não definida: nasce com happiness_start).
+var happiness: float = -1.0
+var _at_taverna: Node = null  # taverna onde está se divertindo (lá dentro, invisível)
+var _strike_spot: Variant = null  # onde fica parado protestando
+var _strike_icon: Sprite2D
+var _strike_refuse_cd := 0.0
+## Robô antigo que mandaram buscar / que está nas costas.
+var _robot_task: Node = null
+var holding_robot: Node = null
+## Guarda: habilidade de combate (0..1, sobe treinando), vida na luta e o inimigo da vez.
+var combat_skill: float = 0.0
+## Radiação acumulada nas ondas solares (sun.gd); passou do limite, machuca.
+var rad: float = 0.0
+var combat_hp: float = -1.0
+var _foe: Node2D = null
+var _attack_cd := 0.0
 var _hub_node: Node = null
 ## Preenchido pelo SaveManager antes de entrar na árvore (ipezinho vindo do save).
 var pending_save_data: Dictionary = {}
@@ -215,14 +320,27 @@ func _ready() -> void:
 	if not pending_save_data.is_empty():
 		load_save_data(pending_save_data)
 		pending_save_data = {}
+	if happiness < 0.0:
+		happiness = happiness_start
+	_strike_icon = Sprite2D.new()
+	_strike_icon.texture = STRIKE_SIGN
+	_strike_icon.position = Vector2(-11, -44)
+	_strike_icon.scale = Vector2(1.5, 1.5)
+	_strike_icon.visible = false
+	add_child(_strike_icon)
 	_ensure_appearance()
+	_ensure_name()
 	_claim_home.call_deferred()  # as casas precisam estar nos grupos
 	_sync_tool_visual.call_deferred()  # recrutado depois da picareta de aço já nasce com ela
+	_apply_research.call_deferred()  # carrinhos de mina (capacidade de carga)
 	_update_hunger_label()
 	_update_cargo_label()
 
 
 func _exit_tree() -> void:
+	_discharge()
+	_leave_taverna()
+	_drop_robot()
 	_release_station()
 	if _home != null and is_instance_valid(_home):
 		_home.set_inside(self, false)
@@ -250,9 +368,28 @@ func get_state() -> String:
 
 
 func get_state_label() -> String:
+	if _ai_state == "guard":
+		return "lutando!" if _foe != null and is_instance_valid(_foe) else "de guarda"
+	if _ai_state == "training":
+		return "treinando (%d%%)" % roundi(combat_skill * 100.0)
+	if _ai_state == "robot":
+		return "carregando o robô" if holding_robot != null else "indo buscar o robô"
+	if _at_taverna != null:
+		return "na taverna (ânimo %d)" % roundi(happiness)
+	if _admitted:
+		return "internado, %s (%ds)" % [injury_severity, ceili(_recovery_left)] if injured else "recebendo alta"
+	if injured and _ai_state == "infirmary":
+		var clock := ("morre em %ds" if injury_severity == "grave" else "piora em %ds") % ceili(_care_left)
+		if _station == null:
+			return "machucado %s, esperando leito (%s)" % [injury_severity, clock]
+		return "machucado %s, indo pra enfermaria (%s)" % [injury_severity, clock]
 	if injured and _ai_state == "home":
-		return "curando (%ds)" % ceili(_recovery_left) if _resting else "machucado, indo pra casa"
+		var why := " por galho" if injury_cause == "galho" else ""
+		return "curando (%ds)" % ceili(_recovery_left) if _resting else "machucado%s, indo pra casa" % why
 	if _ai_state == "home" and _resting:
+		var sun := _sun()
+		if sun and sun.shelter_now() and not _is_night():
+			return "abrigado do sol" if _inside else "sem abrigo, no sol!"
 		return "dormindo" if _inside else "dormindo ao relento"
 	var label: String = STATE_LABELS.get(_ai_state, _ai_state)
 	if _station == null and STATE_GROUP.has(_ai_state):
@@ -312,6 +449,8 @@ func _get_effective_speed() -> float:
 		s *= starving_speed_mult
 	if injured:
 		s *= injured_speed_mult
+	if holding_robot != null:
+		s *= carry_robot_speed_mult
 	s *= [1.0, irritated_speed_mult, furious_speed_mult][_mood]  # zanga acumula com a lesão
 	return s * _speed_bonus()
 
@@ -331,7 +470,8 @@ func _village_hub() -> Node:
 # ------------------------------------------------------------ fome / IA
 func _process(delta: float) -> void:
 	var was_starving := hunger <= 0.0
-	var decay := hunger_decay * (sleep_hunger_mult if _resting else 1.0)
+	var sun := _sun()
+	var decay: float = hunger_decay * (sleep_hunger_mult if _resting else 1.0) * (sun.hunger_mult() if sun else 1.0)  # inverno: mais fome
 	hunger = maxf(hunger - decay * delta, 0.0)
 	if int(hunger) != _last_hunger_int:
 		_update_hunger_label()
@@ -340,11 +480,17 @@ func _process(delta: float) -> void:
 
 	_work_timer = maxf(_work_timer - delta, 0.0)
 	_update_anger(delta)
-	# só cura descansando (em casa ou ao relento)
-	if injured and _resting:
-		_recovery_left -= delta
-		if _recovery_left <= 0.0:
-			_heal()
+	# machucado: só cura DEITADO num leito da enfermaria; fora dele o relógio corre
+	if injured:
+		_update_injury(delta)
+	if _ai_state == "guard":
+		_guard_tick(delta)
+	elif combat_hp >= 0.0:
+		combat_hp = guard_max_hp()  # fora da luta recupera o fôlego
+	# felicidade anda devagar pro alvo (na taverna quem manda é a taverna)
+	if _at_taverna == null:
+		happiness = move_toward(happiness, happiness_target(), happiness_drift * delta)
+	_strike_refuse_cd = maxf(_strike_refuse_cd - delta, 0.0)
 	if _manual_timer > 0.0 and not (_ai_state == "manual" and _moving):
 		_manual_timer -= delta
 
@@ -358,14 +504,46 @@ func _process(delta: float) -> void:
 	if _ai_state == "home" and not _resting and not _moving:
 		if global_position.distance_to(_rest_position()) <= REST_REACH:
 			_start_resting()
+	# robô: pega quando chega nele; larga quando chega na Oficina
+	if _ai_state == "robot" and not _moving and _robot_task != null and is_instance_valid(_robot_task):
+		if holding_robot == null and global_position.distance_to(_robot_task.global_position) <= 18.0:
+			holding_robot = _robot_task
+			_robot_task.attach(self)
+			_decision_timer = 0.0
+		elif holding_robot != null and global_position.distance_to(_robot_task.drop_point()) <= 20.0:
+			holding_robot = null
+			_robot_task.deliver()
+			_robot_task = null
+			_decision_timer = 0.0
+	# chegou no lugar reservado da taverna: entra
+	if _ai_state == "leisure" and _at_taverna == null and not _moving and _station_ok_for("leisure"):
+		if global_position.distance_to(_station.get_slot_position(_slot)) <= REST_REACH:
+			_enter_taverna()
+	# chegou no leito reservado da enfermaria: deita
+	if _ai_state == "infirmary" and injured and not _admitted and not _moving and _station_ok_for("infirmary"):
+		if global_position.distance_to(_station.get_slot_position(_slot)) <= REST_REACH:
+			_admit()
 
 
 func _choose_state() -> String:
+	# Machucado: só cura na ENFERMARIA — vai pra lá (ou espera leito na porta),
+	# de dia ou de noite, antes de qualquer outra coisa.
+	if injured and _has_infirmary():
+		return "infirmary"
+	# Onda solar: quem está na superfície corre pro abrigo; no fundo segue (a rocha protege).
+	var sun := _sun()
+	if sun and sun.shelter_now():
+		var env := get_tree().get_first_node_in_group("environment")
+		if env == null or env.level_at(global_position) == 0:
+			return "home"
+		if _ai_state == "mining" and _station_ok_for("mining"):
+			return "mining"
+		return "idle"
 	# Prioridade 0: de noite o turno acabou — todo mundo pra casa, mesmo com fome ou carga.
 	# Exceção: quem está em TURNO EXTRA continua trabalhando (e ficando zangado).
-	if _is_night() and not overtime:
+	if _is_night() and not overtime and not is_guard():
 		return "home"
-	# Machucado: vai pra casa descansar, mesmo de dia (antes dos outros).
+	# Sem enfermaria na cena (fallback antigo): machucado descansa em casa.
 	if injured:
 		return "home"
 	# Prioridade 1: comer. Quem já está comendo só sai quando estiver quase cheio.
@@ -375,6 +553,19 @@ func _choose_state() -> String:
 		return "eating"
 	if hunger < hunger_threshold and food_ok:
 		return "eating"
+	# Lazer: triste vai pra taverna (se existir) e fica até se animar.
+	if _ai_state == "leisure" and happiness < leisure_until and _station_ok_for("leisure"):
+		return "leisure"
+	if happiness < leisure_below and _has_usable_station("tavernas"):
+		return "leisure"
+	# Greve: ninguém trabalha (só come, dorme, se trata e vai à taverna).
+	if _on_strike():
+		return "strike"
+	# Mandaram buscar o robô antigo: vai, pega e leva pra Oficina.
+	if _robot_task != null:
+		if is_instance_valid(_robot_task) and _robot_task.needs_carrier(self):
+			return "robot"
+		_robot_task = null
 	# Comida na cesta: leva pro comedouro (cozinheiro com a cesta cheia, sem horta
 	# disponível, ou quem deixou de ser cozinheiro com comida na mão).
 	if food_carrying > 0.0:
@@ -390,6 +581,17 @@ func _choose_state() -> String:
 		var keep_chopping := _ai_state == "chopping" and _station_ok_for("chopping")
 		if not is_lumber() or wood_full or _ai_state == "hauling" or (not keep_chopping and not _has_usable_station("arvores")):
 			return "hauling"
+	# Guarda: à noite fica nos portões; de dia treina (até ficar pronto) e descansa.
+	if is_guard():
+		if _is_night():
+			return "guard"
+		if combat_skill < 1.0 and ((_ai_state == "training" and _station_ok_for("training")) or _has_usable_station("campos")):
+			return "training"
+		return "home"
+	# Pesquisador: de dia no laboratório se tiver pesquisa em andamento; senão trabalha normal.
+	if is_researcher():
+		if (_ai_state == "research" and _station_ok_for("research")) or _has_usable_station("laboratorios"):
+			return "research"
 	# Lenhador: larga o minério que tiver e passa a só cortar e levar madeira.
 	if is_lumber():
 		if carrying > 0.0:
@@ -433,6 +635,28 @@ func _decide_next_action() -> void:
 		_go_home()
 		return
 
+	if desired == "strike":
+		_release_station()
+		_set_state("strike")
+		_go_protest()
+		return
+
+	if desired == "guard":
+		if _ai_state != "guard":
+			_release_station()
+			_set_state("guard")
+		return  # quem manda é o _guard_tick (posto / luta)
+
+	if desired == "robot":
+		_release_station()
+		_set_state("robot")
+		var dest: Vector2 = _robot_task.drop_point() if holding_robot != null else _robot_task.global_position
+		if not _moving or _target.distance_to(dest) > 2.0:
+			_go_to(dest)
+		return
+
+	if desired == _ai_state and (_admitted or _at_taverna != null):
+		return  # deitado no leito / sentado no balcão: não se mexe
 	if desired == _ai_state and _station_ok_for(desired):
 		# Continua o que está fazendo; se foi empurrado pra fora do slot, volta.
 		var slot_pos: Vector2 = _station.get_slot_position(_slot)
@@ -477,17 +701,20 @@ func _station_ok_for(state: String) -> bool:
 		return _station.has_wood() and wood_carrying < lumber_carry - 0.01
 	if state == "hauling":
 		return wood_carrying > 0.0
+	if state == "research":
+		return _station.is_usable()
 	return true
 
 
 ## Chegou na gaiola do elevador (NavigationLink2D): desce/sobe na hora.
 func _on_link_reached(details: Dictionary) -> void:
 	var link = details.get("owner")
-	if not (link is Node) or not link.get_parent() or not link.get_parent().is_in_group("elevador"):
+	if not (link is Node) or not link.get_parent() \
+			or not (link.get_parent().is_in_group("elevador") or link.get_parent().is_in_group("elevador_abismo")):
 		return
 	var exit: Vector2 = details.get("link_exit_position", global_position)
 	global_position = exit
-	Audio.deposit(exit)  # "clanc" da gaiola
+	Audio.elevator(exit)  # corrente + "clanc" da gaiola
 	_body.modulate.a = 0.0
 	create_tween().tween_property(_body, "modulate:a", 1.0, 0.35)
 
@@ -557,6 +784,16 @@ func _set_state(new_state: String) -> void:
 		return
 	if _ai_state == "home":
 		_stop_resting()
+	if _ai_state == "infirmary":
+		_discharge()
+	if _ai_state == "leisure":
+		_leave_taverna()
+	if _ai_state == "strike":
+		_strike_spot = null
+	if _ai_state == "robot":
+		_drop_robot()
+	if _ai_state == "guard":
+		_foe = null
 	_ai_state = new_state
 	state_changed.emit(new_state)
 
@@ -577,8 +814,214 @@ func _is_night() -> bool:
 
 ## Chamado pelo DayNight na virada de fase: reage logo (com um atraso aleatório curto).
 func on_phase_changed(_night: bool) -> void:
+	wake_decision()
+
+
+## Repensa o que fazer logo (virada de fase, começo/fim de greve).
+func wake_decision() -> void:
 	if auto_mode and _ai_state != "manual":
 		_decision_timer = randf_range(0.05, phase_react_delay)
+
+
+# ------------------------------------------------------------ felicidade / greve
+func _morale() -> Node:
+	return get_tree().get_first_node_in_group("morale")
+
+
+func _on_strike() -> bool:
+	var m := _morale()
+	return m != null and m.on_strike
+
+
+## Motivos que somam no alvo de felicidade: [[texto, valor], ...] (os da vila vêm do morale.gd).
+func happiness_factors() -> Array:
+	var f: Array = []
+	f.append(["tem cama", 8.0] if has_home() else ["sem cama", -15.0])
+	if hunger <= 0.0:
+		f.append(["passando fome", -30.0])
+	elif hunger < hunger_threshold:
+		f.append(["com fome", -10.0])
+	if _mood == 2:
+		f.append(["furioso (turno extra)", -25.0])
+	elif _mood == 1:
+		f.append(["irritado (turno extra)", -10.0])
+	if injured:
+		f.append(["machucado grave", -18.0] if injury_severity == "grave" else ["machucado", -8.0])
+	var env := get_tree().get_first_node_in_group("environment")
+	if env and env.has_method("is_abyss") and env.is_abyss(global_position):
+		f.append(["calor do abismo", -8.0])
+	var m := _morale()
+	if m:
+		f.append_array(m.village_factors())
+	return f
+
+
+func happiness_target() -> float:
+	var t := happiness_base
+	for f in happiness_factors():
+		t += f[1]
+	return clampf(t, 0.0, 100.0)
+
+
+## 0 revoltado, 1 triste, 2 contente, 3 feliz.
+func happiness_level() -> int:
+	if happiness < miserable_below:
+		return 0
+	if happiness < sad_below:
+		return 1
+	if happiness < happy_at:
+		return 2
+	return 3
+
+
+func happiness_label() -> String:
+	return ["revoltado", "triste", "contente", "feliz"][happiness_level()]
+
+
+func _happiness_work_mult() -> float:
+	return [miserable_work_mult, sad_work_mult, 1.0, happy_work_mult][happiness_level()]
+
+
+# ------------------------------------------------------------ guarda / combate
+func guard_max_hp() -> float:
+	return guard_base_hp + guard_hp_per_skill * combat_skill
+
+
+func _defense() -> Node:
+	return get_tree().get_first_node_in_group("defense")
+
+
+## Campo de treino chama enquanto ele treina.
+func train(amount: float) -> void:
+	if combat_skill >= 1.0:
+		return
+	combat_skill = minf(combat_skill + amount, 1.0)
+	_work_timer = 0.2  # balança a lança no boneco
+	if combat_skill >= 1.0:
+		_popup("Pronto pra lutar!", Color(0.55, 1.0, 0.5))
+		_decision_timer = randf_range(0.05, 0.4)
+
+
+## De noite, de guarda: vai pro posto; vendo criatura por perto, parte pra cima.
+func _guard_tick(delta: float) -> void:
+	_attack_cd -= delta
+	if combat_hp < 0.0:
+		combat_hp = guard_max_hp()
+	var def := _defense()
+	if _foe != null and (not is_instance_valid(_foe) or not _foe.is_alive() \
+			or global_position.distance_to(_foe.global_position) > guard_aggro * 1.5):
+		_foe = null
+	if _foe == null:
+		var best_d := guard_aggro
+		for c in get_tree().get_nodes_in_group("criaturas"):
+			if not c.is_alive():
+				continue
+			var d := global_position.distance_to(c.global_position)
+			if d < best_d:
+				best_d = d
+				_foe = c
+	if _foe == null:
+		var post: Vector2 = def.guard_post(self) if def else global_position
+		if global_position.distance_to(post) > 10.0 and (not _moving or _target.distance_to(post) > 4.0):
+			_go_to(post)
+		return
+	var reach: float = def.weapon_reach() if def else 18.0
+	var dist := global_position.distance_to(_foe.global_position)
+	if dist > reach:
+		if not _moving or _target.distance_to(_foe.global_position) > 12.0:
+			_go_to(_foe.global_position)
+		return
+	_moving = false
+	_facing = signf(_foe.global_position.x - global_position.x) if absf(_foe.global_position.x - global_position.x) > 1.0 else _facing
+	_work_timer = 0.3  # golpe
+	if _attack_cd <= 0.0:
+		_attack_cd = guard_attack_interval
+		var dmg: float = (def.weapon_damage_vs(_foe) if def else 3.0) * lerpf(untrained_damage_mult, 1.0, combat_skill)
+		_foe.take_hit(dmg, self)
+		Audio.hit(global_position)
+
+
+## Criatura bateu. Guarda de serviço aguenta (vida de luta); os outros se machucam.
+func take_hit(amount: float, attacker: Node2D) -> void:
+	if injured:
+		return
+	var flash := create_tween()
+	flash.tween_property(_body, "self_modulate", Color(2.0, 0.5, 0.5), 0.06)
+	flash.tween_property(_body, "self_modulate", Color.WHITE, 0.2)
+	var cause: String = attacker.get("kind") if attacker and attacker.get("kind") else "criatura"
+	if is_guard() and _ai_state == "guard":
+		if combat_hp < 0.0:
+			combat_hp = guard_max_hp()
+		combat_hp -= amount
+		_foe = attacker
+		_popup("-%d" % roundi(amount), Color(1.0, 0.5, 0.4))
+		if combat_hp <= 0.0:
+			combat_hp = guard_max_hp()
+			hurt(cause, "grave" if randf() < 0.3 else "leve")
+		return
+	var grave: float = attacker.get("grave_chance") if attacker and attacker.get("grave_chance") != null else 0.2
+	hurt(cause, "grave" if randf() < grave else "leve")
+
+
+## Mandaram buscar o robô antigo (robo.gd).
+func assign_robot(r: Node) -> void:
+	_robot_task = r
+	_manual_timer = 0.0
+	wake_decision()
+
+
+## Larga o robô onde está (anoiteceu, machucou, greve, ordem...). Continua encarregado.
+func _drop_robot() -> void:
+	if holding_robot != null:
+		if is_instance_valid(holding_robot):
+			holding_robot.detach()
+		holding_robot = null
+
+
+## Taverna chama a cada frame com quem está lá dentro.
+func have_fun(amount: float) -> void:
+	happiness = minf(happiness + amount, 100.0)
+	if happiness >= leisure_until and _decision_timer > 0.3:
+		_decision_timer = randf_range(0.05, 0.3)  # animou: sai logo
+
+
+## Festa: alegria na hora.
+func cheer(amount: float) -> void:
+	happiness = minf(happiness + amount, 100.0)
+	_popup("Eba! Festa!", Color(1.0, 0.85, 0.4))
+
+
+func _enter_taverna() -> void:
+	_at_taverna = _station
+	_resting = true  # relaxando: a zanga baixa e a fome gasta menos
+	_inside = true
+	_moving = false
+	_agent.avoidance_enabled = false
+	_at_taverna.set_inside(self, true)
+	queue_redraw()
+
+
+func _leave_taverna() -> void:
+	if _at_taverna == null:
+		return
+	if is_instance_valid(_at_taverna):
+		_at_taverna.set_inside(self, false)
+	_at_taverna = null
+	_resting = false
+	_inside = false
+	_agent.avoidance_enabled = avoidance_enabled
+	queue_redraw()
+
+
+## Greve: vai pra frente do Centro da Vila e fica lá com a plaquinha.
+func _go_protest() -> void:
+	if _strike_spot == null:
+		var hub := _village_hub()
+		var center: Vector2 = hub.global_position if hub else global_position
+		var p := center + Vector2.from_angle(randf_range(0.35, PI - 0.35)) * randf_range(60.0, 90.0)
+		_strike_spot = NavigationServer2D.map_get_closest_point(_agent.get_navigation_map(), p)
+	if not _moving and global_position.distance_to(_strike_spot) > 6.0:
+		_go_to(_strike_spot)
 
 
 func has_home() -> bool:
@@ -675,7 +1118,9 @@ func on_tool_crafted(id: String) -> void:
 
 ## Machado pro lenhador; picareta (de aço, se já existir) pros outros.
 func _refresh_tool_texture() -> void:
-	if is_lumber():
+	if is_guard():
+		_tool.texture = LANCA
+	elif is_lumber():
 		_tool.texture = AXE
 	elif _has_steel_pickaxe:
 		_tool.texture = STEEL_PICKAXE
@@ -694,9 +1139,66 @@ func _ensure_appearance() -> void:
 	_body.texture = options[look]
 
 
+## Nome sorteado pelo gênero, sem repetir com quem já existe (esgotou: "Zé 2", "Zé 3"...).
+func _ensure_name() -> void:
+	if display_name != "":
+		return
+	var used := {}
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		if w != self and w.get("display_name"):
+			used[w.display_name] = true
+	var pool: Array = (NAMES_GIRL if gender == "menina" else NAMES_BOY).duplicate()
+	pool.shuffle()
+	for n in pool:
+		if not used.has(n):
+			display_name = n
+			return
+	var base: String = pool[0]
+	var i := 2
+	while used.has("%s %d" % [base, i]):
+		i += 1
+	display_name = "%s %d" % [base, i]
+
+
 # ------------------------------------------------------------ cozinheiro
 func is_cook() -> bool:
 	return role == ROLE_COOK
+
+
+func _sun() -> Node:
+	return get_tree().get_first_node_in_group("sun")
+
+
+## Onda solar: exposto na superfície (sun.gd chama a cada frame).
+func radiate(amount: float) -> void:
+	var sun := _sun()
+	if sun == null or injured:
+		return
+	var before := rad
+	rad += amount
+	if before < sun.rad_hurt_at * 0.5 and rad >= sun.rad_hurt_at * 0.5:
+		_popup("Queimando!", Color(1.0, 0.6, 0.3))
+	if rad >= sun.rad_hurt_at:
+		rad = 0.0
+		hurt("radiacao", "grave" if randf() < sun.rad_grave_chance else "leve")
+
+
+func is_researcher() -> bool:
+	return role == ROLE_RESEARCH
+
+
+func _research() -> Node:
+	return get_tree().get_first_node_in_group("research")
+
+
+func _apply_research() -> void:
+	var r := _research()
+	if r:
+		r.apply_worker(self)
+
+
+func is_guard() -> bool:
+	return role == ROLE_GUARD
 
 
 func is_lumber() -> bool:
@@ -708,7 +1210,7 @@ func set_role(new_role: String) -> void:
 	if role == new_role:
 		return
 	role = new_role
-	_popup({ROLE_COOK: "Cozinheiro!", ROLE_LUMBER: "Lenhador!"}.get(role, "De volta à mina"), Color(0.95, 0.9, 0.6))
+	_popup({ROLE_COOK: "Cozinheiro!", ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!"}.get(role, "De volta à mina"), Color(0.95, 0.9, 0.6))
 	_refresh_tool_texture()
 	if auto_mode and _ai_state != "manual":
 		_decision_timer = randf_range(0.05, 0.4)  # troca de tarefa já
@@ -739,7 +1241,24 @@ func chop(amount: float) -> float:
 	_work_timer = 0.2
 	if wood_carrying >= lumber_carry - 0.01:
 		_decision_timer = 0.0  # carga cheia: vai pro armazém já
+	_roll_branch(taken)
 	return taken
+
+
+## Sorteia a queda de galho a cada chop_cycle_amount de madeira cortada (mesmo esquema
+## do acidente de mineração; zanga e noite multiplicam a chance).
+func _roll_branch(chopped: float) -> void:
+	_chopped_since_roll += chopped
+	while _chopped_since_roll >= chop_cycle_amount:
+		_chopped_since_roll -= chop_cycle_amount
+		var chance: float = branch_injury_chance * [1.0, irritated_injury_mult, furious_injury_mult][_mood]
+		if _is_night():
+			chance *= night_chop_injury_mult
+		if randf() < chance:
+			if _station and is_instance_valid(_station) and _station.has_method("drop_branch"):
+				_station.drop_branch(global_position)
+			hurt("galho")
+			return
 
 
 ## Armazém chama: descarrega a madeira. Retorna quanto entregou.
@@ -793,9 +1312,9 @@ func mood_label() -> String:
 	return ["", "irritado", "FURIOSO"][_mood]
 
 
-## Multiplicador da mineração pela zanga.
+## Multiplicador da produção pela zanga e pela felicidade.
 func work_mult() -> float:
-	return [1.0, irritated_work_mult, furious_work_mult][_mood]
+	return [1.0, irritated_work_mult, furious_work_mult][_mood] * _happiness_work_mult()
 
 
 func _update_anger(delta: float) -> void:
@@ -823,14 +1342,26 @@ func _refresh_mood(announce: bool = true) -> void:
 
 # ------------------------------------------------------------ acidentes
 ## Machuca o ipezinho (chamado pelo sorteio na mineração; tecla K testa no selecionado).
-func hurt() -> void:
+## severity "" = sorteia pela causa e pela profundidade.
+func hurt(cause: String = "mina", severity: String = "") -> void:
 	if injured:
 		return
 	injured = true
-	_recovery_left = get_recovery_time()
+	injury_cause = cause
+	injury_severity = severity if severity in ["leve", "grave"] else _roll_severity(cause)
+	_care_left = grave_untreated_time if injury_severity == "grave" else leve_untreated_time
+	var res := _research()
+	if res:
+		_care_left *= res.untreated_mult()  # medicina de campo
+	_recovery_left = 0.0  # o tempo de leito é definido ao deitar (gravidade + melhoria)
+	_death_warned = false
 	_work_timer = 0.0
-	_decision_timer = 0.0  # larga a picareta e vai pra casa já
-	_popup("Ai!", Color(1.0, 0.4, 0.35))
+	_decision_timer = 0.0  # larga a picareta e vai pra enfermaria já
+	var grave := injury_severity == "grave"
+	var text := "Ai! Um galho!" if cause == "galho" else "Ai!"
+	_popup(text + (" (grave)" if grave else ""), Color(1.0, 0.25, 0.2) if grave else Color(1.0, 0.4, 0.35))
+	if grave:
+		_toast("%s se machucou feio! Precisa de leito na enfermaria." % _display())
 	Audio.hurt(global_position)
 	var flash := create_tween()
 	flash.tween_property(_body, "self_modulate", Color(2.0, 0.5, 0.5), 0.06)
@@ -838,7 +1369,118 @@ func hurt() -> void:
 	injured_changed.emit(true)
 
 
-## Tempo total de recuperação (a Enfermaria do Centro da Vila reduz).
+## Sorteia leve/grave: galho é pior que mina, e o nível 2 soma deep_grave_bonus.
+func _roll_severity(cause: String) -> String:
+	var p := grave_chance_branch if cause == "galho" else grave_chance_mine
+	var env := get_tree().get_first_node_in_group("environment")
+	if env and env.is_deep(global_position):
+		p += deep_grave_bonus
+	if env and env.has_method("is_abyss") and env.is_abyss(global_position):
+		p += abyss_grave_bonus
+	return "grave" if randf() < p else "leve"
+
+
+func _has_infirmary() -> bool:
+	return not get_tree().get_nodes_in_group("enfermarias").is_empty()
+
+
+## Relógio do machucado: cura no leito; fora dele, leve piora e grave morre.
+func _update_injury(delta: float) -> void:
+	if _admitted:
+		_recovery_left -= delta
+		if _recovery_left <= 0.0:
+			_heal()
+		return
+	if not _has_infirmary():
+		# cena sem enfermaria (fallback antigo): cura descansando em casa
+		if _resting:
+			if _recovery_left <= 0.0:
+				_recovery_left = get_recovery_time()
+			_recovery_left -= delta
+			if _recovery_left <= 0.0:
+				_heal()
+		return
+	_care_left -= delta
+	if injury_severity == "grave" and not _death_warned and _care_left <= death_warning_time:
+		_death_warned = true
+		_toast("%s vai morrer se não deitar num leito! (%ds)" % [_display(), ceili(_care_left)])
+	if _care_left <= 0.0:
+		if injury_severity == "grave":
+			_die()
+		else:
+			_worsen()
+
+
+## Deita no leito reservado da enfermaria (some lá dentro; a cura começa a contar).
+func _admit() -> void:
+	_admitted = true
+	_ward = _station
+	if overtime:
+		set_overtime(false)
+	_resting = true
+	_inside = true
+	_moving = false
+	_agent.avoidance_enabled = false  # lá dentro: não atrapalha quem passa na porta
+	if _recovery_left <= 0.0:
+		_recovery_left = _ward.heal_time(injury_severity)
+	_ward.set_inside(self, true)
+	queue_redraw()
+
+
+## Sai do leito (curou, ou foi tirado de lá por uma ordem). O que já curou não se perde.
+func _discharge() -> void:
+	if not _admitted:
+		return
+	_admitted = false
+	if _ward != null and is_instance_valid(_ward):
+		_ward.set_inside(self, false)
+	_ward = null
+	_resting = false
+	_inside = false
+	_agent.avoidance_enabled = avoidance_enabled
+	queue_redraw()
+
+
+## Leve sem cuidado por tempo demais: vira grave (e o relógio da morte começa).
+func _worsen() -> void:
+	injury_severity = "grave"
+	_care_left = grave_untreated_time
+	var res := _research()
+	if res:
+		_care_left *= res.untreated_mult()
+	_recovery_left = 0.0
+	_death_warned = false
+	_popup("Piorou!", Color(1.0, 0.25, 0.2))
+	Audio.hurt(global_position)
+	_toast("%s piorou: machucado GRAVE! Precisa de leito." % _display())
+	injured_changed.emit(true)
+
+
+## Grave sem leito até o fim: morre. Vai pro memorial da enfermaria (cruz onde caiu).
+func _die() -> void:
+	var inf := _closest_in_group("enfermarias")
+	if inf:
+		inf.record_death(self)  # o HUD mostra a faixa pelo sinal patient_died
+	Audio.toll()
+	died.emit(_display())
+	var main := get_tree().get_first_node_in_group("game_main")
+	if main and main.is_selected(self):
+		main.toggle_selected(self)
+	injured = false
+	queue_free()
+
+
+func _display() -> String:
+	return display_name if display_name != "" else String(name)
+
+
+func _toast(text: String) -> void:
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast(text, Color(1.0, 0.45, 0.4))
+
+
+## Fallback sem enfermaria: tempo de descanso em casa (a melhoria do Centro da Vila reduz).
 func get_recovery_time() -> float:
 	var hub := _village_hub()
 	return recovery_time * (hub.recovery_mult() if hub else 1.0)
@@ -846,6 +1488,8 @@ func get_recovery_time() -> float:
 
 func _heal() -> void:
 	injured = false
+	injury_severity = ""
+	_care_left = 0.0
 	_recovery_left = 0.0
 	_popup("Curado!", Color(0.55, 1.0, 0.5))
 	Audio.heal(global_position)
@@ -859,8 +1503,17 @@ func _roll_injury(mined: float) -> void:
 	_mined_since_roll += mined
 	while _mined_since_roll >= mining_cycle_amount:
 		_mined_since_roll -= mining_cycle_amount
-		# zanga x profundidade: os dois multiplicadores se acumulam
-		if randf() < injury_chance * [1.0, irritated_injury_mult, furious_injury_mult][_mood] * depth_danger():
+		# achados da escavação (peças raras, itens de reator, o robô antigo)
+		var finds := get_tree().get_first_node_in_group("finds")
+		if finds:
+			finds.roll(self, cargo_type)
+		# zanga x profundidade x vazamento do reator solar: os multiplicadores se acumulam
+		var dig := get_tree().get_first_node_in_group("escavadeira")
+		var leak: float = dig.accident_mult() if dig and dig.has_method("accident_mult") else 1.0
+		var res := _research()
+		if res:
+			leak *= res.accident_mult()  # explosivos / escoramento
+		if randf() < injury_chance * [1.0, irritated_injury_mult, furious_injury_mult][_mood] * depth_danger() * leak:
 			hurt()
 			return
 
@@ -897,13 +1550,24 @@ func feed(amount: float) -> void:
 func mine(amount: float, ore_type: String = "ferro") -> float:
 	if injured:
 		return 0.0  # machucado não consegue minerar
+	if _on_strike():
+		if _strike_refuse_cd <= 0.0:  # nem com ordem manual
+			_strike_refuse_cd = 3.0
+			_popup("Tô em greve!", Color(1.0, 0.55, 0.4))
+		return 0.0
 	if carrying > 0.0 and ore_type != cargo_type:
 		return 0.0  # não mistura minérios na mesma carga
 	if carrying <= 0.0 and ore_type != cargo_type:
 		cargo_type = ore_type
 		_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
 	var space := cargo_capacity - carrying
-	var taken: float = minf(amount * work_mult(), space)  # zangado minera menos
+	var res := _research()
+	var boom: float = res.mining_speed_mult() if res else 1.0  # explosivos
+	var taken: float = minf(amount * work_mult() * boom, space)  # zangado minera menos
+	if ore_type == "solarita" and taken > 0.0:
+		var diary := get_tree().get_first_node_in_group("diary")
+		if diary:
+			diary.unlock("solarita")
 	carrying += taken
 	if taken > 0.0:
 		_work_timer = 0.2
@@ -952,7 +1616,7 @@ func _update_animation(delta: float) -> void:
 		# impacto = ponto mais baixo do golpe (a curva para de subir)
 		var rising := swing > _prev_swing
 		if _swing_rising and not rising:
-			if _ai_state != "gathering" and _ai_state != "chopping":
+			if _ai_state not in ["gathering", "chopping", "guard", "training"]:
 				Audio.pick(global_position)
 		_swing_rising = rising
 		_prev_swing = swing
@@ -977,6 +1641,9 @@ func _update_animation(delta: float) -> void:
 	var bob := absf(sin(_anim_time * PI * 0.5)) * 2.0 if limp else 0.0
 	_body.position.y = _body_base_y + (9.0 if lying else 0.0) + bob
 	_injury_icon.visible = injured and not _inside
+	_strike_icon.visible = _ai_state == "strike" and not _inside
+	if _strike_icon.visible:
+		_strike_icon.position.y = -44.0 + (sin(Time.get_ticks_msec() * 0.008 + _facing) * 3.0 if not _moving else 0.0)
 	if _injury_icon.visible:
 		_injury_icon.position.y = -40.0 + sin(Time.get_ticks_msec() * 0.005) * 1.5
 	# zanga: "veia saltando" pulsando (mais rápida e maior quando furioso) + tremidinha
@@ -1013,7 +1680,7 @@ func _update_animation(delta: float) -> void:
 	if hunger <= 0.0:
 		_body.modulate = Color(1.0, 0.6, 0.6)
 	elif injured:
-		_body.modulate = Color(1.0, 0.78, 0.74)
+		_body.modulate = Color(1.0, 0.64, 0.6) if injury_severity == "grave" else Color(1.0, 0.78, 0.74)
 	else:
 		_body.modulate = Color.WHITE
 
@@ -1052,6 +1719,11 @@ func get_save_data() -> Dictionary:
 		"injured": injured,
 		"recovery_left": _recovery_left,
 		"mined_since_roll": _mined_since_roll,
+		"chopped_since_roll": _chopped_since_roll,
+		"injury_cause": injury_cause,
+		"injury_severity": injury_severity,
+		"happiness": happiness,
+		"care_left": _care_left,
 		"facing": _facing,
 		"home": String(_home.name) if has_home() else "",
 		"home_slot": _home_slot if has_home() else -1,
@@ -1061,7 +1733,9 @@ func get_save_data() -> Dictionary:
 		"food_carrying": food_carrying,
 		"wood_carrying": wood_carrying,
 		"gender": gender,
+		"display_name": display_name,
 		"look": look,
+		"combat_skill": combat_skill,
 	}
 
 
@@ -1073,21 +1747,30 @@ func load_save_data(d: Dictionary) -> void:
 	cargo_type = t if Ores.NAMES.has(t) else "ferro"
 	_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
 	injured = SaveUtil.boolean(d, "injured", false)
+	# 0 = ainda não deitou (o tempo de leito é definido ao deitar)
 	_recovery_left = maxf(SaveUtil.num(d, "recovery_left", 0.0), 0.0) if injured else 0.0
-	if injured and _recovery_left <= 0.0:
-		_recovery_left = get_recovery_time()
+	happiness = clampf(SaveUtil.num(d, "happiness", happiness_start), 0.0, 100.0)  # save antigo: começa bem
+	var sev := SaveUtil.text(d, "injury_severity", "leve")  # save antigo: leve
+	injury_severity = (sev if sev in ["leve", "grave"] else "leve") if injured else ""
+	_care_left = SaveUtil.num(d, "care_left", 0.0) if injured else 0.0
+	if injured and _care_left <= 0.0:
+		_care_left = grave_untreated_time if injury_severity == "grave" else leve_untreated_time
 	_mined_since_roll = maxf(SaveUtil.num(d, "mined_since_roll", 0.0), 0.0)
+	_chopped_since_roll = maxf(SaveUtil.num(d, "chopped_since_roll", 0.0), 0.0)
+	injury_cause = SaveUtil.text(d, "injury_cause", "mina" if injured else "")
 	_facing = -1.0 if SaveUtil.num(d, "facing", 1.0) < 0.0 else 1.0
 	_saved_home = SaveUtil.text(d, "home", "")
 	_saved_home_slot = SaveUtil.integer(d, "home_slot", -1)
 	anger = clampf(SaveUtil.num(d, "anger", 0.0), 0.0, 100.0)
 	overtime = SaveUtil.boolean(d, "overtime", false)
 	var r := SaveUtil.text(d, "role", "")
-	role = r if r in [ROLE_COOK, ROLE_LUMBER] else ""
+	role = r if r in [ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH] else ""
+	combat_skill = clampf(SaveUtil.num(d, "combat_skill", 0.0), 0.0, 1.0)
 	wood_carrying = clampf(SaveUtil.num(d, "wood_carrying", 0.0), 0.0, lumber_carry)
 	food_carrying = clampf(SaveUtil.num(d, "food_carrying", 0.0), 0.0, cook_carry)
 	# save antigo (sem visual) ou valor inválido: _ensure_appearance sorteia e o próximo save guarda
 	gender = SaveUtil.text(d, "gender", "")
+	display_name = SaveUtil.text(d, "display_name", "")  # save antigo: sorteia um nome
 	look = SaveUtil.integer(d, "look", -1)
 	_refresh_mood(false)
 	_target = global_position

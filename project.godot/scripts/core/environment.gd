@@ -13,6 +13,10 @@ signal navigation_ready
 
 ## Grupos de estruturas que bloqueiam a navegação e afastam a decoração.
 const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village_hub", "escavadeira", "oficina", "coleta_comida", "arvores"]
+## Estruturas que bloqueiam a navegação mas NÃO entram no sorteio da decoração
+## (pra não mudar as pedras/cristais da mina de saves antigos). A decoração que
+## cair embaixo delas é escondida depois (_clear_decor_under_extras).
+const NAV_EXTRA_GROUPS := ["enfermarias", "tavernas", "campos", "laboratorios", "escudos"]
 
 @export_group("Mapa")
 @export var map_rect: Rect2 = Rect2(-720, -440, 1440, 880)
@@ -47,6 +51,17 @@ const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village
 @export var deep_pebble_count: int = 40
 ## Tom da decoração do fundo (mais escuro e frio que a mina).
 @export var deep_tint: Color = Color(0.7, 0.72, 0.88)
+
+@export_group("Nível 3 (abismo)")
+## Área do nível 3, abaixo do nível 2; a descida é a plataforma do abismo (conserto).
+@export var abyss_rect: Rect2 = Rect2(-480, 1420, 960, 560)
+@export var abyss_floor_texture: Texture2D
+## Chance de acidente multiplicada por isso minerando no abismo (no lugar da do nível 2).
+@export var abyss_injury_mult: float = 4.0
+@export var abyss_boulder_count: int = 10
+@export var abyss_pebble_count: int = 34
+## Tom da decoração do abismo (escuro e avermelhado).
+@export var abyss_tint: Color = Color(0.72, 0.52, 0.48)
 
 @export_group("Decoração")
 @export var boulder_count: int = 14
@@ -116,6 +131,8 @@ func _ready() -> void:
 	_scatter(torch_count, [torch_texture], 60.0, 0.6, _add_torch)
 	_build_clearing()  # depois de toda a decoração da mina: tem sorteio próprio
 	_build_deep()
+	_build_abyss()  # sorteio próprio também
+	clear_decor_under_extras()
 	_build_navigation()
 
 
@@ -177,10 +194,13 @@ func _bake_navigation() -> NavigationPolygon:
 	if deep_rect.has_area():
 		# ilha separada: só liga com a mina pelo elevador (NavigationLink2D)
 		source.add_traversable_outline(_rect_outline(deep_rect.grow(-nav_edge_inset)))
+	if abyss_rect.has_area():
+		# outra ilha: só liga com o nível 2 pela plataforma do abismo
+		source.add_traversable_outline(_rect_outline(abyss_rect.grow(-nav_edge_inset)))
 	if decorations_block:
 		for o in _obstacles:
 			source.add_obstruction_outline(o)
-	for group in STATION_GROUPS:
+	for group in STATION_GROUPS + NAV_EXTRA_GROUPS:
 		for node in get_tree().get_nodes_in_group(group):
 			if node.has_method("get_obstacle_outline"):
 				var outline: PackedVector2Array = node.get_obstacle_outline()
@@ -202,16 +222,32 @@ func world_rect() -> Rect2:
 		r = r.merge(clearing_rect)
 	if deep_rect.has_area():
 		r = r.merge(deep_rect)
+	if abyss_rect.has_area():
+		r = r.merge(abyss_rect)
 	return r
 
 
-## Esse ponto é no nível 2?
+## Esse ponto é no fundo (nível 2 ou abismo)?
 func is_deep(pos: Vector2) -> bool:
-	return deep_rect.has_area() and deep_rect.has_point(pos)
+	return (deep_rect.has_area() and deep_rect.has_point(pos)) or is_abyss(pos)
+
+
+## Esse ponto é no abismo (nível 3)?
+func is_abyss(pos: Vector2) -> bool:
+	return abyss_rect.has_area() and abyss_rect.has_point(pos)
+
+
+## 0 = mina/clareira, 2 = nível 2, 3 = abismo.
+func level_at(pos: Vector2) -> int:
+	if is_abyss(pos):
+		return 3
+	return 2 if is_deep(pos) else 0
 
 
 ## Multiplicador de acidente por profundidade (1 na mina/clareira).
 func danger_mult_at(pos: Vector2) -> float:
+	if is_abyss(pos):
+		return abyss_injury_mult
 	return deep_injury_mult if is_deep(pos) else 1.0
 
 
@@ -277,6 +313,80 @@ func _build_deep() -> void:
 					if sprite:
 						sprite.modulate *= deep_tint
 				break
+
+
+# ------------------------------------------------------------ nível 3
+func _build_abyss() -> void:
+	if not abyss_rect.has_area():
+		return
+	var arng := RandomNumberGenerator.new()
+	arng.seed = map_seed + 29  # sorteio próprio: não mexe na mina nem no nível 2
+	if abyss_floor_texture:
+		_tiled_sprite(abyss_floor_texture, abyss_rect, -10)
+	var r := abyss_rect
+	var edge: Array[Vector2] = []
+	var x := r.position.x
+	while x <= r.end.x:
+		edge.append(Vector2(x, r.position.y))
+		edge.append(Vector2(x, r.end.y))
+		x += edge_boulder_spacing
+	var y := r.position.y + edge_boulder_spacing
+	while y < r.end.y:
+		edge.append(Vector2(r.position.x, y))
+		edge.append(Vector2(r.end.x, y))
+		y += edge_boulder_spacing
+	for p in edge:
+		if boulder_textures.is_empty():
+			break
+		var s := _deco_sprite(boulder_textures[arng.randi() % boulder_textures.size()],
+			p + Vector2(arng.randf_range(-10, 10), arng.randf_range(-8, 8)))
+		s.scale = Vector2.ONE * pixel_scale * arng.randf_range(1.2, 1.9)
+		s.flip_h = arng.randf() < 0.5
+		s.modulate = abyss_tint
+	var avoid: Array[Vector2] = []
+	var shaft := get_tree().get_first_node_in_group("elevador_abismo")
+	if shaft:
+		avoid.append(shaft.bottom_position)
+	var placed: Array[Vector2] = []
+	var inner := abyss_rect.grow(-50.0)
+	for job in [[abyss_pebble_count, pebble_textures, 10.0, _add_pebble], [abyss_boulder_count, boulder_textures, 45.0, _add_boulder]]:
+		var textures: Array = job[1]
+		if textures.is_empty():
+			continue
+		for i in int(job[0]):
+			for attempt in 30:
+				var p := Vector2(arng.randf_range(inner.position.x, inner.end.x), arng.randf_range(inner.position.y, inner.end.y))
+				if not _deep_spot_free(p, job[2], placed, avoid):
+					continue
+				placed.append(p)
+				var before := get_child_count()
+				job[3].call(textures[arng.randi() % textures.size()], p)
+				for c in range(before, get_child_count()):
+					var sprite := get_child(c) as Sprite2D
+					if sprite:
+						sprite.modulate *= abyss_tint
+				break
+
+
+## Esconde a decoração (e tira o bloqueio dela) que ficou embaixo das estruturas de
+## NAV_EXTRA_GROUPS. Não mexe no sorteio: as posições das outras pedras não mudam.
+## (Chamado de novo quando uma estrutura dessas é construída durante o jogo.)
+func clear_decor_under_extras() -> void:
+	for group in NAV_EXTRA_GROUPS + ["elevador_abismo", "barricadas"]:
+		for node in get_tree().get_nodes_in_group(group):
+			var area: Rect2 = node.decor_clear_rect() if node.has_method("decor_clear_rect") \
+				else Rect2(node.global_position + Vector2(-44, -64), Vector2(88, 84))
+			for c in get_children():
+				var s := c as Sprite2D
+				if s and not s.region_enabled and area.has_point(s.global_position):
+					s.visible = false
+			for i in range(_obstacles.size() - 1, -1, -1):
+				var o: PackedVector2Array = _obstacles[i]
+				var center := Vector2.ZERO
+				for v in o:
+					center += v
+				if o.size() > 0 and area.has_point(center / o.size()):
+					_obstacles.remove_at(i)
 
 
 func _deep_spot_free(p: Vector2, spacing: float, placed: Array[Vector2], avoid: Array[Vector2]) -> bool:

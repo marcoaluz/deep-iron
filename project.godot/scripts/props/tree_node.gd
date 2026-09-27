@@ -5,6 +5,7 @@ extends "res://scripts/props/station.gd"
 ## fica um tempo parada e regenera (cresce de novo) aos poucos.
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const BRANCH := preload("res://assets/game/branch.png")
 
 @export_group("Corte")
 ## Madeira cortada por segundo por lenhador.
@@ -72,8 +73,45 @@ func _process(delta: float) -> void:
 	_sound_timer -= delta
 	if chopping and _sound_timer <= 0.0:
 		_sound_timer = chop_sound_interval * randf_range(0.85, 1.15)
-		Audio.step(global_position)  # "toc" seco de madeira (reaproveita o som de passo)
+		Audio.chop(global_position)
 	_update_visual()
+
+
+## Queda de galho (Bloco 16): um galho cai girando da copa até `target` (o lenhador),
+## com chuva de agulhas, estalo e pancada.
+func drop_branch(target: Vector2) -> void:
+	var b := Sprite2D.new()
+	b.texture = BRANCH
+	b.scale = Vector2(2, 2)
+	b.z_index = 30  # cai por cima de tudo
+	b.global_position = global_position + Vector2(randf_range(-10, 10), -70)
+	get_parent().add_child(b)
+	var land := target + Vector2(randf_range(-6, 6), -18)
+	var tween := b.create_tween().set_parallel()
+	tween.tween_property(b, "global_position", land, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.tween_property(b, "rotation", randf_range(2.5, 4.0) * (1 if randf() < 0.5 else -1), 0.45)
+	tween.chain().tween_property(b, "modulate:a", 0.0, 1.2).set_delay(1.0)
+	tween.chain().tween_callback(b.queue_free)
+	# agulhas caindo da copa
+	var needles := CPUParticles2D.new()
+	needles.position = Vector2(0, -60)
+	needles.one_shot = true
+	needles.amount = 18
+	needles.lifetime = 1.0
+	needles.explosiveness = 0.8
+	needles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	needles.emission_rect_extents = Vector2(18, 10)
+	needles.gravity = Vector2(0, 140)
+	needles.initial_velocity_min = 5.0
+	needles.initial_velocity_max = 30.0
+	needles.scale_amount_min = 1.5
+	needles.scale_amount_max = 2.5
+	needles.color = Color(0.3, 0.45, 0.35)
+	add_child(needles)
+	needles.emitting = true
+	needles.finished.connect(needles.queue_free)
+	_hit_time = 0.4  # a árvore dá uma sacudida
+	Audio.branch(global_position)
 
 
 func _update_visual() -> void:

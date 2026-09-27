@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/campo_treino.gd" id="1_campo"]
+[ext_resource type="Texture2D" path="res://assets/game/campo_treino.png" id="2_sprite"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_campo"]
+radius = 40.0
+
+[node name="CampoTreino" type="Area2D"]
+script = ExtResource("1_campo")
+slot_count = 4
+slot_radius = Vector2(26, 14)
+slot_arc_deg = 150.0
+auto_fit_area = false
+obstacle_size = Vector2(22, 5)
+obstacle_offset = Vector2(0, -6)
+obstacle_is_rect = true
+
+[node name="Visual" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("2_sprite")
+offset = Vector2(0, -11)
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_campo")
+
+[node name="StatusLabel" type="Label" parent="."]
+offset_left = -80.0
+offset_top = -84.0
+offset_right = 80.0
+offset_bottom = -52.0
+theme_override_colors/font_outline_color = Color(0.03, 0.03, 0.03, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+text = "Campo de treino"
+horizontal_alignment = 1
+vertical_alignment = 2

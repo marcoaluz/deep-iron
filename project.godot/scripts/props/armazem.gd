@@ -19,7 +19,7 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 ## Soma de todos os tipos (a pilha e o texto usam isso).
 var total_stored: float = 0.0
 ## Estoque por tipo de minério ("ferro", "cobre", "carvao").
-var stock: Dictionary = {"ferro": 0.0, "cobre": 0.0, "carvao": 0.0, "prata": 0.0}
+var stock: Dictionary = {"ferro": 0.0, "cobre": 0.0, "carvao": 0.0, "prata": 0.0, "solarita": 0.0}
 ## Tudo que já entrou neste armazém desde o começo (não diminui com venda/gasto).
 var lifetime_stored: float = 0.0
 ## Madeira (coluna separada: não é minério, não vende, não conta nos marcos da vila).
@@ -83,6 +83,14 @@ func _process(delta: float) -> void:
 		show_popup("+%d" % int(_pending_popup), Color(1.0, 0.85, 0.35))
 		_pending_popup -= int(_pending_popup)
 		_popup_timer = popup_interval
+
+
+## Minério que chega sem ipezinho (a broca da escavadeira). Conta pro total da vila.
+func add_ore(amount: float, ore_type: String) -> void:
+	stock[ore_type] = stock.get(ore_type, 0.0) + amount
+	lifetime_stored += amount
+	_pending_popup += amount
+	_recount()
 
 
 ## Tira todo o minério do armazém (usado na venda). Retorna quanto saiu.

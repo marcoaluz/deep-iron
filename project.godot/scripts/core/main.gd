@@ -39,6 +39,7 @@ var _drag_world := Vector2.ZERO  # ponto atual do arrasto (mundo)
 var _additive := false  # Shift segurado no clique/arrasto atual
 var _box_drawer: Node2D
 var _group_focus := 0  # Tab no modo grupo: qual deles a câmera mostra
+var _pause: CanvasLayer
 
 @onready var _camera: Camera2D = $Camera2D
 @onready var _environment: Node2D = $World/Environment
@@ -58,6 +59,8 @@ func _ready() -> void:
 	add_child(_box_drawer)
 	# modo de posicionar casa (último filho: recebe o input antes do main e o "consome")
 	add_child(preload("res://scripts/core/house_placer.gd").new())
+	_pause = preload("res://scripts/ui/pause_menu.gd").new()
+	add_child(_pause)
 	SaveManager.register_game(self)
 	if SaveManager.pending_load:
 		# espera o ambiente montar (1 frame + navegação) e as estruturas entrarem nos grupos
@@ -95,14 +98,39 @@ func _unhandled_input(event: InputEvent) -> void:
 				if selected:
 					_camera.follow_target = null if _camera.follow_target == selected else selected
 			KEY_ESCAPE:
-				if not _hud.close_panels():
+				# Esc fecha o que estiver aberto; sem nada pra fechar/soltar, pausa
+				if _hud.close_panels():
+					pass
+				elif not selection.is_empty():
 					select(null)
+				else:
+					_pause.open()
+			KEY_P:
+				_pause.open()
+			KEY_H:
+				_hud.toggle_hints()
 			KEY_U:
 				_hud.toggle_panel("hub")
 			KEY_E:
 				_hud.toggle_panel("escavadeira")
 			KEY_O:
 				_hud.toggle_panel("oficina")
+			KEY_I:
+				_hud.toggle_panel("enfermaria")
+			KEY_B:
+				_hud.toggle_panel("moral")
+			KEY_G:
+				_hud.toggle_panel("defesa")
+			KEY_J:
+				_hud.toggle_panel("diario")
+			KEY_X:
+				toggle_guard()
+			KEY_Z:
+				toggle_research()
+			KEY_Q:
+				_hud.toggle_panel("lab")
+			KEY_Y:
+				_hud.toggle_panel("sol")
 			KEY_V:
 				_economy.sell_all()
 			KEY_R:
@@ -129,7 +157,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_K:
 				for unit in selection.duplicate():
 					if is_instance_valid(unit):
-						unit.hurt()
+						unit.hurt("mina", "grave" if event.shift_pressed else "")
 
 
 # ------------------------------------------------------------ clique / arrasto (botão esquerdo)
@@ -341,6 +369,39 @@ func toggle_lumber() -> void:
 	_hud.show_toast("%s: %d ipezinho%s" % [
 		"Lenhador" if make else "De volta à mina", selection.size(), "s" if selection.size() > 1 else ""],
 		Color(0.85, 0.7, 0.5))
+
+
+## X / botão do HUD: torna os selecionados guardas (se algum ainda não for);
+## se todos já forem, voltam a fazer de tudo.
+func toggle_guard() -> void:
+	_prune_selection()
+	if selection.is_empty():
+		Audio.error()
+		_hud.show_toast("Selecione ipezinhos pra virar guarda", Color(1.0, 0.6, 0.45))
+		return
+	var make := selection.any(func(w): return not w.is_guard())
+	for unit in selection:
+		unit.set_role(unit.ROLE_GUARD if make else "")
+	Audio.click()
+	_hud.show_toast("%s: %d ipezinho%s" % [
+		"Guarda" if make else "De volta à mina", selection.size(), "s" if selection.size() > 1 else ""],
+		Color(0.95, 0.55, 0.45))
+
+
+## Z / botão do HUD: torna os selecionados pesquisadores (ou tira, se todos já forem).
+func toggle_research() -> void:
+	_prune_selection()
+	if selection.is_empty():
+		Audio.error()
+		_hud.show_toast("Selecione ipezinhos pra virar pesquisador", Color(1.0, 0.6, 0.45))
+		return
+	var make := selection.any(func(w): return not w.is_researcher())
+	for unit in selection:
+		unit.set_role(unit.ROLE_RESEARCH if make else "")
+	Audio.click()
+	_hud.show_toast("%s: %d ipezinho%s" % [
+		"Pesquisador" if make else "De volta à mina", selection.size(), "s" if selection.size() > 1 else ""],
+		Color(0.55, 0.95, 0.65))
 
 
 func is_selected(unit: Node) -> bool:

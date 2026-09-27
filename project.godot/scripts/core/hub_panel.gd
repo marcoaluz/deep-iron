@@ -181,7 +181,7 @@ func refresh() -> void:
 
 
 func button_text() -> String:
-	return "Centro da Vila — %s  (U)" % _hub.stage_name()
+	return "Vila: %s (U)" % _hub.stage_name()
 
 
 func has_available_action() -> bool:

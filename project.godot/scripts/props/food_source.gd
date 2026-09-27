@@ -50,7 +50,9 @@ func _process(delta: float) -> void:
 	if _cooldown > 0.0:
 		_cooldown -= delta
 	elif regen_rate > 0.0 and food_remaining < food_total:
-		food_remaining = minf(food_remaining + regen_rate * delta, food_total)
+		var sun := get_tree().get_first_node_in_group("sun")
+		var season: float = sun.garden_mult() if sun else 1.0  # inverno quase para a horta
+		food_remaining = minf(food_remaining + regen_rate * season * delta, food_total)
 
 	var harvesting := false
 	if food_remaining > 0.0 and _cooldown <= 0.0:

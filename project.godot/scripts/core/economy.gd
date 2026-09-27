@@ -18,6 +18,8 @@ signal worker_recruited(worker: Node2D, cost: int)
 @export var coal_price: float = 3.0
 ## Créditos por unidade de prata (nível 2: mais perigoso, paga mais).
 @export var silver_price: float = 8.0
+## Créditos por unidade de solarita (nível 3, o abismo).
+@export var solarita_price: float = 14.0
 @export var starting_credits: float = 0.0
 ## Vende sozinho o que estiver no armazém a cada auto_sell_interval segundos.
 @export var auto_sell: bool = false
@@ -74,6 +76,8 @@ func price_of(ore_type: String) -> float:
 			return coal_price
 		"prata":
 			return silver_price
+		"solarita":
+			return solarita_price
 	return ore_price
 
 
@@ -199,6 +203,22 @@ func recruit() -> Node2D:
 	_add_credits(-cost)
 	recruited_count += 1
 	worker_recruited.emit(worker, cost)
+	Audio.recruit()
+	return worker
+
+
+## Colono que chega de graça (satélite de comunicação). Respeita o limite de ipezinhos
+## e não encarece o próximo recrutamento. Retorna null se não tiver vaga.
+func recruit_free() -> Node2D:
+	if worker_scene == null or worker_count() >= max_workers:
+		return null
+	var parent := get_node_or_null(spawn_parent)
+	if parent == null:
+		return null
+	var worker := worker_scene.instantiate() as Node2D
+	worker.name = _next_worker_name()
+	worker.position = _spawn_position()
+	parent.add_child(worker)
 	Audio.recruit()
 	return worker
 

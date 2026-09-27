@@ -76,6 +76,19 @@ func _build(status: String) -> void:
 		box.add_child(new_game)
 		new_game.grab_focus.call_deferred()
 
+	var settings_button := _button("Configurações")
+	box.add_child(settings_button)
+	var settings: VBoxContainer = preload("res://scripts/ui/settings_panel.gd").new()
+	settings.visible = false
+	center.add_child(settings)
+	settings_button.pressed.connect(func():
+		Audio.click()
+		box.visible = false
+		settings.visible = true)
+	settings.back_pressed.connect(func():
+		settings.visible = false
+		box.visible = true)
+
 	var quit := _button("Sair")
 	quit.pressed.connect(func(): get_tree().quit())
 	box.add_child(quit)

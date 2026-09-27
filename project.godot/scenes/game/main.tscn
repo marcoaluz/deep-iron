@@ -45,6 +45,17 @@
 [ext_resource type="PackedScene" path="res://scenes/props/elevador.tscn" id="42_elevador"]
 [ext_resource type="PackedScene" path="res://scenes/props/jazida_prata.tscn" id="43_prata"]
 [ext_resource type="Texture2D" path="res://assets/game/floor_deep.png" id="44_floor_deep"]
+[ext_resource type="PackedScene" path="res://scenes/props/enfermaria.tscn" id="45_enfermaria"]
+[ext_resource type="Script" path="res://scripts/core/morale.gd" id="46_morale"]
+[ext_resource type="Script" path="res://scripts/core/finds.gd" id="47_finds"]
+[ext_resource type="Texture2D" path="res://assets/game/floor_abyss.png" id="48_floor_abyss"]
+[ext_resource type="PackedScene" path="res://scenes/props/elevador_abismo.tscn" id="49_abismo"]
+[ext_resource type="PackedScene" path="res://scenes/props/jazida_solarita.tscn" id="50_solarita"]
+[ext_resource type="Script" path="res://scripts/core/defense.gd" id="51_defense"]
+[ext_resource type="Script" path="res://scripts/core/diary.gd" id="52_diary"]
+[ext_resource type="PackedScene" path="res://scenes/props/barricada.tscn" id="53_barricada"]
+[ext_resource type="Script" path="res://scripts/core/research.gd" id="54_research"]
+[ext_resource type="Script" path="res://scripts/core/sun.gd" id="55_sun"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
@@ -71,6 +82,7 @@ torch_unlit_texture = ExtResource("24_torch_unlit")
 clearing_floor_texture = ExtResource("40_floor_clareira")
 clearing_tree_texture = ExtResource("41_arvore_tex")
 deep_floor_texture = ExtResource("44_floor_deep")
+abyss_floor_texture = ExtResource("48_floor_abyss")
 support_texture = ExtResource("25_support")
 light_texture = ExtResource("26_light")
 shadow_texture = ExtResource("30_shadow")
@@ -118,6 +130,9 @@ position = Vector2(560, -60)
 
 [node name="Oficina" parent="World" instance=ExtResource("35_oficina")]
 position = Vector2(160, -120)
+
+[node name="Enfermaria" parent="World" instance=ExtResource("45_enfermaria")]
+position = Vector2(-170, 160)
 
 [node name="JazidaCobre" parent="World" instance=ExtResource("36_cobre")]
 position = Vector2(-560, -300)
@@ -168,6 +183,32 @@ position = Vector2(-220, 1180)
 [node name="JazidaCarvaoFundo" parent="World" instance=ExtResource("37_carvao")]
 position = Vector2(200, 890)
 
+[node name="BarricadaTunel" parent="World" instance=ExtResource("53_barricada")]
+position = Vector2(0, -372)
+gate_id = "tunel"
+display_name = "Portão do túnel"
+
+[node name="BarricadaPoco" parent="World" instance=ExtResource("53_barricada")]
+position = Vector2(500, 66)
+gate_id = "poco"
+display_name = "Portão do poço"
+
+[node name="ElevadorAbismo" parent="World" instance=ExtResource("49_abismo")]
+position = Vector2(-440, 1240)
+bottom_position = Vector2(-360, 1500)
+
+[node name="JazidaSolarita" parent="World" instance=ExtResource("50_solarita")]
+position = Vector2(-120, 1620)
+
+[node name="JazidaSolarita2" parent="World" instance=ExtResource("50_solarita")]
+position = Vector2(210, 1760)
+
+[node name="JazidaSolarita3" parent="World" instance=ExtResource("50_solarita")]
+position = Vector2(330, 1540)
+
+[node name="JazidaPrataAbismo" parent="World" instance=ExtResource("43_prata")]
+position = Vector2(-280, 1840)
+
 [node name="Horta" parent="World" instance=ExtResource("38_horta")]
 position = Vector2(320, 60)
 
@@ -186,6 +227,24 @@ worker_scene = ExtResource("2_oekm8")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=768909553]
 script = ExtResource("1_llaio")
+
+[node name="Morale" type="Node" parent="."]
+script = ExtResource("46_morale")
+
+[node name="Finds" type="Node" parent="."]
+script = ExtResource("47_finds")
+
+[node name="Defense" type="Node" parent="."]
+script = ExtResource("51_defense")
+
+[node name="Diary" type="Node" parent="."]
+script = ExtResource("52_diary")
+
+[node name="Research" type="Node" parent="."]
+script = ExtResource("54_research")
+
+[node name="Sun" type="Node" parent="."]
+script = ExtResource("55_sun")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource("8_hud")

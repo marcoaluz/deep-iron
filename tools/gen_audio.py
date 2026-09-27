@@ -243,6 +243,193 @@ def fanfare():
     save("fanfare.wav", fade(out, fout=0.2), 0.8)
 
 
+def chop(i):
+    """Machadada na madeira: "toc" oco e grave + estalo de lasca."""
+    dur = 0.35
+    t = t_axis(dur)
+    f0 = rng.uniform(170, 220)
+    knock = (np.sin(2 * np.pi * f0 * t) + 0.5 * np.sin(2 * np.pi * f0 * 2.6 * t)) * np.exp(-t * 28)
+    body = padded_filter(noise(dur), lo=150, hi=900) * exp_env(dur, 45, 0.001) * 1.2
+    crack = padded_filter(noise(dur), lo=2500) * exp_env(dur, 160, 0.0005) * 0.5
+    save(f"chop_{i}.wav", fade(0.8 * knock + body + crack), 0.8)
+
+
+def elevator():
+    """Gaiola do elevador: corrente chacoalhando + "clanc" metálico no fim."""
+    dur = 1.1
+    out = np.zeros(int(dur * SR))
+    for k in range(14):  # elos da corrente
+        tt = t_axis(0.05)
+        link = padded_filter(noise(0.05), lo=1800, hi=6000) * np.exp(-tt * 90)
+        link += np.sin(2 * np.pi * rng.uniform(1800, 2600) * tt) * np.exp(-tt * 70) * 0.3
+        place(out, 0.05 + k * 0.045 + rng.uniform(-0.01, 0.01), link * rng.uniform(0.4, 0.8))
+    tt = t_axis(0.5)
+    clank = sum(a * np.sin(2 * np.pi * 330 * r * tt) * np.exp(-tt * k)
+                for r, a, k in ((1.0, 1.0, 10), (2.4, 0.5, 14), (4.1, 0.3, 20)))
+    clank = 0.4 * clank + padded_filter(noise(0.5), hi=400) * np.exp(-tt * 30) * 1.5
+    place(out, 0.7, clank)
+    save("elevator.wav", fade(out), 0.75)
+
+
+def branch():
+    """Galho quebrando: estalo seco, farfalhar de agulhas caindo e pancada no chão."""
+    dur = 1.0
+    out = np.zeros(int(dur * SR))
+    tt = t_axis(0.12)
+    crack = padded_filter(noise(0.12), lo=1500) * np.exp(-tt * 60) * 1.4
+    crack += np.sin(2 * np.pi * 900 * tt) * np.exp(-tt * 80) * 0.4
+    place(out, 0.0, crack)
+    tt = t_axis(0.5)
+    rustle = padded_filter(noise(0.5), lo=2500, hi=7000) * np.sin(np.pi * np.clip(tt / 0.5, 0, 1)) * 0.5
+    place(out, 0.1, rustle)
+    tt = t_axis(0.3)
+    thud = padded_filter(noise(0.3), hi=350) * np.exp(-tt * 22) * 2.0
+    thud += np.sin(2 * np.pi * 110 * tt) * np.exp(-tt * 25) * 0.6
+    place(out, 0.55, thud)
+    save("branch.wav", fade(out), 0.8)
+
+
+def toll():
+    """Sino fúnebre, grave e lento (um ipezinho morreu)."""
+    dur = 3.0
+    out = np.zeros(int(dur * SR))
+    for k, start in enumerate((0.0, 1.3)):
+        tt = t_axis(dur - start)
+        f0 = 196.0 if k == 0 else 174.6  # sol, fá (desce)
+        bell = sum(a * np.sin(2 * np.pi * f0 * r * tt) * np.exp(-tt * d)
+                   for r, a, d in ((1.0, 1.0, 1.2), (2.0, 0.5, 1.8), (2.76, 0.35, 2.6), (5.4, 0.15, 4.0)))
+        place(out, start, bell * (1.0 if k == 0 else 0.8))
+    save("toll.wav", fade(padded_filter(out, hi=3000), fout=0.3), 0.6)
+
+
+def cheers():
+    """Brinde na taverna: dois copos batendo + risadinha abafada."""
+    dur = 0.9
+    out = np.zeros(int(dur * SR))
+    for start, f0 in ((0.0, 2350.0), (0.07, 2780.0)):
+        tt = t_axis(0.5)
+        clink = sum(a * np.sin(2 * np.pi * f0 * r * tt) for r, a in ((1.0, 1.0), (2.1, 0.4), (3.3, 0.2)))
+        place(out, start, clink * np.exp(-tt * 18))
+    murmur = padded_filter(noise(0.6), lo=250, hi=900) * 0.25
+    murmur *= np.sin(np.linspace(0, np.pi, len(murmur)))
+    place(out, 0.2, murmur)
+    save("cheers.wav", fade(out, fout=0.1), 0.6)
+
+
+def protest():
+    """Batucada de greve: bumbo em dois tempos + palmas (loop curto)."""
+    dur = 1.6
+    out = np.zeros(int(dur * SR))
+    for k, start in enumerate((0.0, 0.4, 0.8, 1.2)):
+        tt = t_axis(0.35)
+        drum = np.sin(2 * np.pi * (90 - 40 * tt) * tt) * np.exp(-tt * 12)
+        place(out, start, drum * (1.0 if k % 2 == 0 else 0.7))
+        clap = padded_filter(noise(0.08), lo=900, hi=4000) * np.exp(-t_axis(0.08) * 50) * 0.6
+        place(out, start + 0.2, clap)
+    save("protest.wav", fade(out, fout=0.05), 0.7)
+
+
+def find():
+    """Achado na mina: brilhinho subindo (três notas de sino)."""
+    dur = 0.9
+    out = np.zeros(int(dur * SR))
+    for k, f0 in enumerate((1318.5, 1760.0, 2637.0)):
+        tt = t_axis(0.6)
+        bell = (np.sin(2 * np.pi * f0 * tt) + 0.3 * np.sin(2 * np.pi * f0 * 2.01 * tt)) * np.exp(-tt * 7)
+        place(out, k * 0.09, bell * (0.8 + 0.1 * k))
+    save("find.wav", fade(out, fout=0.1), 0.55)
+
+
+def robot():
+    """Robô ligando: zumbido subindo + dois bipes."""
+    dur = 1.2
+    out = np.zeros(int(dur * SR))
+    tt = t_axis(0.7)
+    f = 80 + 220 * tt / 0.7
+    hum = np.sign(np.sin(2 * np.pi * np.cumsum(f) / SR)) * 0.3 * np.minimum(1.0, tt * 4) * np.exp(-np.maximum(tt - 0.5, 0) * 10)
+    place(out, 0.0, padded_filter(hum, hi=1800))
+    for start, f0 in ((0.75, 880.0), (0.92, 1320.0)):
+        tb = t_axis(0.12)
+        place(out, start, np.sign(np.sin(2 * np.pi * f0 * tb)) * 0.35 * np.exp(-tb * 20))
+    save("robot.wav", fade(out, fout=0.05), 0.6)
+
+
+def boom():
+    """Pane do reator de fusão: estouro grave + chiado."""
+    dur = 2.0
+    tt = t_axis(dur)
+    low = np.sin(2 * np.pi * (60 - 25 * tt) * tt) * np.exp(-tt * 2.5)
+    hiss = padded_filter(noise(dur), lo=300, hi=5000) * np.exp(-tt * 3.5) * 0.6
+    save("boom.wav", fade(low + hiss, fin=0.001, fout=0.2), 0.8)
+
+
+def alarm():
+    """Berrante de alerta: invasão chegando (duas notas longas, graves)."""
+    dur = 2.4
+    out = np.zeros(int(dur * SR))
+    for start, f0, ln in ((0.0, 147.0, 0.9), (1.05, 196.0, 1.2)):
+        tt = t_axis(ln)
+        env = np.minimum(1.0, tt * 8) * np.exp(-np.maximum(tt - ln + 0.3, 0) * 8)
+        tone = sum(a * np.sin(2 * np.pi * f0 * k * tt) for k, a in ((1, 1.0), (2, 0.6), (3, 0.35), (4, 0.2)))
+        place(out, start, tone * env)
+    save("alarm.wav", fade(padded_filter(out, hi=2500), fout=0.2), 0.7)
+
+
+def screech():
+    """Lumívoro: chiado agudo, trêmulo."""
+    dur = 0.6
+    tt = t_axis(dur)
+    f = 2200 + 500 * np.sin(2 * np.pi * 23 * tt)
+    s = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-tt * 5) * (0.6 + 0.4 * np.sin(2 * np.pi * 40 * tt))
+    s += padded_filter(noise(dur), lo=3000) * 0.15 * np.exp(-tt * 8)
+    save("screech.wav", fade(s, fout=0.05), 0.5)
+
+
+def clank():
+    """Ferrugento: rangido metálico + batida."""
+    dur = 0.7
+    out = np.zeros(int(dur * SR))
+    tt = t_axis(0.5)
+    ring = sum(a * np.sin(2 * np.pi * f * tt) for f, a in ((523, 1.0), (1210, 0.5), (1870, 0.3))) * np.exp(-tt * 9)
+    place(out, 0.0, ring)
+    grind = padded_filter(noise(0.4), lo=400, hi=1800) * np.exp(-t_axis(0.4) * 6) * 0.5
+    place(out, 0.12, grind)
+    save("clank.wav", fade(out, fout=0.05), 0.6)
+
+
+def hit():
+    """Golpe (lança/porrete acertando)."""
+    dur = 0.25
+    tt = t_axis(dur)
+    thud = np.sin(2 * np.pi * (180 - 120 * tt) * tt) * np.exp(-tt * 25)
+    thud += padded_filter(noise(dur), lo=800, hi=4000) * np.exp(-tt * 40) * 0.5
+    save("hit.wav", fade(thud, fin=0.001, fout=0.03), 0.7)
+
+
+def gate_break():
+    """Barricada quebrando: estalo de madeira + pedras."""
+    dur = 1.2
+    out = np.zeros(int(dur * SR))
+    for k in range(6):
+        tt = t_axis(0.3)
+        crack = padded_filter(noise(0.3), lo=300 + 200 * k, hi=3000) * np.exp(-tt * 18)
+        place(out, 0.05 * k + rng.uniform(0, 0.05), crack * (1.0 - 0.1 * k))
+    tt = t_axis(dur)
+    out += np.sin(2 * np.pi * (70 - 20 * tt) * tt) * np.exp(-tt * 4) * 0.6
+    save("gate_break.wav", fade(out, fout=0.2), 0.8)
+
+
+def solar():
+    """Onda solar: ronco grave crescendo + chiado elétrico."""
+    dur = 3.0
+    tt = t_axis(dur)
+    env = np.minimum(1.0, tt / 1.2) * np.exp(-np.maximum(tt - 2.2, 0) * 4)
+    rumble = padded_filter(noise(dur), hi=180) * 2.5 * env
+    crackle = padded_filter(noise(dur), lo=2500) * (rng.random(len(tt)) < 0.02) * 3.0 * env
+    hum = np.sin(2 * np.pi * 55 * tt) * 0.4 * env
+    save("solar.wav", fade(rumble + crackle + hum, fout=0.3), 0.8)
+
+
 # ----------------------------------------------------------------- loops
 def cave_ambience():
     dur = 24.0
@@ -356,3 +543,19 @@ if __name__ == "__main__":
     heal()
     forge()
     fanfare()
+    for i in range(3):
+        chop(i)
+    elevator()
+    branch()
+    toll()
+    cheers()
+    protest()
+    find()
+    robot()
+    boom()
+    alarm()
+    screech()
+    clank()
+    hit()
+    gate_break()
+    solar()
