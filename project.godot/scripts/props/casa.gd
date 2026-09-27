@@ -16,8 +16,10 @@ const FRAME_EMPTY := 0
 const FRAME_LIT := 1
 const FRAME_LOT := 2
 
-## false = lote vazio, construído depois pelo Centro da Vila.
+## false = lote vazio (formato antigo; hoje as casas novas são posicionadas pelo jogador).
 @export var built: bool = true
+## true = casa nova que o jogador posicionou (a posição vai pro save; as 3 iniciais são fixas).
+@export var placed_by_player: bool = false
 
 var _inside: Array[Node] = []
 
@@ -44,6 +46,13 @@ func build() -> void:
 	_visual.scale = Vector2(2.3, 1.6)
 	pop.tween_property(_visual, "scale", Vector2(2, 2), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	built_changed.emit()
+
+
+## "Pulo" + poeira de quando a casa acaba de ser construída.
+func pop_in() -> void:
+	var pop := create_tween()
+	_visual.scale = Vector2(2.3, 1.6)
+	pop.tween_property(_visual, "scale", Vector2(2, 2), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func has_free_slot_for(worker: Node) -> bool:

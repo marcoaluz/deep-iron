@@ -77,6 +77,7 @@ var _cull_timer: float = 0.0
 
 
 func _ready() -> void:
+	add_to_group("environment")
 	_rng.seed = map_seed
 	_build_ground()
 	# as estações são irmãs deste nó; espera um frame pra elas entrarem nos grupos
@@ -121,10 +122,24 @@ func _cull_offscreen_lights() -> void:
 
 # ------------------------------------------------------------ navegação
 func _build_navigation() -> void:
+	navigation_region = NavigationRegion2D.new()
+	navigation_region.name = "NavigationRegion"
+	navigation_region.navigation_polygon = _bake_navigation()
+	add_child(navigation_region)
+	navigation_ready.emit()
+
+
+## Refaz a malha de navegação (ex.: casa nova posicionada pelo jogador).
+func rebuild_navigation() -> void:
+	if navigation_region:
+		navigation_region.navigation_polygon = _bake_navigation()
+
+
+func _bake_navigation() -> NavigationPolygon:
 	var nav_poly := NavigationPolygon.new()
 	nav_poly.agent_radius = nav_agent_radius
 	var source := NavigationMeshSourceGeometryData2D.new()
-	source.add_traversable_outline(_rect_outline(map_rect.grow(-nav_edge_inset)))
+	source.add_traversable_outline(_rect_outline(walkable_rect()))
 	if decorations_block:
 		for o in _obstacles:
 			source.add_obstruction_outline(o)
@@ -135,12 +150,17 @@ func _build_navigation() -> void:
 				if outline.size() >= 3:
 					source.add_obstruction_outline(outline)
 	NavigationServer2D.bake_from_source_geometry_data(nav_poly, source)
+	return nav_poly
 
-	navigation_region = NavigationRegion2D.new()
-	navigation_region.name = "NavigationRegion"
-	navigation_region.navigation_polygon = nav_poly
-	add_child(navigation_region)
-	navigation_ready.emit()
+
+## Área onde dá pra andar (dentro da borda de pedras do mapa).
+func walkable_rect() -> Rect2:
+	return map_rect.grow(-nav_edge_inset)
+
+
+## Contornos dos obstáculos da decoração (pedras, cristais, tochas) — pra validar construção.
+func decoration_obstacles() -> Array[PackedVector2Array]:
+	return _obstacles
 
 
 func _rect_outline(r: Rect2) -> PackedVector2Array:

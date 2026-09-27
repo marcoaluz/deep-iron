@@ -71,6 +71,7 @@ var _style_row_selected := _row_style(true)
 
 
 func _ready() -> void:
+	add_to_group("hud")
 	_main = get_parent()
 	_economy = get_tree().get_first_node_in_group("economy")
 	_day_night = get_tree().get_first_node_in_group("day_night")

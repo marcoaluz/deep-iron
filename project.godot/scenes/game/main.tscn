@@ -125,22 +125,6 @@ position = Vector2(390, -370)
 [node name="Horta" parent="World" instance=ExtResource("38_horta")]
 position = Vector2(320, 60)
 
-[node name="Lote1" parent="World" instance=ExtResource("31_casa")]
-position = Vector2(-170, 245)
-built = false
-
-[node name="Lote2" parent="World" instance=ExtResource("31_casa")]
-position = Vector2(-530, 300)
-built = false
-
-[node name="Lote3" parent="World" instance=ExtResource("31_casa")]
-position = Vector2(-80, 370)
-built = false
-
-[node name="Lote4" parent="World" instance=ExtResource("31_casa")]
-position = Vector2(-640, 365)
-built = false
-
 [node name="Ipezinho" parent="World" unique_id=1756047734 instance=ExtResource("2_oekm8")]
 position = Vector2(0, -60)
 

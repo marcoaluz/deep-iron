@@ -172,7 +172,8 @@ func refresh() -> void:
 		elif reason.begins_with("requer"):
 			button.text = "Requer vila nível %d" % (cur + 1)
 		else:
-			button.text = "Melhorar  (%s)" % cost_text(_hub.upgrade_cost(id))
+			var verb := "Construir casa" if id == "moradias" else "Melhorar"
+			button.text = "%s  (%s)" % [verb, cost_text(_hub.upgrade_cost(id))]
 		button.disabled = reason != ""
 
 

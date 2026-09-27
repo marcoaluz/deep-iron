@@ -7,8 +7,9 @@ extends "res://scripts/props/station.gd"
 ##   e custa créditos.
 ## - Melhorias compradas com créditos + minério do armazém. Cada melhoria só pode
 ##   ter no máximo tantos níveis quanto o estágio atual da vila.
-##     Moradias:         +workers_per_moradia no limite de ipezinhos e constrói
-##                       uma casa nova (4 camas) no lote vazio mais próximo.
+##     Moradias:         +workers_per_moradia no limite de ipezinhos e uma casa
+##                       nova (4 camas) que o JOGADOR posiciona no mapa (HousePlacer).
+##                       O custo só é pago quando ele confirma o lugar; Esc cancela.
 ##     Enfermaria:       -recovery_cut_per_level no tempo de cura (por nível).
 ##     Trilhas batidas:  +speed_bonus_per_level na velocidade de caminhada (por nível).
 ##
@@ -21,6 +22,7 @@ signal upgrade_bought(id: String, new_level: int)
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const STAGE_NAMES := ["Acampamento", "Vilarejo", "Vila", "Vila Mineira", "Cidade Mineira"]
 const UPGRADE_IDS := ["moradias", "enfermaria", "trilhas"]
+const CASA_SCENE := preload("res://scenes/props/casa.tscn")
 const UPGRADE_NAMES := {
 	"moradias": "Moradias",
 	"enfermaria": "Enfermaria",
@@ -173,6 +175,8 @@ func buy_upgrade(id: String) -> bool:
 	if upgrade_block_reason(id) != "":
 		Audio.error()
 		return false
+	if id == "moradias":
+		return _start_house_placement()  # paga só ao confirmar o lugar
 	var cost := upgrade_cost(id)
 	if not _economy().spend(cost.x, cost.y):
 		return false
@@ -199,7 +203,7 @@ func upgrade_effect_text(id: String, lvl: int) -> String:
 func upgrade_description(id: String) -> String:
 	match id:
 		"moradias":
-			return "+%d no limite de ipezinhos e uma casa nova (4 camas)." % workers_per_moradia
+			return "+%d no limite de ipezinhos e uma casa nova (4 camas) — você escolhe onde." % workers_per_moradia
 		"enfermaria":
 			return "Ipezinhos machucados curam %d%% mais rápido por nível." % roundi(recovery_cut_per_level * 100.0)
 		"trilhas":
@@ -207,28 +211,57 @@ func upgrade_description(id: String) -> String:
 	return ""
 
 
-func _apply_upgrade(id: String) -> void:
-	match id:
-		"moradias":
-			_economy().max_workers += workers_per_moradia
-			_build_next_house()
+func _apply_upgrade(_id: String) -> void:
+	pass  # Moradias é aplicada em _confirm_house (depois de escolher o lugar)
 
 
-## Constrói o lote vazio mais perto do Centro da Vila.
-func _build_next_house() -> void:
-	var best: Node2D = null
-	var best_dist := INF
-	for casa in get_tree().get_nodes_in_group("casas"):
-		if casa.built:
-			continue
-		var d := global_position.distance_to(casa.global_position)
-		if d < best_dist:
-			best_dist = d
-			best = casa
-	if best:
-		best.build()
-	else:
-		push_warning("Centro da Vila: não há lote vazio pra construir a casa nova")
+# ------------------------------------------------------------ casas posicionadas
+func _start_house_placement() -> bool:
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		push_warning("Centro da Vila: sem HousePlacer na cena")
+		return false
+	placer.begin(_confirm_house)
+	return true
+
+
+## HousePlacer chama quando o jogador clica num lugar válido. Só aqui a Moradias é paga.
+func _confirm_house(pos: Vector2) -> bool:
+	if upgrade_block_reason("moradias") != "":  # recursos podem ter mudado enquanto escolhia
+		Audio.error()
+		return false
+	var cost := upgrade_cost("moradias")
+	if not _economy().spend(cost.x, cost.y):
+		return false
+	upgrades.moradias += 1
+	_economy().max_workers += workers_per_moradia
+	var casa := spawn_house(pos)
+	casa.pop_in()
+	_popup("%s %d!" % [UPGRADE_NAMES.moradias, upgrades.moradias], Color(0.55, 1.0, 0.5))
+	Audio.recruit()
+	upgrade_bought.emit("moradias", upgrades.moradias)
+	return true
+
+
+## Cria uma casa construída pelo jogador (também usado ao carregar o save).
+func spawn_house(pos: Vector2, house_name: String = "", rebuild_nav: bool = true) -> Node2D:
+	var casa: Node2D = CASA_SCENE.instantiate()
+	casa.name = house_name if house_name != "" else _next_house_name()
+	casa.position = pos
+	casa.placed_by_player = true
+	get_parent().add_child(casa)
+	if rebuild_nav:
+		var env := get_tree().get_first_node_in_group("environment")
+		if env:
+			env.rebuild_navigation()
+	return casa
+
+
+func _next_house_name() -> String:
+	var n := 1
+	while get_parent().has_node("CasaNova%d" % n):
+		n += 1
+	return "CasaNova%d" % n
 
 
 # ------------------------------------------------------------ internos

@@ -22,8 +22,10 @@ extends Node
 ##     level (estágio 1-5), upgrades {moradias, enfermaria, trilhas}.
 ##     O EFEITO das melhorias já está salvo nos outros sistemas (max_workers,
 ##     casas construídas); speed_mult/recovery_mult são calculados de upgrades.
-##   casa.gd (cada casa/lote, pelo nome do nó)
-##     built (lote vazio ou casa construída).
+##   casa.gd (cada casa, pelo nome do nó)
+##     built. Casas POSICIONADAS pelo jogador (Bloco 12) também vão em
+##     "placed_houses" [{name, position}] e são recriadas antes dos ipezinhos;
+##     as 3 iniciais são fixas na cena e não precisam de posição.
 ##     Quem dorme em qual cama é salvo no ipezinho (home + home_slot).
 ##   armazem.gd (cada armazém, pelo nome do nó)
 ##     stock {ferro, cobre, carvao}, lifetime_stored (marco dos estágios da vila).
@@ -68,7 +70,14 @@ const TEMP_PATH := "user://savegame.tmp"
 const BACKUP_PATH := "user://savegame_backup.json"
 ## JSON ilegível vai pra cá (pra dar pra investigar), e o jogo começa do zero.
 const CORRUPT_PATH := "user://savegame_corrompido.json"
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
+## Versão 1 tinha 4 lotes fixos na cena; um lote construído vira casa posicionada no mesmo lugar.
+const LEGACY_LOTS := {
+	"Lote1": Vector2(-170, 245),
+	"Lote2": Vector2(-530, 300),
+	"Lote3": Vector2(-80, 370),
+	"Lote4": Vector2(-640, 365),
+}
 const MAIN_SCENE := "res://scenes/game/main.tscn"
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 
@@ -248,6 +257,11 @@ func _collect() -> Dictionary:
 	for w in tree.get_nodes_in_group("ipezinhos"):
 		workers.append(w.get_save_data())
 	data["workers"] = workers
+	var placed := []
+	for casa in tree.get_nodes_in_group("casas"):
+		if casa.get("placed_by_player"):
+			placed.append({"name": String(casa.name), "position": SaveUtil.vec2_to_array(casa.global_position)})
+	data["placed_houses"] = placed
 	var cam: Node = _game.get_node_or_null("Camera2D")
 	if cam:
 		data["camera"] = {"position": SaveUtil.vec2_to_array(cam.get_screen_center_position()), "zoom": cam.zoom.x}
@@ -292,6 +306,7 @@ func apply_pending(main: Node) -> void:
 	_apply_single("village_hub", SaveUtil.dict(data, "village"))
 	if not SaveUtil.dict(data, "economy").has("max_workers"):
 		_recompute_max_workers()
+	_spawn_placed_houses(SaveUtil.array(data, "placed_houses"))
 	_apply_group("casas", SaveUtil.dict(data, "casas"))
 	_apply_group("armazens", SaveUtil.dict(data, "armazens"))
 	_apply_single("oficina", SaveUtil.dict(data, "oficina"))
@@ -310,6 +325,26 @@ func apply_pending(main: Node) -> void:
 	print("SaveManager: save carregado (versão %d, salvo em %s)" % [
 		SaveUtil.integer(data, "save_version", 0), SaveUtil.text(data, "saved_at", "?")])
 	loaded.emit()
+
+
+## Recria as casas que o jogador posicionou (antes dos ipezinhos, pra camas baterem).
+func _spawn_placed_houses(list: Array) -> void:
+	var hub := get_tree().get_first_node_in_group("village_hub")
+	if hub == null or list.is_empty():
+		return
+	for h in list:
+		if typeof(h) != TYPE_DICTIONARY:
+			continue
+		var house_name := SaveUtil.text(h, "name", "")
+		if house_name == "" or hub.get_parent().has_node(house_name):
+			continue
+		var pos := SaveUtil.vec2(h, "position", Vector2.INF)
+		if pos == Vector2.INF:
+			continue
+		hub.spawn_house(pos, house_name, false)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.rebuild_navigation()  # uma vez só, com todas as casas
 
 
 func _apply_single(group: String, d: Dictionary) -> void:
@@ -362,5 +397,16 @@ func _migrate(data: Dictionary) -> Dictionary:
 	var version := SaveUtil.integer(data, "save_version", 0)
 	if version > SAVE_VERSION:
 		push_warning("SaveManager: save da versão %d é mais novo que o jogo (%d); tentando carregar mesmo assim" % [version, SAVE_VERSION])
-	# if version < 2: ...converter chaves aqui quando a versão 2 existir...
+	if version < 2:
+		# lotes fixos construídos -> casas posicionadas no mesmo lugar (mesmo nome: camas batem)
+		var placed: Array = SaveUtil.array(data, "placed_houses")
+		var casas := SaveUtil.dict(data, "casas")
+		for lot in LEGACY_LOTS:
+			var d = casas.get(lot, null)
+			if typeof(d) == TYPE_DICTIONARY and SaveUtil.boolean(d, "built", false):
+				placed.append({"name": lot, "position": SaveUtil.vec2_to_array(LEGACY_LOTS[lot])})
+			elif casas.has(lot):
+				casas.erase(lot)  # lote vazio: não existe mais
+		data["placed_houses"] = placed
+	# if version < 3: ...
 	return data

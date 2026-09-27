@@ -56,6 +56,8 @@ func _ready() -> void:
 	_box_drawer.z_index = 50
 	_box_drawer.draw.connect(_draw_box)
 	add_child(_box_drawer)
+	# modo de posicionar casa (último filho: recebe o input antes do main e o "consome")
+	add_child(preload("res://scripts/core/house_placer.gd").new())
 	SaveManager.register_game(self)
 	if SaveManager.pending_load:
 		# espera o ambiente montar (1 frame + navegação) e as estruturas entrarem nos grupos
