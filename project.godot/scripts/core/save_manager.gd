@@ -87,6 +87,10 @@ extends Node
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
+##   Bloco 31: obras. casa.gd build_left/build_total/obra (canteiro esperando engenheiro);
+##     centro_vila.gd pending_upgrade/upgrade_left/upgrade_total/obra; oficina.gd e
+##     escavadeira.gd ganham "obra" (ordered_at, a ordem da fila). Quem está trabalhando
+##     não vai pro save: o engenheiro volta sozinho. Save antigo: nenhuma obra pendente.
 ##   Bloco 30: nada novo — "médico" é mais um valor de job; quem está de plantão
 ##     (enfermaria._doctors) é derivado e volta sozinho pra dentro ao carregar.
 ##   Bloco 27: armazem.gd raw_stored (matéria-prima); hunt_spot.gd (cada toca, grupo

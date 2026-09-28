@@ -869,6 +869,32 @@ IPEZINHO_OUTFITS["medico"] = {
         "..cNNNNNNNNNNc..",
     ],
 }
+_HARD_HAT = [  # capacete de obra (sem lanterna: não é de mina)
+    "................",
+    "................",
+    "......OOPO......",
+    ".....oOOPOo.....",
+    "....oOOOOOPo....",
+    "..oooooooooooo..",
+]
+# Bloco 31: engenheiro — capacete de obra, colete refletivo e cinto de ferramentas.
+IPEZINHO_OUTFITS["engenheiro"] = {
+    "m": _HARD_HAT + _FACE_M + [
+        "..fVVFFFFFFVVu..",
+        "..fRRFFFFFFRRu..",
+        "..SsVVFFFFVVSs..",
+        "...cTITbbTITc...",
+    ],
+    "f": _HARD_HAT + _FACE_F + [
+        "..AVVFFFFFFVVa..",
+        "..tRRFFFFFFRRt..",
+        "..SsVVFFFFVVSs..",
+        "..cCTITbbTITCc..",
+    ],
+}
+HARD_HAT = ((170, 84, 24, 255), (222, 126, 36, 255), (246, 176, 82, 255))  # (escuro, médio, claro)
+HI_VIS = (214, 110, 34, 255)
+REFLECTIVE = (216, 220, 214, 255)
 SCRUBS = ((70, 128, 122, 255), (104, 164, 152, 255))  # (escuro, claro)
 CROSS_RED = (190, 44, 44, 255)
 
@@ -914,6 +940,9 @@ def _outfit_pal(outfit, look_index, shirt):
         return {"i": IRON_DARK, "I": IRON, "J": IRON_LIGHT, "D": (GUARD_TABARD[1], GUARD_TABARD[0])}
     if outfit == "pesquisador":
         return {"Q": LAB_WHITE, "q": LAB_SHADE, "B": BRASS, "O": GOGGLE_GLASS}
+    if outfit == "engenheiro":
+        return {"o": HARD_HAT[0], "O": HARD_HAT[1], "P": HARD_HAT[2],
+                "V": HI_VIS, "R": REFLECTIVE, "I": IRON_LIGHT}
     if outfit == "medico":
         return {"M": LAB_WHITE, "m": LAB_SHADE, "R": CROSS_RED,
                 "N": SCRUBS[1], "n": SCRUBS[0], "E": IRON_DARK, "U": IRON_HIGHLIGHT}
@@ -3149,6 +3178,28 @@ def build_bow():
     save(img, "bow.png")
 
 
+def build_hammer():
+    """Bloco 31: martelo do engenheiro. Mesmo tamanho/pivô da picareta (11x13)."""
+    rows = [
+        "..JJIIIIi..",
+        "..IIIIIIi..",
+        ".....Bb....",
+        ".....Bb....",
+        ".....Bb....",
+        ".....Bb....",
+        ".....Bb....",
+        ".....Bb....",
+        ".....Bb....",
+        ".....Bb....",
+        ".....ww....",
+        ".....Ww....",
+        ".....bb....",
+    ]
+    pal = {"J": IRON_HIGHLIGHT, "I": IRON_LIGHT, "i": IRON_DARK,
+           "B": WOOD_HIGHLIGHT, "b": WOOD_DARK, "W": LEATHER_LIGHT, "w": LEATHER}
+    save(from_rows(rows, pal), "hammer.png")
+
+
 def build_forage_basket():
     """Bloco 29: cestinha de vime do caçador (na mão quando colhe fruta ou está sem arco)."""
     rows = [
@@ -3426,6 +3477,7 @@ if __name__ == "__main__":
     build_bow()
     build_raw_icon()
     build_forage_basket()
+    build_hammer()
     build_arvore()
     build_floor_clareira()
     build_axe()

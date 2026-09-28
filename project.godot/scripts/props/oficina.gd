@@ -15,6 +15,7 @@ signal tool_crafted(id: String)
 
 const Ores := preload("res://scripts/core/ores.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const ObraSite := preload("res://scripts/core/obra_site.gd")
 const TOOL_IDS := ["picareta_aco", "lampiao", "broca", "traje", "arco"]
 const TOOL_NAMES := {
 	"picareta_aco": "Picareta de aço temperado",
@@ -68,6 +69,8 @@ var crafting: String = ""
 var craft_left: float = 0.0
 
 var _sound_timer: float = 0.0
+## Bloco 31: a ferramenta encomendada só é forjada com um ENGENHEIRO trabalhando aqui.
+var _obra := ObraSite.new()
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _sparks: CPUParticles2D = $Sparks
@@ -78,6 +81,7 @@ var _sound_timer: float = 0.0
 func _ready() -> void:
 	super()
 	add_to_group("oficina")
+	add_to_group("obras")
 	add_to_group("clickable")
 	_forge_light.add_to_group("cullable_lights")
 	for id in TOOL_IDS:
@@ -88,17 +92,62 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if crafting == "":
 		return
-	craft_left -= delta
+	var working := _obra.has_engineer()
+	_sparks.emitting = working
+	if not working:  # encomendada, esperando engenheiro: a forja fica em brasa, parada
+		_forge_light.energy = idle_forge_energy
+		_update_label()
+		return
 	_sound_timer -= delta
 	if _sound_timer <= 0.0:
 		_sound_timer = forge_sound_interval * randf_range(0.8, 1.2)
 		Audio.forge(global_position)
 	# forja tremeluzindo enquanto trabalha
 	_forge_light.energy = active_forge_energy * (1.0 + sin(Time.get_ticks_msec() * 0.02) * 0.12)
+	_update_label()
+
+
+# ------------------------------------------------------------ obra (Bloco 31)
+func obra_pending() -> bool:
+	return crafting != ""
+
+
+func obra_title() -> String:
+	return TOOL_NAMES.get(crafting, "ferramenta")
+
+
+func obra_progress() -> float:
+	return craft_progress()
+
+
+func obra_position(worker: Node) -> Vector2:
+	return global_position + Vector2(0, 30) + _obra.offset_for(worker)
+
+
+## O engenheiro trabalhou `seconds` aqui: só assim a forja anda.
+func obra_work(seconds: float) -> void:
+	if crafting == "":
+		return
+	craft_left -= seconds
 	if craft_left <= 0.0:
 		_finish(crafting)
-	else:
-		_update_label()
+
+
+func obra_ordered_at() -> float:
+	return _obra.ordered_at
+
+
+func obra_join(worker: Node) -> void:
+	_obra.join(worker)
+
+
+func obra_leave(worker: Node) -> void:
+	_obra.leave(worker)
+	_update_visual()
+
+
+func obra_workers() -> Array[Node]:
+	return _obra.workers()
 
 
 ## Área clicável (coordenadas globais).
@@ -187,9 +236,10 @@ func start_tool(id: String) -> bool:
 		return false
 	crafting = id
 	craft_left = float(cost.z)
+	_obra.start()
 	_sound_timer = 0.0
 	_update_visual()
-	_popup("Forjando: %s" % TOOL_NAMES[id], Color(1.0, 0.8, 0.45))
+	_popup("Encomendado: %s — precisa de engenheiro" % TOOL_NAMES[id], Color(1.0, 0.8, 0.45))
 	tool_started.emit(id)
 	return true
 
@@ -212,7 +262,7 @@ func _finish(id: String) -> void:
 
 # ------------------------------------------------------------ visual
 func _update_visual() -> void:
-	var active := crafting != ""
+	var active := crafting != "" and _obra.has_engineer()
 	_visual.frame = 1 if active else 0
 	_sparks.emitting = active
 	_forge_light.energy = active_forge_energy if active else idle_forge_energy
@@ -221,8 +271,8 @@ func _update_visual() -> void:
 
 func _update_label() -> void:
 	if crafting != "":
-		_label.text = "Oficina\n%s  %d%%" % [TOOL_NAMES[crafting], roundi(craft_progress() * 100.0)]
-		_label.modulate = Color(1.0, 0.8, 0.5)
+		_label.text = "Oficina\n%s  %s" % [TOOL_NAMES[crafting], _obra.status(craft_progress())]
+		_label.modulate = Color(1.0, 0.8, 0.5) if _obra.has_engineer() else Color(1.0, 0.62, 0.3)
 	else:
 		_label.text = "Oficina"
 		_label.modulate = Color(0.9, 0.86, 0.8)
@@ -250,7 +300,8 @@ func _popup(text: String, color: Color) -> void:
 
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
-	return {"crafted": crafted.duplicate(), "crafting": crafting, "craft_left": craft_left}
+	return {"crafted": crafted.duplicate(), "crafting": crafting, "craft_left": craft_left,
+		"obra": _obra.get_save_data()}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -261,6 +312,7 @@ func load_save_data(d: Dictionary) -> void:
 	if crafting not in TOOL_IDS or has_tool(crafting):
 		crafting = ""
 	craft_left = maxf(SaveUtil.num(d, "craft_left", 0.0), 0.0) if crafting != "" else 0.0
+	_obra.load_save_data(SaveUtil.dict(d, "obra"))  # save antigo: ordered_at 0 (vai primeiro na fila)
 	_update_visual()
 	for node in get_tree().get_nodes_in_group("minerios"):
 		if node.has_method("on_unlock_changed"):

@@ -162,6 +162,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				toggle_hunter()
 			KEY_3, KEY_KP_3:
 				toggle_doctor()
+			KEY_4, KEY_KP_4:
+				toggle_engineer()
 			KEY_0, KEY_KP_0:
 				clear_job()
 			KEY_K:
@@ -378,6 +380,11 @@ func toggle_hunter() -> void:
 ## 3 / botão do HUD: médico (ou tira, se todos já forem) — Bloco 30.
 func toggle_doctor() -> void:
 	toggle_job(Worker.ROLE_DOCTOR, "Médico", Color(0.6, 0.9, 0.85))
+
+
+## 4 / botão do HUD: engenheiro (ou tira, se todos já forem) — Bloco 31.
+func toggle_engineer() -> void:
+	toggle_job(Worker.ROLE_ENGINEER, "Engenheiro", Color(1.0, 0.6, 0.25))
 
 
 ## C / botão do HUD: cozinheiro (ou tira, se todos já forem).

@@ -117,7 +117,10 @@ func refresh() -> void:
 	_craft_label.visible = busy != ""
 	_craft_bar.visible = busy != ""
 	if busy != "":
-		_craft_label.text = "Forjando: %s  —  faltam %ds" % [_oficina.TOOL_NAMES[busy], ceili(_oficina.craft_left)]
+		if _oficina.obra_workers().is_empty():
+			_craft_label.text = "%s: esperando engenheiro (tecla 4)  —  %ds de trabalho" % [_oficina.TOOL_NAMES[busy], ceili(_oficina.craft_left)]
+		else:
+			_craft_label.text = "Forjando: %s  —  faltam %ds" % [_oficina.TOOL_NAMES[busy], ceili(_oficina.craft_left)]
 		_craft_bar.max_value = 1.0
 		_craft_bar.value = _oficina.craft_progress()
 
@@ -132,7 +135,7 @@ func refresh() -> void:
 				status.add_theme_color_override("font_color", _hud.COLOR_HUNGER_OK)
 				button.text = "Pronta"
 			"fabricando":
-				status.text = "forjando %d%%" % roundi(_oficina.craft_progress() * 100.0)
+				status.text = ("forjando %d%%" if not _oficina.obra_workers().is_empty() else "esperando engenheiro %d%%") % roundi(_oficina.craft_progress() * 100.0)
 				status.add_theme_color_override("font_color", _hud.COLOR_TITLE)
 				button.text = "Forjando..."
 			"":
@@ -148,7 +151,7 @@ func refresh() -> void:
 
 func button_text() -> String:
 	if _oficina.crafting != "":
-		return "Oficina %d%% (O)" % roundi(_oficina.craft_progress() * 100.0)
+		return "Oficina %d%%%s (O)" % [roundi(_oficina.craft_progress() * 100.0), "" if not _oficina.obra_workers().is_empty() else " sem eng."]
 	var done := 0
 	for id in _oficina.TOOL_IDS:
 		if _oficina.has_tool(id):

@@ -251,7 +251,10 @@ func refresh() -> void:
 	_fab_label.visible = fab != ""
 	_fab_bar.visible = fab != ""
 	if fab != "":
-		_fab_label.text = "Fabricando: %s  —  faltam %ds" % [_dig.PART_NAMES[fab], ceili(_dig.fab_left)]
+		if _dig.obra_workers().is_empty():
+			_fab_label.text = "%s: esperando engenheiro (tecla 4)  —  %ds de trabalho" % [_dig.PART_NAMES[fab], ceili(_dig.fab_left)]
+		else:
+			_fab_label.text = "Montando: %s  —  faltam %ds" % [_dig.PART_NAMES[fab], ceili(_dig.fab_left)]
 		_fab_bar.max_value = 1.0
 		_fab_bar.value = _dig.fab_progress()
 	_done_label.visible = _dig.complete
@@ -267,7 +270,7 @@ func refresh() -> void:
 				status.add_theme_color_override("font_color", _hud.COLOR_HUNGER_OK)
 				button.text = "Instalada"
 			"fabricando":
-				status.text = "fabricando %d%%" % roundi(_dig.fab_progress() * 100.0)
+				status.text = ("montando %d%%" if not _dig.obra_workers().is_empty() else "esperando engenheiro %d%%") % roundi(_dig.fab_progress() * 100.0)
 				status.add_theme_color_override("font_color", _hud.COLOR_TITLE)
 				button.text = "Fabricando..."
 			"":
@@ -287,7 +290,7 @@ func button_text() -> String:
 			return "Escavadeira %.2f/s (E)" % _dig.reactor_rate()
 		return "Escavadeira: %s (E)" % ("PANE" if _dig.outage_left > 0.0 else ("SEM CARVÃO" if _dig.no_fuel else "desligada"))
 	if _dig.fabricating != "":
-		return "Escavadeira %d%% (E)" % roundi(_dig.fab_progress() * 100.0)
+		return "Escavadeira %d%%%s (E)" % [roundi(_dig.fab_progress() * 100.0), "" if not _dig.obra_workers().is_empty() else " sem eng."]
 	return "Escavadeira %d/5 (E)" % _dig.installed_count()
 
 

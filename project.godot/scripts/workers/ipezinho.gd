@@ -20,6 +20,7 @@ const STATE_LABELS := {
 	"fetching": "buscando matéria-prima",
 	"cooking": "preparando comida",
 	"doctor": "de plantão na enfermaria",
+	"building": "construindo",
 	"chopping": "cortando madeira",
 	"hauling": "levando madeira",
 	"infirmary": "indo pra enfermaria",
@@ -57,6 +58,7 @@ const OUTFIT_FILES := {
 	"guarda": "res://assets/game/ipezinho_guarda_%s%d.png",
 	"pesquisador": "res://assets/game/ipezinho_pesquisador_%s%d.png",
 	"medico": "res://assets/game/ipezinho_medico_%s%d.png",  # Bloco 30
+	"engenheiro": "res://assets/game/ipezinho_engenheiro_%s%d.png",  # Bloco 31
 }
 ## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
 const OUTFITS_WITH_LAMP := ["mineiro"]
@@ -91,12 +93,13 @@ const ROLE_GUARD := "guarda"
 const ROLE_RESEARCH := "pesquisador"
 const ROLE_HUNTER := "caçador"  # Bloco 27: colhe fruta / caça (com arco) -> matéria-prima
 const ROLE_DOCTOR := "médico"  # Bloco 30: plantão na enfermaria (cura mais rápida)
-const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR]
+const ROLE_ENGINEER := "engenheiro"  # Bloco 31: sem ele nenhuma obra anda
+const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER]
 ## Texto do popup ao receber a função.
 const JOB_LABELS := {
 	ROLE_IDLE: "Sem função", ROLE_MINER: "Minerador!", ROLE_COOK: "Cozinheiro!",
 	ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!",
-	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!",
+	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!", ROLE_ENGINEER: "Engenheiro!",
 }
 ## Bloco 26/28: outfit inteiro por função (derivado do `job`: nada novo no save).
 ## REGRA (Bloco 28): toda função nova nasce com outfit próprio no mesmo bloco —
@@ -105,7 +108,7 @@ const JOB_LABELS := {
 const JOB_OUTFIT := {
 	ROLE_IDLE: "civil", ROLE_MINER: "mineiro", ROLE_COOK: "cozinheiro",
 	ROLE_LUMBER: "lenhador", ROLE_GUARD: "guarda", ROLE_RESEARCH: "pesquisador",
-	ROLE_HUNTER: "cacador", ROLE_DOCTOR: "medico",
+	ROLE_HUNTER: "cacador", ROLE_DOCTOR: "medico", ROLE_ENGINEER: "engenheiro",
 }
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
@@ -114,6 +117,10 @@ const AXE := preload("res://assets/game/axe.png")
 const WOOD_LOG := preload("res://assets/game/wood_log.png")
 const BOW := preload("res://assets/game/bow.png")
 const FORAGE_BASKET := preload("res://assets/game/forage_basket.png")
+const HAMMER := preload("res://assets/game/hammer.png")
+## Distância da obra em que o engenheiro já conta como "no local" (a obra pode estar
+## dentro de um obstáculo; a navegação para no ponto andável mais perto).
+const OBRA_REACH := 70.0
 const RAW_FOOD := preload("res://assets/game/raw_food.png")
 const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 
@@ -334,6 +341,8 @@ var _ward: Node = null  # enfermaria onde está internado
 var _death_warned := false
 ## Felicidade 0..100 (-1 = ainda não definida: nasce com happiness_start).
 var happiness: float = -1.0
+var _obra: Node = null  # Bloco 31: obra que o engenheiro está tocando
+var _obra_on_site := false  # já chegou e está trabalhando nela
 var _on_duty: Node = null  # Bloco 30: enfermaria onde o médico está de plantão (lá dentro)
 var _at_taverna: Node = null  # taverna onde está se divertindo (lá dentro, invisível)
 var _strike_spot: Variant = null  # onde fica parado protestando
@@ -409,6 +418,7 @@ func _exit_tree() -> void:
 	_discharge()
 	_leave_taverna()
 	_end_duty()
+	_obra_stop()
 	_drop_robot()
 	_release_station()
 	if _home != null and is_instance_valid(_home):
@@ -471,6 +481,11 @@ func get_state_label() -> String:
 			return "indo pra enfermaria (plantão)"
 		var n: int = _on_duty.patients().size()
 		return "tratando %d internado%s" % [n, "s" if n > 1 else ""] if n > 0 else "de plantão, esperando pacientes"
+	if _ai_state == "building" and _obra != null and is_instance_valid(_obra):
+		var pct := roundi(_obra.obra_progress() * 100.0)
+		return ("construindo: %s (%d%%)" if _obra_on_site else "indo pra obra: %s (%d%%)") % [_obra.obra_title(), pct]
+	if _ai_state == "idle" and is_engineer():
+		return "sem obras — esperando encomenda"
 	if _ai_state == "idle" and is_doctor():
 		return "sem enfermaria"
 	if _ai_state == "cooking" and _prep_left > 0.0:
@@ -599,6 +614,22 @@ func _process(delta: float) -> void:
 			_robot_task.deliver()
 			_robot_task = null
 			_decision_timer = 0.0
+	# engenheiro: chegou na obra -> trabalha nela (só assim o tempo da obra anda)
+	if _ai_state == "building" and _obra != null:
+		if not is_instance_valid(_obra) or not _obra.obra_pending():
+			_obra_stop()
+			_decision_timer = 0.0  # acabou: próxima obra da fila
+		elif not _obra_on_site:
+			if not _moving and global_position.distance_to(_obra.obra_position(self)) <= OBRA_REACH:
+				_obra_on_site = true
+				_obra.obra_join(self)
+		else:
+			_work_timer = 0.2  # martelada
+			_obra.obra_work(delta * work_mult())  # zanga/tristeza deixam mais lento
+			if not _obra.obra_pending():
+				_popup("Obra pronta!", Color(0.55, 1.0, 0.5))
+				_obra_stop()
+				_decision_timer = 0.0
 	# médico chegou na porta da enfermaria: entra e fica de plantão
 	if _ai_state == "doctor" and _on_duty == null and not _moving:
 		var ward := _closest_in_group("enfermarias")
@@ -684,6 +715,10 @@ func _choose_state() -> String:
 	# por lá: não sai pra minerar sozinho). Comer, dormir, se tratar etc. vêm antes.
 	if is_doctor():
 		return "doctor" if _has_infirmary() else "idle"
+	# Engenheiro (Bloco 31): vai tocar a obra mais antiga encomendada; sem obra, espera
+	# no Centro da Vila. (Minério na mão já foi entregue pela regra de cima.)
+	if is_engineer():
+		return "building" if _pick_obra() != null else "idle"
 	# Guarda: à noite fica nos portões; de dia treina (até ficar pronto) e descansa.
 	if is_guard():
 		if _is_night():
@@ -774,6 +809,20 @@ func _decide_next_action() -> void:
 			_set_state("guard")
 		return  # quem manda é o _guard_tick (posto / luta)
 
+	if desired == "building":
+		var site := _pick_obra()
+		if site != _obra:
+			_obra_stop()
+			_obra = site
+		if _ai_state != "building":
+			_release_station()
+			_set_state("building")
+		if not _obra_on_site:
+			var pos: Vector2 = _obra.obra_position(self)
+			if not _moving or _target.distance_to(pos) > 2.0:
+				_go_to(pos)
+		return
+
 	if desired == "doctor":
 		if _ai_state != "doctor":
 			_release_station()
@@ -805,7 +854,7 @@ func _decide_next_action() -> void:
 	_set_state(desired)
 
 	if desired == "idle":
-		if has_no_job():
+		if has_no_job() or is_engineer():
 			_idle_at_hub()
 			return
 		if not _moving and randf() < 0.35:
@@ -961,6 +1010,8 @@ func _set_state(new_state: String) -> void:
 		_leave_taverna()
 	if _ai_state == "doctor":
 		_end_duty()
+	if _ai_state == "building":
+		_obra_stop()  # pausa a obra onde estava (o progresso fica na obra)
 	if _ai_state == "strike":
 		_strike_spot = null
 	if _ai_state == "robot":
@@ -1174,6 +1225,42 @@ func _enter_taverna() -> void:
 	queue_redraw()
 
 
+# ------------------------------------------------------------ engenheiro (Bloco 31)
+func is_engineer() -> bool:
+	return job == ROLE_ENGINEER
+
+
+## Qual obra atender. FILA: a encomenda mais antiga primeiro. Quem já está numa obra
+## termina ela antes de trocar. Com vários engenheiros, cada um prefere uma obra que
+## ninguém está tocando; se todas já têm alguém, ajuda na mais antiga (o trabalho soma).
+func _pick_obra() -> Node:
+	if _obra != null and is_instance_valid(_obra) and _obra.obra_pending():
+		return _obra
+	var oldest_free: Node = null
+	var oldest_any: Node = null
+	for site in get_tree().get_nodes_in_group("obras"):
+		if not site.has_method("obra_pending") or not site.obra_pending():
+			continue
+		var t: float = site.obra_ordered_at()
+		if oldest_any == null or t < oldest_any.obra_ordered_at():
+			oldest_any = site
+		# "tocando" = já trabalhando OU a caminho (senão dois engenheiros designados juntos
+		# escolhem a mesma obra antes de qualquer um chegar)
+		var taken := get_tree().get_nodes_in_group("ipezinhos").any(
+			func(w): return w != self and w.get("_obra") == site)
+		if not taken and (oldest_free == null or t < oldest_free.obra_ordered_at()):
+			oldest_free = site
+	return oldest_free if oldest_free != null else oldest_any
+
+
+## Sai da obra (pausa): o que já foi feito fica guardado nela.
+func _obra_stop() -> void:
+	if _obra != null and is_instance_valid(_obra) and _obra_on_site:
+		_obra.obra_leave(self)
+	_obra = null
+	_obra_on_site = false
+
+
 # ------------------------------------------------------------ médico (Bloco 30)
 func is_doctor() -> bool:
 	return job == ROLE_DOCTOR
@@ -1345,6 +1432,8 @@ func _hand_item() -> Texture2D:
 			return _pickaxe() if _ai_state in ["mining", "storing"] else null
 		ROLE_DOCTOR:
 			return null  # plantão lá dentro da enfermaria: mãos livres
+		ROLE_ENGINEER:
+			return HAMMER
 	return null  # ocioso (civil): mãos vazias
 
 
@@ -1495,6 +1584,8 @@ func set_job(new_job: String) -> void:
 		return
 	if job == ROLE_DOCTOR:
 		_end_duty()  # tirou do médico: o bônus da enfermaria para NA HORA (Bloco 30)
+	if job == ROLE_ENGINEER:
+		_obra_stop()  # tirou do engenheiro: a obra pausa NA HORA, sem perder o feito (Bloco 31)
 	job = new_job
 	_popup(JOB_LABELS[job], Color(0.95, 0.9, 0.6) if job != ROLE_IDLE else Color(0.75, 0.75, 0.8))
 	_apply_outfit()  # troca de roupa na hora (Bloco 26)
@@ -2014,7 +2105,7 @@ func _update_animation(delta: float) -> void:
 		# impacto = ponto mais baixo do golpe (a curva para de subir)
 		var rising := swing > _prev_swing
 		if _swing_rising and not rising:
-			if item == _pickaxe():  # "tock" só de picareta batendo em pedra
+			if item == _pickaxe() or item == HAMMER:  # picareta na pedra / martelo na obra
 				Audio.pick(global_position)
 		_swing_rising = rising
 		_prev_swing = swing

@@ -167,7 +167,11 @@ func refresh() -> void:
 		row.effect.text = effect
 		var reason: String = _hub.upgrade_block_reason(id)
 		var button: Button = row.button
-		if cur >= mx:
+		if reason == "em obra":
+			button.text = "Em obra: %s" % _hub.obra_status().split(": ", true, 1)[-1]
+		elif reason == "outra melhoria em obra":
+			button.text = "Espere a obra atual terminar"
+		elif cur >= mx:
 			button.text = "Nível máximo"
 		elif reason.begins_with("requer"):
 			button.text = "Requer vila nível %d" % (cur + 1)
@@ -181,6 +185,8 @@ func refresh() -> void:
 
 
 func button_text() -> String:
+	if _hub.obra_pending():
+		return "Vila: obra %d%%%s (U)" % [roundi(_hub.obra_progress() * 100.0), "" if not _hub.obra_workers().is_empty() else " sem eng."]
 	return "Vila: %s (U)" % _hub.stage_name()
 
 

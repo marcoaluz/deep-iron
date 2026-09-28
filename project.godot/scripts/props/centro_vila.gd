@@ -13,6 +13,11 @@ extends "res://scripts/props/station.gd"
 ##     Enfermaria:       +1 leito na Enfermaria e -recovery_cut_per_level no tempo de cura (por nível).
 ##     Trilhas batidas:  +speed_bonus_per_level na velocidade de caminhada (por nível).
 ##
+## Bloco 31: comprar uma melhoria (ou uma casa) paga na hora e ENCOMENDA a obra —
+## ela só anda com um engenheiro trabalhando (melhoria: aqui na frente do Centro;
+## casa: no canteiro). Uma melhoria da vila por vez; casas, quantas quiser.
+## O +limite de ipezinhos da casa só entra quando ela fica pronta (on_house_built).
+##
 ## Os ipezinhos consultam recovery_mult() e speed_mult(); a economia guarda o limite.
 ## Ninguém trabalha aqui (sem slots): é só a base que bloqueia a navegação.
 
@@ -20,6 +25,7 @@ signal level_changed(level: int)
 signal upgrade_bought(id: String, new_level: int)
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const ObraSite := preload("res://scripts/core/obra_site.gd")
 const STAGE_NAMES := ["Acampamento", "Vilarejo", "Vila", "Vila Mineira", "Cidade Mineira"]
 const UPGRADE_IDS := ["moradias", "enfermaria", "trilhas"]
 const CASA_SCENE := preload("res://scenes/props/casa.tscn")
@@ -56,8 +62,20 @@ const UPGRADE_NAMES := {
 ## Velocidade extra por nível (0.1 = +10% por nível).
 @export var speed_bonus_per_level: float = 0.1
 
+@export_group("Obras (Bloco 31)")
+## Segundos de trabalho de engenheiro pra cada nível de cada melhoria.
+@export var enfermaria_build_times: Array[float] = [30.0, 45.0, 60.0]
+@export var trilhas_build_times: Array[float] = [25.0, 40.0, 55.0]
+## Segundos de trabalho de engenheiro pra erguer cada casa (por nível de Moradias).
+@export var house_build_times: Array[float] = [35.0, 45.0, 55.0, 65.0]
+
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 var panel_id := "hub"
+## Melhoria da vila encomendada e ainda em obra ("" = nenhuma).
+var pending_upgrade: String = ""
+var upgrade_left: float = 0.0
+var upgrade_total: float = 0.0
+var _obra := ObraSite.new()
 var level: int = 1
 var upgrades: Dictionary = {"moradias": 0, "enfermaria": 0, "trilhas": 0}
 
@@ -68,6 +86,7 @@ var upgrades: Dictionary = {"moradias": 0, "enfermaria": 0, "trilhas": 0}
 func _ready() -> void:
 	super()
 	add_to_group("village_hub")
+	add_to_group("obras")
 	add_to_group("clickable")
 	$WindowLight.add_to_group("cullable_lights")
 	_update_visual()
@@ -165,6 +184,10 @@ func upgrade_cost(id: String) -> Vector2i:
 
 ## "" se pode comprar; senão o motivo (pra mostrar no botão).
 func upgrade_block_reason(id: String) -> String:
+	if pending_upgrade == id:
+		return "em obra"
+	if pending_upgrade != "" and id != "moradias":
+		return "outra melhoria em obra"
 	var lvl: int = upgrades[id]
 	if lvl >= upgrade_max(id):
 		return "nível máximo"
@@ -204,12 +227,90 @@ func buy_upgrade(id: String) -> bool:
 	var cost := upgrade_cost(id)
 	if not _economy().spend(cost.x, cost.y):
 		return false
+	# Bloco 31: pagou -> vira obra; o nível só sobe quando o engenheiro terminar
+	pending_upgrade = id
+	upgrade_total = build_time(id)
+	upgrade_left = upgrade_total
+	_obra.start()
+	_update_visual()
+	_popup("Encomendado: %s %d — precisa de engenheiro" % [UPGRADE_NAMES[id], upgrades[id] + 1], Color(1.0, 0.8, 0.45))
+	Audio.click()
+	return true
+
+
+## Segundos de engenheiro pro PRÓXIMO nível dessa melhoria.
+func build_time(id: String) -> float:
+	var lvl: int = upgrades[id]
+	var times: Array[float] = house_build_times
+	if id == "enfermaria":
+		times = enfermaria_build_times
+	elif id == "trilhas":
+		times = trilhas_build_times
+	return times[mini(lvl, times.size() - 1)] if not times.is_empty() else 30.0
+
+
+func _finish_upgrade() -> void:
+	var id := pending_upgrade
+	pending_upgrade = ""
+	upgrade_left = 0.0
+	upgrade_total = 0.0
 	upgrades[id] += 1
 	_apply_upgrade(id)
-	_popup("%s %d!" % [UPGRADE_NAMES[id], upgrades[id]], Color(0.55, 1.0, 0.5))
+	_update_visual()
+	_popup("%s %d pronta!" % [UPGRADE_NAMES[id], upgrades[id]], Color(0.55, 1.0, 0.5))
 	Audio.recruit()
 	upgrade_bought.emit(id, upgrades[id])
-	return true
+
+
+# ------------------------------------------------------------ obra (Bloco 31)
+func obra_pending() -> bool:
+	return pending_upgrade != ""
+
+
+func obra_title() -> String:
+	return "%s %d" % [UPGRADE_NAMES.get(pending_upgrade, "melhoria"), upgrades.get(pending_upgrade, 0) + 1]
+
+
+func obra_progress() -> float:
+	return clampf(1.0 - upgrade_left / upgrade_total, 0.0, 1.0) if upgrade_total > 0.0 else 0.0
+
+
+func obra_position(worker: Node) -> Vector2:
+	return global_position + Vector2(0, 40) + _obra.offset_for(worker)
+
+
+## O engenheiro trabalhou `seconds` na melhoria: só assim ela anda.
+func obra_work(seconds: float) -> void:
+	if pending_upgrade == "":
+		return
+	upgrade_left -= seconds
+	if upgrade_left <= 0.0:
+		_finish_upgrade()
+	else:
+		_update_visual()
+
+
+func obra_ordered_at() -> float:
+	return _obra.ordered_at
+
+
+func obra_join(worker: Node) -> void:
+	_obra.join(worker)
+	_update_visual()
+
+
+func obra_leave(worker: Node) -> void:
+	_obra.leave(worker)
+	_update_visual()
+
+
+func obra_workers() -> Array[Node]:
+	return _obra.workers()
+
+
+## "Trilhas batidas 2: 40% — esperando engenheiro" (pra UI).
+func obra_status() -> String:
+	return "%s: %s" % [obra_title(), _obra.status(obra_progress())] if obra_pending() else ""
 
 
 ## Texto do efeito atual e do próximo nível (pra UI).
@@ -262,14 +363,31 @@ func _confirm_house(pos: Vector2) -> bool:
 	var cost := upgrade_cost("moradias")
 	if not _economy().spend(cost.x, cost.y, upgrade_ore_type("moradias"), upgrade_wood("moradias")):
 		return false
+	# Bloco 31: o nível sobe já (o preço da próxima casa não repete), mas a casa nasce
+	# como CANTEIRO e o +limite de ipezinhos só entra quando ela fica pronta.
+	var build_seconds := build_time("moradias")
 	upgrades.moradias += 1
-	_economy().max_workers += workers_per_moradia
 	var casa := spawn_house(pos)
-	casa.pop_in()
-	_popup("%s %d!" % [UPGRADE_NAMES.moradias, upgrades.moradias], Color(0.55, 1.0, 0.5))
+	casa.start_construction(build_seconds)
+	_popup("Casa encomendada — precisa de engenheiro", Color(1.0, 0.8, 0.45))
+	Audio.click()
+	return true
+
+
+## A casa terminou (chamado pela própria casa): agora sim entra o limite de ipezinhos.
+func on_house_built(_casa: Node) -> void:
+	var eco := _economy()
+	if eco:
+		eco.max_workers += workers_per_moradia
+	_popup("Casa pronta! +%d no limite de ipezinhos" % workers_per_moradia, Color(0.55, 1.0, 0.5))
 	Audio.recruit()
 	upgrade_bought.emit("moradias", upgrades.moradias)
-	return true
+
+
+## Casas encomendadas que ainda estão em obra (não contam no limite de ipezinhos ainda).
+func pending_houses() -> int:
+	return get_tree().get_nodes_in_group("casas").filter(
+		func(c): return c.has_method("obra_pending") and c.obra_pending()).size()
 
 
 ## Cria uma casa construída pelo jogador (também usado ao carregar o save).
@@ -302,7 +420,7 @@ func _economy() -> Node:
 func _base_max_workers() -> int:
 	var eco := _economy()
 	var current: int = eco.max_workers if eco else 0
-	return current - workers_per_moradia * upgrades.moradias
+	return current - workers_per_moradia * (upgrades.moradias - pending_houses())
 
 
 func _base_recovery_time() -> float:
@@ -314,6 +432,8 @@ func _update_visual() -> void:
 	# quadro 0: começo, 1: sino + estandartes (estágio 3+), 2: lanternas + ouro (estágio 5)
 	_visual.frame = 2 if level >= 5 else (1 if level >= 3 else 0)
 	_name_label.text = "Centro da Vila\n%s" % stage_name()
+	if obra_pending():
+		_name_label.text += "\nobra: " + obra_status()
 
 
 func _popup(text: String, color: Color) -> void:
@@ -344,7 +464,8 @@ func _popup(text: String, color: Color) -> void:
 ## O efeito das melhorias NÃO é reaplicado aqui: max_workers vem salvo na
 ## economia e as casas construídas vêm salvas em cada casa.
 func get_save_data() -> Dictionary:
-	return {"level": level, "upgrades": upgrades.duplicate()}
+	return {"level": level, "upgrades": upgrades.duplicate(), "pending_upgrade": pending_upgrade,
+		"upgrade_left": upgrade_left, "upgrade_total": upgrade_total, "obra": _obra.get_save_data()}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -352,4 +473,10 @@ func load_save_data(d: Dictionary) -> void:
 	var saved := SaveUtil.dict(d, "upgrades")
 	for id in UPGRADE_IDS:
 		upgrades[id] = clampi(SaveUtil.integer(saved, id, upgrades[id]), 0, upgrade_max(id))
+	# Bloco 31 (save antigo: nenhuma obra pendente)
+	var p := SaveUtil.text(d, "pending_upgrade", "")
+	pending_upgrade = p if p in UPGRADE_IDS and p != "moradias" and upgrades[p] < upgrade_max(p) else ""
+	upgrade_total = maxf(SaveUtil.num(d, "upgrade_total", 0.0), 0.0) if pending_upgrade != "" else 0.0
+	upgrade_left = clampf(SaveUtil.num(d, "upgrade_left", upgrade_total), 0.0, upgrade_total)
+	_obra.load_save_data(SaveUtil.dict(d, "obra"))
 	_update_visual()

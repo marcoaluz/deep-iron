@@ -32,6 +32,7 @@ const COLOR_HUNTER := Color(0.8, 0.9, 0.55)
 const COLOR_GUARD := Color(0.95, 0.55, 0.45)
 const COLOR_RESEARCH := Color(0.55, 0.95, 0.65)
 const COLOR_DOCTOR := Color(0.6, 0.9, 0.85)
+const COLOR_ENGINEER := Color(1.0, 0.6, 0.25)
 const Ores := preload("res://scripts/core/ores.gd")
 const Settings := preload("res://scripts/core/settings.gd")
 const STATE_COLORS := {
@@ -58,6 +59,7 @@ const STATE_COLORS := {
 	"fetching": Color(0.95, 0.85, 0.5),
 	"cooking": Color(1.0, 0.75, 0.45),
 	"doctor": Color(0.6, 0.9, 0.85),  # Bloco 30
+	"building": Color(1.0, 0.6, 0.25),  # Bloco 31
 }
 ## Barra de ordens: uma entrada por função, na ordem dos botões.
 ## [job, nome, tecla, ícone, método do main.gd, cor, dica]
@@ -69,6 +71,8 @@ const ORDER_JOBS := [
 		"Colhe fruta na horta e caça nas tocas (com arco e flecha); leva a matéria-prima pro armazém."],
 	["médico", "Médico", "3", "res://assets/game/bandage.png", "toggle_doctor", COLOR_DOCTOR,
 		"Plantão dentro da Enfermaria: internados curam bem mais rápido."],
+	["engenheiro", "Engenheiro", "4", "res://assets/game/hammer.png", "toggle_engineer", COLOR_ENGINEER,
+		"Vai até as obras encomendadas (casa, melhoria da Vila, ferramenta, peça da Escavadeira) e constrói. Sem engenheiro, nada sai do lugar."],
 	["cozinheiro", "Cozinheiro", "C", "res://assets/game/food_basket.png", "toggle_cook", COLOR_COOK,
 		"Busca matéria-prima no armazém e prepara a comida no comedouro."],
 	["lenhador", "Lenhador", "L", "res://assets/game/axe.png", "toggle_lumber", COLOR_LUMBER,
@@ -116,6 +120,7 @@ var _last_credits: float = -1.0
 var _left_panel: PanelContainer
 var _workers_count_label: Label
 var _no_job_label: Label
+var _obras_label: Label
 var _recruit_button: Button
 var _collapse_button: Button
 var _workers_title: Label
@@ -413,6 +418,9 @@ func _build_workforce_panel() -> void:
 	_no_job_label = _label("", 13, COLOR_NO_JOB)
 	_no_job_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(_no_job_label)
+	_obras_label = _label("", 13, COLOR_ENGINEER)
+	_obras_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(_obras_label)
 	if _economy:
 		_recruit_button = _button("Recrutar ipezinho")
 		_recruit_button.pressed.connect(_on_recruit_pressed)
@@ -483,7 +491,7 @@ func _build_hints() -> void:
 	var lines := [
 		"Seleção:  clique  •  arrastar = vários  •  Shift+clique = somar/tirar  •  Esc = soltar  •  Tab = próximo  •  F = seguir",
 		"Ordens:  botão direito = mover / minerar a jazida clicada",
-		"Funções:  1 minerador  •  2 caçador  •  3 médico  •  C cozinheiro  •  L lenhador  •  X guarda  •  Z pesquisador  •  0 sem função  •  T turno extra",
+		"Funções:  1 minerador  •  2 caçador  •  3 médico  •  4 engenheiro  •  C cozinheiro  •  L lenhador  •  X guarda  •  Z pesquisador  •  0 sem função  •  T turno extra",
 		"Economia:  V vender minério  •  R recrutar",
 		"Prédios:  U Centro da Vila  •  E Escavadeira  •  O Oficina  •  I Enfermaria  •  B Bem-estar  •  G Defesa  •  Q Laboratório  •  Y Sol  •  J Diário  (ou clique no prédio)",
 		"Câmera:  roda = zoom  •  botão do meio / WASD / setas = mover  •  Home = centralizar",
@@ -882,6 +890,21 @@ func _refresh_workforce(workers: Array) -> void:
 	else:
 		_no_job_label.text = "Todos com função"
 		_no_job_label.add_theme_color_override("font_color", COLOR_DIM)
+	# Bloco 31: obras encomendadas e se tem engenheiro pra elas
+	var obras := get_tree().get_nodes_in_group("obras").filter(func(o): return o.has_method("obra_pending") and o.obra_pending())
+	var engineers := workers.filter(func(w): return w.has_method("is_engineer") and w.is_engineer()).size()
+	var working := obras.filter(func(o): return not o.obra_workers().is_empty()).size()
+	_obras_label.visible = not obras.is_empty()
+	if not obras.is_empty():
+		var names: Array[String] = []
+		for o in obras.slice(0, 3):
+			names.append("%s %d%%" % [o.obra_title(), roundi(o.obra_progress() * 100.0)])
+		if engineers == 0:
+			_obras_label.text = "OBRAS: %d esperando engenheiro (tecla 4)\n%s" % [obras.size(), "  •  ".join(names)]
+			_obras_label.add_theme_color_override("font_color", COLOR_NO_JOB)
+		else:
+			_obras_label.text = "OBRAS: %d  (%d em andamento)\n%s" % [obras.size(), working, "  •  ".join(names)]
+			_obras_label.add_theme_color_override("font_color", COLOR_ENGINEER)
 	if _economy:
 		_workers_count_label.text = "%d / %d" % [workers.size(), _economy.max_workers]
 		var cost: int = _economy.recruit_cost()

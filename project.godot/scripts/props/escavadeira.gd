@@ -21,6 +21,7 @@ signal part_installed(id: String)
 signal completed
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const ObraSite := preload("res://scripts/core/obra_site.gd")
 const PART_IDS := ["estrutura", "motor", "hidraulica", "cabine", "broca"]
 const PART_NAMES := {
 	"estrutura": "Estrutura",
@@ -114,6 +115,8 @@ var panel_id := "escavadeira"
 var installed: Dictionary = {}
 var fabricating: String = ""
 var fab_left: float = 0.0
+## Bloco 31: a peça encomendada só é montada com um ENGENHEIRO trabalhando aqui.
+var _obra := ObraSite.new()
 var complete: bool = false
 ## Reator instalado ("" antes de ficar pronta) e os que já foram construídos.
 var reactor: String = ""
@@ -148,6 +151,7 @@ var _anim_time: float = 0.0
 func _ready() -> void:
 	super()
 	add_to_group("escavadeira")
+	add_to_group("obras")
 	add_to_group("clickable")
 	for id in PART_IDS:
 		installed[id] = false
@@ -158,15 +162,15 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	if fabricating != "":
-		fab_left -= delta
-		_sound_timer -= delta
-		if _sound_timer <= 0.0:
-			_sound_timer = forge_sound_interval * randf_range(0.8, 1.2)
-			Audio.forge(global_position + Vector2(0, -90))
-		if fab_left <= 0.0:
-			_install(fabricating)
-		else:
-			# o "projeto" da peça pulsa enquanto é fabricada
+		var working := _obra.has_engineer()
+		_sparks.emitting = working
+		_work_light.enabled = working
+		if working:
+			_sound_timer -= delta
+			if _sound_timer <= 0.0:
+				_sound_timer = forge_sound_interval * randf_range(0.8, 1.2)
+				Audio.forge(global_position + Vector2(0, -90))
+			# o "projeto" da peça pulsa enquanto é montada
 			var layer: Sprite2D = _layers[fabricating]
 			layer.modulate.a = 0.4 + 0.35 * (sin(Time.get_ticks_msec() * 0.006) * 0.5 + 0.5)
 		_update_label()
@@ -177,6 +181,49 @@ func _process(delta: float) -> void:
 			_layers.broca.frame = int(_anim_time * drill_fps) % 2
 		_beacon.energy = 0.9 + 0.6 * absf(sin(_anim_time * 3.0)) if reactor_active() else 0.3
 		_update_label()
+
+
+# ------------------------------------------------------------ obra (Bloco 31)
+func obra_pending() -> bool:
+	return fabricating != ""
+
+
+func obra_title() -> String:
+	return PART_NAMES.get(fabricating, "peça")
+
+
+func obra_progress() -> float:
+	return fab_progress()
+
+
+func obra_position(worker: Node) -> Vector2:
+	return global_position + Vector2(0, 40) + _obra.offset_for(worker)
+
+
+## O engenheiro trabalhou `seconds` aqui: só assim a peça anda.
+func obra_work(seconds: float) -> void:
+	if fabricating == "":
+		return
+	fab_left -= seconds
+	if fab_left <= 0.0:
+		_install(fabricating)
+
+
+func obra_ordered_at() -> float:
+	return _obra.ordered_at
+
+
+func obra_join(worker: Node) -> void:
+	_obra.join(worker)
+
+
+func obra_leave(worker: Node) -> void:
+	_obra.leave(worker)
+	_update_visual()
+
+
+func obra_workers() -> Array[Node]:
+	return _obra.workers()
 
 
 ## Área clicável (coordenadas globais).
@@ -252,9 +299,10 @@ func start_part(id: String) -> bool:
 		return false
 	fabricating = id
 	fab_left = float(cost.z)
+	_obra.start()
 	_sound_timer = 0.0
 	_update_visual()
-	_popup("Fabricando: %s" % PART_NAMES[id], Color(1.0, 0.8, 0.45))
+	_popup("Encomendado: %s — precisa de engenheiro" % PART_NAMES[id], Color(1.0, 0.8, 0.45))
 	part_started.emit(id)
 	return true
 
@@ -292,8 +340,8 @@ func _update_visual() -> void:
 		var layer: Sprite2D = _layers[id]
 		layer.modulate = Color.WHITE if installed[id] else GHOST_COLOR
 	_layers.cabine.frame = 1 if complete else 0  # janelas acesas + giroflex
-	_sparks.emitting = fabricating != ""
-	_work_light.enabled = fabricating != ""
+	_sparks.emitting = fabricating != "" and _obra.has_engineer()
+	_work_light.enabled = fabricating != "" and _obra.has_engineer()
 	_beacon.enabled = complete
 	_cab_light.enabled = complete
 	_update_label()
@@ -304,8 +352,8 @@ func _update_label() -> void:
 		_label.text = "Escavadeira — %s\n%s" % [REACTOR_NAMES.get(reactor, "?"), drill_status()]
 		_label.modulate = Color(1.0, 0.85, 0.4) if reactor_active() else Color(1.0, 0.55, 0.45)
 	elif fabricating != "":
-		_label.text = "Escavadeira  %d/5\n%s  %d%%" % [installed_count(), PART_NAMES[fabricating], roundi(fab_progress() * 100.0)]
-		_label.modulate = Color(1.0, 0.8, 0.5)
+		_label.text = "Escavadeira  %d/5\n%s  %s" % [installed_count(), PART_NAMES[fabricating], _obra.status(fab_progress())]
+		_label.modulate = Color(1.0, 0.8, 0.5) if _obra.has_engineer() else Color(1.0, 0.62, 0.3)
 	else:
 		_label.text = "Escavadeira\n%d/5 peças" % installed_count()
 		_label.modulate = Color(0.85, 0.85, 0.9)
@@ -517,7 +565,7 @@ func get_save_data() -> Dictionary:
 	return {
 		"installed": installed.duplicate(), "fabricating": fabricating, "fab_left": fab_left,
 		"reactor": reactor, "built_reactors": built_reactors.duplicate(), "drill_on": drill_on,
-		"outage_left": outage_left,
+		"outage_left": outage_left, "obra": _obra.get_save_data(),
 	}
 
 
@@ -530,6 +578,7 @@ func load_save_data(d: Dictionary) -> void:
 	if fabricating not in PART_IDS or installed[fabricating]:
 		fabricating = ""
 	fab_left = maxf(SaveUtil.num(d, "fab_left", 0.0), 0.0) if fabricating != "" else 0.0
+	_obra.load_save_data(SaveUtil.dict(d, "obra"))  # save antigo: ordered_at 0 (vai primeiro na fila)
 	complete = installed_count() == PART_IDS.size()
 	built_reactors = []
 	for id in SaveUtil.array(d, "built_reactors"):
