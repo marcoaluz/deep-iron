@@ -24,6 +24,9 @@ var stock: Dictionary = {"ferro": 0.0, "cobre": 0.0, "carvao": 0.0, "prata": 0.0
 var lifetime_stored: float = 0.0
 ## Madeira (coluna separada: não é minério, não vende, não conta nos marcos da vila).
 var wood_stored: float = 0.0
+## Matéria-prima da cozinha (Bloco 27): fruta e caça cruas que o caçador traz e o
+## cozinheiro busca pra preparar. Coluna separada como a madeira: não vende, não é minério.
+var raw_stored: float = 0.0
 var _pending_popup: float = 0.0
 var _popup_timer: float = 0.0
 var _sound_timer: float = 0.0
@@ -47,6 +50,7 @@ func _accepts(body: Node2D) -> bool:
 func _process(delta: float) -> void:
 	var received := 0.0
 	var wood_in := 0.0
+	var raw_moved := false
 	for body in _working_bodies():
 		# lenhador descarregando madeira
 		if body.has_method("deliver_wood") and body.get_state() == "hauling":
@@ -54,12 +58,24 @@ func _process(delta: float) -> void:
 			wood_stored += w
 			wood_in += w
 			continue
+		# Bloco 27: caçador descarregando / cozinheiro buscando matéria-prima
+		if body.has_method("deliver_raw") and body.get_state() == "stocking":
+			raw_stored += body.deliver_raw(DEPOSIT_RATE * delta)
+			raw_moved = true
+			continue
+		if body.has_method("receive_raw") and body.get_state() == "fetching":
+			raw_stored -= body.receive_raw(minf(DEPOSIT_RATE * delta, raw_stored))
+			raw_stored = maxf(raw_stored, 0.0)
+			raw_moved = true
+			continue
 		var got: float = body.deposit(DEPOSIT_RATE * delta)
 		if got > 0.0:
 			var t: String = body.cargo_type
 			stock[t] = stock.get(t, 0.0) + got
 			received += got
 	_sound_timer -= delta
+	if raw_moved:
+		_update_label()
 	if wood_in > 0.0:
 		_update_label()
 		if received <= 0.0 and _sound_timer <= 0.0:  # madeira caindo na pilha também faz barulho
@@ -114,6 +130,13 @@ func take(amount: float, ore_type: String) -> float:
 	return taken
 
 
+## Cozinheiro indo buscar matéria-prima: só serve se tiver o que pegar.
+func accepts_worker(worker: Node) -> bool:
+	if worker.has_method("get_state") and worker.get_state() == "fetching":
+		return raw_stored >= 0.5
+	return true
+
+
 ## Tira até `amount` de madeira (custos). Retorna quanto saiu.
 func take_wood(amount: float) -> float:
 	var taken := minf(amount, wood_stored)
@@ -134,6 +157,8 @@ func _update_label() -> void:
 	_label.text = "Minério: %d" % int(total_stored)
 	if wood_stored >= 1.0:
 		_label.text += "  •  madeira %d" % int(wood_stored)
+	if raw_stored >= 1.0:
+		_label.text += "  •  matéria-prima %d" % int(raw_stored)
 	var stage := 0
 	for t in pile_thresholds:
 		if total_stored >= t:
@@ -162,7 +187,8 @@ func show_popup(text: String, color: Color) -> void:
 
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
-	return {"stock": stock.duplicate(), "lifetime_stored": lifetime_stored, "wood_stored": wood_stored}
+	return {"stock": stock.duplicate(), "lifetime_stored": lifetime_stored, "wood_stored": wood_stored,
+		"raw_stored": raw_stored}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -171,4 +197,5 @@ func load_save_data(d: Dictionary) -> void:
 		stock[t] = maxf(SaveUtil.num(saved, t, 0.0), 0.0)
 	lifetime_stored = maxf(SaveUtil.num(d, "lifetime_stored", lifetime_stored), 0.0)
 	wood_stored = maxf(SaveUtil.num(d, "wood_stored", 0.0), 0.0)
+	raw_stored = maxf(SaveUtil.num(d, "raw_stored", 0.0), 0.0)  # save antigo: 0
 	_recount()

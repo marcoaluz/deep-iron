@@ -42,7 +42,13 @@ const STATE_COLORS := {
 	"guard": Color(0.95, 0.55, 0.45),
 	"training": Color(0.9, 0.75, 0.5),
 	"research": Color(0.55, 0.95, 0.65),
+	"foraging": Color(0.75, 0.9, 0.5),  # Bloco 27
+	"hunting": Color(0.8, 0.9, 0.55),
+	"stocking": Color(0.8, 0.85, 0.6),
+	"fetching": Color(0.95, 0.85, 0.5),
+	"cooking": Color(1.0, 0.75, 0.45),
 }
+const COLOR_HUNTER := Color(0.8, 0.9, 0.55)
 
 @export var ore_icon: Texture2D
 @export var coin_icon: Texture2D
@@ -85,6 +91,7 @@ var _recruit_button: Button
 var _overtime_button: Button
 var _cook_button: Button
 var _miner_button: Button
+var _hunter_button: Button
 var _no_job_button: Button
 var _lumber_button: Button
 var _guard_button: Button
@@ -252,7 +259,7 @@ func _build() -> void:
 	var hint := _label(
 		"Clique: selecionar   •   Arrastar: selecionar vários   •   Shift+clique: somar/tirar   •   Botão dir.: mover / minerar (jazida)   •   Esc: soltar   •   Tab: próximo   •   F: seguir\n"
 		+ "Roda: zoom   •   Botão do meio / WASD / setas: mover câmera   •   Home: centralizar\n"
-		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste; Shift+K: grave)   •   T: turno extra   •   1: minerador   •   0: sem função   •   C: cozinheiro   •   L: lenhador   •   X: guarda   •   Z: pesquisador   •   H: esconder dicas   •   Esc/P: pausa\n"
+		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste; Shift+K: grave)   •   T: turno extra   •   1: minerador   •   2: caçador   •   0: sem função   •   C: cozinheiro   •   L: lenhador   •   X: guarda   •   Z: pesquisador   •   H: esconder dicas   •   Esc/P: pausa\n"
 		+ "U: Centro da Vila   •   E: Escavadeira   •   O: Oficina   •   I: Enfermaria   •   B: Bem-estar   •   G: Defesa   •   Q: Laboratório   •   Y: Sol   •   J: Diário   •   ou clique no prédio   •   F5: salvar   •   F9: carregar",
 		12, Color(0.85, 0.8, 0.72, 0.75))
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
@@ -341,12 +348,17 @@ func _build_economy(vbox: VBoxContainer) -> void:
 	_miner_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_miner_button.pressed.connect(func(): _main.toggle_miner())
 	actions.add_child(_miner_button)
+	_hunter_button = _button("Caçador  (2)")
+	_hunter_button.tooltip_text = "Os selecionados colhem fruta na horta (e caçam nas tocas, com arco e flecha) e levam a matéria-prima pro armazém"
+	_hunter_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_hunter_button.pressed.connect(func(): _main.toggle_hunter())
+	actions.add_child(_hunter_button)
 	_no_job_button = _button("Sem função  (0)")
 	_no_job_button.tooltip_text = "Tira a função dos selecionados: entregam o que estiverem carregando e esperam no Centro da Vila"
 	_no_job_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_no_job_button.pressed.connect(func(): _main.clear_job())
 	actions.add_child(_no_job_button)
-	for b in [_overtime_button, _cook_button, _lumber_button, _guard_button, _research_button, _miner_button, _no_job_button]:
+	for b in [_overtime_button, _cook_button, _lumber_button, _guard_button, _research_button, _miner_button, _hunter_button, _no_job_button]:
 		b.add_theme_font_size_override("font_size", 12)
 
 	if _hub:
@@ -668,6 +680,10 @@ func _refresh() -> void:
 		var all_miners: bool = picked > 0 and _main.selection.all(func(u): return is_instance_valid(u) and u.is_miner())
 		_miner_button.text = "Tirar mineração (1)" if all_miners else "Minerador (1)"
 		_miner_button.disabled = picked == 0
+	if _hunter_button:
+		var all_hunters: bool = picked > 0 and _main.selection.all(func(u): return is_instance_valid(u) and u.is_hunter())
+		_hunter_button.text = "Tirar caça (2)" if all_hunters else "Caçador (2)"
+		_hunter_button.disabled = picked == 0
 	if _no_job_button:
 		_no_job_button.disabled = picked == 0 or _main.selection.all(func(u): return is_instance_valid(u) and u.has_no_job())
 	# Bloco 25: quantos estão sem função (pra notar rápido quem falta designar)
@@ -712,6 +728,8 @@ func _refresh() -> void:
 			tags.append("SEM FUNÇÃO")
 		if w.is_miner():
 			tags.append("minerador")
+		if w.is_hunter():
+			tags.append("caçador")
 		if w.is_cook():
 			tags.append("cozinheiro")
 		if w.is_lumber():
@@ -730,6 +748,8 @@ func _refresh() -> void:
 			tag_color = COLOR_NO_JOB  # mesmo zangado, o que importa aqui é "falta designar"
 		elif w.mood() == 0 and w.is_miner():
 			tag_color = COLOR_MINER
+		elif w.mood() == 0 and w.is_hunter():
+			tag_color = COLOR_HUNTER
 		elif w.mood() == 0 and w.is_cook():
 			tag_color = COLOR_COOK
 		elif w.mood() == 0 and w.is_lumber():
@@ -768,9 +788,18 @@ func _refresh_food(workers: Array) -> void:
 	for h in get_tree().get_nodes_in_group("coleta_comida"):
 		garden += h.food_remaining
 	var cooks := workers.filter(func(w): return w.has_method("is_cook") and w.is_cook()).size()
-	var text := "Comida: %s no comedouro  •  horta %d  •  " % [
-		"ACABOU" if stock <= 0.0 else "%d/%d" % [int(stock), int(capacity)], int(garden)]
+	var hunters := workers.filter(func(w): return w.has_method("is_hunter") and w.is_hunter()).size()
+	var raw := 0.0
+	for a in get_tree().get_nodes_in_group("armazens"):
+		raw += a.get("raw_stored") if a.get("raw_stored") != null else 0.0
+	var game := 0.0
+	for t in get_tree().get_nodes_in_group("caca"):
+		game += t.game_remaining
+	# Bloco 27: comida PRONTA (comedouro) separada da matéria-prima CRUA (armazém)
+	var text := "Comida pronta: %s  •  matéria-prima %d  •  horta %d  •  tocas %d\n" % [
+		"ACABOU" if stock <= 0.0 else "%d/%d" % [int(stock), int(capacity)], int(raw), int(garden), int(game)]
 	text += "%d cozinheiro%s" % [cooks, "s" if cooks != 1 else ""] if cooks > 0 else "sem cozinheiro"
+	text += "  •  " + ("%d caçador%s" % [hunters, "es" if hunters != 1 else ""] if hunters > 0 else "sem caçador")
 	_food_label.text = text
 	var color := COLOR_DIM
 	if stock <= 0.0:

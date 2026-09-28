@@ -84,8 +84,8 @@ func _make_tool_row(parent: VBoxContainer, id: String) -> Dictionary:
 	var status: Label = _hud._label("", 12, _hud.COLOR_DIM)
 	top.add_child(status)
 
-	var ore: String = _oficina.TOOL_UNLOCKS[id]
-	var unlock: Label = _hud._label("Libera: %s" % Ores.display_name(ore), 12, Ores.UI_COLORS.get(ore, _hud.COLOR_TEXT))
+	var ore: String = _oficina.TOOL_UNLOCKS.get(id, "")
+	var unlock: Label = _hud._label("Libera: %s" % _oficina.unlock_label(id), 12, Ores.UI_COLORS.get(ore, _hud.COLOR_TEXT))
 	v.add_child(unlock)
 	var desc: Label = _hud._label(_oficina.TOOL_DESCRIPTIONS[id], 12, _hud.COLOR_DIM)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

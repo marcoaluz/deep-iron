@@ -87,6 +87,9 @@ extends Node
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
+##   Bloco 27: armazem.gd raw_stored (matéria-prima); hunt_spot.gd (cada toca, grupo
+##     "caca") game_remaining + cooldown; ipezinho.gd raw_carrying, raw_units, prep_left;
+##     o arco e flecha é mais uma ferramenta em oficina.crafted. Save antigo: tudo zerado/cheio.
 ##   Bloco 25 (save_version 3): ipezinho.gd "job" substitui "role" — ocioso, minerador,
 ##     cozinheiro, lenhador, guarda, pesquisador. Save < 3: role "" vira "minerador"
 ##     (ver _migrate), então ninguém que trabalhava fica parado ao carregar.
@@ -420,7 +423,7 @@ func _collect() -> Dictionary:
 		var node := tree.get_first_node_in_group(singles[key])
 		if node and node.has_method("get_save_data"):
 			data[key] = node.get_save_data()
-	for key in ["casas", "armazens", "minerios", "comedouros", "coleta_comida", "arvores", "barricadas"]:
+	for key in ["casas", "armazens", "minerios", "comedouros", "coleta_comida", "arvores", "barricadas", "caca"]:
 		data[key] = _collect_group(key)
 	var workers := []
 	for w in tree.get_nodes_in_group("ipezinhos"):
@@ -491,6 +494,7 @@ func apply_pending(main: Node) -> void:
 	_apply_group("comedouros", SaveUtil.dict(data, "comedouros"))
 	_apply_group("coleta_comida", SaveUtil.dict(data, "coleta_comida"))
 	_apply_group("arvores", SaveUtil.dict(data, "arvores"))
+	_apply_group("caca", SaveUtil.dict(data, "caca"))  # Bloco 27 (save antigo: tocas cheias)
 	_apply_single("escavadeira", SaveUtil.dict(data, "escavadeira"))
 	_apply_single("finds", SaveUtil.dict(data, "finds"))  # peças raras, achados e o robô
 	# sempre (mesmo save antigo sem a chave): limpa as cruzes da partida atual

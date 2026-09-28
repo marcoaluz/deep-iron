@@ -2,8 +2,9 @@ extends "res://scripts/props/station.gd"
 ## Ponto de coleta de comida: horta de cogumelos de caverna (grupo "coleta_comida").
 ##
 ## Funciona como uma jazida, só que de comida: tem uma quantidade, esgota com a
-## colheita, fica um tempo "colhida" e regenera sozinha. Só o COZINHEIRO colhe
-## (via harvest()); ele leva a comida pro comedouro.
+## colheita, fica um tempo "colhida" e regenera sozinha.
+## Bloco 27: dá matéria-prima CRUA (fruta). Só o CAÇADOR colhe (via harvest()) e leva
+## pro armazém; o cozinheiro busca lá e prepara no comedouro.
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 

@@ -5,6 +5,7 @@ extends "res://scripts/props/station.gd"
 ## Cada ferramenta libera um tipo de minério que antes não dava pra minerar:
 ##   Picareta de aço temperado  -> cobre   (custa ferro)
 ##   Lampião de segurança       -> carvão  (custa cobre: o carvão vem depois do cobre)
+##   Arco e flecha (Bloco 27)   -> caça de animais pro caçador (não libera minério)
 ## Uma ferramenta por vez; o custo é pago ao começar e ela fica pronta depois de
 ## alguns segundos na forja. As jazidas consultam is_ore_unlocked() e são avisadas
 ## (on_unlock_changed) quando algo muda; os ipezinhos, via on_tool_crafted().
@@ -14,20 +15,24 @@ signal tool_crafted(id: String)
 
 const Ores := preload("res://scripts/core/ores.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
-const TOOL_IDS := ["picareta_aco", "lampiao", "broca", "traje"]
+const TOOL_IDS := ["picareta_aco", "lampiao", "broca", "traje", "arco"]
 const TOOL_NAMES := {
 	"picareta_aco": "Picareta de aço temperado",
 	"lampiao": "Lampião de segurança",
 	"broca": "Broca manual",
 	"traje": "Traje de chumbo",
+	"arco": "Arco e flecha",
 }
 const TOOL_DESCRIPTIONS := {
 	"picareta_aco": "Aço duro o bastante pra quebrar os veios de cobre.",
 	"lampiao": "Avisa do gás dos veios de carvão. Sem ele, ninguém entra lá.",
 	"broca": "Fura a rocha dura do nível 2, onde a prata se esconde.",
 	"traje": "Protege do calor e da energia da solarita, lá no abismo (nível 3).",
+	"arco": "Deixa o caçador caçar os coelhos das tocas da clareira: rende mais que fruta por viagem.",
 }
-## Tipo de minério que cada ferramenta libera.
+## O que libera cada ferramenta que NÃO é de minério (texto do painel e do aviso de pronta).
+const TOOL_UNLOCK_LABELS := {"arco": "caça de animais"}
+## Tipo de minério que cada ferramenta libera (as que liberam outra coisa ficam de fora).
 const TOOL_UNLOCKS := {
 	"picareta_aco": "cobre",
 	"lampiao": "carvao",
@@ -42,13 +47,14 @@ const TOOL_UNLOCKS := {
 	Vector3i(560, 125, 45),  # lampião
 	Vector3i(800, 150, 60),  # broca manual
 	Vector3i(1400, 120, 75),  # traje de chumbo
+	Vector3i(180, 40, 25),  # arco e flecha (Bloco 27)
 ]
 ## Tipo do minério gasto em cada ferramenta.
-@export var tool_ore_types: Array[String] = ["ferro", "cobre", "carvao", "prata"]
+@export var tool_ore_types: Array[String] = ["ferro", "cobre", "carvao", "prata", "ferro"]
 ## Madeira gasta em cada ferramenta (cabo/estrutura) — referência: 1 madeira pra 5 minério.
-@export var tool_wood_costs: Array[int] = [30, 25, 40, 30]
+@export var tool_wood_costs: Array[int] = [30, 25, 40, 30, 35]
 ## Estágio mínimo da vila (Centro da Vila) pra fabricar cada ferramenta.
-@export var tool_min_stage: Array[int] = [1, 2, 4, 4]
+@export var tool_min_stage: Array[int] = [1, 2, 4, 4, 1]
 
 @export_group("Efeitos")
 @export var forge_sound_interval: float = 0.7
@@ -119,6 +125,13 @@ func tool_for_ore(ore_type: String) -> String:
 	return ""
 
 
+## Texto do que a ferramenta libera ("Cobre", "caça de animais"...).
+func unlock_label(id: String) -> String:
+	if TOOL_UNLOCKS.has(id):
+		return Ores.display_name(TOOL_UNLOCKS[id])
+	return TOOL_UNLOCK_LABELS.get(id, "?")
+
+
 func tool_cost(id: String) -> Vector3i:
 	return tool_costs[TOOL_IDS.find(id)]
 
@@ -187,8 +200,7 @@ func _finish(id: String) -> void:
 	craft_left = 0.0
 	_update_visual()
 	Audio.recruit()
-	var ore: String = TOOL_UNLOCKS[id]
-	_popup("%s pronta! %s liberado" % [TOOL_NAMES[id], Ores.display_name(ore)], Color(0.55, 1.0, 0.5))
+	_popup("%s pronta! %s liberado" % [TOOL_NAMES[id], unlock_label(id)], Color(0.55, 1.0, 0.5))
 	for node in get_tree().get_nodes_in_group("minerios"):
 		if node.has_method("on_unlock_changed"):
 			node.on_unlock_changed()

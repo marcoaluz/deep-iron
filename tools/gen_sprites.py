@@ -2938,6 +2938,85 @@ def build_horta():
     save(sheet, "horta.png")
 
 
+RABBIT = ((92, 78, 68, 255), (132, 114, 96, 255), (168, 150, 128, 255))  # (escuro, médio, claro)
+RAW_MEAT = ((122, 44, 42, 255), (170, 70, 62, 255), (214, 150, 132, 255))
+
+
+def build_toca():
+    """Bloco 27: toca de caça na clareira (grupo "caca"). 3 quadros como a horta:
+    0 = coelho sentado do lado da toca, 1 = só as orelhas aparecendo, 2 = toca vazia."""
+    W, H = 24, 16
+    rnd = random.Random(27)
+    base = new(W, H)
+    # montinho de terra com capim, buraco escuro na frente
+    for y in range(6, H - 1):
+        for x in range(1, W - 1):
+            if ((x - 11.5) / 10.5) ** 2 + ((y - 11) / 4.5) ** 2 <= 1.0:
+                c = dither(EARTH_RAMP, 0.75 - (y - 6) * 0.07, x, y)
+                if y < 9 and rnd.random() < 0.35:
+                    c = dither(GRASS_RAMP, 0.6, x, y)
+                px(base, x, y, c)
+    for y in range(10, 14):  # boca da toca
+        for x in range(6, 13):
+            if ((x - 9) / 3.5) ** 2 + ((y - 12) / 2.2) ** 2 <= 1.0:
+                px(base, x, y, WALL_VOID if y > 10 else EARTH_SHADOW)
+    for x in (3, 5, 16, 19, 21):  # tufinhos
+        px(base, x, 6, GRASS_RAMP[4])
+        px(base, x, 7, GRASS_RAMP[2])
+    dark, mid, light = RABBIT
+    frames = []
+    for stage in (0, 1, 2):
+        img = base.copy()
+        if stage == 0:  # coelho sentado à direita da toca
+            rect(img, 15, 7, 19, 10, mid)
+            rect(img, 15, 7, 16, 8, light)
+            rect(img, 16, 4, 18, 6, mid)  # cabeça
+            px(img, 16, 4, light)
+            px(img, 18, 5, EYE)
+            for ex in (16, 17):  # orelhas
+                px(img, ex, 2, mid)
+                px(img, ex, 3, light if ex == 16 else mid)
+            px(img, 14, 9, SHROOM_SPOT)  # rabinho
+            rect(img, 16, 10, 19, 10, dark)
+        elif stage == 1:  # orelhas saindo do buraco
+            for ex in (8, 10):
+                px(img, ex, 9, mid)
+                px(img, ex, 10, light)
+        frames.append(outline(pad(img), 0.5))
+    sheet = new(frames[0].width * 3, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "toca.png")
+
+
+def build_bow():
+    """Bloco 27: arco (ferramenta do caçador). Mesmo tamanho/pivô da picareta (11x13)."""
+    img = new(11, 13)
+    for y in range(13):
+        x = 6 - round(3.2 * math.sin(math.pi * y / 12))
+        px(img, x, y, WOOD_HIGHLIGHT if y < 6 else WOOD_LIGHT)
+        if 0 < y < 12:
+            px(img, x + 1, y, WOOD_DARK)
+    for y in range(1, 12):  # corda
+        px(img, 8, y, SHROOM_STEM)
+    rect(img, 3, 5, 3, 7, LEATHER)  # empunhadura
+    save(img, "bow.png")
+
+
+def build_raw_icon():
+    """Bloco 27: ícone de matéria-prima (carga do caçador/cozinheiro): fruta + carne crua."""
+    rows = [
+        "..gG.....",
+        ".AAa.MMm.",
+        "AAAAaMMMm",
+        "AaAAamMmm",
+        ".aaa.mmm.",
+    ]
+    pal = {"g": GRASS_RAMP[1], "G": GRASS_RAMP[3], "A": APPLE_LIGHT, "a": APPLE_DARK,
+           "M": RAW_MEAT[1], "m": RAW_MEAT[0]}
+    save(outline(pad(from_rows(rows, pal)), 0.5), "raw_food.png")
+
+
 def build_food_icons():
     """Cesta de comida (carga do cozinheiro) e chapéu de cozinheiro."""
     basket = [
@@ -3182,6 +3261,9 @@ if __name__ == "__main__":
     build_padlock()
     build_comedouro()
     build_horta()
+    build_toca()
+    build_bow()
+    build_raw_icon()
     build_arvore()
     build_floor_clareira()
     build_axe()

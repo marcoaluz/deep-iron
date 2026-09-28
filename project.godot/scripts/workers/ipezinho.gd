@@ -14,6 +14,11 @@ const STATE_LABELS := {
 	"home": "indo pra casa",
 	"gathering": "colhendo comida",
 	"delivering": "levando comida",
+	"foraging": "colhendo fruta",
+	"hunting": "caçando",
+	"stocking": "levando matéria-prima",
+	"fetching": "buscando matéria-prima",
+	"cooking": "preparando comida",
 	"chopping": "cortando madeira",
 	"hauling": "levando madeira",
 	"infirmary": "indo pra enfermaria",
@@ -58,6 +63,11 @@ const STATE_GROUP := {
 	"storing": "armazens",
 	"gathering": "coleta_comida",
 	"delivering": "comedouros",
+	"foraging": "coleta_comida",  # Bloco 27: caçador na horta (fruta crua)
+	"hunting": "caca",  # Bloco 27: caçador na toca (precisa de arco)
+	"stocking": "armazens",  # caçador descarregando matéria-prima
+	"fetching": "armazens",  # cozinheiro buscando matéria-prima
+	"cooking": "comedouros",  # cozinheiro preparando
 	"chopping": "arvores",
 	"hauling": "armazens",
 	"infirmary": "enfermarias",
@@ -74,11 +84,13 @@ const ROLE_COOK := "cozinheiro"
 const ROLE_LUMBER := "lenhador"
 const ROLE_GUARD := "guarda"
 const ROLE_RESEARCH := "pesquisador"
-const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH]
+const ROLE_HUNTER := "caçador"  # Bloco 27: colhe fruta / caça (com arco) -> matéria-prima
+const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER]
 ## Texto do popup ao receber a função.
 const JOB_LABELS := {
 	ROLE_IDLE: "Sem função", ROLE_MINER: "Minerador!", ROLE_COOK: "Cozinheiro!",
 	ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!",
+	ROLE_HUNTER: "Caçador!",
 }
 ## Bloco 26: outfit inteiro por função (derivado do `job`: nada novo no save).
 ## Guarda e pesquisador ainda vestem o de mineiro — outfit próprio deles = gerar os
@@ -86,12 +98,15 @@ const JOB_LABELS := {
 const JOB_OUTFIT := {
 	ROLE_IDLE: "civil", ROLE_MINER: "mineiro", ROLE_COOK: "cozinheiro",
 	ROLE_LUMBER: "lenhador", ROLE_GUARD: "mineiro", ROLE_RESEARCH: "mineiro",
+	ROLE_HUNTER: "mineiro",  # Bloco 27: outfit próprio fica pra depois (como guarda/pesquisador)
 }
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
 const LANCA := preload("res://assets/game/lanca.png")
 const AXE := preload("res://assets/game/axe.png")
 const WOOD_LOG := preload("res://assets/game/wood_log.png")
+const BOW := preload("res://assets/game/bow.png")
+const RAW_FOOD := preload("res://assets/game/raw_food.png")
 const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 
 @export_group("Movimento")
@@ -207,8 +222,17 @@ const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 @export_range(0.1, 1.0) var carry_robot_speed_mult: float = 0.6
 
 @export_group("Cozinheiro")
-## Comida que o cozinheiro carrega por viagem (horta -> comedouro).
+## Matéria-prima que o cozinheiro carrega por viagem (armazém -> comedouro). Bloco 27.
 @export var cook_carry: float = 12.0
+## Segundos de preparo por unidade de matéria-prima (12 unidades x 0.8 = ~10 s por leva).
+@export var prep_time_per_raw: float = 0.8
+## Comida pronta que cada unidade de matéria-prima rende no comedouro.
+@export var food_per_raw: float = 1.0
+
+@export_group("Caçador")
+## Quantas unidades (fruta ou caça) o caçador carrega por viagem. Cada unidade de caça
+## vale mais matéria-prima (meat_raw_value da toca), por isso caçar rende mais por viagem.
+@export var hunter_carry: float = 10.0
 
 @export_group("Lenhador")
 ## Madeira que o lenhador carrega por viagem (árvore -> armazém).
@@ -269,8 +293,17 @@ var display_name: String = ""
 var gender: String = ""
 ## Variação de cor de roupa/cabelo/pele dentro do gênero (0..LOOKS_PER_GENDER-1).
 var look: int = -1
-## Comida na cesta (só o cozinheiro colhe; qualquer um que tenha na mão entrega).
+## Comida PRONTA na cesta. Desde o Bloco 27 ninguém colhe comida pronta: só vem de
+## save antigo, e quem tiver entrega no comedouro.
 var food_carrying: float = 0.0
+## Matéria-prima nas mãos (Bloco 27), em unidades de matéria-prima: o caçador leva pro
+## armazém; o cozinheiro traz do armazém e prepara no comedouro.
+var raw_carrying: float = 0.0
+## Volume carregado (fruta ou caça: 1 por unidade colhida). É isso que enche a mochila
+## do caçador — a caça ocupa 1 e vale meat_raw_value, por isso rende mais por viagem.
+var _raw_units: float = 0.0
+## Segundos que faltam pra leva atual ficar pronta (cozinheiro no comedouro).
+var _prep_left: float = 0.0
 ## Madeira nas costas (só o lenhador corta; qualquer um que tenha na mão leva pro armazém).
 var wood_carrying: float = 0.0
 var _default_tool: Texture2D
@@ -419,6 +452,12 @@ func get_state_label() -> String:
 		return "dormindo" if _inside else "dormindo ao relento"
 	if _ai_state == "idle" and has_no_job():
 		return "sem função — esperando ordem"
+	if _ai_state == "idle" and is_cook():
+		return "esperando matéria-prima"
+	if _ai_state == "idle" and is_hunter():
+		return "sem fruta nem caça por perto"
+	if _ai_state == "cooking" and _prep_left > 0.0:
+		return "preparando comida (%ds)" % ceili(_prep_left)
 	var label: String = STATE_LABELS.get(_ai_state, _ai_state)
 	if _station == null and STATE_GROUP.has(_ai_state):
 		label += " (esperando)"
@@ -594,14 +633,18 @@ func _choose_state() -> String:
 		if is_instance_valid(_robot_task) and _robot_task.needs_carrier(self):
 			return "robot"
 		_robot_task = null
-	# Comida na cesta: leva pro comedouro (cozinheiro com a cesta cheia, sem horta
-	# disponível, ou quem deixou de ser cozinheiro com comida na mão).
+	# Comida PRONTA na cesta (só de save de antes do Bloco 27): entrega no comedouro.
 	if food_carrying > 0.0:
-		var basket_full := food_carrying >= cook_carry - 0.01
-		# (quem já está colhendo continua até a horta acabar; só depois vai entregar)
-		var keep_gathering := _ai_state == "gathering" and _station_ok_for("gathering")
-		if not is_cook() or basket_full or _ai_state == "delivering" or (not keep_gathering and not _has_usable_station("coleta_comida")):
-			return "delivering"
+		return "delivering"
+	# Bloco 27: matéria-prima nas mãos de quem não é cozinheiro vai pro armazém
+	# (caçador com a mochila cheia / sem mais fruta nem caça, ou quem trocou de função).
+	# (O cozinheiro com matéria-prima vai preparar: ver o bloco dele mais abaixo.)
+	if raw_carrying > 0.0 and not is_cook():
+		var pack_full := _raw_units >= hunter_carry - 0.01
+		# (quem já está colhendo/caçando continua até a fonte acabar; só depois descarrega)
+		var keep_going := _ai_state in ["foraging", "hunting"] and _station_ok_for(_ai_state)
+		if not is_hunter() or pack_full or _ai_state == "stocking" or (not keep_going and not _hunter_has_work()):
+			return "stocking"
 	# Madeira nas costas: leva pro armazém (lenhador cheio / sem árvore, ou quem deixou de ser lenhador).
 	if wood_carrying > 0.0:
 		var wood_full := wood_carrying >= lumber_carry - 0.01
@@ -635,14 +678,29 @@ func _choose_state() -> String:
 		if _has_usable_station("arvores"):
 			return "chopping"
 		return "idle"
-	# Cozinheiro: larga o minério que tiver e passa a só colher e levar comida.
+	# Cozinheiro (Bloco 27): busca matéria-prima no armazém e PREPARA no comedouro.
+	# (Minério na mão já foi entregue pela regra do Bloco 25 lá em cima.)
 	if is_cook():
-		if carrying > 0.0:
-			return "storing"
-		if _ai_state == "gathering" and _station_ok_for("gathering"):
-			return "gathering"
+		# no meio de uma leva: fica até ficar pronta
+		if _ai_state == "cooking" and raw_carrying > 0.0 and _station_ok_for("cooking"):
+			return "cooking"
+		if raw_carrying >= cook_carry - 0.01:
+			return "cooking"
+		if _ai_state == "fetching" and _station_ok_for("fetching"):
+			return "fetching"
+		if _raw_available():
+			return "fetching"
+		if raw_carrying > 0.0:
+			return "cooking"  # o armazém acabou: prepara o que já tem
+		return "idle"  # sem matéria-prima: espera (o HUD mostra "esperando matéria-prima")
+	# Caçador (Bloco 27): caça na toca se tiver arco (rende mais), senão colhe fruta na horta.
+	if is_hunter():
+		if _ai_state in ["foraging", "hunting"] and _station_ok_for(_ai_state):
+			return _ai_state
+		if _has_usable_station("caca"):  # a toca só conta como usável com arco e flecha
+			return "hunting"
 		if _has_usable_station("coleta_comida"):
-			return "gathering"
+			return "foraging"
 		return "idle"
 	# Bloco 25: sem função não trabalha sozinho — espera no Centro da Vila até o
 	# jogador designar. (Comer, dormir, se tratar, taverna e greve vêm antes e seguem iguais.)
@@ -756,6 +814,16 @@ func _station_ok_for(state: String) -> bool:
 		return _station.has_ore() and carrying < cargo_capacity
 	if state == "gathering":
 		return _station.has_food() and food_carrying < cook_carry - 0.01
+	if state == "foraging":
+		return _station.has_food() and _raw_units < hunter_carry - 0.01
+	if state == "hunting":
+		return _station.has_game() and _station.bow_ready() and _raw_units < hunter_carry - 0.01
+	if state == "stocking":
+		return raw_carrying > 0.0
+	if state == "fetching":
+		return _station.raw_stored >= 0.5 and raw_carrying < cook_carry - 0.01
+	if state == "cooking":
+		return raw_carrying > 0.0 and _station.space_left() > 0.5
 	if state == "delivering":
 		return food_carrying > 0.0 and _station.space_left() > 0.5
 	if state == "eating":
@@ -1185,6 +1253,8 @@ func _refresh_tool_texture() -> void:
 		_tool.texture = LANCA
 	elif is_lumber():
 		_tool.texture = AXE
+	elif is_hunter() and _has_bow():
+		_tool.texture = BOW  # Bloco 27: sem arco, o caçador vai de picareta (só colhe fruta)
 	elif _has_steel_pickaxe:
 		_tool.texture = STEEL_PICKAXE
 	elif _default_tool:
@@ -1335,23 +1405,115 @@ func set_job(new_job: String) -> void:
 	job = new_job
 	_popup(JOB_LABELS[job], Color(0.95, 0.9, 0.6) if job != ROLE_IDLE else Color(0.75, 0.75, 0.8))
 	_apply_outfit()  # troca de roupa na hora (Bloco 26)
+	_prep_left = 0.0  # leva pela metade não vale pra outra função
 	_refresh_tool_texture()
 	if auto_mode and _ai_state != "manual":
 		_decision_timer = randf_range(0.05, 0.4)  # troca de tarefa já
 
 
-## Horta chama: o cozinheiro põe comida na cesta. Retorna quanto pegou.
+# ------------------------------------------------------------ caçador / cozinha (Bloco 27)
+func is_hunter() -> bool:
+	return job == ROLE_HUNTER
+
+
+## Horta chama: o caçador colhe fruta crua (1 unidade = 1 de matéria-prima).
+## Retorna quanto tirou da horta.
 func harvest(amount: float) -> float:
-	if not is_cook() or injured or _ai_state != "gathering":
+	return _gather_raw(amount, 1.0, "foraging")
+
+
+## Toca chama: o caçador caça (1 unidade de caça = `value` de matéria-prima).
+## Retorna quanto tirou da toca.
+func hunt(amount: float, value: float) -> float:
+	return _gather_raw(amount, value, "hunting")
+
+
+func _gather_raw(amount: float, value: float, state: String) -> float:
+	if not is_hunter() or injured or _ai_state != state:
 		return 0.0
-	var taken := minf(amount, cook_carry - food_carrying)
+	var taken := minf(amount * work_mult(), hunter_carry - _raw_units)  # zangado rende menos
 	if taken <= 0.0:
 		return 0.0
-	food_carrying += taken
+	_raw_units += taken
+	raw_carrying += taken * value
 	_work_timer = 0.2
-	if food_carrying >= cook_carry - 0.01:
-		_decision_timer = 0.0  # cesta cheia: vai pro comedouro já
+	if _raw_units >= hunter_carry - 0.01:
+		_decision_timer = 0.0  # mochila cheia: vai pro armazém já
 	return taken
+
+
+## Armazém chama: o caçador (ou quem tiver na mão) descarrega matéria-prima.
+func deliver_raw(amount: float) -> float:
+	var given := minf(amount, raw_carrying)
+	if raw_carrying > 0.0:
+		_raw_units *= (raw_carrying - given) / raw_carrying
+	raw_carrying -= given
+	if raw_carrying <= 0.001:
+		_clear_raw()
+		_decision_timer = 0.0
+	return given
+
+
+## Armazém chama: o cozinheiro pega matéria-prima pra preparar. Retorna quanto pegou.
+func receive_raw(amount: float) -> float:
+	if not is_cook() or _ai_state != "fetching":
+		return 0.0
+	var taken := minf(amount, cook_carry - raw_carrying)
+	if taken <= 0.0:
+		return 0.0
+	raw_carrying += taken
+	_raw_units += taken
+	if raw_carrying >= cook_carry - 0.01:
+		_decision_timer = 0.0  # cesta cheia: vai preparar
+	return taken
+
+
+## Comedouro chama a cada frame enquanto o cozinheiro está lá: a leva inteira leva
+## raw x prep_time_per_raw segundos; só quando termina vira comida pronta (retorno > 0).
+## Se o comedouro não tiver espaço pra tudo, prepara o que cabe e guarda o resto.
+func cook_tick(delta: float, space: float) -> float:
+	if not is_cook() or injured or _ai_state != "cooking" or raw_carrying <= 0.0 or space <= 0.5:
+		return 0.0
+	if _prep_left <= 0.0:
+		_prep_left = raw_carrying * prep_time_per_raw  # começa uma leva
+	_prep_left -= delta * work_mult()  # zangado/triste cozinha mais devagar
+	_work_timer = 0.2
+	if _prep_left > 0.0:
+		return 0.0
+	var made := minf(raw_carrying * food_per_raw, space)
+	var used := made / food_per_raw
+	raw_carrying -= used
+	_raw_units = maxf(_raw_units - used, 0.0)
+	_prep_left = 0.0
+	if raw_carrying <= 0.001:
+		_clear_raw()
+	_popup("+%d comida pronta" % roundi(made), Color(0.7, 1.0, 0.55))
+	_decision_timer = 0.0
+	return made
+
+
+func _clear_raw() -> void:
+	raw_carrying = 0.0
+	_raw_units = 0.0
+	_prep_left = 0.0
+
+
+## Tem matéria-prima pra buscar em algum armazém?
+func _raw_available() -> bool:
+	for a in get_tree().get_nodes_in_group("armazens"):
+		if a.get("raw_stored") != null and a.raw_stored >= 0.5:
+			return true
+	return false
+
+
+## O caçador tem onde trabalhar (toca com arco, ou horta)?
+func _hunter_has_work() -> bool:
+	return _has_usable_station("caca") or _has_usable_station("coleta_comida")
+
+
+func _has_bow() -> bool:
+	var oficina := get_tree().get_first_node_in_group("oficina")
+	return oficina != null and oficina.has_tool("arco")
 
 
 ## Árvore chama: o lenhador põe madeira nas costas. Retorna quanto pegou.
@@ -1741,7 +1903,7 @@ func _update_animation(delta: float) -> void:
 		# impacto = ponto mais baixo do golpe (a curva para de subir)
 		var rising := swing > _prev_swing
 		if _swing_rising and not rising:
-			if _ai_state not in ["gathering", "chopping", "guard", "training"]:
+			if _ai_state not in ["gathering", "chopping", "guard", "training", "foraging", "hunting", "cooking"]:
 				Audio.pick(global_position)
 		_swing_rising = rising
 		_prev_swing = swing
@@ -1786,12 +1948,14 @@ func _update_animation(delta: float) -> void:
 
 	# pedrinha de minério em cima da cabeça, maior quanto mais carga
 	_cook_icon.visible = false  # Bloco 26: o chapéu agora faz parte do outfit do cozinheiro
-	_carry_icon.visible = (carrying > 0.0 or food_carrying > 0.0 or wood_carrying > 0.0) and not _resting
+	_carry_icon.visible = (carrying > 0.0 or food_carrying > 0.0 or wood_carrying > 0.0 or raw_carrying > 0.0) and not _resting
 	if wood_carrying > 0.0:
 		_carry_icon.texture = WOOD_LOG
 	elif food_carrying > 0.0:
 		_carry_icon.texture = FOOD_BASKET
-	elif carrying > 0.0 and (_carry_icon.texture == FOOD_BASKET or _carry_icon.texture == WOOD_LOG):
+	elif raw_carrying > 0.0:
+		_carry_icon.texture = RAW_FOOD
+	elif carrying > 0.0 and _carry_icon.texture in [FOOD_BASKET, WOOD_LOG, RAW_FOOD]:
 		_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
 	if _carry_icon.visible:
 		var r := carrying / cargo_capacity
@@ -1799,6 +1963,8 @@ func _update_animation(delta: float) -> void:
 			r = wood_carrying / lumber_carry
 		elif food_carrying > 0.0:
 			r = food_carrying / cook_carry
+		elif raw_carrying > 0.0:
+			r = raw_carrying / cook_carry if is_cook() else _raw_units / hunter_carry
 		_carry_icon.scale = Vector2.ONE * lerpf(1.0, 2.0, r)
 		# (o chapéu do outfit de cozinheiro tem a mesma altura do capacete: sem desvio)
 		_carry_icon.position.y = -44.0 - (2.0 if _body.frame % 2 == 1 else 0.0)
@@ -1858,6 +2024,9 @@ func get_save_data() -> Dictionary:
 		"overtime": overtime,
 		"job": job,
 		"food_carrying": food_carrying,
+		"raw_carrying": raw_carrying,
+		"raw_units": _raw_units,
+		"prep_left": _prep_left,
 		"wood_carrying": wood_carrying,
 		"gender": gender,
 		"display_name": display_name,
@@ -1902,6 +2071,10 @@ func load_save_data(d: Dictionary) -> void:
 	combat_skill = clampf(SaveUtil.num(d, "combat_skill", 0.0), 0.0, 1.0)
 	wood_carrying = clampf(SaveUtil.num(d, "wood_carrying", 0.0), 0.0, lumber_carry)
 	food_carrying = clampf(SaveUtil.num(d, "food_carrying", 0.0), 0.0, cook_carry)
+	# Bloco 27 (save antigo: 0). Volume nunca passa do que cabe na mochila.
+	raw_carrying = maxf(SaveUtil.num(d, "raw_carrying", 0.0), 0.0)
+	_raw_units = clampf(SaveUtil.num(d, "raw_units", raw_carrying), 0.0, maxf(hunter_carry, cook_carry))
+	_prep_left = maxf(SaveUtil.num(d, "prep_left", 0.0), 0.0) if raw_carrying > 0.0 else 0.0
 	# save antigo (sem visual) ou valor inválido: _ensure_appearance sorteia e o próximo save guarda
 	gender = SaveUtil.text(d, "gender", "")
 	display_name = SaveUtil.text(d, "display_name", "")  # save antigo: sorteia um nome

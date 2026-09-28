@@ -4,7 +4,10 @@ extends "res://scripts/props/station.gd"
 ## - Quem vem comer só come se houver estoque; cada unidade de comida repõe
 ##   hunger_per_food de fome. Sem estoque, ninguém come (quem está com fome segue
 ##   trabalhando, faminto e lento, até alguém repor).
-## - O cozinheiro (estado "delivering") descarrega aqui a comida que colheu na horta.
+## - Bloco 27: o cozinheiro (estado "cooking") chega com matéria-prima do armazém e
+##   PREPARA aqui: a leva leva um tempo (prep_time_per_raw no ipezinho) e só no fim
+##   vira comida pronta no estoque.
+## - "delivering" ainda descarrega comida pronta (cesta de saves antigos).
 ## - O sprite mostra cheio / pela metade / vazio.
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
@@ -30,6 +33,8 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 var food_stock: float = 0.0
 var _sound_timer: float = 0.0
 var _was_empty: bool = false
+## Algum cozinheiro preparando uma leva aqui agora (a placa mostra "preparando...").
+var is_cooking: bool = false
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _name_label: Label = $NameLabel
@@ -48,7 +53,7 @@ func _accepts(body: Node2D) -> bool:
 
 ## Quem vem comer precisa de estoque; o cozinheiro precisa de espaço pra descarregar.
 func accepts_worker(worker: Node) -> bool:
-	if worker.has_method("get_state") and worker.get_state() == "delivering":
+	if worker.has_method("get_state") and worker.get_state() in ["delivering", "cooking"]:
 		return food_stock < food_capacity - 0.5
 	return food_stock > 0.0
 
@@ -63,9 +68,14 @@ func space_left() -> float:
 
 func _process(delta: float) -> void:
 	var eating := false
+	var cooking := false
 	for body in _working_bodies():
 		if body.has_method("deliver_food") and body.get_state() == "delivering":
 			food_stock += body.deliver_food(minf(DELIVER_RATE * delta, space_left()))
+			continue
+		if body.has_method("cook_tick") and body.get_state() == "cooking":
+			food_stock += body.cook_tick(delta, space_left())  # 0 até a leva ficar pronta
+			cooking = true
 			continue
 		if food_stock <= 0.0 or body.hunger >= body.hunger_max:
 			continue
@@ -75,6 +85,7 @@ func _process(delta: float) -> void:
 		body.feed(cost * hunger_per_food)
 		eating = true
 	food_stock = clampf(food_stock, 0.0, food_capacity)
+	is_cooking = cooking
 	_sound_timer -= delta
 	if eating and _sound_timer <= 0.0:
 		_sound_timer = eat_sound_interval * randf_range(0.8, 1.2)
@@ -88,6 +99,8 @@ func _update_visual() -> void:
 	_visual.frame = 2 if food_stock <= 0.0 else (1 if ratio < 0.5 else 0)
 	var empty := food_stock <= 0.0
 	_name_label.text = "Comedouro\n%s" % ("SEM COMIDA" if empty else "%d / %d" % [int(food_stock), int(food_capacity)])
+	if is_cooking:
+		_name_label.text += "\npreparando..."
 	_name_label.modulate = Color(1.0, 0.45, 0.4) if empty else (Color(1.0, 0.8, 0.45) if ratio < 0.25 else Color.WHITE)
 	if empty and not _was_empty:
 		var pop := create_tween()

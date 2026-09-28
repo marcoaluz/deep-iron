@@ -158,6 +158,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				toggle_lumber()
 			KEY_1, KEY_KP_1:
 				toggle_miner()
+			KEY_2, KEY_KP_2:
+				toggle_hunter()
 			KEY_0, KEY_KP_0:
 				clear_job()
 			KEY_K:
@@ -364,6 +366,11 @@ func toggle_job(job: String, label: String, color: Color) -> void:
 ## 1 / botão do HUD: minerador (ou tira, se todos já forem).
 func toggle_miner() -> void:
 	toggle_job(Worker.ROLE_MINER, "Minerador", Color(0.95, 0.75, 0.45))
+
+
+## 2 / botão do HUD: caçador (ou tira, se todos já forem) — Bloco 27.
+func toggle_hunter() -> void:
+	toggle_job(Worker.ROLE_HUNTER, "Caçador", Color(0.8, 0.9, 0.55))
 
 
 ## C / botão do HUD: cozinheiro (ou tira, se todos já forem).
