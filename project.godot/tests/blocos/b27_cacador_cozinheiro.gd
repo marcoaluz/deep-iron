@@ -117,19 +117,28 @@ func _process(delta: float) -> bool:
 	elif step == 4 and hunter.get_state() != "stocking":
 		# 4) save/load de verdade (pasta isolada)
 		var toca = get_first_node_in_group("caca")
-		var want := {"raw": arm.raw_stored, "game": toca.game_remaining}
+		# (Bloco 43) matéria-prima TOTAL (armazém + mochilas): o jogo segue rodando depois do
+		# load e o cozinheiro pode pegar um pouco do armazém antes da conferência
+		var raw_total: float = arm.raw_stored
+		for w in get_nodes_in_group("ipezinhos"):
+			raw_total += w.raw_carrying
+		var want := {"raw": arm.raw_stored, "raw_total": raw_total, "game": toca.game_remaining}
 		var sm = root.get_node("SaveManager")
 		check(sm.save_game("teste"), "salvou (raw %.1f, toca %.1f, arco)" % [want.raw, want.game])
 		set_meta("want", want)
 		sm.load_game()
 		step = 5
 		t_mark = t
-	elif step == 5 and t - t_mark > 2.0:
+	elif step == 5 and t - t_mark > 0.8:
 		var want: Dictionary = get_meta("want")
 		var arm2 = get_first_node_in_group("armazens")
 		var of2 = get_first_node_in_group("oficina")
 		var toca2 = get_first_node_in_group("caca")
-		check(absf(arm2.raw_stored - want.raw) < 1.0, "matéria-prima voltou (%.1f)" % arm2.raw_stored)
+		var total2: float = arm2.raw_stored
+		for w in get_nodes_in_group("ipezinhos"):
+			total2 += w.raw_carrying
+		check(absf(arm2.raw_stored - want.raw) < 1.0 or absf(total2 - want.raw_total) < 1.0,
+			"matéria-prima voltou (armazém %.1f, total %.1f de %.1f)" % [arm2.raw_stored, total2, want.raw_total])
 		check(absf(toca2.game_remaining - want.game) < 1.0, "toca voltou no mesmo estado (%.1f)" % toca2.game_remaining)
 		check(of2.has_tool("arco"), "arco e flecha continua desbloqueado")
 		var jobs := get_nodes_in_group("ipezinhos").map(func(w): return w.job)

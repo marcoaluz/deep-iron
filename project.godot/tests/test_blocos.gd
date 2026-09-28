@@ -20,7 +20,9 @@ const BLOCOS := "res://tests/blocos/"
 const BAD := ["FALHOU", "TIMEOUT", "ABORTADO", "Parse Error"]
 
 
-## Pasta de usuário de mentira (fora do projeto e fora do save de verdade).
+## Pasta de usuário de mentira (fora do projeto e fora do save de verdade). Cada bloco
+## começa com ela LIMPA: sem save, backups nem settings.cfg de outro teste (senão uma
+## preferência salva por um bloco muda o ponto de partida do seguinte).
 static func fake_appdata() -> String:
 	var base := OS.get_environment("TEMP")
 	if base == "":
@@ -28,8 +30,27 @@ static func fake_appdata() -> String:
 	if base == "":
 		base = "/tmp"
 	var dir := base.path_join("deep_iron_testes").path_join("fake_appdata")
+	_wipe(dir)
 	DirAccess.make_dir_recursive_absolute(dir)
 	return dir
+
+
+## Apaga a pasta temporária dos testes (só ela: confere o nome antes).
+static func _wipe(path: String) -> void:
+	if not ("deep_iron_testes" in path and path.ends_with("fake_appdata")) or not DirAccess.dir_exists_absolute(path):
+		return
+	_wipe_inside(path)
+
+
+static func _wipe_inside(path: String) -> void:
+	var d := DirAccess.open(path)
+	if d == null:
+		return
+	for f in d.get_files():
+		DirAccess.remove_absolute(path.path_join(f))
+	for sub in d.get_directories():
+		_wipe_inside(path.path_join(sub))
+		DirAccess.remove_absolute(path.path_join(sub))
 
 
 ## Roda um teste de bloco num Godot separado e confere a saída.

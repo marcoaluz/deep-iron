@@ -154,14 +154,15 @@ func _process(delta: float) -> bool:
 		var gd = find(get_meta("guard"))
 		var now := [gd.global_position.round(), gd.injury_severity, snappedf(gd._care_left, 1.0), gd.downed_gate]
 		print("  antes:  ", get_meta("before"), "\n  depois: ", now, "  ", gd.get_state_label())
-		check(gd.downed and now[0] == get_meta("before")[0] and now[1] == "grave" and now[3] == "tunel" and absf(now[2] - get_meta("before")[2]) <= 3.0,
+		# (Bloco 43) o save guarda posição com 1 casa decimal: tolerância de 2 px, não igualdade
+		check(gd.downed and now[0].distance_to(get_meta("before")[0]) <= 2.0 and now[1] == "grave" and now[3] == "tunel" and absf(now[2] - get_meta("before")[2]) <= 3.0,
 			"save/load: caído no mesmo lugar, grave, relógio e portão iguais")
 		Engine.time_scale = 1.0
 		step = 5
 		t_mark = t
 	elif step == 5 and t - t_mark > 3.0:
 		var gd = find(get_meta("guard"))
-		check(gd.downed and gd.global_position.round() == get_meta("before")[0], "depois do load continua caído, parado")
+		check(gd.downed and gd.global_position.distance_to(get_meta("before")[0]) <= 2.0, "depois do load continua caído, parado")
 		print("== médico designado (de noite)")
 		var doc: Node = null
 		for w in ws():

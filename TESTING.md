@@ -85,6 +85,12 @@ comportamento de propósito (cada troca está comentada com `(Bloco 43)` no arqu
 - `b28_cacador_outfit` e `b29_30_item_mao_medico` — HUD novo (seções e contagem por
   função na barra de funções); guarda novo começa com porrete (Bloco 35); o médico
   "some do mapa" confere `_inside` (o desenho some um quadro depois).
+- `b27_cacador_cozinheiro` — depois do load confere a matéria-prima TOTAL (armazém +
+  mochilas): o jogo segue rodando e o cozinheiro pode pegar um pouco antes da conferência.
+- `b36_guarda_caido` — posição do caído com tolerância de 2 px (o save guarda 1 casa
+  decimal; comparar arredondado dava diferença de 1 px à toa).
+- `test_blocos.gd` — cada bloco começa com a pasta de usuário temporária **limpa**
+  (sem save, backup ou `settings.cfg` deixado pelo bloco anterior).
 
 ## Conhecido
 
