@@ -84,6 +84,9 @@ extends Node
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
+##   Bloco 25 (save_version 3): ipezinho.gd "job" substitui "role" — ocioso, minerador,
+##     cozinheiro, lenhador, guarda, pesquisador. Save < 3: role "" vira "minerador"
+##     (ver _migrate), então ninguém que trabalhava fica parado ao carregar.
 ##   camera_controller.gd (Camera2D)
 ##     posição e zoom (conforto: volta a olhar pro mesmo lugar).
 ##
@@ -102,7 +105,8 @@ const TEMP_PATH := "user://savegame.tmp"
 const BACKUP_PATH := "user://savegame_backup.json"
 ## JSON ilegível vai pra cá (pra dar pra investigar), e o jogo começa do zero.
 const CORRUPT_PATH := "user://savegame_corrompido.json"
-const SAVE_VERSION := 2
+## 3 = Bloco 25: função única "job" por ipezinho ("ocioso" de padrão).
+const SAVE_VERSION := 3
 ## Versão 1 tinha 4 lotes fixos na cena; um lote construído vira casa posicionada no mesmo lugar.
 const LEGACY_LOTS := {
 	"Lote1": Vector2(-170, 245),
@@ -469,5 +473,15 @@ func _migrate(data: Dictionary) -> Dictionary:
 			elif casas.has(lot):
 				casas.erase(lot)  # lote vazio: não existe mais
 		data["placed_houses"] = placed
-	# if version < 3: ...
+	if version < 3:
+		# Bloco 25: "role" virou "job". Antes, role "" = fazia de tudo (minerava por padrão);
+		# agora quem nasce fica ocioso. Pra carregar um save antigo não parecer que
+		# "todo mundo parou de trabalhar", quem não tinha função especial vira minerador.
+		for wd in SaveUtil.array(data, "workers"):
+			if typeof(wd) != TYPE_DICTIONARY or wd.has("job"):
+				continue
+			var role := SaveUtil.text(wd, "role", "")
+			wd["job"] = role if role in ["cozinheiro", "lenhador", "guarda", "pesquisador"] else "minerador"
+			wd.erase("role")
+	# if version < 4: ...
 	return data

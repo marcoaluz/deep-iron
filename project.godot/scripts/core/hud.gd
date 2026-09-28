@@ -20,6 +20,8 @@ const COLOR_LUMBER := Color(0.85, 0.66, 0.45)
 const COLOR_WOOD := Color(0.78, 0.6, 0.4)
 const COLOR_IRRITATED := Color(1.0, 0.72, 0.35)
 const COLOR_FURIOUS := Color(1.0, 0.35, 0.28)
+const COLOR_NO_JOB := Color(1.0, 0.62, 0.3)  # Bloco 25: "sem função" salta aos olhos
+const COLOR_MINER := Color(0.95, 0.75, 0.45)
 const Ores := preload("res://scripts/core/ores.gd")
 const Settings := preload("res://scripts/core/settings.gd")
 const STATE_COLORS := {
@@ -82,6 +84,8 @@ var _auto_sell_check: CheckBox
 var _recruit_button: Button
 var _overtime_button: Button
 var _cook_button: Button
+var _miner_button: Button
+var _no_job_button: Button
 var _lumber_button: Button
 var _guard_button: Button
 var _research_button: Button
@@ -248,7 +252,7 @@ func _build() -> void:
 	var hint := _label(
 		"Clique: selecionar   •   Arrastar: selecionar vários   •   Shift+clique: somar/tirar   •   Botão dir.: mover / minerar (jazida)   •   Esc: soltar   •   Tab: próximo   •   F: seguir\n"
 		+ "Roda: zoom   •   Botão do meio / WASD / setas: mover câmera   •   Home: centralizar\n"
-		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste; Shift+K: grave)   •   T: turno extra   •   C: cozinheiro   •   L: lenhador   •   X: guarda   •   Z: pesquisador   •   H: esconder dicas   •   Esc/P: pausa\n"
+		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste; Shift+K: grave)   •   T: turno extra   •   1: minerador   •   0: sem função   •   C: cozinheiro   •   L: lenhador   •   X: guarda   •   Z: pesquisador   •   H: esconder dicas   •   Esc/P: pausa\n"
 		+ "U: Centro da Vila   •   E: Escavadeira   •   O: Oficina   •   I: Enfermaria   •   B: Bem-estar   •   G: Defesa   •   Q: Laboratório   •   Y: Sol   •   J: Diário   •   ou clique no prédio   •   F5: salvar   •   F9: carregar",
 		12, Color(0.85, 0.8, 0.72, 0.75))
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
@@ -332,7 +336,17 @@ func _build_economy(vbox: VBoxContainer) -> void:
 	_research_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_research_button.pressed.connect(func(): _main.toggle_research())
 	actions.add_child(_research_button)
-	for b in [_overtime_button, _cook_button, _lumber_button, _guard_button, _research_button]:
+	_miner_button = _button("Minerador  (1)")
+	_miner_button.tooltip_text = "Os selecionados vão minerar e levar o minério pro armazém"
+	_miner_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_miner_button.pressed.connect(func(): _main.toggle_miner())
+	actions.add_child(_miner_button)
+	_no_job_button = _button("Sem função  (0)")
+	_no_job_button.tooltip_text = "Tira a função dos selecionados: entregam o que estiverem carregando e esperam no Centro da Vila"
+	_no_job_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_no_job_button.pressed.connect(func(): _main.clear_job())
+	actions.add_child(_no_job_button)
+	for b in [_overtime_button, _cook_button, _lumber_button, _guard_button, _research_button, _miner_button, _no_job_button]:
 		b.add_theme_font_size_override("font_size", 12)
 
 	if _hub:
@@ -650,8 +664,20 @@ func _refresh() -> void:
 		var all_res: bool = picked > 0 and _main.selection.all(func(u): return is_instance_valid(u) and u.is_researcher())
 		_research_button.text = "Tirar pesquisa (Z)" if all_res else "Pesquisador (Z)"
 		_research_button.disabled = picked == 0
-	_workers_title.text = "IPEZINHOS  —  %d selecionados" % picked if picked > 1 else "IPEZINHOS"
-	_workers_title.add_theme_color_override("font_color", COLOR_TITLE if picked > 1 else COLOR_DIM)
+	if _miner_button:
+		var all_miners: bool = picked > 0 and _main.selection.all(func(u): return is_instance_valid(u) and u.is_miner())
+		_miner_button.text = "Tirar mineração (1)" if all_miners else "Minerador (1)"
+		_miner_button.disabled = picked == 0
+	if _no_job_button:
+		_no_job_button.disabled = picked == 0 or _main.selection.all(func(u): return is_instance_valid(u) and u.has_no_job())
+	# Bloco 25: quantos estão sem função (pra notar rápido quem falta designar)
+	var no_job := workers.filter(func(w): return w.has_no_job()).size()
+	var title := "IPEZINHOS  —  %d selecionados" % picked if picked > 1 else "IPEZINHOS"
+	if no_job > 0:
+		title += "  •  %d SEM FUNÇÃO" % no_job
+	_workers_title.text = title
+	_workers_title.add_theme_color_override("font_color",
+		COLOR_TITLE if picked > 1 else (COLOR_NO_JOB if no_job > 0 else COLOR_DIM))
 	for w in workers:
 		var row: Dictionary = _rows[w]
 		row.name.text = _worker_name(w)
@@ -677,9 +703,15 @@ func _refresh() -> void:
 			state_color = COLOR_HUNGER_BAD
 		elif w.injured:
 			state_color = COLOR_INJURED
+		elif state == "idle" and w.has_no_job():
+			state_color = COLOR_NO_JOB
 		row.state.add_theme_color_override("font_color", state_color)
 		# etiqueta de turno extra / zanga (o humor tem prioridade de cor)
 		var tags: Array[String] = []
+		if w.has_no_job():
+			tags.append("SEM FUNÇÃO")
+		if w.is_miner():
+			tags.append("minerador")
 		if w.is_cook():
 			tags.append("cozinheiro")
 		if w.is_lumber():
@@ -694,7 +726,11 @@ func _refresh() -> void:
 			tags.append(w.mood_label())
 		row.tag.text = "  ".join(tags) + ("  " if not tags.is_empty() else "")
 		var tag_color: Color = [COLOR_OVERTIME, COLOR_IRRITATED, COLOR_FURIOUS][w.mood()]
-		if w.mood() == 0 and w.is_cook():
+		if w.has_no_job():
+			tag_color = COLOR_NO_JOB  # mesmo zangado, o que importa aqui é "falta designar"
+		elif w.mood() == 0 and w.is_miner():
+			tag_color = COLOR_MINER
+		elif w.mood() == 0 and w.is_cook():
 			tag_color = COLOR_COOK
 		elif w.mood() == 0 and w.is_lumber():
 			tag_color = COLOR_LUMBER

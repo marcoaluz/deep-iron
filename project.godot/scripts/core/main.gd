@@ -20,6 +20,8 @@ const DRAG_THRESHOLD := 6.0
 const FORMATION_SPACING := 18.0
 ## Raio (px do mundo) em volta de uma jazida que conta como "clicou na jazida".
 const ORE_CLICK_RADIUS := 30.0
+## Constantes de função (job) do ipezinho — Bloco 25.
+const Worker := preload("res://scripts/workers/ipezinho.gd")
 
 ## Ipezinhos selecionados (a ordem importa pro Tab no modo grupo).
 var selection: Array[Node2D] = []
@@ -154,6 +156,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				toggle_cook()
 			KEY_L:
 				toggle_lumber()
+			KEY_1, KEY_KP_1:
+				toggle_miner()
+			KEY_0, KEY_KP_0:
+				clear_job()
 			KEY_K:
 				for unit in selection.duplicate():
 					if is_instance_valid(unit):
@@ -337,71 +343,61 @@ func toggle_overtime() -> void:
 		Color(0.6, 0.7, 1.0))
 
 
-## C / botão do HUD: torna os selecionados cozinheiros (se algum ainda não for);
-## se todos já forem, voltam a fazer de tudo.
+## Bloco 25: designa a função `job` aos selecionados. Se TODOS já têm essa função,
+## tira (ficam sem função, ociosos no Centro da Vila). Trocar é seguro: quem estiver
+## carregando algo entrega antes (ver _choose_state no ipezinho).
+func toggle_job(job: String, label: String, color: Color) -> void:
+	_prune_selection()
+	if selection.is_empty():
+		Audio.error()
+		_hud.show_toast("Selecione ipezinhos pra virar %s" % label.to_lower(), Color(1.0, 0.6, 0.45))
+		return
+	var make := selection.any(func(w): return w.job != job)
+	for unit in selection:
+		unit.set_job(job if make else Worker.ROLE_IDLE)
+	Audio.click()
+	_hud.show_toast("%s: %d ipezinho%s" % [
+		label if make else "Sem função", selection.size(), "s" if selection.size() > 1 else ""],
+		color if make else Color(0.75, 0.75, 0.8))
+
+
+## 1 / botão do HUD: minerador (ou tira, se todos já forem).
+func toggle_miner() -> void:
+	toggle_job(Worker.ROLE_MINER, "Minerador", Color(0.95, 0.75, 0.45))
+
+
+## C / botão do HUD: cozinheiro (ou tira, se todos já forem).
 func toggle_cook() -> void:
-	_prune_selection()
-	if selection.is_empty():
-		Audio.error()
-		_hud.show_toast("Selecione ipezinhos pra virar cozinheiro", Color(1.0, 0.6, 0.45))
-		return
-	var make_cook := selection.any(func(w): return not w.is_cook())
-	for unit in selection:
-		unit.set_role(unit.ROLE_COOK if make_cook else "")
-	Audio.click()
-	_hud.show_toast("%s: %d ipezinho%s" % [
-		"Cozinheiro" if make_cook else "De volta à mina", selection.size(), "s" if selection.size() > 1 else ""],
-		Color(0.95, 0.9, 0.6))
+	toggle_job(Worker.ROLE_COOK, "Cozinheiro", Color(0.95, 0.9, 0.6))
 
 
-## L / botão do HUD: torna os selecionados lenhadores (se algum ainda não for);
-## se todos já forem, voltam a fazer de tudo.
+## L / botão do HUD: lenhador (ou tira, se todos já forem).
 func toggle_lumber() -> void:
-	_prune_selection()
-	if selection.is_empty():
-		Audio.error()
-		_hud.show_toast("Selecione ipezinhos pra virar lenhador", Color(1.0, 0.6, 0.45))
-		return
-	var make := selection.any(func(w): return not w.is_lumber())
-	for unit in selection:
-		unit.set_role(unit.ROLE_LUMBER if make else "")
-	Audio.click()
-	_hud.show_toast("%s: %d ipezinho%s" % [
-		"Lenhador" if make else "De volta à mina", selection.size(), "s" if selection.size() > 1 else ""],
-		Color(0.85, 0.7, 0.5))
+	toggle_job(Worker.ROLE_LUMBER, "Lenhador", Color(0.85, 0.7, 0.5))
 
 
-## X / botão do HUD: torna os selecionados guardas (se algum ainda não for);
-## se todos já forem, voltam a fazer de tudo.
+## X / botão do HUD: guarda (ou tira, se todos já forem).
 func toggle_guard() -> void:
-	_prune_selection()
-	if selection.is_empty():
-		Audio.error()
-		_hud.show_toast("Selecione ipezinhos pra virar guarda", Color(1.0, 0.6, 0.45))
-		return
-	var make := selection.any(func(w): return not w.is_guard())
-	for unit in selection:
-		unit.set_role(unit.ROLE_GUARD if make else "")
-	Audio.click()
-	_hud.show_toast("%s: %d ipezinho%s" % [
-		"Guarda" if make else "De volta à mina", selection.size(), "s" if selection.size() > 1 else ""],
-		Color(0.95, 0.55, 0.45))
+	toggle_job(Worker.ROLE_GUARD, "Guarda", Color(0.95, 0.55, 0.45))
 
 
-## Z / botão do HUD: torna os selecionados pesquisadores (ou tira, se todos já forem).
+## Z / botão do HUD: pesquisador (ou tira, se todos já forem).
 func toggle_research() -> void:
+	toggle_job(Worker.ROLE_RESEARCH, "Pesquisador", Color(0.55, 0.95, 0.65))
+
+
+## 0 / botão do HUD: tira a função dos selecionados (voltam a ficar ociosos).
+func clear_job() -> void:
 	_prune_selection()
 	if selection.is_empty():
 		Audio.error()
-		_hud.show_toast("Selecione ipezinhos pra virar pesquisador", Color(1.0, 0.6, 0.45))
+		_hud.show_toast("Selecione ipezinhos pra tirar a função", Color(1.0, 0.6, 0.45))
 		return
-	var make := selection.any(func(w): return not w.is_researcher())
 	for unit in selection:
-		unit.set_role(unit.ROLE_RESEARCH if make else "")
+		unit.set_job(Worker.ROLE_IDLE)
 	Audio.click()
-	_hud.show_toast("%s: %d ipezinho%s" % [
-		"Pesquisador" if make else "De volta à mina", selection.size(), "s" if selection.size() > 1 else ""],
-		Color(0.55, 0.95, 0.65))
+	_hud.show_toast("Sem função: %d ipezinho%s" % [selection.size(), "s" if selection.size() > 1 else ""],
+		Color(0.75, 0.75, 0.8))
 
 
 func is_selected(unit: Node) -> bool:

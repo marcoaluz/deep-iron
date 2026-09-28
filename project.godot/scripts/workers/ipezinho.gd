@@ -71,11 +71,23 @@ const STATE_GROUP := {
 	"training": "campos",
 	"research": "laboratorios",
 }
-## Função fixa (designada pelo jogador). "" = faz de tudo (minerar etc.).
+## Função (job) designada pelo jogador — Bloco 25: um campo só, com "ocioso" de padrão.
+## Função nova (caçador, engenheiro...) = mais uma constante aqui + entrada em JOBS/JOB_LABELS
+## + o que ela faz no _choose_state().
+const ROLE_IDLE := "ocioso"  # sem função: não trabalha sozinho, espera no Centro da Vila
+const ROLE_MINER := "minerador"
 const ROLE_COOK := "cozinheiro"
 const ROLE_LUMBER := "lenhador"
 const ROLE_GUARD := "guarda"
 const ROLE_RESEARCH := "pesquisador"
+const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH]
+## Texto do popup ao receber a função.
+const JOB_LABELS := {
+	ROLE_IDLE: "Sem função", ROLE_MINER: "Minerador!", ROLE_COOK: "Cozinheiro!",
+	ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!",
+}
+## Quem está sem função fica a até esta distância do Centro da Vila.
+const IDLE_HUB_RADIUS := 70.0
 const LANCA := preload("res://assets/game/lanca.png")
 const AXE := preload("res://assets/game/axe.png")
 const WOOD_LOG := preload("res://assets/game/wood_log.png")
@@ -247,8 +259,9 @@ var _body_base_y: float = 0.0
 var injured: bool = false
 ## Turno extra: de noite continua trabalhando em vez de ir pra cama (ligado pelo jogador).
 var overtime: bool = false
-## Função: "" (faz de tudo) ou ROLE_COOK (só busca comida pro comedouro).
-var role: String = ""
+## Função atual (um dos JOBS). Nasce ociosa: só trabalha depois que o jogador designa.
+## (Save de antes do Bloco 25 sem função vira "minerador" — ver load_save_data / SaveManager.)
+var job: String = ROLE_IDLE
 ## Nome próprio mostrado no HUD (o nome do NÓ continua "IpezinhoN": é a chave do save).
 var display_name: String = ""
 ## "menino" ou "menina": sorteado ao nascer (jogo novo / recrutamento), fixo depois.
@@ -403,6 +416,8 @@ func get_state_label() -> String:
 		if sun and sun.shelter_now() and not _is_night():
 			return "abrigado do sol" if _inside else "sem abrigo, no sol!"
 		return "dormindo" if _inside else "dormindo ao relento"
+	if _ai_state == "idle" and has_no_job():
+		return "sem função — esperando ordem"
 	var label: String = STATE_LABELS.get(_ai_state, _ai_state)
 	if _station == null and STATE_GROUP.has(_ai_state):
 		label += " (esperando)"
@@ -593,6 +608,12 @@ func _choose_state() -> String:
 		var keep_chopping := _ai_state == "chopping" and _station_ok_for("chopping")
 		if not is_lumber() or wood_full or _ai_state == "hauling" or (not keep_chopping and not _has_usable_station("arvores")):
 			return "hauling"
+	# Bloco 25: quem não é minerador não fica com minério na mão — entrega antes
+	# (ex.: trocou de função no meio da carga, ou tiraram a função dele).
+	# Pesquisador fica de fora: sem laboratório ele volta a minerar (como já era),
+	# e mandar guardar cada pedrinha viraria um vai-e-volta sem fim.
+	if carrying > 0.0 and not is_miner() and not is_researcher():
+		return "storing"
 	# Guarda: à noite fica nos portões; de dia treina (até ficar pronto) e descansa.
 	if is_guard():
 		if _is_night():
@@ -622,6 +643,11 @@ func _choose_state() -> String:
 		if _has_usable_station("coleta_comida"):
 			return "gathering"
 		return "idle"
+	# Bloco 25: sem função não trabalha sozinho — espera no Centro da Vila até o
+	# jogador designar. (Comer, dormir, se tratar, taverna e greve vêm antes e seguem iguais.)
+	if has_no_job():
+		return "idle"
+	# Daqui pra baixo: minerador (e pesquisador sem laboratório, como antes).
 	# Prioridade 2: depositar carga cheia (e não desistir no meio do caminho).
 	if carrying >= cargo_capacity - 0.01:
 		return "storing"
@@ -680,6 +706,9 @@ func _decide_next_action() -> void:
 	_set_state(desired)
 
 	if desired == "idle":
+		if has_no_job():
+			_idle_at_hub()
+			return
 		if not _moving and randf() < 0.35:
 			var offset := Vector2.RIGHT.rotated(randf() * TAU) * randf_range(10.0, idle_wander_radius)
 			_go_to(global_position + offset)
@@ -696,6 +725,27 @@ func _decide_next_action() -> void:
 		var nearest := _closest_in_group(group)
 		if nearest:
 			_go_to(nearest.get_wait_position(self))
+
+
+## Sem função: vai pra frente do Centro da Vila e fica zanzando por ali.
+## (Sem Centro da Vila na cena: fica passeando onde está, como o ocioso antigo.)
+func _idle_at_hub() -> void:
+	if _moving:
+		return
+	var sun := _sun()
+	if sun and sun.shelter_now():
+		return  # onda solar: quem está lá embaixo fica protegido onde está
+	var hub := _village_hub()
+	if hub == null or not (hub is Node2D):
+		if randf() < 0.35:
+			_go_to(global_position + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(10.0, idle_wander_radius))
+		return
+	var center: Vector2 = (hub as Node2D).global_position + Vector2(0, 55)  # na frente da fachada
+	var far := global_position.distance_to(center) > IDLE_HUB_RADIUS + 20.0
+	if far or randf() < 0.25:
+		var offset := Vector2.RIGHT.rotated(randf() * TAU) * randf_range(0.0, IDLE_HUB_RADIUS)
+		offset.y *= 0.5  # área achatada, esparramada na frente do prédio
+		_go_to(center + offset)
 
 
 func _station_ok_for(state: String) -> bool:
@@ -1201,7 +1251,7 @@ func _ensure_name() -> void:
 
 # ------------------------------------------------------------ cozinheiro
 func is_cook() -> bool:
-	return role == ROLE_COOK
+	return job == ROLE_COOK
 
 
 func _sun() -> Node:
@@ -1223,7 +1273,7 @@ func radiate(amount: float) -> void:
 
 
 func is_researcher() -> bool:
-	return role == ROLE_RESEARCH
+	return job == ROLE_RESEARCH
 
 
 func _research() -> Node:
@@ -1237,19 +1287,33 @@ func _apply_research() -> void:
 
 
 func is_guard() -> bool:
-	return role == ROLE_GUARD
+	return job == ROLE_GUARD
 
 
 func is_lumber() -> bool:
-	return role == ROLE_LUMBER
+	return job == ROLE_LUMBER
 
 
-## Designa/tira a função de cozinheiro (tecla C com o ipezinho selecionado).
-func set_role(new_role: String) -> void:
-	if role == new_role:
+func is_miner() -> bool:
+	return job == ROLE_MINER
+
+
+## Sem função atribuída (Bloco 25): não trabalha sozinho.
+func has_no_job() -> bool:
+	return job == ROLE_IDLE
+
+
+## Designa a função (teclas/botões com os ipezinhos selecionados). Trocar no meio do
+## trabalho é seguro: o _choose_state() faz ele entregar primeiro o que estiver
+## carregando (minério -> armazém, comida -> comedouro, madeira -> armazém).
+func set_job(new_job: String) -> void:
+	if not new_job in JOBS:
+		push_warning("Ipezinho: função desconhecida '%s'" % new_job)
 		return
-	role = new_role
-	_popup({ROLE_COOK: "Cozinheiro!", ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!"}.get(role, "De volta à mina"), Color(0.95, 0.9, 0.6))
+	if job == new_job:
+		return
+	job = new_job
+	_popup(JOB_LABELS[job], Color(0.95, 0.9, 0.6) if job != ROLE_IDLE else Color(0.75, 0.75, 0.8))
 	_refresh_tool_texture()
 	if auto_mode and _ai_state != "manual":
 		_decision_timer = randf_range(0.05, 0.4)  # troca de tarefa já
@@ -1769,7 +1833,7 @@ func get_save_data() -> Dictionary:
 		"home_slot": _home_slot if has_home() else -1,
 		"anger": anger,
 		"overtime": overtime,
-		"role": role,
+		"job": job,
 		"food_carrying": food_carrying,
 		"wood_carrying": wood_carrying,
 		"gender": gender,
@@ -1803,8 +1867,15 @@ func load_save_data(d: Dictionary) -> void:
 	_saved_home_slot = SaveUtil.integer(d, "home_slot", -1)
 	anger = clampf(SaveUtil.num(d, "anger", 0.0), 0.0, 100.0)
 	overtime = SaveUtil.boolean(d, "overtime", false)
-	var r := SaveUtil.text(d, "role", "")
-	role = r if r in [ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH] else ""
+	# Bloco 25: "job". Save de antes (só "role", onde "" = fazia de tudo) já chega aqui
+	# migrado pelo SaveManager (versão 3); o fallback abaixo cobre dados sem migração:
+	# quem não tinha função especial continua MINERANDO, não fica ocioso do nada.
+	if d.has("job"):
+		var j := SaveUtil.text(d, "job", ROLE_MINER)
+		job = j if j in JOBS else ROLE_MINER
+	else:
+		var r := SaveUtil.text(d, "role", "")
+		job = r if r in [ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH] else ROLE_MINER
 	combat_skill = clampf(SaveUtil.num(d, "combat_skill", 0.0), 0.0, 1.0)
 	wood_carrying = clampf(SaveUtil.num(d, "wood_carrying", 0.0), 0.0, lumber_carry)
 	food_carrying = clampf(SaveUtil.num(d, "food_carrying", 0.0), 0.0, cook_carry)
