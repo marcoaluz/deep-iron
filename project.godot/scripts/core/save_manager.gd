@@ -91,6 +91,10 @@ extends Node
 ##     centro_vila.gd pending_upgrade/upgrade_left/upgrade_total/obra; oficina.gd e
 ##     escavadeira.gd ganham "obra" (ordered_at, a ordem da fila). Quem está trabalhando
 ##     não vai pro save: o engenheiro volta sozinho. Save antigo: nenhuma obra pendente.
+##   Bloco 31b: "canteiros" [{kind, position, total, left, obra}] (taverna, laboratório,
+##     campo, ampliação da taverna) — recriados antes dos ipezinhos; escudo.gd ganha "obra";
+##     escavadeira.gd building_reactor/reactor_left/reactor_total; a expansão da vila é
+##     pending_upgrade = "expandir" no centro_vila.gd.
 ##   Bloco 30: nada novo — "médico" é mais um valor de job; quem está de plantão
 ##     (enfermaria._doctors) é derivado e volta sozinho pra dentro ao carregar.
 ##   Bloco 27: armazem.gd raw_stored (matéria-prima); hunt_spot.gd (cada toca, grupo
@@ -133,6 +137,7 @@ const LEGACY_LOTS := {
 }
 const MAIN_SCENE := "res://scenes/game/main.tscn"
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const Canteiro := preload("res://scripts/props/canteiro.gd")
 
 ## Segundos entre autosaves (0 = desligado). Padrão: 3 minutos.
 @export var autosave_interval: float = 180.0
@@ -431,6 +436,11 @@ func _collect() -> Dictionary:
 			data[key] = node.get_save_data()
 	for key in ["casas", "armazens", "minerios", "comedouros", "coleta_comida", "arvores", "barricadas", "caca"]:
 		data[key] = _collect_group(key)
+	# Bloco 31b: canteiros de obras encomendadas (taverna, laboratório, campo...)
+	var canteiros := []
+	for c in tree.get_nodes_in_group("canteiros"):
+		canteiros.append(c.get_save_data())
+	data["canteiros"] = canteiros
 	var workers := []
 	for w in tree.get_nodes_in_group("ipezinhos"):
 		workers.append(w.get_save_data())
@@ -490,6 +500,13 @@ func apply_pending(main: Node) -> void:
 	_apply_single("diary", SaveUtil.dict(data, "diary"))
 	_apply_single("research", SaveUtil.dict(data, "research"))  # recria o laboratório
 	_apply_single("sun", SaveUtil.dict(data, "sun"))  # ondas, vitória e o gerador do escudo
+	for c in get_tree().get_nodes_in_group("canteiros"):  # (troca pelos do save)
+		c.remove_from_group("canteiros")
+		c.remove_from_group("obras")
+		c.queue_free()
+	for cd in SaveUtil.array(data, "canteiros"):
+		if typeof(cd) == TYPE_DICTIONARY:
+			Canteiro.restore(get_tree(), cd)
 	_apply_group("barricadas", SaveUtil.dict(data, "barricadas"))
 	_apply_group("casas", SaveUtil.dict(data, "casas"))
 	_apply_group("armazens", SaveUtil.dict(data, "armazens"))

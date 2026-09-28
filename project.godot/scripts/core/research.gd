@@ -16,6 +16,7 @@ signal researched(id: String)
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const LAB_SCENE := preload("res://scenes/props/laboratorio.tscn")
 const LAB_TEXTURE := preload("res://assets/game/laboratorio.png")
+const Canteiro := preload("res://scripts/props/canteiro.gd")
 const ORDER := ["carrinhos", "explosivos", "escoramento", "medicina", "radio", "hidroponia",
 	"estudo_solar", "satelite", "holofotes", "escudo"]
 ## points = pontos de pesquisa; cost = créditos, minério, madeira; ore = tipo do minério.
@@ -55,6 +56,8 @@ const TECHS := {
 @export_group("Laboratório")
 @export var lab_credits: int = 300
 @export var lab_wood: int = 60
+## Bloco 31b: segundos de engenheiro pra erguer o laboratório.
+@export var lab_build_time: float = 60.0
 @export var lab_iron: int = 80
 @export var lab_min_stage: int = 2
 ## Pontos por segundo que cada pesquisador gera no laboratório.
@@ -106,6 +109,9 @@ func researchers() -> Array:
 func lab_block_reason() -> String:
 	if lab() != null:
 		return "construído"
+	var c := Canteiro.pending(get_tree(), "laboratorio")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
 	var hub := get_tree().get_first_node_in_group("village_hub")
 	if hub and hub.level < lab_min_stage:
 		return "requer vila nível %d" % lab_min_stage
@@ -130,13 +136,24 @@ func _confirm_lab(pos: Vector2) -> bool:
 		return false
 	if not get_tree().get_first_node_in_group("economy").spend(lab_credits, lab_iron, "ferro", lab_wood):
 		return false
+	Canteiro.order(get_tree(), "laboratorio", pos, lab_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Laboratório encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+## Bloco 31b: o canteiro terminou (chamado por canteiro.gd).
+func finish_build(kind: String, pos: Vector2) -> void:
+	if kind != "laboratorio" or lab() != null:
+		return
 	var l := spawn_lab(pos)
 	l.pop_in()
 	Audio.recruit()
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
 		hud.show_toast("Laboratório pronto! Escolha uma pesquisa (Q) e mande pesquisadores (Z).", Color(0.55, 1.0, 0.5))
-	return true
 
 
 func spawn_lab(pos: Vector2) -> Node2D:

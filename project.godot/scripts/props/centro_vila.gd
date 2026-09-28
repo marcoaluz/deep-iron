@@ -68,6 +68,8 @@ const UPGRADE_NAMES := {
 @export var trilhas_build_times: Array[float] = [25.0, 40.0, 55.0]
 ## Segundos de trabalho de engenheiro pra erguer cada casa (por nível de Moradias).
 @export var house_build_times: Array[float] = [35.0, 45.0, 55.0, 65.0]
+## Bloco 31b: segundos de engenheiro pra EXPANDIR a vila (estágio 2, 3, 4, 5).
+@export var expand_build_times: Array[float] = [60.0, 90.0, 120.0, 150.0]
 
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 var panel_id := "hub"
@@ -142,7 +144,7 @@ func next_level_cost() -> int:
 
 func can_level_up() -> bool:
 	var eco := _economy()
-	return level < max_level() and eco != null \
+	return level < max_level() and eco != null and pending_upgrade == "" \
 		and lifetime_ore() >= next_level_ore() and eco.credits >= next_level_cost()
 
 
@@ -151,12 +153,26 @@ func level_up() -> bool:
 		Audio.error()
 		return false
 	_economy().spend(next_level_cost(), 0)
+	# Bloco 31b: pagou -> vira obra (uma obra da vila por vez, como as melhorias)
+	pending_upgrade = "expandir"
+	upgrade_total = build_time("expandir")
+	upgrade_left = upgrade_total
+	_obra.start()
+	_update_visual()
+	_popup("Expansão encomendada — precisa de engenheiro", Color(1.0, 0.8, 0.45))
+	Audio.click()
+	return true
+
+
+func _finish_expansion() -> void:
+	pending_upgrade = ""
+	upgrade_left = 0.0
+	upgrade_total = 0.0
 	level += 1
 	_update_visual()
 	_popup("A vila agora é: %s!" % stage_name(), Color(1.0, 0.85, 0.4))
 	Audio.recruit()
 	level_changed.emit(level)
-	return true
 
 
 # ------------------------------------------------------------ melhorias
@@ -240,6 +256,8 @@ func buy_upgrade(id: String) -> bool:
 
 ## Segundos de engenheiro pro PRÓXIMO nível dessa melhoria.
 func build_time(id: String) -> float:
+	if id == "expandir":
+		return expand_build_times[clampi(level - 1, 0, expand_build_times.size() - 1)] if not expand_build_times.is_empty() else 60.0
 	var lvl: int = upgrades[id]
 	var times: Array[float] = house_build_times
 	if id == "enfermaria":
@@ -250,6 +268,9 @@ func build_time(id: String) -> float:
 
 
 func _finish_upgrade() -> void:
+	if pending_upgrade == "expandir":
+		_finish_expansion()
+		return
 	var id := pending_upgrade
 	pending_upgrade = ""
 	upgrade_left = 0.0
@@ -268,6 +289,8 @@ func obra_pending() -> bool:
 
 
 func obra_title() -> String:
+	if pending_upgrade == "expandir":
+		return "Expandir vila → %s" % stage_name(level + 1)
 	return "%s %d" % [UPGRADE_NAMES.get(pending_upgrade, "melhoria"), upgrades.get(pending_upgrade, 0) + 1]
 
 
@@ -475,7 +498,8 @@ func load_save_data(d: Dictionary) -> void:
 		upgrades[id] = clampi(SaveUtil.integer(saved, id, upgrades[id]), 0, upgrade_max(id))
 	# Bloco 31 (save antigo: nenhuma obra pendente)
 	var p := SaveUtil.text(d, "pending_upgrade", "")
-	pending_upgrade = p if p in UPGRADE_IDS and p != "moradias" and upgrades[p] < upgrade_max(p) else ""
+	pending_upgrade = p if (p in UPGRADE_IDS and p != "moradias" and upgrades[p] < upgrade_max(p)) \
+		or (p == "expandir" and level < max_level()) else ""
 	upgrade_total = maxf(SaveUtil.num(d, "upgrade_total", 0.0), 0.0) if pending_upgrade != "" else 0.0
 	upgrade_left = clampf(SaveUtil.num(d, "upgrade_left", upgrade_total), 0.0, upgrade_total)
 	_obra.load_save_data(SaveUtil.dict(d, "obra"))

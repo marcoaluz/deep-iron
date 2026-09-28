@@ -150,7 +150,11 @@ func refresh() -> void:
 		_next_bar.value = minf(have, need)
 		_next_label.text = "%d / %d minério coletado no total" % [int(have), need]
 		var cost: int = _hub.next_level_cost()
-		if have < need:
+		if _hub.pending_upgrade == "expandir":
+			_level_button.text = "Expandindo: %s" % _hub.obra_status().split(": ", true, 1)[-1]
+		elif _hub.pending_upgrade != "":
+			_level_button.text = "Expandir vila  (espere a obra atual terminar)"
+		elif have < need:
 			_level_button.text = "Expandir vila  (falta minério coletado)"
 		else:
 			_level_button.text = "Expandir vila  (%d cr)" % cost

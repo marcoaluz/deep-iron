@@ -89,6 +89,8 @@ const GHOST_COLOR := Color(0.75, 1.0, 1.5, 0.4)
 	Vector3i(500, 80, 5),
 	Vector3i(800, 150, 8),
 ]
+## Bloco 31b: segundos de engenheiro pra montar cada reator (a Caldeira vem pronta).
+@export var reactor_build_times: Array[float] = [0.0, 40.0, 60.0, 60.0, 90.0]
 ## Caldeira: carvão gasto por segundo.
 @export var vapor_coal_per_sec: float = 0.08
 ## Diesel: ânimo a menos pra todos enquanto liga.
@@ -117,6 +119,10 @@ var fabricating: String = ""
 var fab_left: float = 0.0
 ## Bloco 31: a peça encomendada só é montada com um ENGENHEIRO trabalhando aqui.
 var _obra := ObraSite.new()
+## Bloco 31b: reator encomendado e em obra ("" = nenhum) — também precisa de engenheiro.
+var building_reactor: String = ""
+var reactor_left: float = 0.0
+var reactor_total: float = 0.0
 var complete: bool = false
 ## Reator instalado ("" antes de ficar pronta) e os que já foram construídos.
 var reactor: String = ""
@@ -185,14 +191,18 @@ func _process(delta: float) -> void:
 
 # ------------------------------------------------------------ obra (Bloco 31)
 func obra_pending() -> bool:
-	return fabricating != ""
+	return fabricating != "" or building_reactor != ""
 
 
 func obra_title() -> String:
+	if building_reactor != "":
+		return "Reator: %s" % REACTOR_NAMES.get(building_reactor, "?")
 	return PART_NAMES.get(fabricating, "peça")
 
 
 func obra_progress() -> float:
+	if building_reactor != "":
+		return clampf(1.0 - reactor_left / reactor_total, 0.0, 1.0) if reactor_total > 0.0 else 0.0
 	return fab_progress()
 
 
@@ -202,6 +212,13 @@ func obra_position(worker: Node) -> Vector2:
 
 ## O engenheiro trabalhou `seconds` aqui: só assim a peça anda.
 func obra_work(seconds: float) -> void:
+	if building_reactor != "":
+		reactor_left -= seconds
+		if reactor_left <= 0.0:
+			_finish_reactor()
+		else:
+			_update_label()
+		return
 	if fabricating == "":
 		return
 	fab_left -= seconds
@@ -350,6 +367,8 @@ func _update_visual() -> void:
 func _update_label() -> void:
 	if complete:
 		_label.text = "Escavadeira — %s\n%s" % [REACTOR_NAMES.get(reactor, "?"), drill_status()]
+		if building_reactor != "":
+			_label.text += "\nobra: reator %s  %s" % [REACTOR_NAMES[building_reactor], _obra.status(obra_progress())]
 		_label.modulate = Color(1.0, 0.85, 0.4) if reactor_active() else Color(1.0, 0.55, 0.45)
 	elif fabricating != "":
 		_label.text = "Escavadeira  %d/5\n%s  %s" % [installed_count(), PART_NAMES[fabricating], _obra.status(fab_progress())]
@@ -427,6 +446,10 @@ func reactor_block_reason(id: String) -> String:
 		return "instalado"
 	if built_reactors.has(id):
 		return "construído"
+	if building_reactor == id:
+		return "em obra (%s)" % _obra.status(obra_progress())
+	if building_reactor != "":
+		return "outro reator em obra"
 	var finds := get_tree().get_first_node_in_group("finds")
 	if REACTOR_ITEM.has(id) and (finds == null or not finds.has_item(REACTOR_ITEM[id])):
 		return "precisa achar: %s" % finds.ITEM_NAMES[REACTOR_ITEM[id]] if finds else "precisa de um achado"
@@ -452,9 +475,24 @@ func build_reactor(id: String) -> bool:
 	if not eco.spend(cost.x, cost.y, "ferro"):
 		return false
 	get_tree().get_first_node_in_group("finds").spend_parts(cost.z)
+	# Bloco 31b: pagou -> vira obra; o reator só entra quando o engenheiro terminar
+	building_reactor = id
+	reactor_total = reactor_build_times[REACTOR_IDS.find(id)] if REACTOR_IDS.find(id) < reactor_build_times.size() else 60.0
+	reactor_left = reactor_total
+	_obra.start()
+	_popup("Encomendado: reator %s — precisa de engenheiro" % REACTOR_NAMES[id], Color(1.0, 0.8, 0.45))
+	_update_label()
+	return true
+
+
+func _finish_reactor() -> void:
+	var id := building_reactor
+	building_reactor = ""
+	reactor_left = 0.0
+	reactor_total = 0.0
 	built_reactors.append(id)
 	_popup("Reator novo: %s!" % REACTOR_NAMES[id], Color(0.55, 1.0, 0.5))
-	return install_reactor(id)
+	install_reactor(id)
 
 
 ## Troca pro reator (já construído).
@@ -566,6 +604,7 @@ func get_save_data() -> Dictionary:
 		"installed": installed.duplicate(), "fabricating": fabricating, "fab_left": fab_left,
 		"reactor": reactor, "built_reactors": built_reactors.duplicate(), "drill_on": drill_on,
 		"outage_left": outage_left, "obra": _obra.get_save_data(),
+		"building_reactor": building_reactor, "reactor_left": reactor_left, "reactor_total": reactor_total,
 	}
 
 
@@ -579,6 +618,10 @@ func load_save_data(d: Dictionary) -> void:
 		fabricating = ""
 	fab_left = maxf(SaveUtil.num(d, "fab_left", 0.0), 0.0) if fabricating != "" else 0.0
 	_obra.load_save_data(SaveUtil.dict(d, "obra"))  # save antigo: ordered_at 0 (vai primeiro na fila)
+	var br := SaveUtil.text(d, "building_reactor", "")  # Bloco 31b (save antigo: nenhum)
+	building_reactor = br if br in REACTOR_IDS else ""
+	reactor_total = maxf(SaveUtil.num(d, "reactor_total", 0.0), 0.0) if building_reactor != "" else 0.0
+	reactor_left = clampf(SaveUtil.num(d, "reactor_left", reactor_total), 0.0, reactor_total)
 	complete = installed_count() == PART_IDS.size()
 	built_reactors = []
 	for id in SaveUtil.array(d, "built_reactors"):

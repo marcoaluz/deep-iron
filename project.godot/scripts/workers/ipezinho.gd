@@ -121,6 +121,9 @@ const HAMMER := preload("res://assets/game/hammer.png")
 ## Distância da obra em que o engenheiro já conta como "no local" (a obra pode estar
 ## dentro de um obstáculo; a navegação para no ponto andável mais perto).
 const OBRA_REACH := 70.0
+## Anti-travamento: segundos parado "andando" até refazer o caminho / puxar pra área andável.
+const STUCK_REPATH_TIME := 1.5
+const STUCK_SNAP_TIME := 3.0
 const RAW_FOOD := preload("res://assets/game/raw_food.png")
 const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 
@@ -341,6 +344,10 @@ var _ward: Node = null  # enfermaria onde está internado
 var _death_warned := false
 ## Felicidade 0..100 (-1 = ainda não definida: nasce com happiness_start).
 var happiness: float = -1.0
+var _stuck_time := 0.0  # Bloco 31b: anti-travamento (_check_stuck)
+var _stuck_pos := Vector2.ZERO
+var _stuck_stage := 0
+var _ghost_left := 0.0  # segundos com o desvio desligado pra desencalhar
 var _obra: Node = null  # Bloco 31: obra que o engenheiro está tocando
 var _obra_on_site := false  # já chegou e está trabalhando nela
 var _on_duty: Node = null  # Bloco 30: enfermaria onde o médico está de plantão (lá dentro)
@@ -518,9 +525,12 @@ func _physics_process(delta: float) -> void:
 			var to_next := next - global_position
 			var d := to_next.length()
 			if d > 0.01:
-				var spd := minf(_get_effective_speed(), dist_to_target / delta)
+				# nunca passa do próximo ponto do caminho num quadro só (com FPS baixo o
+				# passo ficava maior que a tolerância e ele ia e voltava em volta do ponto)
+				var spd := minf(_get_effective_speed(), minf(dist_to_target, d + 2.0) / delta)
 				desired = to_next / d * spd
 
+	_check_stuck(delta)
 	if _agent.avoidance_enabled:
 		# parado (trabalhando/esperando) tem prioridade: quem está andando desvia dele
 		_agent.avoidance_priority = 0.5 if _moving else 1.0
@@ -528,6 +538,48 @@ func _physics_process(delta: float) -> void:
 	else:
 		_apply_velocity(desired)
 	_update_animation(delta)
+
+
+## Bloco 31b: anti-travamento. "Andando" sem sair do lugar (a malha de navegação foi
+## refeita com ele dentro de um obstáculo novo — canteiro, prédio, save carregado — ou
+## o desvio travou entre dois): 1) refaz o caminho; 2) puxa pro ponto andável mais
+## perto e tenta de novo; 3) desiste de andar até ali (a IA decide de novo).
+func _check_stuck(delta: float) -> void:
+	# desvio desligado de propósito (passando por alguém): volta ao normal quando acabar
+	if _ghost_left > 0.0:
+		_ghost_left -= delta
+		if _ghost_left <= 0.0 and not _inside:
+			_agent.avoidance_enabled = avoidance_enabled
+	if not _moving:
+		_stuck_time = 0.0
+		_stuck_stage = 0
+		return
+	# "saiu do lugar" = andou pelo menos 12 px (tremer no lugar, empurrado pelo desvio, não conta)
+	if global_position.distance_to(_stuck_pos) > 12.0:
+		_stuck_pos = global_position
+		_stuck_time = 0.0
+		_stuck_stage = 0
+		return
+	_stuck_time += delta
+	if _stuck_stage == 0 and _stuck_time > STUCK_REPATH_TIME:
+		_stuck_stage = 1
+		_agent.target_position = _target  # refaz o caminho
+		# alguém parado trabalhando no corredor: passa "por dentro" dele por um instante
+		if _agent.avoidance_enabled:
+			_agent.avoidance_enabled = false
+			_ghost_left = 2.5
+	elif _stuck_stage == 1 and _stuck_time > STUCK_SNAP_TIME:
+		_stuck_stage = 2
+		var map := _agent.get_navigation_map()
+		var p := NavigationServer2D.map_get_closest_point(map, global_position)
+		if p.distance_to(global_position) > 0.5:
+			global_position = p  # estava fora da área andável
+		_agent.target_position = _target
+	elif _stuck_stage == 2 and _stuck_time > STUCK_SNAP_TIME * 2.0:
+		_moving = false  # não dá pra chegar mais perto daqui
+		_decision_timer = 0.0
+		_stuck_time = 0.0
+		_stuck_stage = 0
 
 
 func _on_velocity_computed(safe_velocity: Vector2) -> void:
@@ -620,7 +672,11 @@ func _process(delta: float) -> void:
 			_obra_stop()
 			_decision_timer = 0.0  # acabou: próxima obra da fila
 		elif not _obra_on_site:
-			if not _moving and global_position.distance_to(_obra.obra_position(self)) <= OBRA_REACH:
+			# chegou: parou perto (a obra pode estar dentro de um obstáculo) ou já está
+			# colado no ponto mesmo com outro engenheiro esbarrando nele
+			var dist := global_position.distance_to(_obra.obra_position(self))
+			if (not _moving and dist <= OBRA_REACH) or dist <= 24.0:
+				_moving = false
 				_obra_on_site = true
 				_obra.obra_join(self)
 		else:
@@ -1251,6 +1307,29 @@ func _pick_obra() -> Node:
 		if not taken and (oldest_free == null or t < oldest_free.obra_ordered_at()):
 			oldest_free = site
 	return oldest_free if oldest_free != null else oldest_any
+
+
+## Bloco 31b: nuvenzinha de poeira/lascas onde o martelo bate (fica no mundo, não
+## acompanha o ipezinho, e some sozinha).
+func _dust_puff() -> void:
+	var p := CPUParticles2D.new()
+	p.one_shot = true
+	p.explosiveness = 0.9
+	p.amount = 7
+	p.lifetime = 0.55
+	p.direction = Vector2(0, -1)
+	p.spread = 70.0
+	p.gravity = Vector2(0, 90)
+	p.initial_velocity_min = 20.0
+	p.initial_velocity_max = 45.0
+	p.scale_amount_min = 1.5
+	p.scale_amount_max = 3.0
+	p.color = Color(0.78, 0.68, 0.55, 0.8)
+	p.z_index = 5
+	get_parent().add_child(p)
+	p.global_position = global_position + Vector2(16.0 * _facing, -6.0)
+	p.emitting = true
+	p.finished.connect(p.queue_free)
 
 
 ## Sai da obra (pausa): o que já foi feito fica guardado nela.
@@ -2107,6 +2186,8 @@ func _update_animation(delta: float) -> void:
 		if _swing_rising and not rising:
 			if item == _pickaxe() or item == HAMMER:  # picareta na pedra / martelo na obra
 				Audio.pick(global_position)
+			if item == HAMMER and _ai_state == "building":
+				_dust_puff()
 		_swing_rising = rising
 		_prev_swing = swing
 	else:

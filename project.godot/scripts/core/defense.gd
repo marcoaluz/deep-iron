@@ -20,6 +20,7 @@ const LUMIVORO := preload("res://scenes/creatures/lumivoro.tscn")
 const FERRUGENTO := preload("res://scenes/creatures/ferrugento.tscn")
 const CAMPO_SCENE := preload("res://scenes/props/campo_treino.tscn")
 const CAMPO_TEXTURE := preload("res://assets/game/campo_treino.png")
+const Canteiro := preload("res://scripts/props/canteiro.gd")
 const WEAPON_IDS := ["porrete", "lanca", "besta", "lanca_prata"]
 const WEAPON_NAMES := {
 	"porrete": "Porrete",
@@ -47,6 +48,8 @@ const WEAPON_DESCRIPTIONS := {
 @export_group("Campo de treino")
 @export var campo_credits: int = 120
 @export var campo_wood: int = 50
+## Bloco 31b: segundos de engenheiro pra erguer o campo de treino.
+@export var campo_build_time: float = 30.0
 
 @export_group("Invasões")
 @export var first_invasion_day: int = 3
@@ -227,6 +230,9 @@ func forge_progress() -> float:
 func campo_block_reason() -> String:
 	if campo() != null:
 		return "construído"
+	var c := Canteiro.pending(get_tree(), "campo")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
 	var eco := get_tree().get_first_node_in_group("economy")
 	return eco.missing_text(campo_credits, 0, "", campo_wood) if eco else "sem recursos"
 
@@ -248,13 +254,24 @@ func _confirm_campo(pos: Vector2) -> bool:
 		return false
 	if not get_tree().get_first_node_in_group("economy").spend(campo_credits, 0, "", campo_wood):
 		return false
+	Canteiro.order(get_tree(), "campo", pos, campo_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Campo de treino encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+## Bloco 31b: o canteiro terminou (chamado por canteiro.gd).
+func finish_build(kind: String, pos: Vector2) -> void:
+	if kind != "campo" or campo() != null:
+		return
 	var c := spawn_campo(pos)
 	c.pop_in()
 	Audio.recruit()
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
 		hud.show_toast("Campo de treino pronto! Os guardas treinam aqui de dia (tecla X faz guarda).", Color(0.55, 1.0, 0.5))
-	return true
 
 
 func spawn_campo(pos: Vector2) -> Node2D:

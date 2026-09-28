@@ -2,8 +2,10 @@ extends Node2D
 ## Gerador do ESCUDO SOLAR (grupo "escudos"): o projeto final. O jogador escolhe o lugar
 ## (janela do Sol, tecla Y) e constrói 4 etapas, uma por vez (paga ao começar, leva tempo):
 ## Fundação -> Bobinas -> Núcleo de solarita -> Emissor. Com a última: VITÓRIA (sun.gd).
+## Bloco 31b: cada etapa paga vira OBRA — só anda com um engenheiro trabalhando aqui.
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const ObraSite := preload("res://scripts/core/obra_site.gd")
 const STAGE_IDS := ["fundacao", "bobinas", "nucleo", "emissor"]
 const STAGE_NAMES := {
 	"fundacao": "Fundação",
@@ -32,6 +34,7 @@ var built: int = 0  # etapas prontas
 var building: String = ""
 var build_left: float = 0.0
 var _sound_timer := 0.0
+var _obra := ObraSite.new()
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _glow: PointLight2D = $Glow
@@ -40,6 +43,7 @@ var _sound_timer := 0.0
 
 func _ready() -> void:
 	add_to_group("escudos")
+	add_to_group("obras")
 	add_to_group("clickable")
 	_glow.add_to_group("cullable_lights")
 	_update_visual()
@@ -122,8 +126,66 @@ func start_stage(id: String) -> bool:
 		get_tree().get_first_node_in_group("finds").spend_parts(nucleo_parts)
 	building = id
 	build_left = float(c.z)
+	_obra.start()
 	_update_visual()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Etapa encomendada: %s — precisa de engenheiro (tecla 4)." % STAGE_NAMES[id], Color(1.0, 0.8, 0.45))
 	return true
+
+
+# ------------------------------------------------------------ obra (Bloco 31b)
+func obra_pending() -> bool:
+	return building != ""
+
+
+func obra_title() -> String:
+	return "Escudo: %s" % STAGE_NAMES.get(building, "etapa")
+
+
+func obra_progress() -> float:
+	return build_progress()
+
+
+func obra_position(worker: Node) -> Vector2:
+	return global_position + Vector2(0, 30) + _obra.offset_for(worker)
+
+
+## O engenheiro trabalhou `seconds` aqui: só assim a etapa anda.
+func obra_work(seconds: float) -> void:
+	if building == "":
+		return
+	build_left -= seconds
+	if build_left <= 0.0:
+		_finish_stage()
+
+
+func obra_ordered_at() -> float:
+	return _obra.ordered_at
+
+
+func obra_join(worker: Node) -> void:
+	_obra.join(worker)
+
+
+func obra_leave(worker: Node) -> void:
+	_obra.leave(worker)
+
+
+func obra_workers() -> Array[Node]:
+	return _obra.workers()
+
+
+func _finish_stage() -> void:
+	built += 1
+	building = ""
+	build_left = 0.0
+	pop_in()
+	_update_visual()
+	if complete():
+		var sun := get_tree().get_first_node_in_group("sun")
+		if sun:
+			sun.win()
 
 
 func build_progress() -> float:
@@ -143,22 +205,13 @@ func _process(delta: float) -> void:
 		if complete():
 			_glow.energy = 0.9 + 0.3 * sin(Time.get_ticks_msec() * 0.003)
 		return
-	build_left -= delta
-	_sound_timer -= delta
-	if _sound_timer <= 0.0:
-		_sound_timer = 0.8 * randf_range(0.8, 1.2)
-		Audio.forge(global_position)
+	# a etapa só anda com engenheiro (obra_work); aqui só o som e o texto
+	if _obra.has_engineer():
+		_sound_timer -= delta
+		if _sound_timer <= 0.0:
+			_sound_timer = 0.8 * randf_range(0.8, 1.2)
+			Audio.forge(global_position)
 	_update_label()
-	if build_left <= 0.0:
-		built += 1
-		building = ""
-		build_left = 0.0
-		pop_in()
-		_update_visual()
-		if complete():
-			var sun := get_tree().get_first_node_in_group("sun")
-			if sun:
-				sun.win()
 
 
 func _update_visual() -> void:
@@ -173,8 +226,8 @@ func _update_label() -> void:
 		_label.text = "ESCUDO SOLAR\nativo"
 		_label.modulate = Color(0.6, 0.9, 1.0)
 	elif building != "":
-		_label.text = "Gerador do escudo\n%s %d%%" % [STAGE_NAMES[building], roundi(build_progress() * 100.0)]
-		_label.modulate = Color(1.0, 0.8, 0.5)
+		_label.text = "Gerador do escudo\n%s  %s" % [STAGE_NAMES[building], _obra.status(build_progress())]
+		_label.modulate = Color(1.0, 0.8, 0.5) if _obra.has_engineer() else Color(1.0, 0.62, 0.3)
 	else:
 		_label.text = "Gerador do escudo\n%d/4 etapas" % built
 		_label.modulate = Color(0.9, 0.85, 0.75)
@@ -182,7 +235,8 @@ func _update_label() -> void:
 
 # ------------------------------------------------------------ save/load (via sun.gd)
 func get_save_data() -> Dictionary:
-	return {"position": SaveUtil.vec2_to_array(global_position), "built": built, "building": building, "build_left": build_left}
+	return {"position": SaveUtil.vec2_to_array(global_position), "built": built, "building": building, "build_left": build_left,
+		"obra": _obra.get_save_data()}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -191,4 +245,5 @@ func load_save_data(d: Dictionary) -> void:
 	if building not in STAGE_IDS or STAGE_IDS.find(building) != built:
 		building = ""
 	build_left = maxf(SaveUtil.num(d, "build_left", 0.0), 0.0) if building != "" else 0.0
+	_obra.load_save_data(SaveUtil.dict(d, "obra"))
 	_update_visual()
