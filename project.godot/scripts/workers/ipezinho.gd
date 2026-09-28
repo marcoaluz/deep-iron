@@ -52,6 +52,9 @@ const OUTFIT_FILES := {
 	"lenhador": "res://assets/game/ipezinho_lenhador_%s%d.png",
 	"cozinheiro": "res://assets/game/ipezinho_cozinheiro_%s%d.png",
 	"civil": "res://assets/game/ipezinho_civil_%s%d.png",
+	"cacador": "res://assets/game/ipezinho_cacador_%s%d.png",  # Bloco 28
+	"guarda": "res://assets/game/ipezinho_guarda_%s%d.png",
+	"pesquisador": "res://assets/game/ipezinho_pesquisador_%s%d.png",
 }
 ## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
 const OUTFITS_WITH_LAMP := ["mineiro"]
@@ -92,13 +95,14 @@ const JOB_LABELS := {
 	ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!",
 	ROLE_HUNTER: "Caçador!",
 }
-## Bloco 26: outfit inteiro por função (derivado do `job`: nada novo no save).
-## Guarda e pesquisador ainda vestem o de mineiro — outfit próprio deles = gerar os
-## corpos no gen_sprites.py, pôr o arquivo em OUTFIT_FILES e trocar aqui.
+## Bloco 26/28: outfit inteiro por função (derivado do `job`: nada novo no save).
+## REGRA (Bloco 28): toda função nova nasce com outfit próprio no mesmo bloco —
+## gerar os corpos no gen_sprites.py (IPEZINHO_OUTFITS), pôr o arquivo em OUTFIT_FILES
+## e mapear aqui. Nada de "por enquanto usa o de mineiro".
 const JOB_OUTFIT := {
 	ROLE_IDLE: "civil", ROLE_MINER: "mineiro", ROLE_COOK: "cozinheiro",
-	ROLE_LUMBER: "lenhador", ROLE_GUARD: "mineiro", ROLE_RESEARCH: "mineiro",
-	ROLE_HUNTER: "mineiro",  # Bloco 27: outfit próprio fica pra depois (como guarda/pesquisador)
+	ROLE_LUMBER: "lenhador", ROLE_GUARD: "guarda", ROLE_RESEARCH: "pesquisador",
+	ROLE_HUNTER: "cacador",
 }
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
@@ -693,12 +697,16 @@ func _choose_state() -> String:
 		if raw_carrying > 0.0:
 			return "cooking"  # o armazém acabou: prepara o que já tem
 		return "idle"  # sem matéria-prima: espera (o HUD mostra "esperando matéria-prima")
-	# Caçador (Bloco 27): caça na toca se tiver arco (rende mais), senão colhe fruta na horta.
+	# Caçador (Bloco 27/28): caça tem PRIORIDADE (rende mais) quando tem arco e alguma toca
+	# com caça; com todas as tocas esgotadas, colhe fruta em vez de ficar parado; assim que
+	# uma toca volta, larga a fruta e volta a caçar (a mochila é a mesma: não perde nada).
 	if is_hunter():
-		if _ai_state in ["foraging", "hunting"] and _station_ok_for(_ai_state):
-			return _ai_state
+		if _ai_state == "hunting" and _station_ok_for("hunting"):
+			return "hunting"
 		if _has_usable_station("caca"):  # a toca só conta como usável com arco e flecha
 			return "hunting"
+		if _ai_state == "foraging" and _station_ok_for("foraging"):
+			return "foraging"
 		if _has_usable_station("coleta_comida"):
 			return "foraging"
 		return "idle"

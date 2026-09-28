@@ -751,6 +751,112 @@ IPEZINHO_OUTFITS = {
         ],
     },
 }
+def _put(rows, y, x, ch):
+    """Cópia de `rows` com o caractere da coluna x da linha y trocado."""
+    out = list(rows)
+    out[y] = out[y][:x] + ch + out[y][x + 1:]
+    return out
+
+
+def _quiver(face):
+    """Penas das flechas do carcaz aparecendo atrás do ombro direito (coluna 14)."""
+    for y, ch in ((0, "p"), (1, "P"), (2, "T"), (3, "T")):
+        face = _put(face, y, 14, ch)
+    return face
+
+
+_FELT_HAT = [  # chapéu de caça de feltro com pena e aba larga
+    "................",
+    ".........pP.....",
+    ".....vVVVVp.....",
+    ".....vVyVVv.....",
+    "....vTTTTTTv....",
+    "..vvvvvvvvvvvv..",
+]
+_KETTLE_HELM = [  # elmo de ferro de aba larga (sem lanterna)
+    "................",
+    "................",
+    "......iIJi......",
+    ".....iIIJJi.....",
+    "....iIIIIJIi....",
+    "..iiiiiiiiiiii..",
+]
+# Bloco 28: caçador, guarda e pesquisador ganham outfit próprio (regra: função nova
+# nasce com outfit próprio no mesmo bloco — nada de "por enquanto usa o de mineiro").
+IPEZINHO_OUTFITS.update({
+    # caçador: chapéu com pena, colete de couro, alça do carcaz cruzando o peito
+    "cacador": {
+        "m": _FELT_HAT + _quiver(_FACE_M) + [
+            "..fKKTFFFFKKFu..",
+            "..fKKKFTFFKKFu..",
+            "..SsKKFFFTKKSs..",
+            "...cTTTbbTTTc...",
+        ],
+        "f": _FELT_HAT + _quiver(_FACE_F) + [
+            "..AKKTFFFFKKFa..",
+            "..tKKKFTFFKKFt..",
+            "..SsKKFFFTKKSs..",
+            "..cCTTTbbTTTCc..",
+        ],
+    },
+    # guarda: elmo de ferro, peitoral com ombreiras e a faixa vermelha da guarda
+    "guarda": {
+        "m": _KETTLE_HELM + _FACE_M + [
+            "..JJIIIDDIIIJJ..",
+            "..fIIIIDDIIIIu..",
+            "..SsuIIDDIIuSs..",
+            "...cTTTbbTTTc...",
+        ],
+        "f": _KETTLE_HELM + _FACE_F + [
+            "..JJIIIDDIIIJJ..",
+            "..tIIIIDDIIIIt..",
+            "..SsuIIDDIIuSs..",
+            "..cCCCDDDDCCCc..",
+        ],
+    },
+    # pesquisador: óculos de proteção na testa, jaleco branco sobre a camisa
+    "pesquisador": {
+        "m": [
+            "................",
+            "................",
+            "................",
+            "....aAAAAAAa....",
+            "...aAAAAAAAAa...",
+            "...aBOBaaBOBa...",
+            "...aSSSSSSSSa...",
+        ] + _FACE_M[1:] + [
+            "..QQQQqFFqQQQq..",
+            "..QQQQQqQQQQQq..",
+            "..SsQQQqQQQQSs..",
+            "...cQQQqQQQQc...",
+        ],
+        "f": [
+            "................",
+            "................",
+            "................",
+            "....aAAAAAAa....",
+            "...aAAAAAAAAa...",
+            "..aABOBaaBOBAa..",
+            "..aASSSSSSSSAa..",
+        ] + _FACE_F[1:] + [
+            "..AQQQqFFqQQQa..",
+            "..tQQQQqQQQQQt..",
+            "..SsQQQqQQQQSs..",
+            "..cQQQQqQQQQQc..",
+        ],
+    },
+})
+FELT_COLORS = ((66, 52, 40, 255), (94, 76, 56, 255), (124, 102, 74, 255))  # feltro marrom
+FEATHER_COLORS = (  # pena do chapéu (e das flechas), varia pela variação
+    ((140, 44, 40, 255), (196, 84, 64, 255)),
+    ((44, 96, 92, 255), (84, 148, 136, 255)),
+    ((170, 164, 150, 255), (226, 222, 210, 255)),
+)
+GUARD_TABARD = ((110, 30, 34, 255), (150, 44, 44, 255))  # faixa vermelha da guarda
+LAB_WHITE = (228, 232, 234, 255)
+LAB_SHADE = (178, 186, 194, 255)
+GOGGLE_GLASS = (104, 176, 196, 255)
+
 BEANIE_COLORS = (  # (escuro, médio, claro) — sorteado pela variação, pra colônia não ficar uniforme
     ((36, 70, 52, 255), (52, 96, 68, 255), (76, 122, 88, 255)),  # verde-mata
     ((110, 40, 34, 255), (150, 60, 44, 255), (182, 90, 62, 255)),  # vermelho-ferrugem
@@ -771,6 +877,17 @@ def _outfit_pal(outfit, look_index, shirt):
         }
     if outfit == "cozinheiro":
         return {"Q": CHEF_WHITE, "q": CHEF_SHADE, "j": CHEF_BAND}
+    if outfit == "cacador":
+        f_dark, f_light = FEATHER_COLORS[look_index % len(FEATHER_COLORS)]
+        return {
+            "v": FELT_COLORS[0], "V": FELT_COLORS[1], "y": FELT_COLORS[2],
+            "p": f_dark, "P": f_light,
+            "K": LEATHER_LIGHT,  # colete
+        }
+    if outfit == "guarda":
+        return {"i": IRON_DARK, "I": IRON, "J": IRON_LIGHT, "D": (GUARD_TABARD[1], GUARD_TABARD[0])}
+    if outfit == "pesquisador":
+        return {"Q": LAB_WHITE, "q": LAB_SHADE, "B": BRASS, "O": GOGGLE_GLASS}
     return {}
 
 

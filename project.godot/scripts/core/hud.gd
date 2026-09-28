@@ -49,6 +49,16 @@ const STATE_COLORS := {
 	"cooking": Color(1.0, 0.75, 0.45),
 }
 const COLOR_HUNTER := Color(0.8, 0.9, 0.55)
+## Bloco 28: contagem do bloco "Mão de obra" (função -> [rótulo no plural, cor]).
+## Função nova = uma linha aqui (e o outfit dela, ver JOB_OUTFIT no ipezinho.gd).
+const WORKFORCE_JOBS := {
+	"minerador": ["Mineradores", COLOR_MINER],
+	"caçador": ["Caçadores", COLOR_HUNTER],
+	"cozinheiro": ["Cozinheiros", COLOR_COOK],
+	"lenhador": ["Lenhadores", COLOR_LUMBER],
+	"guarda": ["Guardas", Color(0.95, 0.55, 0.45)],
+	"pesquisador": ["Pesquisadores", Color(0.55, 0.95, 0.65)],
+}
 
 @export var ore_icon: Texture2D
 @export var coin_icon: Texture2D
@@ -102,7 +112,10 @@ var _workers_title: Label
 var _main_panel: PanelContainer
 var _main_vbox: VBoxContainer
 var _collapse_button: Button
-var _collapse_index: int = -1  # daqui pra baixo o painel recolhe
+var _collapsible: Array[Control] = []  # o que o botão –/+ esconde
+var _health_label: Label
+var _job_labels: Dictionary = {}  # função -> célula da contagem (bloco Mão de obra)
+var _no_job_label: Label
 var _hint: Label
 var _rows_scroll: ScrollContainer
 var _rows_box: VBoxContainer
@@ -164,7 +177,7 @@ func _build() -> void:
 	add_child(panel)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
+	vbox.add_theme_constant_override("separation", 5)
 	panel.add_child(vbox)
 
 	_main_panel = panel
@@ -201,59 +214,12 @@ func _build() -> void:
 		_sun_label = _label("", 12, COLOR_DIM)
 		vbox.add_child(_sun_label)
 
-	var res_row := HBoxContainer.new()
-	res_row.add_theme_constant_override("separation", 8)
-	vbox.add_child(res_row)
-	if ore_icon:
-		var icon := TextureRect.new()
-		icon.texture = ore_icon
-		icon.custom_minimum_size = Vector2(20, 20)
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		res_row.add_child(icon)
-	_stored_label = _label("0", 18, COLOR_TEXT)
-	res_row.add_child(_stored_label)
-	res_row.add_child(_label("minério armazenado", 13, COLOR_DIM))
-	# estoque por tipo, cada um na sua cor
-	_stock_label = RichTextLabel.new()
-	_stock_label.bbcode_enabled = true
-	_stock_label.fit_content = true
-	_stock_label.scroll_active = false
-	_stock_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # quebra em vez de alargar o painel
-	_stock_label.custom_minimum_size.x = 300
-	_stock_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_stock_label.add_theme_font_size_override("normal_font_size", 13)
-	vbox.add_child(_stock_label)
-
-	_deposits_label = _label("", 13, COLOR_DIM)
-	vbox.add_child(_deposits_label)
-	_village_label = _label("", 13, COLOR_DIM)
-	vbox.add_child(_village_label)
-	_food_label = _label("", 13, COLOR_DIM)
-	vbox.add_child(_food_label)
-	_morale_label = _label("", 13, COLOR_DIM)
-	vbox.add_child(_morale_label)
-
-	if _economy:
-		_build_economy(vbox)
-
-	vbox.add_child(HSeparator.new())
-	var header := HBoxContainer.new()
-	vbox.add_child(header)
-	_workers_title = _label("IPEZINHOS", 12, COLOR_DIM)
-	_workers_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(_workers_title)
-	_workers_count_label = _label("", 12, COLOR_DIM)
-	header.add_child(_workers_count_label)
-
-	_rows_scroll = ScrollContainer.new()
-	_rows_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	vbox.add_child(_rows_scroll)
-	_rows_box = VBoxContainer.new()
-	_rows_box.add_theme_constant_override("separation", 4)
-	_rows_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_rows_scroll.add_child(_rows_box)
+	# Bloco 28: o painel em blocos (economia / vila / bem-estar / mão de obra).
+	# Mão de obra fica por último porque termina na lista de ipezinhos, que rola.
+	_build_economy_section(vbox)
+	_build_village_section(vbox)
+	_build_welfare_section(vbox)
+	_build_workforce_section(vbox)
 
 	# dica de controles no canto inferior esquerdo
 	var hint := _label(
@@ -275,26 +241,66 @@ func _build() -> void:
 	add_child(hint)
 
 
-func _build_economy(vbox: VBoxContainer) -> void:
-	var credits_row := HBoxContainer.new()
-	credits_row.add_theme_constant_override("separation", 8)
-	vbox.add_child(credits_row)
-	if coin_icon:
-		var icon := TextureRect.new()
-		icon.texture = coin_icon
-		icon.custom_minimum_size = Vector2(20, 20)
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		credits_row.add_child(icon)
-	_credits_label = _label("0", 18, COLOR_TITLE)
-	credits_row.add_child(_credits_label)
-	credits_row.add_child(_label("créditos", 13, COLOR_DIM))
-	_collapse_index = vbox.get_child_count()  # botões e lista recolhem daqui pra baixo
+## Cabeçalho de bloco: "── ECONOMIA ────── (texto à direita)". Retorna o rótulo da direita.
+func _section(vbox: VBoxContainer, text: String) -> Label:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	vbox.add_child(row)
+	var line_left := HSeparator.new()
+	line_left.custom_minimum_size.x = 10
+	row.add_child(line_left)
+	row.add_child(_label(text, 11, COLOR_BORDER.lightened(0.35)))
+	var line := HSeparator.new()
+	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(line)
+	var right := _label("", 11, COLOR_DIM)
+	row.add_child(right)
+	return right
 
+
+## Recolher (botão –/+) esconde o que for "detalhe": botões, grade de prédios e a lista.
+func _collapsible_add(vbox: VBoxContainer, node: Control) -> void:
+	vbox.add_child(node)
+	_collapsible.append(node)
+
+
+# ------------------------------------------------------------ bloco: economia
+func _build_economy_section(vbox: VBoxContainer) -> void:
+	_section(vbox, "ECONOMIA")
+	var money_row := HBoxContainer.new()
+	money_row.add_theme_constant_override("separation", 8)
+	vbox.add_child(money_row)
+	if _economy:
+		if coin_icon:
+			money_row.add_child(_icon(coin_icon))
+		_credits_label = _label("0", 18, COLOR_TITLE)
+		money_row.add_child(_credits_label)
+		money_row.add_child(_label("créditos", 13, COLOR_DIM))
+		var gap := Control.new()
+		gap.custom_minimum_size.x = 10
+		money_row.add_child(gap)
+	if ore_icon:
+		money_row.add_child(_icon(ore_icon))
+	_stored_label = _label("0", 18, COLOR_TEXT)
+	money_row.add_child(_stored_label)
+	money_row.add_child(_label("minério", 13, COLOR_DIM))
+	# estoque por tipo, cada um na sua cor (madeira e peças raras também)
+	_stock_label = RichTextLabel.new()
+	_stock_label.bbcode_enabled = true
+	_stock_label.fit_content = true
+	_stock_label.scroll_active = false
+	_stock_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # quebra em vez de alargar o painel
+	_stock_label.custom_minimum_size.x = 300
+	_stock_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stock_label.add_theme_font_size_override("normal_font_size", 13)
+	vbox.add_child(_stock_label)
+	_deposits_label = _label("", 13, COLOR_DIM)
+	vbox.add_child(_deposits_label)
+	if _economy == null:
+		return
 	var sell_row := HBoxContainer.new()
 	sell_row.add_theme_constant_override("separation", 6)
-	vbox.add_child(sell_row)
+	_collapsible_add(vbox, sell_row)
 	_sell_button = _button("Vender minério")
 	_sell_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_sell_button.pressed.connect(_on_sell_pressed)
@@ -308,59 +314,23 @@ func _build_economy(vbox: VBoxContainer) -> void:
 	_auto_sell_check.toggled.connect(_on_auto_sell_toggled)
 	sell_row.add_child(_auto_sell_check)
 
-	_recruit_button = _button("Recrutar ipezinho")
-	_recruit_button.pressed.connect(_on_recruit_pressed)
-	vbox.add_child(_recruit_button)
 
-	# ordens pros selecionados: em grade (3 por linha) pra economizar altura
-	var actions := GridContainer.new()
-	actions.columns = 3
-	actions.add_theme_constant_override("h_separation", 4)
-	actions.add_theme_constant_override("v_separation", 4)
-	vbox.add_child(actions)
-	_overtime_button = _button("Turno extra  (T)")
-	_overtime_button.tooltip_text = "Os selecionados continuam trabalhando à noite (e vão ficando zangados)"
-	_overtime_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_overtime_button.pressed.connect(func(): _main.toggle_overtime())
-	actions.add_child(_overtime_button)
-	_cook_button = _button("Cozinheiro  (C)")
-	_cook_button.tooltip_text = "Os selecionados param de minerar e passam a buscar comida na horta pro comedouro"
-	_cook_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_cook_button.pressed.connect(func(): _main.toggle_cook())
-	actions.add_child(_cook_button)
-	_lumber_button = _button("Lenhador  (L)")
-	_lumber_button.tooltip_text = "Os selecionados param de minerar e vão cortar madeira na clareira"
-	_lumber_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_lumber_button.pressed.connect(func(): _main.toggle_lumber())
-	actions.add_child(_lumber_button)
-	_guard_button = _button("Guarda  (X)")
-	_guard_button.tooltip_text = "Os selecionados viram guardas: treinam de dia no campo e à noite defendem os portões"
-	_guard_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_guard_button.pressed.connect(func(): _main.toggle_guard())
-	actions.add_child(_guard_button)
-	_research_button = _button("Pesquisador  (Z)")
-	_research_button.tooltip_text = "Os selecionados trabalham no laboratório de dia, gerando pontos pra pesquisa em andamento"
-	_research_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_research_button.pressed.connect(func(): _main.toggle_research())
-	actions.add_child(_research_button)
-	_miner_button = _button("Minerador  (1)")
-	_miner_button.tooltip_text = "Os selecionados vão minerar e levar o minério pro armazém"
-	_miner_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_miner_button.pressed.connect(func(): _main.toggle_miner())
-	actions.add_child(_miner_button)
-	_hunter_button = _button("Caçador  (2)")
-	_hunter_button.tooltip_text = "Os selecionados colhem fruta na horta (e caçam nas tocas, com arco e flecha) e levam a matéria-prima pro armazém"
-	_hunter_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_hunter_button.pressed.connect(func(): _main.toggle_hunter())
-	actions.add_child(_hunter_button)
-	_no_job_button = _button("Sem função  (0)")
-	_no_job_button.tooltip_text = "Tira a função dos selecionados: entregam o que estiverem carregando e esperam no Centro da Vila"
-	_no_job_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_no_job_button.pressed.connect(func(): _main.clear_job())
-	actions.add_child(_no_job_button)
-	for b in [_overtime_button, _cook_button, _lumber_button, _guard_button, _research_button, _miner_button, _hunter_button, _no_job_button]:
-		b.add_theme_font_size_override("font_size", 12)
+func _icon(tex: Texture2D) -> TextureRect:
+	var icon := TextureRect.new()
+	icon.texture = tex
+	icon.custom_minimum_size = Vector2(20, 20)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	return icon
 
+
+# ------------------------------------------------------------ bloco: vila e construções
+func _build_village_section(vbox: VBoxContainer) -> void:
+	_section(vbox, "VILA E CONSTRUÇÕES")
+	_village_label = _label("", 13, COLOR_DIM)
+	vbox.add_child(_village_label)
+	# botões das janelas dos prédios (a grade é criada no primeiro _add_panel, aqui)
 	if _hub:
 		_add_panel("hub", preload("res://scripts/core/hub_panel.gd"), _hub, vbox)
 	if _dig:
@@ -383,6 +353,82 @@ func _build_economy(vbox: VBoxContainer) -> void:
 		_add_panel("sol", preload("res://scripts/core/sun_panel.gd"), _sun, vbox)
 	if _diary:
 		_add_panel("diario", preload("res://scripts/core/diary_panel.gd"), _diary, vbox)
+	if _panel_grid:
+		_collapsible.append(_panel_grid)
+
+
+# ------------------------------------------------------------ bloco: bem-estar
+func _build_welfare_section(vbox: VBoxContainer) -> void:
+	_section(vbox, "BEM-ESTAR")
+	_food_label = _label("", 13, COLOR_DIM)
+	vbox.add_child(_food_label)
+	_morale_label = _label("", 13, COLOR_DIM)
+	vbox.add_child(_morale_label)
+	_health_label = _label("", 13, COLOR_DIM)
+	vbox.add_child(_health_label)
+
+
+# ------------------------------------------------------------ bloco: mão de obra
+## Contagem por função (uma célula por função, na cor da função) + "SEM FUNÇÃO"
+## destacado, recrutar, as ordens pros selecionados e a lista de ipezinhos.
+func _build_workforce_section(vbox: VBoxContainer) -> void:
+	_workers_count_label = _section(vbox, "MÃO DE OBRA")
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 0)
+	vbox.add_child(grid)
+	for job in WORKFORCE_JOBS:
+		var cell := _label("", 13, WORKFORCE_JOBS[job][1])
+		grid.add_child(cell)
+		_job_labels[job] = cell
+	_no_job_label = _label("", 13, COLOR_NO_JOB)
+	vbox.add_child(_no_job_label)
+
+	if _economy == null:
+		return
+	_recruit_button = _button("Recrutar ipezinho")
+	_recruit_button.pressed.connect(_on_recruit_pressed)
+	_collapsible_add(vbox, _recruit_button)
+
+	# ordens pros selecionados: em grade (3 por linha) pra economizar altura
+	var actions := GridContainer.new()
+	actions.columns = 3
+	actions.add_theme_constant_override("h_separation", 4)
+	actions.add_theme_constant_override("v_separation", 4)
+	_collapsible_add(vbox, actions)
+	_miner_button = _job_button(actions, "Minerador  (1)", "Os selecionados vão minerar e levar o minério pro armazém", _main.toggle_miner)
+	_hunter_button = _job_button(actions, "Caçador  (2)", "Os selecionados colhem fruta na horta (e caçam nas tocas, com arco e flecha) e levam a matéria-prima pro armazém", _main.toggle_hunter)
+	_cook_button = _job_button(actions, "Cozinheiro  (C)", "Os selecionados buscam matéria-prima no armazém e preparam a comida no comedouro", _main.toggle_cook)
+	_lumber_button = _job_button(actions, "Lenhador  (L)", "Os selecionados vão cortar madeira na clareira", _main.toggle_lumber)
+	_guard_button = _job_button(actions, "Guarda  (X)", "Os selecionados viram guardas: treinam de dia no campo e à noite defendem os portões", _main.toggle_guard)
+	_research_button = _job_button(actions, "Pesquisador  (Z)", "Os selecionados trabalham no laboratório de dia, gerando pontos pra pesquisa em andamento", _main.toggle_research)
+	_no_job_button = _job_button(actions, "Sem função  (0)", "Tira a função dos selecionados: entregam o que estiverem carregando e esperam no Centro da Vila", _main.clear_job)
+	_overtime_button = _job_button(actions, "Turno extra  (T)", "Os selecionados continuam trabalhando à noite (e vão ficando zangados)", _main.toggle_overtime)
+
+	var header := HBoxContainer.new()
+	_collapsible_add(vbox, header)
+	_workers_title = _label("IPEZINHOS", 12, COLOR_DIM)
+	_workers_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(_workers_title)
+
+	_rows_scroll = ScrollContainer.new()
+	_rows_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_collapsible_add(vbox, _rows_scroll)
+	_rows_box = VBoxContainer.new()
+	_rows_box.add_theme_constant_override("separation", 4)
+	_rows_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_rows_scroll.add_child(_rows_box)
+
+
+func _job_button(grid: GridContainer, text: String, tip: String, action: Callable) -> Button:
+	var b := _button(text)
+	b.tooltip_text = tip
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.add_theme_font_size_override("font_size", 12)
+	b.pressed.connect(action)
+	grid.add_child(b)
+	return b
 
 
 # ------------------------------------------------------------ janelas das estruturas
@@ -456,10 +502,11 @@ func _worker_name(w: Node) -> String:
 
 ## Recolhe/abre os botões e a lista de ipezinhos (fica lembrado nas configurações).
 func set_collapsed(on: bool, remember: bool = true) -> void:
-	if _collapse_index < 0 or _main_vbox == null:
+	if _main_vbox == null:
 		return
-	for i in range(_collapse_index, _main_vbox.get_child_count()):
-		_main_vbox.get_child(i).visible = not on
+	for node in _collapsible:
+		if is_instance_valid(node):
+			node.visible = not on
 	_collapse_button.text = "+" if on else "–"
 	_main_panel.reset_size()
 	if remember:
@@ -686,14 +733,9 @@ func _refresh() -> void:
 		_hunter_button.disabled = picked == 0
 	if _no_job_button:
 		_no_job_button.disabled = picked == 0 or _main.selection.all(func(u): return is_instance_valid(u) and u.has_no_job())
-	# Bloco 25: quantos estão sem função (pra notar rápido quem falta designar)
-	var no_job := workers.filter(func(w): return w.has_no_job()).size()
-	var title := "IPEZINHOS  —  %d selecionados" % picked if picked > 1 else "IPEZINHOS"
-	if no_job > 0:
-		title += "  •  %d SEM FUNÇÃO" % no_job
-	_workers_title.text = title
-	_workers_title.add_theme_color_override("font_color",
-		COLOR_TITLE if picked > 1 else (COLOR_NO_JOB if no_job > 0 else COLOR_DIM))
+	# (quem está sem função agora aparece destacado no bloco Mão de obra — Bloco 28)
+	_workers_title.text = "IPEZINHOS  —  %d selecionados" % picked if picked > 1 else "IPEZINHOS"
+	_workers_title.add_theme_color_override("font_color", COLOR_TITLE if picked > 1 else COLOR_DIM)
 	for w in workers:
 		var row: Dictionary = _rows[w]
 		row.name.text = _worker_name(w)
@@ -788,7 +830,6 @@ func _refresh_food(workers: Array) -> void:
 	for h in get_tree().get_nodes_in_group("coleta_comida"):
 		garden += h.food_remaining
 	var cooks := workers.filter(func(w): return w.has_method("is_cook") and w.is_cook()).size()
-	var hunters := workers.filter(func(w): return w.has_method("is_hunter") and w.is_hunter()).size()
 	var raw := 0.0
 	for a in get_tree().get_nodes_in_group("armazens"):
 		raw += a.get("raw_stored") if a.get("raw_stored") != null else 0.0
@@ -796,10 +837,11 @@ func _refresh_food(workers: Array) -> void:
 	for t in get_tree().get_nodes_in_group("caca"):
 		game += t.game_remaining
 	# Bloco 27: comida PRONTA (comedouro) separada da matéria-prima CRUA (armazém)
-	var text := "Comida pronta: %s  •  matéria-prima %d  •  horta %d  •  tocas %d\n" % [
+	# (quantos cozinheiros/caçadores: bloco Mão de obra — Bloco 28)
+	var text := "Comida pronta: %s  •  matéria-prima %d\nhorta %d  •  tocas %d" % [
 		"ACABOU" if stock <= 0.0 else "%d/%d" % [int(stock), int(capacity)], int(raw), int(garden), int(game)]
-	text += "%d cozinheiro%s" % [cooks, "s" if cooks != 1 else ""] if cooks > 0 else "sem cozinheiro"
-	text += "  •  " + ("%d caçador%s" % [hunters, "es" if hunters != 1 else ""] if hunters > 0 else "sem caçador")
+	if cooks == 0:
+		text += "  •  ninguém cozinhando"
 	_food_label.text = text
 	var color := COLOR_DIM
 	if stock <= 0.0:
@@ -866,17 +908,41 @@ func _refresh_village(workers: Array) -> void:
 		text += "  •  %d dormindo" % sleeping
 	if homeless > 0:
 		text += "  •  %d sem teto" % homeless
-	if injured > 0:
-		text += "  •  %d machucado%s" % [injured, "s" if injured > 1 else ""]
-		if grave > 0:
-			text += " (%d grave%s)" % [grave, "s" if grave > 1 else ""]
 	_village_label.text = text
-	var color := COLOR_DIM
-	if injured > 0:
-		color = COLOR_INJURED
-	elif homeless > 0:
-		color = COLOR_HUNGER_LOW
-	_village_label.add_theme_color_override("font_color", color)
+	_village_label.add_theme_color_override("font_color", COLOR_HUNGER_LOW if homeless > 0 else COLOR_DIM)
+	# machucados: bloco Bem-estar (Bloco 28)
+	if _health_label:
+		_health_label.visible = injured > 0
+		_health_label.text = "Saúde: %d machucado%s" % [injured, "s" if injured > 1 else ""]
+		if grave > 0:
+			_health_label.text += " (%d grave%s)" % [grave, "s" if grave > 1 else ""]
+		_health_label.add_theme_color_override("font_color", COLOR_HUNGER_BAD if grave > 0 else COLOR_INJURED)
+	_refresh_workforce(workers)
+
+
+## Bloco "Mão de obra": quantos em cada função + SEM FUNÇÃO destacado.
+func _refresh_workforce(workers: Array) -> void:
+	var counts := {}
+	var no_job := 0
+	for w in workers:
+		if not w.has_method("has_no_job"):
+			continue
+		if w.has_no_job():
+			no_job += 1
+		else:
+			counts[w.job] = counts.get(w.job, 0) + 1
+	for job in _job_labels:
+		var n: int = counts.get(job, 0)
+		var cell: Label = _job_labels[job]
+		cell.text = "%s %d" % [WORKFORCE_JOBS[job][0], n]
+		cell.modulate = Color.WHITE if n > 0 else Color(1, 1, 1, 0.45)  # zero fica apagado
+	if _no_job_label:
+		if no_job > 0:
+			_no_job_label.text = "SEM FUNÇÃO: %d  —  selecione e aperte 1, 2, C, L, X ou Z" % no_job
+			_no_job_label.add_theme_color_override("font_color", COLOR_NO_JOB)
+		else:
+			_no_job_label.text = "Todos com função"
+			_no_job_label.add_theme_color_override("font_color", COLOR_DIM)
 
 
 ## "Ânimo: 62 — contentes" / contagem pra greve / "GREVE! expulsão em 4:12"
