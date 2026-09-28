@@ -43,13 +43,21 @@ const BODY_TEXTURES := {
 		preload("res://assets/game/ipezinho_m0.png"),
 		preload("res://assets/game/ipezinho_m1.png"),
 		preload("res://assets/game/ipezinho_m2.png"),
+		preload("res://assets/game/ipezinho_m3.png"),  # 3..5: Bloco 24
+		preload("res://assets/game/ipezinho_m4.png"),
+		preload("res://assets/game/ipezinho_m5.png"),
 	],
 	"menina": [
 		preload("res://assets/game/ipezinho_f0.png"),
 		preload("res://assets/game/ipezinho_f1.png"),
 		preload("res://assets/game/ipezinho_f2.png"),
+		preload("res://assets/game/ipezinho_f3.png"),
+		preload("res://assets/game/ipezinho_f4.png"),
+		preload("res://assets/game/ipezinho_f5.png"),
 	],
 }
+## Chance (0..1) de cada camada de acessório aparecer (botas, remendo/bolso, lenço).
+const ACCESSORY_CHANCE := 0.6
 const STATE_GROUP := {
 	"eating": "comedouros",
 	"mining": "minerios",
@@ -301,6 +309,9 @@ var _saved_home_slot: int = -1
 @onready var _cook_icon: Sprite2D = $CookIcon
 @onready var _lamp: PointLight2D = $HeadLamp
 @onready var _agent: NavigationAgent2D = $Agent
+## Acessórios (Bloco 24): camadas filhas do Body, com os mesmos 4 quadros de caminhada.
+@onready var _accessories: Array[Sprite2D] = [$Body/Boots, $Body/Detail, $Body/Neck]
+var _accessory_variant: Array[int] = [-1, -1, -1]
 
 
 func _ready() -> void:
@@ -330,6 +341,7 @@ func _ready() -> void:
 	add_child(_strike_icon)
 	_ensure_appearance()
 	_ensure_name()
+	_apply_accessories()
 	_claim_home.call_deferred()  # as casas precisam estar nos grupos
 	_sync_tool_visual.call_deferred()  # recrutado depois da picareta de aço já nasce com ela
 	_apply_research.call_deferred()  # carrinhos de mina (capacidade de carga)
@@ -1139,6 +1151,33 @@ func _ensure_appearance() -> void:
 	_body.texture = options[look]
 
 
+## Lenço, remendo/bolso e cor de bota, independentes da roupa. Não vão pro save:
+## saem de um hash do nome (que já é salvo), então o mesmo ipezinho sempre volta
+## igual depois de carregar.
+func _apply_accessories() -> void:
+	var h := absi(("%s|%s" % [display_name, gender]).hash())
+	for i in _accessories.size():
+		var layer := _accessories[i]
+		var roll := (h >> (i * 7)) % 100
+		if roll < int((1.0 - ACCESSORY_CHANCE) * 100.0):
+			_accessory_variant[i] = -1
+			layer.visible = false
+		else:
+			_accessory_variant[i] = roll % layer.vframes
+			layer.visible = true
+	_sync_accessories()
+
+
+## Mantém as camadas de acessório no mesmo quadro/lado do corpo.
+func _sync_accessories() -> void:
+	for i in _accessories.size():
+		var layer := _accessories[i]
+		if _accessory_variant[i] < 0:
+			continue
+		layer.frame = _accessory_variant[i] * layer.hframes + _body.frame
+		layer.flip_h = _body.flip_h
+
+
 ## Nome sorteado pelo gênero, sem repetir com quem já existe (esgotou: "Zé 2", "Zé 3"...).
 func _ensure_name() -> void:
 	if display_name != "":
@@ -1605,6 +1644,7 @@ func _update_animation(delta: float) -> void:
 
 	_body.flip_h = _facing < 0.0
 	_body.skew = -0.08 * _facing if spd > 5.0 else 0.0  # leve inclinação ao andar
+	_sync_accessories()
 
 	# picareta: no ombro andando, balançando enquanto minera
 	_tool.position.x = 9.0 * _facing

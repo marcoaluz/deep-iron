@@ -8,6 +8,9 @@
 [ext_resource type="Texture2D" path="res://assets/game/bandage.png" id="6_bandage"]
 [ext_resource type="Texture2D" path="res://assets/game/anger.png" id="7_anger"]
 [ext_resource type="Texture2D" path="res://assets/game/cook_hat.png" id="8_hat"]
+[ext_resource type="Texture2D" path="res://assets/game/acc_boots.png" id="9_boots"]
+[ext_resource type="Texture2D" path="res://assets/game/acc_detail.png" id="10_detail"]
+[ext_resource type="Texture2D" path="res://assets/game/acc_neck.png" id="11_neck"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3ucvb"]
 size = Vector2(12, 10)
@@ -22,6 +25,24 @@ position = Vector2(0, -17)
 scale = Vector2(2, 2)
 texture = ExtResource("2_walk")
 hframes = 4
+
+[node name="Boots" type="Sprite2D" parent="Body"]
+visible = false
+texture = ExtResource("9_boots")
+hframes = 4
+vframes = 3
+
+[node name="Detail" type="Sprite2D" parent="Body"]
+visible = false
+texture = ExtResource("10_detail")
+hframes = 4
+vframes = 3
+
+[node name="Neck" type="Sprite2D" parent="Body"]
+visible = false
+texture = ExtResource("11_neck")
+hframes = 4
+vframes = 3
 
 [node name="Tool" type="Sprite2D" parent="." unique_id=907998625]
 position = Vector2(9, -12)

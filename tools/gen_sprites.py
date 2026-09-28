@@ -37,12 +37,12 @@ CLEAR = (0, 0, 0, 0)
 # dithering. Sprite novo? Use estas cores (ou shade() delas), não invente outras.
 
 # --- ambiente (frio, dessaturado) -------------------------------------------
-STONE_BLACK = (24, 26, 33, 255)
-STONE_SHADOW = (36, 38, 48, 255)
-STONE_DARK = (51, 53, 64, 255)
-STONE = (68, 70, 81, 255)
-STONE_LIGHT = (92, 94, 104, 255)
-STONE_HIGHLIGHT = (126, 128, 136, 255)
+STONE_BLACK = (28, 25, 31, 255)  # Bloco 24: pedra esquentada (era cinza-azulado)
+STONE_SHADOW = (41, 37, 45, 255)
+STONE_DARK = (57, 52, 59, 255)
+STONE = (76, 70, 75, 255)
+STONE_LIGHT = (101, 94, 96, 255)
+STONE_HIGHLIGHT = (136, 128, 124, 255)
 STONE_RAMP = (STONE_BLACK, STONE_SHADOW, STONE_DARK, STONE, STONE_LIGHT, STONE_HIGHLIGHT)
 
 WALL_VOID = (13, 14, 19, 255)
@@ -160,7 +160,7 @@ HAIR_AUBURN = ((84, 38, 30, 255), (122, 62, 42, 255))
 HAIR_BLONDE = ((128, 104, 68, 255), (166, 138, 92, 255))
 
 # superfície (clareira): mato escuro e pinheiros, ainda dessaturados
-GRASS_RAMP = ((30, 40, 32, 255), (38, 52, 38, 255), (48, 64, 44, 255), (60, 78, 52, 255), (74, 92, 60, 255))
+GRASS_RAMP = ((30, 44, 32, 255), (38, 58, 38, 255), (50, 74, 44, 255), (66, 92, 52, 255), (86, 110, 62, 255))  # Bloco 24: mais viva
 PINE_RAMP = ((22, 36, 32, 255), (30, 48, 40, 255), (40, 62, 48, 255), (54, 78, 58, 255), (70, 94, 68, 255))
 BARK_RAMP = ((40, 30, 26, 255), (58, 42, 34, 255), (78, 58, 44, 255), (98, 74, 54, 255))
 WOOD_CUT = (170, 138, 96, 255)  # miolo claro da madeira cortada
@@ -201,6 +201,57 @@ GOLD_DARK = (116, 64, 18, 255)
 GOLD = (206, 140, 36, 255)
 GOLD_LIGHT = (244, 194, 64, 255)
 GOLD_HIGHLIGHT = (255, 238, 150, 255)
+
+# --- roupas/peles extras do Bloco 24 (mais variedade na colônia) ------------
+SHIRT_SKY = ((58, 76, 98, 255), (80, 104, 128, 255), (110, 134, 152, 255))
+SHIRT_BRICK = ((96, 44, 36, 255), (132, 64, 48, 255), (162, 92, 68, 255))
+SHIRT_CREAM = ((140, 126, 100, 255), (176, 162, 132, 255), (206, 194, 164, 255))
+BLOUSE_MUSTARD = ((118, 90, 40, 255), (158, 124, 56, 255), (190, 158, 86, 255))
+BLOUSE_LAVENDER = ((88, 74, 110, 255), (118, 102, 140, 255), (148, 132, 166, 255))
+BLOUSE_SAGE = ((72, 88, 66, 255), (100, 118, 88, 255), (132, 148, 112, 255))
+CLOTH_BROWN = ((62, 44, 34, 255), (88, 64, 46, 255))
+HAIR_GREY = ((92, 90, 96, 255), (138, 136, 140, 255))
+HAIR_GINGER = ((130, 62, 30, 255), (176, 98, 50, 255))
+# tons de pele: (sombra, escuro, base, bochecha)
+SKIN_TONE_LIGHT = (SKIN_SHADOW, SKIN_DARK, SKIN, BLUSH)
+SKIN_TONE_TAN = ((104, 64, 52, 255), (140, 92, 68, 255), (176, 124, 90, 255), (168, 90, 76, 255))
+SKIN_TONE_DEEP = ((66, 40, 38, 255), (92, 58, 48, 255), (122, 82, 62, 255), (128, 66, 60, 255))
+# acessórios (camadas por cima do corpo, sorteadas independente da roupa)
+SCARF_RED = (APPLE_DARK, APPLE, APPLE_LIGHT)
+SCARF_MUSTARD = BLOUSE_MUSTARD
+SCARF_TEAL = ((44, 86, 80, 255), VERDIGRIS, VERDIGRIS_LIGHT)
+BOOT_BLACK = ((28, 26, 32, 255), (52, 48, 56, 255))  # (escuro, claro)
+BOOT_RED = ((92, 36, 34, 255), (140, 60, 50, 255))
+BOOT_YELLOW = ((122, 94, 36, 255), (176, 140, 58, 255))  # galocha
+
+# =================================================================== GRADAÇÃO
+# Bloco 24: a paleta acima é a "fonte"; na hora de salvar, todo sprite passa por
+# esta gradação de cor. É ela que dá o clima geral: meios-tons mais claros, luz
+# puxada pro âmbar, sombra puxada pro roxo-azulado e mais contraste entre as duas
+# (Stardew: cores levemente dessaturadas, mas luz/sombra bem separadas).
+# Pra mudar o clima do jogo inteiro, mexa AQUI — não cor por cor.
+GRADE_GAMMA = 0.82  # < 1 levanta os meios-tons
+GRADE_CONTRAST = 1.18  # separa luz e sombra em torno de GRADE_PIVOT
+GRADE_PIVOT = 0.40
+GRADE_SHADOW_TINT = (0.97, 0.95, 1.05)  # multiplicador RGB nas sombras
+GRADE_LIGHT_TINT = (1.07, 1.01, 0.90)  # multiplicador RGB nas luzes
+GRADE_SAT = 1.10
+
+# Ícones de HUD congelados: a pedra esquentou no Bloco 24, mas a interface fica igual.
+HUD_STONE_DARK = (51, 53, 64, 255)
+
+# Cores de fonte de luz: nunca são graduadas nem sombreadas (continuam "acesas").
+EMISSIVE = {c[:3] for c in (
+    *TORCH_RAMP, LAMP_GLOW, LAMP_CORE, WINDOW_DIM, WINDOW_LIT, WINDOW_BRIGHT,
+    GOLD_LIGHT, GOLD_HIGHLIGHT, BLOOD, ANGER,
+)}
+# Sprites de interface/alerta: ficam bit a bit iguais (HUD está fora do escopo).
+UNGRADED = {
+    "coin.png", "anger.png", "bandage.png", "strike_sign.png", "note.png", "shadow_blob.png",
+    "find_bobina.png", "find_cristal.png", "find_peca.png", "find_solar.png",
+}
+# Sprites que são fonte de luz inteira: não gradua (mas podem ganhar detalhe).
+NO_GRADE = {"crystal_0.png", "crystal_1.png", "crystal_2.png", "crystal_3.png"}
 
 
 # =================================================================== helpers
@@ -259,20 +310,94 @@ def luminance(c):
     return 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]
 
 
-def outline(img, k=0.5):
-    """Contorno de 1px "colorido": cada pixel do contorno é a cor do vizinho
-    opaco, escurecida por shade(). Nada de preto puro."""
+def is_emissive(c):
+    return c[:3] in EMISSIVE
+
+
+def form_shade(img):
+    """Sombreamento de forma (Bloco 24): dá volume sem redesenhar o sprite.
+    A borda de baixo e a da direita da silhueta escurecem (lado da sombra /
+    contato com o chão); a de cima e a da esquerda clareiam (lado da luz).
+    Cores de fonte de luz ficam intactas."""
     src = img.copy()
+    for y in range(img.height):
+        for x in range(img.width):
+            c = src.getpixel((x, y))
+            if c[3] == 0 or is_emissive(c):
+                continue
+            if not opaque(src, x, y + 1):
+                k = 0.80
+            elif not opaque(src, x + 1, y):
+                k = 0.87
+            elif not opaque(src, x, y - 1) or not opaque(src, x - 1, y):
+                k = 1.14
+            else:
+                continue
+            img.putpixel((x, y), shade(c, k))
+    return img
+
+
+def outline(img, k=0.5, form=True, selout=True):
+    """Contorno de 1px "colorido": cada pixel do contorno é a cor do vizinho
+    opaco, escurecida por shade(). Nada de preto puro.
+
+    Bloco 24: contorno "selout" — no lado da luz (cima/esquerda) ele é mais
+    claro, no lado da sombra (baixo/direita) mais escuro; separa melhor do fundo
+    sem ficar pesado. `form=True` aplica também form_shade() antes (sprites
+    minúsculos, até 10px, e pedras — que já têm luz própria — passam form=False)."""
+    if form and max(img.width, img.height) > 10:
+        form_shade(img)
+    src = img.copy()
+    k_lit = min(0.9, k + 0.16) if selout else k
     for y in range(img.height):
         for x in range(img.width):
             if src.getpixel((x, y))[3] != 0:
                 continue
-            neigh = [src.getpixel((x + dx, y + dy)) for dx, dy in ((0, 1), (0, -1), (1, 0), (-1, 0))
-                     if opaque(src, x + dx, y + dy)]
+            lit, dark = [], []
+            for dx, dy in ((0, 1), (1, 0), (0, -1), (-1, 0)):
+                if opaque(src, x + dx, y + dy):
+                    # vizinho embaixo/à direita = este pixel está no topo/esquerda da forma
+                    (lit if (dx, dy) in ((0, 1), (1, 0)) else dark).append(src.getpixel((x + dx, y + dy)))
+            neigh = (dark or lit) if selout else dark + lit
             if neigh:
                 avg = tuple(sum(c[i] for c in neigh) // len(neigh) for i in range(3)) + (255,)
-                img.putpixel((x, y), shade(avg, k))
+                img.putpixel((x, y), shade(avg, k if dark else k_lit))
     return img
+
+
+_GRADE_CACHE = {}
+
+
+def _smooth(a, b, x):
+    t = max(0.0, min(1.0, (x - a) / (b - a)))
+    return t * t * (3 - 2 * t)
+
+
+def grade_color(c):
+    """Gradação da paleta (ver GRADE_* lá em cima). Mantém o alpha."""
+    if c[3] == 0 or is_emissive(c):
+        return c
+    hit = _GRADE_CACHE.get(c)
+    if hit:
+        return hit
+    r, g, b = (v / 255 for v in c[:3])
+    v = max(r, g, b)
+    w = _smooth(0.12, 0.65, v)
+    tint = [GRADE_SHADOW_TINT[i] + (GRADE_LIGHT_TINT[i] - GRADE_SHADOW_TINT[i]) * w for i in range(3)]
+    r, g, b = min(1.0, r * tint[0]), min(1.0, g * tint[1]), min(1.0, b * tint[2])
+    h, s, _ = colorsys.rgb_to_hsv(r, g, b)
+    v2 = max(0.0, min(1.0, GRADE_PIVOT + (v ** GRADE_GAMMA - GRADE_PIVOT) * GRADE_CONTRAST))
+    r, g, b = colorsys.hsv_to_rgb(h, min(1.0, s * GRADE_SAT), v2)
+    out = (round(r * 255), round(g * 255), round(b * 255), c[3])
+    _GRADE_CACHE[c] = out
+    return out
+
+
+def grade(img):
+    out = img.copy()
+    data = img.get_flattened_data() if hasattr(img, "get_flattened_data") else img.getdata()
+    out.putdata([grade_color(c) for c in data])
+    return out
 
 
 def recolor_dark_outline(img, k=0.45, threshold=40):
@@ -316,6 +441,8 @@ def tile(sheet, col, row, size=16, margin=0):
 
 
 def save(img, name):
+    if name not in UNGRADED and name not in NO_GRADE:
+        img = grade(img)
     img.save(OUT / name)
     print("ok", name, img.size)
 
@@ -461,7 +588,7 @@ def rock(w, h, seed, ramp=STONE_RAMP, ore=0, moss=0.0, cracks=1, bright=0.0, vei
             x, y = rnd.choice(inner)
             img.putpixel((x, y), c)
 
-    return outline(img, 0.55)
+    return outline(img, 0.55, form=False)  # a pedra já tem luz própria (lambert + facetas)
 
 
 # =================================================================== sprites
@@ -513,32 +640,41 @@ IPEZINHO_PAL = {
 }
 
 
-# Variações de cor por gênero: (camisa/blusa, calça/saia, cabelo, fita)
+# Variações por gênero: (camisa/blusa, calça/saia, cabelo, fita, pele).
+# As 3 primeiras de cada são as do Bloco 11 (o índice "look" do save continua
+# apontando pra mesma roupa); 3 a 5 são do Bloco 24, com tons de pele variados.
 IPEZINHO_LOOKS = {
     "m": [
-        ((FLANNEL_DARK, FLANNEL, FLANNEL_LIGHT), CLOTH_DENIM, HAIR_BROWN, None),
-        (SHIRT_MOSS, CLOTH_CANVAS, HAIR_BLACK, None),
-        (SHIRT_OCHRE, CLOTH_SLATE, HAIR_AUBURN, None),
+        ((FLANNEL_DARK, FLANNEL, FLANNEL_LIGHT), CLOTH_DENIM, HAIR_BROWN, None, SKIN_TONE_LIGHT),
+        (SHIRT_MOSS, CLOTH_CANVAS, HAIR_BLACK, None, SKIN_TONE_LIGHT),
+        (SHIRT_OCHRE, CLOTH_SLATE, HAIR_AUBURN, None, SKIN_TONE_LIGHT),
+        (SHIRT_SKY, CLOTH_CANVAS, HAIR_BLONDE, None, SKIN_TONE_TAN),
+        (SHIRT_BRICK, CLOTH_MOSS, HAIR_BLACK, None, SKIN_TONE_DEEP),
+        (SHIRT_CREAM, CLOTH_BROWN, HAIR_GREY, None, SKIN_TONE_LIGHT),
     ],
     "f": [
-        (BLOUSE_PLUM, CLOTH_DENIM, HAIR_AUBURN, SHROOM),
-        (BLOUSE_TEAL, CLOTH_CANVAS, HAIR_BLONDE, BRASS),
-        (BLOUSE_ROSE, CLOTH_MOSS, HAIR_BLACK, FLANNEL_LIGHT),
+        (BLOUSE_PLUM, CLOTH_DENIM, HAIR_AUBURN, SHROOM, SKIN_TONE_LIGHT),
+        (BLOUSE_TEAL, CLOTH_CANVAS, HAIR_BLONDE, BRASS, SKIN_TONE_LIGHT),
+        (BLOUSE_ROSE, CLOTH_MOSS, HAIR_BLACK, FLANNEL_LIGHT, SKIN_TONE_LIGHT),
+        (BLOUSE_MUSTARD, CLOTH_SLATE, HAIR_BROWN, VERDIGRIS_LIGHT, SKIN_TONE_TAN),
+        (BLOUSE_LAVENDER, CLOTH_CANVAS, HAIR_BLACK, BLOUSE_ROSE[2], SKIN_TONE_DEEP),
+        (BLOUSE_SAGE, CLOTH_DENIM, HAIR_GINGER, BREAD_HIGHLIGHT, SKIN_TONE_LIGHT),
     ],
 }
 
 
 def build_ipezinho():
-    """Gera ipezinho_m0..2.png (meninos) e ipezinho_f0..2.png (meninas): mesmo layout de
+    """Gera ipezinho_m0..5.png (meninos) e ipezinho_f0..5.png (meninas): mesmo layout de
     4 quadros de caminhada, só troca a textura. ipezinho_walk.png = m0 (padrão da cena)."""
     for gender, looks in IPEZINHO_LOOKS.items():
-        for i, (shirt, cloth, hair, ribbon) in enumerate(looks):
+        for i, (shirt, cloth, hair, ribbon, skin) in enumerate(looks):
             pal = {
                 **IPEZINHO_PAL,
                 "u": shirt[0], "f": shirt[1], "F": shirt[2],
                 "c": cloth[0], "C": cloth[1], "Z": (cloth[1], cloth[0]),
                 "a": hair[0], "A": hair[1],
                 "t": ribbon or hair[0],
+                "m": skin[0], "s": skin[1], "S": skin[2], "r": skin[3],
             }
             if gender == "m":
                 sheet = ipezinho_sheet(IPEZINHO_UPPER, IPEZINHO_LEG, IPEZINHO_FOOT, pal)
@@ -549,8 +685,23 @@ def build_ipezinho():
                 save(sheet, "ipezinho_walk.png")
 
 
+def side_light(img, first_row, x0=3, x1=12, strength=0.16):
+    """Luz lateral (Bloco 24): da esquerda (lado da luz) pra direita (sombra),
+    do `first_row` pra baixo — cada peça de roupa/rosto deixa de ser um tom só."""
+    for y in range(first_row, img.height):
+        for x in range(img.width):
+            c = img.getpixel((x, y))
+            if c[3] == 0 or is_emissive(c):
+                continue
+            u = max(0.0, min(1.0, (x - x0) / (x1 - x0)))
+            k = 1 + strength * 0.5 - strength * u
+            if abs(k - 1) > 0.02:
+                img.putpixel((x, y), shade(c, k))
+    return img
+
+
 def ipezinho_sheet(upper_rows, leg_row, foot_row, pal):
-    upper = from_rows(upper_rows, pal)
+    upper = side_light(from_rows(upper_rows, pal), first_row=6)  # linha 6 = abaixo do capacete
     leg = from_rows([leg_row], pal)
     foot = from_rows([foot_row], pal)
 
@@ -577,6 +728,64 @@ def ipezinho_sheet(upper_rows, leg_row, foot_row, pal):
     for i, f in enumerate(frames):
         sheet.alpha_composite(f, (i * 16, 0))
     return sheet
+
+
+# ------------------------------------------------------------ acessórios do ipezinho
+# Camadas desenhadas por cima do corpo (nós Body/Neck, Body/Detail, Body/Boots na
+# cena). Cada folha tem 4 colunas (os mesmos quadros de caminhada do corpo) e uma
+# linha por variante. Servem pros meninos e pras meninas: as posições usadas
+# (pescoço, peito/avental, botas) são iguais nos dois layouts.
+# Coordenadas no quadro "parado"; nos quadros 1 e 3 o corpo sobe 1px (lift).
+WALK_LIFT = (0, 1, 0, 1)
+WALK_FOOT_UP = ((False, False), (False, True), (False, False), (True, False))  # (esquerdo, direito)
+
+
+def _acc_sheet(variants, draw):
+    sheet = new(16 * 4, 17 * len(variants))
+    for v, colors in enumerate(variants):
+        for f in range(4):
+            frame = new(16, 17)
+            draw(frame, colors, f)
+            sheet.alpha_composite(frame, (f * 16, v * 17))
+    return sheet
+
+
+def build_ipezinho_accessories():
+    # lenço no pescoço: faixa sobre a gola + pontinha do nó
+    def neck(img, c, f):
+        y = 10 - WALK_LIFT[f]
+        dark, mid, light = c
+        px(img, 5, y, light)
+        rect(img, 6, y, 9, y, mid)
+        px(img, 10, y, dark)
+        px(img, 7, y + 1, mid)
+        px(img, 8, y + 1, dark)
+    save(_acc_sheet((SCARF_RED, SCARF_MUSTARD, SCARF_TEAL), neck), "acc_neck.png")
+
+    # detalhe na roupa: remendo de lona, remendo xadrez, bolso (costura escura translúcida:
+    # funciona em cima de qualquer cor de roupa)
+    def detail(img, c, f):
+        y = 11 - WALK_LIFT[f]
+        if c == "pocket":
+            seam = SHADOW_INK[:3] + (120,)
+            rect(img, 6, y, 7, y, seam)
+            px(img, 7, y + 1, SHADOW_INK[:3] + (70,))
+            return
+        a, b = c
+        rect(img, 8, y, 9, y + 1, (a, b))  # xadrez
+        px(img, 9, y, SHIRT_CREAM[2])  # pontinho da costura
+    save(_acc_sheet(((SHIRT_OCHRE[1], SHIRT_OCHRE[2]), (FLANNEL_LIGHT, FLANNEL_DARK), "pocket"), detail),
+         "acc_detail.png")
+
+    # botas de outra cor: repinta exatamente os pixels do pé do corpo
+    # (mesmo formato de IPEZINHO_FOOT e a mesma sombra de base do form_shade)
+    def boots(img, c, f):
+        dark, light = shade(c[0], 0.80), shade(c[1], 0.80)
+        for x0, up in ((3, WALK_FOOT_UP[f][0]), (9, WALK_FOOT_UP[f][1])):
+            y = 14 if (WALK_LIFT[f] and up) else 15
+            rect(img, x0, y, x0 + 2, y, light)
+            px(img, x0 + 3, y, dark)
+    save(_acc_sheet((BOOT_BLACK, BOOT_RED, BOOT_YELLOW), boots), "acc_boots.png")
 
 
 def build_pickaxe_steel():
@@ -719,7 +928,29 @@ def build_crystals():
     # cristais são fonte de luz: ficam com as cores saturadas do pack, só o contorno muda
     sheet = Image.open(STEWV).convert("RGBA")
     for i, (col, row) in enumerate(((7, 0), (0, 1), (7, 1), (2, 2))):
-        save(recolor_dark_outline(trim(tile(sheet, col, row, 32))), f"crystal_{i}.png")
+        save(crystal_sparkle(recolor_dark_outline(trim(tile(sheet, col, row, 32))), i), f"crystal_{i}.png")
+
+
+def crystal_sparkle(img, seed):
+    """Bloco 24: brilhinho em estrela nas facetas mais claras (1-2 por cristal).
+    Só pinta por cima de pixels já opacos: o tamanho do sprite não muda."""
+    rnd = random.Random(900 + seed)
+    spots = sorted(((luminance(img.getpixel((x, y))), x, y)
+                    for y in range(2, img.height - 2) for x in range(2, img.width - 2)
+                    if all(opaque(img, x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))),
+                   reverse=True)
+    placed = []
+    for _, x, y in spots:
+        if len(placed) >= 1 + rnd.randrange(2):
+            break
+        if any(abs(x - a) + abs(y - b) < 6 for a, b in placed):
+            continue
+        placed.append((x, y))
+        img.putpixel((x, y), (255, 255, 255, 255))
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            c = img.getpixel((x + dx, y + dy))
+            img.putpixel((x + dx, y + dy), tuple(min(255, (v + 255) // 2) for v in c[:3]) + (255,))
+    return img
 
 
 def build_shadow():
@@ -783,6 +1014,22 @@ def wood_beam(img, x0, y0, w, h, rnd):
         x += 1
 
 
+def plank_grain(img, x, y0, y1, rnd):
+    """Veio de madeira numa coluna de tábua já pintada (Bloco 24): riscos curtos
+    escurecendo o tom que já está ali (não quebra o dithering) e, às vezes, um nó."""
+    y = y0 + rnd.randrange(2)
+    while y <= y1:
+        run = rnd.randint(2, 4)
+        for k in range(run):
+            if y + k <= y1 and opaque(img, x, y + k):
+                img.putpixel((x, y + k), shade(img.getpixel((x, y + k)), 0.82))
+        y += run + rnd.randint(2, 5)
+    if rnd.random() < 0.3 and y1 - y0 > 3:
+        ky = rnd.randint(y0 + 1, y1 - 1)
+        px(img, x, ky, WOOD_ROT)
+        px(img, x, ky - 1, WOOD_HIGHLIGHT)
+
+
 def nail(img, x, y):
     px(img, x, y, IRON_LIGHT)
     px(img, x + 1, y + 1, RUST_DARK)  # escorrido de ferrugem
@@ -832,6 +1079,10 @@ def build_armazem():
                 t -= max(0.0, (y - 23) / 7) * 0.4  # podre/sujo perto do chão
                 c = dither(WOOD_RAMP, t, x, y)
             img.putpixel((x, y), c)
+    grain_rnd = random.Random(361)  # rnd separado: não muda o resto do armazém
+    for x in range(2, W - 2):
+        if (x - 2) % 4 == 2:
+            plank_grain(img, x, 15, 27, grain_rnd)
     # sombra do beiral (longa, dithered)
     for y in (12, 13, 14):
         for x in range(2, W - 2):
@@ -945,13 +1196,23 @@ def build_casa():
     for y in range(11, 22):
         for x in range(2, W - 2):
             if y >= 18:
-                t = 0.5 if (x + (y % 2) * 2) % 5 else 0.1
-                c = dither(STONE_RAMP, t - (y - 18) * 0.06, x, y)
+                # blocos de pedra em fiadas de 2px, juntas desencontradas;
+                # face de cima de cada bloco pega luz, a de baixo fica na sombra
+                course, top = (y - 18) // 2, (y - 18) % 2 == 0
+                if (x + course * 2) % 4 == 0:
+                    t = 0.06
+                else:
+                    t = (0.64 if top else 0.40) - course * 0.06
+                c = dither(STONE_RAMP, t, x, y)
             elif (x - 2) % 3 == 0:
                 c = WOOD_ROT
             else:
                 c = dither(WOOD_RAMP, 0.55 - ((x - 2) % 3 - 1) * 0.12, x, y)
             base.putpixel((x, y), c)
+    grain_rnd = random.Random(281)
+    for x in range(2, W - 2):
+        if (x - 2) % 3 == 2:
+            plank_grain(base, x, 13, 17, grain_rnd)
     for x in range(2, W - 2):  # sombra do beiral (dithered)
         px(base, x, 11, WOOD_ROT)
         if x & 1:
@@ -1600,13 +1861,28 @@ def build_floor_clareira():
             if dirt[y][x] > 0.7 and BAYER4[y % 4][x % 4] < (dirt[y][x] - 0.7) * 30:
                 c = dither(EARTH_RAMP, 0.55 + v * 0.1, x, y, mode="bayer")
             img.putpixel((x, y), c)
-    for _ in range(40):  # tufos de capim claro
+    def put(x, y, c):
+        img.putpixel((x % size, y % size), c)
+
+    for _ in range(55):  # tufos de capim: lâminas em "V", ponta clara, pé escuro
         x, y = rnd.randrange(size), rnd.randrange(size)
-        img.putpixel((x, y), GRASS_RAMP[4])
-        img.putpixel((x, (y + 1) % size), GRASS_RAMP[2])
-    for _ in range(6):  # florzinhas apagadas
+        put(x, y, GRASS_RAMP[4])
+        put(x - 1, y + 1, GRASS_RAMP[3])
+        put(x + 1, y + 1, GRASS_RAMP[3])
+        put(x, y + 1, GRASS_RAMP[2])
+        for dx in (-1, 0, 1):
+            put(x + dx, y + 2, GRASS_RAMP[1])
+    for _ in range(18):  # fiapos soltos
         x, y = rnd.randrange(size), rnd.randrange(size)
-        img.putpixel((x, y), rnd.choice((SHROOM_SPOT, BRASS, BLOUSE_ROSE[2])))
+        put(x, y, GRASS_RAMP[4])
+        put(x, y + 1, GRASS_RAMP[2])
+    for _ in range(9):  # florzinhas de 4 pétalas com miolo
+        x, y = rnd.randrange(size), rnd.randrange(size)
+        petal = rnd.choice((SHROOM_SPOT, BLOUSE_ROSE[2], BLOUSE_LAVENDER[2]))
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            put(x + dx, y + dy, petal)
+        put(x, y, BRASS)
+        put(x + 1, y + 2, GRASS_RAMP[1])  # sombrinha
     save(img, "floor_clareira.png")
 
 
@@ -1886,7 +2162,7 @@ def build_strike_sign():
         "....S....",
     ]
     pal = {"W": WOOD_DARK, "w": BANDAGE, "R": ANGER, "s": WOOD_LIGHT, "S": WOOD}
-    save(outline(pad(from_rows(rows, pal)), 0.5), "strike_sign.png")
+    save(outline(pad(from_rows(rows, pal)), 0.5, form=False, selout=False), "strike_sign.png")
 
 
 def build_note():
@@ -1899,7 +2175,7 @@ def build_note():
         "NNN..",
         "NNN..",
     ]
-    save(outline(pad(from_rows(rows, {"N": WINDOW_BRIGHT})), 0.5), "note.png")
+    save(outline(pad(from_rows(rows, {"N": WINDOW_BRIGHT})), 0.5, form=False, selout=False), "note.png")
 
 
 def build_robo():
@@ -1980,7 +2256,7 @@ def build_find_icons():
         "bbBBBBbb",
         ".b.bb.b.",
     ]
-    save(outline(pad(from_rows(gear, {"B": BRASS, "b": RUST_ACCENT, "o": IRON_DARK})), 0.5), "find_peca.png")
+    save(outline(pad(from_rows(gear, {"B": BRASS, "b": RUST_ACCENT, "o": IRON_DARK})), 0.5, form=False, selout=False), "find_peca.png")
     crystal = [
         "...cC...",
         "..cCCc..",
@@ -1991,7 +2267,7 @@ def build_find_icons():
         "...cc...",
         "..dddd..",
     ]
-    save(outline(pad(from_rows(crystal, {"c": (150, 110, 220, 255), "C": (200, 170, 255, 255), "W": (245, 235, 255, 255), "d": STONE_DARK})), 0.5), "find_cristal.png")
+    save(outline(pad(from_rows(crystal, {"c": (150, 110, 220, 255), "C": (200, 170, 255, 255), "W": (245, 235, 255, 255), "d": HUD_STONE_DARK})), 0.5, form=False, selout=False), "find_cristal.png")
     solar = [
         "..yYYy..",
         ".yYWWYy.",
@@ -2002,7 +2278,7 @@ def build_find_icons():
         ".yYWWYy.",
         "..yYYy..",
     ]
-    save(outline(pad(from_rows(solar, {"y": (200, 110, 40, 255), "Y": (255, 180, 60, 255), "W": (255, 240, 170, 255)})), 0.5), "find_solar.png")
+    save(outline(pad(from_rows(solar, {"y": (200, 110, 40, 255), "Y": (255, 180, 60, 255), "W": (255, 240, 170, 255)})), 0.5, form=False, selout=False), "find_solar.png")
     coil = [
         "iiiiiiii",
         ".cCcCcC.",
@@ -2013,7 +2289,7 @@ def build_find_icons():
         "iiiiiiii",
         "..p..p..",
     ]
-    save(outline(pad(from_rows(coil, {"i": IRON_DARK, "c": COPPER, "C": (120, 220, 255, 255), "p": COPPER_LIGHT})), 0.5), "find_bobina.png")
+    save(outline(pad(from_rows(coil, {"i": IRON_DARK, "c": COPPER, "C": (120, 220, 255, 255), "p": COPPER_LIGHT})), 0.5, form=False, selout=False), "find_bobina.png")
 
 
 # nível 3 (abismo): basalto quase preto com rachaduras incandescentes
@@ -2741,7 +3017,7 @@ def build_bandage():
         ".wWW.",
     ]
     pal = {"w": BANDAGE, "W": BANDAGE_SHADOW, "r": BLOOD}
-    save(outline(pad(from_rows(rows, pal)), 0.5), "bandage.png")
+    save(outline(pad(from_rows(rows, pal)), 0.5, form=False, selout=False), "bandage.png")
 
 
 def build_anger():
@@ -2755,7 +3031,7 @@ def build_anger():
         "rRr.rRr",
         ".r...r.",
     ]
-    save(outline(pad(from_rows(rows, {"r": ANGER_DARK, "R": ANGER})), 0.5), "anger.png")
+    save(outline(pad(from_rows(rows, {"r": ANGER_DARK, "R": ANGER})), 0.5, form=False, selout=False), "anger.png")
 
 
 def build_coin():
@@ -2778,6 +3054,7 @@ if __name__ == "__main__":
     build_bandage()
     build_anger()
     build_ipezinho()
+    build_ipezinho_accessories()
     build_pickaxe()
     build_ores()
     build_crystals()
