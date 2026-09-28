@@ -6,6 +6,9 @@ extends Node
 ##   - F5 salva, F9 carrega (teclas tratadas no main.gd);
 ##   - autosave a cada autosave_interval segundos (0 = desligado);
 ##   - ao fechar a janela (NOTIFICATION_WM_CLOSE_REQUEST).
+## Rede de segurança: partida nova por cima de um save existente (Novo Jogo, ou main.tscn
+## aberta direto) guarda o save em user://backups/ com data/hora no nome; ficam os
+## max_backups mais recentes e a tela inicial lista e carrega qualquer um deles.
 ## Ajuste os números na cena res://scenes/core/save_manager.tscn (Inspector).
 ##
 ## ---------------------------------------------------------------------------
@@ -101,8 +104,13 @@ signal save_failed(message: String)
 
 const SAVE_PATH := "user://savegame.json"
 const TEMP_PATH := "user://savegame.tmp"
-## Novo Jogo com um save existente move o antigo pra cá (não se perde nada sem querer).
-const BACKUP_PATH := "user://savegame_backup.json"
+## Backups rotativos: "partida nova" com save existente (Novo Jogo no menu, ou main.tscn
+## aberta direto no editor) move o save pra cá com data/hora no nome, em vez de
+## sobrescrever um backup único. Ficam só os `max_backups` mais recentes.
+const BACKUP_DIR := "user://backups"
+const BACKUP_PREFIX := "savegame_backup_"
+## Backup único das versões antigas do jogo: é adotado pra dentro de BACKUP_DIR no _ready.
+const LEGACY_BACKUP_PATH := "user://savegame_backup.json"
 ## JSON ilegível vai pra cá (pra dar pra investigar), e o jogo começa do zero.
 const CORRUPT_PATH := "user://savegame_corrompido.json"
 ## 3 = Bloco 25: função única "job" por ipezinho ("ocioso" de padrão).
@@ -121,6 +129,8 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 @export var autosave_interval: float = 180.0
 ## Salva sozinho ao fechar a janela.
 @export var save_on_quit: bool = true
+## Quantos backups com data/hora manter em user://backups (o mais antigo, por data, sai).
+@export_range(1, 50) var max_backups: int = 5
 
 ## true = a próxima partida (main.tscn) deve aplicar _pending_data ao ficar pronta.
 var pending_load: bool = false
@@ -136,6 +146,7 @@ var game_over: bool = false
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().set_auto_accept_quit(false)  # quem fecha é o _notification abaixo
+	_adopt_legacy_backup()
 
 
 func _process(delta: float) -> void:
@@ -166,9 +177,14 @@ func save_status() -> String:
 	return "ok" if read_save() != null else "corrupt"
 
 
-## Lê e valida o arquivo. Retorna o Dictionary ou null se estiver ilegível.
+## Lê e valida o save principal. Retorna o Dictionary ou null se estiver ilegível.
 func read_save() -> Variant:
-	var text := FileAccess.get_file_as_string(SAVE_PATH)
+	return read_save_file(SAVE_PATH)
+
+
+## Lê e valida qualquer arquivo de save (principal ou backup), já migrado pra versão atual.
+func read_save_file(path: String) -> Variant:
+	var text := FileAccess.get_file_as_string(path)
 	if text == "":
 		return null
 	var json := JSON.new()  # (JSON.parse_string imprime erro no console; assim fica silencioso)
@@ -180,8 +196,10 @@ func read_save() -> Variant:
 ## Resumo pra tela de Continuar (dia, estágio, população, quando salvou).
 func save_summary() -> Dictionary:
 	var data = read_save()
-	if data == null:
-		return {}
+	return _summary_of(data) if data != null else {}
+
+
+func _summary_of(data: Dictionary) -> Dictionary:
 	return SaveUtil.dict(data, "summary").merged({"saved_at": SaveUtil.text(data, "saved_at", "?")})
 
 
@@ -202,7 +220,7 @@ func is_game_running() -> bool:
 	return _game != null and is_instance_valid(_game) and _game.is_inside_tree()
 
 
-## Menu: começa do zero. Se havia save, ele vira savegame_backup.json.
+## Menu: começa do zero. Se havia save, ele vira um backup com data/hora (user://backups).
 func start_new_game() -> void:
 	backup_existing_save()
 	_backup_checked = true
@@ -218,24 +236,127 @@ func load_game() -> bool:
 		save_failed.emit("save ilegível")
 		Audio.error()
 		return false
+	_start_loaded(data)
+	return true
+
+
+## Tela inicial: carrega um backup. Antes, o save principal atual (se houver) também
+## vira backup — "voltar no tempo" não apaga o presente. A partida carregada volta a
+## salvar no savegame.json normal.
+func load_backup(path: String) -> bool:
+	var data = read_save_file(path)  # lê ANTES de mexer nos arquivos
+	if data == null:
+		save_failed.emit("backup ilegível")
+		Audio.error()
+		return false
+	if save_status() == "corrupt":
+		quarantine_corrupt_save()
+	else:
+		backup_existing_save(path)  # não deixa a poda apagar justo o backup escolhido
+	_start_loaded(data)
+	return true
+
+
+func _start_loaded(data: Dictionary) -> void:
 	_pending_data = data
 	pending_load = true
 	_backup_checked = true
 	get_tree().paused = false
 	get_tree().change_scene_to_file(MAIN_SCENE)
-	return true
 
 
-## Move o save atual pro backup (sobrescreve o backup anterior).
-func backup_existing_save() -> void:
+# ------------------------------------------------------------ backups rotativos
+## Move o save atual pra user://backups/savegame_backup_AAAA-MM-DD_HH-MM-SS.json e poda
+## os antigos (fica com max_backups). `protect` = caminho que a poda não pode apagar.
+## Retorna o caminho do backup criado ("" se não havia save).
+func backup_existing_save(protect: String = "") -> String:
 	if not has_save():
+		return ""
+	var dir := DirAccess.open("user://")
+	if dir == null:
+		return ""
+	if not dir.dir_exists(BACKUP_DIR.get_file()):
+		dir.make_dir(BACKUP_DIR.get_file())
+	var stamp := Time.get_datetime_string_from_system(false, true).replace(":", "-").replace(" ", "_")
+	var target := "%s/%s%s.json" % [BACKUP_DIR, BACKUP_PREFIX, stamp]
+	var n := 2
+	while FileAccess.file_exists(target):  # dois backups no mesmo segundo
+		target = "%s/%s%s_%d.json" % [BACKUP_DIR, BACKUP_PREFIX, stamp, n]
+		n += 1
+	# copia (a cópia nasce com a data de AGORA: a poda ordena pela data do backup,
+	# não pela de quando o jogo foi salvo) e só depois tira o original
+	if dir.copy(SAVE_PATH, target) != OK:
+		push_warning("SaveManager: não deu pra criar o backup %s; o save fica onde está" % target)
+		return ""
+	dir.remove(SAVE_PATH.get_file())
+	print("SaveManager: save anterior guardado em %s" % ProjectSettings.globalize_path(target))
+	_prune_backups(protect)
+	return target
+
+
+## Backups em user://backups, do mais novo pro mais antigo (pela data do arquivo).
+## Cada item: {path, file, time (unix), label ("28/09/2026 23:37"), ok, summary}.
+func list_backups() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var dir := DirAccess.open(BACKUP_DIR)
+	if dir == null:
+		return out
+	for f in dir.get_files():
+		if not (f.begins_with(BACKUP_PREFIX) and f.ends_with(".json")):
+			continue
+		var path := "%s/%s" % [BACKUP_DIR, f]
+		var t := FileAccess.get_modified_time(path)
+		out.append({"path": path, "file": f, "time": t, "label": _local_time_label(t)})
+	out.sort_custom(func(a, b): return a.time > b.time or (a.time == b.time and a.file > b.file))
+	return out
+
+
+## list_backups() + resumo de cada um (lê os arquivos: use só na tela inicial).
+func list_backups_with_summary() -> Array[Dictionary]:
+	var out := list_backups()
+	for b in out:
+		var data = read_save_file(b.path)
+		b["ok"] = data != null
+		b["summary"] = _summary_of(data) if data != null else {}
+	return out
+
+
+func _prune_backups(protect: String = "") -> void:
+	var all := list_backups()  # mais novo primeiro
+	var keep := 0
+	for b in all:
+		if keep < max_backups or b.path == protect:
+			keep += 1
+			continue
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(b.path))
+		print("SaveManager: backup antigo removido (limite de %d): %s" % [max_backups, b.file])
+
+
+## O savegame_backup.json das versões antigas vira um backup com data na pasta nova.
+func _adopt_legacy_backup() -> void:
+	if not FileAccess.file_exists(LEGACY_BACKUP_PATH):
 		return
 	var dir := DirAccess.open("user://")
 	if dir == null:
 		return
-	if dir.file_exists(BACKUP_PATH.get_file()):
-		dir.remove(BACKUP_PATH.get_file())
-	dir.rename(SAVE_PATH.get_file(), BACKUP_PATH.get_file())
+	if not dir.dir_exists(BACKUP_DIR.get_file()):
+		dir.make_dir(BACKUP_DIR.get_file())
+	var t := FileAccess.get_modified_time(LEGACY_BACKUP_PATH)
+	var d := Time.get_datetime_dict_from_unix_time(t + _tz_bias_seconds())
+	var target := "%s/%s%04d-%02d-%02d_%02d-%02d-%02d_antigo.json" % [
+		BACKUP_DIR, BACKUP_PREFIX, d.year, d.month, d.day, d.hour, d.minute, d.second]
+	if FileAccess.file_exists(target) or dir.rename(LEGACY_BACKUP_PATH.get_file(), target.trim_prefix("user://")) != OK:
+		return
+	_prune_backups()
+
+
+func _tz_bias_seconds() -> int:
+	return int(Time.get_time_zone_from_system().get("bias", 0)) * 60
+
+
+func _local_time_label(unix_time: int) -> String:
+	var d := Time.get_datetime_dict_from_unix_time(unix_time + _tz_bias_seconds())
+	return "%02d/%02d/%04d %02d:%02d:%02d" % [d.day, d.month, d.year, d.hour, d.minute, d.second]
 
 
 ## Move um save ilegível pra savegame_corrompido.json.
