@@ -5,10 +5,9 @@ Pasta de revisão — **nada aqui está ligado ao jogo**. `atual/` = o que o jog
 
 ## Estado
 
-**Não gerado ainda:** as ferramentas do PixelLab (`create_character`, `animate_character`,
-`create_image_pro`) não estavam conectadas na sessão do Claude Code. Pra rodar o teste,
-conecte o servidor MCP do PixelLab (com a sua chave de API) e peça de novo — a
-especificação abaixo já está pronta.
+**Tentativa 1 gerada (2026-09-28)**: veja `gerado/RELATORIO.md` e
+`gerado/comparacao_lado_a_lado.png`. Resumo: a paleta e o tamanho 16×17 nativo batem;
+contorno, rosto, lanterna e caminhada não batem. Não substitui o sprite atual.
 
 ## Passo 0 — o minerador de hoje (referência)
 
