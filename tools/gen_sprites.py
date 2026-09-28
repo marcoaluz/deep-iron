@@ -3350,6 +3350,81 @@ def build_arsenal():
     save(outline(pad(from_rows(rows, {"w": WOOD_LIGHT, "W": WOOD_DARK, "h": IRON_LIGHT, "H": IRON_HIGHLIGHT})), 0.5), "arma_quebrada.png")
 
 
+def build_coletor_madeira():
+    """Bloco 45: Coletor de madeira — serraria pequena a vapor: esteira de toras, serra
+    circular, caldeirinha com chaminé e pilha de tábuas. 2 quadros: 0 = parada,
+    1 = trabalhando (serra borrada, faíscas de serragem, brasa na caldeira, fumaça)."""
+    W, H = 50, 38
+    base = new(W, H)
+    # estrado de madeira no chão
+    for y in range(30, 36):
+        for x in range(2, 48):
+            t = 0.55 - (y - 30) * 0.05 - (0.15 if x % 6 == 0 else 0.0)
+            px(base, x, y, dither(WOOD_RAMP, t, x, y))
+    rect(base, 2, 36, 47, 36, WOOD_ROT)
+    # caldeirinha de ferro (esquerda) com chaminé
+    for y in range(18, 31):
+        for x in range(4, 14):
+            px(base, x, y, dither(IRON_RAMP, 0.72 - (x - 4) * 0.05, x, y))
+    rect(base, 4, 18, 13, 18, IRON_HIGHLIGHT)
+    for x in (5, 9, 12):
+        px(base, x, 21, IRON_HIGHLIGHT)
+        px(base, x, 28, IRON_HIGHLIGHT)
+    rect(base, 7, 24, 10, 27, IRON_SHADOW)  # portinha da fornalha (brasa no quadro 1)
+    rect(base, 8, 4, 10, 17, IRON_DARK)  # chaminé
+    rect(base, 7, 4, 11, 5, IRON)
+    # mesa da serra com a esteira de toras
+    rect(base, 15, 22, 44, 24, WOOD_LIGHT)
+    rect(base, 15, 25, 44, 25, WOOD_DARK)
+    for x in (16, 43):
+        rect(base, x, 26, x + 1, 30, WOOD_DARK)
+    for i, x in enumerate(range(28, 44, 5)):  # toras na esteira
+        for y in range(18, 22):
+            for xx in range(x, x + 4):
+                px(base, xx, y, dither(BARK_RAMP, 0.6 - (y - 18) * 0.12, xx, y))
+        px(base, x + 3, 19, WOOD_CUT)
+    rect(base, 14, 21, 22, 21, IRON_DARK)  # eixo da serra
+    # pilha de tábuas cortadas (frente, direita)
+    for k, y in enumerate((31, 29, 27)):
+        rect(base, 34 + k, y, 46 - k, y + 1, WOOD_CUT if k % 2 == 0 else WOOD_HIGHLIGHT)
+        rect(base, 34 + k, y + 1, 46 - k, y + 1, WOOD_LIGHT)
+    # alavanca do operador
+    rect(base, 25, 26, 25, 31, IRON_DARK)
+    px(base, 25, 25, RUST_LIGHT)
+
+    frames = []
+    for working in (False, True):
+        img = base.copy()
+        cx, cy, r = 18, 18, 5  # serra circular
+        for y in range(cy - r, cy + r + 1):
+            for x in range(cx - r, cx + r + 1):
+                d = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5
+                if d <= r:
+                    if working:
+                        c = STEEL_LIGHT if d > r - 1.2 else (STEEL if (x + y) % 2 else STEEL_HIGHLIGHT)
+                    else:
+                        c = STEEL_HIGHLIGHT if d > r - 1.0 and (x + y) % 2 else (STEEL if d > 1.5 else IRON_DARK)
+                    px(img, x, y, c)
+        if not working:
+            for a in range(8):  # dentes parados
+                import math as _m
+                tx = round(cx + (r + 0.6) * _m.cos(a * _m.pi / 4))
+                ty = round(cy + (r + 0.6) * _m.sin(a * _m.pi / 4))
+                px(img, tx, ty, STEEL_HIGHLIGHT)
+        else:
+            for (x, y, c) in ((8, 25, TORCH_GLOW), (9, 25, TORCH_BRIGHT), (8, 26, TORCH_FLAME), (9, 26, TORCH_GLOW)):
+                px(img, x, y, c)  # brasa na fornalha
+            for (x, y) in ((24, 16), (26, 19), (23, 14), (27, 15)):
+                px(img, x, y, WOOD_CUT)  # serragem voando
+            for (x, y) in ((9, 2), (10, 1), (8, 0), (11, 3)):
+                px(img, x, y, (150, 150, 158, 200))  # fumacinha
+        frames.append(outline(pad(img), 0.5))
+    sheet = new(frames[0].width * 2, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "coletor_madeira.png")
+
+
 def build_vestiario():
     """Bloco 44: Vestiário — galpão de tábuas com telhado de uma água, porta, um casaco
     pendurado no cabide de fora e a plaquinha amarela da máscara de gás (os trajes)."""
@@ -4178,6 +4253,7 @@ if __name__ == "__main__":
     build_parque()
     build_hazard_sign()
     build_vestiario()
+    build_coletor_madeira()
     build_lab()
     build_escudo()
     build_food_icons()

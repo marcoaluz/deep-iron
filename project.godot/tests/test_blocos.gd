@@ -176,3 +176,11 @@ func test_b42_equipamento() -> void:
 
 func test_b44_vestiario() -> void:
 	run_bloco("b44_vestiario.gd")
+
+
+func test_b45_coletor_madeira() -> void:
+	run_bloco("b45_coletor_madeira.gd")
+
+
+func test_b46_menu_construcao() -> void:
+	run_bloco("b46_menu_construcao.gd")

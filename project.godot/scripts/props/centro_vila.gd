@@ -74,6 +74,10 @@ const STAGE_HALF_W := [60.0, 60.0, 58.0, 86.0, 90.0]
 const STAGE_LIGHT := [Vector3(30, -14, 0.6), Vector3(0, -26, 0.75), Vector3(0, -34, 0.9), Vector3(0, -34, 1.05), Vector3(0, -50, 1.25)]
 const STAGE_LIGHT_SCALE := [0.7, 0.85, 1.1, 1.35, 1.6]
 const COMEDOURO_FOOTPRINT := Rect2(-44, -40, 88, 60)
+## Bloco 45: coletor de madeira (serraria na clareira).
+const COLETOR_SCENE := preload("res://scenes/props/coletor_madeira.tscn")
+const COLETOR_TEXTURE := preload("res://assets/game/coletor_madeira.png")
+const COLETOR_FOOTPRINT := Rect2(-52, -78, 104, 90)
 const UPGRADE_NAMES := {
 	"moradias": "Moradias",
 	"enfermaria": "Enfermaria",
@@ -129,6 +133,12 @@ const UPGRADE_NAMES := {
 @export var founding_credits: int = 400
 @export var founding_ore: int = 90
 @export var founding_wood: int = 80
+
+@export_group("Coletor de madeira (Bloco 45)")
+## Construir: créditos e ferro (não gasta madeira: é ele que faz madeira); segundos de engenheiro.
+@export var coletor_credits: int = 250
+@export var coletor_ore: int = 60
+@export var coletor_build_time: float = 40.0
 
 @export_group("Raio das casas (Bloco 37)")
 ## Casa só pode ser posicionada até essa distância do Centro da Vila no estágio 1...
@@ -591,8 +601,77 @@ func _confirm_comedouro(pos: Vector2) -> bool:
 	return true
 
 
+# ------------------------------------------------------------ coletor de madeira (Bloco 45)
+func coletor() -> Node:
+	return get_tree().get_first_node_in_group("coletores")
+
+
+func coletor_block_reason() -> String:
+	if coletor() != null:
+		return "já tem um"
+	var c := Canteiro.pending(get_tree(), "coletor")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	return eco.missing_text(coletor_credits, coletor_ore, "ferro") if eco else "sem recursos"
+
+
+func coletor_cost_text() -> String:
+	return "%d cr + %d ferro" % [coletor_credits, coletor_ore]
+
+
+## Escolher o lugar — só na clareira (onde estão as árvores).
+func build_coletor() -> bool:
+	if coletor_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	var env := get_tree().get_first_node_in_group("environment")
+	if placer == null or env == null:
+		return false
+	placer.begin(_confirm_coletor, COLETOR_TEXTURE, 2, "o coletor de madeira (na clareira)",
+		{"footprint": COLETOR_FOOTPRINT, "area": env.clearing_rect.grow(-30.0), "area_name": "da clareira",
+		"start": env.clearing_rect.get_center()})
+	return true
+
+
+func _confirm_coletor(pos: Vector2) -> bool:
+	if coletor_block_reason() != "":
+		Audio.error()
+		return false
+	if not _economy().spend(coletor_credits, coletor_ore, "ferro"):
+		return false
+	Canteiro.order(get_tree(), "coletor", pos, coletor_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Coletor de madeira encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_coletor(pos: Vector2) -> Node2D:
+	var c: Node2D = COLETOR_SCENE.instantiate()
+	c.name = "ColetorMadeira"
+	c.position = pos
+	get_parent().add_child(c)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
+	return c
+
+
 ## O canteiro terminou (canteiro.gd chama o dono do tipo).
 func finish_build(kind: String, pos: Vector2) -> void:
+	if kind == "coletor":
+		if coletor() == null:
+			var col := spawn_coletor(pos)
+			col.pop_in()
+			Audio.recruit()
+			var h := get_tree().get_first_node_in_group("hud")
+			if h:
+				h.show_toast("Coletor de madeira pronto! Designe um lenhador pra operar (clique nele).", Color(0.55, 1.0, 0.5))
+		return
 	if kind != "comedouro":
 		return
 	var c := spawn_comedouro(pos)
@@ -805,7 +884,15 @@ func _popup(text: String, color: Color) -> void:
 func get_save_data() -> Dictionary:
 	return {"level": level, "upgrades": upgrades.duplicate(), "pending_upgrade": pending_upgrade,
 		"upgrade_left": upgrade_left, "upgrade_total": upgrade_total, "obra": _obra.get_save_data(),
-		"founded": founded, "starter_houses_left": starter_houses_left}
+		"founded": founded, "starter_houses_left": starter_houses_left,
+		"coletor": _coletor_save()}
+
+
+func _coletor_save() -> Dictionary:
+	var c := coletor()
+	if c == null:
+		return {}
+	return {"position": SaveUtil.vec2_to_array(c.global_position), "total": c.total_produced}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -823,5 +910,15 @@ func load_save_data(d: Dictionary) -> void:
 	# Bloco 37 (save antigo: fundada, sem casas iniciais — ela já tinha as da cena)
 	founded = SaveUtil.boolean(d, "founded", true)
 	starter_houses_left = clampi(SaveUtil.integer(d, "starter_houses_left", 0), 0, starter_houses)
+	# Bloco 45: coletor de madeira (o operador se religa sozinho: ipezinho "operates_coletor")
+	var old := coletor()
+	if old:
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	var cd := SaveUtil.dict(d, "coletor")
+	var cpos := SaveUtil.vec2(cd, "position", Vector2.INF)
+	if cpos != Vector2.INF:
+		var col := spawn_coletor(cpos)
+		col.total_produced = maxf(SaveUtil.num(cd, "total", 0.0), 0.0)
 	_update_visual()
 	_refresh_galleries(false)  # Bloco 33: galerias batem com o estágio carregado

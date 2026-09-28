@@ -20,6 +20,8 @@ extends Node2D
 ##   radius / radius_center   só vale até essa distância do centro (casas em volta do
 ##                      Centro da Vila); o contorno do raio aparece enquanto escolhe
 ##   start: Vector2     onde o fantasma aparece
+##   area: Rect2        onde pode (em vez da área da mina) — Bloco 45: coletor na clareira
+##   area_name: String  como chamar essa área no aviso ("fora da clareira")
 
 signal finished(confirmed: bool)
 
@@ -44,6 +46,8 @@ var _ignore: Array = []
 var _cancelable := true
 var _radius := 0.0
 var _radius_center := Vector2.ZERO
+var _area := Rect2()
+var _area_name := ""
 
 
 func _ready() -> void:
@@ -88,6 +92,8 @@ func begin(on_confirm: Callable, texture: Texture2D = CASA_TEXTURE, hframes: int
 	_cancelable = opts.get("cancelable", true)
 	_radius = opts.get("radius", 0.0)
 	_radius_center = opts.get("radius_center", Vector2.ZERO)
+	_area = opts.get("area", Rect2())
+	_area_name = opts.get("area_name", "da área")
 	active = true
 	_collect_blockers()
 	var hud := get_tree().get_first_node_in_group("hud")
@@ -112,6 +118,7 @@ func _end(confirmed: bool) -> void:
 	_ignore = []
 	_cancelable = true
 	_radius = 0.0
+	_area = Rect2()
 	finished.emit(confirmed)
 
 
@@ -168,7 +175,10 @@ func move_to(world_pos: Vector2) -> void:
 func check_spot(pos: Vector2) -> String:
 	var fp := Rect2(pos + _footprint.position, _footprint.size)
 	var env := get_tree().get_first_node_in_group("environment")
-	if env and not env.walkable_rect().encloses(fp):
+	if _area.has_area():
+		if not _area.encloses(fp):
+			return "fora %s" % _area_name
+	elif env and not env.walkable_rect().encloses(fp):
 		return "fora da área da mina"
 	if _radius > 0.0 and pos.distance_to(_radius_center) > _radius:
 		return "longe demais do Centro da Vila (a vila cresce e o raio aumenta)"

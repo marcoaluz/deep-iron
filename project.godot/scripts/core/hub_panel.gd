@@ -17,6 +17,7 @@ var _starter_button: Button  # Bloco 37: casas iniciais
 var _comedouro_button: Button
 var _radius_label: Label
 var _recruit_button: Button  # Bloco 39
+var _coletor_button: Button  # Bloco 45
 
 
 func setup(hud: CanvasLayer, hub: Node, economy: Node) -> void:
@@ -95,6 +96,12 @@ func _build() -> void:
 		_hub.build_comedouro()
 		refresh())
 	vbox.add_child(_comedouro_button)
+	_coletor_button = _hud._button("")
+	_coletor_button.pressed.connect(func():
+		Audio.click()
+		_hub.build_coletor()
+		refresh())
+	vbox.add_child(_coletor_button)
 	_recruit_button = _hud._button("")
 	_recruit_button.pressed.connect(func():
 		Audio.click()
@@ -202,6 +209,10 @@ func refresh() -> void:
 	var cr: String = _hub.comedouro_block_reason()
 	_comedouro_button.text = ("Comedouro — escolher lugar  (%s)" % _hub.comedouro_cost_text()) if cr == "" else "Comedouro: " + cr
 	_comedouro_button.disabled = cr != ""
+	var colr: String = _hub.coletor_block_reason()
+	_coletor_button.text = ("Coletor de madeira — escolher lugar na clareira  (%s)" % _hub.coletor_cost_text()) if colr == "" \
+		else "Coletor de madeira: " + colr
+	_coletor_button.disabled = colr != ""
 	var why: String = _economy.recruit_block_reason() if _economy else "sem economia"
 	_recruit_button.text = ("Recrutar ipezinho  (%d cr, %d cama%s livre%s)" % [_economy.recruit_cost(), _economy.free_beds(),
 		"s" if _economy.free_beds() != 1 else "", "s" if _economy.free_beds() != 1 else ""]) if why == "" else "Recrutar: " + why

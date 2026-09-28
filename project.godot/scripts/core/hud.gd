@@ -124,6 +124,8 @@ var _obras_label: Label
 var _unarmed_label: Label  # Bloco 35: guardas desarmados (arma quebrou)
 var _downed_label: Label  # Bloco 36: guardas caídos esperando o médico
 var _cold_label: Label  # Bloco 42: sem casaco no inverno
+var _build_menu: PanelContainer  # Bloco 46: menu de construção (estilo Frostpunk)
+var _build_button: Button
 var _recruit_button: Button
 var _collapse_button: Button
 var _workers_title: Label
@@ -194,6 +196,9 @@ func _process(delta: float) -> void:
 func _build() -> void:
 	_build_top_bar()
 	_build_order_bar()
+	_build_menu = preload("res://scripts/core/build_menu.gd").new()
+	add_child(_build_menu)
+	_build_menu.setup(self)
 	_build_workforce_panel()
 	_build_buildings_column()
 	_build_hints()
@@ -333,6 +338,12 @@ func _build_order_bar() -> void:
 	row.add_theme_constant_override("separation", 6)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_child(row)
+	# Bloco 46: CONSTRUIR abre o menu de construção por abas (também na barra de espaço)
+	var build := _order_button(row, "Construir", "Espaço", load("res://assets/game/hammer.png"), COLOR_TITLE,
+		"Menu de construção: casas, comedouro, lazer, pesquisa, defesa, coleta automática…")
+	build.button.pressed.connect(toggle_build_menu)
+	_build_button = build.button
+	row.add_child(VSeparator.new())
 	for entry in ORDER_JOBS:
 		var job: String = entry[0]
 		var info := _order_button(row, entry[1], entry[2], load(entry[3]), entry[5], entry[6])
@@ -470,6 +481,8 @@ func _build_buildings_column() -> void:
 	var arm := get_tree().get_first_node_in_group("armazens")
 	if arm and _economy:
 		_add_panel("armazem", preload("res://scripts/core/armazem_panel.gd"), arm)  # Bloco 39
+	if _hub:
+		_add_panel("coletor", preload("res://scripts/core/coletor_panel.gd"), _hub)  # Bloco 45
 	if _dig:
 		_add_panel("escavadeira", preload("res://scripts/core/escavadeira_panel.gd"), _dig)
 	if _oficina:
@@ -511,6 +524,7 @@ func _build_hints() -> void:
 		"Ordens:  botão direito = mover / minerar a jazida clicada",
 		"Funções:  1 minerador  •  2 caçador  •  3 médico  •  4 engenheiro  •  C cozinheiro  •  L lenhador  •  X guarda  •  Z pesquisador  •  0 sem função  •  T turno extra",
 		"Economia:  V vender minério  •  R recrutar",
+		"Construir:  Espaço = menu de construção (casas, comedouro, lazer, pesquisa, defesa, coleta automática…)",
 		"Prédios:  U Centro da Vila  •  E Escavadeira  •  O Oficina  •  I Enfermaria  •  B Bem-estar  •  G Defesa  •  Q Laboratório  •  Y Sol  •  J Diário  (ou clique no prédio)",
 		"Câmera:  roda = zoom  •  botão do meio / WASD / setas = mover  •  Home = centralizar",
 		"Jogo:  F5 salvar  •  F9 carregar  •  M música  •  Esc/P pausa  •  N pular fase (teste)  •  K machucar (teste; Shift+K grave)",
@@ -539,9 +553,20 @@ func _add_panel(id: String, script: GDScript, target: Node) -> void:
 	_panel_buttons[id] = button
 
 
+## Bloco 46: abre/fecha o menu de construção.
+func toggle_build_menu() -> void:
+	if not _build_menu.visible:
+		for id in _panels:
+			_panels[id].visible = false
+	Audio.click()
+	_build_menu.toggle()
+	_build_button.set_pressed_no_signal(_build_menu.visible)
+
+
 func open_panel(id: String) -> void:
 	if not _panels.has(id):
 		return
+	_build_menu.visible = false
 	for other in _panels:
 		if other != id:
 			_panels[other].visible = false
@@ -567,6 +592,9 @@ func close_panels() -> bool:
 			closed = true
 	if _hint_panel and _hint_panel.visible:
 		_hint_panel.visible = false
+		closed = true
+	if _build_menu and _build_menu.visible:
+		_build_menu.visible = false
 		closed = true
 	if closed:
 		Audio.click()
@@ -1072,6 +1100,9 @@ func _joy_color(h: float) -> Color:
 
 
 func _refresh_panels() -> void:
+	if _build_menu:
+		_build_menu.refresh()
+		_build_button.set_pressed_no_signal(_build_menu.visible)
 	for id in _panels:
 		var panel: PanelContainer = _panels[id]
 		var button: Button = _panel_buttons[id]

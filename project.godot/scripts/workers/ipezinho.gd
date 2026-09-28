@@ -33,6 +33,7 @@ const STATE_LABELS := {
 	"rearming": "indo ao Arsenal",
 	"downed": "caído em combate",
 	"rescue": "resgatando",
+	"operating": "operando o coletor",
 }
 ## Distância da porta/cama a partir da qual o ipezinho "chega" em casa.
 const REST_REACH := 12.0
@@ -80,6 +81,7 @@ const STATE_GROUP := {
 	"cooking": "comedouros",  # cozinheiro preparando
 	"chopping": "arvores",
 	"hauling": "armazens",
+	"operating": "coletores",  # Bloco 45: lenhador designado operando o coletor de madeira
 	"infirmary": "enfermarias",
 	"leisure": "tavernas",
 	"training": "campos",
@@ -907,9 +909,12 @@ func _choose_state() -> String:
 		if (_ai_state == "research" and _station_ok_for("research")) or _has_usable_station("laboratorios"):
 			return "research"
 	# Lenhador: larga o minério que tiver e passa a só cortar e levar madeira.
+	# Bloco 45: o designado pro coletor de madeira fica operando a máquina.
 	if is_lumber():
 		if carrying > 0.0:
 			return "storing"
+		if _my_coletor() != null:
+			return "operating"
 		if _ai_state == "chopping" and _station_ok_for("chopping"):
 			return "chopping"
 		if _has_usable_station("arvores"):
@@ -1111,6 +1116,8 @@ func _station_ok_for(state: String) -> bool:
 		return food_carrying > 0.0 and _station.space_left() > 0.5
 	if state == "eating":
 		return _station.has_food()
+	if state == "operating":
+		return is_lumber() and _station.get("operator") == self
 	if state == "chopping":
 		return _station.has_wood() and wood_carrying < lumber_carry - 0.01
 	if state == "hauling":
@@ -2012,6 +2019,8 @@ func set_job(new_job: String) -> void:
 		_obra_stop()  # tirou do engenheiro: a obra pausa NA HORA, sem perder o feito (Bloco 31)
 	if job == ROLE_DOCTOR:
 		_drop_patient()  # Bloco 36: tirou do médico no meio do resgate: larga o caído ali
+	if job == ROLE_LUMBER and _my_coletor() != null:
+		_my_coletor().release()  # Bloco 45: deixou de ser lenhador: o coletor para
 	job = new_job
 	_popup(JOB_LABELS[job], Color(0.95, 0.9, 0.6) if job != ROLE_IDLE else Color(0.75, 0.75, 0.8))
 	# Bloco 35: o primeiro porrete vem de casa; depois disso, arma nova só no Arsenal
@@ -2068,6 +2077,29 @@ func deliver_raw(amount: float) -> float:
 		_clear_raw()
 		_decision_timer = 0.0
 	return given
+
+
+# ------------------------------------------------------------ coletor de madeira (Bloco 45)
+## O coletor em que ele é o operador (ou null).
+func _my_coletor() -> Node:
+	if not is_inside_tree():
+		return null
+	for c in get_tree().get_nodes_in_group("coletores"):
+		if c.get("operator") == self:
+			return c
+	return null
+
+
+## Coletor chama a cada quadro com ele no posto: mexendo nas alavancas (anima o machado).
+func operate_tick() -> void:
+	_work_timer = 0.2
+
+
+## Save carregado com ele operando: volta pro posto.
+func _relink_coletor() -> void:
+	var c := get_tree().get_first_node_in_group("coletores") if is_inside_tree() else null
+	if c and is_lumber():
+		c.designate(self)
 
 
 ## Bloco 42: armazém chama — entrega todo o couro que estiver na mochila.
@@ -2801,6 +2833,7 @@ func get_save_data() -> Dictionary:
 		"downed_gate": downed_gate,
 		"wearing": wearing.duplicate(),
 		"leather_carrying": leather_carrying,
+		"operates_coletor": _my_coletor() != null,
 	}
 
 
@@ -2859,6 +2892,8 @@ func load_save_data(d: Dictionary) -> void:
 		if k in ["casaco", "gas", "calor", "radiacao"] and (wd[k] is float or wd[k] is int) and float(wd[k]) > 0.0:
 			wearing[k] = float(wd[k])
 	leather_carrying = maxf(SaveUtil.num(d, "leather_carrying", 0.0), 0.0)
+	if SaveUtil.boolean(d, "operates_coletor", false):
+		_relink_coletor.call_deferred()  # Bloco 45
 	downed = injured and injury_severity == "grave" and SaveUtil.boolean(d, "downed", false)
 	downed_gate = SaveUtil.text(d, "downed_gate", "") if downed else ""
 	if downed:

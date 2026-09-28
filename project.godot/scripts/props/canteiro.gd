@@ -24,6 +24,7 @@ const KINDS := {
 	"comedouro": ["Comedouro", "village_hub", "res://assets/game/comedouro.png", 3],  # Bloco 37
 	"parque": ["Parque", "morale", "res://assets/game/parque.png", 1],  # Bloco 41
 	"vestiario": ["Vestiário", "equipment", "res://assets/game/vestiario.png", 1],  # Bloco 44
+	"coletor": ["Coletor de madeira", "village_hub", "res://assets/game/coletor_madeira.png", 2],  # Bloco 45
 }
 
 var kind: String = ""

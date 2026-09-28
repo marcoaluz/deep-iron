@@ -157,6 +157,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				var worker: Node2D = _economy.recruit()
 				if worker:
 					_camera.focus_on(worker.global_position)
+			KEY_SPACE:
+				_hud.toggle_build_menu()  # Bloco 46: menu de construção
 			KEY_M:
 				Audio.toggle_music()
 			KEY_F5:
