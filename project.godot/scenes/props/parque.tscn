@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/parque.gd" id="1_parque"]
+[ext_resource type="Texture2D" path="res://assets/game/parque.png" id="2_sprite"]
+[ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="3_light"]
+
+[node name="Parque" type="Node2D"]
+script = ExtResource("1_parque")
+
+[node name="Visual" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("2_sprite")
+offset = Vector2(0, -18)
+
+[node name="Light" type="PointLight2D" parent="."]
+position = Vector2(18, -46)
+color = Color(1, 0.8, 0.45, 1)
+energy = 0.6
+texture = ExtResource("3_light")
+texture_scale = 0.5

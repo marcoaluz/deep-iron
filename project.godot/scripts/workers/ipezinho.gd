@@ -1580,6 +1580,12 @@ func have_fun(amount: float) -> void:
 		_decision_timer = randf_range(0.05, 0.3)  # animou: sai logo
 
 
+## Bloco 41: parque perto (morale.gd chama a cada quadro) — ânimo aos pouquinhos, até `cap`.
+func enjoy_park(amount: float, cap: float) -> void:
+	if happiness < cap:
+		happiness = minf(happiness + amount, cap)
+
+
 ## Festa: alegria na hora.
 func cheer(amount: float) -> void:
 	happiness = minf(happiness + amount, 100.0)

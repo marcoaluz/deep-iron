@@ -3350,6 +3350,50 @@ def build_arsenal():
     save(outline(pad(from_rows(rows, {"w": WOOD_LIGHT, "W": WOOD_DARK, "h": IRON_LIGHT, "H": IRON_HIGHLIGHT})), 0.5), "arma_quebrada.png")
 
 
+def build_parque():
+    """Bloco 41: Parque — gramado com caminho de pedra, duas árvores, banco, canteiro
+    de flores e um poste de luz. O pé fica embaixo no meio."""
+    W, H = 48, 34
+    img = new(W, H)
+    for y in range(14, H):  # gramado oval
+        for x in range(W):
+            d = (x - 23.5) ** 2 / 23.5 ** 2 + (y - 25) ** 2 / 9.0 ** 2
+            if d <= 1.0:
+                t = 0.7 - d * 0.35 - (y - 14) * 0.012
+                px(img, x, y, dither(GRASS_RAMP, t, x, y))
+    for i in range(22):  # caminho de pedra atravessando
+        x = 12 + i
+        y = 30 - round(i * 9 / 21)
+        for dx in (0, 1):
+            if (x + y) % 3:
+                px(img, x + dx, y, dither(STONE_RAMP, 0.62, x, y))
+    for (tx, ty, r) in ((9, 11, 7), (41, 13, 6)):  # árvores
+        rect(img, tx - 1, ty + r - 2, tx, ty + r + 7, BARK_RAMP[1])
+        px(img, tx - 1, ty + r + 2, BARK_RAMP[3])
+        for y in range(ty - r, ty + r + 1):
+            for x in range(tx - r, tx + r + 1):
+                d = ((x - tx) ** 2 + (y - ty) ** 2) ** 0.5
+                if d <= r - ((x * 3 + y) % 4 == 0) * 0.6:
+                    t = 0.78 - (x - tx + r) / (2 * r) * 0.35 - (y - ty + r) / (2 * r) * 0.3
+                    px(img, x, y, dither(PINE_RAMP, t + 0.12, x, y))
+    for x in range(18, 31):  # banco
+        px(img, x, 22, WOOD_LIGHT)
+        px(img, x, 23, WOOD)
+        px(img, x, 19, WOOD_DARK if x % 3 else WOOD)
+    for x in (19, 29):
+        rect(img, x, 24, x, 26, IRON_DARK)
+        rect(img, x, 19, x, 21, WOOD_DARK)
+    flowers = ((255, 120, 120, 255), (255, 214, 96, 255), (240, 240, 250, 255), (200, 140, 230, 255))
+    for i, (x, y) in enumerate(((4, 27), (6, 29), (8, 26), (36, 29), (39, 27), (41, 30), (33, 31), (16, 31))):
+        px(img, x, y, flowers[i % 4])
+        px(img, x, y + 1, GRASS_RAMP[1])
+    rect(img, 33, 13, 33, 27, IRON_DARK)  # poste de luz
+    rect(img, 31, 11, 35, 11, IRON)
+    rect(img, 32, 12, 34, 13, LAMP_GLOW)
+    px(img, 33, 12, LAMP_CORE)
+    save(outline(pad(img), 0.5), "parque.png")
+
+
 def build_weather():
     """Bloco 40: partículas do clima da clareira (brancas/neutras: a cor vem da partícula).
     folha (outono), floco (inverno), gota (chuva) e pólen (verão)."""
@@ -4047,6 +4091,7 @@ if __name__ == "__main__":
     build_defense()
     build_arsenal()
     build_weather()
+    build_parque()
     build_lab()
     build_escudo()
     build_food_icons()

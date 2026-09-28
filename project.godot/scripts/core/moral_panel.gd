@@ -13,6 +13,8 @@ var _causes: VBoxContainer
 var _festa_button: Button
 var _taverna_label: Label
 var _taverna_button: Button
+var _park_label: Label  # Bloco 41
+var _park_button: Button
 
 
 func setup(hud: CanvasLayer, morale: Node, economy: Node) -> void:
@@ -90,6 +92,15 @@ func _build() -> void:
 		_morale.build_or_upgrade_taverna()
 		refresh())
 	vbox.add_child(_taverna_button)
+	_park_label = _hud._label("", 12, _hud.COLOR_DIM)
+	_park_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(_park_label)
+	_park_button = _hud._button("")
+	_park_button.pressed.connect(func():
+		Audio.click()
+		_morale.build_park()
+		refresh())
+	vbox.add_child(_park_button)
 
 
 func _color_for(h: float) -> Color:
@@ -177,6 +188,12 @@ func refresh() -> void:
 		else:
 			_taverna_button.text = "Ampliar taverna: " + tav_reason
 	_taverna_button.disabled = tav_reason != ""
+	var n: int = _morale.parks().size()
+	_park_label.text = "Parques: %d. Quem passa perto (até %d px) ganha ânimo aos pouquinhos, sem precisar ir lá." % [n, roundi(_morale.park_radius)]
+	var pr: String = _morale.park_block_reason()
+	_park_button.text = ("Construir parque — escolher lugar  (%d cr + %d %s + %d madeira)" % [_morale.park_credits, _morale.park_ore, _morale.park_ore_type, _morale.park_wood]) \
+		if pr == "" else "Construir parque: " + pr
+	_park_button.disabled = pr != ""
 
 
 func button_text() -> String:

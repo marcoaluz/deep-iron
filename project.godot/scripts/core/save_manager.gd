@@ -108,6 +108,7 @@ extends Node
 ##   Bloco 35 (save_version 4): arma por guarda com desgaste. Save < 4: cada guarda recebe a
 ##     melhor arma que a vila já tinha forjado (durabilidade cheia) e a forja que andava
 ##     sozinha (forging/forge_left) vira a primeira encomenda da fila do Arsenal.
+##   Bloco 41: morale.gd "parques" [posições] — recriados ao carregar (save antigo: nenhum).
 ##   Bloco 37: "layout" {hub, armazens {nome: pos}, comedouros [{name, position}]} — onde o
 ##     jogador fundou a vila e os comedouros que construiu. Aplicado ANTES de tudo: as casas
 ##     e o comedouro que vêm na cena somem e o Centro/Armazém vão pro lugar salvo. Save

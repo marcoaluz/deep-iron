@@ -15,6 +15,10 @@ extends Node
 ##     alvo por festa_duration. Uma por dia.
 ##   - Luto: cada morte soma grief_per_death no alvo de todos, que some aos poucos.
 ##   - Taverna: o jogador escolhe onde construir (igual às casas) e pode ampliar.
+##   - Parque (Bloco 41): lazer PASSIVO. Quem está ao ar livre a até park_radius de um
+##     parque ganha park_rate de ânimo por segundo, até park_cap (o teto de 100 vale
+##     sempre). Vários parques não somam. Posicionado como as casas (raio do Centro da
+##     Vila) — é pra quem mora perto. Pode ter mais de um; um canteiro por vez.
 
 signal strike_started
 signal strike_ended
@@ -24,6 +28,9 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 const TAVERNA_SCENE := preload("res://scenes/props/taverna.tscn")
 const Canteiro := preload("res://scripts/props/canteiro.gd")
 const TAVERNA_TEXTURE := preload("res://assets/game/taverna.png")
+const PARQUE_SCENE := preload("res://scenes/props/parque.tscn")
+const PARQUE_TEXTURE := preload("res://assets/game/parque.png")
+const PARQUE_FOOTPRINT := Rect2(-50, -72, 100, 80)
 const GameOver := preload("res://scripts/ui/game_over.gd")
 
 @export_group("Greve")
@@ -75,6 +82,20 @@ const GameOver := preload("res://scripts/ui/game_over.gd")
 @export var taverna_up_build_time: float = 40.0
 ## Alvo de felicidade de todos por ter taverna (nível 1 / 2).
 @export var taverna_bonus: Array[float] = [5.0, 8.0]
+
+@export_group("Parque (Bloco 41)")
+## Construir: créditos, minério (tipo abaixo) e madeira; segundos de engenheiro.
+@export var park_credits: int = 100
+@export var park_ore: int = 20
+@export var park_ore_type: String = "ferro"
+@export var park_wood: int = 40
+@export var park_build_time: float = 30.0
+## Até onde o parque alegra (px do mundo, a partir do parque).
+@export var park_radius: float = 120.0
+## Ânimo ganho por segundo por quem está no raio (ao ar livre).
+@export var park_rate: float = 0.5
+## O parque só leva o ânimo até aqui (o teto geral é 100).
+@export_range(0.0, 100.0) var park_cap: float = 100.0
 
 var on_strike := false
 ## Segundos que faltam do ultimato (só vale em greve).
@@ -174,6 +195,7 @@ func _hud() -> Node:
 func _process(delta: float) -> void:
 	if is_expelled:
 		return
+	_park_tick(delta)
 	if grief > 0.0:
 		grief = maxf(grief - grief_per_death / grief_time * delta, 0.0)
 	festa_left = maxf(festa_left - delta, 0.0)
@@ -318,6 +340,79 @@ func throw_festa() -> bool:
 	return true
 
 
+# ------------------------------------------------------------ parque (Bloco 41)
+func parks() -> Array:
+	return get_tree().get_nodes_in_group("parques")
+
+
+## Quem está ao ar livre perto de algum parque ganha ânimo (uma vez só, mesmo com vários).
+func _park_tick(delta: float) -> void:
+	var list := parks()
+	if list.is_empty() or park_rate <= 0.0:
+		return
+	var amount := park_rate * delta
+	for w in workers():
+		if w.get("_inside") or w.get("downed"):
+			continue
+		for p in list:
+			if w.global_position.distance_to(p.global_position) <= park_radius:
+				w.enjoy_park(amount, minf(park_cap, 100.0))
+				break
+
+
+func park_block_reason() -> String:
+	var c := Canteiro.pending(get_tree(), "parque")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	return eco.missing_text(park_credits, park_ore, park_ore_type, park_wood) if eco else "sem recursos"
+
+
+## Escolher o lugar (no raio das casas, em volta do Centro da Vila); paga ao confirmar.
+func build_park() -> bool:
+	if park_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	var opts := {"footprint": PARQUE_FOOTPRINT}
+	var hub := get_tree().get_first_node_in_group("village_hub")
+	if hub and hub.has_method("house_radius") and hub.house_radius() > 0.0:
+		opts["radius"] = hub.house_radius()
+		opts["radius_center"] = hub.global_position
+	placer.begin(_confirm_park, PARQUE_TEXTURE, 1, "o parque", opts)
+	return true
+
+
+func _confirm_park(pos: Vector2) -> bool:
+	if park_block_reason() != "":
+		Audio.error()
+		return false
+	if not _economy().spend(park_credits, park_ore, park_ore_type, park_wood):
+		return false
+	Canteiro.order(get_tree(), "parque", pos, park_build_time)
+	Audio.click()
+	_toast("Parque encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_park(pos: Vector2) -> Node2D:
+	var p: Node2D = PARQUE_SCENE.instantiate()
+	var n := 1
+	var world := get_tree().get_first_node_in_group("village_hub").get_parent()
+	while world.has_node("Parque%d" % n):
+		n += 1
+	p.name = "Parque%d" % n
+	p.position = pos
+	world.add_child(p)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
+	return p
+
+
 # ------------------------------------------------------------ taverna
 ## "" se dá pra construir/ampliar; senão o motivo.
 func taverna_block_reason() -> String:
@@ -371,6 +466,12 @@ func _confirm_taverna(pos: Vector2) -> bool:
 
 ## Bloco 31b: o canteiro terminou (chamado por canteiro.gd).
 func finish_build(kind: String, pos: Vector2) -> void:
+	if kind == "parque":  # Bloco 41
+		var p := spawn_park(pos)
+		p.pop_in()
+		Audio.recruit()
+		_toast("Parque pronto! Quem passa perto fica mais animado.", Color(0.55, 1.0, 0.5))
+		return
 	if kind == "taverna" and taverna() == null:
 		var tav := spawn_taverna(pos, 1)
 		tav.pop_in()
@@ -418,6 +519,10 @@ func get_save_data() -> Dictionary:
 	var tav := taverna()
 	if tav:
 		d["taverna"] = tav.get_save_data()
+	var ps := []
+	for p in parks():
+		ps.append(SaveUtil.vec2_to_array(p.global_position))
+	d["parques"] = ps  # Bloco 41
 	return d
 
 
@@ -434,3 +539,10 @@ func load_save_data(d: Dictionary) -> void:
 		var pos := SaveUtil.vec2(td, "position", Vector2.INF)
 		if pos != Vector2.INF:
 			spawn_taverna(pos, clampi(SaveUtil.integer(td, "level", 1), 1, 2))
+	# Bloco 41 (save antigo: sem parque)
+	for p in parks():
+		p.get_parent().remove_child(p)
+		p.queue_free()
+	for v in SaveUtil.array(d, "parques"):
+		if typeof(v) == TYPE_ARRAY and v.size() >= 2:
+			spawn_park(Vector2(float(v[0]), float(v[1])))
