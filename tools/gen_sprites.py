@@ -663,9 +663,121 @@ IPEZINHO_LOOKS = {
 }
 
 
+# ------------------------------------------------------------ outfits por função (Bloco 26)
+# Cada outfit troca a CABEÇA (linhas 0-5: capacete / gorro / chapéu / cabelo) e o
+# RECHEIO do tronco (linhas 10-13), mas mantém a mesma silhueta do tronco, das pernas e
+# dos pés — por isso lenço, remendo/bolso e botas (Bloco 24) encaixam em todos.
+# Linhas 6-9 (rosto) vêm do mineiro, exceto no civil (sem aba: testa iluminada).
+# Outfit novo (guarda, pesquisador...) = mais uma entrada em IPEZINHO_OUTFITS
+# + a paleta dele em _outfit_pal() + o mapeamento função -> outfit no ipezinho.gd.
+_FACE_M = IPEZINHO_UPPER[6:10]
+_FACE_F = IPEZINHA_UPPER[6:10]
+_BEANIE = [  # gorro de lã com pompom e barra dobrada (lenhador)
+    "................",
+    ".......oN.......",
+    ".....nNNNNn.....",
+    "....nNoNNoNn....",
+    "...nNNNNNNNNn...",
+    "...RRRRRRRRRR...",
+]
+_TOQUE = [  # chapéu de cozinheiro: copa fofa + faixa
+    "................",
+    "....qQQQQQQq....",
+    "...qQQQQQQQQq...",
+    "...qQQQQQQQQq...",
+    "....qQQQQQQq....",
+    "....jjjjjjjj....",
+]
+IPEZINHO_OUTFITS = {
+    # lenhador: gorro, flanela xadrez, suspensórios de couro, manga arregaçada
+    "lenhador": {
+        "m": _BEANIE + _FACE_M + [
+            "..fFFTFFFFTFFu..",
+            "..SSGTGGGGTGSs..",
+            "..SsFTFFFFTFSs..",
+            "...cTTTbbTTTc...",
+        ],
+        "f": _BEANIE + _FACE_F + [
+            "..AFFTFFFFTFFa..",
+            "..tSGTGGGGTGSt..",
+            "..SsFTFFFFTFSs..",
+            "..cCTTTbbTTTCc..",
+        ],
+    },
+    # cozinheiro: chapéu branco (sem capacete por baixo) + avental branco sobre a roupa
+    "cozinheiro": {
+        "m": _TOQUE + _FACE_M + [
+            "..fFFQQQQQQFFu..",
+            "..fFFqQQQQqFFu..",
+            "..SsuQQQQQQuSs..",
+            "...cTQQQQQQTc...",
+        ],
+        "f": _TOQUE + _FACE_F + [
+            "..AFFQQQQQQFFa..",
+            "..tFFqQQQQqFFt..",
+            "..SsuQQQQQQuSs..",
+            "..cCQQQQQQQQCc..",
+        ],
+    },
+    # civil (ocioso): cabelo à mostra, camisa/blusa abotoada, sem equipamento nem lanterna
+    "civil": {
+        "m": [
+            "................",
+            "................",
+            "................",
+            "....aAAAAAAa....",
+            "...aAAAAAAAAa...",
+            "...aAaAAAAaAa...",
+            "...aSSSSSSSSa...",
+        ] + _FACE_M[1:] + [
+            "..fFFFFSsFFFFu..",
+            "..fFFFFbFFFFFu..",
+            "..SsuFFFFFFuSs..",
+            "...cTTTbbTTTc...",
+        ],
+        "f": [
+            "................",
+            "................",
+            "................",
+            "....aAAAAAAa....",
+            "...aAAAAAAAAa...",
+            "..aAAaAAAAaAAa..",
+            "..aASSSSSSSSAa..",
+        ] + _FACE_F[1:] + [
+            "..AFFFFSsFFFFa..",
+            "..tFFFFbFFFFFt..",
+            "..SsuFFFFFFuSs..",
+            "..cCCCCCCCCCCc..",
+        ],
+    },
+}
+BEANIE_COLORS = (  # (escuro, médio, claro) — sorteado pela variação, pra colônia não ficar uniforme
+    ((36, 70, 52, 255), (52, 96, 68, 255), (76, 122, 88, 255)),  # verde-mata
+    ((110, 40, 34, 255), (150, 60, 44, 255), (182, 90, 62, 255)),  # vermelho-ferrugem
+    ((120, 92, 36, 255), (160, 124, 50, 255), (194, 160, 80, 255)),  # mostarda
+)
+CHEF_WHITE = (236, 232, 222, 255)
+CHEF_SHADE = (196, 190, 178, 255)
+CHEF_BAND = (160, 154, 142, 255)
+
+
+def _outfit_pal(outfit, look_index, shirt):
+    if outfit == "lenhador":
+        dark, mid, light = BEANIE_COLORS[look_index % len(BEANIE_COLORS)]
+        return {
+            "n": dark, "N": mid, "o": light, "R": shade(dark, 0.85),
+            "F": (shirt[2], shirt[0]),  # xadrez da flanela (nas cores da camisa da variação)
+            "G": shirt[1],
+        }
+    if outfit == "cozinheiro":
+        return {"Q": CHEF_WHITE, "q": CHEF_SHADE, "j": CHEF_BAND}
+    return {}
+
+
 def build_ipezinho():
-    """Gera ipezinho_m0..5.png (meninos) e ipezinho_f0..5.png (meninas): mesmo layout de
-    4 quadros de caminhada, só troca a textura. ipezinho_walk.png = m0 (padrão da cena)."""
+    """Gera os corpos: 4 outfits x 2 gêneros x 6 variações, mesmo layout de 4 quadros.
+    Mineiro (capacete + lanterna): ipezinho_m0..5.png / ipezinho_f0..5.png — os nomes de
+    sempre (ipezinho_walk.png = m0, padrão da cena). Os outros: ipezinho_<outfit>_m0.png etc."""
     for gender, looks in IPEZINHO_LOOKS.items():
         for i, (shirt, cloth, hair, ribbon, skin) in enumerate(looks):
             pal = {
@@ -676,13 +788,15 @@ def build_ipezinho():
                 "t": ribbon or hair[0],
                 "m": skin[0], "s": skin[1], "S": skin[2], "r": skin[3],
             }
-            if gender == "m":
-                sheet = ipezinho_sheet(IPEZINHO_UPPER, IPEZINHO_LEG, IPEZINHO_FOOT, pal)
-            else:
-                sheet = ipezinho_sheet(IPEZINHA_UPPER, IPEZINHA_LEG, IPEZINHO_FOOT, pal)
+            leg = IPEZINHO_LEG if gender == "m" else IPEZINHA_LEG
+            upper = IPEZINHO_UPPER if gender == "m" else IPEZINHA_UPPER
+            sheet = ipezinho_sheet(upper, leg, IPEZINHO_FOOT, pal)
             save(sheet, f"ipezinho_{gender}{i}.png")
             if gender == "m" and i == 0:
                 save(sheet, "ipezinho_walk.png")
+            for outfit, rows in IPEZINHO_OUTFITS.items():
+                opal = {**pal, **_outfit_pal(outfit, i, shirt)}
+                save(ipezinho_sheet(rows[gender], leg, IPEZINHO_FOOT, opal), f"ipezinho_{outfit}_{gender}{i}.png")
 
 
 def side_light(img, first_row, x0=3, x1=12, strength=0.16):

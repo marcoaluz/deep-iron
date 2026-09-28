@@ -30,32 +30,26 @@ const Ores := preload("res://scripts/core/ores.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const STEEL_PICKAXE := preload("res://assets/game/pickaxe_aco.png")
 const FOOD_BASKET := preload("res://assets/game/food_basket.png")
-## Visual do corpo por gênero: 3 variações de cor de roupa/cabelo cada (tools/gen_sprites.py).
-## Todas têm o mesmo layout de 4 quadros e o mesmo capacete, então os ícones por cima
-## (carga, chapéu de cozinheiro, zanga, curativo) encaixam igual.
 ## Nomes sorteados (sem repetir enquanto houver nome livre).
 const NAMES_BOY := ["Tião", "Zé", "Juca", "Chico", "Bento", "Dito", "Tonho", "Neco",
 	"Quim", "Bira", "Tuco", "Lalo", "Nando", "Beto", "Vavá", "Duda"]
 const NAMES_GIRL := ["Zefa", "Lia", "Nina", "Cida", "Bia", "Tuca", "Dora", "Rosinha",
 	"Mel", "Tita", "Lulu", "Nena", "Fifi", "Jana", "Didi", "Cacá"]
-const BODY_TEXTURES := {
-	"menino": [
-		preload("res://assets/game/ipezinho_m0.png"),
-		preload("res://assets/game/ipezinho_m1.png"),
-		preload("res://assets/game/ipezinho_m2.png"),
-		preload("res://assets/game/ipezinho_m3.png"),  # 3..5: Bloco 24
-		preload("res://assets/game/ipezinho_m4.png"),
-		preload("res://assets/game/ipezinho_m5.png"),
-	],
-	"menina": [
-		preload("res://assets/game/ipezinho_f0.png"),
-		preload("res://assets/game/ipezinho_f1.png"),
-		preload("res://assets/game/ipezinho_f2.png"),
-		preload("res://assets/game/ipezinho_f3.png"),
-		preload("res://assets/game/ipezinho_f4.png"),
-		preload("res://assets/game/ipezinho_f5.png"),
-	],
+## Visual do corpo (tools/gen_sprites.py): outfit (pela função) x gênero x variação.
+## Todos têm o mesmo layout de 4 quadros e a mesma silhueta de tronco/pés, então
+## acessórios (lenço, remendo, bota) e ícones por cima (carga, zanga, curativo) encaixam igual.
+const GENDERS := {"menino": "m", "menina": "f"}
+## Variações de roupa/cabelo/pele por gênero (índice `look`, salvo desde o Bloco 11).
+const LOOKS_PER_GENDER := 6
+## Arquivo de cada outfit (%s = "m"/"f", %d = look). O mineiro usa os nomes de sempre.
+const OUTFIT_FILES := {
+	"mineiro": "res://assets/game/ipezinho_%s%d.png",
+	"lenhador": "res://assets/game/ipezinho_lenhador_%s%d.png",
+	"cozinheiro": "res://assets/game/ipezinho_cozinheiro_%s%d.png",
+	"civil": "res://assets/game/ipezinho_civil_%s%d.png",
 }
+## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
+const OUTFITS_WITH_LAMP := ["mineiro"]
 ## Chance (0..1) de cada camada de acessório aparecer (botas, remendo/bolso, lenço).
 const ACCESSORY_CHANCE := 0.6
 const STATE_GROUP := {
@@ -85,6 +79,13 @@ const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_R
 const JOB_LABELS := {
 	ROLE_IDLE: "Sem função", ROLE_MINER: "Minerador!", ROLE_COOK: "Cozinheiro!",
 	ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!",
+}
+## Bloco 26: outfit inteiro por função (derivado do `job`: nada novo no save).
+## Guarda e pesquisador ainda vestem o de mineiro — outfit próprio deles = gerar os
+## corpos no gen_sprites.py, pôr o arquivo em OUTFIT_FILES e trocar aqui.
+const JOB_OUTFIT := {
+	ROLE_IDLE: "civil", ROLE_MINER: "mineiro", ROLE_COOK: "cozinheiro",
+	ROLE_LUMBER: "lenhador", ROLE_GUARD: "mineiro", ROLE_RESEARCH: "mineiro",
 }
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
@@ -266,7 +267,7 @@ var job: String = ROLE_IDLE
 var display_name: String = ""
 ## "menino" ou "menina": sorteado ao nascer (jogo novo / recrutamento), fixo depois.
 var gender: String = ""
-## Variação de cor de roupa/cabelo dentro do gênero (índice em BODY_TEXTURES).
+## Variação de cor de roupa/cabelo/pele dentro do gênero (0..LOOKS_PER_GENDER-1).
 var look: int = -1
 ## Comida na cesta (só o cozinheiro colhe; qualquer um que tenha na mão entrega).
 var food_carrying: float = 0.0
@@ -1193,12 +1194,31 @@ func _refresh_tool_texture() -> void:
 # ------------------------------------------------------------ visual: menino/menina
 ## Sorteia gênero e variação se ainda não tiver (ou se vier inválido do save) e aplica.
 func _ensure_appearance() -> void:
-	if not BODY_TEXTURES.has(gender):
+	if not GENDERS.has(gender):
 		gender = "menino" if randf() < 0.5 else "menina"
-	var options: Array = BODY_TEXTURES[gender]
-	if look < 0 or look >= options.size():
-		look = randi() % options.size()
-	_body.texture = options[look]
+	if look < 0 or look >= LOOKS_PER_GENDER:
+		look = randi() % LOOKS_PER_GENDER
+	_apply_outfit()
+
+
+## Veste o outfit da função atual (chamado ao nascer/carregar e a cada troca de função).
+func _apply_outfit() -> void:
+	_body.texture = _body_texture(outfit(), gender, look)
+
+
+## Nome do outfit que a função atual veste ("mineiro", "lenhador", "cozinheiro", "civil").
+func outfit() -> String:
+	return JOB_OUTFIT.get(job, "mineiro")
+
+
+static var _texture_cache := {}
+
+
+static func _body_texture(outfit_id: String, gender_id: String, look_id: int) -> Texture2D:
+	var path: String = OUTFIT_FILES.get(outfit_id, OUTFIT_FILES["mineiro"]) % [GENDERS.get(gender_id, "m"), look_id]
+	if not _texture_cache.has(path):
+		_texture_cache[path] = load(path)
+	return _texture_cache[path]
 
 
 ## Lenço, remendo/bolso e cor de bota, independentes da roupa. Não vão pro save:
@@ -1314,6 +1334,7 @@ func set_job(new_job: String) -> void:
 		return
 	job = new_job
 	_popup(JOB_LABELS[job], Color(0.95, 0.9, 0.6) if job != ROLE_IDLE else Color(0.75, 0.75, 0.8))
+	_apply_outfit()  # troca de roupa na hora (Bloco 26)
 	_refresh_tool_texture()
 	if auto_mode and _ai_state != "manual":
 		_decision_timer = randf_range(0.05, 0.4)  # troca de tarefa já
@@ -1732,8 +1753,9 @@ func _update_animation(delta: float) -> void:
 
 	# dormindo: dentro de casa some; ao relento fica deitado no chão
 	_body.visible = not _inside
-	_tool.visible = not _resting
-	_lamp.enabled = head_lamp_enabled and not _resting
+	# civil (sem função) e cozinheiro não carregam ferramenta de mina (Bloco 26)
+	_tool.visible = not _resting and outfit() not in ["civil", "cozinheiro"]
+	_lamp.enabled = head_lamp_enabled and not _resting and outfit() in OUTFITS_WITH_LAMP
 	var lying := _resting and not _inside
 	var limp := injured and spd > 5.0
 	if lying:
@@ -1763,7 +1785,7 @@ func _update_animation(delta: float) -> void:
 		_body.position.x = 0.0
 
 	# pedrinha de minério em cima da cabeça, maior quanto mais carga
-	_cook_icon.visible = is_cook() and not _inside
+	_cook_icon.visible = false  # Bloco 26: o chapéu agora faz parte do outfit do cozinheiro
 	_carry_icon.visible = (carrying > 0.0 or food_carrying > 0.0 or wood_carrying > 0.0) and not _resting
 	if wood_carrying > 0.0:
 		_carry_icon.texture = WOOD_LOG
@@ -1778,7 +1800,8 @@ func _update_animation(delta: float) -> void:
 		elif food_carrying > 0.0:
 			r = food_carrying / cook_carry
 		_carry_icon.scale = Vector2.ONE * lerpf(1.0, 2.0, r)
-		_carry_icon.position.y = -44.0 - (8.0 if is_cook() else 0.0) - (2.0 if _body.frame % 2 == 1 else 0.0)
+		# (o chapéu do outfit de cozinheiro tem a mesma altura do capacete: sem desvio)
+		_carry_icon.position.y = -44.0 - (2.0 if _body.frame % 2 == 1 else 0.0)
 
 	# vermelho de fome / rosado de machucado
 	if hunger <= 0.0:
