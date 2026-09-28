@@ -251,7 +251,8 @@ UNGRADED = {
     "find_bobina.png", "find_cristal.png", "find_peca.png", "find_solar.png",
 }
 # Sprites que são fonte de luz inteira: não gradua (mas podem ganhar detalhe).
-NO_GRADE = {"crystal_0.png", "crystal_1.png", "crystal_2.png", "crystal_3.png"}
+NO_GRADE = {"crystal_0.png", "crystal_1.png", "crystal_2.png", "crystal_3.png",
+            "weather_leaf.png", "weather_snow.png", "weather_rain.png", "weather_pollen.png"}  # clima: a cor vem da partícula
 
 
 # =================================================================== helpers
@@ -3349,6 +3350,33 @@ def build_arsenal():
     save(outline(pad(from_rows(rows, {"w": WOOD_LIGHT, "W": WOOD_DARK, "h": IRON_LIGHT, "H": IRON_HIGHLIGHT})), 0.5), "arma_quebrada.png")
 
 
+def build_weather():
+    """Bloco 40: partículas do clima da clareira (brancas/neutras: a cor vem da partícula).
+    folha (outono), floco (inverno), gota (chuva) e pólen (verão)."""
+    leaf = from_rows([
+        "..LL.",
+        ".LML.",
+        "LMMD.",
+        ".DD..",
+        "..s..",
+    ], {"L": (255, 255, 255, 255), "M": (215, 215, 215, 255), "D": (165, 165, 165, 255), "s": (120, 110, 100, 255)})
+    save(leaf, "weather_leaf.png")
+    snow = from_rows([
+        ".W.",
+        "WWW",
+        ".W.",
+    ], {"W": (255, 255, 255, 255)})
+    save(snow, "weather_snow.png")
+    rain = new(1, 6)
+    for y in range(6):
+        px(rain, 0, y, (255, 255, 255, 60 + y * 35))
+    save(rain, "weather_rain.png")
+    pollen = new(2, 2)
+    for (x, y) in ((0, 0), (1, 0), (0, 1), (1, 1)):
+        px(pollen, x, y, (255, 255, 255, 255 if (x, y) == (0, 0) else 150))
+    save(pollen, "weather_pollen.png")
+
+
 LAB_GLOW = (120, 230, 150, 255)
 LAB_GLOW_DIM = (60, 150, 100, 255)
 
@@ -4018,6 +4046,7 @@ if __name__ == "__main__":
     build_creatures()
     build_defense()
     build_arsenal()
+    build_weather()
     build_lab()
     build_escudo()
     build_food_icons()

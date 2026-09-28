@@ -71,6 +71,10 @@ func _ready() -> void:
 	_founding = preload("res://scripts/core/founding.gd").new()
 	_founding.name = "Founding"
 	add_child(_founding)
+	# Bloco 40: clima visual da clareira (folhas, neve, chuva, pólen)
+	var weather := preload("res://scripts/core/weather.gd").new()
+	weather.name = "Weather"
+	add_child(weather)
 	SaveManager.register_game(self)
 	if SaveManager.pending_load:
 		# espera o ambiente montar (1 frame + navegação) e as estruturas entrarem nos grupos
