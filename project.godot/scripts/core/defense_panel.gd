@@ -193,13 +193,16 @@ func refresh() -> void:
 	var lines: Array[String] = ["Guardas: %d (%d treinados)%s  •  X faz guarda. De dia treinam no campo; à noite vão pros portões." % [
 		gs.size(), ready_n, ("  •  %d DESARMADO%s" % [unarmed.size(), "S" if unarmed.size() > 1 else ""]) if not unarmed.is_empty() else ""]]
 	for w in gs:
-		if w.weapon == "":
+		if w.downed:  # Bloco 36
+			lines.append("  • %s: CAÍDO no %s — %s" % [w.display_name, _def.gate_label(w.downed_gate),
+				"sendo levado pra enfermaria" if w._carried_by != null else "só o médico resgata (morre em %ds)" % ceili(w._care_left)])
+		elif w.weapon == "":
 			lines.append("  • %s: DESARMADO — %s" % [w.display_name,
 				"indo ao Arsenal" if w.get_state() == "rearming" else ("sem Arsenal, luta no soco" if _def.arsenal() == null else "vai ao Arsenal")])
 		else:
 			lines.append("  • %s: %s%s" % [w.display_name, w.weapon_label(), "  (gasta!)" if w.weapon_condition() < 0.25 else ""])
 	_guards_label.text = "\n".join(lines)
-	_guards_label.add_theme_color_override("font_color", _hud.COLOR_HUNGER_BAD if not unarmed.is_empty() else _hud.COLOR_TEXT)
+	_guards_label.add_theme_color_override("font_color", _hud.COLOR_HUNGER_BAD if not unarmed.is_empty() or not _def.downed_guards().is_empty() else _hud.COLOR_TEXT)
 	var campo_reason: String = _def.campo_block_reason()
 	_campo_button.text = "Campo de treino construído" if campo_reason == "construído" else (
 		"Construir campo de treino — escolher lugar (%d cr + %d madeira)" % [_def.campo_credits, _def.campo_wood] if campo_reason == "" else "Campo de treino: " + campo_reason)

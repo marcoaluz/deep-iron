@@ -6,6 +6,8 @@ extends Node2D
 ##   Ferrugento — máquina de antes da explosão. Sobe pelo poço do elevador (só depois que
 ##                o nível 2 abre). Ataca quem estiver perto e rouba minério do armazém.
 ## Antes de entrar, precisa derrubar a barricada do caminho (se tiver uma de pé).
+## Bloco 36: com o guarda do portão dele CAÍDO (brecha), vai direto no armazém saquear
+## (defense.gd: raid — uma parte do minério e dos créditos, uma vez por portão por invasão).
 ## Ao amanhecer: o Lumívoro foge da luz e o Ferrugento desliga.
 
 signal died(killed: bool)
@@ -26,6 +28,8 @@ signal died(killed: bool)
 @export var notice_range: float = 150.0
 
 var hp: float = 0.0
+## Portão por onde ele vem ("tunel"/"poco") — Bloco 36, pra saber se a brecha é a dele.
+var gate_id: String = ""
 ## Já passou (ou derrubou) a barricada do caminho?
 var inside: bool = false
 var _gate: Node2D = null
@@ -124,6 +128,12 @@ func _nearest(candidates: Array, max_d: float = INF) -> Node2D:
 
 
 func _pick_target() -> Node2D:
+	# Bloco 36: guarda do meu portão caído = brecha: direto pro armazém
+	var def := get_tree().get_first_node_in_group("defense")
+	if def and def.breached(gate_id):
+		var stores := get_tree().get_nodes_in_group("armazens")
+		if not stores.is_empty():
+			return _nearest(stores)
 	# quem me bateu por último, se ainda estiver perto
 	if _aggressor != null and is_instance_valid(_aggressor) and _target_ok(_aggressor) \
 			and global_position.distance_to(_aggressor.global_position) < notice_range:
@@ -165,6 +175,10 @@ func _attack(t: Node2D) -> void:
 		if kind == "ferrugento":
 			Audio.clank(global_position)
 		return
+	if t.is_in_group("armazens"):
+		var def := get_tree().get_first_node_in_group("defense")
+		if def and def.breached(gate_id):
+			def.raid(self, t)  # Bloco 36: saque pela brecha
 	if t.has_method("take_hit"):
 		t.take_hit(damage, self)
 		if kind == "lumivoro":

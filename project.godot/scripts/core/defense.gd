@@ -26,6 +26,16 @@ extends Node
 ##     melhor do cavalete e a dele, usada, vai pra pilha de conserto.
 ##   - `weapons` = armas que a vila JÁ SABE fazer (forjou pelo menos uma vez): libera a
 ##     próxima da lista. O primeiro porrete de cada guarda vem de casa.
+##
+## GUARDA CAÍDO + BRECHA (Bloco 36):
+##   - Guarda que perde a luta cai GRAVE no lugar e não anda (ipezinho.downed). Só o MÉDICO
+##     resgata: vai até ele (acorda/sai do plantão pra isso), carrega nas costas e entrega
+##     na enfermaria. No chão o relógio de "sem cuidado" corre (downed_untreated_time) e,
+##     zerado, ele morre; nas costas do médico o relógio pausa.
+##   - Enquanto ele está caído, o portão dele (downed_gate) tem uma BRECHA: o primeiro
+##     invasor daquele portão que chegar num armazém leva raid_ore_percent do minério
+##     guardado e raid_credit_percent dos créditos. Uma vez por portão por invasão. (O roubo
+##     de sempre do Ferrugento — steal_amount por golpe — continua igual, à parte.)
 
 signal invasion_started(wave: int)
 signal invasion_ended(killed: int)
@@ -71,6 +81,13 @@ const WEAPON_DESCRIPTIONS := {
 ## Desarmado (a arma quebrou): luta no soco.
 @export var unarmed_damage: float = 1.5
 @export var unarmed_range: float = 16.0
+
+@export_group("Brecha na defesa (Bloco 36)")
+## Guarda caído abre brecha no portão dele: o primeiro invasor dali que chega no armazém
+## leva essa fração do MINÉRIO guardado (de cada tipo)...
+@export_range(0.0, 1.0) var raid_ore_percent: float = 0.12
+## ...e essa fração dos CRÉDITOS. (Uma vez por portão por invasão.)
+@export_range(0.0, 1.0) var raid_credit_percent: float = 0.12
 
 @export_group("Arsenal (Bloco 35)")
 @export var arsenal_credits: int = 150
@@ -118,6 +135,8 @@ var invasion_active: bool = false
 var killed_tonight: int = 0
 var _warned_day: int = -1
 var _spawn_queue: Array = []  # [{kind, at}]
+## Bloco 36: portões que já foram saqueados nesta invasão (brecha rouba uma vez só).
+var _raided_gates: Array = []
 var _night_time: float = 0.0
 var _sound_timer := 0.0
 
@@ -220,6 +239,62 @@ func weapon_max_durability(weapon_id: String) -> float:
 ## Guardas sem arma nenhuma.
 func unarmed_guards() -> Array:
 	return guards().filter(func(w): return w.weapon == "")
+
+
+# ------------------------------------------------------------ brecha (Bloco 36)
+## Quem está caído em combate esperando o médico.
+func downed_guards() -> Array:
+	return get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return w.get("downed"))
+
+
+func nearest_gate_id(pos: Vector2) -> String:
+	var best := ""
+	var best_d := INF
+	for g in get_tree().get_nodes_in_group("barricadas"):
+		var d := pos.distance_to(g.global_position)
+		if d < best_d:
+			best_d = d
+			best = g.gate_id
+	return best
+
+
+func gate_label(id: String) -> String:
+	return {"tunel": "portão do túnel", "poco": "portão do poço"}.get(id, "portão")
+
+
+## O portão está aberto pra saque? (guarda dele caído, numa invasão, e ainda não saquearam)
+func breached(gate_id: String) -> bool:
+	if not invasion_active or gate_id == "" or _raided_gates.has(gate_id):
+		return false
+	return downed_guards().any(func(w): return w.downed_gate == gate_id)
+
+
+## Invasor que passou pela brecha chegou no armazém: leva uma parte do minério e dos créditos.
+func raid(creature: Node, armazem: Node) -> void:
+	var gid: String = creature.get("gate_id") if creature.get("gate_id") != null else ""
+	if not breached(gid):
+		return
+	_raided_gates.append(gid)
+	var ore_taken := 0.0
+	for ore in armazem.stock.keys():
+		var amount: float = floorf(float(armazem.stock[ore]) * raid_ore_percent)
+		if amount >= 1.0:
+			ore_taken += armazem.take(amount, ore)
+	var eco := get_tree().get_first_node_in_group("economy")
+	var cr_taken := 0
+	if eco:
+		cr_taken = floori(eco.credits * raid_credit_percent)
+		if cr_taken > 0:
+			eco.credits -= cr_taken
+			eco.credits_changed.emit(eco.credits)
+	armazem.show_popup("ROUBO: -%d minério  -%d cr" % [roundi(ore_taken), cr_taken], Color(1.0, 0.35, 0.3))
+	Audio.alarm()
+	var who: Array = downed_guards().filter(func(w): return w.downed_gate == gid).map(func(w): return w.display_name)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_banner("ROUBO NO ARMAZÉM!",
+			"Com %s caído, os invasores entraram pela brecha do %s e levaram %d de minério e %d créditos." % [
+				", ".join(who) if not who.is_empty() else "o guarda", gate_label(gid), roundi(ore_taken), cr_taken])
 
 
 ## Posto de cada guarda: metade no túnel, metade no poço (se o nível 2 abriu).
@@ -589,6 +664,7 @@ func _on_phase_changed(night: bool) -> void:
 func start_invasion() -> void:
 	wave += 1
 	invasion_active = true
+	_raided_gates = []
 	killed_tonight = 0
 	_night_time = 0.0
 	_spawn_queue = []
@@ -624,6 +700,7 @@ func _spawn(kind: String) -> void:
 	if env:
 		pos = NavigationServer2D.map_get_closest_point(world.get_world_2d().navigation_map, pos)
 	c.position = pos
+	c.gate_id = "tunel" if kind == "lumivoro" else "poco"  # Bloco 36: de que portão ele vem
 	world.add_child(c)
 	c.setup(g, 1.0 + hp_growth * (wave - 1))
 	var res := get_tree().get_first_node_in_group("research")

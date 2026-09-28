@@ -122,6 +122,7 @@ var _workers_count_label: Label
 var _no_job_label: Label
 var _obras_label: Label
 var _unarmed_label: Label  # Bloco 35: guardas desarmados (arma quebrou)
+var _downed_label: Label  # Bloco 36: guardas caídos esperando o médico
 var _recruit_button: Button
 var _collapse_button: Button
 var _workers_title: Label
@@ -426,6 +427,10 @@ func _build_workforce_panel() -> void:
 	_unarmed_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_unarmed_label.visible = false
 	v.add_child(_unarmed_label)
+	_downed_label = _label("", 13, Color(1.0, 0.4, 0.35))
+	_downed_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_downed_label.visible = false
+	v.add_child(_downed_label)
 	if _economy:
 		_recruit_button = _button("Recrutar ipezinho")
 		_recruit_button.pressed.connect(_on_recruit_pressed)
@@ -920,6 +925,16 @@ func _refresh_workforce(workers: Array) -> void:
 			names.append(w.display_name)
 		_unarmed_label.text = "DESARMADOS: %d (%s) — %s" % [unarmed.size(), ", ".join(names),
 			"indo ao Arsenal pegar outra arma" if def.arsenal() != null else "sem Arsenal pra pegar outra (G: Defesa)"]
+	# Bloco 36: guarda caído em combate (só o médico resgata)
+	var downed: Array = workers.filter(func(w): return w.get("downed"))
+	_downed_label.visible = not downed.is_empty()
+	if not downed.is_empty():
+		var docs := workers.filter(func(w): return w.has_method("is_doctor") and w.is_doctor() and not w.injured).size()
+		var parts: Array[String] = []
+		for w in downed.slice(0, 3):
+			parts.append("%s (%s)" % [w.display_name, "sendo carregado" if w._carried_by != null else "morre em %ds" % ceili(w._care_left)])
+		_downed_label.text = "CAÍDO%s EM COMBATE: %s — %s" % ["S" if downed.size() > 1 else "", ", ".join(parts),
+			"médico a caminho" if docs > 0 else "SEM MÉDICO! Designe um (tecla 3)"]
 	if _economy:
 		_workers_count_label.text = "%d / %d" % [workers.size(), _economy.max_workers]
 		var cost: int = _economy.recruit_cost()

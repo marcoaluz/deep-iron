@@ -31,6 +31,8 @@ const STATE_LABELS := {
 	"training": "treinando",
 	"research": "pesquisando",
 	"rearming": "indo ao Arsenal",
+	"downed": "caído em combate",
+	"rescue": "resgatando",
 }
 ## Distância da porta/cama a partir da qual o ipezinho "chega" em casa.
 const REST_REACH := 12.0
@@ -194,6 +196,13 @@ const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 @export var grave_untreated_time: float = 75.0
 ## Aviso no HUD quando faltar isso pro grave morrer.
 @export var death_warning_time: float = 25.0
+
+@export_group("Caído em combate (Bloco 36)")
+## Guarda que perde a luta cai GRAVE no lugar e não anda. Sem resgate, morre depois de
+## tantos segundos no chão (o relógio PAUSA enquanto o médico carrega: primeiros socorros).
+@export var downed_untreated_time: float = 150.0
+## Médico carregando alguém nas costas anda nessa fração da velocidade.
+@export_range(0.1, 1.0) var carry_patient_speed_mult: float = 0.6
 
 @export_group("Turno extra / zanga")
 ## Zanga ganha por segundo trabalhando à noite em turno extra (0.8 -> ~+48 por noite).
@@ -382,6 +391,16 @@ var weapon_durability: float = 0.0
 var broken_weapon: String = ""
 ## Todo ipezinho tem um porrete de casa: o primeiro vem de graça quando vira guarda.
 var got_porrete: bool = false
+## Bloco 36: guarda que perdeu a luta — caído no lugar (grave), só o MÉDICO leva pra enfermaria.
+var downed: bool = false
+## Portão onde ele caiu ("tunel"/"poco"): enquanto ele está caído, é a brecha na defesa.
+var downed_gate: String = ""
+## (caído) o médico que vem buscar / quem está carregando agora.
+var _rescuer: Node = null
+var _carried_by: Node = null
+## (médico) o caído que ele vai buscar / que está nas costas dele.
+var _rescue: Node = null
+var carrying_patient: Node = null
 var _broken_icon: Sprite2D
 var _hub_node: Node = null
 ## Preenchido pelo SaveManager antes de entrar na árvore (ipezinho vindo do save).
@@ -461,6 +480,8 @@ func _exit_tree() -> void:
 # ------------------------------------------------------------ comandos
 ## Ordem do jogador (clique). A IA fica em pausa por manual_override_time.
 func move_to(pos: Vector2) -> void:
+	if downed:
+		return  # caído não levanta por ordem: só o médico tira ele dali
 	_release_station()
 	_set_state("manual")
 	_manual_timer = manual_override_time
@@ -478,6 +499,14 @@ func get_state() -> String:
 
 
 func get_state_label() -> String:
+	if downed:
+		if _carried_by != null:
+			return "sendo levado pra enfermaria"
+		var coming: bool = _rescuer != null and is_instance_valid(_rescuer) and _rescuer.get("_rescue") == self
+		return "CAÍDO — %s (morre em %ds)" % ["médico a caminho" if coming else "esperando médico", ceili(_care_left)]
+	if _ai_state == "rescue":
+		var who: String = _rescue.display_name if _rescue != null and is_instance_valid(_rescue) else "?"
+		return ("levando %s pra enfermaria" if carrying_patient != null else "indo resgatar %s") % who
 	if _ai_state == "rearming":
 		return "DESARMADO — indo ao Arsenal" if weapon == "" else "indo ao Arsenal trocar de arma"
 	if is_guard() and weapon == "" and _ai_state in ["guard", "training", "home"]:
@@ -577,7 +606,7 @@ func _check_stuck(delta: float) -> void:
 	# desvio desligado de propósito (passando por alguém): volta ao normal quando acabar
 	if _ghost_left > 0.0:
 		_ghost_left -= delta
-		if _ghost_left <= 0.0 and not _inside:
+		if _ghost_left <= 0.0 and not _inside and not downed:
 			_agent.avoidance_enabled = avoidance_enabled
 	if not _moving:
 		_stuck_time = 0.0
@@ -619,6 +648,9 @@ func _apply_velocity(v: Vector2) -> void:
 	velocity = v
 	if velocity.length_squared() > 0.5:
 		move_and_slide()
+	# Bloco 36: quem vai nas costas acompanha no mesmo passo (sem ficar um quadro atrás)
+	if carrying_patient != null and is_instance_valid(carrying_patient) and carrying_patient._carried_by == self:
+		carrying_patient.global_position = global_position + Vector2(0, 1)
 
 
 func _get_effective_speed() -> float:
@@ -631,6 +663,8 @@ func _get_effective_speed() -> float:
 		s *= injured_speed_mult
 	if holding_robot != null:
 		s *= carry_robot_speed_mult
+	if carrying_patient != null:
+		s *= carry_patient_speed_mult
 	s *= [1.0, irritated_speed_mult, furious_speed_mult][_mood]  # zanga acumula com a lesão
 	return s * _speed_bonus()
 
@@ -684,6 +718,30 @@ func _process(delta: float) -> void:
 	if _ai_state == "home" and not _resting and not _moving:
 		if global_position.distance_to(_rest_position()) <= REST_REACH:
 			_start_resting()
+	# Bloco 36: caído nas costas do médico acompanha ele
+	if _carried_by != null:
+		if not is_instance_valid(_carried_by) or _carried_by.get("carrying_patient") != self:
+			_carried_by = null  # largou (o médico se machucou, trocou de função...)
+		else:
+			global_position = _carried_by.global_position + Vector2(0, 1)
+	# médico: chegou no caído -> põe nas costas; chegou na enfermaria -> entrega
+	if _ai_state == "rescue" and _rescue != null and is_instance_valid(_rescue):
+		if carrying_patient == null:
+			var d := global_position.distance_to(_rescue.global_position)
+			if d <= 22.0 or (not _moving and d <= 44.0):
+				carrying_patient = _rescue
+				_rescue.picked_up_by(self)
+				_popup("Te peguei!", Color(0.6, 0.9, 1.0))
+				_decision_timer = 0.0
+		else:
+			var ward := _closest_in_group("enfermarias")
+			var dd := global_position.distance_to(ward.doctor_spot()) if ward else INF
+			if ward and (dd <= REST_REACH + 8.0 or (not _moving and dd <= 40.0)):
+				var p := carrying_patient
+				carrying_patient = null
+				_rescue = null
+				p.delivered_to(ward)
+				_decision_timer = 0.0
 	# robô: pega quando chega nele; larga quando chega na Oficina
 	if _ai_state == "robot" and not _moving and _robot_task != null and is_instance_valid(_robot_task):
 		if holding_robot == null and global_position.distance_to(_robot_task.global_position) <= 18.0:
@@ -731,10 +789,17 @@ func _process(delta: float) -> void:
 
 
 func _choose_state() -> String:
+	# Bloco 36: caído em combate não anda — espera o médico (ou vai nas costas dele).
+	if downed:
+		return "downed"
 	# Machucado: só cura na ENFERMARIA — vai pra lá (ou espera leito na porta),
 	# de dia ou de noite, antes de qualquer outra coisa.
 	if injured and _has_infirmary():
 		return "infirmary"
+	# Bloco 36: guarda caído em combate — o médico larga tudo (plantão, cama, até de noite)
+	# e vai buscar. Só o médico resgata.
+	if is_doctor() and _has_infirmary() and (carrying_patient != null or _pick_rescue() != null):
+		return "rescue"
 	# Onda solar: quem está na superfície corre pro abrigo; no fundo segue (a rocha protege).
 	var sun := _sun()
 	if sun and sun.shelter_now():
@@ -899,6 +964,22 @@ func _decide_next_action() -> void:
 			_release_station()
 			_set_state("guard")
 		return  # quem manda é o _guard_tick (posto / luta)
+
+	if desired == "downed":
+		if _ai_state != "downed":
+			_release_station()
+			_set_state("downed")
+		_moving = false
+		return
+
+	if desired == "rescue":
+		if _ai_state != "rescue":
+			_release_station()
+			_set_state("rescue")
+		var dest := _rescue_dest()
+		if not _moving or _target.distance_to(dest) > 2.0:
+			_go_to(dest)
+		return
 
 	if desired == "building":
 		var site := _pick_obra()
@@ -1111,6 +1192,8 @@ func _set_state(new_state: String) -> void:
 		_drop_robot()
 	if _ai_state == "guard":
 		_foe = null
+	if _ai_state == "rescue":
+		_drop_patient()
 	_ai_state = new_state
 	state_changed.emit(new_state)
 
@@ -1300,6 +1383,8 @@ func _break_weapon() -> void:
 	weapon = ""
 	weapon_durability = 0.0
 	_refresh_tool_texture()
+	_tool.visible = false  # mãos vazias já neste quadro (a animação mantém depois)
+	_broken_icon.visible = true
 	_popup("%s quebrou!" % nm, Color(1.0, 0.45, 0.35))
 	Audio.clank(global_position)
 	var hud := get_tree().get_first_node_in_group("hud")
@@ -1357,10 +1442,117 @@ func take_hit(amount: float, attacker: Node2D) -> void:
 		_popup("-%d" % roundi(amount), Color(1.0, 0.5, 0.4))
 		if combat_hp <= 0.0:
 			combat_hp = guard_max_hp()
-			hurt(cause, "grave" if randf() < 0.3 else "leve")
+			_fall_in_combat(cause)  # Bloco 36: cai no lugar, grave; só o médico resgata
 		return
 	var grave: float = attacker.get("grave_chance") if attacker and attacker.get("grave_chance") != null else 0.2
 	hurt(cause, "grave" if randf() < grave else "leve")
+
+
+# ------------------------------------------------------------ caído em combate (Bloco 36)
+## Perdeu a luta: cai GRAVE ali mesmo, não anda, e abre a brecha no portão dele.
+func _fall_in_combat(cause: String) -> void:
+	downed = true
+	hurt(cause, "grave")
+	var res := _research()
+	_care_left = downed_untreated_time * (res.untreated_mult() if res else 1.0)
+	var def := _defense()
+	downed_gate = def.nearest_gate_id(global_position) if def else ""
+	_release_station()
+	_set_state("downed")
+	_moving = false
+	_foe = null
+	_agent.avoidance_enabled = false  # caído no chão não empurra ninguém
+	_rescuer = null
+	_carried_by = null
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		var has_doc := get_tree().get_nodes_in_group("ipezinhos").any(func(w): return w.is_doctor() and not w.injured)
+		hud.show_banner("GUARDA CAÍDO: %s" % _display(),
+			"Caiu no %s e não levanta sozinho. Só um MÉDICO pode levar pra enfermaria%s. Enquanto isso o portão fica aberto pra roubo." % [
+				def.gate_label(downed_gate) if def else "portão", "" if has_doc else " — NÃO HÁ MÉDICO (tecla 3)"])
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		if w.is_doctor():
+			w.wake_decision()
+
+
+## (caído) o médico chegou e pôs nas costas: o relógio pausa.
+func picked_up_by(doctor: Node) -> void:
+	_carried_by = doctor
+	_rescuer = doctor
+
+
+## (caído) o médico largou no caminho: fica ali, o relógio volta a correr.
+func dropped() -> void:
+	_carried_by = null
+	_rescuer = null
+	wake_decision()
+
+
+## (caído) chegou na enfermaria nas costas do médico: deita num leito se tiver; senão
+## espera na porta com o relógio normal de grave (com médico lá dentro corre mais devagar).
+func delivered_to(ward: Node) -> void:
+	downed = false
+	downed_gate = ""
+	_carried_by = null
+	_rescuer = null
+	_agent.avoidance_enabled = avoidance_enabled
+	global_position = ward.doctor_spot()
+	var res := _research()
+	_care_left = maxf(_care_left, grave_untreated_time * (res.untreated_mult() if res else 1.0))
+	_death_warned = false
+	_release_station()
+	if ward.has_free_slot_for(self):
+		_station = ward
+		_slot = ward.reserve_slot(self)
+		_set_state("infirmary")
+		global_position = ward.get_slot_position(_slot)
+		_admit()
+	else:
+		_set_state("idle")
+		_decision_timer = 0.0  # espera leito na porta
+	_popup("Na enfermaria!", Color(0.55, 1.0, 0.5))
+
+
+## (médico) o caído que ele vai buscar: o que já é dele, ou o mais perto sem médico.
+func _pick_rescue() -> Node:
+	if _rescue != null and is_instance_valid(_rescue) and _rescue.downed:
+		return _rescue
+	_rescue = null
+	if injured:
+		return null
+	var best: Node = null
+	var best_d := INF
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		if w == self or not w.downed:
+			continue
+		var r = w._rescuer
+		if r != null and is_instance_valid(r) and r != self and r.get("_rescue") == w:
+			continue  # outro médico já vai buscar esse
+		var d := global_position.distance_to(w.global_position)
+		if d < best_d:
+			best_d = d
+			best = w
+	if best:
+		_rescue = best
+		best._rescuer = self
+	return best
+
+
+func _rescue_dest() -> Vector2:
+	if carrying_patient != null:
+		var ward := _closest_in_group("enfermarias")
+		return ward.doctor_spot() if ward else global_position
+	return _rescue.global_position if _rescue != null and is_instance_valid(_rescue) else global_position
+
+
+## (médico) larga quem estiver carregando (saiu do resgate por qualquer motivo).
+func _drop_patient() -> void:
+	if carrying_patient != null and is_instance_valid(carrying_patient):
+		carrying_patient.dropped()
+	carrying_patient = null
+	if _rescue != null and is_instance_valid(_rescue) and _rescue._rescuer == self:
+		_rescue._rescuer = null
+	_rescue = null
 
 
 ## Mandaram buscar o robô antigo (robo.gd).
@@ -1785,6 +1977,8 @@ func set_job(new_job: String) -> void:
 		_end_duty()  # tirou do médico: o bônus da enfermaria para NA HORA (Bloco 30)
 	if job == ROLE_ENGINEER:
 		_obra_stop()  # tirou do engenheiro: a obra pausa NA HORA, sem perder o feito (Bloco 31)
+	if job == ROLE_DOCTOR:
+		_drop_patient()  # Bloco 36: tirou do médico no meio do resgate: larga o caído ali
 	job = new_job
 	_popup(JOB_LABELS[job], Color(0.95, 0.9, 0.6) if job != ROLE_IDLE else Color(0.75, 0.75, 0.8))
 	# Bloco 35: o primeiro porrete vem de casa; depois disso, arma nova só no Arsenal
@@ -2033,7 +2227,7 @@ func hurt(cause: String = "mina", severity: String = "") -> void:
 	var grave := injury_severity == "grave"
 	var text := "Ai! Um galho!" if cause == "galho" else "Ai!"
 	_popup(text + (" (grave)" if grave else ""), Color(1.0, 0.25, 0.2) if grave else Color(1.0, 0.4, 0.35))
-	if grave:
+	if grave and not downed:  # (caído em combate tem o aviso próprio)
 		_toast("%s se machucou feio! Precisa de leito na enfermaria." % _display())
 	Audio.hurt(global_position)
 	var flash := create_tween()
@@ -2059,6 +2253,17 @@ func _has_infirmary() -> bool:
 
 ## Relógio do machucado: cura no leito; fora dele, leve piora e grave morre.
 func _update_injury(delta: float) -> void:
+	if downed:
+		# Bloco 36: no chão o relógio corre; nas costas do médico pausa (primeiros socorros)
+		if _carried_by != null:
+			return
+		_care_left -= delta
+		if not _death_warned and _care_left <= death_warning_time:
+			_death_warned = true
+			_toast("%s está caído e morre em %ds se um médico não chegar!" % [_display(), ceili(_care_left)])
+		if _care_left <= 0.0:
+			_die()
+		return
 	if _admitted:
 		# Bloco 30: com médico de plantão a cura anda mais rápido (sem médico: como sempre)
 		var rate: float = _ward.heal_rate() if _ward != null and is_instance_valid(_ward) and _ward.has_method("heal_rate") else 1.0
@@ -2325,22 +2530,29 @@ func _update_animation(delta: float) -> void:
 	_body.visible = not _inside
 	_tool.visible = item != null and not _resting  # Bloco 29: mãos vazias = sem nada na mão
 	_lamp.enabled = head_lamp_enabled and not _resting and outfit() in OUTFITS_WITH_LAMP
-	var lying := _resting and not _inside
-	var limp := injured and spd > 5.0
-	if lying:
+	var lying := (_resting and not _inside) or downed
+	var limp := injured and spd > 5.0 and not downed
+	var carried := downed and _carried_by != null and is_instance_valid(_carried_by)
+	if carried:
+		_facing = _carried_by._facing
+		_body.rotation = -PI * 0.5 * _facing
+	elif lying:
 		_body.rotation = -PI * 0.5 * _facing
 	elif limp:
 		_body.rotation = sin(_anim_time * PI) * 0.12  # mancando: tomba pra um lado a cada passo
 	else:
 		_body.rotation = 0.0
 	var bob := absf(sin(_anim_time * PI * 0.5)) * 2.0 if limp else 0.0
-	_body.position.y = _body_base_y + (9.0 if lying else 0.0) + bob
+	_body.position.y = _body_base_y + (-13.0 if carried else (9.0 if lying else 0.0)) + bob
 	_injury_icon.visible = injured and not _inside
 	_strike_icon.visible = _ai_state == "strike" and not _inside
 	if _strike_icon.visible:
 		_strike_icon.position.y = -44.0 + (sin(Time.get_ticks_msec() * 0.008 + _facing) * 3.0 if not _moving else 0.0)
 	if _injury_icon.visible:
 		_injury_icon.position.y = -40.0 + sin(Time.get_ticks_msec() * 0.005) * 1.5
+		# Bloco 36: caído esperando resgate = curativo piscando vermelho
+		_injury_icon.modulate = Color(1.0, 0.45, 0.45, 0.5 + 0.5 * absf(sin(Time.get_ticks_msec() * 0.008))) \
+			if downed and not carried else Color.WHITE
 	# zanga: "veia saltando" pulsando (mais rápida e maior quando furioso) + tremidinha
 	_anger_icon.visible = _mood > 0 and not _inside
 	if _anger_icon.visible:
@@ -2449,6 +2661,8 @@ func get_save_data() -> Dictionary:
 		"weapon_durability": weapon_durability,
 		"broken_weapon": broken_weapon,
 		"got_porrete": got_porrete,
+		"downed": downed,
+		"downed_gate": downed_gate,
 	}
 
 
@@ -2498,6 +2712,13 @@ func load_save_data(d: Dictionary) -> void:
 	var bw := SaveUtil.text(d, "broken_weapon", "")
 	broken_weapon = bw if WEAPON_SPRITES.has(bw) else ""
 	got_porrete = SaveUtil.boolean(d, "got_porrete", weapon != "" or broken_weapon != "")
+	# Bloco 36: caído em combate volta caído no mesmo lugar (quem carregava não é salvo:
+	# o médico vem buscar de novo). O relógio (care_left) já veio acima.
+	downed = injured and injury_severity == "grave" and SaveUtil.boolean(d, "downed", false)
+	downed_gate = SaveUtil.text(d, "downed_gate", "") if downed else ""
+	if downed:
+		_ai_state = "downed"
+		_agent.avoidance_enabled = false
 	wood_carrying = clampf(SaveUtil.num(d, "wood_carrying", 0.0), 0.0, lumber_carry)
 	food_carrying = clampf(SaveUtil.num(d, "food_carrying", 0.0), 0.0, cook_carry)
 	# Bloco 27 (save antigo: 0). Volume nunca passa do que cabe na mochila.

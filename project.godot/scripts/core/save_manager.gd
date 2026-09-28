@@ -108,6 +108,9 @@ extends Node
 ##   Bloco 35 (save_version 4): arma por guarda com desgaste. Save < 4: cada guarda recebe a
 ##     melhor arma que a vila já tinha forjado (durabilidade cheia) e a forja que andava
 ##     sozinha (forging/forge_left) vira a primeira encomenda da fila do Arsenal.
+##   Bloco 36: ipezinho.gd downed (caído em combate) + downed_gate; a posição, a gravidade
+##     e o relógio (care_left) já iam. Quem carregava NÃO vai: ao carregar ele está caído no
+##     chão onde estava e o médico vem buscar de novo. Criaturas continuam fora do save.
 ##   Bloco 33/34: nada novo no save — galerias lacradas saem do estágio da vila e a horta
 ##     (pelo nome do nó) carrega já no lugar novo, na clareira.
 ##   camera_controller.gd (Camera2D)
