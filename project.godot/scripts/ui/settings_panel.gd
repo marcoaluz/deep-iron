@@ -30,7 +30,7 @@ func _ready() -> void:
 
 	var hints := CheckBox.new()
 	hints.text = "Mostrar dicas de controle  (H)"
-	hints.button_pressed = Settings.get_value("hud", "show_hints", true)
+	hints.button_pressed = Settings.get_value("hud", "show_hints", false)
 	hints.toggled.connect(func(on: bool):
 		Settings.set_value("hud", "show_hints", on)
 		var hud := get_tree().get_first_node_in_group("hud")
