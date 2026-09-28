@@ -846,6 +846,32 @@ IPEZINHO_OUTFITS.update({
         ],
     },
 })
+_SURGICAL_CAP = [  # touca branca com a cruz vermelha
+    "................",
+    "................",
+    "................",
+    ".....mMRMMm.....",
+    "....mMRRRMMm....",
+    "...mmMMRMMMmm...",
+]
+# Bloco 30: médico — touca com cruz, pijama cirúrgico verde-água e estetoscópio.
+IPEZINHO_OUTFITS["medico"] = {
+    "m": _SURGICAL_CAP + _FACE_M + [
+        "..nNNENNNNENNn..",
+        "..nNNNENNENNNn..",
+        "..SsnNNEUNNnSs..",
+        "...cNNNNNNNNc...",
+    ],
+    "f": _SURGICAL_CAP + _FACE_F + [
+        "..ANNENNNNENNa..",
+        "..tNNNENNENNNt..",
+        "..SsnNNEUNNnSs..",
+        "..cNNNNNNNNNNc..",
+    ],
+}
+SCRUBS = ((70, 128, 122, 255), (104, 164, 152, 255))  # (escuro, claro)
+CROSS_RED = (190, 44, 44, 255)
+
 FELT_COLORS = ((66, 52, 40, 255), (94, 76, 56, 255), (124, 102, 74, 255))  # feltro marrom
 FEATHER_COLORS = (  # pena do chapéu (e das flechas), varia pela variação
     ((140, 44, 40, 255), (196, 84, 64, 255)),
@@ -888,6 +914,9 @@ def _outfit_pal(outfit, look_index, shirt):
         return {"i": IRON_DARK, "I": IRON, "J": IRON_LIGHT, "D": (GUARD_TABARD[1], GUARD_TABARD[0])}
     if outfit == "pesquisador":
         return {"Q": LAB_WHITE, "q": LAB_SHADE, "B": BRASS, "O": GOGGLE_GLASS}
+    if outfit == "medico":
+        return {"M": LAB_WHITE, "m": LAB_SHADE, "R": CROSS_RED,
+                "N": SCRUBS[1], "n": SCRUBS[0], "E": IRON_DARK, "U": IRON_HIGHLIGHT}
     return {}
 
 
@@ -3120,6 +3149,21 @@ def build_bow():
     save(img, "bow.png")
 
 
+def build_forage_basket():
+    """Bloco 29: cestinha de vime do caçador (na mão quando colhe fruta ou está sem arco)."""
+    rows = [
+        "..bbbbb..",
+        ".b.....b.",
+        ".b.....b.",
+        "WwWwWwWwW",
+        "wWwWwWwWw",
+        ".WwWwWwW.",
+        "..wwwww..",
+    ]
+    pal = {"b": WOOD_DARK, "W": WOOD_HIGHLIGHT, "w": WOOD_LIGHT}
+    save(outline(pad(from_rows(rows, pal)), 0.5), "forage_basket.png")
+
+
 def build_raw_icon():
     """Bloco 27: ícone de matéria-prima (carga do caçador/cozinheiro): fruta + carne crua."""
     rows = [
@@ -3381,6 +3425,7 @@ if __name__ == "__main__":
     build_toca()
     build_bow()
     build_raw_icon()
+    build_forage_basket()
     build_arvore()
     build_floor_clareira()
     build_axe()

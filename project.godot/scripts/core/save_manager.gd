@@ -87,6 +87,8 @@ extends Node
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
+##   Bloco 30: nada novo — "médico" é mais um valor de job; quem está de plantão
+##     (enfermaria._doctors) é derivado e volta sozinho pra dentro ao carregar.
 ##   Bloco 27: armazem.gd raw_stored (matéria-prima); hunt_spot.gd (cada toca, grupo
 ##     "caca") game_remaining + cooldown; ipezinho.gd raw_carrying, raw_units, prep_left;
 ##     o arco e flecha é mais uma ferramenta em oficina.crafted. Save antigo: tudo zerado/cheio.

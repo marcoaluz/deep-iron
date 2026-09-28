@@ -22,12 +22,25 @@ const GRAVE := preload("res://assets/game/grave.png")
 @export var heal_time_leve: float = 20.0
 @export var heal_time_grave: float = 45.0
 
+@export_group("Médico (Bloco 30)")
+## Sem médico a cura é a de sempre (passiva). Cada médico LÁ DENTRO soma essa
+## velocidade de cura aos internados (1.5 = +150%: um grave de 45 s cura em ~18 s).
+@export var doctor_heal_bonus: float = 1.5
+## Quantos médicos somam bônus ao mesmo tempo (os outros ficam de reserva).
+@export var max_doctors_effective: int = 2
+## Com médico lá dentro, o relógio de "sem cuidado" de quem espera leito na porta corre
+## nessa fração (0.5 = metade: demora o dobro pra piorar/morrer).
+@export_range(0.0, 1.0) var doctor_waiting_clock_mult: float = 0.5
+
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 var panel_id := "enfermaria"
 ## [{name, cause, severity, day, position: [x, y]}]
 var memorial: Array = []
 
 var _inside: Array[Node] = []
+## Médicos de plantão lá dentro (Bloco 30). Não ocupam leito e não vão pro save:
+## saem da função (job "médico"), que já é salva — ao carregar eles voltam sozinhos.
+var _doctors: Array[Node] = []
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _window_light: PointLight2D = $WindowLight
@@ -100,6 +113,38 @@ func set_inside(worker: Node, inside: bool) -> void:
 func patients() -> Array:
 	_inside = _inside.filter(func(w): return is_instance_valid(w))
 	return _inside
+
+
+# ------------------------------------------------------------ médico (Bloco 30)
+## Onde o médico entra (a porta, na frente da fachada).
+func doctor_spot() -> Vector2:
+	return global_position + Vector2(0, 26)
+
+
+func add_doctor(worker: Node) -> void:
+	if not _doctors.has(worker):
+		_doctors.append(worker)
+	_update_visual()
+
+
+func remove_doctor(worker: Node) -> void:
+	_doctors.erase(worker)
+	_update_visual()
+
+
+func doctors() -> Array[Node]:
+	_doctors = _doctors.filter(func(w): return is_instance_valid(w))
+	return _doctors
+
+
+## Velocidade da cura no leito: 1 sem médico (passiva, como sempre), mais com médico.
+func heal_rate() -> float:
+	return 1.0 + doctor_heal_bonus * mini(doctors().size(), max_doctors_effective)
+
+
+## Quão rápido corre o relógio de "sem cuidado" de quem espera leito aqui.
+func waiting_clock_mult() -> float:
+	return doctor_waiting_clock_mult if not doctors().is_empty() else 1.0
 
 
 ## Machucados que ainda não estão num leito (a caminho ou esperando).
@@ -195,6 +240,9 @@ func _update_visual() -> void:
 	_window_light.enabled = n > 0
 	var waiting_n := without_bed().size() if is_inside_tree() else 0
 	_label.text = "Enfermaria  %d/%d" % [n, slot_count]
+	var docs := doctors().size() if is_inside_tree() else 0
+	_label.text += "\n%s" % ("%d médico%s de plantão" % [docs, "s" if docs > 1 else ""] if docs > 0 else "sem médico (cura lenta)")
+	_window_light.enabled = n > 0 or docs > 0
 	if waiting_n > 0:
 		_label.text += "\n%d esperando leito!" % waiting_n
 	_label.modulate = Color(1.0, 0.55, 0.5) if waiting_n > 0 else Color(0.95, 0.9, 0.85)

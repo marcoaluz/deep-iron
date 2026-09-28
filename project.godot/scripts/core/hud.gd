@@ -47,6 +47,7 @@ const STATE_COLORS := {
 	"stocking": Color(0.8, 0.85, 0.6),
 	"fetching": Color(0.95, 0.85, 0.5),
 	"cooking": Color(1.0, 0.75, 0.45),
+	"doctor": Color(0.6, 0.9, 0.85),  # Bloco 30
 }
 const COLOR_HUNTER := Color(0.8, 0.9, 0.55)
 ## Bloco 28: contagem do bloco "Mão de obra" (função -> [rótulo no plural, cor]).
@@ -58,6 +59,7 @@ const WORKFORCE_JOBS := {
 	"lenhador": ["Lenhadores", COLOR_LUMBER],
 	"guarda": ["Guardas", Color(0.95, 0.55, 0.45)],
 	"pesquisador": ["Pesquisadores", Color(0.55, 0.95, 0.65)],
+	"médico": ["Médicos", Color(0.6, 0.9, 0.85)],  # Bloco 30
 }
 
 @export var ore_icon: Texture2D
@@ -102,6 +104,7 @@ var _overtime_button: Button
 var _cook_button: Button
 var _miner_button: Button
 var _hunter_button: Button
+var _doctor_button: Button
 var _no_job_button: Button
 var _lumber_button: Button
 var _guard_button: Button
@@ -225,7 +228,7 @@ func _build() -> void:
 	var hint := _label(
 		"Clique: selecionar   •   Arrastar: selecionar vários   •   Shift+clique: somar/tirar   •   Botão dir.: mover / minerar (jazida)   •   Esc: soltar   •   Tab: próximo   •   F: seguir\n"
 		+ "Roda: zoom   •   Botão do meio / WASD / setas: mover câmera   •   Home: centralizar\n"
-		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste; Shift+K: grave)   •   T: turno extra   •   1: minerador   •   2: caçador   •   0: sem função   •   C: cozinheiro   •   L: lenhador   •   X: guarda   •   Z: pesquisador   •   H: esconder dicas   •   Esc/P: pausa\n"
+		+ "V: vender minério   •   R: recrutar   •   M: liga/desliga música   •   N: pular fase (teste)   •   K: machucar selecionado (teste; Shift+K: grave)   •   T: turno extra   •   1: minerador   •   2: caçador   •   3: médico   •   0: sem função   •   C: cozinheiro   •   L: lenhador   •   X: guarda   •   Z: pesquisador   •   H: esconder dicas   •   Esc/P: pausa\n"
 		+ "U: Centro da Vila   •   E: Escavadeira   •   O: Oficina   •   I: Enfermaria   •   B: Bem-estar   •   G: Defesa   •   Q: Laboratório   •   Y: Sol   •   J: Diário   •   ou clique no prédio   •   F5: salvar   •   F9: carregar",
 		12, Color(0.85, 0.8, 0.72, 0.75))
 	hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
@@ -403,6 +406,7 @@ func _build_workforce_section(vbox: VBoxContainer) -> void:
 	_lumber_button = _job_button(actions, "Lenhador  (L)", "Os selecionados vão cortar madeira na clareira", _main.toggle_lumber)
 	_guard_button = _job_button(actions, "Guarda  (X)", "Os selecionados viram guardas: treinam de dia no campo e à noite defendem os portões", _main.toggle_guard)
 	_research_button = _job_button(actions, "Pesquisador  (Z)", "Os selecionados trabalham no laboratório de dia, gerando pontos pra pesquisa em andamento", _main.toggle_research)
+	_doctor_button = _job_button(actions, "Médico  (3)", "Os selecionados ficam de plantão dentro da Enfermaria: os internados curam bem mais rápido e quem espera leito piora mais devagar", _main.toggle_doctor)
 	_no_job_button = _job_button(actions, "Sem função  (0)", "Tira a função dos selecionados: entregam o que estiverem carregando e esperam no Centro da Vila", _main.clear_job)
 	_overtime_button = _job_button(actions, "Turno extra  (T)", "Os selecionados continuam trabalhando à noite (e vão ficando zangados)", _main.toggle_overtime)
 
@@ -731,6 +735,10 @@ func _refresh() -> void:
 		var all_hunters: bool = picked > 0 and _main.selection.all(func(u): return is_instance_valid(u) and u.is_hunter())
 		_hunter_button.text = "Tirar caça (2)" if all_hunters else "Caçador (2)"
 		_hunter_button.disabled = picked == 0
+	if _doctor_button:
+		var all_doctors: bool = picked > 0 and _main.selection.all(func(u): return is_instance_valid(u) and u.is_doctor())
+		_doctor_button.text = "Tirar médico (3)" if all_doctors else "Médico (3)"
+		_doctor_button.disabled = picked == 0
 	if _no_job_button:
 		_no_job_button.disabled = picked == 0 or _main.selection.all(func(u): return is_instance_valid(u) and u.has_no_job())
 	# (quem está sem função agora aparece destacado no bloco Mão de obra — Bloco 28)
@@ -938,7 +946,7 @@ func _refresh_workforce(workers: Array) -> void:
 		cell.modulate = Color.WHITE if n > 0 else Color(1, 1, 1, 0.45)  # zero fica apagado
 	if _no_job_label:
 		if no_job > 0:
-			_no_job_label.text = "SEM FUNÇÃO: %d  —  selecione e aperte 1, 2, C, L, X ou Z" % no_job
+			_no_job_label.text = "SEM FUNÇÃO: %d  —  selecione e aperte 1, 2, 3, C, L, X ou Z" % no_job
 			_no_job_label.add_theme_color_override("font_color", COLOR_NO_JOB)
 		else:
 			_no_job_label.text = "Todos com função"

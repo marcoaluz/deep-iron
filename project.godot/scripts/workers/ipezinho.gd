@@ -19,6 +19,7 @@ const STATE_LABELS := {
 	"stocking": "levando matéria-prima",
 	"fetching": "buscando matéria-prima",
 	"cooking": "preparando comida",
+	"doctor": "de plantão na enfermaria",
 	"chopping": "cortando madeira",
 	"hauling": "levando madeira",
 	"infirmary": "indo pra enfermaria",
@@ -55,6 +56,7 @@ const OUTFIT_FILES := {
 	"cacador": "res://assets/game/ipezinho_cacador_%s%d.png",  # Bloco 28
 	"guarda": "res://assets/game/ipezinho_guarda_%s%d.png",
 	"pesquisador": "res://assets/game/ipezinho_pesquisador_%s%d.png",
+	"medico": "res://assets/game/ipezinho_medico_%s%d.png",  # Bloco 30
 }
 ## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
 const OUTFITS_WITH_LAMP := ["mineiro"]
@@ -88,12 +90,13 @@ const ROLE_LUMBER := "lenhador"
 const ROLE_GUARD := "guarda"
 const ROLE_RESEARCH := "pesquisador"
 const ROLE_HUNTER := "caçador"  # Bloco 27: colhe fruta / caça (com arco) -> matéria-prima
-const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER]
+const ROLE_DOCTOR := "médico"  # Bloco 30: plantão na enfermaria (cura mais rápida)
+const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR]
 ## Texto do popup ao receber a função.
 const JOB_LABELS := {
 	ROLE_IDLE: "Sem função", ROLE_MINER: "Minerador!", ROLE_COOK: "Cozinheiro!",
 	ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!",
-	ROLE_HUNTER: "Caçador!",
+	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!",
 }
 ## Bloco 26/28: outfit inteiro por função (derivado do `job`: nada novo no save).
 ## REGRA (Bloco 28): toda função nova nasce com outfit próprio no mesmo bloco —
@@ -102,7 +105,7 @@ const JOB_LABELS := {
 const JOB_OUTFIT := {
 	ROLE_IDLE: "civil", ROLE_MINER: "mineiro", ROLE_COOK: "cozinheiro",
 	ROLE_LUMBER: "lenhador", ROLE_GUARD: "guarda", ROLE_RESEARCH: "pesquisador",
-	ROLE_HUNTER: "cacador",
+	ROLE_HUNTER: "cacador", ROLE_DOCTOR: "medico",
 }
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
@@ -110,6 +113,7 @@ const LANCA := preload("res://assets/game/lanca.png")
 const AXE := preload("res://assets/game/axe.png")
 const WOOD_LOG := preload("res://assets/game/wood_log.png")
 const BOW := preload("res://assets/game/bow.png")
+const FORAGE_BASKET := preload("res://assets/game/forage_basket.png")
 const RAW_FOOD := preload("res://assets/game/raw_food.png")
 const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 
@@ -330,6 +334,7 @@ var _ward: Node = null  # enfermaria onde está internado
 var _death_warned := false
 ## Felicidade 0..100 (-1 = ainda não definida: nasce com happiness_start).
 var happiness: float = -1.0
+var _on_duty: Node = null  # Bloco 30: enfermaria onde o médico está de plantão (lá dentro)
 var _at_taverna: Node = null  # taverna onde está se divertindo (lá dentro, invisível)
 var _strike_spot: Variant = null  # onde fica parado protestando
 var _strike_icon: Sprite2D
@@ -403,6 +408,7 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	_discharge()
 	_leave_taverna()
+	_end_duty()
 	_drop_robot()
 	_release_station()
 	if _home != null and is_instance_valid(_home):
@@ -460,6 +466,13 @@ func get_state_label() -> String:
 		return "esperando matéria-prima"
 	if _ai_state == "idle" and is_hunter():
 		return "sem fruta nem caça por perto"
+	if _ai_state == "doctor":
+		if _on_duty == null:
+			return "indo pra enfermaria (plantão)"
+		var n: int = _on_duty.patients().size()
+		return "tratando %d internado%s" % [n, "s" if n > 1 else ""] if n > 0 else "de plantão, esperando pacientes"
+	if _ai_state == "idle" and is_doctor():
+		return "sem enfermaria"
 	if _ai_state == "cooking" and _prep_left > 0.0:
 		return "preparando comida (%ds)" % ceili(_prep_left)
 	var label: String = STATE_LABELS.get(_ai_state, _ai_state)
@@ -586,6 +599,11 @@ func _process(delta: float) -> void:
 			_robot_task.deliver()
 			_robot_task = null
 			_decision_timer = 0.0
+	# médico chegou na porta da enfermaria: entra e fica de plantão
+	if _ai_state == "doctor" and _on_duty == null and not _moving:
+		var ward := _closest_in_group("enfermarias")
+		if ward and global_position.distance_to(ward.doctor_spot()) <= REST_REACH:
+			_start_duty(ward)
 	# chegou no lugar reservado da taverna: entra
 	if _ai_state == "leisure" and _at_taverna == null and not _moving and _station_ok_for("leisure"):
 		if global_position.distance_to(_station.get_slot_position(_slot)) <= REST_REACH:
@@ -662,6 +680,10 @@ func _choose_state() -> String:
 	# e mandar guardar cada pedrinha viraria um vai-e-volta sem fim.
 	if carrying > 0.0 and not is_miner() and not is_researcher():
 		return "storing"
+	# Médico (Bloco 30): plantão DENTRO da enfermaria, tendo internado ou não (esperando
+	# por lá: não sai pra minerar sozinho). Comer, dormir, se tratar etc. vêm antes.
+	if is_doctor():
+		return "doctor" if _has_infirmary() else "idle"
 	# Guarda: à noite fica nos portões; de dia treina (até ficar pronto) e descansa.
 	if is_guard():
 		if _is_night():
@@ -751,6 +773,16 @@ func _decide_next_action() -> void:
 			_release_station()
 			_set_state("guard")
 		return  # quem manda é o _guard_tick (posto / luta)
+
+	if desired == "doctor":
+		if _ai_state != "doctor":
+			_release_station()
+			_set_state("doctor")
+		if _on_duty == null:
+			var ward := _closest_in_group("enfermarias")
+			if ward and (not _moving or _target.distance_to(ward.doctor_spot()) > 2.0):
+				_go_to(ward.doctor_spot())
+		return
 
 	if desired == "robot":
 		_release_station()
@@ -927,6 +959,8 @@ func _set_state(new_state: String) -> void:
 		_discharge()
 	if _ai_state == "leisure":
 		_leave_taverna()
+	if _ai_state == "doctor":
+		_end_duty()
 	if _ai_state == "strike":
 		_strike_spot = null
 	if _ai_state == "robot":
@@ -1140,6 +1174,31 @@ func _enter_taverna() -> void:
 	queue_redraw()
 
 
+# ------------------------------------------------------------ médico (Bloco 30)
+func is_doctor() -> bool:
+	return job == ROLE_DOCTOR
+
+
+func _start_duty(ward: Node) -> void:
+	_on_duty = ward
+	_inside = true  # lá dentro: some do mapa, como na taverna
+	_moving = false
+	_agent.avoidance_enabled = false
+	ward.add_doctor(self)
+	queue_redraw()
+
+
+func _end_duty() -> void:
+	if _on_duty == null:
+		return
+	if is_instance_valid(_on_duty):
+		_on_duty.remove_doctor(self)
+	_on_duty = null
+	_inside = false
+	_agent.avoidance_enabled = avoidance_enabled
+	queue_redraw()
+
+
 func _leave_taverna() -> void:
 	if _at_taverna == null:
 		return
@@ -1257,16 +1316,40 @@ func on_tool_crafted(id: String) -> void:
 
 ## Machado pro lenhador; picareta (de aço, se já existir) pros outros.
 func _refresh_tool_texture() -> void:
-	if is_guard():
-		_tool.texture = LANCA
-	elif is_lumber():
-		_tool.texture = AXE
-	elif is_hunter() and _has_bow():
-		_tool.texture = BOW  # Bloco 27: sem arco, o caçador vai de picareta (só colhe fruta)
-	elif _has_steel_pickaxe:
-		_tool.texture = STEEL_PICKAXE
-	elif _default_tool:
-		_tool.texture = _default_tool
+	var item := _hand_item()
+	if item:
+		_tool.texture = item
+
+
+## Bloco 29: o que vai na mão — UMA regra só, por função e (quando importa) pelo que
+## está fazendo agora. Reavaliada a cada quadro em _update_animation, então trocar de
+## função troca a ferramenta na hora, junto com o outfit. null = mãos vazias.
+## Função nova = um caso aqui (junto do outfit, regra do Bloco 28).
+func _hand_item() -> Texture2D:
+	match job:
+		ROLE_MINER:
+			return _pickaxe()
+		ROLE_LUMBER:
+			return AXE
+		ROLE_GUARD:
+			return LANCA
+		ROLE_COOK:
+			return FOOD_BASKET  # cesta (a carga, quando tem, vai por cima da cabeça como sempre)
+		ROLE_HUNTER:
+			# arco só caçando de verdade; sem arco ou colhendo fruta: a cestinha de coleta
+			if _ai_state == "hunting" and _has_bow():
+				return BOW
+			return FORAGE_BASKET
+		ROLE_RESEARCH:
+			# sem laboratório ele cai pra mineração (Bloco 25): aí sim segura a picareta
+			return _pickaxe() if _ai_state in ["mining", "storing"] else null
+		ROLE_DOCTOR:
+			return null  # plantão lá dentro da enfermaria: mãos livres
+	return null  # ocioso (civil): mãos vazias
+
+
+func _pickaxe() -> Texture2D:
+	return STEEL_PICKAXE if _has_steel_pickaxe else _default_tool
 
 
 # ------------------------------------------------------------ visual: menino/menina
@@ -1410,6 +1493,8 @@ func set_job(new_job: String) -> void:
 		return
 	if job == new_job:
 		return
+	if job == ROLE_DOCTOR:
+		_end_duty()  # tirou do médico: o bônus da enfermaria para NA HORA (Bloco 30)
 	job = new_job
 	_popup(JOB_LABELS[job], Color(0.95, 0.9, 0.6) if job != ROLE_IDLE else Color(0.75, 0.75, 0.8))
 	_apply_outfit()  # troca de roupa na hora (Bloco 26)
@@ -1681,7 +1766,9 @@ func _has_infirmary() -> bool:
 ## Relógio do machucado: cura no leito; fora dele, leve piora e grave morre.
 func _update_injury(delta: float) -> void:
 	if _admitted:
-		_recovery_left -= delta
+		# Bloco 30: com médico de plantão a cura anda mais rápido (sem médico: como sempre)
+		var rate: float = _ward.heal_rate() if _ward != null and is_instance_valid(_ward) and _ward.has_method("heal_rate") else 1.0
+		_recovery_left -= delta * rate
 		if _recovery_left <= 0.0:
 			_heal()
 		return
@@ -1694,7 +1781,8 @@ func _update_injury(delta: float) -> void:
 			if _recovery_left <= 0.0:
 				_heal()
 		return
-	_care_left -= delta
+	var ward := _closest_in_group("enfermarias")
+	_care_left -= delta * (ward.waiting_clock_mult() if ward and ward.has_method("waiting_clock_mult") else 1.0)
 	if injury_severity == "grave" and not _death_warned and _care_left <= death_warning_time:
 		_death_warned = true
 		_toast("%s vai morrer se não deitar num leito! (%ds)" % [_display(), ceili(_care_left)])
@@ -1901,17 +1989,32 @@ func _update_animation(delta: float) -> void:
 	_body.skew = -0.08 * _facing if spd > 5.0 else 0.0  # leve inclinação ao andar
 	_sync_accessories()
 
-	# picareta: no ombro andando, balançando enquanto minera
+	# Bloco 29: item da mão (regra única em _hand_item). Ferramentas (picareta, machado,
+	# lança) no ombro e balançando no trabalho; arco em pé na mão; cestas penduradas.
+	var item := _hand_item()
+	if item != null and _tool.texture != item:
+		_tool.texture = item
+	var hanging := item == FOOD_BASKET or item == FORAGE_BASKET
+	var swings := item != null and not hanging and item != BOW
+	_tool.offset = Vector2(-item.get_width() * 0.5, -1.0) if hanging else Vector2(-5.5, -12.5)
 	_tool.position.x = 9.0 * _facing
 	_tool.scale = Vector2(2.0 * _facing, 2.0)
-	if _work_timer > 0.0:
+	if hanging or item == BOW:
+		_swing_time = 0.0
+		_prev_swing = 0.0
+		_swing_rising = false
+		if hanging:  # cesta balança de leve com o passo
+			_tool.rotation = sin(_anim_time * PI) * 0.12 if spd > 5.0 else 0.0
+		else:  # arco em pé; puxando a corda enquanto caça
+			_tool.rotation = _facing * (-0.1 + (0.08 * sin(Time.get_ticks_msec() * 0.01) if _work_timer > 0.0 else 0.0))
+	elif swings and _work_timer > 0.0:
 		_swing_time += delta
 		var swing := (sin(_swing_time * 12.0) * 0.5 + 0.5)  # 0..1
 		_tool.rotation = _facing * lerpf(-0.9, 1.4, swing * swing)
 		# impacto = ponto mais baixo do golpe (a curva para de subir)
 		var rising := swing > _prev_swing
 		if _swing_rising and not rising:
-			if _ai_state not in ["gathering", "chopping", "guard", "training", "foraging", "hunting", "cooking"]:
+			if item == _pickaxe():  # "tock" só de picareta batendo em pedra
 				Audio.pick(global_position)
 		_swing_rising = rising
 		_prev_swing = swing
@@ -1923,8 +2026,7 @@ func _update_animation(delta: float) -> void:
 
 	# dormindo: dentro de casa some; ao relento fica deitado no chão
 	_body.visible = not _inside
-	# civil (sem função) e cozinheiro não carregam ferramenta de mina (Bloco 26)
-	_tool.visible = not _resting and outfit() not in ["civil", "cozinheiro"]
+	_tool.visible = item != null and not _resting  # Bloco 29: mãos vazias = sem nada na mão
 	_lamp.enabled = head_lamp_enabled and not _resting and outfit() in OUTFITS_WITH_LAMP
 	var lying := _resting and not _inside
 	var limp := injured and spd > 5.0
