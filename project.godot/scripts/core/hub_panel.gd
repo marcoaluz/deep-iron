@@ -16,6 +16,7 @@ var _rows: Dictionary = {}  # id -> {level, effect, button}
 var _starter_button: Button  # Bloco 37: casas iniciais
 var _comedouro_button: Button
 var _radius_label: Label
+var _recruit_button: Button  # Bloco 39
 
 
 func setup(hud: CanvasLayer, hub: Node, economy: Node) -> void:
@@ -94,6 +95,12 @@ func _build() -> void:
 		_hub.build_comedouro()
 		refresh())
 	vbox.add_child(_comedouro_button)
+	_recruit_button = _hud._button("")
+	_recruit_button.pressed.connect(func():
+		Audio.click()
+		_economy.recruit()
+		refresh())
+	vbox.add_child(_recruit_button)
 
 	vbox.add_child(HSeparator.new())
 	var up_header := HBoxContainer.new()
@@ -195,6 +202,10 @@ func refresh() -> void:
 	var cr: String = _hub.comedouro_block_reason()
 	_comedouro_button.text = ("Comedouro — escolher lugar  (%s)" % _hub.comedouro_cost_text()) if cr == "" else "Comedouro: " + cr
 	_comedouro_button.disabled = cr != ""
+	var why: String = _economy.recruit_block_reason() if _economy else "sem economia"
+	_recruit_button.text = ("Recrutar ipezinho  (%d cr, %d cama%s livre%s)" % [_economy.recruit_cost(), _economy.free_beds(),
+		"s" if _economy.free_beds() != 1 else "", "s" if _economy.free_beds() != 1 else ""]) if why == "" else "Recrutar: " + why
+	_recruit_button.disabled = why != ""
 
 	for id in _rows:
 		var row: Dictionary = _rows[id]

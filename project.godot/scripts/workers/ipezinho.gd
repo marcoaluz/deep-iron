@@ -1200,6 +1200,8 @@ func _set_state(new_state: String) -> void:
 
 # ------------------------------------------------------------ turno / casa
 func _sync_tool_visual() -> void:
+	if not is_inside_tree():
+		return
 	var oficina := get_tree().get_first_node_in_group("oficina")
 	if oficina and oficina.has_tool("picareta_aco"):
 		on_tool_crafted("picareta_aco")
@@ -1709,7 +1711,7 @@ func has_home() -> bool:
 ## senão escolhe a casa com MAIS camas livres (empate: a mais perto), pra espalhar
 ## os ipezinhos pela vila em vez de empilhar todo mundo na casa mais próxima.
 func _claim_home() -> void:
-	if has_home():
+	if has_home() or not is_inside_tree():
 		return
 	if _saved_home != "":
 		for casa in get_tree().get_nodes_in_group("casas"):
@@ -1943,6 +1945,8 @@ func _research() -> Node:
 
 
 func _apply_research() -> void:
+	if not is_inside_tree():
+		return
 	var r := _research()
 	if r:
 		r.apply_worker(self)

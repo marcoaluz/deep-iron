@@ -36,15 +36,25 @@ var _sound_timer: float = 0.0
 @onready var _pile: Sprite2D = $OrePile
 
 
+## Bloco 39: clicar no armazém abre a janela de venda.
+var panel_id := "armazem"
+
+
 func _ready() -> void:
 	super()
 	add_to_group("armazens")
+	add_to_group("clickable")
 	$WindowLight.add_to_group("cullable_lights")
 	_update_label()
 
 
 func _accepts(body: Node2D) -> bool:
 	return body.has_method("deposit")
+
+
+## Área clicável (coordenadas globais).
+func contains_point(p: Vector2) -> bool:
+	return Rect2(global_position + Vector2(-40, -70), Vector2(80, 74)).has_point(p)
 
 
 func _process(delta: float) -> void:

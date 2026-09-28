@@ -462,6 +462,9 @@ func _build_buildings_column() -> void:
 	_buildings_box.add_child(_label("CONSTRUÇÕES", 13, COLOR_TITLE))
 	if _hub:
 		_add_panel("hub", preload("res://scripts/core/hub_panel.gd"), _hub)
+	var arm := get_tree().get_first_node_in_group("armazens")
+	if arm and _economy:
+		_add_panel("armazem", preload("res://scripts/core/armazem_panel.gd"), arm)  # Bloco 39
 	if _dig:
 		_add_panel("escavadeira", preload("res://scripts/core/escavadeira_panel.gd"), _dig)
 	if _oficina:
@@ -938,9 +941,11 @@ func _refresh_workforce(workers: Array) -> void:
 	if _economy:
 		_workers_count_label.text = "%d / %d" % [workers.size(), _economy.max_workers]
 		var cost: int = _economy.recruit_cost()
-		var at_max: bool = workers.size() >= _economy.max_workers
-		_recruit_button.text = "Limite de ipezinhos atingido" if at_max else "Recrutar ipezinho  (%d cr)" % cost
-		_recruit_button.disabled = not _economy.can_recruit()
+		var why: String = _economy.recruit_block_reason()
+		_recruit_button.text = "Recrutar ipezinho  (%d cr)" % cost if why == "" or why.begins_with("falta") \
+			else "Recrutar: " + why
+		_recruit_button.tooltip_text = why if why != "" else "Chega na frente do Centro da Vila e ganha uma cama."
+		_recruit_button.disabled = why != ""
 	else:
 		_workers_count_label.text = str(workers.size())
 

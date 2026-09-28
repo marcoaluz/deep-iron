@@ -1,6 +1,11 @@
 extends Node
 ## Economia do protótipo: vender minério armazenado por créditos e recrutar ipezinhos.
 ## Fica no nó "Economy" da cena principal (grupo "economy") — ajuste os números no Inspector.
+##
+## Bloco 39: vender também pela janela do Armazém (clique nele), tudo ou um tipo só
+## (sell). Recrutar exige CAMA LIVRE nas casas prontas (recruit_needs_bed) além do
+## limite de ipezinhos e dos créditos; bloqueado, avisa o motivo e não gasta nada
+## (recruit_block_reason). O recrutado chega na frente do Centro da Vila.
 
 signal credits_changed(credits: float)
 
@@ -34,6 +39,8 @@ signal worker_recruited(worker: Node2D, cost: int)
 @export var max_workers: int = 8
 ## Nó onde os novos ipezinhos são criados (precisa ser o nó com y-sort).
 @export var spawn_parent: NodePath = ^"../World"
+## Bloco 39: só recruta se tiver cama livre numa casa pronta (sem cama = sem lugar pra morar).
+@export var recruit_needs_bed: bool = true
 
 var credits: float = 0.0
 var recruited_count: int = 0
@@ -86,6 +93,29 @@ func sale_value() -> int:
 	for t in Ores.TYPES:
 		value += floorf(stored_ore(t)) * price_of(t)
 	return int(value)
+
+
+## Bloco 39: vende um tipo só ("" = tudo). Retorna os créditos ganhos.
+func sell(ore_type: String = "") -> float:
+	if ore_type == "":
+		return sell_all()
+	var sold := 0.0
+	for a in get_tree().get_nodes_in_group("armazens"):
+		var amount := floorf(a.stock.get(ore_type, 0.0))
+		if amount < 1.0:
+			continue
+		var got: float = a.take(amount, ore_type)
+		sold += got
+		if got > 0.0:
+			a.show_popup("+%d cr" % int(got * price_of(ore_type)), Color(0.55, 1.0, 0.5))
+	if sold <= 0.0:
+		return 0.0
+	var earned := sold * price_of(ore_type)
+	_add_credits(earned)
+	total_earned += earned
+	ore_sold.emit(sold, earned)
+	Audio.sell()
+	return earned
 
 
 func sell_all() -> float:
@@ -181,13 +211,39 @@ func recruit_cost() -> int:
 	return int(round(recruit_base_cost * pow(recruit_cost_growth, recruited_count)))
 
 
+## Camas das casas PRONTAS que ninguém ocupa (cada ipezinho precisa de uma).
+func free_beds() -> int:
+	var total := 0
+	for casa in get_tree().get_nodes_in_group("casas"):
+		if casa.has_method("beds_total"):
+			total += casa.beds_total()
+	return total - worker_count()
+
+
+## "" = pode recrutar; senão o motivo (limite, cama, créditos — nessa ordem).
+func recruit_block_reason() -> String:
+	if worker_scene == null:
+		return "sem ipezinho pra recrutar"
+	if worker_count() >= max_workers:
+		return "limite de ipezinhos (Moradias aumenta)"
+	if recruit_needs_bed and free_beds() <= 0:
+		return "sem cama livre — construa uma casa"
+	if credits < recruit_cost():
+		return "falta %d cr" % ceili(recruit_cost() - credits)
+	return ""
+
+
 func can_recruit() -> bool:
-	return worker_scene != null and credits >= recruit_cost() and worker_count() < max_workers
+	return recruit_block_reason() == ""
 
 
 func recruit() -> Node2D:
-	if not can_recruit():
+	var reason := recruit_block_reason()
+	if reason != "":
 		Audio.error()
+		var hud := get_tree().get_first_node_in_group("hud")
+		if hud:
+			hud.show_toast("Não dá pra recrutar: %s." % reason, Color(1.0, 0.55, 0.4))
 		return null
 	var cost := recruit_cost()
 	var parent := get_node_or_null(spawn_parent)
@@ -223,7 +279,11 @@ func recruit_free() -> Node2D:
 	return worker
 
 
+## Bloco 39: o recrutado chega na frente do Centro da Vila (sem Centro: perto do armazém).
 func _spawn_position() -> Vector2:
+	var hub: Node2D = get_tree().get_first_node_in_group("village_hub")
+	if hub:
+		return hub.global_position + Vector2(randf_range(-50.0, 50.0), randf_range(40.0, 70.0))
 	var armazem: Node2D = get_tree().get_first_node_in_group("armazens")
 	var base := armazem.global_position if armazem else Vector2.ZERO
 	return base + Vector2(randf_range(-50.0, 50.0), randf_range(70.0, 95.0))
