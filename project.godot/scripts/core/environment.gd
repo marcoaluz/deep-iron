@@ -16,7 +16,7 @@ const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village
 ## Estruturas que bloqueiam a navegação mas NÃO entram no sorteio da decoração
 ## (pra não mudar as pedras/cristais da mina de saves antigos). A decoração que
 ## cair embaixo delas é escondida depois (_clear_decor_under_extras).
-const NAV_EXTRA_GROUPS := ["enfermarias", "tavernas", "campos", "laboratorios", "escudos", "caca", "canteiros"]
+const NAV_EXTRA_GROUPS := ["enfermarias", "tavernas", "campos", "laboratorios", "escudos", "caca", "canteiros", "arsenais"]
 
 @export_group("Mapa")
 @export var map_rect: Rect2 = Rect2(-720, -440, 1440, 880)
@@ -461,7 +461,7 @@ func _build_clearing() -> void:
 			_add_shadow(tree, 0.35)
 	# placa na boca do túnel, do lado da mina
 	var sign_label := Label.new()
-	sign_label.text = "saída pra clareira (madeira)"
+	sign_label.text = "saída pra clareira (madeira, caça, fruta)"
 	sign_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sign_label.position = Vector2(tunnel_x - 90.0, map_rect.position.y + 42.0)
 	sign_label.size = Vector2(180, 20)

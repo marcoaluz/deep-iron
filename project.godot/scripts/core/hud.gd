@@ -68,7 +68,7 @@ const ORDER_JOBS := [
 	["minerador", "Minerador", "1", "res://assets/game/pickaxe.png", "toggle_miner", COLOR_MINER,
 		"Minera nas jazidas e leva o minério pro armazém."],
 	["caçador", "Caçador", "2", "res://assets/game/bow.png", "toggle_hunter", COLOR_HUNTER,
-		"Colhe fruta na horta e caça nas tocas (com arco e flecha); leva a matéria-prima pro armazém."],
+		"Trabalha na clareira: caça nas tocas (com arco) e colhe fruta na horta; só desce pra mina pra deixar a matéria-prima no armazém."],
 	["médico", "Médico", "3", "res://assets/game/bandage.png", "toggle_doctor", COLOR_DOCTOR,
 		"Plantão dentro da Enfermaria: internados curam bem mais rápido."],
 	["engenheiro", "Engenheiro", "4", "res://assets/game/hammer.png", "toggle_engineer", COLOR_ENGINEER,
@@ -78,7 +78,7 @@ const ORDER_JOBS := [
 	["lenhador", "Lenhador", "L", "res://assets/game/axe.png", "toggle_lumber", COLOR_LUMBER,
 		"Corta madeira na clareira e leva pro armazém."],
 	["guarda", "Guarda", "X", "res://assets/game/lanca.png", "toggle_guard", COLOR_GUARD,
-		"Treina de dia no campo e defende os portões à noite."],
+		"Treina de dia no campo e defende os portões à noite. A arma se gasta na luta: quebrou, busca outra no Arsenal."],
 	["pesquisador", "Pesquisador", "Z", "res://assets/game/note.png", "toggle_research", COLOR_RESEARCH,
 		"Trabalha no laboratório de dia, gerando pontos pra pesquisa em andamento."],
 ]
@@ -121,6 +121,7 @@ var _left_panel: PanelContainer
 var _workers_count_label: Label
 var _no_job_label: Label
 var _obras_label: Label
+var _unarmed_label: Label  # Bloco 35: guardas desarmados (arma quebrou)
 var _recruit_button: Button
 var _collapse_button: Button
 var _workers_title: Label
@@ -421,6 +422,10 @@ func _build_workforce_panel() -> void:
 	_obras_label = _label("", 13, COLOR_ENGINEER)
 	_obras_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(_obras_label)
+	_unarmed_label = _label("", 13, COLOR_NO_JOB)
+	_unarmed_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_unarmed_label.visible = false
+	v.add_child(_unarmed_label)
 	if _economy:
 		_recruit_button = _button("Recrutar ipezinho")
 		_recruit_button.pressed.connect(_on_recruit_pressed)
@@ -905,6 +910,16 @@ func _refresh_workforce(workers: Array) -> void:
 		else:
 			_obras_label.text = "OBRAS: %d  (%d em andamento)\n%s" % [obras.size(), working, "  •  ".join(names)]
 			_obras_label.add_theme_color_override("font_color", COLOR_ENGINEER)
+	# Bloco 35: guarda com a arma quebrada
+	var def := get_tree().get_first_node_in_group("defense")
+	var unarmed: Array = def.unarmed_guards() if def else []
+	_unarmed_label.visible = not unarmed.is_empty()
+	if not unarmed.is_empty():
+		var names: Array[String] = []
+		for w in unarmed.slice(0, 3):
+			names.append(w.display_name)
+		_unarmed_label.text = "DESARMADOS: %d (%s) — %s" % [unarmed.size(), ", ".join(names),
+			"indo ao Arsenal pegar outra arma" if def.arsenal() != null else "sem Arsenal pra pegar outra (G: Defesa)"]
 	if _economy:
 		_workers_count_label.text = "%d / %d" % [workers.size(), _economy.max_workers]
 		var cost: int = _economy.recruit_cost()

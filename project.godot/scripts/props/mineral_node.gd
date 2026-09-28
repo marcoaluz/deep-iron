@@ -4,9 +4,14 @@ extends "res://scripts/props/station.gd"
 ## ore_type diz o que ela dá (ferro, cobre, carvão). Tipos que precisam de
 ## ferramenta ficam BLOQUEADOS (escuros, com cadeado, ninguém minera) até a
 ## Oficina fabricar a ferramenta certa.
+##
+## Bloco 33: GALERIAS LACRADAS. Uma jazida com min_village_level > 1 fica atrás de
+## entulho, dentro da mina de sempre, até a vila chegar nesse estágio ("Expandir a
+## vila" no Centro). O mapa não cresce: expandir só abre essas galerias.
 
 const Ores := preload("res://scripts/core/ores.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const RUBBLE_TEXTURE := preload("res://assets/game/entulho.png")
 
 signal depleted
 signal replenished
@@ -24,6 +29,12 @@ signal replenished
 ## Abaixo disso a jazida não atrai novos ipezinhos (quem já está minerando continua).
 @export var min_ore_to_mine: float = 15.0
 
+@export_group("Galeria lacrada (Bloco 33)")
+## Estágio da vila que abre esta jazida (1 = aberta desde o começo).
+@export_range(1, 5) var min_village_level: int = 1
+## Nome da galeria pros avisos ("oeste", "sudeste"...).
+@export var gallery_name: String = ""
+
 @export_group("Visual")
 ## Variantes de sprite sorteadas no _ready (vazio = mantém a textura da cena).
 @export var textures: Array[Texture2D] = []
@@ -35,6 +46,8 @@ var _hit_time: float = 0.0
 var _base_scale: Vector2
 var _unlocked: bool = true
 var _needs_descent: bool = false  # trancada porque o nível 2 ainda não abriu
+var _needs_village: bool = false  # Bloco 33: galeria lacrada até a vila crescer
+var _rubble: Sprite2D = null  # entulho com tábuas em X na frente da galeria lacrada
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _label: Label = $AmountLabel
@@ -50,6 +63,15 @@ func _ready() -> void:
 		_visual.texture = textures[randi() % textures.size()]
 		_visual.flip_h = randf() < 0.5
 	_base_scale = _visual.scale
+	if min_village_level > 1:
+		_rubble = Sprite2D.new()
+		_rubble.name = "Entulho"
+		_rubble.texture = RUBBLE_TEXTURE
+		_rubble.scale = Vector2(2, 2)
+		_rubble.offset = Vector2(0, -8)
+		_rubble.position = Vector2(0, 8)
+		add_child(_rubble)
+		move_child(_rubble, _visual.get_index() + 1)  # na frente da pedra, atrás do texto
 	_chips.color = Ores.CHIP_COLORS.get(ore_type, _chips.color)
 	on_unlock_changed.call_deferred()  # a Oficina pode entrar na árvore depois
 	_update_visual()
@@ -65,6 +87,11 @@ func is_usable() -> bool:
 
 func is_unlocked() -> bool:
 	return _unlocked
+
+
+## Bloco 33: ainda atrás do entulho (a vila não chegou no estágio)?
+func is_sealed() -> bool:
+	return _needs_village
 
 
 ## Ipezinho só vem pra cá de mãos vazias ou já carregando o mesmo tipo.
@@ -84,6 +111,7 @@ func get_value_weight() -> float:
 func on_unlock_changed(animate: bool = true) -> void:
 	var oficina := get_tree().get_first_node_in_group("oficina")
 	var was := _unlocked
+	var was_sealed := _needs_village
 	# sem Oficina no mapa, nada fica bloqueado
 	var tool_ok: bool = oficina == null or oficina.is_ore_unlocked(ore_type)
 	# no nível 2, também precisa da descida aberta (escavadeira pronta)
@@ -94,12 +122,35 @@ func on_unlock_changed(animate: bool = true) -> void:
 	if env != null and env.has_method("is_abyss") and env.is_abyss(global_position):
 		var abyss := get_tree().get_first_node_in_group("elevador_abismo")
 		_needs_descent = _needs_descent or not (abyss != null and abyss.unlocked)
-	_unlocked = tool_ok and not _needs_descent
+	# Bloco 33: galeria lacrada até a vila chegar no estágio
+	var hub := get_tree().get_first_node_in_group("village_hub")
+	_needs_village = hub != null and hub.level < min_village_level
+	_unlocked = tool_ok and not _needs_descent and not _needs_village
+	_update_rubble(was_sealed and animate)
 	if _unlocked and not was and animate:
 		var pop := create_tween()
 		_visual.scale = _base_scale * 1.25
 		pop.tween_property(_visual, "scale", _base_scale, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_update_visual()
+
+
+## Entulho aparece enquanto lacrada; ao abrir (animate) ele "desmancha" e some.
+func _update_rubble(animate: bool) -> void:
+	if _rubble == null:
+		return
+	if _needs_village:
+		_rubble.visible = true
+		_rubble.modulate = Color.WHITE
+		_rubble.scale = Vector2(2, 2)
+		return
+	if not animate or not _rubble.visible:
+		_rubble.visible = false
+		return
+	Audio.boom(global_position)
+	var t := create_tween().set_parallel()
+	t.tween_property(_rubble, "scale", Vector2(2.6, 0.6), 0.5).set_ease(Tween.EASE_IN)
+	t.tween_property(_rubble, "modulate:a", 0.0, 0.5)
+	t.chain().tween_callback(func(): _rubble.visible = false)
 
 
 func has_ore() -> bool:
@@ -143,12 +194,15 @@ func _update_visual() -> void:
 	_visual.scale = _base_scale * s
 	# tremidinha enquanto alguém bate com a picareta
 	_visual.position.x = sin(_hit_time * 40.0) * 1.0 if _hit_time > 0.0 else 0.0
-	_padlock.visible = not _unlocked
+	_padlock.visible = not _unlocked and not _needs_village  # lacrada: o entulho já diz tudo
 	if not _unlocked:
 		_visual.modulate = Color(0.42, 0.42, 0.5)
 		var oficina := get_tree().get_first_node_in_group("oficina")
 		var tool: String = oficina.tool_for_ore(ore_type) if oficina else ""
-		if _needs_descent:
+		if _needs_village:
+			var hub := get_tree().get_first_node_in_group("village_hub")
+			_label.text = "Galeria lacrada (%s)\nabre com a vila: %s" % [Ores.display_name(ore_type).to_lower(), hub.stage_name(min_village_level) if hub else "?"]
+		elif _needs_descent:
 			_label.text = "%s: fechado até a\nescavadeira ficar pronta" % Ores.display_name(ore_type)
 		else:
 			_label.text = "%s: precisa de\n%s" % [Ores.display_name(ore_type), oficina.TOOL_NAMES[tool] if tool != "" else "?"]

@@ -5,6 +5,16 @@ extends "res://scripts/props/station.gd"
 ## - "Expandir a vila": sobe o estágio (1 a 5). Precisa de um marco de minério
 ##   coletado no total (tudo que já entrou nos armazéns, mesmo o que foi vendido)
 ##   e custa créditos.
+##   Bloco 33 — o que EXPANDIR faz (e o que NÃO faz):
+##     * NÃO muda o tamanho do mapa: a mina (map_rect do environment) é fixa.
+##     * Abre uma GALERIA LACRADA dentro da mina de sempre (nível 1): uma jazida atrás
+##       de entulho (mineral_node: min_village_level). 2 Vilarejo = ferro (oeste),
+##       3 Vila = cobre (sudeste), 4 Vila Mineira = carvão (norte), 5 Cidade Mineira =
+##       veio rico de ferro (nordeste). Cobre e carvão ainda pedem a ferramenta da Oficina.
+##     * Continua liberando o que pede "vila nível N" (melhorias, peças da Escavadeira,
+##       ferramentas, laboratório, escudo, conserto do abismo).
+##     * Os NÍVEIS DE PROFUNDIDADE são outra coisa e não mudaram: o nível 2 abre com a
+##       Escavadeira pronta (elevador) e o abismo com o conserto da plataforma.
 ## - Melhorias compradas com créditos + minério do armazém. Cada melhoria só pode
 ##   ter no máximo tantos níveis quanto o estágio atual da vila.
 ##     Moradias:         +workers_per_moradia no limite de ipezinhos e uma casa
@@ -26,6 +36,7 @@ signal upgrade_bought(id: String, new_level: int)
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
+const Ores := preload("res://scripts/core/ores.gd")
 const STAGE_NAMES := ["Acampamento", "Vilarejo", "Vila", "Vila Mineira", "Cidade Mineira"]
 const UPGRADE_IDS := ["moradias", "enfermaria", "trilhas"]
 const CASA_SCENE := preload("res://scenes/props/casa.tscn")
@@ -172,7 +183,47 @@ func _finish_expansion() -> void:
 	_update_visual()
 	_popup("A vila agora é: %s!" % stage_name(), Color(1.0, 0.85, 0.4))
 	Audio.recruit()
+	_refresh_galleries(true)
+	var opened := galleries_for_level(level)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud and not opened.is_empty():
+		var names: Array[String] = []
+		for m in opened:
+			names.append(_gallery_text(m))
+		hud.show_banner("A VILA AGORA É: %s" % stage_name().to_upper(),
+			"Galeria aberta dentro da mina: %s." % ", ".join(names))
 	level_changed.emit(level)
+
+
+# ------------------------------------------------------------ galerias lacradas (Bloco 33)
+## Jazidas que abrem quando a vila chega nesse estágio.
+func galleries_for_level(lvl: int) -> Array:
+	return get_tree().get_nodes_in_group("minerios").filter(
+		func(m): return m.get("min_village_level") == lvl)
+
+
+## "galeria oeste (ferro)" (+ a ferramenta que ainda falta, se faltar).
+func _gallery_text(m: Node) -> String:
+	var t := "galeria %s (%s)" % [m.gallery_name, Ores.display_name(m.ore_type).to_lower()]
+	var oficina := get_tree().get_first_node_in_group("oficina")
+	if oficina and not oficina.is_ore_unlocked(m.ore_type):
+		t += " — precisa de %s" % oficina.TOOL_NAMES[oficina.tool_for_ore(m.ore_type)]
+	return t
+
+
+## O que o estágio `lvl` libera (pro painel da vila).
+func stage_unlocks_text(lvl: int) -> String:
+	var parts: Array[String] = []
+	for m in galleries_for_level(lvl):
+		parts.append(_gallery_text(m))
+	parts.append("melhorias até o nível %d" % lvl)
+	return ", ".join(parts)
+
+
+func _refresh_galleries(animate: bool) -> void:
+	for m in get_tree().get_nodes_in_group("minerios"):
+		if m.has_method("on_unlock_changed"):
+			m.on_unlock_changed(animate)
 
 
 # ------------------------------------------------------------ melhorias
@@ -504,3 +555,4 @@ func load_save_data(d: Dictionary) -> void:
 	upgrade_left = clampf(SaveUtil.num(d, "upgrade_left", upgrade_total), 0.0, upgrade_total)
 	_obra.load_save_data(SaveUtil.dict(d, "obra"))
 	_update_visual()
+	_refresh_galleries(false)  # Bloco 33: galerias batem com o estágio carregado

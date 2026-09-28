@@ -1,0 +1,73 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/arsenal.gd" id="1_arsenal"]
+[ext_resource type="Texture2D" path="res://assets/game/arsenal.png" id="2_sprite"]
+[ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="3_shadow"]
+[ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="4_light"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_arsenal"]
+radius = 52.0
+
+[sub_resource type="Gradient" id="Gradient_sparks"]
+offsets = PackedFloat32Array(0, 0.4, 1)
+colors = PackedColorArray(1, 0.95, 0.7, 1, 1, 0.6, 0.15, 1, 0.6, 0.15, 0.05, 0)
+
+[node name="Arsenal" type="Area2D"]
+script = ExtResource("1_arsenal")
+slot_count = 3
+slot_radius = Vector2(44, 16)
+slot_arc_deg = 120.0
+auto_fit_area = false
+obstacle_size = Vector2(42, 8)
+obstacle_offset = Vector2(0, -10)
+obstacle_is_rect = true
+
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -4
+position = Vector2(2, -2)
+scale = Vector2(5.4, 1.8)
+texture = ExtResource("3_shadow")
+
+[node name="Visual" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("2_sprite")
+hframes = 4
+offset = Vector2(0, -19)
+
+[node name="Sparks" type="CPUParticles2D" parent="."]
+position = Vector2(-26, -76)
+emitting = false
+amount = 10
+lifetime = 0.7
+explosiveness = 0.2
+direction = Vector2(0, -1)
+spread = 35.0
+gravity = Vector2(0, 60)
+initial_velocity_min = 25.0
+initial_velocity_max = 60.0
+scale_amount_min = 1.5
+scale_amount_max = 2.5
+color_ramp = SubResource("Gradient_sparks")
+
+[node name="ForgeLight" type="PointLight2D" parent="."]
+position = Vector2(-10, -30)
+enabled = false
+color = Color(1, 0.62, 0.3, 1)
+energy = 0.8
+texture = ExtResource("4_light")
+texture_scale = 0.6
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_arsenal")
+
+[node name="StatusLabel" type="Label" parent="."]
+offset_left = -110.0
+offset_top = -150.0
+offset_right = 110.0
+offset_bottom = -82.0
+theme_override_colors/font_outline_color = Color(0.03, 0.03, 0.03, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+text = "Arsenal"
+horizontal_alignment = 1
+vertical_alignment = 2

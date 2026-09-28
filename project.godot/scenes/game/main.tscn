@@ -147,6 +147,29 @@ position = Vector2(-200, -380)
 [node name="JazidaCarvao2" parent="World" instance=ExtResource("37_carvao")]
 position = Vector2(390, -370)
 
+[node name="GaleriaOeste" parent="World" instance=ExtResource("5_j7lav")]
+position = Vector2(-630, 30)
+ore_total = 300.0
+min_village_level = 2
+gallery_name = "oeste"
+
+[node name="GaleriaSudeste" parent="World" instance=ExtResource("36_cobre")]
+position = Vector2(620, 340)
+min_village_level = 3
+gallery_name = "sudeste"
+
+[node name="GaleriaNorte" parent="World" instance=ExtResource("37_carvao")]
+position = Vector2(190, -350)
+min_village_level = 4
+gallery_name = "norte"
+
+[node name="GaleriaNordeste" parent="World" instance=ExtResource("5_j7lav")]
+position = Vector2(630, -310)
+ore_total = 500.0
+regen_rate = 0.8
+min_village_level = 5
+gallery_name = "nordeste"
+
 [node name="Arvore" parent="World" instance=ExtResource("39_arvore")]
 position = Vector2(-190, -790)
 
@@ -217,7 +240,7 @@ position = Vector2(330, 1540)
 position = Vector2(-280, 1840)
 
 [node name="Horta" parent="World" instance=ExtResource("38_horta")]
-position = Vector2(320, 60)
+position = Vector2(-100, -650)
 
 [node name="Ipezinho" parent="World" unique_id=1756047734 instance=ExtResource("2_oekm8")]
 position = Vector2(0, -60)

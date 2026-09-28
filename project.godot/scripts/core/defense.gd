@@ -10,7 +10,22 @@ extends Node
 ##   - Ferrugentos sobem pelo poço do elevador (barricada "poco") — só depois que
 ##     o nível 2 abre (a escavação acordou eles).
 ## Ao amanhecer os que sobraram vão embora (creature.gd -> leave_at_dawn).
-## Os guardas (ipezinho com a função "guarda") usam a melhor arma forjada aqui.
+##
+## ARSENAL + DESGASTE (Bloco 35):
+##   - O Arsenal é um prédio que o jogador posiciona (como a taverna) e o engenheiro ergue.
+##     As armas são forjadas LÁ, numa fila de encomendas que só anda com engenheiro
+##     trabalhando no Arsenal (interface de obra). Arma pronta vai pro cavalete (rack).
+##   - Cada guarda tem a SUA arma (ipezinho.weapon) com durabilidade: cada golpe numa
+##     invasão gasta 1 (weapon_durability). Zerou, quebra: o guarda fica desarmado (soco,
+##     unarmed_damage) até ir ao Arsenal. Lá ele deixa a quebrada e pega a melhor do
+##     cavalete; cavalete vazio = um porrete (de graça, sempre tem). Sem Arsenal, fica no soco.
+##   - Decisão: FORJAR x CONSERTAR. Forjar faz uma arma nova do zero (custo cheio). A arma
+##     quebrada vai pra pilha "para consertar"; consertar custa repair_cost_mult do custo
+##     (créditos, minério e madeira) e repair_time_mult do tempo, e volta pro cavalete.
+##     Porrete não se conserta (é de graça). De dia, guarda com arma pior troca por uma
+##     melhor do cavalete e a dele, usada, vai pra pilha de conserto.
+##   - `weapons` = armas que a vila JÁ SABE fazer (forjou pelo menos uma vez): libera a
+##     próxima da lista. O primeiro porrete de cada guarda vem de casa.
 
 signal invasion_started(wave: int)
 signal invasion_ended(killed: int)
@@ -21,6 +36,8 @@ const FERRUGENTO := preload("res://scenes/creatures/ferrugento.tscn")
 const CAMPO_SCENE := preload("res://scenes/props/campo_treino.tscn")
 const CAMPO_TEXTURE := preload("res://assets/game/campo_treino.png")
 const Canteiro := preload("res://scripts/props/canteiro.gd")
+const ARSENAL_SCENE := preload("res://scenes/props/arsenal.tscn")
+const ARSENAL_TEXTURE := preload("res://assets/game/arsenal.png")
 const WEAPON_IDS := ["porrete", "lanca", "besta", "lanca_prata"]
 const WEAPON_NAMES := {
 	"porrete": "Porrete",
@@ -43,7 +60,27 @@ const WEAPON_DESCRIPTIONS := {
 ## x = créditos, y = minério, z = madeira.
 @export var weapon_costs: Array[Vector3i] = [Vector3i.ZERO, Vector3i(150, 40, 20), Vector3i(350, 40, 40), Vector3i(600, 60, 20)]
 @export var weapon_ore: Array[String] = ["", "ferro", "cobre", "prata"]
+## Segundos de ENGENHEIRO no Arsenal pra forjar cada arma (Bloco 35: só anda com engenheiro).
 @export var weapon_time: Array[float] = [0.0, 40.0, 60.0, 80.0]
+## Bloco 35: golpes que cada arma aguenta antes de quebrar (cada ataque numa invasão gasta 1).
+@export var weapon_durability: Array[int] = [30, 45, 55, 70]
+## Consertar custa essa fração do custo de forjar (créditos, minério e madeira)...
+@export_range(0.1, 1.0) var repair_cost_mult: float = 0.4
+## ...e essa fração do tempo de forja.
+@export_range(0.1, 1.0) var repair_time_mult: float = 0.5
+## Desarmado (a arma quebrou): luta no soco.
+@export var unarmed_damage: float = 1.5
+@export var unarmed_range: float = 16.0
+
+@export_group("Arsenal (Bloco 35)")
+@export var arsenal_credits: int = 150
+## Pedra (minério de ferro) e madeira pra erguer o Arsenal.
+@export var arsenal_ore: int = 40
+@export var arsenal_wood: int = 60
+## Segundos de engenheiro pra erguer o Arsenal.
+@export var arsenal_build_time: float = 40.0
+## Máximo de encomendas na fila da forja.
+@export var forge_queue_max: int = 4
 
 @export_group("Campo de treino")
 @export var campo_credits: int = 120
@@ -66,10 +103,14 @@ const WEAPON_DESCRIPTIONS := {
 ## As criaturas vão chegando ao longo desses segundos do começo da noite.
 @export var spawn_spread: float = 20.0
 
-## Armas já forjadas (o porrete já vem).
+## Armas que a vila já sabe fazer (forjou pelo menos uma vez; o porrete já vem).
 var weapons: Array = ["porrete"]
-var forging: String = ""
-var forge_left: float = 0.0
+## Bloco 35: armas prontas no cavalete do Arsenal e quebradas esperando conserto (id -> qtd).
+var rack: Dictionary = {}
+var broken: Dictionary = {}
+## Fila da forja: [{what: "forjar"/"consertar", id, left, total, ordered_at}]. A primeira é
+## a que o engenheiro está fazendo.
+var queue: Array = []
 var wave: int = 0
 ## Dia em que a defesa começou nesta partida (-1 = ainda não sabe).
 var start_day: int = -1
@@ -145,6 +186,7 @@ func guards() -> Array:
 	return get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return w.is_guard())
 
 
+## A melhor arma que a vila já sabe forjar.
 func best_weapon() -> String:
 	var best := "porrete"
 	for id in WEAPON_IDS:
@@ -153,10 +195,11 @@ func best_weapon() -> String:
 	return best
 
 
-func weapon_damage_vs(target: Node) -> float:
-	var i := WEAPON_IDS.find(best_weapon())
-	var dmg: float = weapon_damage[i]
-	if target != null and target.get("kind") == "ferrugento":
+## Dano de um golpe com essa arma ("" = desarmado, no soco).
+func weapon_damage_vs(target: Node, weapon_id: String = "") -> float:
+	var i := WEAPON_IDS.find(weapon_id)
+	var dmg: float = weapon_damage[i] if i >= 0 else unarmed_damage
+	if i >= 0 and target != null and target.get("kind") == "ferrugento":
 		dmg *= weapon_vs_ferrugento[i]
 	var res := get_tree().get_first_node_in_group("research")
 	if res:
@@ -164,8 +207,19 @@ func weapon_damage_vs(target: Node) -> float:
 	return dmg
 
 
-func weapon_reach() -> float:
-	return weapon_range[WEAPON_IDS.find(best_weapon())]
+func weapon_reach(weapon_id: String = "") -> float:
+	var i := WEAPON_IDS.find(weapon_id)
+	return weapon_range[i] if i >= 0 else unarmed_range
+
+
+func weapon_max_durability(weapon_id: String) -> float:
+	var i := WEAPON_IDS.find(weapon_id)
+	return float(weapon_durability[i]) if i >= 0 and i < weapon_durability.size() else 0.0
+
+
+## Guardas sem arma nenhuma.
+func unarmed_guards() -> Array:
+	return guards().filter(func(w): return w.weapon == "")
 
 
 ## Posto de cada guarda: metade no túnel, metade no poço (se o nível 2 abriu).
@@ -189,23 +243,108 @@ func guard_post(worker: Node) -> Vector2:
 	return base + Vector2(-24.0 + 16.0 * (slot % 4), 10.0 * floorf(slot / 4.0))
 
 
-# ------------------------------------------------------------ armas
+# ------------------------------------------------------------ armas / Arsenal (Bloco 35)
+func arsenal() -> Node:
+	return get_tree().get_first_node_in_group("arsenais")
+
+
+func rack_count(id: String) -> int:
+	return int(rack.get(id, 0))
+
+
+func broken_count(id: String) -> int:
+	return int(broken.get(id, 0))
+
+
+func rack_total() -> int:
+	var n := 0
+	for id in rack:
+		n += int(rack[id])
+	return n
+
+
+func broken_total() -> int:
+	var n := 0
+	for id in broken:
+		n += int(broken[id])
+	return n
+
+
+## Melhor arma do cavalete que é MELHOR que `than` ("" = qualquer). "" se não tem.
+func better_in_rack(than: String) -> String:
+	var best := ""
+	for i in range(WEAPON_IDS.find(than) + 1, WEAPON_IDS.size()):
+		if rack_count(WEAPON_IDS[i]) > 0:
+			best = WEAPON_IDS[i]
+	return best
+
+
+## O guarda chegou no Arsenal: deixa a quebrada (e a usada, se trocar) e pega a melhor.
+func swap_weapon(worker: Node) -> void:
+	if worker.broken_weapon != "":
+		if worker.broken_weapon != "porrete":  # porrete quebrado vai pro fogo
+			broken[worker.broken_weapon] = broken_count(worker.broken_weapon) + 1
+		worker.broken_weapon = ""
+	var cur: String = worker.weapon
+	var best := better_in_rack(cur)
+	if best != "":
+		_take_from(rack, best)
+		if cur != "" and cur != "porrete":
+			# a dele volta: inteira pro cavalete, usada pra pilha de conserto
+			var full: bool = worker.weapon_durability >= weapon_max_durability(cur) - 0.01
+			var pile: Dictionary = rack if full else broken
+			pile[cur] = int(pile.get(cur, 0)) + 1
+		worker.equip(best)
+	elif cur == "":
+		worker.equip("porrete")  # cavalete vazio: porrete, que sempre tem
+	_arsenal_refresh()
+
+
+func _take_from(pile: Dictionary, id: String) -> void:
+	pile[id] = int(pile.get(id, 0)) - 1
+	if pile[id] <= 0:
+		pile.erase(id)
+
+
+func weapon_cost(id: String) -> Vector3i:
+	return weapon_costs[WEAPON_IDS.find(id)]
+
+
+func repair_cost(id: String) -> Vector3i:
+	var c := weapon_cost(id)
+	return Vector3i(ceili(c.x * repair_cost_mult), ceili(c.y * repair_cost_mult), ceili(c.z * repair_cost_mult))
+
+
+## "" se pode encomendar a forja; senão o motivo.
 func weapon_block_reason(id: String) -> String:
-	if weapons.has(id):
-		return "pronta"
-	if forging == id:
-		return "forjando"
-	if forging != "":
-		return "forja ocupada"
+	if id == "porrete":
+		return "de graça no Arsenal"
+	if arsenal() == null:
+		return "precisa do Arsenal"
+	if queue.size() >= forge_queue_max:
+		return "fila da forja cheia"
 	var i := WEAPON_IDS.find(id)
 	var prev: String = WEAPON_IDS[i - 1] if i > 0 else ""
 	if prev != "" and not weapons.has(prev):
-		return "precisa: %s" % WEAPON_NAMES[prev]
+		return "precisa forjar antes: %s" % WEAPON_NAMES[prev]
 	var c := weapon_costs[i]
 	var eco := get_tree().get_first_node_in_group("economy")
 	return eco.missing_text(c.x, c.y, weapon_ore[i], c.z) if eco else "sem recursos"
 
 
+func repair_block_reason(id: String) -> String:
+	if arsenal() == null:
+		return "precisa do Arsenal"
+	if broken_count(id) <= 0:
+		return "nenhuma quebrada"
+	if queue.size() >= forge_queue_max:
+		return "fila da forja cheia"
+	var c := repair_cost(id)
+	var eco := get_tree().get_first_node_in_group("economy")
+	return eco.missing_text(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z) if eco else "sem recursos"
+
+
+## Paga e põe na fila da forja (só anda com engenheiro no Arsenal).
 func start_forge(id: String) -> bool:
 	if weapon_block_reason(id) != "":
 		Audio.error()
@@ -214,16 +353,132 @@ func start_forge(id: String) -> bool:
 	var c := weapon_costs[i]
 	if not get_tree().get_first_node_in_group("economy").spend(c.x, c.y, weapon_ore[i], c.z):
 		return false
-	forging = id
-	forge_left = weapon_time[i]
+	_enqueue("forjar", id, weapon_time[i])
 	return true
 
 
+## Paga o conserto (mais barato) e põe na fila; a quebrada sai da pilha e vai pra bigorna.
+func start_repair(id: String) -> bool:
+	if repair_block_reason(id) != "":
+		Audio.error()
+		return false
+	var c := repair_cost(id)
+	if not get_tree().get_first_node_in_group("economy").spend(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z):
+		return false
+	_take_from(broken, id)
+	_enqueue("consertar", id, weapon_time[WEAPON_IDS.find(id)] * repair_time_mult)
+	return true
+
+
+func _enqueue(what: String, id: String, seconds: float) -> void:
+	var t := maxf(seconds, 1.0)
+	queue.append({"what": what, "id": id, "left": t, "total": t, "ordered_at": Time.get_unix_time_from_system()})
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("%s: %s — na fila do Arsenal, precisa de engenheiro (tecla 4)." % [
+			"Forjar" if what == "forjar" else "Consertar", WEAPON_NAMES[id]], Color(1.0, 0.8, 0.45))
+	_arsenal_refresh()
+
+
+## "Forjar: Lança de ferro" da encomenda da vez.
+func forge_title() -> String:
+	if queue.is_empty():
+		return ""
+	var o: Dictionary = queue[0]
+	return "%s: %s" % ["Forjar" if o.what == "forjar" else "Consertar", WEAPON_NAMES.get(o.id, "?")]
+
+
 func forge_progress() -> float:
-	if forging == "":
+	if queue.is_empty():
 		return 0.0
-	var total: float = weapon_time[WEAPON_IDS.find(forging)]
-	return clampf(1.0 - forge_left / total, 0.0, 1.0) if total > 0.0 else 1.0
+	var o: Dictionary = queue[0]
+	return clampf(1.0 - float(o.left) / float(o.total), 0.0, 1.0) if float(o.total) > 0.0 else 1.0
+
+
+func forge_ordered_at() -> float:
+	return float(queue[0].ordered_at) if not queue.is_empty() else 0.0
+
+
+## O engenheiro trabalhou `seconds` no Arsenal: só assim a forja anda.
+func forge_work(seconds: float) -> void:
+	if queue.is_empty():
+		return
+	var o: Dictionary = queue[0]
+	o.left = float(o.left) - seconds
+	if o.left > 0.0:
+		return
+	queue.pop_front()
+	var id: String = o.id
+	rack[id] = rack_count(id) + 1
+	var first := not weapons.has(id)
+	if first:
+		weapons.append(id)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("%s %s! Está no cavalete do Arsenal: os guardas vêm buscar." % [
+			WEAPON_NAMES[id], "forjada" if o.what == "forjar" else "consertada"], Color(0.55, 1.0, 0.5))
+	var ars := arsenal()
+	Audio.forge(ars.global_position if ars else Vector2.ZERO)
+	# guardas com arma pior (ou sem nenhuma) já decidem ir buscar
+	for w in guards():
+		if w.weapon == "" or better_in_rack(w.weapon) != "":
+			w.wake_decision()
+	_arsenal_refresh()
+
+
+func _arsenal_refresh() -> void:
+	var ars := arsenal()
+	if ars and ars.has_method("refresh"):
+		ars.refresh()
+
+
+# ------------------------------------------------------------ construir o Arsenal
+func arsenal_block_reason() -> String:
+	if arsenal() != null:
+		return "construído"
+	var c := Canteiro.pending(get_tree(), "arsenal")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := get_tree().get_first_node_in_group("economy")
+	return eco.missing_text(arsenal_credits, arsenal_ore, "ferro", arsenal_wood) if eco else "sem recursos"
+
+
+func build_arsenal() -> bool:
+	if arsenal_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_arsenal, ARSENAL_TEXTURE, 4, "o Arsenal")
+	return true
+
+
+func _confirm_arsenal(pos: Vector2) -> bool:
+	if arsenal_block_reason() != "":
+		Audio.error()
+		return false
+	if not get_tree().get_first_node_in_group("economy").spend(arsenal_credits, arsenal_ore, "ferro", arsenal_wood):
+		return false
+	Canteiro.order(get_tree(), "arsenal", pos, arsenal_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Arsenal encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_arsenal(pos: Vector2) -> Node2D:
+	var a: Node2D = ARSENAL_SCENE.instantiate()
+	a.name = "Arsenal"
+	a.position = pos
+	get_tree().get_first_node_in_group("village_hub").get_parent().add_child(a)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
+	return a
 
 
 # ------------------------------------------------------------ campo de treino
@@ -264,6 +519,18 @@ func _confirm_campo(pos: Vector2) -> bool:
 
 ## Bloco 31b: o canteiro terminou (chamado por canteiro.gd).
 func finish_build(kind: String, pos: Vector2) -> void:
+	if kind == "arsenal":
+		if arsenal() != null:
+			return
+		var a := spawn_arsenal(pos)
+		a.pop_in()
+		Audio.recruit()
+		var h := get_tree().get_first_node_in_group("hud")
+		if h:
+			h.show_toast("Arsenal pronto! Forje armas aqui (G: Defesa); guarda desarmado vem buscar.", Color(0.55, 1.0, 0.5))
+		for w in guards():
+			w.wake_decision()
+		return
 	if kind != "campo" or campo() != null:
 		return
 	var c := spawn_campo(pos)
@@ -288,17 +555,7 @@ func spawn_campo(pos: Vector2) -> Node2D:
 
 # ------------------------------------------------------------ invasões
 func _process(delta: float) -> void:
-	if forging != "":
-		forge_left -= delta
-		if forge_left <= 0.0:
-			weapons.append(forging)
-			var hud := get_tree().get_first_node_in_group("hud")
-			if hud:
-				hud.show_toast("Arma nova: %s! Todos os guardas já usam." % WEAPON_NAMES[forging], Color(0.55, 1.0, 0.5))
-			var ofi := get_tree().get_first_node_in_group("oficina")
-			Audio.forge(ofi.global_position if ofi else Vector2.ZERO)
-			forging = ""
-			forge_left = 0.0
+	# (Bloco 35: a forja não anda mais sozinha — só com engenheiro no Arsenal, forge_work)
 	var dn := _dn()
 	if dn == null:
 		return
@@ -399,8 +656,9 @@ func end_invasion() -> void:
 func get_save_data() -> Dictionary:
 	var d := {
 		"weapons": weapons.duplicate(),
-		"forging": forging,
-		"forge_left": forge_left,
+		"rack": rack.duplicate(),
+		"broken": broken.duplicate(),
+		"queue": queue.duplicate(true),
 		"wave": wave,
 		"warned_day": _warned_day,
 		"start_day": start_day,
@@ -408,6 +666,9 @@ func get_save_data() -> Dictionary:
 	var c := campo()
 	if c:
 		d["campo"] = SaveUtil.vec2_to_array(c.global_position)
+	var a := arsenal()
+	if a:
+		d["arsenal"] = SaveUtil.vec2_to_array(a.global_position)
 	return d
 
 
@@ -416,10 +677,23 @@ func load_save_data(d: Dictionary) -> void:
 	for id in SaveUtil.array(d, "weapons"):
 		if id is String and id in WEAPON_IDS and not weapons.has(id):
 			weapons.append(id)
-	forging = SaveUtil.text(d, "forging", "")
-	if forging not in WEAPON_IDS or weapons.has(forging):
-		forging = ""
-	forge_left = maxf(SaveUtil.num(d, "forge_left", 0.0), 0.0) if forging != "" else 0.0
+	# Bloco 35 (save antigo: o SaveManager já passou a forja em andamento pra fila)
+	rack = _load_pile(SaveUtil.dict(d, "rack"))
+	broken = _load_pile(SaveUtil.dict(d, "broken"))
+	queue = []
+	for o in SaveUtil.array(d, "queue"):
+		if typeof(o) != TYPE_DICTIONARY:
+			continue
+		var id := SaveUtil.text(o, "id", "")
+		var what := SaveUtil.text(o, "what", "forjar")
+		if id not in WEAPON_IDS or id == "porrete" or what not in ["forjar", "consertar"]:
+			continue
+		var i := WEAPON_IDS.find(id)
+		var full_t: float = weapon_time[i] * (repair_time_mult if what == "consertar" else 1.0)
+		var total := maxf(SaveUtil.num(o, "total", full_t), 1.0)
+		queue.append({"what": what, "id": id, "total": total,
+			"left": clampf(SaveUtil.num(o, "left", total), 0.0, total),
+			"ordered_at": SaveUtil.num(o, "ordered_at", 0.0)})
 	wave = maxi(SaveUtil.integer(d, "wave", 0), 0)
 	_warned_day = SaveUtil.integer(d, "warned_day", -1)
 	start_day = SaveUtil.integer(d, "start_day", -1)
@@ -428,3 +702,18 @@ func load_save_data(d: Dictionary) -> void:
 		var pos := SaveUtil.vec2(d, "campo", Vector2.INF)
 		if pos != Vector2.INF:
 			spawn_campo(pos)
+	if d.has("arsenal") and arsenal() == null:
+		var apos := SaveUtil.vec2(d, "arsenal", Vector2.INF)
+		if apos != Vector2.INF:
+			spawn_arsenal(apos)
+	_arsenal_refresh()
+
+
+func _load_pile(src: Dictionary) -> Dictionary:
+	var out := {}
+	for id in src:
+		if id in WEAPON_IDS and id != "porrete":
+			var n := maxi(int(SaveUtil.num(src, id, 0.0)), 0)
+			if n > 0:
+				out[id] = n
+	return out

@@ -5,6 +5,9 @@ extends "res://scripts/props/station.gd"
 ## colheita, fica um tempo "colhida" e regenera sozinha.
 ## Bloco 27: dá matéria-prima CRUA (fruta). Só o CAÇADOR colhe (via harvest()) e leva
 ## pro armazém; o cozinheiro busca lá e prepara no comedouro.
+## Bloco 34: a horta fica NA CLAREIRA (main.tscn), junto das árvores e das tocas — os três
+## pontos de coleta "de fora". Dentro da mina só fica o preparo (comedouro). A posição
+## não vai no save: um save antigo carrega com a horta já no lugar novo.
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 

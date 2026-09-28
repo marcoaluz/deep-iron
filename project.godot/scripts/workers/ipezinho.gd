@@ -30,6 +30,7 @@ const STATE_LABELS := {
 	"guard": "de guarda",
 	"training": "treinando",
 	"research": "pesquisando",
+	"rearming": "indo ao Arsenal",
 }
 ## Distância da porta/cama a partir da qual o ipezinho "chega" em casa.
 const REST_REACH := 12.0
@@ -81,6 +82,7 @@ const STATE_GROUP := {
 	"leisure": "tavernas",
 	"training": "campos",
 	"research": "laboratorios",
+	"rearming": "arsenais",  # Bloco 35: guarda buscando/trocando a arma
 }
 ## Função (job) designada pelo jogador — Bloco 25: um campo só, com "ocioso" de padrão.
 ## Função nova (caçador, engenheiro...) = mais uma constante aqui + entrada em JOBS/JOB_LABELS
@@ -113,6 +115,12 @@ const JOB_OUTFIT := {
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
 const LANCA := preload("res://assets/game/lanca.png")
+## Bloco 35: cada arma tem o seu desenho na mão do guarda.
+const PORRETE := preload("res://assets/game/porrete.png")
+const BESTA := preload("res://assets/game/besta.png")
+const LANCA_PRATA := preload("res://assets/game/lanca_prata.png")
+const WEAPON_SPRITES := {"porrete": PORRETE, "lanca": LANCA, "besta": BESTA, "lanca_prata": LANCA_PRATA}
+const BROKEN_ICON := preload("res://assets/game/arma_quebrada.png")
 const AXE := preload("res://assets/game/axe.png")
 const WOOD_LOG := preload("res://assets/game/wood_log.png")
 const BOW := preload("res://assets/game/bow.png")
@@ -244,8 +252,9 @@ const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 @export var cook_carry: float = 12.0
 ## Segundos de preparo por unidade de matéria-prima (12 unidades x 0.8 = ~10 s por leva).
 @export var prep_time_per_raw: float = 0.8
-## Comida pronta que cada unidade de matéria-prima rende no comedouro.
-@export var food_per_raw: float = 1.0
+## Comida pronta que cada unidade de matéria-prima rende no comedouro. Bloco 33: cozinhar
+## RENDE — 1.25 = 10 de matéria-prima viram 12,5 de ração (era 1.0, sem ganho nenhum).
+@export var food_per_raw: float = 1.25
 
 @export_group("Caçador")
 ## Quantas unidades (fruta ou caça) o caçador carrega por viagem. Cada unidade de caça
@@ -365,6 +374,15 @@ var rad: float = 0.0
 var combat_hp: float = -1.0
 var _foe: Node2D = null
 var _attack_cd := 0.0
+## Bloco 35: a arma que ESTE guarda carrega ("" = desarmado) e quantos golpes ela ainda
+## aguenta (cada ataque numa invasão gasta 1; zerou, quebra).
+var weapon: String = ""
+var weapon_durability: float = 0.0
+## Arma quebrada que ele leva de volta pro Arsenal (vai pra pilha de conserto).
+var broken_weapon: String = ""
+## Todo ipezinho tem um porrete de casa: o primeiro vem de graça quando vira guarda.
+var got_porrete: bool = false
+var _broken_icon: Sprite2D
 var _hub_node: Node = null
 ## Preenchido pelo SaveManager antes de entrar na árvore (ipezinho vindo do save).
 var pending_save_data: Dictionary = {}
@@ -411,6 +429,12 @@ func _ready() -> void:
 	_strike_icon.scale = Vector2(1.5, 1.5)
 	_strike_icon.visible = false
 	add_child(_strike_icon)
+	_broken_icon = Sprite2D.new()
+	_broken_icon.texture = BROKEN_ICON
+	_broken_icon.position = Vector2(0, -46)
+	_broken_icon.scale = Vector2(2, 2)
+	_broken_icon.visible = false
+	add_child(_broken_icon)
 	_ensure_appearance()
 	_ensure_name()
 	_apply_accessories()
@@ -454,6 +478,11 @@ func get_state() -> String:
 
 
 func get_state_label() -> String:
+	if _ai_state == "rearming":
+		return "DESARMADO — indo ao Arsenal" if weapon == "" else "indo ao Arsenal trocar de arma"
+	if is_guard() and weapon == "" and _ai_state in ["guard", "training", "home"]:
+		var def := _defense()
+		return "DESARMADO — %s" % ("sem Arsenal pra pegar outra" if def == null or def.arsenal() == null else "esperando o Arsenal")
 	if _ai_state == "guard":
 		return "lutando!" if _foe != null and is_instance_valid(_foe) else "de guarda"
 	if _ai_state == "training":
@@ -482,7 +511,7 @@ func get_state_label() -> String:
 	if _ai_state == "idle" and is_cook():
 		return "esperando matéria-prima"
 	if _ai_state == "idle" and is_hunter():
-		return "sem fruta nem caça por perto"
+		return "sem fruta nem caça na clareira"
 	if _ai_state == "doctor":
 		if _on_duty == null:
 			return "indo pra enfermaria (plantão)"
@@ -776,7 +805,11 @@ func _choose_state() -> String:
 	if is_engineer():
 		return "building" if _pick_obra() != null else "idle"
 	# Guarda: à noite fica nos portões; de dia treina (até ficar pronto) e descansa.
+	# Bloco 35: desarmado vai ao Arsenal pegar outra arma (até de noite: sem arma no
+	# posto não adianta); de dia também troca por uma melhor que estiver no cavalete.
 	if is_guard():
+		if (_ai_state == "rearming" and _station_ok_for("rearming")) or (_wants_rearm() and _has_usable_station("arsenais")):
+			return "rearming"
 		if _is_night():
 			return "guard"
 		if combat_skill < 1.0 and ((_ai_state == "training" and _station_ok_for("training")) or _has_usable_station("campos")):
@@ -813,6 +846,8 @@ func _choose_state() -> String:
 	# Caçador (Bloco 27/28): caça tem PRIORIDADE (rende mais) quando tem arco e alguma toca
 	# com caça; com todas as tocas esgotadas, colhe fruta em vez de ficar parado; assim que
 	# uma toca volta, larga a fruta e volta a caçar (a mochila é a mesma: não perde nada).
+	# Bloco 34: horta e tocas ficam na clareira, então o caçador trabalha todo lá fora e só
+	# atravessa o túnel de volta pra deixar a matéria-prima no armazém.
 	if is_hunter():
 		if _ai_state == "hunting" and _station_ok_for("hunting"):
 			return "hunting"
@@ -979,6 +1014,8 @@ func _station_ok_for(state: String) -> bool:
 		return wood_carrying > 0.0
 	if state == "research":
 		return _station.is_usable()
+	if state == "rearming":
+		return is_guard() and _wants_rearm()
 	return true
 
 
@@ -1205,7 +1242,7 @@ func _guard_tick(delta: float) -> void:
 		if global_position.distance_to(post) > 10.0 and (not _moving or _target.distance_to(post) > 4.0):
 			_go_to(post)
 		return
-	var reach: float = def.weapon_reach() if def else 18.0
+	var reach: float = def.weapon_reach(weapon) if def else 18.0
 	var dist := global_position.distance_to(_foe.global_position)
 	if dist > reach:
 		if not _moving or _target.distance_to(_foe.global_position) > 12.0:
@@ -1216,9 +1253,92 @@ func _guard_tick(delta: float) -> void:
 	_work_timer = 0.3  # golpe
 	if _attack_cd <= 0.0:
 		_attack_cd = guard_attack_interval
-		var dmg: float = (def.weapon_damage_vs(_foe) if def else 3.0) * lerpf(untrained_damage_mult, 1.0, combat_skill)
+		var dmg: float = (def.weapon_damage_vs(_foe, weapon) if def else 3.0) * lerpf(untrained_damage_mult, 1.0, combat_skill)
 		_foe.take_hit(dmg, self)
 		Audio.hit(global_position)
+		_wear_weapon()
+
+
+# ------------------------------------------------------------ arma do guarda (Bloco 35)
+## Pega a arma (nova ou consertada: durabilidade cheia).
+func equip(id: String) -> void:
+	var def := _defense()
+	weapon = id
+	weapon_durability = def.weapon_max_durability(id) if def and id != "" else 0.0
+	_refresh_tool_texture()
+
+
+## 0..1 da durabilidade (pra HUD/painel).
+func weapon_condition() -> float:
+	var def := _defense()
+	var mx: float = def.weapon_max_durability(weapon) if def and weapon != "" else 0.0
+	return clampf(weapon_durability / mx, 0.0, 1.0) if mx > 0.0 else 0.0
+
+
+## "Lança de ferro 32/45" / "desarmado".
+func weapon_label() -> String:
+	var def := _defense()
+	if weapon == "":
+		return "desarmado"
+	var mx: float = def.weapon_max_durability(weapon) if def else 0.0
+	return "%s %d/%d" % [def.WEAPON_NAMES.get(weapon, weapon) if def else weapon, ceili(weapon_durability), roundi(mx)]
+
+
+## Cada golpe desferido gasta 1 de durabilidade; zerou, a arma quebra na mão.
+func _wear_weapon() -> void:
+	if weapon == "":
+		return
+	weapon_durability -= 1.0
+	if weapon_durability <= 0.0:
+		_break_weapon()
+
+
+func _break_weapon() -> void:
+	var def := _defense()
+	var nm: String = def.WEAPON_NAMES.get(weapon, weapon) if def else weapon
+	broken_weapon = weapon
+	weapon = ""
+	weapon_durability = 0.0
+	_refresh_tool_texture()
+	_popup("%s quebrou!" % nm, Color(1.0, 0.45, 0.35))
+	Audio.clank(global_position)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		var has_arsenal: bool = def != null and def.arsenal() != null
+		hud.show_toast("%s de %s quebrou! %s" % [nm, display_name,
+			"Vai ao Arsenal pegar outra." if has_arsenal else "Sem Arsenal, luta no soco (G: Defesa)."],
+			Color(1.0, 0.55, 0.4))
+	_decision_timer = 0.0  # já decide ir ao Arsenal
+
+
+## Quer ir ao Arsenal? Desarmado: sempre (se existe Arsenal). De dia: se tem arma
+## melhor no cavalete. (De noite, com arma na mão, fica no posto.)
+func _wants_rearm() -> bool:
+	if injured:
+		return false
+	var def := _defense()
+	if def == null or def.arsenal() == null:
+		return false
+	if weapon == "":
+		return true
+	if _is_night() or def.invasion_active:
+		return false
+	return def.better_in_rack(weapon) != ""
+
+
+## Arsenal chama enquanto ele está lá: devolve a quebrada/usada e pega a melhor que tiver.
+func rearm(_arsenal: Node) -> void:
+	if not is_guard() or _ai_state != "rearming":
+		return
+	var def := _defense()
+	if def == null:
+		return
+	var before := weapon
+	def.swap_weapon(self)
+	if weapon != before:
+		_popup("Pegou: %s" % def.WEAPON_NAMES.get(weapon, weapon), Color(0.55, 1.0, 0.5))
+		Audio.forge(global_position)
+	_decision_timer = 0.0
 
 
 ## Criatura bateu. Guarda de serviço aguenta (vida de luta); os outros se machucam.
@@ -1498,7 +1618,7 @@ func _hand_item() -> Texture2D:
 		ROLE_LUMBER:
 			return AXE
 		ROLE_GUARD:
-			return LANCA
+			return WEAPON_SPRITES.get(weapon, null)  # Bloco 35: a arma dele (desarmado: mãos vazias)
 		ROLE_COOK:
 			return FOOD_BASKET  # cesta (a carga, quando tem, vai por cima da cabeça como sempre)
 		ROLE_HUNTER:
@@ -1667,6 +1787,10 @@ func set_job(new_job: String) -> void:
 		_obra_stop()  # tirou do engenheiro: a obra pausa NA HORA, sem perder o feito (Bloco 31)
 	job = new_job
 	_popup(JOB_LABELS[job], Color(0.95, 0.9, 0.6) if job != ROLE_IDLE else Color(0.75, 0.75, 0.8))
+	# Bloco 35: o primeiro porrete vem de casa; depois disso, arma nova só no Arsenal
+	if job == ROLE_GUARD and weapon == "" and not got_porrete:
+		got_porrete = true
+		equip("porrete")
 	_apply_outfit()  # troca de roupa na hora (Bloco 26)
 	_prep_left = 0.0  # leva pela metade não vale pra outra função
 	_refresh_tool_texture()
@@ -1750,7 +1874,7 @@ func cook_tick(delta: float, space: float) -> float:
 	_prep_left = 0.0
 	if raw_carrying <= 0.001:
 		_clear_raw()
-	_popup("+%d comida pronta" % roundi(made), Color(0.7, 1.0, 0.55))
+	_popup("%d crua → +%d comida pronta" % [roundi(used), roundi(made)], Color(0.7, 1.0, 0.55))
 	_decision_timer = 0.0
 	return made
 
@@ -2165,11 +2289,12 @@ func _update_animation(delta: float) -> void:
 	if item != null and _tool.texture != item:
 		_tool.texture = item
 	var hanging := item == FOOD_BASKET or item == FORAGE_BASKET
-	var swings := item != null and not hanging and item != BOW
+	var upright := item == BOW or item == BESTA  # arco e besta ficam em pé na mão
+	var swings := item != null and not hanging and not upright
 	_tool.offset = Vector2(-item.get_width() * 0.5, -1.0) if hanging else Vector2(-5.5, -12.5)
 	_tool.position.x = 9.0 * _facing
 	_tool.scale = Vector2(2.0 * _facing, 2.0)
-	if hanging or item == BOW:
+	if hanging or upright:
 		_swing_time = 0.0
 		_prev_swing = 0.0
 		_swing_rising = false
@@ -2227,6 +2352,12 @@ func _update_animation(delta: float) -> void:
 		_body.position.x = sin(Time.get_ticks_msec() * 0.09) * 0.6
 	else:
 		_body.position.x = 0.0
+
+	# Bloco 35: guarda desarmado = lança quebrada piscando em cima da cabeça
+	_broken_icon.visible = is_guard() and weapon == "" and not _resting
+	if _broken_icon.visible:
+		_broken_icon.modulate = Color(1.0, 0.5, 0.45, 0.55 + 0.45 * absf(sin(Time.get_ticks_msec() * 0.005)))
+		_broken_icon.position.y = -46.0 - (2.0 if _body.frame % 2 == 1 else 0.0)
 
 	# pedrinha de minério em cima da cabeça, maior quanto mais carga
 	_cook_icon.visible = false  # Bloco 26: o chapéu agora faz parte do outfit do cozinheiro
@@ -2314,6 +2445,10 @@ func get_save_data() -> Dictionary:
 		"display_name": display_name,
 		"look": look,
 		"combat_skill": combat_skill,
+		"weapon": weapon,
+		"weapon_durability": weapon_durability,
+		"broken_weapon": broken_weapon,
+		"got_porrete": got_porrete,
 	}
 
 
@@ -2351,6 +2486,18 @@ func load_save_data(d: Dictionary) -> void:
 		var r := SaveUtil.text(d, "role", "")
 		job = r if r in [ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH] else ROLE_MINER
 	combat_skill = clampf(SaveUtil.num(d, "combat_skill", 0.0), 0.0, 1.0)
+	# Bloco 35 (save antigo: o SaveManager já pôs a melhor arma forjada nos guardas)
+	var wpn := SaveUtil.text(d, "weapon", "")
+	weapon = wpn if WEAPON_SPRITES.has(wpn) else ""
+	var def := get_tree().get_first_node_in_group("defense") if is_inside_tree() else null
+	var wmax: float = def.weapon_max_durability(weapon) if def and weapon != "" else 999.0
+	var wdur := SaveUtil.num(d, "weapon_durability", -1.0)
+	weapon_durability = (wmax if wdur < 0.0 else clampf(wdur, 0.0, wmax)) if weapon != "" else 0.0
+	if weapon != "" and weapon_durability <= 0.0:
+		weapon_durability = 1.0
+	var bw := SaveUtil.text(d, "broken_weapon", "")
+	broken_weapon = bw if WEAPON_SPRITES.has(bw) else ""
+	got_porrete = SaveUtil.boolean(d, "got_porrete", weapon != "" or broken_weapon != "")
 	wood_carrying = clampf(SaveUtil.num(d, "wood_carrying", 0.0), 0.0, lumber_carry)
 	food_carrying = clampf(SaveUtil.num(d, "food_carrying", 0.0), 0.0, cook_carry)
 	# Bloco 27 (save antigo: 0). Volume nunca passa do que cabe na mochila.

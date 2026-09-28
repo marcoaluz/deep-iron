@@ -1117,6 +1117,37 @@ def build_padlock():
     save(outline(pad(from_rows(rows, pal)), 0.5), "cadeado.png")
 
 
+def build_entulho():
+    """Bloco 33: galeria lacrada — monte de pedra desmoronada com duas tábuas em X
+    pregadas na frente (interditado). Fica na frente da jazida até a vila crescer."""
+    W, H = 28, 22
+    img = new(W, H)
+    rnd = random.Random(3301)
+    # monte de pedras: as de trás primeiro, as da frente por cima
+    for (w, h, seed, x, y) in ((10, 9, 3302, 2, 7), (11, 10, 3303, 15, 6), (9, 8, 3304, 9, 3),
+                               (8, 7, 3305, 0, 13), (12, 9, 3306, 8, 11), (8, 7, 3307, 19, 14)):
+        img.alpha_composite(rock(w, h, seed, moss=0.0, cracks=1, bright=-0.02), (x, y))
+    # poeira/cascalho na base
+    for _ in range(14):
+        x = rnd.randrange(1, W - 1)
+        px(img, x, H - 2 - rnd.randrange(2), rnd.choice((STONE_DARK, STONE, STONE_LIGHT)))
+    # tábuas em X (2 px de largura: luz em cima, sombra embaixo) com pregos
+    for (x0, y0, x1, y1) in ((3, 5, 24, 16), (24, 5, 3, 16)):
+        _line(img, x0, y0, x1, y1, WOOD_LIGHT)
+        _line(img, x0, y0 + 1, x1, y1 + 1, WOOD)
+        _line(img, x0, y0 + 2, x1, y1 + 2, WOOD_DARK)
+        nail(img, x0 + (1 if x1 > x0 else -2), y0 + 1)
+        nail(img, x1 + (-2 if x1 > x0 else 1), y1 + 1)
+    # faixa de perigo na tábua de cima (amarelo gasto / preto)
+    for i in range(0, 22):
+        x = 3 + i
+        y = round(5 + (16 - 5) * i / 21)
+        if (i // 3) % 2 == 0 and 6 <= i <= 15:
+            px(img, x, y, (170, 142, 60, 255))
+            px(img, x, y + 1, (132, 108, 46, 255))
+    save(outline(img, 0.5), "entulho.png")
+
+
 def build_pickaxe():
     # mantém 11x13 (o offset da cena depende disso); as bordas já são tons escuros do próprio metal
     rows = [
@@ -2934,6 +2965,171 @@ def build_defense():
     save(outline(pad(from_rows(rows, {"w": WOOD_LIGHT, "W": WOOD_DARK, "h": IRON_LIGHT, "H": IRON_HIGHLIGHT})), 0.5), "lanca.png")
 
 
+# ------------------------------------------------------------ Arsenal (Bloco 35)
+SLATE_RAMP = ((30, 33, 44, 255), (42, 47, 61, 255), (56, 63, 80, 255), (74, 83, 101, 255))  # ardósia do telhado
+
+
+def build_arsenal():
+    """Arsenal: casa de pedra com telhado de ardósia, porta de ferro com o brasão das
+    lanças cruzadas, chaminé da forja e um cavalete de armas do lado de fora.
+    4 quadros: 0 = parado / cavalete vazio, 1 = parado / com armas,
+               2 = forjando / vazio, 3 = forjando / com armas."""
+    W, H = 44, 36
+    rnd = random.Random(4435)
+    base = new(W, H)
+    # chaminé de pedra (à esquerda)
+    for y in range(0, 12):
+        for x in range(4, 9):
+            px(base, x, y, dither(STONE_RAMP, 0.62 - (x - 4) * 0.1, x, y))
+    rect(base, 3, 0, 9, 1, STONE_LIGHT)
+    rect(base, 5, 0, 7, 0, STONE_BLACK)
+    # telhado de ardósia em duas águas
+    cx = 16
+    for y in range(5, 15):
+        half = 4 + (y - 5) * 1.5
+        for x in range(1, 32):
+            if abs(x - cx) > half:
+                continue
+            if 4 <= x <= 8 and y < 8:
+                continue  # chaminé na frente do telhado
+            t = 0.72 - (y - 5) * 0.04 - (0.22 if x > cx else 0.0)
+            if y % 2 == 0 and (x + y) % 4 == 0:
+                t = 0.08  # junta entre as placas
+            px(base, x, y, dither(SLATE_RAMP, t, x, y))
+    rect(base, 1, 14, 31, 14, SLATE_RAMP[0])
+    # paredes de pedra em blocos
+    for y in range(15, 31):
+        for x in range(2, 31):
+            joint = y % 4 == 0 or (x + (y // 4) * 3) % 6 == 0
+            t = 0.2 if joint else 0.62 - (y - 15) * 0.015 - (0.18 if x > 26 else 0.0)
+            px(base, x, y, dither(STONE_RAMP, t + rnd.uniform(-0.03, 0.03), x, y))
+    # porta de madeira com faixas de ferro
+    for y in range(21, 31):
+        for x in range(13, 20):
+            if y == 21 and x in (13, 19):
+                continue  # topo arredondado
+            px(base, x, y, dither(WOOD_RAMP, 0.55 - (0.15 if x % 2 else 0.0), x, y))
+    for y in (23, 28):
+        rect(base, 13, y, 19, y, IRON_DARK)
+        px(base, 14, y, IRON_LIGHT)
+    px(base, 18, 26, BRASS)  # argola
+    # brasão: duas lanças cruzadas sobre um escudinho
+    _line(base, 12, 20, 20, 15, WOOD_LIGHT)
+    _line(base, 20, 20, 12, 15, WOOD_LIGHT)
+    for (x, y) in ((20, 15), (12, 15)):
+        px(base, x, y, IRON_HIGHLIGHT)
+    rect(base, 15, 16, 17, 18, RUST)
+    px(base, 16, 19, RUST_DARK)
+    px(base, 16, 17, RUST_ACCENT)
+    # fundação
+    for x in range(1, 32):
+        for y in (31, 32):
+            px(base, x, y, dither(STONE_RAMP, 0.45 if y == 31 else 0.22, x, y))
+    # cavalete de armas lá fora (à direita)
+    for x0 in (33, 42):
+        for y in range(18, 32):
+            px(base, x0, y, WOOD_LIGHT if x0 == 33 else WOOD)
+            px(base, x0, y + 0, WOOD_LIGHT if x0 == 33 else WOOD_DARK)
+    rect(base, 33, 20, 42, 20, WOOD_DARK)
+    rect(base, 33, 28, 42, 28, WOOD_DARK)
+    rect(base, 33, 20, 42, 20, WOOD)
+    for x in range(32, 44):
+        px(base, x, 32, dither(STONE_RAMP, 0.3, x, 32))
+
+    def stocked(img):
+        # lanças em pé no cavalete (ponta de ferro, uma de prata)
+        for i, x in enumerate((35, 38, 41)):
+            top = 11 + (i % 2) * 2
+            rect(img, x, top + 2, x, 30, WOOD_LIGHT if i != 1 else WOOD)
+            tip = SILVER_GLINT if i == 2 else IRON_HIGHLIGHT
+            px(img, x, top, tip)
+            px(img, x, top + 1, IRON_LIGHT if i != 2 else SILVER_LIGHT)
+            px(img, x - 1, top + 2, IRON_DARK)  # rebarba da ponta
+            px(img, x + 1, top + 2, IRON_DARK)
+
+    def hot(img):
+        for (x0, x1) in ((6, 7), (25, 26)):  # janelas de seteira acesas
+            for y in range(19, 24):
+                for x in range(x0, x1 + 1):
+                    px(img, x, y, WINDOW_LIT if y > 19 else WINDOW_BRIGHT)
+        for x in range(4, 9):  # boca da chaminé em brasa
+            px(img, x, 1, TORCH_GLOW if x in (5, 6, 7) else TORCH_FLAME)
+        px(img, 6, 0, TORCH_BRIGHT)
+
+    def cold(img):
+        for (x0, x1) in ((6, 7), (25, 26)):
+            for y in range(19, 24):
+                for x in range(x0, x1 + 1):
+                    px(img, x, y, WALL_VOID if y > 20 else WALL_SHADOW)
+
+    frames = []
+    for forging in (False, True):
+        for full in (False, True):
+            img = base.copy()
+            (hot if forging else cold)(img)
+            if full:
+                stocked(img)
+            frames.append(outline(pad(img), 0.5))
+    sheet = new(frames[0].width * 4, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "arsenal.png")
+
+    # armas na mão do guarda (mesmo desenho/escala da lança: cabo do canto de baixo-esquerdo)
+    rows = [
+        "..........oO",
+        ".........oOo",
+        "........oOo.",
+        ".......wOo..",
+        "......w.....",
+        ".....w......",
+        "....w.......",
+        "...w........",
+        "..w.........",
+        ".W..........",
+        "W...........",
+    ]
+    save(outline(pad(from_rows(rows, {"w": WOOD_LIGHT, "W": WOOD_DARK, "o": WOOD, "O": WOOD_HIGHLIGHT})), 0.5), "porrete.png")
+    rows = [
+        "..........hH",
+        ".........wHh",
+        "........w...",
+        ".......w....",
+        "......w.....",
+        ".....w......",
+        "....w.......",
+        "...w........",
+        "..w.........",
+        ".W..........",
+        "W...........",
+    ]
+    save(outline(pad(from_rows(rows, {"w": (70, 58, 60, 255), "W": (48, 40, 44, 255), "h": SILVER_LIGHT, "H": SILVER_GLINT})), 0.5), "lanca_prata.png")
+    # besta: segurada em pé como o arco (coronha de madeira + arco de cobre + corda)
+    rows = [
+        "........C...",
+        "......s.c...",
+        "....s...c...",
+        "WWwwwwwwwwhH",
+        "....s...c...",
+        "......s.c...",
+        "........C...",
+    ]
+    save(outline(pad(from_rows(rows, {"w": WOOD_LIGHT, "W": WOOD_DARK, "c": COPPER, "C": COPPER_LIGHT, "s": (200, 190, 170, 255),
+                                      "h": IRON_LIGHT, "H": IRON_HIGHLIGHT})), 0.5), "besta.png")
+    # ícone de arma quebrada (em cima da cabeça do guarda desarmado)
+    rows = [
+        ".......hH",
+        "......whh",
+        ".....w...",
+        "....w....",
+        ".........",
+        "...w.....",
+        "..w......",
+        ".W.......",
+    ]
+    save(outline(pad(from_rows(rows, {"w": WOOD_LIGHT, "W": WOOD_DARK, "h": IRON_LIGHT, "H": IRON_HIGHLIGHT})), 0.5), "arma_quebrada.png")
+
+
 LAB_GLOW = (120, 230, 150, 255)
 LAB_GLOW_DIM = (60, 150, 100, 255)
 
@@ -3577,6 +3773,7 @@ if __name__ == "__main__":
     build_oficina()
     build_pickaxe_steel()
     build_padlock()
+    build_entulho()
     build_comedouro()
     build_horta()
     build_toca()
@@ -3601,6 +3798,7 @@ if __name__ == "__main__":
     build_abyss()
     build_creatures()
     build_defense()
+    build_arsenal()
     build_lab()
     build_escudo()
     build_food_icons()

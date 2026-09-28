@@ -50,8 +50,10 @@ extends Node
 ##     last_festa_day e a taverna {position, level} (recriada antes dos ipezinhos).
 ##     No ipezinho: happiness (save antigo começa em happiness_start).
 ##   defense.gd (nó Defense, Bloco 21)
-##     weapons (forjadas), forging, forge_left, wave, warned_day e o campo de treino
-##     {posição}. Barricadas pelo nome do nó: level, hp. No ipezinho: combat_skill
+##     weapons (receitas já forjadas), wave, warned_day e o campo de treino {posição}.
+##     Bloco 35: rack (armas no cavalete), broken (pra consertar), queue (fila da forja:
+##     what/id/left/total/ordered_at) e o Arsenal {posição}. No ipezinho: weapon,
+##     weapon_durability, broken_weapon, got_porrete. Barricadas pelo nome do nó: level, hp. No ipezinho: combat_skill
 ##     (e role "guarda"). Criaturas NÃO vão pro save (carregar de noite encerra a invasão).
 ##   diary.gd (nó Diary): pages [{id, day}].
 ##   sun.gd (nó Sun, Bloco 23): onda do dia (wave_today, wave_at, wave_left,
@@ -103,6 +105,11 @@ extends Node
 ##   Bloco 25 (save_version 3): ipezinho.gd "job" substitui "role" — ocioso, minerador,
 ##     cozinheiro, lenhador, guarda, pesquisador. Save < 3: role "" vira "minerador"
 ##     (ver _migrate), então ninguém que trabalhava fica parado ao carregar.
+##   Bloco 35 (save_version 4): arma por guarda com desgaste. Save < 4: cada guarda recebe a
+##     melhor arma que a vila já tinha forjado (durabilidade cheia) e a forja que andava
+##     sozinha (forging/forge_left) vira a primeira encomenda da fila do Arsenal.
+##   Bloco 33/34: nada novo no save — galerias lacradas saem do estágio da vila e a horta
+##     (pelo nome do nó) carrega já no lugar novo, na clareira.
 ##   camera_controller.gd (Camera2D)
 ##     posição e zoom (conforto: volta a olhar pro mesmo lugar).
 ##
@@ -127,7 +134,8 @@ const LEGACY_BACKUP_PATH := "user://savegame_backup.json"
 ## JSON ilegível vai pra cá (pra dar pra investigar), e o jogo começa do zero.
 const CORRUPT_PATH := "user://savegame_corrompido.json"
 ## 3 = Bloco 25: função única "job" por ipezinho ("ocioso" de padrão).
-const SAVE_VERSION := 3
+## 4 = Bloco 35: arma e durabilidade por guarda; fila da forja no Arsenal.
+const SAVE_VERSION := 4
 ## Versão 1 tinha 4 lotes fixos na cena; um lote construído vira casa posicionada no mesmo lugar.
 const LEGACY_LOTS := {
 	"Lote1": Vector2(-170, 245),
@@ -631,5 +639,28 @@ func _migrate(data: Dictionary) -> Dictionary:
 			var role := SaveUtil.text(wd, "role", "")
 			wd["job"] = role if role in ["cozinheiro", "lenhador", "guarda", "pesquisador"] else "minerador"
 			wd.erase("role")
-	# if version < 4: ...
+	if version < 4 and data.has("defense"):
+		# Bloco 35: antes todo guarda usava a melhor arma já forjada, sem desgaste. Cada
+		# guarda sai do save com ela (-1 = durabilidade cheia) e a forja que andava sozinha
+		# vira a primeira encomenda da fila do Arsenal (só anda com engenheiro lá).
+		var def := SaveUtil.dict(data, "defense")
+		var known: Array = SaveUtil.array(def, "weapons")
+		var best := "porrete"
+		for id in ["porrete", "lanca", "besta", "lanca_prata"]:
+			if known.has(id):
+				best = id
+		for wd in SaveUtil.array(data, "workers"):
+			if typeof(wd) != TYPE_DICTIONARY or wd.has("weapon"):
+				continue
+			if SaveUtil.text(wd, "job", "") == "guarda":
+				wd["weapon"] = best
+				wd["weapon_durability"] = -1.0
+				wd["got_porrete"] = true
+		var f := SaveUtil.text(def, "forging", "")
+		if f != "" and not def.has("queue"):
+			def["queue"] = [{"what": "forjar", "id": f, "left": SaveUtil.num(def, "forge_left", 0.0)}]
+		def.erase("forging")
+		def.erase("forge_left")
+		data["defense"] = def
+	# if version < 5: ...
 	return data

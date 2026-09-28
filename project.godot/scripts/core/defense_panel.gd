@@ -1,6 +1,8 @@
 extends PanelContainer
 ## Janela de Defesa (tecla G, ou clique numa barricada / no campo de treino):
 ## próxima invasão, portões (ampliar/consertar), guardas, campo de treino e armas.
+## Bloco 35: Arsenal (construir, cavalete, fila da forja), forjar/consertar cada arma e a
+## arma + durabilidade de cada guarda (desarmado em destaque).
 
 var _hud: CanvasLayer
 var _def: Node
@@ -8,8 +10,11 @@ var _status: Label
 var _gate_rows: Dictionary = {}  # gate_id -> {label, up, fix}
 var _guards_label: Label
 var _campo_button: Button
-var _weapon_rows: Dictionary = {}  # id -> {status, button}
+var _weapon_rows: Dictionary = {}  # id -> {status, button, fix}
 var _forge_bar: ProgressBar
+var _arsenal_label: Label
+var _arsenal_button: Button
+var _forge_label: Label
 
 
 func setup(hud: CanvasLayer, def: Node, _economy: Node) -> void:
@@ -87,7 +92,19 @@ func _build() -> void:
 	vbox.add_child(_campo_button)
 
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("ARMAS (todos os guardas usam a melhor que já foi forjada)", 12, _hud.COLOR_DIM))
+	vbox.add_child(_hud._label("ARSENAL — armas se gastam na luta; quebrou, o guarda vem aqui buscar outra", 12, _hud.COLOR_DIM))
+	_arsenal_label = _hud._label("", 12, _hud.COLOR_TEXT)
+	_arsenal_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(_arsenal_label)
+	_arsenal_button = _hud._button("")
+	_arsenal_button.pressed.connect(func():
+		Audio.click()
+		_def.build_arsenal()
+		refresh())
+	vbox.add_child(_arsenal_button)
+	_forge_label = _hud._label("", 12, _hud.COLOR_TEXT)
+	_forge_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(_forge_label)
 	_forge_bar = _hud._bar(_hud.COLOR_TITLE)
 	_forge_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_forge_bar.max_value = 1.0
@@ -103,19 +120,32 @@ func _build() -> void:
 		var i: int = _def.WEAPON_IDS.find(id)
 		info.tooltip_text = _def.WEAPON_DESCRIPTIONS[id]
 		info.mouse_filter = Control.MOUSE_FILTER_PASS
-		info.add_child(_hud._label("%s — dano %d%s" % [_def.WEAPON_NAMES[id], roundi(_def.weapon_damage[i]),
-			(", de longe" if _def.weapon_range[i] > 40.0 else (", forte contra Ferrugentos" if _def.weapon_vs_ferrugento[i] > 1.0 else ""))], 13, _hud.COLOR_TEXT))
+		info.add_child(_hud._label("%s — dano %d%s  •  aguenta %d golpes" % [_def.WEAPON_NAMES[id], roundi(_def.weapon_damage[i]),
+			(", de longe" if _def.weapon_range[i] > 40.0 else (", forte contra Ferrugentos" if _def.weapon_vs_ferrugento[i] > 1.0 else "")),
+			roundi(_def.weapon_max_durability(id))], 13, _hud.COLOR_TEXT))
 		var status: Label = _hud._label("", 11, _hud.COLOR_DIM)
 		status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		info.add_child(status)
+		var buttons := VBoxContainer.new()
+		buttons.add_theme_constant_override("separation", 2)
+		row.add_child(buttons)
 		var b: Button = _hud._button("Forjar")
-		b.custom_minimum_size.x = 110
+		b.custom_minimum_size.x = 150
+		b.add_theme_font_size_override("font_size", 12)
 		b.pressed.connect(func():
 			Audio.click()
 			_def.start_forge(id)
 			refresh())
-		row.add_child(b)
-		_weapon_rows[id] = {"status": status, "button": b}
+		buttons.add_child(b)
+		var fix: Button = _hud._button("Consertar")
+		fix.custom_minimum_size.x = 150
+		fix.add_theme_font_size_override("font_size", 12)
+		fix.pressed.connect(func():
+			Audio.click()
+			_def.start_repair(id)
+			refresh())
+		buttons.add_child(fix)
+		_weapon_rows[id] = {"status": status, "button": b, "fix": fix}
 
 
 func refresh() -> void:
@@ -159,23 +189,60 @@ func refresh() -> void:
 
 	var gs: Array = _def.guards()
 	var ready_n := gs.filter(func(w): return w.combat_skill >= 1.0).size()
-	_guards_label.text = "Guardas: %d (%d treinados)  •  arma: %s  •  selecione ipezinhos e aperte X pra torná-los guardas. De dia treinam no campo; à noite vão pros portões." % [
-		gs.size(), ready_n, _def.WEAPON_NAMES[_def.best_weapon()]]
+	var unarmed: Array = _def.unarmed_guards()
+	var lines: Array[String] = ["Guardas: %d (%d treinados)%s  •  X faz guarda. De dia treinam no campo; à noite vão pros portões." % [
+		gs.size(), ready_n, ("  •  %d DESARMADO%s" % [unarmed.size(), "S" if unarmed.size() > 1 else ""]) if not unarmed.is_empty() else ""]]
+	for w in gs:
+		if w.weapon == "":
+			lines.append("  • %s: DESARMADO — %s" % [w.display_name,
+				"indo ao Arsenal" if w.get_state() == "rearming" else ("sem Arsenal, luta no soco" if _def.arsenal() == null else "vai ao Arsenal")])
+		else:
+			lines.append("  • %s: %s%s" % [w.display_name, w.weapon_label(), "  (gasta!)" if w.weapon_condition() < 0.25 else ""])
+	_guards_label.text = "\n".join(lines)
+	_guards_label.add_theme_color_override("font_color", _hud.COLOR_HUNGER_BAD if not unarmed.is_empty() else _hud.COLOR_TEXT)
 	var campo_reason: String = _def.campo_block_reason()
 	_campo_button.text = "Campo de treino construído" if campo_reason == "construído" else (
 		"Construir campo de treino — escolher lugar (%d cr + %d madeira)" % [_def.campo_credits, _def.campo_wood] if campo_reason == "" else "Campo de treino: " + campo_reason)
 	_campo_button.disabled = campo_reason != ""
 
-	_forge_bar.visible = _def.forging != ""
+	# Arsenal
+	var ars: Node = _def.arsenal()
+	var ars_reason: String = _def.arsenal_block_reason()
+	_arsenal_button.visible = ars == null
+	_arsenal_button.text = ("Construir Arsenal — escolher lugar (%d cr + %d ferro + %d madeira)" % [_def.arsenal_credits, _def.arsenal_ore, _def.arsenal_wood]) \
+		if ars_reason == "" else "Arsenal: " + ars_reason
+	_arsenal_button.disabled = ars_reason != ""
+	if ars == null:
+		_arsenal_label.text = "Sem Arsenal: não dá pra forjar nem trocar arma quebrada (o guarda luta no soco)."
+	else:
+		var bits: Array[String] = []
+		for id in _def.WEAPON_IDS:
+			if _def.rack_count(id) > 0:
+				bits.append("%d %s" % [_def.rack_count(id), _def.WEAPON_NAMES[id].to_lower()])
+		_arsenal_label.text = "Cavalete: %s  •  pra consertar: %d  •  porrete sempre tem (de graça)." % [
+			", ".join(bits) if not bits.is_empty() else "vazio", _def.broken_total()]
+	_forge_bar.visible = not _def.queue.is_empty()
 	_forge_bar.value = _def.forge_progress()
+	_forge_label.visible = not _def.queue.is_empty()
+	if not _def.queue.is_empty():
+		var eng: bool = ars != null and not ars.obra_workers().is_empty()
+		_forge_label.text = "Na forja: %s — %d%%%s%s" % [_def.forge_title(), roundi(_def.forge_progress() * 100.0),
+			"" if eng else "  (esperando engenheiro — tecla 4)" if ars != null else "  (construa o Arsenal)",
+			"  •  +%d na fila" % (_def.queue.size() - 1) if _def.queue.size() > 1 else ""]
 	for id in _weapon_rows:
 		var row: Dictionary = _weapon_rows[id]
 		var reason: String = _def.weapon_block_reason(id)
+		var fix_reason: String = _def.repair_block_reason(id)
 		var i: int = _def.WEAPON_IDS.find(id)
-		var cost := _cost_text(_def.weapon_costs[i], _def.weapon_ore[i])
-		row.status.text = {"pronta": "PRONTA", "forjando": "forjando %d%%" % roundi(_def.forge_progress() * 100.0)}.get(reason, cost + ("" if reason == "" else "  (" + reason + ")"))
-		row.button.text = "Pronta" if reason == "pronta" else "Forjar"
+		var st := "no cavalete: %d  •  quebradas: %d" % [_def.rack_count(id), _def.broken_count(id)]
+		if reason != "" and not reason.begins_with("falta"):
+			st += "  (" + reason + ")"
+		row.status.text = st
+		row.button.text = ("Forjar  (%s)" % _cost_text(_def.weapon_costs[i], _def.weapon_ore[i])) if not reason.begins_with("falta") else reason.substr(0, 1).to_upper() + reason.substr(1)
 		row.button.disabled = reason != ""
+		row.fix.text = "Consertar  (%s)" % _cost_text(_def.repair_cost(id), _def.weapon_ore[i]) if fix_reason == "" or fix_reason.begins_with("fila") \
+			else ("Consertar: " + fix_reason)
+		row.fix.disabled = fix_reason != ""
 
 
 func _cost_text(c: Vector3i, ore: String) -> String:
@@ -190,13 +257,15 @@ func _cost_text(c: Vector3i, ore: String) -> String:
 
 
 func button_text() -> String:
+	var un: int = _def.unarmed_guards().size()
+	var tail := "  •  %d desarmado%s" % [un, "s" if un > 1 else ""] if un > 0 else ""
 	if _def.invasion_active:
-		return "INVASÃO! (G)"
+		return "INVASÃO! (G)" + tail
 	var dn := get_tree().get_first_node_in_group("day_night")
 	var nd: int = _def.next_invasion_day()
 	if dn and nd == dn.day:
-		return "Defesa: HOJE (G)"
-	return "Defesa: dia %d (G)" % nd
+		return "Defesa: HOJE (G)" + tail
+	return "Defesa: dia %d (G)" % nd + tail
 
 
 func has_available_action() -> bool:

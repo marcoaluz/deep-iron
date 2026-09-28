@@ -64,6 +64,7 @@ func _build() -> void:
 	_next_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_child(_next_bar)
 	_next_label = _hud._label("", 12, _hud.COLOR_DIM)
+	_next_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_next_label)
 	_level_button = _hud._button("")
 	_level_button.pressed.connect(func():
@@ -148,7 +149,7 @@ func refresh() -> void:
 		_next_title.text = "PRÓXIMO ESTÁGIO: %s" % _hub.stage_name(lvl + 1).to_upper()
 		_next_bar.max_value = need
 		_next_bar.value = minf(have, need)
-		_next_label.text = "%d / %d minério coletado no total" % [int(have), need]
+		_next_label.text = "%d / %d minério coletado no total\nLibera: %s" % [int(have), need, _hub.stage_unlocks_text(lvl + 1)]
 		var cost: int = _hub.next_level_cost()
 		if _hub.pending_upgrade == "expandir":
 			_level_button.text = "Expandindo: %s" % _hub.obra_status().split(": ", true, 1)[-1]
