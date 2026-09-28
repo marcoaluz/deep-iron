@@ -44,6 +44,13 @@ extends "res://scripts/props/station.gd"
 ##     Casas que já existem (saves antigos) não são checadas: a regra é só pra posicionar.
 ##   - Comedouro: dá pra construir mais (build_comedouro), um canteiro por vez.
 ##   - Save antigo (sem "layout"): tudo fica onde a cena põe, como antes.
+##
+## Bloco 38 — o PRÉDIO cresce com a vila (puramente visual): um quadro por estágio
+## (barraca -> cabana -> salão -> salão com alas -> cidade com torre alta; gen_sprites:
+## build_centro_vila). Enquanto a expansão está em obra, o próximo estágio aparece por
+## cima como fantasma que fica nítido com o progresso (mesma cor do canteiro); ao
+## terminar ele "assenta" (fica sólido) e troca de quadro sem pulo. Carregar o save
+## mostra direto o quadro do estágio salvo (e o fantasma, se a expansão estava em obra).
 
 signal level_changed(level: int)
 signal upgrade_bought(id: String, new_level: int)
@@ -60,6 +67,12 @@ const CASA_TEXTURE := preload("res://assets/game/casa.png")
 const Canteiro := preload("res://scripts/props/canteiro.gd")
 ## Pegadas (em volta do pé do prédio) pro posicionador.
 const HOUSE_FOOTPRINT := Rect2(-32, -54, 64, 78)
+## Bloco 38, por estágio (quadro 0..4): topo do desenho e meia-largura (px do mundo),
+## luz das janelas/fogueira (x, y, energia) e tamanho do brilho.
+const STAGE_TOP := [-58.0, -70.0, -100.0, -100.0, -152.0]
+const STAGE_HALF_W := [60.0, 60.0, 58.0, 86.0, 90.0]
+const STAGE_LIGHT := [Vector3(30, -14, 0.6), Vector3(0, -26, 0.75), Vector3(0, -34, 0.9), Vector3(0, -34, 1.05), Vector3(0, -50, 1.25)]
+const STAGE_LIGHT_SCALE := [0.7, 0.85, 1.1, 1.35, 1.6]
 const COMEDOURO_FOOTPRINT := Rect2(-44, -40, 88, 60)
 const UPGRADE_NAMES := {
 	"moradias": "Moradias",
@@ -141,6 +154,11 @@ var starter_houses_left: int = 0
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _name_label: Label = $NameLabel
+@onready var _next_stage: Sprite2D = $NextStage
+@onready var _window_light: PointLight2D = $WindowLight
+@onready var _shadow: Sprite2D = $Shadow
+## A troca de quadro pro estágio novo está acontecendo (Bloco 38).
+var _growing := false
 
 
 func _ready() -> void:
@@ -154,7 +172,9 @@ func _ready() -> void:
 
 ## Área clicável do prédio (coordenadas globais).
 func contains_point(p: Vector2) -> bool:
-	return Rect2(global_position + Vector2(-58, -100), Vector2(116, 104)).has_point(p)
+	var i := _stage_index()
+	var hw: float = STAGE_HALF_W[i]
+	return Rect2(global_position + Vector2(-hw, STAGE_TOP[i]), Vector2(hw * 2.0, -STAGE_TOP[i] + 4.0)).has_point(p)
 
 
 ## Pro ambiente não espalhar pedras/tochas em cima do prédio.
@@ -166,9 +186,10 @@ func get_clear_radius() -> float:
 	return 85.0
 
 
-## Área onde a decoração some quando o Centro é posicionado (Bloco 37).
+## Área onde a decoração some quando o Centro é posicionado (Bloco 37) — já do tamanho
+## do maior estágio (Bloco 38), pra nenhuma pedra aparecer "dentro" do prédio quando ele crescer.
 func decor_clear_rect() -> Rect2:
-	return Rect2(global_position + Vector2(-62, -104), Vector2(124, 116))
+	return Rect2(global_position + Vector2(-92, -154), Vector2(184, 166))
 
 
 # ------------------------------------------------------------ efeitos (consultados pelos ipezinhos)
@@ -232,6 +253,7 @@ func _finish_expansion() -> void:
 	upgrade_left = 0.0
 	upgrade_total = 0.0
 	level += 1
+	_grow_to_stage(_stage_index())  # Bloco 38: o fantasma assenta e vira o prédio novo
 	_update_visual()
 	_popup("A vila agora é: %s!" % stage_name(), Color(1.0, 0.85, 0.4))
 	Audio.recruit()
@@ -413,7 +435,7 @@ func obra_work(seconds: float) -> void:
 	if upgrade_left <= 0.0:
 		_finish_upgrade()
 	else:
-		_update_visual()
+		_update_visual()  # (o fantasma do próximo estágio acompanha o progresso)
 
 
 func obra_ordered_at() -> float:
@@ -680,11 +702,77 @@ func _base_recovery_time() -> float:
 
 
 func _update_visual() -> void:
-	# quadro 0: começo, 1: sino + estandartes (estágio 3+), 2: lanternas + ouro (estágio 5)
-	_visual.frame = 2 if level >= 5 else (1 if level >= 3 else 0)
+	# Bloco 38: um quadro por estágio; durante a troca quem manda é o _grow_to_stage
+	if not _growing:
+		_visual.frame = _stage_index()
+		_apply_stage_look(_stage_index())
+	# expansão em obra: o próximo estágio aparece como fantasma que fica nítido
+	var expanding := pending_upgrade == "expandir" and level < max_level()
+	if not _growing:
+		_next_stage.visible = expanding
+		if expanding:
+			_next_stage.frame = clampi(level, 0, 4)
+			_next_stage.modulate = ObraSite.ghost_color(obra_progress())
 	_name_label.text = "Centro da Vila\n%s" % stage_name()
 	if obra_pending():
 		_name_label.text += "\nobra: " + obra_status()
+
+
+# ------------------------------------------------------------ aparência por estágio (Bloco 38)
+func _stage_index() -> int:
+	return clampi(level - 1, 0, STAGE_TOP.size() - 1)
+
+
+## Texto, luz, sombra do tamanho do prédio do estágio i.
+func _apply_stage_look(i: int) -> void:
+	_name_label.position.y = STAGE_TOP[i] - 40.0
+	var l: Vector3 = STAGE_LIGHT[i]
+	_window_light.position = Vector2(l.x, l.y)
+	_window_light.energy = l.z
+	_window_light.texture_scale = STAGE_LIGHT_SCALE[i]
+	_shadow.scale = Vector2(5.2 * STAGE_HALF_W[i] / 58.0, 2.6)
+
+
+## Subiu de estágio: o fantasma do prédio novo fica sólido em ~0,6 s e só então vira o
+## quadro de verdade (sem troca seca), com poeira e um "assentar" de leve.
+func _grow_to_stage(i: int) -> void:
+	_growing = true
+	_next_stage.frame = i
+	_next_stage.visible = true
+	if not _next_stage.modulate.a > 0.0:
+		_next_stage.modulate = ObraSite.ghost_color(0.0)
+	var tw := create_tween()
+	tw.tween_property(_next_stage, "modulate", Color.WHITE, 0.6)
+	tw.tween_callback(func():
+		_visual.frame = i
+		_next_stage.visible = false
+		_growing = false
+		_apply_stage_look(i)
+		_visual.scale = Vector2(2.08, 1.92)
+		create_tween().tween_property(_visual, "scale", Vector2(2, 2), 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT))
+	_stage_dust(i)
+
+
+func _stage_dust(i: int) -> void:
+	var d := CPUParticles2D.new()
+	d.one_shot = true
+	d.explosiveness = 0.85
+	d.amount = 36
+	d.lifetime = 1.1
+	d.position = Vector2(0, -12)
+	d.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	d.emission_rect_extents = Vector2(STAGE_HALF_W[i], 10)
+	d.direction = Vector2(0, -1)
+	d.spread = 80.0
+	d.gravity = Vector2(0, -8)
+	d.initial_velocity_min = 12.0
+	d.initial_velocity_max = 40.0
+	d.scale_amount_min = 3.0
+	d.scale_amount_max = 6.0
+	d.color = Color(0.72, 0.64, 0.54, 0.6)
+	add_child(d)
+	d.emitting = true
+	get_tree().create_timer(1.6).timeout.connect(d.queue_free)
 
 
 func _popup(text: String, color: Color) -> void:

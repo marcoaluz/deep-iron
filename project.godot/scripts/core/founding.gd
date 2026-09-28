@@ -14,7 +14,8 @@ signal done
 
 const HUB_TEXTURE := preload("res://assets/game/centro_vila.png")
 const ARMAZEM_TEXTURE := preload("res://assets/game/armazem.png")
-const HUB_FOOTPRINT := Rect2(-60, -102, 120, 116)
+## (do tamanho do MAIOR estágio do prédio — Bloco 38 — pra ele poder crescer sem invadir nada)
+const HUB_FOOTPRINT := Rect2(-90, -152, 180, 166)
 const ARMAZEM_FOOTPRINT := Rect2(-40, -70, 80, 86)
 
 var step := ""  # "hub" -> "armazem" -> "done"
@@ -74,7 +75,7 @@ func _place_hub() -> void:
 	var cam := get_tree().get_first_node_in_group("game_main").get_node_or_null("Camera2D")
 	if cam and cam.has_method("focus_on"):
 		cam.focus_on(start)
-	_placer().begin(_confirm_hub, HUB_TEXTURE, 3, "o CENTRO DA VILA (fundação 1/2)", {
+	_placer().begin(_confirm_hub, HUB_TEXTURE, 5, "o CENTRO DA VILA (fundação 1/2)", {
 		"footprint": HUB_FOOTPRINT, "ignore": [hub, _armazem()], "cancelable": false, "start": start})
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:

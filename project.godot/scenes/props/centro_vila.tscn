@@ -25,8 +25,16 @@ texture = ExtResource("3_shadow")
 [node name="Visual" type="Sprite2D" parent="."]
 scale = Vector2(2, 2)
 texture = ExtResource("2_sprite")
-hframes = 3
-offset = Vector2(0, -25)
+hframes = 5
+offset = Vector2(0, -38)
+
+[node name="NextStage" type="Sprite2D" parent="."]
+visible = false
+scale = Vector2(2, 2)
+texture = ExtResource("2_sprite")
+hframes = 5
+frame = 1
+offset = Vector2(0, -38)
 
 [node name="WindowLight" type="PointLight2D" parent="."]
 position = Vector2(0, -34)

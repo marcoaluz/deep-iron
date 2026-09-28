@@ -1628,9 +1628,9 @@ def casa_lot(W, H):
 
 
 # ------------------------------------------------------------ centro da vila
-def build_centro_vila():
-    """Prédio principal: salão de enxaimel com torre do sino. 3 quadros por estágio:
-    0 = começo (torre vazia), 1 = sino + estandartes, 2 = lanternas + ponta dourada."""
+def _hub_hall():
+    """Salão de enxaimel com torre do sino (56x48, sem os enfeites de estágio).
+    É o miolo do Centro da Vila dos estágios 3, 4 e 5 (build_centro_vila)."""
     W, H = 56, 48
     rnd = random.Random(56)
     base = new(W, H)
@@ -1742,38 +1742,257 @@ def build_centro_vila():
     for i, y in enumerate((44, 45, 46)):
         rect(base, 21 - i, y, 34 + i, y, (STONE_LIGHT, STONE, STONE_DARK)[i])
 
-    frames = []
-    for tier in range(3):
-        img = base.copy()
-        if tier >= 1:
-            # sino de bronze no vão
-            for y in range(12, 16):
-                w = 1 + (y - 12)
-                for x in range(28 - w // 2 - 1, 28 + w // 2 + 1):
-                    px(img, x, y, GOLD if x < 28 else GOLD_DARK)
-            px(img, 27, 12, GOLD_LIGHT)
-            px(img, 27, 11, IRON_DARK)
-            # estandartes pendurados nas pontas da fachada
-            for bx in (4, W - 7):
-                rect(img, bx, 26, bx + 2, 33, FLANNEL)
-                rect(img, bx, 26, bx, 33, FLANNEL_LIGHT)
-                px(img, bx + 1, 34, FLANNEL_DARK)
-                px(img, bx + 1, 29, GOLD)  # emblema
-                rect(img, bx - 1, 25, bx + 3, 25, WOOD_DARK)  # varão
-        if tier >= 2:
-            # lanternas acesas ladeando o portão
-            for lx in (19, 36):
-                px(img, lx, 29, IRON_DARK)
-                rect(img, lx - 1, 30, lx + 1, 30, IRON)
-                rect(img, lx - 1, 31, lx + 1, 32, LAMP_GLOW)
-                px(img, lx, 31, LAMP_CORE)
-                rect(img, lx - 1, 33, lx + 1, 33, IRON_DARK)
-            # ponta dourada na torre e friso dourado na placa
-            px(img, 27, 0, GOLD_HIGHLIGHT)
-            px(img, 28, 0, GOLD)
-            rect(img, 22, 25, 33, 25, GOLD_LIGHT)
-        frames.append(outline(pad(img), 0.5))
+    return base
 
+
+# Bloco 38: o Centro da Vila cresce com a vila. 5 quadros (um por estágio), todos no
+# mesmo canvas HUB_W x HUB_H com o pé embaixo no meio — o jogo troca o quadro sem o
+# prédio "pular" de lugar. O salão (56x48) fica em HALL_X, HALL_Y dentro do canvas.
+HUB_W, HUB_H = 88, 74
+HALL_X, HALL_Y = 16, 26
+TENT_RAMP = ((58, 44, 34, 255), (84, 66, 48, 255), (112, 90, 64, 255), (140, 116, 84, 255))  # lona encardida
+
+
+def _hub_bell(img):
+    ox, oy = HALL_X, HALL_Y
+    for y in range(12, 16):  # sino de bronze no vão da torre
+        w = 1 + (y - 12)
+        for x in range(28 - w // 2 - 1, 28 + w // 2 + 1):
+            px(img, ox + x, oy + y, GOLD if x < 28 else GOLD_DARK)
+    px(img, ox + 27, oy + 12, GOLD_LIGHT)
+    px(img, ox + 27, oy + 11, IRON_DARK)
+
+
+def _hub_banners(img):
+    ox, oy = HALL_X, HALL_Y
+    for bx in (4, 49):  # estandartes nas pontas da fachada
+        rect(img, ox + bx, oy + 26, ox + bx + 2, oy + 33, FLANNEL)
+        rect(img, ox + bx, oy + 26, ox + bx, oy + 33, FLANNEL_LIGHT)
+        px(img, ox + bx + 1, oy + 34, FLANNEL_DARK)
+        px(img, ox + bx + 1, oy + 29, GOLD)
+        rect(img, ox + bx - 1, oy + 25, ox + bx + 3, oy + 25, WOOD_DARK)
+
+
+def _hub_lanterns(img):
+    ox, oy = HALL_X, HALL_Y
+    for lx in (19, 36):  # lanternas acesas ladeando o portão
+        px(img, ox + lx, oy + 29, IRON_DARK)
+        rect(img, ox + lx - 1, oy + 30, ox + lx + 1, oy + 30, IRON)
+        rect(img, ox + lx - 1, oy + 31, ox + lx + 1, oy + 32, LAMP_GLOW)
+        px(img, ox + lx, oy + 31, LAMP_CORE)
+        rect(img, ox + lx - 1, oy + 33, ox + lx + 1, oy + 33, IRON_DARK)
+
+
+def _hub_path(img):
+    for x in range(34, 54):  # caminho de pedra na frente da escadaria
+        for y in (72, 73):
+            if (x + y) % 3:
+                px(img, x, y, dither(STONE_RAMP, 0.55 if y == 72 else 0.35, x, y))
+
+
+def _hub_camp(img):
+    """1 — Acampamento: barraca de lona, fogueira e a placa das picaretas."""
+    for y in range(69, 74):  # chão batido
+        for x in range(16, 74):
+            if (x - 45) ** 2 / 841 + (y - 72) ** 2 / 9 <= 1:
+                px(img, x, y, dither(EARTH_RAMP, 0.75, x, y))
+    cx, top, bot = 42, 50, 71
+    for y in range(top, bot + 1):  # barraca em A, luz da esquerda
+        half = (y - top) * 0.78 + 1
+        for x in range(round(cx - half), round(cx + half) + 1):
+            t = (0.8 if x < cx else 0.42) - (y - top) * 0.006
+            if (x - cx) % 6 == 0:
+                t -= 0.18  # costura da lona
+            px(img, x, y, dither(TENT_RAMP, t, x, y))
+    for y in range(60, bot + 1):  # entrada escura
+        half = (y - 60) * 0.42
+        for x in range(round(cx - half), round(cx + half) + 1):
+            px(img, x, y, WALL_VOID if abs(x - cx) < half - 0.6 else WALL_SHADOW)
+    rect(img, cx, top - 3, cx, top, WOOD_DARK)  # ponta do mastro
+    px(img, cx, top - 3, WOOD_LIGHT)
+    _line(img, cx - 17, bot, cx - 8, top + 6, WOOD_DARK)  # cordas
+    _line(img, cx + 17, bot, cx + 8, top + 6, WOOD_DARK)
+    fx, fy = 60, 70  # fogueira
+    for (x, y) in ((fx - 3, fy + 1), (fx - 1, fy + 2), (fx + 1, fy + 2), (fx + 3, fy + 1)):
+        px(img, x, y, STONE_LIGHT)
+    _line(img, fx - 3, fy + 1, fx + 3, fy - 1, WOOD_DARK)
+    _line(img, fx - 3, fy - 1, fx + 3, fy + 1, WOOD)
+    for (x, y, c) in ((fx, fy - 2, TORCH_FLAME), (fx - 1, fy - 1, TORCH_GLOW), (fx + 1, fy - 1, TORCH_FLAME),
+                      (fx, fy - 1, TORCH_BRIGHT), (fx, fy - 3, TORCH_GLOW), (fx, fy, TORCH_CORE)):
+        px(img, x, y, c)
+    rect(img, 24, 57, 24, 71, WOOD_DARK)  # placa com as picaretas cruzadas
+    rect(img, 19, 55, 29, 59, WOOD_LIGHT)
+    rect(img, 19, 59, 29, 59, WOOD_DARK)
+    for i in range(3):
+        px(img, 22 + i, 56 + i, IRON_HIGHLIGHT)
+        px(img, 26 - i, 56 + i, IRON_HIGHLIGHT)
+    rect(img, 64, 68, 70, 69, WOOD)  # tronco de sentar
+    rect(img, 64, 68, 70, 68, WOOD_LIGHT)
+
+
+def _hub_cabin(img):
+    """2 — Vilarejo: cabana de toras com telhado de tábuas, duas janelas e um lampião."""
+    x0, x1 = 24, 63
+    for y in range(56, 70):  # paredes de toras (bojudas: claro em cima, escuro embaixo)
+        for x in range(x0, x1 + 1):
+            k = (y - 56) % 3
+            t = (0.72, 0.52, 0.22)[k] - (x - x0) / (x1 - x0) * 0.12
+            px(img, x, y, dither(WOOD_RAMP, t, x, y))
+        if (y - 56) % 3 == 1:
+            px(img, x0 - 1, y, WOOD_CUT)  # ponta das toras
+            px(img, x1 + 1, y, WOOD_CUT)
+    cx = (x0 + x1) / 2
+    for y in range(41, 57):  # telhado de tábuas em duas águas, com musgo
+        half = (y - 41) * 1.45 + 2
+        for x in range(round(cx - half), round(cx + half) + 1):
+            if x < x0 - 3 or x > x1 + 3:
+                continue
+            t = (0.66 if x < cx else 0.34) - (y - 41) * 0.01
+            if (x + y) % 4 == 0:
+                t -= 0.16
+            c = dither(WOOD_RAMP, t, x, y)
+            if (x * 7 + y * 3) % 11 == 0:
+                c = dither(MOSS_RAMP, 0.5, x, y)
+            px(img, x, y, c)
+    rect(img, x0 - 3, 56, x1 + 3, 56, WOOD_ROT)  # beiral
+    rect(img, 41, 60, 46, 69, WOOD_DARK)  # porta
+    rect(img, 42, 61, 45, 69, WOOD)
+    rect(img, 41, 64, 46, 64, IRON_DARK)
+    px(img, 45, 66, BRASS)
+    for wx in (29, 52):  # janelas acesas
+        rect(img, wx, 59, wx + 4, 63, WOOD_ROT)
+        rect(img, wx + 1, 60, wx + 3, 62, WINDOW_LIT)
+        px(img, wx + 1, 60, WINDOW_BRIGHT)
+        rect(img, wx + 2, 60, wx + 2, 62, WOOD_DARK)
+    rect(img, 38, 52, 49, 55, WOOD_LIGHT)  # placa das picaretas
+    rect(img, 38, 55, 49, 55, WOOD_DARK)
+    for i in range(3):
+        px(img, 41 + i, 53 + i // 2, IRON_HIGHLIGHT)
+        px(img, 46 - i, 53 + i // 2, IRON_HIGHLIGHT)
+    for x in range(x0 - 2, x1 + 3):  # fundação de pedra
+        for y in (70, 71):
+            px(img, x, y, dither(STONE_RAMP, 0.45 if y == 70 else 0.25, x, y))
+    rect(img, 70, 57, 70, 71, IRON_DARK)  # poste com lampião
+    rect(img, 68, 55, 72, 55, IRON)
+    rect(img, 69, 56, 71, 58, LAMP_GLOW)
+    px(img, 70, 57, LAMP_CORE)
+    for bx in (15, 19):  # barris
+        for y in range(65, 72):
+            for x in range(bx, bx + 4):
+                px(img, x, y, dither(WOOD_RAMP, 0.6 - (x - bx) * 0.1, x, y))
+        rect(img, bx, 67, bx + 3, 67, IRON_DARK)
+        rect(img, bx, 70, bx + 3, 70, IRON_DARK)
+
+
+def _hub_wings(img):
+    """Alas de pedra dos dois lados do salão (estágios 4 e 5), janela acesa em cada."""
+    for wx0, wx1, side in ((3, 20, -1), (67, 84, 1)):
+        for y in range(50, 68):
+            for x in range(wx0, wx1 + 1):
+                joint = y % 4 == 1 or (x + (y // 4) * 3) % 7 == 0
+                t = 0.18 if joint else 0.6 - (y - 50) * 0.012 - (0.15 if (side > 0) else 0.0)
+                px(img, x, y, dither(STONE_RAMP, t, x, y))
+        for y in range(43, 50):  # telhado de ardósia caindo pra fora
+            d = 49 - y
+            xa = wx0 + d if side < 0 else wx0 - 1
+            xb = wx1 + 1 if side < 0 else wx1 - d
+            for x in range(xa, xb + 1):
+                t = 0.4 - (y - 43) * 0.02 + (0.1 if side < 0 else -0.05)
+                if (x + y) % 4 == 0:
+                    t -= 0.15
+                px(img, x, y, dither(STONE_RAMP, t, x, y))
+        rect(img, wx0 - 1, 49, wx1 + 1, 49, STONE_BLACK)
+        wcx = (wx0 + wx1) // 2 + (2 * side)  # janela acesa
+        rect(img, wcx - 2, 54, wcx + 2, 60, WOOD_ROT)
+        rect(img, wcx - 1, 55, wcx + 1, 59, WINDOW_LIT)
+        px(img, wcx - 1, 55, WINDOW_BRIGHT)
+        rect(img, wcx - 1, 57, wcx + 1, 57, WOOD_DARK)
+        for x in range(wx0 - 1, wx1 + 2):  # fundação
+            for y in (68, 69):
+                px(img, x, y, dither(STONE_RAMP, 0.45 if y == 68 else 0.25, x, y))
+
+
+def _hub_tall_tower(img):
+    """5 — a torre do sino sobe mais um andar: sineira, relógio grande e agulha dourada."""
+    tx0, tx1 = HALL_X + 22, HALL_X + 33
+    top = 10
+    for y in range(top, HALL_Y + 9):
+        for x in range(tx0, tx1 + 1):
+            px(img, x, y, dither(STONE_RAMP, 0.62 - (x - tx0) * 0.04, x, y))
+        px(img, tx0, y, STONE_DARK)
+        px(img, tx1, y, STONE_BLACK)
+    rect(img, tx0 - 1, top, tx1 + 1, top, STONE_BLACK)
+    rect(img, tx0 - 1, 22, tx1 + 1, 22, STONE_LIGHT)  # cornija
+    rect(img, tx0 + 2, 12, tx1 - 2, 19, WALL_VOID)  # sineira
+    rect(img, tx0 + 2, 12, tx1 - 2, 12, WALL_SHADOW)
+    for y in range(14, 19):
+        w = 1 + (y - 14)
+        for x in range(tx0 + 6 - w // 2 - 1, tx0 + 6 + w // 2 + 1):
+            px(img, x, y, GOLD if x < tx0 + 6 else GOLD_DARK)
+    for y in range(24, 32):  # relógio grande com aro dourado
+        for x in range(tx0 + 1, tx1):
+            d = (x - (tx0 + 5.5)) ** 2 + (y - 27.5) ** 2
+            if d <= 13:
+                px(img, x, y, IRON_HIGHLIGHT if d <= 7 else GOLD)
+    px(img, tx0 + 5, 26, IRON_SHADOW)
+    px(img, tx0 + 6, 27, IRON_SHADOW)
+    px(img, tx0 + 5, 27, IRON_SHADOW)
+    cx = (tx0 + tx1) / 2
+    for y in range(1, top):  # agulha de ardósia
+        half = (y - 1) * 0.72 + 0.5
+        for x in range(round(cx - half), round(cx + half) + 1):
+            px(img, x, y, dither(STONE_RAMP, (0.62 if x < cx else 0.28) - y * 0.01, x, y))
+    px(img, round(cx), 0, GOLD_HIGHLIGHT)
+    px(img, round(cx) - 1, 1, GOLD)
+
+
+def _hub_flags(img):
+    for fx, dirx in ((4, -1), (83, 1)):  # mastros com flâmula nas pontas das alas
+        rect(img, fx, 26, fx, 43, IRON_DARK)
+        px(img, fx, 25, GOLD_LIGHT)
+        for i in range(7):
+            h = 3 - i // 3
+            for y in range(27, 27 + h):
+                px(img, fx + dirx * (i + 1), y + (i // 3), FLANNEL if i % 2 == 0 else FLANNEL_LIGHT)
+        px(img, fx + dirx * 2, 28, GOLD)
+
+
+def _hub_lamp_posts(img):
+    for lx in (12, 75):  # postes de luz na frente das alas
+        rect(img, lx, 62, lx, 72, IRON_DARK)
+        rect(img, lx - 2, 59, lx + 2, 59, IRON)
+        rect(img, lx - 1, 60, lx + 1, 61, LAMP_GLOW)
+        px(img, lx, 60, LAMP_CORE)
+
+
+def build_centro_vila():
+    """Centro da Vila, um quadro por estágio (Bloco 38):
+    0 Acampamento: barraca e fogueira   1 Vilarejo: cabana de toras
+    2 Vila: salão de enxaimel com estandartes   3 Vila Mineira: + alas de pedra, sino, lanternas
+    4 Cidade Mineira: + torre alta com relógio, bandeiras, postes de luz e ouro."""
+    hall = _hub_hall()
+    frames = []
+    for stage in range(5):
+        img = new(HUB_W, HUB_H)
+        if stage == 0:
+            _hub_camp(img)
+        elif stage == 1:
+            _hub_cabin(img)
+        else:
+            _hub_path(img)
+            if stage >= 3:
+                _hub_wings(img)
+            img.alpha_composite(hall, (HALL_X, HALL_Y))
+            _hub_banners(img)
+            if stage >= 3:
+                _hub_bell(img)
+                _hub_lanterns(img)
+            if stage >= 4:
+                _hub_tall_tower(img)
+                _hub_flags(img)
+                _hub_lamp_posts(img)
+                rect(img, HALL_X + 22, HALL_Y + 25, HALL_X + 33, HALL_Y + 25, GOLD_LIGHT)  # friso dourado na placa
+        frames.append(outline(pad(img), 0.5))
     sheet = new(frames[0].width * len(frames), frames[0].height)
     for i, f in enumerate(frames):
         sheet.alpha_composite(f, (i * f.width, 0))
