@@ -24,6 +24,8 @@ const FRAME_LOT := 2
 @export var built: bool = true
 ## true = casa nova que o jogador posicionou (a posição vai pro save; as 3 iniciais são fixas).
 @export var placed_by_player: bool = false
+## Bloco 37: casa inicial da fundação (não soma no limite de ipezinhos quando fica pronta).
+@export var starter_house: bool = false
 
 var _inside: Array[Node] = []
 ## Obra (Bloco 31): segundos de engenheiro que faltam / total. build_total 0 = não é obra.
@@ -191,11 +193,12 @@ func _update_visual() -> void:
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	return {"built": built, "build_left": build_left, "build_total": build_total,
-		"obra": _obra.get_save_data()}
+		"obra": _obra.get_save_data(), "starter_house": starter_house}
 
 
 func load_save_data(d: Dictionary) -> void:
 	built = SaveUtil.boolean(d, "built", built)
+	starter_house = SaveUtil.boolean(d, "starter_house", false)
 	# Bloco 31 (save antigo: casa sem obra)
 	build_total = maxf(SaveUtil.num(d, "build_total", 0.0), 0.0) if not built else 0.0
 	build_left = clampf(SaveUtil.num(d, "build_left", build_total), 0.0, build_total)

@@ -12,6 +12,14 @@ extends Node2D
 ## Lugar válido: a "pegada" da casa (base + degrau da porta, onde ficam as camas)
 ## tem que caber na área andável do mapa e não pode encostar em nenhuma estrutura
 ## (e na área de trabalho dela), jazida, horta, casa ou decoração que bloqueia.
+##
+## Bloco 37: begin() aceita `opts` —
+##   footprint: Rect2   pegada de outro prédio (Centro da Vila, Armazém, Comedouro)
+##   ignore: Array      nós que não contam como obstáculo (o próprio prédio sendo mudado)
+##   cancelable: bool   false = Esc/direito não cancelam (fundação da vila)
+##   radius / radius_center   só vale até essa distância do centro (casas em volta do
+##                      Centro da Vila); o contorno do raio aparece enquanto escolhe
+##   start: Vector2     onde o fantasma aparece
 
 signal finished(confirmed: bool)
 
@@ -31,6 +39,11 @@ var _ghost: Sprite2D
 var _hint_layer: CanvasLayer
 var _hint: Label
 var _what := "a casa nova"
+var _footprint := FOOTPRINT
+var _ignore: Array = []
+var _cancelable := true
+var _radius := 0.0
+var _radius_center := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -62,24 +75,31 @@ func _ready() -> void:
 
 ## Liga o modo. on_confirm(pos: Vector2) -> bool constrói de fato (e paga).
 ## texture/hframes/what trocam o fantasma e o texto (padrão: casa).
-func begin(on_confirm: Callable, texture: Texture2D = CASA_TEXTURE, hframes: int = 3, what: String = "a casa nova") -> void:
+func begin(on_confirm: Callable, texture: Texture2D = CASA_TEXTURE, hframes: int = 3, what: String = "a casa nova", opts: Dictionary = {}) -> void:
 	_on_confirm = on_confirm
 	_ghost.texture = texture
 	_ghost.hframes = hframes
 	_ghost.frame = 0
+	# o pé do prédio fica no ponto clicado (desenhos de alturas diferentes)
+	_ghost.offset = Vector2(0, -texture.get_height() * 0.5)
 	_what = what
+	_footprint = opts.get("footprint", FOOTPRINT)
+	_ignore = opts.get("ignore", [])
+	_cancelable = opts.get("cancelable", true)
+	_radius = opts.get("radius", 0.0)
+	_radius_center = opts.get("radius_center", Vector2.ZERO)
 	active = true
 	_collect_blockers()
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud and hud.has_method("close_panels"):
 		hud.close_panels()
-	_pos = get_global_mouse_position()
+	_pos = opts.get("start", get_global_mouse_position())
 	_refresh()
 	_set_visible(true)
 
 
 func cancel() -> void:
-	if not active:
+	if not active or not _cancelable:
 		return
 	_end(false)
 	Audio.click()
@@ -88,6 +108,10 @@ func cancel() -> void:
 func _end(confirmed: bool) -> void:
 	active = false
 	_set_visible(false)
+	_footprint = FOOTPRINT
+	_ignore = []
+	_cancelable = true
+	_radius = 0.0
 	finished.emit(confirmed)
 
 
@@ -142,10 +166,12 @@ func move_to(world_pos: Vector2) -> void:
 
 ## "" se dá pra construir aqui; senão o motivo.
 func check_spot(pos: Vector2) -> String:
-	var fp := Rect2(pos + FOOTPRINT.position, FOOTPRINT.size)
+	var fp := Rect2(pos + _footprint.position, _footprint.size)
 	var env := get_tree().get_first_node_in_group("environment")
 	if env and not env.walkable_rect().encloses(fp):
 		return "fora da área da mina"
+	if _radius > 0.0 and pos.distance_to(_radius_center) > _radius:
+		return "longe demais do Centro da Vila (a vila cresce e o raio aumenta)"
 	for b in _blockers:
 		if fp.intersects(b.rect):
 			return "em cima de %s" % b.name
@@ -157,11 +183,12 @@ func _refresh() -> void:
 	_reason = check_spot(_pos)
 	_ghost.position = _pos
 	_ghost.modulate = Color(COLOR_OK, 0.6) if _reason == "" else Color(COLOR_BAD, 0.6)
+	var cancel_txt := "  •  Esc ou botão direito cancela" if _cancelable else ""
 	if _reason == "":
-		_hint.text = "Onde fica %s?  Clique pra construir  •  Esc ou botão direito cancela" % _what
+		_hint.text = "Onde fica %s?  Clique pra construir%s" % [_what, cancel_txt]
 		_hint.add_theme_color_override("font_color", Color(0.95, 0.9, 0.75))
 	else:
-		_hint.text = "Não dá pra construir aqui: %s\nEsc ou botão direito cancela" % _reason
+		_hint.text = "Não dá pra construir aqui: %s%s" % [_reason, ("\n" + cancel_txt.trim_prefix("  •  ")) if _cancelable else ""]
 		_hint.add_theme_color_override("font_color", COLOR_BAD)
 	queue_redraw()
 
@@ -169,7 +196,14 @@ func _refresh() -> void:
 func _draw() -> void:
 	if not active:
 		return
-	var fp := Rect2(_pos + FOOTPRINT.position, FOOTPRINT.size)
+	if _radius > 0.0:
+		# Bloco 37: onde pode construir casa (em volta do Centro da Vila), tracejado
+		draw_circle(_radius_center, _radius, Color(1.0, 0.9, 0.55, 0.06))
+		var n := 72
+		for i in n:
+			if i % 2 == 0:
+				draw_arc(_radius_center, _radius, TAU * i / n, TAU * (i + 1) / n, 4, Color(1.0, 0.88, 0.5, 0.85), 2.0)
+	var fp := Rect2(_pos + _footprint.position, _footprint.size)
 	var c := COLOR_OK if _reason == "" else COLOR_BAD
 	draw_rect(fp, Color(c, 0.12), true)
 	draw_rect(fp, Color(c, 0.9), false, 1.5)
@@ -183,6 +217,8 @@ func _collect_blockers() -> void:
 	var groups: Array = env.STATION_GROUPS + env.NAV_EXTRA_GROUPS if env else ["casas"]
 	for group in groups:
 		for node in get_tree().get_nodes_in_group(group):
+			if _ignore.has(node):
+				continue
 			var r := Rect2(node.global_position, Vector2.ZERO)
 			if node.has_method("get_obstacle_outline"):
 				var outline: PackedVector2Array = node.get_obstacle_outline()

@@ -13,6 +13,9 @@ var _next_bar: ProgressBar
 var _next_label: Label
 var _level_button: Button
 var _rows: Dictionary = {}  # id -> {level, effect, button}
+var _starter_button: Button  # Bloco 37: casas iniciais
+var _comedouro_button: Button
+var _radius_label: Label
 
 
 func setup(hud: CanvasLayer, hub: Node, economy: Node) -> void:
@@ -72,6 +75,25 @@ func _build() -> void:
 		_hub.level_up()
 		refresh())
 	vbox.add_child(_level_button)
+
+	# Bloco 37: construções da vila (casas iniciais da fundação e comedouro)
+	vbox.add_child(HSeparator.new())
+	vbox.add_child(_hud._label("CONSTRUIR (o engenheiro ergue)", 12, _hud.COLOR_DIM))
+	_radius_label = _hud._label("", 12, _hud.COLOR_TEXT)
+	_radius_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(_radius_label)
+	_starter_button = _hud._button("")
+	_starter_button.pressed.connect(func():
+		Audio.click()
+		_hub.build_starter_house()
+		refresh())
+	vbox.add_child(_starter_button)
+	_comedouro_button = _hud._button("")
+	_comedouro_button.pressed.connect(func():
+		Audio.click()
+		_hub.build_comedouro()
+		refresh())
+	vbox.add_child(_comedouro_button)
 
 	vbox.add_child(HSeparator.new())
 	var up_header := HBoxContainer.new()
@@ -161,6 +183,19 @@ func refresh() -> void:
 			_level_button.text = "Expandir vila  (%d cr)" % cost
 		_level_button.disabled = not _hub.can_level_up()
 
+	# Bloco 37
+	var r: float = _hub.house_radius()
+	_radius_label.text = ("Casas só em volta do Centro da Vila: até %d px (cresce %d a cada estágio)." % [roundi(r), roundi(_hub.house_radius_per_stage)]) \
+		if r > 0.0 else "Casas em qualquer lugar livre da mina."
+	_starter_button.visible = _hub.starter_houses_left > 0
+	var sr: String = _hub.starter_block_reason()
+	_starter_button.text = ("Casa inicial (%d restante%s) — escolher lugar  (%s)" % [_hub.starter_houses_left, "s" if _hub.starter_houses_left > 1 else "", _hub.starter_cost_text()]) \
+		if sr == "" else "Casa inicial: " + sr
+	_starter_button.disabled = sr != ""
+	var cr: String = _hub.comedouro_block_reason()
+	_comedouro_button.text = ("Comedouro — escolher lugar  (%s)" % _hub.comedouro_cost_text()) if cr == "" else "Comedouro: " + cr
+	_comedouro_button.disabled = cr != ""
+
 	for id in _rows:
 		var row: Dictionary = _rows[id]
 		var cur: int = _hub.upgrades[id]
@@ -197,6 +232,9 @@ func button_text() -> String:
 
 func has_available_action() -> bool:
 	if _hub.can_level_up():
+		return true
+	# Bloco 37: casa inicial da fundação ainda por construir (guia o começo da partida)
+	if _hub.starter_houses_left > 0 and _hub.starter_block_reason() == "":
 		return true
 	for id in _hub.UPGRADE_IDS:
 		if _hub.upgrade_block_reason(id) == "":

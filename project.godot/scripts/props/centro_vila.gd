@@ -30,6 +30,20 @@ extends "res://scripts/props/station.gd"
 ##
 ## Os ipezinhos consultam recovery_mult() e speed_mult(); a economia guarda o limite.
 ## Ninguém trabalha aqui (sem slots): é só a base que bloqueia a navegação.
+##
+## Bloco 37 — FUNDAÇÃO e RAIO DAS CASAS:
+##   - Partida nova começa com a fundação (founding.gd): o jogador escolhe onde fica o
+##     Centro da Vila e depois o Armazém (na hora, sem custo). Aí ganha o pacote inicial
+##     (founding_*): dá pra 3 CASAS INICIAIS + 1 COMEDOURO, construídos pelo engenheiro.
+##   - Casas iniciais (starter_houses): não gastam nível de Moradias nem somam no limite
+##     de ipezinhos (o limite inicial, 8, já conta com elas — eram as 3 casas prontas da
+##     cena). Depois delas, casa nova é a melhoria Moradias, como antes.
+##   - Casa (inicial ou Moradias) só pode ser posicionada até house_radius() do Centro.
+##     ESCOLHA: o raio cresce a cada ESTÁGIO da vila (Expandir) — Moradias já é a própria
+##     casa, e "a vila cresceu" é o que o estágio mede. O mapa continua do mesmo tamanho.
+##     Casas que já existem (saves antigos) não são checadas: a regra é só pra posicionar.
+##   - Comedouro: dá pra construir mais (build_comedouro), um canteiro por vez.
+##   - Save antigo (sem "layout"): tudo fica onde a cena põe, como antes.
 
 signal level_changed(level: int)
 signal upgrade_bought(id: String, new_level: int)
@@ -40,6 +54,13 @@ const Ores := preload("res://scripts/core/ores.gd")
 const STAGE_NAMES := ["Acampamento", "Vilarejo", "Vila", "Vila Mineira", "Cidade Mineira"]
 const UPGRADE_IDS := ["moradias", "enfermaria", "trilhas"]
 const CASA_SCENE := preload("res://scenes/props/casa.tscn")
+const COMEDOURO_SCENE := preload("res://scenes/props/comedouro.tscn")
+const COMEDOURO_TEXTURE := preload("res://assets/game/comedouro.png")
+const CASA_TEXTURE := preload("res://assets/game/casa.png")
+const Canteiro := preload("res://scripts/props/canteiro.gd")
+## Pegadas (em volta do pé do prédio) pro posicionador.
+const HOUSE_FOOTPRINT := Rect2(-32, -54, 64, 78)
+const COMEDOURO_FOOTPRINT := Rect2(-44, -40, 88, 60)
 const UPGRADE_NAMES := {
 	"moradias": "Moradias",
 	"enfermaria": "Enfermaria",
@@ -82,6 +103,28 @@ const UPGRADE_NAMES := {
 ## Bloco 31b: segundos de engenheiro pra EXPANDIR a vila (estágio 2, 3, 4, 5).
 @export var expand_build_times: Array[float] = [60.0, 90.0, 120.0, 150.0]
 
+@export_group("Fundação (Bloco 37)")
+## Casas iniciais da partida nova (fora das Moradias; não somam no limite de ipezinhos).
+@export var starter_houses: int = 3
+## Custo de cada casa inicial: x = créditos, y = pedra (ferro), z = madeira.
+@export var starter_house_cost: Vector3i = Vector3i(80, 20, 15)
+@export var starter_house_build_time: float = 25.0
+## Comedouro novo: x = créditos, y = ferro, z = madeira; e segundos de engenheiro.
+@export var comedouro_cost: Vector3i = Vector3i(100, 20, 25)
+@export var comedouro_build_time: float = 20.0
+## Pacote que entra quando a vila é fundada (dá pras 3 casas + 1 comedouro, com folga).
+@export var founding_credits: int = 400
+@export var founding_ore: int = 90
+@export var founding_wood: int = 80
+
+@export_group("Raio das casas (Bloco 37)")
+## Casa só pode ser posicionada até essa distância do Centro da Vila no estágio 1...
+@export var house_radius_base: float = 230.0
+## ...e o raio cresce isso a cada estágio da vila.
+@export var house_radius_per_stage: float = 70.0
+## false = sem limite (casa em qualquer lugar livre da mina).
+@export var house_radius_enabled: bool = true
+
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 var panel_id := "hub"
 ## Melhoria da vila encomendada e ainda em obra ("" = nenhuma).
@@ -91,6 +134,10 @@ var upgrade_total: float = 0.0
 var _obra := ObraSite.new()
 var level: int = 1
 var upgrades: Dictionary = {"moradias": 0, "enfermaria": 0, "trilhas": 0}
+## Bloco 37: a vila já foi fundada? (false só durante a fundação da partida nova)
+var founded: bool = true
+## Casas iniciais que ainda dá pra encomendar (partida nova começa com starter_houses).
+var starter_houses_left: int = 0
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _name_label: Label = $NameLabel
@@ -117,6 +164,11 @@ func get_clear_center() -> Vector2:
 
 func get_clear_radius() -> float:
 	return 85.0
+
+
+## Área onde a decoração some quando o Centro é posicionado (Bloco 37).
+func decor_clear_rect() -> Rect2:
+	return Rect2(global_position + Vector2(-62, -104), Vector2(124, 116))
 
 
 # ------------------------------------------------------------ efeitos (consultados pelos ipezinhos)
@@ -425,8 +477,128 @@ func _start_house_placement() -> bool:
 	if placer == null:
 		push_warning("Centro da Vila: sem HousePlacer na cena")
 		return false
-	placer.begin(_confirm_house)
+	placer.begin(_confirm_house, CASA_TEXTURE, 3, "a casa nova", house_placer_opts())
 	return true
+
+
+# ------------------------------------------------------------ fundação / raio (Bloco 37)
+## Até onde (do Centro da Vila) dá pra posicionar casa agora. 0 = sem limite.
+func house_radius() -> float:
+	if not house_radius_enabled:
+		return 0.0
+	return house_radius_base + house_radius_per_stage * (level - 1)
+
+
+func house_placer_opts() -> Dictionary:
+	return {"footprint": HOUSE_FOOTPRINT, "radius": house_radius(), "radius_center": global_position}
+
+
+func starter_cost_text() -> String:
+	return "%d cr + %d pedra (ferro) + %d madeira" % [starter_house_cost.x, starter_house_cost.y, starter_house_cost.z]
+
+
+func comedouro_cost_text() -> String:
+	return "%d cr + %d ferro + %d madeira" % [comedouro_cost.x, comedouro_cost.y, comedouro_cost.z]
+
+
+func starter_block_reason() -> String:
+	if starter_houses_left <= 0:
+		return "sem casas iniciais"
+	var eco := _economy()
+	return eco.missing_text(starter_house_cost.x, starter_house_cost.y, house_stone_ore, starter_house_cost.z, "pedra (ferro)") if eco else "sem recursos"
+
+
+## Casa inicial: escolhe o lugar (dentro do raio) e paga só ao confirmar.
+func build_starter_house() -> bool:
+	if starter_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_starter_house, CASA_TEXTURE, 3, "a casa inicial (%d/%d)" % [starter_houses - starter_houses_left + 1, starter_houses], house_placer_opts())
+	return true
+
+
+func _confirm_starter_house(pos: Vector2) -> bool:
+	if starter_block_reason() != "":
+		Audio.error()
+		return false
+	if not _economy().spend(starter_house_cost.x, starter_house_cost.y, house_stone_ore, starter_house_cost.z):
+		return false
+	starter_houses_left -= 1
+	var casa := spawn_house(pos)
+	casa.starter_house = true  # não soma no limite de ipezinhos quando ficar pronta
+	casa.start_construction(starter_house_build_time)
+	_popup("Casa inicial encomendada — precisa de engenheiro", Color(1.0, 0.8, 0.45))
+	Audio.click()
+	return true
+
+
+func comedouro_block_reason() -> String:
+	var c := Canteiro.pending(get_tree(), "comedouro")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	return eco.missing_text(comedouro_cost.x, comedouro_cost.y, "ferro", comedouro_cost.z) if eco else "sem recursos"
+
+
+## Comedouro novo: o jogador escolhe o lugar (qualquer lugar livre da mina).
+func build_comedouro() -> bool:
+	if comedouro_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_comedouro, COMEDOURO_TEXTURE, 3, "o comedouro", {"footprint": COMEDOURO_FOOTPRINT})
+	return true
+
+
+func _confirm_comedouro(pos: Vector2) -> bool:
+	if comedouro_block_reason() != "":
+		Audio.error()
+		return false
+	if not _economy().spend(comedouro_cost.x, comedouro_cost.y, "ferro", comedouro_cost.z):
+		return false
+	Canteiro.order(get_tree(), "comedouro", pos, comedouro_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Comedouro encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+## O canteiro terminou (canteiro.gd chama o dono do tipo).
+func finish_build(kind: String, pos: Vector2) -> void:
+	if kind != "comedouro":
+		return
+	var c := spawn_comedouro(pos)
+	var v := c.get_node_or_null("Visual") as Sprite2D
+	if v:
+		v.scale = Vector2(2.0, 0.2)
+		create_tween().tween_property(v, "scale", Vector2(2, 2), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	Audio.recruit()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Comedouro pronto! O cozinheiro (tecla C) enche ele de comida.", Color(0.55, 1.0, 0.5))
+
+
+## Cria um comedouro (também ao carregar o save, com o mesmo nome).
+func spawn_comedouro(pos: Vector2, node_name: String = "", rebuild_nav: bool = true) -> Node2D:
+	var c: Node2D = COMEDOURO_SCENE.instantiate()
+	var n := 1
+	while node_name == "" and get_parent().has_node("Comedouro" if n == 1 else "Comedouro%d" % n):
+		n += 1
+	c.name = node_name if node_name != "" else ("Comedouro" if n == 1 else "Comedouro%d" % n)
+	c.position = pos
+	get_parent().add_child(c)
+	if rebuild_nav:
+		var env := get_tree().get_first_node_in_group("environment")
+		if env:
+			env.clear_decor_under_extras()
+			env.rebuild_navigation()
+	return c
 
 
 ## HousePlacer chama quando o jogador clica num lugar válido. Só aqui a Moradias é paga.
@@ -449,7 +621,12 @@ func _confirm_house(pos: Vector2) -> bool:
 
 
 ## A casa terminou (chamado pela própria casa): agora sim entra o limite de ipezinhos.
-func on_house_built(_casa: Node) -> void:
+func on_house_built(casa: Node) -> void:
+	if casa.get("starter_house"):
+		# Bloco 37: casa inicial — o limite inicial de ipezinhos já conta com ela
+		_popup("Casa inicial pronta! (4 camas)", Color(0.55, 1.0, 0.5))
+		Audio.recruit()
+		return
 	var eco := _economy()
 	if eco:
 		eco.max_workers += workers_per_moradia
@@ -539,7 +716,8 @@ func _popup(text: String, color: Color) -> void:
 ## economia e as casas construídas vêm salvas em cada casa.
 func get_save_data() -> Dictionary:
 	return {"level": level, "upgrades": upgrades.duplicate(), "pending_upgrade": pending_upgrade,
-		"upgrade_left": upgrade_left, "upgrade_total": upgrade_total, "obra": _obra.get_save_data()}
+		"upgrade_left": upgrade_left, "upgrade_total": upgrade_total, "obra": _obra.get_save_data(),
+		"founded": founded, "starter_houses_left": starter_houses_left}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -554,5 +732,8 @@ func load_save_data(d: Dictionary) -> void:
 	upgrade_total = maxf(SaveUtil.num(d, "upgrade_total", 0.0), 0.0) if pending_upgrade != "" else 0.0
 	upgrade_left = clampf(SaveUtil.num(d, "upgrade_left", upgrade_total), 0.0, upgrade_total)
 	_obra.load_save_data(SaveUtil.dict(d, "obra"))
+	# Bloco 37 (save antigo: fundada, sem casas iniciais — ela já tinha as da cena)
+	founded = SaveUtil.boolean(d, "founded", true)
+	starter_houses_left = clampi(SaveUtil.integer(d, "starter_houses_left", 0), 0, starter_houses)
 	_update_visual()
 	_refresh_galleries(false)  # Bloco 33: galerias batem com o estágio carregado

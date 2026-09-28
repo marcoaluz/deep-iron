@@ -108,6 +108,11 @@ extends Node
 ##   Bloco 35 (save_version 4): arma por guarda com desgaste. Save < 4: cada guarda recebe a
 ##     melhor arma que a vila já tinha forjado (durabilidade cheia) e a forja que andava
 ##     sozinha (forging/forge_left) vira a primeira encomenda da fila do Arsenal.
+##   Bloco 37: "layout" {hub, armazens {nome: pos}, comedouros [{name, position}]} — onde o
+##     jogador fundou a vila e os comedouros que construiu. Aplicado ANTES de tudo: as casas
+##     e o comedouro que vêm na cena somem e o Centro/Armazém vão pro lugar salvo. Save
+##     antigo (sem "layout") fica com o layout da cena, como antes. No Centro da Vila:
+##     founded, starter_houses_left; na casa: starter_house.
 ##   Bloco 36: ipezinho.gd downed (caído em combate) + downed_gate; a posição, a gravidade
 ##     e o relógio (care_left) já iam. Quem carregava NÃO vai: ao carregar ele está caído no
 ##     chão onde estava e o médico vem buscar de novo. Criaturas continuam fora do save.
@@ -461,6 +466,7 @@ func _collect() -> Dictionary:
 		if casa.get("placed_by_player"):
 			placed.append({"name": String(casa.name), "position": SaveUtil.vec2_to_array(casa.global_position)})
 	data["placed_houses"] = placed
+	data["layout"] = _collect_layout(tree)
 	var cam: Node = _game.get_node_or_null("Camera2D")
 	if cam:
 		data["camera"] = {"position": SaveUtil.vec2_to_array(cam.get_screen_center_position()), "zoom": cam.zoom.x}
@@ -502,6 +508,7 @@ func apply_pending(main: Node) -> void:
 	# ordem importa: oficina antes das jazidas (desbloqueio), casas antes dos ipezinhos (camas)
 	_apply_single("day_night", SaveUtil.dict(data, "day_night"))
 	_apply_single("economy", SaveUtil.dict(data, "economy"))
+	_apply_layout(SaveUtil.dict(data, "layout"))  # Bloco 37: antes das casas e da navegação
 	_apply_single("village_hub", SaveUtil.dict(data, "village"))
 	if not SaveUtil.dict(data, "economy").has("max_workers"):
 		_recompute_max_workers()
@@ -515,9 +522,17 @@ func apply_pending(main: Node) -> void:
 		c.remove_from_group("canteiros")
 		c.remove_from_group("obras")
 		c.queue_free()
+	var restored := false
 	for cd in SaveUtil.array(data, "canteiros"):
 		if typeof(cd) == TYPE_DICTIONARY:
 			Canteiro.restore(get_tree(), cd)
+			restored = true
+	if restored:
+		# canteiros carregados também são obstáculo na navegação (como quando encomendados)
+		var env := get_tree().get_first_node_in_group("environment")
+		if env:
+			env.clear_decor_under_extras()
+			env.rebuild_navigation()
 	_apply_group("barricadas", SaveUtil.dict(data, "barricadas"))
 	_apply_group("casas", SaveUtil.dict(data, "casas"))
 	_apply_group("armazens", SaveUtil.dict(data, "armazens"))
@@ -549,6 +564,57 @@ func apply_pending(main: Node) -> void:
 	print("SaveManager: save carregado (versão %d, salvo em %s)" % [
 		SaveUtil.integer(data, "save_version", 0), SaveUtil.text(data, "saved_at", "?")])
 	loaded.emit()
+
+
+## Bloco 37: onde a vila foi fundada (Centro, Armazém) e os comedouros construídos.
+func _collect_layout(tree: SceneTree) -> Dictionary:
+	var hub: Node2D = tree.get_first_node_in_group("village_hub")
+	var arms := {}
+	for a in tree.get_nodes_in_group("armazens"):
+		arms[String(a.name)] = SaveUtil.vec2_to_array(a.global_position)
+	var coms := []
+	for c in tree.get_nodes_in_group("comedouros"):
+		coms.append({"name": String(c.name), "position": SaveUtil.vec2_to_array(c.global_position)})
+	# casas que vieram na cena e continuam de pé (partida de antes da fundação): ficam
+	var scene_casas := []
+	for casa in tree.get_nodes_in_group("casas"):
+		if not casa.placed_by_player:
+			scene_casas.append(String(casa.name))
+	return {"hub": SaveUtil.vec2_to_array(hub.global_position) if hub else [], "armazens": arms,
+		"comedouros": coms, "scene_casas": scene_casas}
+
+
+## Save sem "layout" (antigo): não mexe em nada — fica o layout da cena.
+func _apply_layout(layout: Dictionary) -> void:
+	if layout.is_empty():
+		return
+	var hub: Node2D = get_tree().get_first_node_in_group("village_hub")
+	if hub == null:
+		return
+	# casas e comedouro que vêm na cena não existem nessa partida (o jogador fez os dele) —
+	# menos as casas da cena que o save diz que continuam (partida de antes da fundação)
+	var keep: Array = SaveUtil.array(layout, "scene_casas")
+	for casa in get_tree().get_nodes_in_group("casas"):
+		if not casa.placed_by_player and not keep.has(String(casa.name)):
+			casa.get_parent().remove_child(casa)
+			casa.queue_free()
+	for c in get_tree().get_nodes_in_group("comedouros"):
+		c.get_parent().remove_child(c)
+		c.queue_free()
+	hub.global_position = SaveUtil.vec2(layout, "hub", hub.global_position)
+	var arms := SaveUtil.dict(layout, "armazens")
+	for a in get_tree().get_nodes_in_group("armazens"):
+		a.global_position = SaveUtil.vec2(arms, String(a.name), a.global_position)
+	for cd in SaveUtil.array(layout, "comedouros"):
+		if typeof(cd) != TYPE_DICTIONARY:
+			continue
+		var pos := SaveUtil.vec2(cd, "position", Vector2.INF)
+		if pos != Vector2.INF:
+			hub.spawn_comedouro(pos, SaveUtil.text(cd, "name", ""), false)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
 
 
 ## Recria as casas que o jogador posicionou (antes dos ipezinhos, pra camas baterem).

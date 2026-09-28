@@ -372,7 +372,7 @@ func _build_abyss() -> void:
 ## NAV_EXTRA_GROUPS. Não mexe no sorteio: as posições das outras pedras não mudam.
 ## (Chamado de novo quando uma estrutura dessas é construída durante o jogo.)
 func clear_decor_under_extras() -> void:
-	for group in NAV_EXTRA_GROUPS + ["elevador_abismo", "barricadas"]:
+	for group in NAV_EXTRA_GROUPS + ["elevador_abismo", "barricadas", "village_hub", "armazens", "comedouros"]:
 		for node in get_tree().get_nodes_in_group(group):
 			var area: Rect2 = node.decor_clear_rect() if node.has_method("decor_clear_rect") \
 				else Rect2(node.global_position + Vector2(-44, -64), Vector2(88, 84))

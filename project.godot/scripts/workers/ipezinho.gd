@@ -1479,6 +1479,7 @@ func _fall_in_combat(cause: String) -> void:
 func picked_up_by(doctor: Node) -> void:
 	_carried_by = doctor
 	_rescuer = doctor
+	global_position = doctor.global_position + Vector2(0, 1)  # já nas costas neste quadro
 
 
 ## (caído) o médico largou no caminho: fica ali, o relógio volta a correr.

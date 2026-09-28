@@ -23,6 +23,10 @@ const ORE_CLICK_RADIUS := 30.0
 ## Constantes de função (job) do ipezinho — Bloco 25.
 const Worker := preload("res://scripts/workers/ipezinho.gd")
 
+## Bloco 37: partida nova começa com a FUNDAÇÃO (o jogador escolhe onde ficam o Centro da
+## Vila e o Armazém; ver founding.gd). false = começa com o layout da cena (testes).
+@export var founding_on_new_game: bool = true
+
 ## Ipezinhos selecionados (a ordem importa pro Tab no modo grupo).
 var selection: Array[Node2D] = []
 ## Selecionado "principal" (o único, ou o primeiro do grupo): F segue ele.
@@ -42,6 +46,7 @@ var _additive := false  # Shift segurado no clique/arrasto atual
 var _box_drawer: Node2D
 var _group_focus := 0  # Tab no modo grupo: qual deles a câmera mostra
 var _pause: CanvasLayer
+var _founding: Node
 
 @onready var _camera: Camera2D = $Camera2D
 @onready var _environment: Node2D = $World/Environment
@@ -63,11 +68,20 @@ func _ready() -> void:
 	add_child(preload("res://scripts/core/house_placer.gd").new())
 	_pause = preload("res://scripts/ui/pause_menu.gd").new()
 	add_child(_pause)
+	_founding = preload("res://scripts/core/founding.gd").new()
+	_founding.name = "Founding"
+	add_child(_founding)
 	SaveManager.register_game(self)
 	if SaveManager.pending_load:
 		# espera o ambiente montar (1 frame + navegação) e as estruturas entrarem nos grupos
 		await _environment.navigation_ready
 		SaveManager.apply_pending(self)
+		var hub := get_tree().get_first_node_in_group("village_hub")
+		if hub and not hub.founded:
+			_founding.start(false)  # salvo no meio da fundação: volta a escolher
+	elif founding_on_new_game:
+		await _environment.navigation_ready
+		_founding.start(true)
 
 
 func _unhandled_input(event: InputEvent) -> void:
