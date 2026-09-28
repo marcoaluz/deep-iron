@@ -7,9 +7,12 @@ extends "res://scripts/props/station.gd"
 ##   aqui no canteiro (uma peça por vez). Os custos são pagos ao começar.
 ## - A Estrutura vem primeiro (o resto é montado nela); as outras em qualquer ordem.
 ## - Cada peça exige um estágio mínimo da vila (Centro da Vila).
-## - No mapa, a escavadeira inteira aparece como "projeto" translúcido azulado;
-##   cada peça pronta vira sólida. Com as 5, ela liga: a broca gira, a cabine e
-##   o giroflex acendem e o sinal `completed` dispara (o HUD mostra a conquista).
+## - No mapa (Bloco 32), a partida começa só com a plataforma vazia. A peça em montagem
+##   aparece como fantasma que fica nítido conforme o engenheiro trabalha (igual ao
+##   canteiro) e, instalada, vira sólida no lugar dela. Com as 5, ela liga: a broca gira,
+##   a cabine e o giroflex acendem e o sinal `completed` dispara (o HUD mostra a conquista).
+## - O reator instalado aparece embaixo do convés, à esquerda; um reator novo em obra é
+##   montado no chão ao lado da plataforma e, pronto, entra no lugar do antigo.
 ##
 ## REATORES (Bloco 19): pronta, a escavadeira perfura sozinha e manda minério pro
 ## armazém. O ritmo e o efeito colateral dependem do reator instalado (um por vez,
@@ -63,8 +66,11 @@ const REACTOR_MIX := {
 	"fusao": {"ferro": 0.5, "cobre": 0.25, "carvao": 0.1, "prata": 0.15},
 }
 
-## "Planta" azulada das peças que ainda não foram feitas (valores > 1 brilham mesmo no escuro).
-const GHOST_COLOR := Color(0.75, 1.0, 1.5, 0.4)
+## Reator parado (desligado, sem carvão, em pane): mais escuro.
+const REACTOR_IDLE_COLOR := Color(0.6, 0.6, 0.66)
+## Onde saem as faíscas: na torre (peça) ou no reator novo montado ao lado.
+const SPARKS_PART := Vector2(-10, -84)
+const SPARKS_REACTOR := Vector2(-92, -50)
 
 @export_group("Peças (na ordem de PART_IDS)")
 ## Custo de cada peça: x = créditos, y = minério do armazém, z = segundos de fabricação.
@@ -146,6 +152,8 @@ var _anim_time: float = 0.0
 	"broca": $Broca,
 	"cabine": $Cabine,
 }
+@onready var _reactor_layer: Sprite2D = $Reator
+@onready var _reactor_new: Sprite2D = $ReatorNovo
 @onready var _sparks: CPUParticles2D = $Sparks
 @onready var _dust: CPUParticles2D = $Dust
 @onready var _beacon: PointLight2D = $Beacon
@@ -167,24 +175,29 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if fabricating != "":
+	if obra_pending():
 		var working := _obra.has_engineer()
 		_sparks.emitting = working
 		_work_light.enabled = working
+		_sparks.position = SPARKS_REACTOR if building_reactor != "" else SPARKS_PART
 		if working:
 			_sound_timer -= delta
 			if _sound_timer <= 0.0:
 				_sound_timer = forge_sound_interval * randf_range(0.8, 1.2)
-				Audio.forge(global_position + Vector2(0, -90))
-			# o "projeto" da peça pulsa enquanto é montada
-			var layer: Sprite2D = _layers[fabricating]
-			layer.modulate.a = 0.4 + 0.35 * (sin(Time.get_ticks_msec() * 0.006) * 0.5 + 0.5)
-		_update_label()
+				Audio.forge(global_position + _sparks.position)
+		_update_obra_visual()
+		if not complete:
+			_update_label()
 	if complete:
 		_drill(delta)
 		if reactor_active():
 			_anim_time += delta
 			_layers.broca.frame = int(_anim_time * drill_fps) % 2
+			# o reator "respira" enquanto trabalha
+			var glow := 1.0 + 0.12 * (sin(_anim_time * 4.0) * 0.5 + 0.5)
+			_reactor_layer.modulate = Color(glow, glow, glow)
+		else:
+			_reactor_layer.modulate = REACTOR_IDLE_COLOR
 		_beacon.energy = 0.9 + 0.6 * absf(sin(_anim_time * 3.0)) if reactor_active() else 0.3
 		_update_label()
 
@@ -217,6 +230,7 @@ func obra_work(seconds: float) -> void:
 		if reactor_left <= 0.0:
 			_finish_reactor()
 		else:
+			_update_obra_visual()
 			_update_label()
 		return
 	if fabricating == "":
@@ -224,6 +238,8 @@ func obra_work(seconds: float) -> void:
 	fab_left -= seconds
 	if fab_left <= 0.0:
 		_install(fabricating)
+	else:
+		_update_obra_visual()
 
 
 func obra_ordered_at() -> float:
@@ -352,16 +368,43 @@ func _complete() -> void:
 
 
 # ------------------------------------------------------------ visual
+## Bloco 32: só aparece o que existe. Peça instalada = sólida; peça em montagem =
+## fantasma que fica nítido com o progresso; o resto não aparece (plataforma vazia).
 func _update_visual() -> void:
 	for id in PART_IDS:
 		var layer: Sprite2D = _layers[id]
-		layer.modulate = Color.WHITE if installed[id] else GHOST_COLOR
+		layer.visible = installed[id] or id == fabricating
+		if installed[id]:
+			layer.modulate = Color.WHITE
 	_layers.cabine.frame = 1 if complete else 0  # janelas acesas + giroflex
-	_sparks.emitting = fabricating != "" and _obra.has_engineer()
-	_work_light.enabled = fabricating != "" and _obra.has_engineer()
+	# reator instalado: embaixo do convés (só depois de pronta)
+	var ri := REACTOR_IDS.find(reactor)
+	_reactor_layer.visible = complete and ri >= 0
+	if ri >= 0:
+		_reactor_layer.frame = ri
+	_reactor_layer.modulate = Color.WHITE if reactor_active() else REACTOR_IDLE_COLOR
+	# reator novo em obra: no chão, ao lado da plataforma
+	var bi := REACTOR_IDS.find(building_reactor)
+	_reactor_new.visible = bi >= 0
+	if bi >= 0:
+		_reactor_new.frame = bi
+	var working := obra_pending() and _obra.has_engineer()
+	_sparks.emitting = working
+	_work_light.enabled = working
+	_sparks.position = SPARKS_REACTOR if building_reactor != "" else SPARKS_PART
+	_update_obra_visual()
 	_beacon.enabled = complete
 	_cab_light.enabled = complete
 	_update_label()
+
+
+## O fantasma do que está em obra acompanha o progresso (mesma cor do canteiro).
+func _update_obra_visual() -> void:
+	if fabricating != "":
+		var layer: Sprite2D = _layers[fabricating]
+		layer.modulate = ObraSite.ghost_color(fab_progress())
+	if building_reactor != "":
+		_reactor_new.modulate = ObraSite.ghost_color(obra_progress())
 
 
 func _update_label() -> void:
@@ -481,7 +524,7 @@ func build_reactor(id: String) -> bool:
 	reactor_left = reactor_total
 	_obra.start()
 	_popup("Encomendado: reator %s — precisa de engenheiro" % REACTOR_NAMES[id], Color(1.0, 0.8, 0.45))
-	_update_label()
+	_update_visual()
 	return true
 
 
@@ -492,7 +535,8 @@ func _finish_reactor() -> void:
 	reactor_total = 0.0
 	built_reactors.append(id)
 	_popup("Reator novo: %s!" % REACTOR_NAMES[id], Color(0.55, 1.0, 0.5))
-	install_reactor(id)
+	if not install_reactor(id):
+		_update_visual()  # em pane: fica guardado pra trocar depois, mas o fantasma some
 
 
 ## Troca pro reator (já construído).
@@ -505,13 +549,16 @@ func install_reactor(id: String) -> bool:
 	_fusao_timer = 0.0
 	_dust.restart()
 	Audio.forge(global_position + Vector2(0, -90))
-	_update_label()
+	_update_visual()
+	# o reator novo "encaixa" embaixo do convés
+	_reactor_layer.scale = Vector2(2.2, 1.8)
+	create_tween().tween_property(_reactor_layer, "scale", Vector2(2, 2), 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	return true
 
 
 func toggle_drill() -> void:
 	drill_on = not drill_on
-	_update_label()
+	_update_visual()
 
 
 func _drill(delta: float) -> void:

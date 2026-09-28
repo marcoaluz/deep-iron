@@ -2080,6 +2080,111 @@ def dig_cabine(lit):
     return outline(img, 0.5)
 
 
+# Bloco 32: reatores visíveis na plataforma — embaixo do deck, à esquerda (a torre da
+# estrutura passa na frente). Um quadro de DIG_W x DIG_H por reator, na ordem de REACTOR_IDS
+# do escavadeira.gd: vapor, diesel, cristal, solar, fusão.
+REACTOR_SLOT = (6, 62)  # canto de cima-esquerda do espaço do reator no quadro
+REACTOR_W, REACTOR_H = 21, 24
+
+
+def _reactor_vapor():
+    img = new(REACTOR_W, REACTOR_H)
+    for y in range(6, 24):  # caldeira: cilindro de ferro com luz da esquerda
+        for x in range(3, 18):
+            t = 0.75 - (x - 3) / 15 * 0.55
+            px(img, x, y, dither(IRON_RAMP, t, x, y))
+    rect(img, 4, 5, 16, 5, IRON_LIGHT)  # tampo arredondado
+    rect(img, 6, 4, 14, 4, IRON)
+    for x in (4, 8, 12, 16):  # rebites
+        px(img, x, 9, IRON_HIGHLIGHT)
+        px(img, x, 20, IRON_HIGHLIGHT)
+    rect(img, 7, 14, 13, 19, IRON_SHADOW)  # porta da fornalha acesa
+    rect(img, 8, 15, 12, 18, TORCH_FLAME)
+    rect(img, 9, 16, 11, 17, TORCH_BRIGHT)
+    px(img, 10, 16, TORCH_CORE)
+    rect(img, 13, 0, 14, 4, IRON_DARK)  # chaminé
+    px(img, 13, 0, IRON_LIGHT)
+    rect(img, 12, 0, 15, 0, IRON)
+    return outline(img, 0.5)
+
+
+def _reactor_diesel():
+    img = new(REACTOR_W, REACTOR_H)
+    paint = ((96, 84, 40, 255), (138, 120, 52, 255), (176, 156, 78, 255))  # amarelo de máquina, gasto
+    for y in range(9, 24):
+        for x in range(1, 19):
+            t = 0.8 - (x - 1) / 18 * 0.6 - (0.15 if y > 20 else 0.0)
+            px(img, x, y, dither(paint, t, x, y))
+    for y in range(12, 20, 2):  # grelha do radiador
+        rect(img, 3, y, 9, y, IRON_SHADOW)
+    rect(img, 12, 12, 17, 17, IRON_DARK)  # tampa do motor
+    rect(img, 13, 13, 16, 13, IRON_LIGHT)
+    rect(img, 15, 1, 16, 9, IRON_DARK)  # escapamento
+    rect(img, 14, 1, 17, 1, IRON)
+    px(img, 15, 2, RUST_DARK)
+    rect(img, 1, 22, 18, 23, IRON_SHADOW)  # base
+    return outline(img, 0.5)
+
+
+def _reactor_cristal():
+    img = new(REACTOR_W, REACTOR_H)
+    rect(img, 3, 18, 17, 23, IRON_DARK)  # berço de ferro
+    rect(img, 3, 18, 17, 18, IRON_LIGHT)
+    for x in (4, 16):  # garras
+        rect(img, x, 10, x, 18, IRON)
+        px(img, x, 10, IRON_HIGHLIGHT)
+    glow = ((40, 110, 140, 255), (90, 190, 220, 255), (170, 240, 255, 255), (240, 255, 255, 255))
+    for y in range(2, 18):  # cristal em losango, brilhando
+        half = 5 - abs(y - 9) * 5 // 8
+        for x in range(10 - half, 11 + half):
+            t = 0.9 - abs(x - 9) / 6 - (y - 2) / 30
+            px(img, x, y, dither(glow, t, x, y))
+    px(img, 9, 5, glow[3])
+    px(img, 8, 7, glow[3])
+    return outline(img, 0.5)
+
+
+def _reactor_solar():
+    img = new(REACTOR_W, REACTOR_H)
+    rect(img, 9, 13, 11, 23, IRON_DARK)  # mastro
+    rect(img, 6, 21, 14, 23, IRON)  # pé
+    cell_dark, cell, cell_light = (24, 40, 78, 255), (40, 70, 128, 255), (86, 128, 190, 255)
+    for y in range(2, 13):  # painel inclinado
+        skew = (12 - y) // 3
+        for x in range(1 + skew, 20 - skew // 2):
+            c = cell if (x + y) % 5 else cell_light
+            if (x - skew) % 5 == 0 or y % 4 == 0:
+                c = cell_dark
+            px(img, x, y, c)
+    rect(img, 1, 12, 19, 12, BRASS)  # moldura
+    rect(img, 5, 1, 17, 1, BRASS)
+    return outline(img, 0.5)
+
+
+def _reactor_fusao():
+    img = new(REACTOR_W, REACTOR_H)
+    cx, cy = 10, 11
+    core = ((120, 40, 110, 255), (200, 80, 190, 255), (255, 170, 240, 255), (255, 240, 255, 255))
+    for y in range(REACTOR_H):
+        for x in range(REACTOR_W):
+            d = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5
+            if 6.5 <= d <= 9.5:  # anel de contenção
+                t = 0.7 - (x - cx) / 20 - (y - cy) / 20
+                px(img, x, y, dither(IRON_RAMP, t, x, y))
+            elif d < 4.5:  # núcleo
+                px(img, x, y, dither(core, 1.0 - d / 4.5, x, y))
+    for x in (5, 15):  # pés
+        rect(img, x, 20, x + 1, 23, IRON_DARK)
+    return outline(img, 0.5)
+
+
+def build_reactor_layer():
+    sheet = new(DIG_W * 5, DIG_H)
+    for i, fn in enumerate((_reactor_vapor, _reactor_diesel, _reactor_cristal, _reactor_solar, _reactor_fusao)):
+        sheet.alpha_composite(fn(), (i * DIG_W + REACTOR_SLOT[0], REACTOR_SLOT[1]))
+    save(sheet, "escavadeira_reator.png")
+
+
 def build_escavadeira():
     save(dig_base(), "escavadeira_base.png")
     save(dig_estrutura(), "escavadeira_estrutura.png")
@@ -3468,6 +3573,7 @@ if __name__ == "__main__":
     build_casa()
     build_centro_vila()
     build_escavadeira()
+    build_reactor_layer()
     build_oficina()
     build_pickaxe_steel()
     build_padlock()

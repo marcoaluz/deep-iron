@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/game/escavadeira_cabine.png" id="7_cabine"]
 [ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="8_shadow"]
 [ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="9_light"]
+[ext_resource type="Texture2D" path="res://assets/game/escavadeira_reator.png" id="10_reator"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_dig"]
 radius = 60.0
@@ -38,6 +39,21 @@ texture = ExtResource("8_shadow")
 [node name="Base" type="Sprite2D" parent="."]
 scale = Vector2(2, 2)
 texture = ExtResource("2_base")
+offset = Vector2(0, -48)
+
+[node name="Reator" type="Sprite2D" parent="."]
+visible = false
+scale = Vector2(2, 2)
+texture = ExtResource("10_reator")
+hframes = 5
+offset = Vector2(0, -48)
+
+[node name="ReatorNovo" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(-44, 14)
+scale = Vector2(2, 2)
+texture = ExtResource("10_reator")
+hframes = 5
 offset = Vector2(0, -48)
 
 [node name="Estrutura" type="Sprite2D" parent="."]

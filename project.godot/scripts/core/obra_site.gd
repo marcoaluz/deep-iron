@@ -19,6 +19,12 @@ var ordered_at: float = 0.0
 var _workers: Array[Node] = []
 
 
+## Cor do "fantasma" do que está sendo construído: fica nítido conforme a obra anda
+## (canteiro e peças/reatores da Escavadeira usam a mesma, pra obra parecer obra).
+static func ghost_color(progress: float) -> Color:
+	return Color(0.8, 0.7, 0.55, 0.18 + 0.6 * clampf(progress, 0.0, 1.0))
+
+
 ## Obra nova encomendada agora.
 func start() -> void:
 	ordered_at = Time.get_unix_time_from_system()

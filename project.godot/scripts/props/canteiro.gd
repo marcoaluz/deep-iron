@@ -138,7 +138,7 @@ func _refresh() -> void:
 	var working := _obra.has_engineer()
 	if _ghost:
 		# o prédio "aparece" conforme a obra anda
-		_ghost.modulate = Color(0.8, 0.7, 0.55, 0.18 + 0.6 * p)
+		_ghost.modulate = ObraSite.ghost_color(p)
 	_dust.emitting = working
 	_label.text = "obra: %s\n%s" % [obra_title(), _obra.status(p)]
 	_label.modulate = Color(1.0, 0.8, 0.5) if working else Color(1.0, 0.62, 0.3)
