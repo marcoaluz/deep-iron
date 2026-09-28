@@ -57,6 +57,8 @@
 [ext_resource type="PackedScene" path="res://scenes/props/barricada.tscn" id="53_barricada"]
 [ext_resource type="Script" path="res://scripts/core/research.gd" id="54_research"]
 [ext_resource type="Script" path="res://scripts/core/sun.gd" id="55_sun"]
+[ext_resource type="Script" path="res://scripts/core/equipment.gd" id="56_equip"]
+[ext_resource type="Script" path="res://scripts/props/hazard_zone.gd" id="57_zone"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
@@ -239,6 +241,50 @@ position = Vector2(330, 1540)
 [node name="JazidaPrataAbismo" parent="World" instance=ExtResource("43_prata")]
 position = Vector2(-280, 1840)
 
+[node name="ZonaGas" type="Node2D" parent="World"]
+position = Vector2(455, 1240)
+script = ExtResource("57_zone")
+kind = "gas"
+radius = 85.0
+sign_offset = Vector2(-95, 10)
+
+[node name="JazidaGasCarvao" parent="World" instance=ExtResource("37_carvao")]
+position = Vector2(480, 1255)
+ore_total = 450.0
+regen_rate = 0.8
+hazard = "gas"
+
+[node name="JazidaGasPrata" parent="World" instance=ExtResource("43_prata")]
+position = Vector2(422, 1226)
+ore_total = 300.0
+hazard = "gas"
+
+[node name="ZonaRadiacao" type="Node2D" parent="World"]
+position = Vector2(-470, 770)
+script = ExtResource("57_zone")
+kind = "radiacao"
+radius = 80.0
+sign_offset = Vector2(95, 20)
+
+[node name="JazidaRadPrata" parent="World" instance=ExtResource("43_prata")]
+position = Vector2(-470, 776)
+ore_total = 500.0
+regen_rate = 0.9
+hazard = "radiacao"
+
+[node name="ZonaCalor" type="Node2D" parent="World"]
+position = Vector2(390, 1895)
+script = ExtResource("57_zone")
+kind = "calor"
+radius = 80.0
+sign_offset = Vector2(-95, -10)
+
+[node name="JazidaCalorSolarita" parent="World" instance=ExtResource("50_solarita")]
+position = Vector2(398, 1900)
+ore_total = 450.0
+regen_rate = 0.7
+hazard = "calor"
+
 [node name="Horta" parent="World" instance=ExtResource("38_horta")]
 position = Vector2(-100, -650)
 
@@ -275,6 +321,9 @@ script = ExtResource("54_research")
 
 [node name="Sun" type="Node" parent="."]
 script = ExtResource("55_sun")
+
+[node name="Equipment" type="Node" parent="."]
+script = ExtResource("56_equip")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource("8_hud")

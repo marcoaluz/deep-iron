@@ -123,6 +123,7 @@ var _no_job_label: Label
 var _obras_label: Label
 var _unarmed_label: Label  # Bloco 35: guardas desarmados (arma quebrou)
 var _downed_label: Label  # Bloco 36: guardas caídos esperando o médico
+var _cold_label: Label  # Bloco 42: sem casaco no inverno
 var _recruit_button: Button
 var _collapse_button: Button
 var _workers_title: Label
@@ -431,6 +432,10 @@ func _build_workforce_panel() -> void:
 	_downed_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_downed_label.visible = false
 	v.add_child(_downed_label)
+	_cold_label = _label("", 13, Color(0.7, 0.85, 1.0))
+	_cold_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_cold_label.visible = false
+	v.add_child(_cold_label)
 	if _economy:
 		_recruit_button = _button("Recrutar ipezinho")
 		_recruit_button.pressed.connect(_on_recruit_pressed)
@@ -928,6 +933,13 @@ func _refresh_workforce(workers: Array) -> void:
 			names.append(w.display_name)
 		_unarmed_label.text = "DESARMADOS: %d (%s) — %s" % [unarmed.size(), ", ".join(names),
 			"indo ao Arsenal pegar outra arma" if def.arsenal() != null else "sem Arsenal pra pegar outra (G: Defesa)"]
+	# Bloco 42: inverno sem casaco (trabalha mais devagar, não morre)
+	var eqp := get_tree().get_first_node_in_group("equipment")
+	var cold: Array = eqp.cold_without_coat() if eqp else []
+	_cold_label.visible = not cold.is_empty()
+	if not cold.is_empty():
+		_cold_label.text = "SEM CASACO: %d de %d — no frio trabalham a %d%% (faça casacos na Oficina, tecla O)" % [
+			cold.size(), workers.size(), roundi(eqp.cold_work_mult * 100.0)]
 	# Bloco 36: guarda caído em combate (só o médico resgata)
 	var downed: Array = workers.filter(func(w): return w.get("downed"))
 	_downed_label.visible = not downed.is_empty()

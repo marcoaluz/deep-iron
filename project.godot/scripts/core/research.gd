@@ -17,7 +17,7 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 const LAB_SCENE := preload("res://scenes/props/laboratorio.tscn")
 const LAB_TEXTURE := preload("res://assets/game/laboratorio.png")
 const Canteiro := preload("res://scripts/props/canteiro.gd")
-const ORDER := ["carrinhos", "explosivos", "escoramento", "medicina", "radio", "hidroponia",
+const ORDER := ["carrinhos", "explosivos", "escoramento", "trajes", "medicina", "radio", "hidroponia",
 	"estudo_solar", "satelite", "holofotes", "escudo"]
 ## points = pontos de pesquisa; cost = créditos, minério, madeira; ore = tipo do minério.
 const TECHS := {
@@ -30,6 +30,9 @@ const TECHS := {
 	"escoramento": {"name": "Escoramento", "branch": "Mina", "req": "carrinhos", "excl": "explosivos", "points": 140,
 		"cost": Vector3i(250, 0, 100), "ore": "",
 		"desc": "Vigas nas galerias: acidentes na mina 40% menos comuns."},
+	"trajes": {"name": "Trajes de proteção", "branch": "Mina", "req": "carrinhos", "excl": "", "points": 120,
+		"cost": Vector3i(250, 40, 0), "ore": "cobre",
+		"desc": "A Oficina passa a fazer máscara de gás, traje térmico e traje antirradiação — pras zonas de perigo do fundo (Bloco 42)."},
 	"medicina": {"name": "Medicina de campo", "branch": "Vila", "req": "", "excl": "", "points": 80,
 		"cost": Vector3i(200, 40, 0), "ore": "cobre",
 		"desc": "Cura no leito 30% mais rápida; machucado sem leito aguenta 50% mais tempo."},

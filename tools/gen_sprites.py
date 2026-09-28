@@ -3350,6 +3350,41 @@ def build_arsenal():
     save(outline(pad(from_rows(rows, {"w": WOOD_LIGHT, "W": WOOD_DARK, "h": IRON_LIGHT, "H": IRON_HIGHLIGHT})), 0.5), "arma_quebrada.png")
 
 
+def build_hazard_sign():
+    """Bloco 42: placa de perigo na entrada das zonas (3 quadros: gás, calor, radiação).
+    Triângulo amarelo gasto num poste, com o símbolo de cada perigo."""
+    W, H = 14, 18
+    YEL, YEL_D, INK = (214, 176, 58, 255), (150, 118, 40, 255), (40, 30, 26, 255)
+    frames = []
+    for kind in ("gas", "calor", "radiacao"):
+        img = new(W, H)
+        rect(img, 6, 10, 7, 17, WOOD_DARK)  # poste
+        px(img, 6, 10, WOOD)
+        for y in range(0, 11):  # triângulo
+            half = y * 0.62
+            for x in range(round(6.5 - half), round(6.5 + half) + 1):
+                edge = abs(x - 6.5) >= half - 0.8 or y == 10
+                px(img, x, y, INK if edge else (YEL if x < 7 else YEL_D))
+        if kind == "gas":  # nuvem com olhinhos (gás)
+            for (x, y) in ((5, 5), (6, 5), (7, 5), (8, 6), (4, 6), (5, 7), (6, 7), (7, 7), (8, 7)):
+                px(img, x, y, (96, 150, 70, 255))
+            px(img, 5, 6, INK)
+            px(img, 7, 6, INK)
+        elif kind == "calor":  # chama
+            for (x, y, c) in ((6, 4, TORCH_FLAME), (7, 5, TORCH_FLAME), (5, 6, TORCH_FLAME), (6, 6, TORCH_GLOW),
+                              (7, 6, TORCH_FLAME), (6, 7, TORCH_BRIGHT), (5, 8, TORCH_FLAME), (7, 8, TORCH_FLAME), (6, 8, TORCH_GLOW)):
+                px(img, x, y, c)
+        else:  # trevo de radiação
+            for (x, y) in ((6, 6), (5, 4), (7, 4), (4, 7), (8, 7), (5, 8), (7, 8), (4, 5), (8, 5)):
+                px(img, x, y, INK)
+            px(img, 6, 6, (180, 230, 90, 255))
+        frames.append(outline(pad(img), 0.5))
+    sheet = new(frames[0].width * 3, frames[0].height)
+    for i, f in enumerate(frames):
+        sheet.alpha_composite(f, (i * f.width, 0))
+    save(sheet, "placa_perigo.png")
+
+
 def build_parque():
     """Bloco 41: Parque — gramado com caminho de pedra, duas árvores, banco, canteiro
     de flores e um poste de luz. O pé fica embaixo no meio."""
@@ -4092,6 +4127,7 @@ if __name__ == "__main__":
     build_arsenal()
     build_weather()
     build_parque()
+    build_hazard_sign()
     build_lab()
     build_escudo()
     build_food_icons()

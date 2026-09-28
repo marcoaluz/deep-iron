@@ -2,7 +2,7 @@ extends PanelContainer
 ## Janela do Laboratório (tecla Q, ou clique no laboratório): a árvore de pesquisa.
 ## Cada ramo em uma coluna; os pares do 2º nível são escolhas (pesquisar um tranca o outro).
 
-const BRANCHES := [["Mina", ["carrinhos", "explosivos", "escoramento"]],
+const BRANCHES := [["Mina", ["carrinhos", "explosivos", "escoramento", "trajes"]],
 	["Vila", ["medicina", "radio", "hidroponia"]],
 	["Sol", ["estudo_solar", "satelite", "holofotes", "escudo"]]]
 

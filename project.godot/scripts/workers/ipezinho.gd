@@ -197,6 +197,10 @@ const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 ## Aviso no HUD quando faltar isso pro grave morrer.
 @export var death_warning_time: float = 25.0
 
+@export_group("Equipamento (Bloco 42)")
+## Couro que cada unidade de CAÇA rende (fruta não dá couro). Vai pro armazém com a carne.
+@export var leather_per_game: float = 0.5
+
 @export_group("Caído em combate (Bloco 36)")
 ## Guarda que perde a luta cai GRAVE no lugar e não anda. Sem resgate, morre depois de
 ## tantos segundos no chão (o relógio PAUSA enquanto o médico carrega: primeiros socorros).
@@ -391,6 +395,12 @@ var weapon_durability: float = 0.0
 var broken_weapon: String = ""
 ## Todo ipezinho tem um porrete de casa: o primeiro vem de graça quando vira guarda.
 var got_porrete: bool = false
+## Bloco 42: o que está vestindo agora (tipo -> durabilidade): "casaco" e/ou um traje.
+## Pega e devolve sozinho no vestiário (equipment.gd).
+var wearing: Dictionary = {}
+## Couro da caça na mochila (vai pro armazém junto com a carne).
+var leather_carrying: float = 0.0
+var _hazard_cd := 0.0
 ## Bloco 36: guarda que perdeu a luta — caído no lugar (grave), só o MÉDICO leva pra enfermaria.
 var downed: bool = false
 ## Portão onde ele caiu ("tunel"/"poco"): enquanto ele está caído, é a brecha na defesa.
@@ -482,6 +492,17 @@ func _exit_tree() -> void:
 func move_to(pos: Vector2) -> void:
 	if downed:
 		return  # caído não levanta por ordem: só o médico tira ele dali
+	var eq := _equipment()
+	if eq:
+		var z: String = eq.hazard_at(pos)
+		if z != "" and not can_enter_hazard(z):
+			Audio.error()
+			_popup("Sem %s!" % eq.NAMES[z].to_lower(), Color(1.0, 0.55, 0.4))
+			var hud := get_tree().get_first_node_in_group("hud")
+			if hud:
+				hud.show_toast("Ordem bloqueada: pra entrar no %s precisa de %s (Oficina, tecla O)." % [
+					eq.ZONE_NAMES[z].to_lower(), eq.NAMES[z].to_lower()], Color(1.0, 0.6, 0.4))
+			return
 	_release_station()
 	_set_state("manual")
 	_manual_timer = manual_override_time
@@ -697,6 +718,7 @@ func _process(delta: float) -> void:
 	# machucado: só cura DEITADO num leito da enfermaria; fora dele o relógio corre
 	if injured:
 		_update_injury(delta)
+	_equip_tick(delta)  # Bloco 42: casaco no inverno, traje nas zonas de perigo
 	if _ai_state == "guard":
 		_guard_tick(delta)
 	elif combat_hp >= 0.0:
@@ -2028,6 +2050,8 @@ func _gather_raw(amount: float, value: float, state: String) -> float:
 		return 0.0
 	_raw_units += taken
 	raw_carrying += taken * value
+	if state == "hunting":
+		leather_carrying += taken * leather_per_game  # Bloco 42: pele da caça
 	_work_timer = 0.2
 	if _raw_units >= hunter_carry - 0.01:
 		_decision_timer = 0.0  # mochila cheia: vai pro armazém já
@@ -2044,6 +2068,13 @@ func deliver_raw(amount: float) -> float:
 		_clear_raw()
 		_decision_timer = 0.0
 	return given
+
+
+## Bloco 42: armazém chama — entrega todo o couro que estiver na mochila.
+func deliver_leather() -> float:
+	var n := leather_carrying
+	leather_carrying = 0.0
+	return n
 
 
 ## Armazém chama: o cozinheiro pega matéria-prima pra preparar. Retorna quanto pegou.
@@ -2192,7 +2223,93 @@ func mood_label() -> String:
 
 ## Multiplicador da produção pela zanga e pela felicidade.
 func work_mult() -> float:
-	return [1.0, irritated_work_mult, furious_work_mult][_mood] * _happiness_work_mult()
+	return [1.0, irritated_work_mult, furious_work_mult][_mood] * _happiness_work_mult() * _cold_mult()
+
+
+# ------------------------------------------------------------ equipamento (Bloco 42)
+func _equipment() -> Node:
+	return get_tree().get_first_node_in_group("equipment") if is_inside_tree() else null
+
+
+## Sem casaco no frio (inverno, mina/clareira): o trabalho rende menos. Ninguém morre disso.
+func _cold_mult() -> float:
+	var eq := _equipment()
+	if eq == null or wearing.has("casaco") or _inside or not eq.is_cold_at(global_position):
+		return 1.0
+	return eq.cold_work_mult
+
+
+## Está com frio agora? (pro visual e pro HUD)
+func is_cold() -> bool:
+	return _cold_mult() < 1.0
+
+
+## Pode entrar numa zona desse perigo? (vestindo o traje ou tem um no vestiário)
+func can_enter_hazard(kind: String) -> bool:
+	var eq := _equipment()
+	return eq == null or wearing.has(kind) or eq.available(kind) > 0
+
+
+func _equip_tick(delta: float) -> void:
+	var eq := _equipment()
+	if eq == null:
+		return
+	_hazard_cd = maxf(_hazard_cd - delta, 0.0)
+	# casaco: pega no inverno, devolve quando acaba; gasta só no frio de verdade
+	if eq.is_winter():
+		if not wearing.has("casaco") and not downed:
+			var d: float = eq.take("casaco")
+			if d > 0.0:
+				wearing["casaco"] = d
+				_popup("Vestiu o casaco", Color(0.75, 0.88, 1.0))
+		if wearing.has("casaco") and not _inside and not _resting and eq.is_cold_at(global_position):
+			wearing.casaco -= delta
+			if wearing.casaco <= 0.0:
+				wearing.erase("casaco")
+				eq.give_back("casaco", 0.0)
+				_popup("O casaco rasgou!", Color(1.0, 0.6, 0.45))
+	elif wearing.has("casaco"):
+		eq.give_back("casaco", wearing.casaco)
+		wearing.erase("casaco")
+	# trajes: veste na entrada da zona, devolve na saída, gasta só lá dentro
+	var z: String = eq.hazard_at(global_position)
+	for t in eq.SUITS:
+		if wearing.has(t) and t != z:
+			eq.give_back(t, wearing[t])
+			wearing.erase(t)
+	if z == "" or _carried_by != null:
+		return
+	if not wearing.has(z):
+		var d: float = eq.take(z)
+		if d > 0.0:
+			wearing[z] = d
+			_popup("Vestiu: %s" % eq.NAMES[z].to_lower(), Color(0.8, 1.0, 0.7))
+		else:
+			_leave_hazard(eq, z, "sem %s no vestiário" % eq.NAMES[z].to_lower())
+		return
+	wearing[z] -= delta * eq.wear_rate(z)
+	if wearing[z] <= 0.0:
+		wearing.erase(z)
+		eq.give_back(z, 0.0)
+		_leave_hazard(eq, z, "%s quebrou" % eq.NAMES[z].to_lower())
+
+
+## Sem traje (ou ele quebrou) dentro da zona: sai na hora, sem travar nada.
+func _leave_hazard(eq: Node, kind: String, why: String) -> void:
+	var zone: Node = eq.zone_of(global_position)
+	if zone == null:
+		return
+	if _hazard_cd <= 0.0:
+		_hazard_cd = 4.0
+		_popup("Saindo: %s!" % why, Color(1.0, 0.6, 0.4))
+		var hud := get_tree().get_first_node_in_group("hud")
+		if hud:
+			hud.show_toast("%s saiu do %s: %s." % [_display(), eq.ZONE_NAMES[kind].to_lower(), why], Color(1.0, 0.65, 0.4))
+	if _ai_state != "manual" or not _moving or zone.contains(_target):
+		_release_station()
+		_set_state("manual")
+		_manual_timer = 2.0
+		_go_to(zone.exit_point(global_position))
 
 
 func _update_anger(delta: float) -> void:
@@ -2610,6 +2727,14 @@ func _update_animation(delta: float) -> void:
 		_body.modulate = Color(1.0, 0.6, 0.6)
 	elif injured:
 		_body.modulate = Color(1.0, 0.64, 0.6) if injury_severity == "grave" else Color(1.0, 0.78, 0.74)
+	elif wearing.has("gas") or wearing.has("calor") or wearing.has("radiacao"):
+		# Bloco 42: com traje de perigo (cor do traje)
+		_body.modulate = Color(0.78, 1.0, 0.8) if wearing.has("gas") else (Color(1.0, 0.82, 0.66) if wearing.has("calor") else Color(1.0, 1.0, 0.62))
+	elif is_cold():
+		# Bloco 42: sem casaco no frio — azulado e tremendo
+		_body.modulate = Color(0.8, 0.88, 1.0)
+		if not lying:
+			_body.position.x = sin(Time.get_ticks_msec() * 0.07) * 0.5
 	else:
 		_body.modulate = Color.WHITE
 
@@ -2674,6 +2799,8 @@ func get_save_data() -> Dictionary:
 		"got_porrete": got_porrete,
 		"downed": downed,
 		"downed_gate": downed_gate,
+		"wearing": wearing.duplicate(),
+		"leather_carrying": leather_carrying,
 	}
 
 
@@ -2725,6 +2852,13 @@ func load_save_data(d: Dictionary) -> void:
 	got_porrete = SaveUtil.boolean(d, "got_porrete", weapon != "" or broken_weapon != "")
 	# Bloco 36: caído em combate volta caído no mesmo lugar (quem carregava não é salvo:
 	# o médico vem buscar de novo). O relógio (care_left) já veio acima.
+	# Bloco 42 (save antigo: nada vestido, sem couro)
+	wearing = {}
+	var wd := SaveUtil.dict(d, "wearing")
+	for k in wd:
+		if k in ["casaco", "gas", "calor", "radiacao"] and (wd[k] is float or wd[k] is int) and float(wd[k]) > 0.0:
+			wearing[k] = float(wd[k])
+	leather_carrying = maxf(SaveUtil.num(d, "leather_carrying", 0.0), 0.0)
 	downed = injured and injury_severity == "grave" and SaveUtil.boolean(d, "downed", false)
 	downed_gate = SaveUtil.text(d, "downed_gate", "") if downed else ""
 	if downed:

@@ -108,6 +108,9 @@ extends Node
 ##   Bloco 35 (save_version 4): arma por guarda com desgaste. Save < 4: cada guarda recebe a
 ##     melhor arma que a vila já tinha forjado (durabilidade cheia) e a forja que andava
 ##     sozinha (forging/forge_left) vira a primeira encomenda da fila do Arsenal.
+##   Bloco 42: equipment.gd (nó Equipment) pool (durabilidade de cada casaco/traje no
+##     vestiário), broken, queue; ipezinho.gd wearing {tipo: durabilidade} e leather_carrying;
+##     armazem.gd leather_stored. Save antigo: vestiário vazio, ninguém vestindo nada.
 ##   Bloco 41: morale.gd "parques" [posições] — recriados ao carregar (save antigo: nenhum).
 ##   Bloco 37: "layout" {hub, armazens {nome: pos}, comedouros [{name, position}]} — onde o
 ##     jogador fundou a vila e os comedouros que construiu. Aplicado ANTES de tudo: as casas
@@ -446,6 +449,7 @@ func _collect() -> Dictionary:
 		"diary": "diary",
 		"research": "research",
 		"sun": "sun",
+		"equipment": "equipment",
 	}
 	for key in singles:
 		var node := tree.get_first_node_in_group(singles[key])
@@ -519,6 +523,7 @@ func apply_pending(main: Node) -> void:
 	_apply_single("diary", SaveUtil.dict(data, "diary"))
 	_apply_single("research", SaveUtil.dict(data, "research"))  # recria o laboratório
 	_apply_single("sun", SaveUtil.dict(data, "sun"))  # ondas, vitória e o gerador do escudo
+	_apply_single("equipment", SaveUtil.dict(data, "equipment"))  # Bloco 42: vestiário e fila
 	for c in get_tree().get_nodes_in_group("canteiros"):  # (troca pelos do save)
 		c.remove_from_group("canteiros")
 		c.remove_from_group("obras")

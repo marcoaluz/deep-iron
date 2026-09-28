@@ -9,6 +9,8 @@ extends "res://scripts/props/station.gd"
 ## Uma ferramenta por vez; o custo é pago ao começar e ela fica pronta depois de
 ## alguns segundos na forja. As jazidas consultam is_ore_unlocked() e são avisadas
 ## (on_unlock_changed) quando algo muda; os ipezinhos, via on_tool_crafted().
+## Bloco 42: quando não tem ferramenta na forja, o engenheiro toca a fila de EQUIPAMENTO
+## (casacos e trajes — equipment.gd): a obra da Oficina é "ferramenta, senão equipamento".
 
 signal tool_started(id: String)
 signal tool_crafted(id: String)
@@ -89,8 +91,12 @@ func _ready() -> void:
 	_update_visual()
 
 
+func _equip() -> Node:
+	return get_tree().get_first_node_in_group("equipment")
+
+
 func _process(delta: float) -> void:
-	if crafting == "":
+	if not obra_pending():
 		return
 	var working := _obra.has_engineer()
 	_sparks.emitting = working
@@ -109,14 +115,19 @@ func _process(delta: float) -> void:
 
 # ------------------------------------------------------------ obra (Bloco 31)
 func obra_pending() -> bool:
-	return crafting != ""
+	var eq := _equip()
+	return crafting != "" or (eq != null and eq.pending())
 
 
 func obra_title() -> String:
+	if crafting == "" and _equip() and _equip().pending():
+		return _equip().title()
 	return TOOL_NAMES.get(crafting, "ferramenta")
 
 
 func obra_progress() -> float:
+	if crafting == "" and _equip() and _equip().pending():
+		return _equip().progress()
 	return craft_progress()
 
 
@@ -127,6 +138,10 @@ func obra_position(worker: Node) -> Vector2:
 ## O engenheiro trabalhou `seconds` aqui: só assim a forja anda.
 func obra_work(seconds: float) -> void:
 	if crafting == "":
+		var eq := _equip()
+		if eq and eq.pending():
+			eq.work(seconds)
+			_update_label()
 		return
 	craft_left -= seconds
 	if craft_left <= 0.0:
@@ -134,6 +149,8 @@ func obra_work(seconds: float) -> void:
 
 
 func obra_ordered_at() -> float:
+	if crafting == "" and _equip() and _equip().pending():
+		return _equip().ordered_at()
 	return _obra.ordered_at
 
 
@@ -262,7 +279,7 @@ func _finish(id: String) -> void:
 
 # ------------------------------------------------------------ visual
 func _update_visual() -> void:
-	var active := crafting != "" and _obra.has_engineer()
+	var active := obra_pending() and _obra.has_engineer()
 	_visual.frame = 1 if active else 0
 	_sparks.emitting = active
 	_forge_light.energy = active_forge_energy if active else idle_forge_energy
@@ -272,6 +289,9 @@ func _update_visual() -> void:
 func _update_label() -> void:
 	if crafting != "":
 		_label.text = "Oficina\n%s  %s" % [TOOL_NAMES[crafting], _obra.status(craft_progress())]
+		_label.modulate = Color(1.0, 0.8, 0.5) if _obra.has_engineer() else Color(1.0, 0.62, 0.3)
+	elif obra_pending():
+		_label.text = "Oficina\n%s  %s" % [obra_title(), _obra.status(obra_progress())]
 		_label.modulate = Color(1.0, 0.8, 0.5) if _obra.has_engineer() else Color(1.0, 0.62, 0.3)
 	else:
 		_label.text = "Oficina"

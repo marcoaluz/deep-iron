@@ -11,6 +11,8 @@ var _economy: Node
 var _craft_label: Label
 var _craft_bar: ProgressBar
 var _rows: Dictionary = {}  # id -> {status, button}
+var _eq_rows: Dictionary = {}  # Bloco 42: tipo -> {status, make, fix}
+var _eq_queue: Label
 
 
 func setup(hud: CanvasLayer, oficina: Node, economy: Node) -> void:
@@ -66,6 +68,41 @@ func _build() -> void:
 	vbox.add_child(_hud._label("FERRAMENTAS", 12, _hud.COLOR_DIM))
 	for id in _oficina.TOOL_IDS:
 		_rows[id] = _make_tool_row(vbox, id)
+	# Bloco 42: equipamento (vestiário da vila)
+	var eq := get_tree().get_first_node_in_group("equipment") if _oficina.is_inside_tree() else null
+	if eq:
+		vbox.add_child(HSeparator.new())
+		var hint: Label = _hud._label("EQUIPAMENTO — o vestiário da vila: cada um pega e devolve sozinho. Casaco no inverno; traje na zona de perigo.", 12, _hud.COLOR_DIM)
+		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vbox.add_child(hint)
+		_eq_queue = _hud._label("", 12, _hud.COLOR_TEXT)
+		_eq_queue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vbox.add_child(_eq_queue)
+		for id in eq.TYPES:
+			var row := HBoxContainer.new()
+			vbox.add_child(row)
+			var st: Label = _hud._label("", 12, _hud.COLOR_TEXT)
+			st.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			st.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(st)
+			var btns := VBoxContainer.new()
+			row.add_child(btns)
+			var make: Button = _hud._button("")
+			make.add_theme_font_size_override("font_size", 11)
+			make.custom_minimum_size.x = 190
+			make.pressed.connect(func():
+				Audio.click()
+				eq.order(id)
+				refresh())
+			btns.add_child(make)
+			var fix: Button = _hud._button("")
+			fix.add_theme_font_size_override("font_size", 11)
+			fix.pressed.connect(func():
+				Audio.click()
+				eq.repair(id)
+				refresh())
+			btns.add_child(fix)
+			_eq_rows[id] = {"status": st, "make": make, "fix": fix}
 
 
 func _make_tool_row(parent: VBoxContainer, id: String) -> Dictionary:
@@ -147,6 +184,34 @@ func refresh() -> void:
 				status.add_theme_color_override("font_color", _hud.COLOR_DIM)
 				button.text = "Fabricar"
 		button.disabled = reason != ""
+	_refresh_equipment()
+
+
+func _refresh_equipment() -> void:
+	var eq := get_tree().get_first_node_in_group("equipment")
+	if eq == null or _eq_queue == null:
+		return
+	_eq_queue.visible = eq.pending()
+	if eq.pending():
+		var eng: bool = not _oficina.obra_workers().is_empty()
+		_eq_queue.text = "Fila: %s — %d%%%s%s" % [eq.title(), roundi(eq.progress() * 100.0),
+			"" if eng else "  (esperando engenheiro — tecla 4)", "  •  +%d na fila" % (eq.queue.size() - 1) if eq.queue.size() > 1 else ""]
+	for id in _eq_rows:
+		var row: Dictionary = _eq_rows[id]
+		var extra := ""
+		if id == "casaco":
+			extra = "  •  faz %d por vez; sem casaco no inverno trabalha a %d%%" % [eq.coat_batch, roundi(eq.cold_work_mult * 100.0)]
+		else:
+			extra = "  •  pra entrar no %s" % eq.ZONE_NAMES[id].to_lower()
+		row.status.text = "%s: %d no vestiário, %d em uso, %d quebrado%s%s" % [eq.NAMES[id], eq.available(id), eq.in_use(id), eq.broken_count(id),
+			"s" if eq.broken_count(id) != 1 else "", extra]
+		var r: String = eq.order_block_reason(id)
+		row.make.text = ("Fazer  (%s)" % eq.cost_text(eq.cost(id), id)) if r == "" else (r.substr(0, 1).to_upper() + r.substr(1))
+		row.make.disabled = r != ""
+		var fr: String = eq.repair_block_reason(id)
+		row.fix.visible = eq.broken_count(id) > 0
+		row.fix.text = ("Consertar  (%s)" % eq.cost_text(eq.repair_cost(id), id)) if fr == "" else "Consertar: " + fr
+		row.fix.disabled = fr != ""
 
 
 func button_text() -> String:

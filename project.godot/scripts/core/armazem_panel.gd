@@ -96,7 +96,11 @@ func refresh() -> void:
 	var raw := 0.0
 	for a in get_tree().get_nodes_in_group("armazens"):
 		raw += a.get("raw_stored") if a.get("raw_stored") != null else 0.0
-	_other_label.text = "Não se vende: madeira %d (obras) e matéria-prima %d (o cozinheiro prepara)." % [int(_economy.stored_wood()), int(raw)]
+	var leather := 0.0
+	for a in get_tree().get_nodes_in_group("armazens"):
+		leather += a.get("leather_stored") if a.get("leather_stored") != null else 0.0
+	_other_label.text = "Não se vende: madeira %d (obras), matéria-prima %d (o cozinheiro prepara) e couro %d (casacos e trajes)." % [
+		int(_economy.stored_wood()), int(raw), int(leather)]
 
 
 func button_text() -> String:

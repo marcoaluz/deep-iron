@@ -27,6 +27,8 @@ var wood_stored: float = 0.0
 ## Matéria-prima da cozinha (Bloco 27): fruta e caça cruas que o caçador traz e o
 ## cozinheiro busca pra preparar. Coluna separada como a madeira: não vende, não é minério.
 var raw_stored: float = 0.0
+## Bloco 42: couro da caça (material do casaco de inverno e dos trajes). Não se vende.
+var leather_stored: float = 0.0
 var _pending_popup: float = 0.0
 var _popup_timer: float = 0.0
 var _sound_timer: float = 0.0
@@ -69,6 +71,9 @@ func _process(delta: float) -> void:
 			wood_in += w
 			continue
 		# Bloco 27: caçador descarregando / cozinheiro buscando matéria-prima
+		if body.get("leather_carrying") != null and body.leather_carrying > 0.0:
+			leather_stored += body.deliver_leather()  # Bloco 42: couro vai junto
+			raw_moved = true
 		if body.has_method("deliver_raw") and body.get_state() == "stocking":
 			raw_stored += body.deliver_raw(DEPOSIT_RATE * delta)
 			raw_moved = true
@@ -169,6 +174,8 @@ func _update_label() -> void:
 		_label.text += "  •  madeira %d" % int(wood_stored)
 	if raw_stored >= 1.0:
 		_label.text += "  •  matéria-prima %d" % int(raw_stored)
+	if leather_stored >= 1.0:
+		_label.text += "  •  couro %d" % int(leather_stored)
 	var stage := 0
 	for t in pile_thresholds:
 		if total_stored >= t:
@@ -198,7 +205,7 @@ func show_popup(text: String, color: Color) -> void:
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	return {"stock": stock.duplicate(), "lifetime_stored": lifetime_stored, "wood_stored": wood_stored,
-		"raw_stored": raw_stored}
+		"raw_stored": raw_stored, "leather_stored": leather_stored}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -208,4 +215,5 @@ func load_save_data(d: Dictionary) -> void:
 	lifetime_stored = maxf(SaveUtil.num(d, "lifetime_stored", lifetime_stored), 0.0)
 	wood_stored = maxf(SaveUtil.num(d, "wood_stored", 0.0), 0.0)
 	raw_stored = maxf(SaveUtil.num(d, "raw_stored", 0.0), 0.0)  # save antigo: 0
+	leather_stored = maxf(SaveUtil.num(d, "leather_stored", 0.0), 0.0)  # Bloco 42
 	_recount()

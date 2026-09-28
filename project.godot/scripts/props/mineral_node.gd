@@ -29,6 +29,11 @@ signal replenished
 ## Abaixo disso a jazida não atrai novos ipezinhos (quem já está minerando continua).
 @export var min_ore_to_mine: float = 15.0
 
+@export_group("Zona de perigo (Bloco 42)")
+## Jazida dentro de uma zona de perigo (hazard_zone.gd): só minera quem veste o traje certo.
+## "" = jazida comum; "gas", "calor" ou "radiacao" = precisa do traje desse perigo.
+@export var hazard: String = ""
+
 @export_group("Galeria lacrada (Bloco 33)")
 ## Estágio da vila que abre esta jazida (1 = aberta desde o começo).
 @export_range(1, 5) var min_village_level: int = 1
@@ -96,6 +101,8 @@ func is_sealed() -> bool:
 
 ## Ipezinho só vem pra cá de mãos vazias ou já carregando o mesmo tipo.
 func accepts_worker(worker: Node) -> bool:
+	if hazard != "" and worker.has_method("can_enter_hazard") and not worker.can_enter_hazard(hazard):
+		return false  # Bloco 42: sem o traje (nem no vestiário), nem tenta
 	return worker.carrying <= 0.0 or worker.cargo_type == ore_type
 
 
@@ -215,6 +222,10 @@ func _update_visual() -> void:
 	else:
 		_visual.modulate = Color.WHITE
 		_label.text = str(int(ore_remaining))
+		if hazard != "":  # Bloco 42: zona de perigo — sem traje no vestiário, ninguém vem
+			var eq := get_tree().get_first_node_in_group("equipment")
+			if eq and eq.available(hazard) + eq.in_use(hazard) == 0:
+				_label.text += "\nsem %s" % eq.NAMES[hazard].to_lower()
 		_label.modulate = Color(1, 1, 1, 0.9) if is_usable() else Color(1, 0.8, 0.4)
 
 
