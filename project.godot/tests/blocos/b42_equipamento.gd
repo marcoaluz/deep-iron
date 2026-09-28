@@ -77,6 +77,8 @@ func _process(delta: float) -> bool:
 		dn.time = 20.0
 	if step == 0 and t > 2.0:
 		print("== casaco na Oficina")
+		# (Bloco 44) o equipamento agora precisa do prédio do Vestiário: ergue um pronto
+		eq.spawn_vestiario(g("village_hub").global_position + Vector2(170, 70))
 		set_meta("gal", g("village_hub").galleries_for_level(2).map(func(m): return m.is_sealed()))
 		dn.day = day_of(1)  # verão
 		eco.credits = 99999.0

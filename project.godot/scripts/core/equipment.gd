@@ -13,6 +13,9 @@ extends Node
 ## Fabricar e consertar: na Oficina, numa fila que só anda com ENGENHEIRO (a Oficina chama
 ## pending()/work()). Mesmo padrão do Arsenal (Bloco 35): peça quebrada vai pra pilha de
 ## conserto; consertar custa repair_cost_mult do custo e repair_time_mult do tempo.
+## Bloco 44: o VESTIÁRIO é um prédio (vestiario.gd), posicionado pelo jogador e erguido pelo
+## engenheiro. Sem ele: a Oficina não faz equipamento e ninguém pega casaco/traje (o que já
+## estava guardado continua contado, só volta a ser usado quando o Vestiário existir).
 ## Os trajes precisam da pesquisa "Trajes de proteção" (ramo Mina). Casaco é de couro
 ## (vem da caça, Bloco 42) + madeira + créditos.
 ## As zonas e as ferramentas antigas (lampião, traje de chumbo) são coisas separadas: a
@@ -28,6 +31,10 @@ const NAMES := {
 	"radiacao": "Traje antirradiação",
 }
 const ZONE_NAMES := {"gas": "Bolsão de gás", "calor": "Fenda de calor", "radiacao": "Veio radioativo"}
+const VESTIARIO_SCENE := preload("res://scenes/props/vestiario.tscn")
+const VESTIARIO_TEXTURE := preload("res://assets/game/vestiario.png")
+const Canteiro := preload("res://scripts/props/canteiro.gd")
+const VESTIARIO_FOOTPRINT := Rect2(-42, -68, 84, 78)
 
 @export_group("Casaco de inverno")
 @export var coat_credits: int = 30
@@ -55,6 +62,13 @@ const ZONE_NAMES := {"gas": "Bolsão de gás", "calor": "Fenda de calor", "radia
 @export var suit_wear_rate: Array[float] = [1.0, 1.3, 1.6]
 ## Pesquisa que libera os trajes ("" = sem pesquisa).
 @export var suit_research: String = "trajes"
+
+@export_group("Vestiário (Bloco 44)")
+@export var vestiario_credits: int = 120
+## Pedra (ferro) e madeira pra erguer o Vestiário.
+@export var vestiario_ore: int = 30
+@export var vestiario_wood: int = 50
+@export var vestiario_build_time: float = 30.0
 
 @export_group("Conserto e fila")
 @export_range(0.1, 1.0) var repair_cost_mult: float = 0.4
@@ -92,6 +106,77 @@ func wear_rate(id: String) -> float:
 
 func available(id: String) -> int:
 	return (pool.get(id, []) as Array).size()
+
+
+## Dá pra pegar agora? (tem no estoque E o Vestiário existe)
+func usable(id: String) -> int:
+	return available(id) if vestiario() != null else 0
+
+
+# ------------------------------------------------------------ o prédio (Bloco 44)
+func vestiario() -> Node:
+	return get_tree().get_first_node_in_group("vestiarios")
+
+
+func vestiario_block_reason() -> String:
+	if vestiario() != null:
+		return "construído"
+	var c := Canteiro.pending(get_tree(), "vestiario")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := get_tree().get_first_node_in_group("economy")
+	return eco.missing_text(vestiario_credits, vestiario_ore, "ferro", vestiario_wood) if eco else "sem recursos"
+
+
+func build_vestiario() -> bool:
+	if vestiario_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_vestiario, VESTIARIO_TEXTURE, 1, "o Vestiário", {"footprint": VESTIARIO_FOOTPRINT})
+	return true
+
+
+func _confirm_vestiario(pos: Vector2) -> bool:
+	if vestiario_block_reason() != "":
+		Audio.error()
+		return false
+	if not get_tree().get_first_node_in_group("economy").spend(vestiario_credits, vestiario_ore, "ferro", vestiario_wood):
+		return false
+	Canteiro.order(get_tree(), "vestiario", pos, vestiario_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Vestiário encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+## O canteiro terminou (canteiro.gd chama o dono do tipo).
+func finish_build(kind: String, pos: Vector2) -> void:
+	if kind != "vestiario" or vestiario() != null:
+		return
+	var v := spawn_vestiario(pos)
+	v.pop_in()
+	Audio.recruit()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Vestiário pronto! Casacos e trajes ficam guardados aqui (Oficina, tecla O, faz).", Color(0.55, 1.0, 0.5))
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		w.wake_decision()
+
+
+func spawn_vestiario(pos: Vector2) -> Node2D:
+	var v: Node2D = VESTIARIO_SCENE.instantiate()
+	v.name = "Vestiario"
+	v.position = pos
+	get_tree().get_first_node_in_group("village_hub").get_parent().add_child(v)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
+	return v
 
 
 func in_use(id: String) -> int:
@@ -146,8 +231,10 @@ func cold_without_coat() -> Array:
 
 
 # ------------------------------------------------------------ vestiário
-## Pega a peça mais inteira (retorna a durabilidade; -1 = não tem).
+## Pega a peça mais inteira (retorna a durabilidade; -1 = não tem ou sem Vestiário).
 func take(id: String) -> float:
+	if vestiario() == null:
+		return -1.0
 	var list: Array = pool.get(id, [])
 	if list.is_empty():
 		return -1.0
@@ -233,6 +320,8 @@ func _pay(c: Vector4i, id: String) -> bool:
 
 
 func order_block_reason(id: String) -> String:
+	if vestiario() == null:
+		return "precisa do Vestiário (onde guardar)"
 	if not recipe_unlocked(id):
 		return "precisa pesquisar: Trajes de proteção"
 	if get_tree().get_first_node_in_group("oficina") == null:
@@ -243,6 +332,8 @@ func order_block_reason(id: String) -> String:
 
 
 func repair_block_reason(id: String) -> String:
+	if vestiario() == null:
+		return "precisa do Vestiário"
 	if broken_count(id) <= 0:
 		return "nenhum quebrado"
 	if queue.size() >= queue_max:
@@ -327,17 +418,22 @@ func _process(_delta: float) -> void:
 	if dn == null or not is_winter() or _winter_warned == dn.day:
 		return
 	_winter_warned = dn.day
-	var missing := get_tree().get_nodes_in_group("ipezinhos").size() - (available("casaco") + in_use("casaco"))
+	var missing := get_tree().get_nodes_in_group("ipezinhos").size() - (usable("casaco") + in_use("casaco"))
 	if missing > 0:
 		var hud := get_tree().get_first_node_in_group("hud")
 		if hud:
-			hud.show_toast("Inverno: faltam %d casaco%s — sem casaco trabalham bem mais devagar (Oficina, tecla O)." % [
-				missing, "s" if missing > 1 else ""], Color(0.7, 0.85, 1.0))
+			hud.show_toast(("Inverno: faltam %d casaco%s — sem casaco trabalham bem mais devagar (Oficina, tecla O)." % [
+				missing, "s" if missing > 1 else ""]) if vestiario() != null else
+				"Inverno e a vila não tem Vestiário: ninguém tem casaco (construa pela Oficina, tecla O).", Color(0.7, 0.85, 1.0))
 
 
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
-	return {"pool": pool.duplicate(true), "broken": broken.duplicate(), "queue": queue.duplicate(true), "winter_warned": _winter_warned}
+	var d := {"pool": pool.duplicate(true), "broken": broken.duplicate(), "queue": queue.duplicate(true), "winter_warned": _winter_warned}
+	var v := vestiario()
+	if v:
+		d["vestiario"] = SaveUtil.vec2_to_array(v.global_position)  # Bloco 44
+	return d
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -362,3 +458,11 @@ func load_save_data(d: Dictionary) -> void:
 		queue.append({"what": what, "id": id, "total": total, "left": clampf(SaveUtil.num(o, "left", total), 0.0, total),
 			"ordered_at": SaveUtil.num(o, "ordered_at", 0.0)})
 	_winter_warned = SaveUtil.integer(d, "winter_warned", -1)
+	# Bloco 44 (save antigo: sem Vestiário)
+	var v := vestiario()
+	if v:
+		v.get_parent().remove_child(v)
+		v.queue_free()
+	var pos := SaveUtil.vec2(d, "vestiario", Vector2.INF)
+	if pos != Vector2.INF:
+		spawn_vestiario(pos)

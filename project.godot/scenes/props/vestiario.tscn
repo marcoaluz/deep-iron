@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/vestiario.gd" id="1_vest"]
+[ext_resource type="Texture2D" path="res://assets/game/vestiario.png" id="2_sprite"]
+[ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="3_shadow"]
+[ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="4_light"]
+
+[node name="Vestiario" type="Node2D"]
+script = ExtResource("1_vest")
+
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -4
+position = Vector2(0, -2)
+scale = Vector2(4.4, 1.6)
+texture = ExtResource("3_shadow")
+
+[node name="Visual" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("2_sprite")
+offset = Vector2(0, -17)
+
+[node name="Light" type="PointLight2D" parent="."]
+position = Vector2(-30, -26)
+color = Color(1, 0.7, 0.4, 1)
+energy = 0.5
+texture = ExtResource("4_light")
+texture_scale = 0.45
+
+[node name="StatusLabel" type="Label" parent="."]
+offset_left = -90.0
+offset_top = -112.0
+offset_right = 90.0
+offset_bottom = -72.0
+theme_override_colors/font_outline_color = Color(0.03, 0.03, 0.03, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+text = "Vestiário"
+horizontal_alignment = 1
+vertical_alignment = 2

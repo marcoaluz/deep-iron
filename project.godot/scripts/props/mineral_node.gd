@@ -224,7 +224,7 @@ func _update_visual() -> void:
 		_label.text = str(int(ore_remaining))
 		if hazard != "":  # Bloco 42: zona de perigo — sem traje no vestiário, ninguém vem
 			var eq := get_tree().get_first_node_in_group("equipment")
-			if eq and eq.available(hazard) + eq.in_use(hazard) == 0:
+			if eq and eq.usable(hazard) + eq.in_use(hazard) == 0:
 				_label.text += "\nsem %s" % eq.NAMES[hazard].to_lower()
 		_label.modulate = Color(1, 1, 1, 0.9) if is_usable() else Color(1, 0.8, 0.4)
 

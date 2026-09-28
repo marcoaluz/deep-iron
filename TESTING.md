@@ -65,6 +65,10 @@ determinístico) só mudou o que o bloco pretendia — instruções no topo do a
 | `b29_30_item_mao_medico.gd` | 29 e 30 — item na mão, médico |
 | `b31_obras_engenheiro.gd`, `b31b_obras_restantes.gd` | 31 e 31b — engenheiro e obras |
 | `b32_…` a `b42_…` | 32 a 42 (um arquivo por bloco) |
+| `b44_vestiario.gd` | 44 — Vestiário como prédio físico |
+
+(Bloco 44 mudou de propósito o `b42_equipamento`: ele ergue um Vestiário pronto no começo,
+porque desde o 44 o equipamento só funciona com o prédio.)
 
 **Sem teste versionado:** os blocos **1 a 24** (os testes daquela época não foram
 guardados — sobraram só sondas de depuração, que não dão OK/FALHOU e ficaram de fora)

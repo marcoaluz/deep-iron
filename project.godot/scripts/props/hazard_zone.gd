@@ -98,7 +98,7 @@ func exit_point(from: Vector2) -> Vector2:
 func refresh() -> void:
 	var eq := get_tree().get_first_node_in_group("equipment") if is_inside_tree() else null
 	var suit: String = eq.NAMES[kind] if eq else "traje"
-	var n: int = eq.available(kind) if eq else 0
+	var n: int = eq.usable(kind) if eq else 0
 	_label.text = "%s\nsó com %s (%d no vestiário)" % [eq.ZONE_NAMES[kind].to_upper() if eq else kind, suit.to_lower(), n]
 
 

@@ -2247,7 +2247,7 @@ func is_cold() -> bool:
 ## Pode entrar numa zona desse perigo? (vestindo o traje ou tem um no vestiário)
 func can_enter_hazard(kind: String) -> bool:
 	var eq := _equipment()
-	return eq == null or wearing.has(kind) or eq.available(kind) > 0
+	return eq == null or wearing.has(kind) or eq.usable(kind) > 0  # (Bloco 44: precisa do Vestiário)
 
 
 func _equip_tick(delta: float) -> void:

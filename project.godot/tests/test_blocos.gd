@@ -172,3 +172,7 @@ func test_b41_parque() -> void:
 
 func test_b42_equipamento() -> void:
 	run_bloco("b42_equipamento.gd")
+
+
+func test_b44_vestiario() -> void:
+	run_bloco("b44_vestiario.gd")

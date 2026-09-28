@@ -3350,6 +3350,55 @@ def build_arsenal():
     save(outline(pad(from_rows(rows, {"w": WOOD_LIGHT, "W": WOOD_DARK, "h": IRON_LIGHT, "H": IRON_HIGHLIGHT})), 0.5), "arma_quebrada.png")
 
 
+def build_vestiario():
+    """Bloco 44: Vestiário — galpão de tábuas com telhado de uma água, porta, um casaco
+    pendurado no cabide de fora e a plaquinha amarela da máscara de gás (os trajes)."""
+    W, H = 40, 32
+    rnd = random.Random(4440)
+    img = new(W, H)
+    for y in range(8, 15):  # telhado de uma água
+        for x in range(0, W):
+            if x > 31 - (y - 8) * 0 and y < 9 + (x - 0) * 0.2:
+                pass
+            t = 0.62 - (y - 8) * 0.05
+            if (x + y * 2) % 5 == 0:
+                t = 0.14
+            px(img, x, y, dither(WOOD_RAMP, t, x, y))
+    rect(img, 0, 14, W - 1, 14, WOOD_ROT)
+    for y in range(15, 29):  # paredes de tábua em pé
+        for x in range(2, 30):
+            t = 0.55 - (0.18 if x % 4 == 0 else 0.0) - (y - 15) * 0.01
+            px(img, x, y, dither(WOOD_RAMP, t, x, y))
+        for x in range(2, 30, 4):
+            if rnd.random() < 0.3:
+                px(img, x + 1, y, WOOD_DARK)
+    rect(img, 12, 19, 19, 28, WOOD_DARK)  # porta
+    rect(img, 13, 20, 18, 28, WOOD)
+    px(img, 17, 24, BRASS)
+    rect(img, 4, 18, 8, 22, WOOD_ROT)  # janelinha acesa
+    rect(img, 5, 19, 7, 21, WINDOW_LIT)
+    px(img, 5, 19, WINDOW_BRIGHT)
+    rect(img, 22, 17, 27, 20, (214, 176, 58, 255))  # plaquinha amarela (máscara)
+    rect(img, 22, 20, 27, 20, (150, 118, 40, 255))
+    px(img, 24, 18, (60, 90, 50, 255))
+    px(img, 25, 18, (60, 90, 50, 255))
+    px(img, 24, 19, (40, 30, 26, 255))
+    px(img, 25, 19, (40, 30, 26, 255))
+    rect(img, 32, 14, 32, 29, WOOD_DARK)  # cabide de fora com um casaco
+    rect(img, 31, 15, 38, 15, WOOD)
+    coat = ((88, 58, 40, 255), (122, 84, 56, 255), (150, 108, 72, 255))
+    for y in range(16, 26):
+        half = 2 + (y - 16) // 4
+        for x in range(35 - half, 36 + half):
+            px(img, x, y, dither(coat, 0.65 - (x - 35 + half) * 0.08, x, y))
+    px(img, 35, 16, IRON_DARK)
+    rect(img, 35, 18, 35, 24, (70, 46, 32, 255))
+    for x in range(0, W):  # fundação
+        for y in (29, 30):
+            px(img, x, y, dither(STONE_RAMP, 0.45 if y == 29 else 0.25, x, y))
+    save(outline(pad(img), 0.5), "vestiario.png")
+
+
 def build_hazard_sign():
     """Bloco 42: placa de perigo na entrada das zonas (3 quadros: gás, calor, radiação).
     Triângulo amarelo gasto num poste, com o símbolo de cada perigo."""
@@ -4128,6 +4177,7 @@ if __name__ == "__main__":
     build_weather()
     build_parque()
     build_hazard_sign()
+    build_vestiario()
     build_lab()
     build_escudo()
     build_food_icons()

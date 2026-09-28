@@ -111,6 +111,8 @@ extends Node
 ##   Bloco 42: equipment.gd (nó Equipment) pool (durabilidade de cada casaco/traje no
 ##     vestiário), broken, queue; ipezinho.gd wearing {tipo: durabilidade} e leather_carrying;
 ##     armazem.gd leather_stored. Save antigo: vestiário vazio, ninguém vestindo nada.
+##   Bloco 44: equipment.gd "vestiario" (posição do prédio). Save antigo: sem Vestiário
+##     (o equipamento guardado fica contado e volta a ser usado quando ele for construído).
 ##   Bloco 41: morale.gd "parques" [posições] — recriados ao carregar (save antigo: nenhum).
 ##   Bloco 37: "layout" {hub, armazens {nome: pos}, comedouros [{name, position}]} — onde o
 ##     jogador fundou a vila e os comedouros que construiu. Aplicado ANTES de tudo: as casas

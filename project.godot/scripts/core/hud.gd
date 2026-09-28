@@ -938,8 +938,9 @@ func _refresh_workforce(workers: Array) -> void:
 	var cold: Array = eqp.cold_without_coat() if eqp else []
 	_cold_label.visible = not cold.is_empty()
 	if not cold.is_empty():
-		_cold_label.text = "SEM CASACO: %d de %d — no frio trabalham a %d%% (faça casacos na Oficina, tecla O)" % [
-			cold.size(), workers.size(), roundi(eqp.cold_work_mult * 100.0)]
+		_cold_label.text = "SEM CASACO: %d de %d — no frio trabalham a %d%% (%s)" % [
+			cold.size(), workers.size(), roundi(eqp.cold_work_mult * 100.0),
+			"faça casacos na Oficina, tecla O" if eqp.vestiario() != null else "construa o Vestiário pela Oficina, tecla O"]
 	# Bloco 36: guarda caído em combate (só o médico resgata)
 	var downed: Array = workers.filter(func(w): return w.get("downed"))
 	_downed_label.visible = not downed.is_empty()
