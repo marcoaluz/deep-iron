@@ -156,9 +156,13 @@ func village_factors() -> Array:
 	var hub := get_tree().get_first_node_in_group("village_hub")
 	if hub and hub.level > 1:
 		f.append(["vila crescendo", stage_bonus * (hub.level - 1)])
-	var tav := taverna()
-	if tav:
-		f.append(["tem taverna", taverna_bonus[clampi(tav.level, 1, taverna_bonus.size()) - 1]])
+	# Bloco 47: com várias tavernas o bônus NÃO soma — vale o da melhor (mais tavernas = mais
+	# lugares e mais perto, não mais ânimo de graça)
+	var best_lvl := 0
+	for tav in tavernas():
+		best_lvl = maxi(best_lvl, tav.level)
+	if best_lvl > 0:
+		f.append(["tem taverna", taverna_bonus[clampi(best_lvl, 1, taverna_bonus.size()) - 1]])
 	if festa_left > 0.0:
 		f.append(["festa recente", festa_bonus])
 	var dig := get_tree().get_first_node_in_group("escavadeira")
@@ -181,6 +185,35 @@ func village_factors() -> Array:
 
 func taverna() -> Node:
 	return get_tree().get_first_node_in_group("tavernas")
+
+
+## Bloco 47: todas as tavernas (cada uma com os seus lugares; o triste vai na mais perto livre).
+func tavernas() -> Array:
+	return get_tree().get_nodes_in_group("tavernas")
+
+
+## A que "Ampliar" melhora: a primeira que ainda não está no nível máximo (ou null).
+func taverna_to_upgrade() -> Node:
+	for tav in tavernas():
+		if tav.level < tav.max_level():
+			return tav
+	return null
+
+
+## Custo da PRÓXIMA taverna (x cr, z madeira): cresce a cada uma que já existe.
+func taverna_cost() -> Vector3i:
+	var base := Vector3i(taverna_credits, 0, taverna_wood)
+	var eco := _economy()
+	return eco.scaled_cost(base, tavernas().size()) if eco else base
+
+
+func taverna_cost_text() -> String:
+	var c := taverna_cost()
+	return "%d cr + %d madeira" % [c.x, c.z]
+
+
+func taverna_up_cost_text() -> String:
+	return "%d cr + %d madeira + %d %s" % [taverna_up_credits, taverna_up_wood, taverna_up_ore, taverna_up_ore_type]
 
 
 func _economy() -> Node:
@@ -414,49 +447,85 @@ func spawn_park(pos: Vector2) -> Node2D:
 
 
 # ------------------------------------------------------------ taverna
-## "" se dá pra construir/ampliar; senão o motivo.
-func taverna_block_reason() -> String:
+## Bloco 47: construir OUTRA taverna e AMPLIAR uma que existe são coisas separadas.
+## "" se dá pra construir uma taverna nova; senão o motivo.
+func taverna_build_reason() -> String:
 	var eco := _economy()
 	if eco == null:
 		return "sem recursos"
-	for k in ["taverna", "taverna_up"]:
-		var c := Canteiro.pending(get_tree(), k)
-		if c:
-			return "em obra (%s)" % c._obra.status(c.obra_progress())
-	var tav := taverna()
-	if tav == null:
-		return eco.missing_text(taverna_credits, 0, "", taverna_wood)
-	if tav.level >= tav.max_level():
+	var c := Canteiro.pending(get_tree(), "taverna")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var cost := taverna_cost()
+	return eco.missing_text(cost.x, 0, "", cost.z)
+
+
+## "" se dá pra ampliar (a primeira taverna abaixo do máximo); senão o motivo.
+func taverna_upgrade_reason() -> String:
+	var eco := _economy()
+	if eco == null:
+		return "sem recursos"
+	if tavernas().is_empty():
+		return "sem taverna"
+	var c := Canteiro.pending(get_tree(), "taverna_up")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	if taverna_to_upgrade() == null:
 		return "nível máximo"
 	return eco.missing_text(taverna_up_credits, taverna_up_ore, taverna_up_ore_type, taverna_up_wood, "pedra (%s)" % taverna_up_ore_type)
 
 
-## Construir (abre o modo de escolher lugar) ou ampliar.
+## (compatível com antes) o motivo do que build_or_upgrade_taverna faria: construir a
+## primeira taverna ou ampliar.
+func taverna_block_reason() -> String:
+	if tavernas().is_empty():
+		var c := Canteiro.pending(get_tree(), "taverna")
+		if c:
+			return "em obra (%s)" % c._obra.status(c.obra_progress())
+		return taverna_build_reason()
+	return taverna_upgrade_reason()
+
+
+## Construir (sem taverna ainda) ou ampliar (já tem) — o botão antigo da janela de Bem-estar.
 func build_or_upgrade_taverna() -> bool:
-	if taverna_block_reason() != "":
+	if tavernas().is_empty():
+		return build_taverna()
+	return upgrade_taverna()
+
+
+## Abre o modo de escolher lugar pra uma taverna NOVA (pode ter várias).
+func build_taverna() -> bool:
+	if taverna_build_reason() != "":
 		Audio.error()
 		return false
-	var tav := taverna()
-	if tav:
-		if not _economy().spend(taverna_up_credits, taverna_up_ore, taverna_up_ore_type, taverna_up_wood):
-			return false
-		Canteiro.order(get_tree(), "taverna_up", tav.global_position, taverna_up_build_time)
-		Audio.click()
-		_toast("Ampliação da taverna encomendada — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
-		return true
 	var placer := get_tree().get_first_node_in_group("house_placer")
 	if placer == null:
 		return false
-	placer.begin(_confirm_taverna, TAVERNA_TEXTURE, 2, "a taverna")
+	placer.begin(_confirm_taverna, TAVERNA_TEXTURE, 2, "a taverna" if tavernas().is_empty() else "outra taverna")
+	return true
+
+
+## Encomenda a ampliação da primeira taverna que ainda não está no máximo.
+func upgrade_taverna() -> bool:
+	if taverna_upgrade_reason() != "":
+		Audio.error()
+		return false
+	var tav := taverna_to_upgrade()
+	if not _economy().spend(taverna_up_credits, taverna_up_ore, taverna_up_ore_type, taverna_up_wood):
+		return false
+	Canteiro.order(get_tree(), "taverna_up", tav.global_position, taverna_up_build_time)
+	Audio.click()
+	_toast("Ampliação da taverna encomendada — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
 	return true
 
 
 ## HousePlacer chama quando o jogador clica num lugar válido. Só aqui a taverna é paga.
 func _confirm_taverna(pos: Vector2) -> bool:
-	if taverna() != null or taverna_block_reason() != "":
+	if taverna_build_reason() != "":
 		Audio.error()
 		return false
-	if not _economy().spend(taverna_credits, 0, "", taverna_wood):
+	var cost := taverna_cost()
+	if not _economy().spend(cost.x, 0, "", cost.z):
 		return false
 	Canteiro.order(get_tree(), "taverna", pos, taverna_build_time)
 	Audio.click()
@@ -472,13 +541,17 @@ func finish_build(kind: String, pos: Vector2) -> void:
 		Audio.recruit()
 		_toast("Parque pronto! Quem passa perto fica mais animado.", Color(0.55, 1.0, 0.5))
 		return
-	if kind == "taverna" and taverna() == null:
+	if kind == "taverna":
 		var tav := spawn_taverna(pos, 1)
 		tav.pop_in()
 		Audio.recruit()
 		_toast("Taverna construída! Quem estiver triste vai lá se animar.", Color(0.55, 1.0, 0.5))
-	elif kind == "taverna_up" and taverna() != null:
-		var tav := taverna()
+	elif kind == "taverna_up" and not tavernas().is_empty():
+		# Bloco 47: amplia a taverna onde está o canteiro (a mais perto dele)
+		var tav: Node2D = null
+		for t in tavernas():
+			if tav == null or t.global_position.distance_to(pos) < tav.global_position.distance_to(pos):
+				tav = t
 		tav.level = mini(tav.level + 1, tav.max_level())
 		tav.refresh_seats()
 		tav.pop_in()
@@ -488,7 +561,8 @@ func finish_build(kind: String, pos: Vector2) -> void:
 
 func spawn_taverna(pos: Vector2, lvl: int) -> Node2D:
 	var tav: Node2D = TAVERNA_SCENE.instantiate()
-	tav.name = "Taverna"
+	var n := tavernas().size()
+	tav.name = "Taverna" if n == 0 else "Taverna%d" % (n + 1)
 	tav.position = pos
 	tav.level = lvl
 	var world := get_tree().get_first_node_in_group("village_hub").get_parent()
@@ -516,9 +590,7 @@ func get_save_data() -> Dictionary:
 		"festa_left": festa_left,
 		"last_festa_day": last_festa_day,
 	}
-	var tav := taverna()
-	if tav:
-		d["taverna"] = tav.get_save_data()
+	d["tavernas"] = tavernas().map(func(t): return t.get_save_data())  # Bloco 47 (antes: "taverna", uma só)
 	var ps := []
 	for p in parks():
 		ps.append(SaveUtil.vec2_to_array(p.global_position))
@@ -534,11 +606,16 @@ func load_save_data(d: Dictionary) -> void:
 	festa_left = clampf(SaveUtil.num(d, "festa_left", 0.0), 0.0, festa_duration)
 	last_festa_day = SaveUtil.integer(d, "last_festa_day", -1)
 	_last_warned = false
-	var td := SaveUtil.dict(d, "taverna")
-	if not td.is_empty() and taverna() == null:
-		var pos := SaveUtil.vec2(td, "position", Vector2.INF)
-		if pos != Vector2.INF:
-			spawn_taverna(pos, clampi(SaveUtil.integer(td, "level", 1), 1, 2))
+	if tavernas().is_empty():
+		var list: Array = SaveUtil.array(d, "tavernas")
+		if list.is_empty() and not SaveUtil.dict(d, "taverna").is_empty():
+			list = [SaveUtil.dict(d, "taverna")]  # Bloco 47: save antigo, uma só
+		for td in list:
+			if typeof(td) != TYPE_DICTIONARY:
+				continue
+			var pos := SaveUtil.vec2(td, "position", Vector2.INF)
+			if pos != Vector2.INF:
+				spawn_taverna(pos, clampi(SaveUtil.integer(td, "level", 1), 1, 2))
 	# Bloco 41 (save antigo: sem parque)
 	for p in parks():
 		p.get_parent().remove_child(p)

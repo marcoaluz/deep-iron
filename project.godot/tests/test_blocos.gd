@@ -184,3 +184,7 @@ func test_b45_coletor_madeira() -> void:
 
 func test_b46_menu_construcao() -> void:
 	run_bloco("b46_menu_construcao.gd")
+
+
+func test_b47_varios_predios() -> void:
+	run_bloco("b47_varios_predios.gd")

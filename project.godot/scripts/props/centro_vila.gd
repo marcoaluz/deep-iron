@@ -78,6 +78,10 @@ const COMEDOURO_FOOTPRINT := Rect2(-44, -40, 88, 60)
 const COLETOR_SCENE := preload("res://scenes/props/coletor_madeira.tscn")
 const COLETOR_TEXTURE := preload("res://assets/game/coletor_madeira.png")
 const COLETOR_FOOTPRINT := Rect2(-52, -78, 104, 90)
+## Bloco 47: enfermaria extra (a principal vem com a vila).
+const ENFERMARIA_SCENE := preload("res://scenes/props/enfermaria.tscn")
+const ENFERMARIA_TEXTURE := preload("res://assets/game/enfermaria.png")
+const ENFERMARIA_FOOTPRINT := Rect2(-40, -64, 80, 84)
 const UPGRADE_NAMES := {
 	"moradias": "Moradias",
 	"enfermaria": "Enfermaria",
@@ -139,6 +143,14 @@ const UPGRADE_NAMES := {
 @export var coletor_credits: int = 250
 @export var coletor_ore: int = 60
 @export var coletor_build_time: float = 40.0
+
+@export_group("Enfermaria extra (Bloco 47)")
+## Custo da 1ª enfermaria extra (a da vila é de graça); as seguintes crescem com
+## Economy.extra_building_cost_growth. Segundos de engenheiro pra erguer.
+@export var enfermaria_extra_credits: int = 200
+@export var enfermaria_extra_ore: int = 40
+@export var enfermaria_extra_wood: int = 60
+@export var enfermaria_extra_build_time: float = 45.0
 
 @export_group("Raio das casas (Bloco 37)")
 ## Casa só pode ser posicionada até essa distância do Centro da Vila no estágio 1...
@@ -606,18 +618,30 @@ func coletor() -> Node:
 	return get_tree().get_first_node_in_group("coletores")
 
 
+## Bloco 47: pode ter vários — cada um com o SEU operador e a sua produção (independentes).
+func coletores() -> Array:
+	return get_tree().get_nodes_in_group("coletores")
+
+
+## Custo do PRÓXIMO coletor (x cr, y ferro): cresce a cada um que já existe.
+func coletor_cost() -> Vector3i:
+	var base := Vector3i(coletor_credits, coletor_ore, 0)
+	var eco := _economy()
+	return eco.scaled_cost(base, coletores().size()) if eco else base
+
+
 func coletor_block_reason() -> String:
-	if coletor() != null:
-		return "já tem um"
 	var c := Canteiro.pending(get_tree(), "coletor")
 	if c:
 		return "em obra (%s)" % c._obra.status(c.obra_progress())
 	var eco := _economy()
-	return eco.missing_text(coletor_credits, coletor_ore, "ferro") if eco else "sem recursos"
+	var cost := coletor_cost()
+	return eco.missing_text(cost.x, cost.y, "ferro") if eco else "sem recursos"
 
 
 func coletor_cost_text() -> String:
-	return "%d cr + %d ferro" % [coletor_credits, coletor_ore]
+	var c := coletor_cost()
+	return "%d cr + %d ferro" % [c.x, c.y]
 
 
 ## Escolher o lugar — só na clareira (onde estão as árvores).
@@ -639,7 +663,8 @@ func _confirm_coletor(pos: Vector2) -> bool:
 	if coletor_block_reason() != "":
 		Audio.error()
 		return false
-	if not _economy().spend(coletor_credits, coletor_ore, "ferro"):
+	var cost := coletor_cost()
+	if not _economy().spend(cost.x, cost.y, "ferro"):
 		return false
 	Canteiro.order(get_tree(), "coletor", pos, coletor_build_time)
 	Audio.click()
@@ -651,7 +676,8 @@ func _confirm_coletor(pos: Vector2) -> bool:
 
 func spawn_coletor(pos: Vector2) -> Node2D:
 	var c: Node2D = COLETOR_SCENE.instantiate()
-	c.name = "ColetorMadeira"
+	var n := coletores().size()
+	c.name = "ColetorMadeira" if n == 0 else "ColetorMadeira%d" % (n + 1)
 	c.position = pos
 	get_parent().add_child(c)
 	var env := get_tree().get_first_node_in_group("environment")
@@ -661,16 +687,89 @@ func spawn_coletor(pos: Vector2) -> Node2D:
 	return c
 
 
+# ------------------------------------------------------------ enfermaria extra (Bloco 47)
+## As enfermarias construídas pelo jogador (sem a principal, que vem com a vila).
+func extra_enfermarias() -> Array:
+	return get_tree().get_nodes_in_group("enfermarias").filter(func(w): return w.extra)
+
+
+## Custo da PRÓXIMA enfermaria extra (x cr, y ferro, z madeira).
+func enfermaria_cost() -> Vector3i:
+	var base := Vector3i(enfermaria_extra_credits, enfermaria_extra_ore, enfermaria_extra_wood)
+	var eco := _economy()
+	return eco.scaled_cost(base, extra_enfermarias().size()) if eco else base
+
+
+func enfermaria_cost_text() -> String:
+	var c := enfermaria_cost()
+	return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+
+
+func enfermaria_block_reason() -> String:
+	var c := Canteiro.pending(get_tree(), "enfermaria")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	var cost := enfermaria_cost()
+	return eco.missing_text(cost.x, cost.y, "ferro", cost.z) if eco else "sem recursos"
+
+
+func build_enfermaria() -> bool:
+	if enfermaria_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_enfermaria, ENFERMARIA_TEXTURE, 2, "a nova enfermaria", {"footprint": ENFERMARIA_FOOTPRINT})
+	return true
+
+
+func _confirm_enfermaria(pos: Vector2) -> bool:
+	if enfermaria_block_reason() != "":
+		Audio.error()
+		return false
+	var cost := enfermaria_cost()
+	if not _economy().spend(cost.x, cost.y, "ferro", cost.z):
+		return false
+	Canteiro.order(get_tree(), "enfermaria", pos, enfermaria_extra_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Nova enfermaria encomendada — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_enfermaria(pos: Vector2) -> Node2D:
+	var inf: Node2D = ENFERMARIA_SCENE.instantiate()
+	inf.extra = true
+	inf.name = "EnfermariaExtra%d" % (extra_enfermarias().size() + 1)
+	inf.position = pos
+	get_parent().add_child(inf)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
+	return inf
+
+
 ## O canteiro terminou (canteiro.gd chama o dono do tipo).
 func finish_build(kind: String, pos: Vector2) -> void:
+	if kind == "enfermaria":  # Bloco 47
+		var inf := spawn_enfermaria(pos)
+		inf.pop_in()
+		Audio.recruit()
+		var hh := get_tree().get_first_node_in_group("hud")
+		if hh:
+			hh.show_toast("Nova enfermaria pronta! Mais leitos pra quem se machuca (o médico vai pra que precisa).", Color(0.55, 1.0, 0.5))
+		return
 	if kind == "coletor":
-		if coletor() == null:
-			var col := spawn_coletor(pos)
-			col.pop_in()
-			Audio.recruit()
-			var h := get_tree().get_first_node_in_group("hud")
-			if h:
-				h.show_toast("Coletor de madeira pronto! Designe um lenhador pra operar (clique nele).", Color(0.55, 1.0, 0.5))
+		var col := spawn_coletor(pos)
+		col.pop_in()
+		Audio.recruit()
+		var h := get_tree().get_first_node_in_group("hud")
+		if h:
+			h.show_toast("Coletor de madeira pronto! Designe um lenhador pra operar (clique nele).", Color(0.55, 1.0, 0.5))
 		return
 	if kind != "comedouro":
 		return
@@ -885,14 +984,8 @@ func get_save_data() -> Dictionary:
 	return {"level": level, "upgrades": upgrades.duplicate(), "pending_upgrade": pending_upgrade,
 		"upgrade_left": upgrade_left, "upgrade_total": upgrade_total, "obra": _obra.get_save_data(),
 		"founded": founded, "starter_houses_left": starter_houses_left,
-		"coletor": _coletor_save()}
-
-
-func _coletor_save() -> Dictionary:
-	var c := coletor()
-	if c == null:
-		return {}
-	return {"position": SaveUtil.vec2_to_array(c.global_position), "total": c.total_produced}
+		"coletores": coletores().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position), "total": c.total_produced}),
+		"enfermarias_extra": extra_enfermarias().map(func(w): return SaveUtil.vec2_to_array(w.global_position))}  # Bloco 47
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -911,14 +1004,24 @@ func load_save_data(d: Dictionary) -> void:
 	founded = SaveUtil.boolean(d, "founded", true)
 	starter_houses_left = clampi(SaveUtil.integer(d, "starter_houses_left", 0), 0, starter_houses)
 	# Bloco 45: coletor de madeira (o operador se religa sozinho: ipezinho "operates_coletor")
-	var old := coletor()
-	if old:
+	for old in coletores():
 		old.get_parent().remove_child(old)
 		old.queue_free()
-	var cd := SaveUtil.dict(d, "coletor")
-	var cpos := SaveUtil.vec2(cd, "position", Vector2.INF)
-	if cpos != Vector2.INF:
-		var col := spawn_coletor(cpos)
-		col.total_produced = maxf(SaveUtil.num(cd, "total", 0.0), 0.0)
+	var list: Array = SaveUtil.array(d, "coletores")
+	if list.is_empty() and not SaveUtil.dict(d, "coletor").is_empty():
+		list = [SaveUtil.dict(d, "coletor")]  # Bloco 47: save antigo, um só
+	for cd in list:
+		if typeof(cd) != TYPE_DICTIONARY:
+			continue
+		var cpos := SaveUtil.vec2(cd, "position", Vector2.INF)
+		if cpos != Vector2.INF:
+			var col := spawn_coletor(cpos)
+			col.total_produced = maxf(SaveUtil.num(cd, "total", 0.0), 0.0)
+	# Bloco 47: enfermarias extras (save antigo: nenhuma)
+	for old in extra_enfermarias():
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	for epos in SaveUtil.positions(d, "enfermarias_extra"):
+		spawn_enfermaria(epos)
 	_update_visual()
 	_refresh_galleries(false)  # Bloco 33: galerias batem com o estágio carregado

@@ -2,6 +2,9 @@ extends Node
 ## Pesquisa (nó Research, grupo "research"): a árvore de tecnologias do Laboratório.
 ##
 ## - O Laboratório é posicionado pelo jogador (janela do Laboratório, tecla Q).
+##   Bloco 47: pode ter vários (cada um a mais custa mais — Economy.extra_building_cost_growth).
+##   A pesquisa é UMA só: todos os laboratórios somam pontos na mesma pesquisa; ter mais
+##   laboratório = mais vagas pra pesquisador trabalhar ao mesmo tempo.
 ## - Pesquisa gasta recursos ao começar e depois precisa de PONTOS, que só os
 ##   PESQUISADORES (função, tecla Z) geram trabalhando no laboratório de dia.
 ## - Três ramos. No 2º nível de cada ramo há uma ESCOLHA: pesquisar um tranca o outro
@@ -104,14 +107,29 @@ func lab() -> Node:
 	return get_tree().get_first_node_in_group("laboratorios")
 
 
+## Bloco 47: todos os laboratórios da vila.
+func labs() -> Array:
+	return get_tree().get_nodes_in_group("laboratorios")
+
+
+## Custo do PRÓXIMO laboratório (x cr, y ferro, z madeira): cresce a cada um que já existe.
+func lab_cost() -> Vector3i:
+	var base := Vector3i(lab_credits, lab_iron, lab_wood)
+	var eco := get_tree().get_first_node_in_group("economy")
+	return eco.scaled_cost(base, labs().size()) if eco else base
+
+
+func lab_cost_text() -> String:
+	var c := lab_cost()
+	return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+
+
 func researchers() -> Array:
 	return get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return w.is_researcher())
 
 
 # ------------------------------------------------------------ laboratório
 func lab_block_reason() -> String:
-	if lab() != null:
-		return "construído"
 	var c := Canteiro.pending(get_tree(), "laboratorio")
 	if c:
 		return "em obra (%s)" % c._obra.status(c.obra_progress())
@@ -119,7 +137,8 @@ func lab_block_reason() -> String:
 	if hub and hub.level < lab_min_stage:
 		return "requer vila nível %d" % lab_min_stage
 	var eco := get_tree().get_first_node_in_group("economy")
-	return eco.missing_text(lab_credits, lab_iron, "ferro", lab_wood) if eco else "sem recursos"
+	var cost := lab_cost()
+	return eco.missing_text(cost.x, cost.y, "ferro", cost.z) if eco else "sem recursos"
 
 
 func build_lab() -> bool:
@@ -137,7 +156,8 @@ func _confirm_lab(pos: Vector2) -> bool:
 	if lab_block_reason() != "":
 		Audio.error()
 		return false
-	if not get_tree().get_first_node_in_group("economy").spend(lab_credits, lab_iron, "ferro", lab_wood):
+	var cost := lab_cost()
+	if not get_tree().get_first_node_in_group("economy").spend(cost.x, cost.y, "ferro", cost.z):
 		return false
 	Canteiro.order(get_tree(), "laboratorio", pos, lab_build_time)
 	Audio.click()
@@ -149,7 +169,7 @@ func _confirm_lab(pos: Vector2) -> bool:
 
 ## Bloco 31b: o canteiro terminou (chamado por canteiro.gd).
 func finish_build(kind: String, pos: Vector2) -> void:
-	if kind != "laboratorio" or lab() != null:
+	if kind != "laboratorio":
 		return
 	var l := spawn_lab(pos)
 	l.pop_in()
@@ -161,7 +181,8 @@ func finish_build(kind: String, pos: Vector2) -> void:
 
 func spawn_lab(pos: Vector2) -> Node2D:
 	var l: Node2D = LAB_SCENE.instantiate()
-	l.name = "Laboratorio"
+	var n := labs().size()
+	l.name = "Laboratorio" if n == 0 else "Laboratorio%d" % (n + 1)
 	l.position = pos
 	get_tree().get_first_node_in_group("village_hub").get_parent().add_child(l)
 	var env := get_tree().get_first_node_in_group("environment")
@@ -309,9 +330,10 @@ func _on_day_started(day: int) -> void:
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	var d := {"done": done.duplicate(), "current": current, "progress": progress}
-	var l := lab()
-	if l:
-		d["lab"] = SaveUtil.vec2_to_array(l.global_position)
+	var ls := []
+	for l in labs():
+		ls.append(SaveUtil.vec2_to_array(l.global_position))
+	d["labs"] = ls  # Bloco 47: lista (antes: "lab" com um só)
 	return d
 
 
@@ -324,8 +346,7 @@ func load_save_data(d: Dictionary) -> void:
 	if not TECHS.has(current) or has(current):
 		current = ""
 	progress = maxf(SaveUtil.num(d, "progress", 0.0), 0.0) if current != "" else 0.0
-	if d.has("lab") and lab() == null:
-		var pos := SaveUtil.vec2(d, "lab", Vector2.INF)
-		if pos != Vector2.INF:
+	if labs().is_empty():
+		for pos in SaveUtil.positions(d, "labs", "lab"):  # Bloco 47 (save antigo: "lab", um só)
 			spawn_lab(pos)
 	apply_all.call_deferred()

@@ -6,7 +6,8 @@ extends "res://scripts/props/station.gd"
 ## perto (como a Escavadeira faz com o minério). Sem operador ela para — nada quebra. O
 ## lenhador manual (cortar árvore e levar) continua existindo em paralelo.
 ## De noite o operador vai pra casa como todo lenhador (turno extra: continua).
-## Construída pelo engenheiro (canteiro "coletor", dono: Centro da Vila); uma por vila.
+## Construída pelo engenheiro (canteiro "coletor", dono: Centro da Vila). Bloco 47: pode ter
+## vários, cada um com o seu operador e a sua produção (independentes).
 
 ## Madeira por segundo com o operador no posto (antes da zanga/ânimo dele).
 @export var wood_per_sec: float = 0.6
@@ -66,6 +67,10 @@ func designate(worker: Node) -> bool:
 		return false
 	if has_operator() and operator != worker:
 		release()
+	# Bloco 47: um lenhador opera UMA máquina só (sai da outra, se estava nela)
+	for other in get_tree().get_nodes_in_group("coletores"):
+		if other != self and other.operator == worker:
+			other.release()
 	operator = worker
 	worker.wake_decision()
 	refresh()

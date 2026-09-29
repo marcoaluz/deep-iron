@@ -8,6 +8,9 @@ extends "res://scripts/props/station.gd"
 ##   leve piora pra grave, grave morre (regras no ipezinho.gd).
 ## - Quem morre vai pro MEMORIAL (nome, causa, gravidade, dia) e ganha uma cruzinha
 ##   no cemitério ao lado da enfermaria. O memorial é salvo e vai servir pro diário.
+## - Bloco 47: dá pra construir enfermarias EXTRAS (Centro da Vila). Cada uma tem os seus
+##   leitos (mesmo nível da melhoria "Enfermaria", que vale pra todas) e o seu médico de
+##   plantão. O memorial e o cemitério ficam só na PRINCIPAL (a que vem com a vila).
 
 signal patient_died(worker_name: String, cause: String)
 
@@ -34,6 +37,8 @@ const GRAVE := preload("res://assets/game/grave.png")
 
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 var panel_id := "enfermaria"
+## Bloco 47: construída pelo jogador (a principal vem na cena e é false).
+var extra := false
 ## [{name, cause, severity, day, position: [x, y]}]
 var memorial: Array = []
 
@@ -58,6 +63,8 @@ func _ready() -> void:
 
 
 func _connect_hub() -> void:
+	if not is_inside_tree():
+		return  # saiu antes (ex.: carregou um save no mesmo quadro)
 	var hub := get_tree().get_first_node_in_group("village_hub")
 	if hub:
 		hub.upgrade_bought.connect(func(id: String, _lvl: int):
@@ -115,6 +122,26 @@ func patients() -> Array:
 	return _inside
 
 
+## Bloco 47: a enfermaria principal (a da cena): memorial, cemitério e o sinal de morte.
+func primary() -> Node:
+	for w in get_tree().get_nodes_in_group("enfermarias"):
+		if not w.extra:
+			return w
+	return self
+
+
+## A enfermaria mais perto de um ipezinho (onde ele espera leito).
+func _nearest_ward(worker: Node2D, wards: Array) -> Node:
+	var best: Node = null
+	var best_d := INF
+	for w in wards:
+		var d: float = worker.global_position.distance_to(w.global_position)
+		if d < best_d:
+			best_d = d
+			best = w
+	return best
+
+
 # ------------------------------------------------------------ médico (Bloco 30)
 ## Onde o médico entra (a porta, na frente da fachada).
 func doctor_spot() -> Vector2:
@@ -148,9 +175,28 @@ func waiting_clock_mult() -> float:
 
 
 ## Machucados que ainda não estão num leito (a caminho ou esperando).
+## Bloco 47: com mais de uma enfermaria, "daqui" = a caminho de um leito DAQUI, ou sem leito
+## em nenhuma e esta é a mais perto dele (é na porta dela que ele espera).
 func waiting() -> Array:
-	var inside := patients()
-	return get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return w.injured and not inside.has(w))
+	var wards := get_tree().get_nodes_in_group("enfermarias")
+	var inside: Array = []
+	for w in wards:
+		inside.append_array(w.patients())
+	var out: Array = []
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		if not w.injured or inside.has(w):
+			continue
+		if slot_of(w) >= 0:
+			out.append(w)  # a caminho de um leito daqui
+			continue
+		var has_bed := false
+		for o in wards:
+			if o.slot_of(w) >= 0:
+				has_bed = true
+				break
+		if not has_bed and _nearest_ward(w, wards) == self:
+			out.append(w)
+	return out
 
 
 ## Fila de quem espera leito: na frente da porta, lado a lado (não atrás do prédio).
@@ -166,6 +212,10 @@ func without_bed() -> Array:
 
 # ------------------------------------------------------------ mortes
 func record_death(worker: Node2D) -> void:
+	var main := primary()
+	if main != self:
+		main.record_death(worker)  # Bloco 47: memorial e cemitério só na principal
+		return
 	var dn := get_tree().get_first_node_in_group("day_night")
 	var pos := _grave_spot()
 	var entry := {
@@ -239,7 +289,7 @@ func _update_visual() -> void:
 	_visual.frame = 1 if n > 0 else 0
 	_window_light.enabled = n > 0
 	var waiting_n := without_bed().size() if is_inside_tree() else 0
-	_label.text = "Enfermaria  %d/%d" % [n, slot_count]
+	_label.text = "Enfermaria%s  %d/%d" % [" (extra)" if extra else "", n, slot_count]
 	var docs := doctors().size() if is_inside_tree() else 0
 	_label.text += "\n%s" % ("%d médico%s de plantão" % [docs, "s" if docs > 1 else ""] if docs > 0 else "sem médico (cura lenta)")
 	_window_light.enabled = n > 0 or docs > 0
@@ -250,6 +300,12 @@ func _update_visual() -> void:
 
 func _process(_delta: float) -> void:
 	_update_visual()
+
+
+## Bloco 47: "brota" quando a obra da enfermaria extra termina.
+func pop_in() -> void:
+	_visual.scale = Vector2(2.0, 0.2)
+	create_tween().tween_property(_visual, "scale", Vector2(2, 2), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 # ------------------------------------------------------------ save/load (SaveManager)

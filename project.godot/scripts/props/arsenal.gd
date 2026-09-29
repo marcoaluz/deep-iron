@@ -6,6 +6,10 @@ extends "res://scripts/props/station.gd"
 ## Pronto, ele é uma OBRA como a Oficina: a fila da forja (defense.gd: queue) só anda com
 ## um engenheiro trabalhando aqui. Os dados (cavalete, pilha de conserto, fila) ficam no
 ## Defense; este nó é o lugar no mapa: visual, obra e os slots onde os guardas trocam de arma.
+##
+## Bloco 47: pode ter vários. O cavalete e a fila são UM só (no Defense); a FORJA fica no
+## Arsenal principal (o primeiro) — senão a mesma encomenda viraria duas obras. Os outros
+## são postos de armas: o guarda pega/devolve no Arsenal mais perto dele.
 
 const ObraSite := preload("res://scripts/core/obra_site.gd")
 
@@ -75,7 +79,7 @@ func refresh() -> void:
 	var working := obra_pending() and _obra.has_engineer()
 	_visual.frame = (2 if working else 0) + (1 if stocked else 0)
 	_light.enabled = working
-	var lines: Array[String] = ["Arsenal"]
+	var lines: Array[String] = ["Arsenal" if is_forge() else "Arsenal (posto de armas)"]
 	if def:
 		var bits: Array[String] = []
 		for id in def.WEAPON_IDS:
@@ -87,6 +91,8 @@ func refresh() -> void:
 		if obra_pending():
 			lines.append("%s  %s%s" % [def.forge_title(), _obra.status(obra_progress()),
 				"  (+%d na fila)" % (def.queue.size() - 1) if def.queue.size() > 1 else ""])
+		elif not def.queue.is_empty():
+			lines.append("forjando no Arsenal principal")
 	_label.text = "\n".join(lines)
 	_label.modulate = Color(1.0, 0.8, 0.5) if working else (Color(1.0, 0.62, 0.3) if obra_pending() else Color(0.9, 0.88, 0.85))
 
@@ -99,7 +105,13 @@ func pop_in() -> void:
 # ------------------------------------------------------------ obra (a fila da forja)
 func obra_pending() -> bool:
 	var def := _def()
-	return def != null and not def.queue.is_empty()
+	return def != null and not def.queue.is_empty() and is_forge()
+
+
+## Bloco 47: é o Arsenal onde a forja trabalha (o principal)?
+func is_forge() -> bool:
+	var def := _def()
+	return def == null or def.arsenal() == self
 
 
 func obra_title() -> String:

@@ -203,17 +203,21 @@ func refresh() -> void:
 			lines.append("  • %s: %s%s" % [w.display_name, w.weapon_label(), "  (gasta!)" if w.weapon_condition() < 0.25 else ""])
 	_guards_label.text = "\n".join(lines)
 	_guards_label.add_theme_color_override("font_color", _hud.COLOR_HUNGER_BAD if not unarmed.is_empty() or not _def.downed_guards().is_empty() else _hud.COLOR_TEXT)
+	# Bloco 47: pode ter vários (cada um a mais custa mais)
 	var campo_reason: String = _def.campo_block_reason()
-	_campo_button.text = "Campo de treino construído" if campo_reason == "construído" else (
-		"Construir campo de treino — escolher lugar (%d cr + %d madeira)" % [_def.campo_credits, _def.campo_wood] if campo_reason == "" else "Campo de treino: " + campo_reason)
+	var n_campos: int = _def.campos().size()
+	var campo_what := "campo de treino" if n_campos == 0 else "outro campo de treino (tem %d)" % n_campos
+	_campo_button.text = ("Construir %s — escolher lugar (%s)" % [campo_what, _def.campo_cost_text()]) if campo_reason == "" \
+		else "Construir %s: %s" % [campo_what, campo_reason]
 	_campo_button.disabled = campo_reason != ""
 
 	# Arsenal
 	var ars: Node = _def.arsenal()
 	var ars_reason: String = _def.arsenal_block_reason()
-	_arsenal_button.visible = ars == null
-	_arsenal_button.text = ("Construir Arsenal — escolher lugar (%d cr + %d ferro + %d madeira)" % [_def.arsenal_credits, _def.arsenal_ore, _def.arsenal_wood]) \
-		if ars_reason == "" else "Arsenal: " + ars_reason
+	var n_ars: int = _def.arsenais().size()
+	var ars_what := "Arsenal" if n_ars == 0 else "outro Arsenal — posto de armas (tem %d)" % n_ars
+	_arsenal_button.text = ("Construir %s — escolher lugar (%s)" % [ars_what, _def.arsenal_cost_text()]) \
+		if ars_reason == "" else "Construir %s: %s" % [ars_what, ars_reason]
 	_arsenal_button.disabled = ars_reason != ""
 	if ars == null:
 		_arsenal_label.text = "Sem Arsenal: não dá pra forjar nem trocar arma quebrada (o guarda luta no soco)."

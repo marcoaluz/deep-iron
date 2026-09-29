@@ -4,9 +4,10 @@ extends PanelContainer
 ## desenho, custo e o motivo quando não dá. Clicar em "Construir" chama o MESMO fluxo que
 ## já existia (escolher lugar + engenheiro) — o menu só junta tudo num lugar.
 ##
-## Os limites de hoje continuam: o que só pode ter um (Arsenal, Laboratório, Taverna,
-## Vestiário, Coletor…) mostra "um por vila"; o que pode ter vários (casas, comedouros,
-## parques) mostra "pode ter vários". Itens do futuro aparecem como "em breve".
+## Bloco 47: o que pode ter vários mostra "pode ter vários • tem N" e, se o próximo custa
+## mais (Economy.extra_building_cost_growth), o custo do cartão já é o do PRÓXIMO. O que
+## continua único (Vestiário, Oficina, Centro da Vila, Escudo) mostra "um por vila";
+## melhorias mostram "melhoria". Itens do futuro aparecem como "em breve".
 
 const TAB_NAMES := ["Moradia", "Alimentação", "Saúde", "Lazer", "Pesquisa", "Defesa e equipamento", "Coleta automática", "Vila"]
 
@@ -91,7 +92,8 @@ func _show_tab(i: int) -> void:
 
 # ------------------------------------------------------------ o que tem em cada aba
 ## Cada item: name, tex, frames, desc, many (pode ter vários?), soon (em breve), cost(), reason(),
-## act(), e opcional label (texto do botão) e "open" (abre uma janela em vez de construir).
+## act(), e opcional label (texto do botão), "open" (abre uma janela em vez de construir),
+## tag (etiqueta fixa), count() (quantos já tem) e scales (o próximo custa mais — Bloco 47).
 func _defs(tab: String) -> Array:
 	var hub := _g("village_hub")
 	var mor := _g("morale")
@@ -129,16 +131,26 @@ func _defs(tab: String) -> Array:
 					"desc": "+1 leito e cura mais rápida. (A enfermaria vem com a vila.)",
 					"cost": func(): return _upgrade_cost_text(hub, "enfermaria"),
 					"reason": func(): return hub.upgrade_block_reason("enfermaria"),
-					"act": func(): hub.buy_upgrade("enfermaria"), "label": "Ampliar"})
-			out.append({"name": "Nova enfermaria", "tex": "enfermaria", "frames": 2, "soon": true, "desc": "Mais de uma enfermaria na vila."})
+					"act": func(): hub.buy_upgrade("enfermaria"), "label": "Ampliar", "tag": "melhoria (vale pra todas)"})
+				out.append({"name": "Nova enfermaria", "tex": "enfermaria", "frames": 2, "many": true, "scales": true,
+					"desc": "Mais leitos em outro lugar. O médico vai pra que precisa; o memorial fica na principal.",
+					"count": func(): return _count("enfermarias"),
+					"cost": func(): return hub.enfermaria_cost_text(),
+					"reason": func(): return hub.enfermaria_block_reason(),
+					"act": func(): hub.build_enfermaria()})
 		"Lazer":
 			if mor:
-				out.append({"name": "Taverna", "tex": "taverna", "frames": 2,
-					"desc": "Quem está triste vai lá se animar. Depois dá pra ampliar.",
-					"cost": func(): return _taverna_cost(mor),
-					"reason": func(): return mor.taverna_block_reason(),
-					"act": func(): mor.build_or_upgrade_taverna(),
-					"label_fn": func(): return "Construir" if mor.taverna() == null else "Ampliar"})
+				out.append({"name": "Taverna", "tex": "taverna", "frames": 2, "many": true, "scales": true,
+					"desc": "Quem está triste vai lá se animar. Mais tavernas = mais lugares (o ânimo não soma).",
+					"count": func(): return _count("tavernas"),
+					"cost": func(): return mor.taverna_cost_text(),
+					"reason": func(): return mor.taverna_build_reason(),
+					"act": func(): mor.build_taverna()})
+				out.append({"name": "Ampliar taverna", "tex": "taverna", "frames": 2, "tag": "melhoria",
+					"desc": "+2 lugares e diversão mais rápida (a primeira taverna que ainda não está no máximo).",
+					"cost": func(): return mor.taverna_up_cost_text(),
+					"reason": func(): return mor.taverna_upgrade_reason(),
+					"act": func(): mor.upgrade_taverna(), "label": "Ampliar"})
 				out.append({"name": "Parque", "tex": "parque", "frames": 1, "many": true,
 					"desc": "Ânimo aos pouquinhos pra quem passa perto.",
 					"cost": func(): return "%d cr + %d %s + %d madeira" % [mor.park_credits, mor.park_ore, mor.park_ore_type, mor.park_wood],
@@ -146,38 +158,42 @@ func _defs(tab: String) -> Array:
 					"act": func(): mor.build_park()})
 		"Pesquisa":
 			if res:
-				out.append({"name": "Laboratório", "tex": "laboratorio", "frames": 2,
-					"desc": "Pesquisadores (tecla Z) geram pontos pra árvore de pesquisa.",
-					"cost": func(): return "%d cr + %d ferro + %d madeira" % [res.lab_credits, res.lab_iron, res.lab_wood],
-					"reason": func(): return "" if res.lab_block_reason() == "" else res.lab_block_reason(),
+				out.append({"name": "Laboratório", "tex": "laboratorio", "frames": 2, "many": true, "scales": true,
+					"desc": "Pesquisadores (tecla Z) geram pontos. Todos os laboratórios somam na MESMA pesquisa.",
+					"count": func(): return _count("laboratorios"),
+					"cost": func(): return res.lab_cost_text(),
+					"reason": func(): return res.lab_block_reason(),
 					"act": func(): res.build_lab()})
 		"Defesa e equipamento":
 			if def:
-				out.append({"name": "Arsenal", "tex": "arsenal", "frames": 4,
-					"desc": "Forja e conserta as armas dos guardas.",
-					"cost": func(): return "%d cr + %d ferro + %d madeira" % [def.arsenal_credits, def.arsenal_ore, def.arsenal_wood],
+				out.append({"name": "Arsenal", "tex": "arsenal", "frames": 4, "many": true, "scales": true,
+					"desc": "Forja e conserta as armas. O 1º forja; os outros são postos de armas (guarda troca no mais perto).",
+					"count": func(): return _count("arsenais"),
+					"cost": func(): return def.arsenal_cost_text(),
 					"reason": func(): return def.arsenal_block_reason(),
 					"act": func(): def.build_arsenal()})
-				out.append({"name": "Campo de treino", "tex": "campo_treino", "frames": 1,
-					"desc": "Guardas treinam de dia e lutam melhor.",
-					"cost": func(): return "%d cr + %d madeira" % [def.campo_credits, def.campo_wood],
+				out.append({"name": "Campo de treino", "tex": "campo_treino", "frames": 1, "many": true, "scales": true,
+					"desc": "Guardas treinam de dia e lutam melhor. Mais campos = mais guardas treinando juntos.",
+					"count": func(): return _count("campos"),
+					"cost": func(): return def.campo_cost_text(),
 					"reason": func(): return def.campo_block_reason(),
 					"act": func(): def.build_campo()})
 			if eq:
 				out.append({"name": "Vestiário", "tex": "vestiario", "frames": 1,
-					"desc": "Guarda casacos e trajes (a Oficina faz).",
+					"desc": "Guarda casacos e trajes (a Oficina faz). Um só: o estoque é da vila toda.",
 					"cost": func(): return "%d cr + %d ferro + %d madeira" % [eq.vestiario_credits, eq.vestiario_ore, eq.vestiario_wood],
 					"reason": func(): return eq.vestiario_block_reason(),
 					"act": func(): eq.build_vestiario()})
-			out.append({"name": "Oficina (forja)", "tex": "oficina", "frames": 2, "open": "oficina",
+			out.append({"name": "Oficina (forja)", "tex": "oficina", "frames": 2, "open": "oficina", "tag": "vem com a vila (uma só)",
 				"desc": "Ferramentas e equipamento. Já vem com a vila.",
 				"cost": func(): return "",
 				"reason": func(): return "",
 				"act": func(): _hud.open_panel("oficina"), "label": "Abrir"})
 		"Coleta automática":
 			if hub:
-				out.append({"name": "Coletor de madeira", "tex": "coletor_madeira", "frames": 2,
-					"desc": "Serraria na clareira: um lenhador opera e ela faz madeira sozinha.",
+				out.append({"name": "Coletor de madeira", "tex": "coletor_madeira", "frames": 2, "many": true, "scales": true,
+					"desc": "Serraria na clareira: um lenhador opera e ela faz madeira sozinha. Cada uma tem o seu operador.",
+					"count": func(): return _count("coletores"),
 					"cost": func(): return hub.coletor_cost_text(),
 					"reason": func(): return hub.coletor_block_reason(),
 					"act": func(): hub.build_coletor()})
@@ -188,11 +204,11 @@ func _defs(tab: String) -> Array:
 					"desc": "Próximo estágio (o Centro da Vila é um só). Abre galerias e aumenta o raio das casas.",
 					"cost": func(): return ("%d cr" % hub.next_level_cost()) if hub.level < hub.max_level() else "",
 					"reason": func(): return _expand_reason(hub),
-					"act": func(): hub.level_up(), "label": "Expandir"})
+					"act": func(): hub.level_up(), "label": "Expandir", "tag": "Centro da Vila: um só"})
 				out.append({"name": "Trilhas batidas", "tex": "", "desc": "Todo mundo anda mais rápido.",
 					"cost": func(): return _upgrade_cost_text(hub, "trilhas"),
 					"reason": func(): return hub.upgrade_block_reason("trilhas"),
-					"act": func(): hub.buy_upgrade("trilhas"), "label": "Melhorar"})
+					"act": func(): hub.buy_upgrade("trilhas"), "label": "Melhorar", "tag": "melhoria"})
 			if sun:
 				out.append({"name": "Escudo solar", "tex": "escudo", "frames": 5,
 					"desc": "O projeto final: protege a vila do sol pra sempre.",
@@ -202,10 +218,25 @@ func _defs(tab: String) -> Array:
 	return out
 
 
-func _taverna_cost(mor: Node) -> String:
-	if mor.taverna() == null:
-		return "%d cr + %d madeira" % [mor.taverna_credits, mor.taverna_wood]
-	return "%d cr + %d madeira + %d %s" % [mor.taverna_up_credits, mor.taverna_up_wood, mor.taverna_up_ore, mor.taverna_up_ore_type]
+func _count(group: String) -> int:
+	return get_tree().get_nodes_in_group(group).size()
+
+
+## Etiqueta do cartão (Bloco 47: "pode ter vários • tem 2 • o próximo custa +50%").
+func _tag_text(d: Dictionary) -> String:
+	if d.get("soon", false):
+		return "em breve"
+	if d.has("tag"):
+		return d.tag
+	if not d.get("many", false):
+		return "" if d.has("open") else "um por vila"
+	var t := "pode ter vários"
+	if d.has("count"):
+		t += " • tem %d" % d.count.call()
+	var eco := _g("economy")
+	if d.get("scales", false) and eco and eco.extra_building_cost_growth != 1.0:
+		t += " • o próximo custa %+d%%" % roundi((eco.extra_building_cost_growth - 1.0) * 100.0)
+	return t
 
 
 func _expand_reason(hub: Node) -> String:
@@ -262,9 +293,11 @@ func _make_card(d: Dictionary) -> Dictionary:
 	v.add_child(icon)
 	var name_l: Label = _hud._label(d.name, 14, _hud.COLOR_TEXT)
 	v.add_child(name_l)
-	var tag := "em breve" if d.get("soon", false) else ("pode ter vários" if d.get("many", false) else ("" if d.has("open") else "um por vila"))
-	if tag != "":
-		v.add_child(_hud._label(tag, 11, _hud.COLOR_DIM))
+	var tag: Label = _hud._label(_tag_text(d), 11, _hud.COLOR_DIM)
+	tag.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tag.custom_minimum_size.x = 176
+	tag.visible = tag.text != ""
+	v.add_child(tag)
 	var desc: Label = _hud._label(d.get("desc", ""), 11, _hud.COLOR_DIM)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.custom_minimum_size.x = 176
@@ -291,7 +324,7 @@ func _make_card(d: Dictionary) -> Dictionary:
 			d.act.call()
 			if visible:
 				refresh())
-	return {"def": d, "status": status, "button": btn, "cost": cost}
+	return {"def": d, "status": status, "button": btn, "cost": cost, "tag": tag}
 
 
 func refresh() -> void:
@@ -305,6 +338,7 @@ func refresh() -> void:
 			continue
 		var reason: String = d.reason.call()
 		c.cost.text = d.cost.call()
+		c.tag.text = _tag_text(d)  # Bloco 47: "tem N" muda quando constrói
 		var ok := reason == ""
 		c.status.text = "" if ok else reason
 		c.button.disabled = not ok

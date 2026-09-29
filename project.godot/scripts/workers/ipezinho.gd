@@ -799,7 +799,7 @@ func _process(delta: float) -> void:
 				_decision_timer = 0.0
 	# médico chegou na porta da enfermaria: entra e fica de plantão
 	if _ai_state == "doctor" and _on_duty == null and not _moving:
-		var ward := _closest_in_group("enfermarias")
+		var ward := _doctor_ward()
 		if ward and global_position.distance_to(ward.doctor_spot()) <= REST_REACH:
 			_start_duty(ward)
 	# chegou no lugar reservado da taverna: entra
@@ -1027,7 +1027,7 @@ func _decide_next_action() -> void:
 			_release_station()
 			_set_state("doctor")
 		if _on_duty == null:
-			var ward := _closest_in_group("enfermarias")
+			var ward := _doctor_ward()
 			if ward and (not _moving or _target.distance_to(ward.doctor_spot()) > 2.0):
 				_go_to(ward.doctor_spot())
 		return
@@ -1181,6 +1181,27 @@ func _find_best_station(group_name: String) -> Node2D:
 		if score < best_score:
 			best_score = score
 			best = node
+	return best
+
+
+## Bloco 47: pode ter mais de uma enfermaria. O médico vai pra que precisa dele (gente
+## deitada ou esperando lá e nenhum outro médico); senão pra mais perto e menos coberta.
+## Com uma enfermaria só é sempre ela (como antes).
+func _doctor_ward() -> Node2D:
+	var best: Node2D = null
+	var best_score := INF
+	for ward in get_tree().get_nodes_in_group("enfermarias"):
+		var others := 0
+		for d in ward.doctors():
+			if d != self:
+				others += 1
+		var need: int = ward.patients().size() + ward.waiting().size()
+		var score: float = global_position.distance_to(ward.global_position) + 400.0 * others
+		if need > 0 and others == 0:
+			score -= 5000.0
+		if score < best_score:
+			best_score = score
+			best = ward
 	return best
 
 
@@ -2095,10 +2116,18 @@ func operate_tick() -> void:
 	_work_timer = 0.2
 
 
-## Save carregado com ele operando: volta pro posto.
-func _relink_coletor() -> void:
-	var c := get_tree().get_first_node_in_group("coletores") if is_inside_tree() else null
-	if c and is_lumber():
+## Save carregado com ele operando: volta pro posto. Bloco 47: pode ter vários coletores —
+## volta pro que estava (o mais perto de onde a máquina dele estava; save antigo: o primeiro).
+func _relink_coletor(at: Vector2 = Vector2.INF) -> void:
+	if not is_inside_tree() or not is_lumber():
+		return
+	var c: Node2D = null
+	for k in get_tree().get_nodes_in_group("coletores"):
+		if k.get("operator") != null and k.operator != self:
+			continue  # já tem outro operador
+		if c == null or (at != Vector2.INF and k.global_position.distance_to(at) < c.global_position.distance_to(at)):
+			c = k
+	if c:
 		c.designate(self)
 
 
@@ -2834,6 +2863,7 @@ func get_save_data() -> Dictionary:
 		"wearing": wearing.duplicate(),
 		"leather_carrying": leather_carrying,
 		"operates_coletor": _my_coletor() != null,
+		"coletor_pos": SaveUtil.vec2_to_array(_my_coletor().global_position) if _my_coletor() != null else [],  # Bloco 47
 	}
 
 
@@ -2893,7 +2923,7 @@ func load_save_data(d: Dictionary) -> void:
 			wearing[k] = float(wd[k])
 	leather_carrying = maxf(SaveUtil.num(d, "leather_carrying", 0.0), 0.0)
 	if SaveUtil.boolean(d, "operates_coletor", false):
-		_relink_coletor.call_deferred()  # Bloco 45
+		_relink_coletor.call_deferred(SaveUtil.vec2(d, "coletor_pos", Vector2.INF))  # Bloco 45/47
 	downed = injured and injury_severity == "grave" and SaveUtil.boolean(d, "downed", false)
 	downed_gate = SaveUtil.text(d, "downed_gate", "") if downed else ""
 	if downed:

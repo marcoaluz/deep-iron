@@ -113,6 +113,11 @@ extends Node
 ##     armazem.gd leather_stored. Save antigo: vestiário vazio, ninguém vestindo nada.
 ##   Bloco 45: centro_vila.gd "coletor" {position, total}; ipezinho.gd operates_coletor
 ##     (o operador volta pro posto sozinho). Save antigo: sem coletor.
+##   Bloco 47: prédios que agora podem ter vários viram LISTAS: research "labs", defense
+##     "campos"/"arsenais", morale "tavernas" [{position, level}], centro_vila "coletores"
+##     [{position, total}] e "enfermarias_extra" [posições]; ipezinho coletor_pos (qual
+##     máquina opera). Save antigo: as chaves de um só ("lab", "campo", "arsenal",
+##     "taverna", "coletor") viram lista de um; sem enfermaria extra.
 ##   Bloco 44: equipment.gd "vestiario" (posição do prédio). Save antigo: sem Vestiário
 ##     (o equipamento guardado fica contado e volta a ser usado quando ele for construído).
 ##   Bloco 41: morale.gd "parques" [posições] — recriados ao carregar (save antigo: nenhum).

@@ -13,6 +13,7 @@ var _causes: VBoxContainer
 var _festa_button: Button
 var _taverna_label: Label
 var _taverna_button: Button
+var _taverna_new_button: Button  # Bloco 47: construir OUTRA taverna
 var _park_label: Label  # Bloco 41
 var _park_button: Button
 
@@ -92,6 +93,12 @@ func _build() -> void:
 		_morale.build_or_upgrade_taverna()
 		refresh())
 	vbox.add_child(_taverna_button)
+	_taverna_new_button = _hud._button("")
+	_taverna_new_button.pressed.connect(func():
+		Audio.click()
+		_morale.build_taverna()
+		refresh())
+	vbox.add_child(_taverna_new_button)
 	_park_label = _hud._label("", 12, _hud.COLOR_DIM)
 	_park_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_park_label)
@@ -174,20 +181,37 @@ func refresh() -> void:
 	_festa_button.disabled = festa_reason != ""
 
 	var tav: Node = _morale.taverna()
+	var tavs: Array = _morale.tavernas()
 	var tav_reason: String = _morale.taverna_block_reason()
 	if tav == null:
 		_taverna_label.text = "Sem taverna. Com ela, quem está triste vai lá se animar (e todo mundo fica +%d)." % roundi(_morale.taverna_bonus[0])
-		_taverna_button.text = ("Construir taverna — escolher lugar  (%d cr + %d madeira)" % [_morale.taverna_credits, _morale.taverna_wood]) if tav_reason == "" else "Construir taverna: " + tav_reason
+		_taverna_button.text = ("Construir taverna — escolher lugar  (%s)" % _morale.taverna_cost_text()) if tav_reason == "" else "Construir taverna: " + tav_reason
 	else:
-		_taverna_label.text = "Taverna nível %d: %d lugares, %d na taverna agora." % [tav.level, tav.slot_count, tav.guests().size()]
+		if tavs.size() == 1:
+			_taverna_label.text = "Taverna nível %d: %d lugares, %d na taverna agora." % [tav.level, tav.slot_count, tav.guests().size()]
+		else:
+			# Bloco 47: várias — os lugares somam; o ânimo "tem taverna" é o da melhor (não soma)
+			var seats := 0
+			var guests := 0
+			var lv: Array[String] = []
+			for t in tavs:
+				seats += t.slot_count
+				guests += t.guests().size()
+				lv.append(str(t.level))
+			_taverna_label.text = "%d tavernas (níveis %s): %d lugares, %d lá agora. O ânimo de ter taverna não soma: vale o da melhor." % [
+				tavs.size(), "/".join(lv), seats, guests]
 		if tav_reason == "nível máximo":
-			_taverna_button.text = "Taverna no tamanho máximo"
+			_taverna_button.text = "Tavernas no tamanho máximo" if tavs.size() > 1 else "Taverna no tamanho máximo"
 		elif tav_reason == "":
-			_taverna_button.text = "Ampliar taverna: +2 lugares  (%d cr + %d madeira + %d %s)" % [
-				_morale.taverna_up_credits, _morale.taverna_up_wood, _morale.taverna_up_ore, _morale.taverna_up_ore_type]
+			_taverna_button.text = "Ampliar taverna: +2 lugares  (%s)" % _morale.taverna_up_cost_text()
 		else:
 			_taverna_button.text = "Ampliar taverna: " + tav_reason
 	_taverna_button.disabled = tav_reason != ""
+	_taverna_new_button.visible = tav != null
+	var new_reason: String = _morale.taverna_build_reason()
+	_taverna_new_button.text = ("Construir outra taverna — escolher lugar  (%s)" % _morale.taverna_cost_text()) if new_reason == "" \
+		else "Construir outra taverna: " + new_reason
+	_taverna_new_button.disabled = new_reason != ""
 	var n: int = _morale.parks().size()
 	_park_label.text = "Parques: %d. Quem passa perto (até %d px) ganha ânimo aos pouquinhos, sem precisar ir lá." % [n, roundi(_morale.park_radius)]
 	var pr: String = _morale.park_block_reason()

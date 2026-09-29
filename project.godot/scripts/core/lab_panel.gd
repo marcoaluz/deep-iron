@@ -109,8 +109,10 @@ func refresh() -> void:
 	var n: int = _res.researchers().size()
 	var lab: Node = _res.lab()
 	var lab_reason: String = _res.lab_block_reason()
-	_lab_button.visible = lab == null
-	_lab_button.text = ("Construir laboratório — escolher lugar (%d cr + %d ferro + %d madeira)" % [_res.lab_credits, _res.lab_iron, _res.lab_wood]) \
+	# Bloco 47: pode ter vários (somam na mesma pesquisa; o próximo custa mais)
+	var n_labs: int = _res.labs().size()
+	var lab_what := "laboratório" if lab == null else "outro laboratório (tem %d: mais vagas pra pesquisador)" % n_labs
+	_lab_button.text = ("Construir %s — escolher lugar (%s)" % [lab_what, _res.lab_cost_text()]) \
 		if lab_reason == "" else "Laboratório: " + lab_reason
 	_lab_button.disabled = lab_reason != ""
 	if _res.current != "":

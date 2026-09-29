@@ -168,6 +168,22 @@ func campo() -> Node:
 	return get_tree().get_first_node_in_group("campos")
 
 
+## Bloco 47: todos os campos de treino (cada um tem as suas vagas; guarda treina no mais perto livre).
+func campos() -> Array:
+	return get_tree().get_nodes_in_group("campos")
+
+
+func campo_cost() -> Vector3i:
+	var base := Vector3i(campo_credits, 0, campo_wood)
+	var eco := get_tree().get_first_node_in_group("economy")
+	return eco.scaled_cost(base, campos().size()) if eco else base
+
+
+func campo_cost_text() -> String:
+	var c := campo_cost()
+	return "%d cr + %d madeira" % [c.x, c.z]
+
+
 func level2_open() -> bool:
 	var shaft := get_tree().get_first_node_in_group("elevador")
 	return shaft != null and shaft.unlocked
@@ -321,6 +337,24 @@ func guard_post(worker: Node) -> Vector2:
 # ------------------------------------------------------------ armas / Arsenal (Bloco 35)
 func arsenal() -> Node:
 	return get_tree().get_first_node_in_group("arsenais")
+
+
+## Bloco 47: todos os Arsenais. O cavalete, a pilha de conserto e a fila da forja são UM só
+## (ficam aqui no Defense): engenheiro em qualquer Arsenal anda com a mesma fila, e o guarda
+## pega/devolve arma no Arsenal mais perto dele. Mais Arsenal = mais perto e mais vagas.
+func arsenais() -> Array:
+	return get_tree().get_nodes_in_group("arsenais")
+
+
+func arsenal_cost() -> Vector3i:
+	var base := Vector3i(arsenal_credits, arsenal_ore, arsenal_wood)
+	var eco := get_tree().get_first_node_in_group("economy")
+	return eco.scaled_cost(base, arsenais().size()) if eco else base
+
+
+func arsenal_cost_text() -> String:
+	var c := arsenal_cost()
+	return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
 
 
 func rack_count(id: String) -> int:
@@ -503,20 +537,19 @@ func forge_work(seconds: float) -> void:
 
 
 func _arsenal_refresh() -> void:
-	var ars := arsenal()
-	if ars and ars.has_method("refresh"):
-		ars.refresh()
+	for ars in arsenais():
+		if ars.has_method("refresh"):
+			ars.refresh()
 
 
 # ------------------------------------------------------------ construir o Arsenal
 func arsenal_block_reason() -> String:
-	if arsenal() != null:
-		return "construído"
 	var c := Canteiro.pending(get_tree(), "arsenal")
 	if c:
 		return "em obra (%s)" % c._obra.status(c.obra_progress())
 	var eco := get_tree().get_first_node_in_group("economy")
-	return eco.missing_text(arsenal_credits, arsenal_ore, "ferro", arsenal_wood) if eco else "sem recursos"
+	var cost := arsenal_cost()
+	return eco.missing_text(cost.x, cost.y, "ferro", cost.z) if eco else "sem recursos"
 
 
 func build_arsenal() -> bool:
@@ -534,7 +567,8 @@ func _confirm_arsenal(pos: Vector2) -> bool:
 	if arsenal_block_reason() != "":
 		Audio.error()
 		return false
-	if not get_tree().get_first_node_in_group("economy").spend(arsenal_credits, arsenal_ore, "ferro", arsenal_wood):
+	var cost := arsenal_cost()
+	if not get_tree().get_first_node_in_group("economy").spend(cost.x, cost.y, "ferro", cost.z):
 		return false
 	Canteiro.order(get_tree(), "arsenal", pos, arsenal_build_time)
 	Audio.click()
@@ -546,7 +580,8 @@ func _confirm_arsenal(pos: Vector2) -> bool:
 
 func spawn_arsenal(pos: Vector2) -> Node2D:
 	var a: Node2D = ARSENAL_SCENE.instantiate()
-	a.name = "Arsenal"
+	var n := arsenais().size()
+	a.name = "Arsenal" if n == 0 else "Arsenal%d" % (n + 1)
 	a.position = pos
 	get_tree().get_first_node_in_group("village_hub").get_parent().add_child(a)
 	var env := get_tree().get_first_node_in_group("environment")
@@ -558,13 +593,12 @@ func spawn_arsenal(pos: Vector2) -> Node2D:
 
 # ------------------------------------------------------------ campo de treino
 func campo_block_reason() -> String:
-	if campo() != null:
-		return "construído"
 	var c := Canteiro.pending(get_tree(), "campo")
 	if c:
 		return "em obra (%s)" % c._obra.status(c.obra_progress())
 	var eco := get_tree().get_first_node_in_group("economy")
-	return eco.missing_text(campo_credits, 0, "", campo_wood) if eco else "sem recursos"
+	var cost := campo_cost()
+	return eco.missing_text(cost.x, 0, "", cost.z) if eco else "sem recursos"
 
 
 func build_campo() -> bool:
@@ -582,7 +616,8 @@ func _confirm_campo(pos: Vector2) -> bool:
 	if campo_block_reason() != "":
 		Audio.error()
 		return false
-	if not get_tree().get_first_node_in_group("economy").spend(campo_credits, 0, "", campo_wood):
+	var cost := campo_cost()
+	if not get_tree().get_first_node_in_group("economy").spend(cost.x, 0, "", cost.z):
 		return false
 	Canteiro.order(get_tree(), "campo", pos, campo_build_time)
 	Audio.click()
@@ -595,8 +630,6 @@ func _confirm_campo(pos: Vector2) -> bool:
 ## Bloco 31b: o canteiro terminou (chamado por canteiro.gd).
 func finish_build(kind: String, pos: Vector2) -> void:
 	if kind == "arsenal":
-		if arsenal() != null:
-			return
 		var a := spawn_arsenal(pos)
 		a.pop_in()
 		Audio.recruit()
@@ -606,7 +639,7 @@ func finish_build(kind: String, pos: Vector2) -> void:
 		for w in guards():
 			w.wake_decision()
 		return
-	if kind != "campo" or campo() != null:
+	if kind != "campo":
 		return
 	var c := spawn_campo(pos)
 	c.pop_in()
@@ -618,7 +651,8 @@ func finish_build(kind: String, pos: Vector2) -> void:
 
 func spawn_campo(pos: Vector2) -> Node2D:
 	var c: Node2D = CAMPO_SCENE.instantiate()
-	c.name = "CampoTreino"
+	var n := campos().size()
+	c.name = "CampoTreino" if n == 0 else "CampoTreino%d" % (n + 1)
 	c.position = pos
 	get_tree().get_first_node_in_group("village_hub").get_parent().add_child(c)
 	var env := get_tree().get_first_node_in_group("environment")
@@ -740,12 +774,9 @@ func get_save_data() -> Dictionary:
 		"warned_day": _warned_day,
 		"start_day": start_day,
 	}
-	var c := campo()
-	if c:
-		d["campo"] = SaveUtil.vec2_to_array(c.global_position)
-	var a := arsenal()
-	if a:
-		d["arsenal"] = SaveUtil.vec2_to_array(a.global_position)
+	# Bloco 47: listas (antes: "campo" e "arsenal" com um só)
+	d["campos"] = campos().map(func(c): return SaveUtil.vec2_to_array(c.global_position))
+	d["arsenais"] = arsenais().map(func(a): return SaveUtil.vec2_to_array(a.global_position))
 	return d
 
 
@@ -775,14 +806,12 @@ func load_save_data(d: Dictionary) -> void:
 	_warned_day = SaveUtil.integer(d, "warned_day", -1)
 	start_day = SaveUtil.integer(d, "start_day", -1)
 	invasion_active = false
-	if d.has("campo") and campo() == null:
-		var pos := SaveUtil.vec2(d, "campo", Vector2.INF)
-		if pos != Vector2.INF:
+	if campos().is_empty():
+		for pos in SaveUtil.positions(d, "campos", "campo"):  # Bloco 47 (save antigo: um só)
 			spawn_campo(pos)
-	if d.has("arsenal") and arsenal() == null:
-		var apos := SaveUtil.vec2(d, "arsenal", Vector2.INF)
-		if apos != Vector2.INF:
-			spawn_arsenal(apos)
+	if arsenais().is_empty():
+		for pos in SaveUtil.positions(d, "arsenais", "arsenal"):
+			spawn_arsenal(pos)
 	_arsenal_refresh()
 
 

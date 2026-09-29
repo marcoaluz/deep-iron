@@ -50,5 +50,19 @@ static func vec2(d: Dictionary, key: String, default: Vector2) -> Vector2:
 	return default
 
 
+## Bloco 47: posições de um prédio que agora pode ter vários. Lê a lista nova (list_key);
+## save antigo tem só a chave de um (old_key) — vira lista de um.
+static func positions(d: Dictionary, list_key: String, old_key: String = "") -> Array[Vector2]:
+	var raw: Array = array(d, list_key)
+	if raw.is_empty() and old_key != "" and d.has(old_key):
+		raw = [d[old_key]]
+	var out: Array[Vector2] = []
+	for r in raw:
+		var p := vec2({"p": r}, "p", Vector2.INF)
+		if p.is_finite():
+			out.append(p)
+	return out
+
+
 static func vec2_to_array(v: Vector2) -> Array:
 	return [snappedf(v.x, 0.1), snappedf(v.y, 0.1)]

@@ -42,6 +42,12 @@ signal worker_recruited(worker: Node2D, cost: int)
 ## Bloco 39: só recruta se tiver cama livre numa casa pronta (sem cama = sem lugar pra morar).
 @export var recruit_needs_bed: bool = true
 
+@export_group("Prédios extras (Bloco 47)")
+## Cada unidade a mais do mesmo prédio custa isso vezes a anterior (1.5 = +50%; 1.0 = sempre
+## o mesmo preço). Vale pra Laboratório, Arsenal, Campo de treino, Taverna, Coletor de madeira
+## e Enfermaria extra. (Casas, comedouros e parques seguem com o preço de sempre.)
+@export var extra_building_cost_growth: float = 1.5
+
 var credits: float = 0.0
 var recruited_count: int = 0
 var total_earned: float = 0.0
@@ -195,6 +201,25 @@ func spend(cost_credits: float, cost_ore: float, ore_type: String = "", cost_woo
 				break
 			left -= a.take(left, t)
 	return true
+
+
+## Bloco 47: custo da PRÓXIMA unidade de um prédio que já tem `existing` na vila.
+## base/retorno = (créditos, minério, madeira).
+func scaled_cost(base: Vector3i, existing: int) -> Vector3i:
+	var m := pow(maxf(extra_building_cost_growth, 0.0), maxi(existing, 0))
+	return Vector3i(roundi(base.x * m), roundi(base.y * m), roundi(base.z * m))
+
+
+## "300 cr + 80 ferro + 60 madeira" (pula o que for zero).
+static func cost_text(c: Vector3i, ore_label: String = "minério") -> String:
+	var parts: Array[String] = []
+	if c.x > 0:
+		parts.append("%d cr" % c.x)
+	if c.y > 0:
+		parts.append("%d %s" % [c.y, ore_label])
+	if c.z > 0:
+		parts.append("%d madeira" % c.z)
+	return " + ".join(parts)
 
 
 func _add_credits(amount: float) -> void:

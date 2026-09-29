@@ -563,7 +563,9 @@ func toggle_build_menu() -> void:
 	_build_button.set_pressed_no_signal(_build_menu.visible)
 
 
-func open_panel(id: String) -> void:
+## Bloco 47: `focus` = o prédio clicado, pra janela que pode mostrar um de vários (coletor,
+## enfermaria). Pelo botão/tecla vem null: a janela mostra o primeiro.
+func open_panel(id: String, focus: Node = null) -> void:
 	if not _panels.has(id):
 		return
 	_build_menu.visible = false
@@ -571,6 +573,8 @@ func open_panel(id: String) -> void:
 		if other != id:
 			_panels[other].visible = false
 	var panel: PanelContainer = _panels[id]
+	if panel.has_method("focus"):
+		panel.focus(focus)
 	if not panel.visible:
 		Audio.click()
 	panel.visible = true
@@ -579,7 +583,7 @@ func open_panel(id: String) -> void:
 
 ## Abre a janela da estrutura clicada no mapa (ela diz qual pelo panel_id).
 func open_panel_for(node: Node) -> void:
-	open_panel(node.get("panel_id"))
+	open_panel(node.get("panel_id"), node)
 
 
 ## Fecha a janela aberta (ou os atalhos). Retorna true se havia alguma
@@ -901,9 +905,11 @@ func _refresh_top_bar(workers: Array) -> void:
 			var left := ceili(_morale.strike_grace - _morale.below_time)
 			text += " (greve em %d:%02d!)" % [left / 60, left % 60]
 			color = COLOR_HUNGER_BAD
-		var tav: Node = _morale.taverna()
-		if tav and not tav.guests().is_empty():
-			tip += "\n%d na taverna" % tav.guests().size()
+		var at_tav := 0
+		for tav in _morale.tavernas():  # Bloco 47: pode ter várias
+			at_tav += tav.guests().size()
+		if at_tav > 0:
+			tip += "\n%d na taverna" % at_tav
 		_set_chip("joy", text, color, tip, avg >= 0.0)
 
 	# saúde (só aparece com alguém machucado)
