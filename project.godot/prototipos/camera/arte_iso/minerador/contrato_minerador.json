@@ -1,0 +1,61 @@
+{
+ "caixa": [
+  28,
+  28,
+  70
+ ],
+ "ancora_por_direcao": {
+  "SE": [
+   57.7,
+   100
+  ],
+  "NE": [
+   58.3,
+   97
+  ],
+  "SO": [
+   53.3,
+   100
+  ],
+  "NO": [
+   52.7,
+   97
+  ]
+ },
+ "luz": {
+  "SE": {
+   "lanterna_relativa_a_ancora": [
+    8.3,
+    -75.6
+   ],
+   "quadros_com_lanterna": 4
+  },
+  "NE": {
+   "lanterna_relativa_a_ancora": null,
+   "obs": "de costas a lanterna nao aparece; a luz (PointLight) vai na frente do capacete, ~(+4, -70) estimado"
+  },
+  "SO": {
+   "lanterna_relativa_a_ancora": [
+    -8.3,
+    -75.6
+   ],
+   "quadros_com_lanterna": 4
+  },
+  "NO": {
+   "lanterna_relativa_a_ancora": null,
+   "obs": "de costas a lanterna nao aparece; a luz (PointLight) vai na frente do capacete, ~(-4, -70) estimado"
+  }
+ },
+ "direcoes_desenhadas": [
+  "SE",
+  "NE"
+ ],
+ "espelho": {
+  "SO": "SE",
+  "NO": "NE"
+ },
+ "picareta": {
+  "SE": "atras",
+  "NE": "na frente"
+ }
+}

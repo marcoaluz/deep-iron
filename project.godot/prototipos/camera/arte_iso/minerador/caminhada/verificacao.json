@@ -1,0 +1,146 @@
+{
+ "quadros": [
+  {
+   "arquivo": "NE\\0.png",
+   "ancora": [
+    60.7,
+    94
+   ],
+   "pixels": 1294
+  },
+  {
+   "arquivo": "NE\\1.png",
+   "ancora": [
+    55.8,
+    97
+   ],
+   "pixels": 1234
+  },
+  {
+   "arquivo": "NE\\2.png",
+   "ancora": [
+    61.7,
+    92
+   ],
+   "pixels": 1221
+  },
+  {
+   "arquivo": "NE\\3.png",
+   "ancora": [
+    46.0,
+    90
+   ],
+   "pixels": 1209
+  },
+  {
+   "arquivo": "NO\\0.png",
+   "ancora": [
+    50.3,
+    94
+   ],
+   "pixels": 1294
+  },
+  {
+   "arquivo": "NO\\1.png",
+   "ancora": [
+    55.2,
+    97
+   ],
+   "pixels": 1234
+  },
+  {
+   "arquivo": "NO\\2.png",
+   "ancora": [
+    49.3,
+    92
+   ],
+   "pixels": 1221
+  },
+  {
+   "arquivo": "NO\\3.png",
+   "ancora": [
+    65.0,
+    90
+   ],
+   "pixels": 1209
+  },
+  {
+   "arquivo": "SE\\0.png",
+   "ancora": [
+    54.6,
+    96
+   ],
+   "pixels": 1221
+  },
+  {
+   "arquivo": "SE\\1.png",
+   "ancora": [
+    63.7,
+    92
+   ],
+   "pixels": 1148
+  },
+  {
+   "arquivo": "SE\\2.png",
+   "ancora": [
+    55.7,
+    98
+   ],
+   "pixels": 1214
+  },
+  {
+   "arquivo": "SE\\3.png",
+   "ancora": [
+    59.8,
+    100
+   ],
+   "pixels": 1284
+  },
+  {
+   "arquivo": "SO\\0.png",
+   "ancora": [
+    56.4,
+    96
+   ],
+   "pixels": 1221
+  },
+  {
+   "arquivo": "SO\\1.png",
+   "ancora": [
+    47.3,
+    92
+   ],
+   "pixels": 1148
+  },
+  {
+   "arquivo": "SO\\2.png",
+   "ancora": [
+    55.3,
+    98
+   ],
+   "pixels": 1214
+  },
+  {
+   "arquivo": "SO\\3.png",
+   "ancora": [
+    51.2,
+    100
+   ],
+   "pixels": 1284
+  }
+ ],
+ "caixa": {
+  "declarada": [
+   28.0,
+   28.0,
+   67.0
+  ],
+  "fora": 9,
+  "total": 19650
+ },
+ "sugerida": [
+  26,
+  26,
+  69
+ ]
+}

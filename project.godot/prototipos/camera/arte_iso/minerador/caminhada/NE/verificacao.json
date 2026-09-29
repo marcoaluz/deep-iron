@@ -1,0 +1,50 @@
+{
+ "quadros": [
+  {
+   "arquivo": "0.png",
+   "ancora": [
+    60.7,
+    94
+   ],
+   "pixels": 1294
+  },
+  {
+   "arquivo": "1.png",
+   "ancora": [
+    55.8,
+    97
+   ],
+   "pixels": 1234
+  },
+  {
+   "arquivo": "2.png",
+   "ancora": [
+    61.7,
+    92
+   ],
+   "pixels": 1221
+  },
+  {
+   "arquivo": "3.png",
+   "ancora": [
+    46.0,
+    90
+   ],
+   "pixels": 1209
+  }
+ ],
+ "caixa": {
+  "declarada": [
+   28.0,
+   28.0,
+   67.0
+  ],
+  "fora": 0,
+  "total": 4958
+ },
+ "sugerida": [
+  26,
+  26,
+  68
+ ]
+}

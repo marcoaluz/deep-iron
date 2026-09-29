@@ -1,0 +1,74 @@
+{
+ "quadros": [
+  {
+   "arquivo": "east.png",
+   "ancora": [
+    23.3,
+    80
+   ],
+   "pixels": 1029
+  },
+  {
+   "arquivo": "north-east.png",
+   "ancora": [
+    28.5,
+    79
+   ],
+   "pixels": 1396
+  },
+  {
+   "arquivo": "north-west.png",
+   "ancora": [
+    18.5,
+    79
+   ],
+   "pixels": 1337
+  },
+  {
+   "arquivo": "north.png",
+   "ancora": [
+    22.3,
+    79
+   ],
+   "pixels": 1546
+  },
+  {
+   "arquivo": "south-east.png",
+   "ancora": [
+    19.6,
+    81
+   ],
+   "pixels": 1242
+  },
+  {
+   "arquivo": "south-west.png",
+   "ancora": [
+    31.9,
+    81
+   ],
+   "pixels": 1442
+  },
+  {
+   "arquivo": "south.png",
+   "ancora": [
+    15.2,
+    82
+   ],
+   "pixels": 1554
+  },
+  {
+   "arquivo": "west.png",
+   "ancora": [
+    24.5,
+    80
+   ],
+   "pixels": 1061
+  }
+ ],
+ "caixa": null,
+ "sugerida": [
+  28,
+  28,
+  67
+ ]
+}

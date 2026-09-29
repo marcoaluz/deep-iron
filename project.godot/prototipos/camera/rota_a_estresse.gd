@@ -22,8 +22,16 @@ const SHEETS := [preload("res://assets/game/ipezinho_m0.png"), preload("res://as
 	preload("res://assets/game/ipezinho_guarda_m1.png"), preload("res://assets/game/ipezinho_medico_f3.png")]
 const MODE_NAMES := ["INGÊNUA (1 ponto por prédio)", "FATIADA automática", "CAIXAS (ordem topológica completa)", "CAIXAS incremental (produção)"]
 const N_WORKERS := 14
-const WORKER_SIZE := 12.0
-const WORKER_H := 30.0
+var WORKER_SIZE := 12.0
+var WORKER_H := 30.0
+## Arte nova (linha de comando `arte=minerador`): minerador isométrico de verdade, 4 direções
+## de losango (SE/NE desenhadas, SO/NO espelho), âncora fixa por direção, caixa declarada.
+const ARTE_DIR := "res://prototipos/camera/arte_iso/minerador/com_picareta/"
+const ARTE_ANCORA := {"SE": Vector2(57.7, 100), "NE": Vector2(58.3, 97), "SO": Vector2(53.3, 100), "NO": Vector2(52.7, 97)}
+const ARTE_ANG := {"SE": 26.57, "SO": 153.43, "NO": 206.57, "NE": 333.43}
+var _arte := false
+var _arte_tex := {}  # "SE" -> [Texture2D x4]
+var _arte_dir := {}  # Worker -> direção atual
 
 var world := World.new()
 var mode := 2
@@ -47,6 +55,17 @@ var _face_miss := {}
 
 func _ready() -> void:
 	_rng.seed = 47
+	if "arte=minerador" in OS.get_cmdline_user_args():
+		_arte = true
+		WORKER_SIZE = 28.0  # caixa declarada do minerador (verifica_arte.py): 28 x 28 x 70
+		WORKER_H = 70.0
+		world.agent_radius = 15.0
+		for d in ARTE_ANCORA:
+			var fs := []
+			for i in 4:
+				var img := Image.load_from_file(ProjectSettings.globalize_path(ARTE_DIR + "%s/%d.png" % [d, i]))
+				fs.append(ImageTexture.create_from_image(img))
+			_arte_tex[d] = fs
 	world.build()
 	_statics = world.static_boxes()
 	_wander = world.wander_points()
@@ -82,10 +101,16 @@ func _ready() -> void:
 		var v := Node2D.new()
 		var s := Sprite2D.new()
 		s.name = "S"
-		s.texture = SHEETS[i % SHEETS.size()]
-		s.hframes = 4
-		s.scale = Vector2(2, 2)
-		s.offset = Vector2(0, -8.5)
+		if _arte:
+			s.texture = _arte_tex.SE[0]
+			s.centered = false
+			s.offset = -ARTE_ANCORA.SE  # âncora (pés) no ponto do nó
+			_arte_dir[w] = "SE"
+		else:
+			s.texture = SHEETS[i % SHEETS.size()]
+			s.hframes = 4
+			s.scale = Vector2(2, 2)
+			s.offset = Vector2(0, -8.5)
 		v.add_child(s)
 		_container.add_child(v)
 		_wview[w] = v
@@ -192,10 +217,18 @@ func _step(delta: float) -> void:
 		else:
 			v.position = Vector2(feet.x, Iso.key(b))
 			s.position = Vector2(0, feet.y - v.position.y)
-		s.frame = int(w.anim) % 4 if w.moving else 0
 		var sv := Iso.iso(w.velocity) - Iso.iso(Vector2.ZERO)
+		if _arte:
+			if sv.length() > 0.01:
+				_arte_dir[w] = _snap4(rad_to_deg(sv.angle()), _arte_dir[w])
+			var dn: String = _arte_dir[w]
+			s.texture = _arte_tex[dn][int(w.anim) % 4 if w.moving else 0]
+			s.offset = -ARTE_ANCORA[dn]
+		else:
+			s.frame = int(w.anim) % 4 if w.moving else 0
 		if sv.length() > 0.01:
-			s.flip_h = sv.x < 0.0
+			if not _arte:
+				s.flip_h = sv.x < 0.0
 			_angles.append(rad_to_deg(sv.angle()))
 	if mode == 2:
 		var all := []
@@ -231,6 +264,18 @@ func _step(delta: float) -> void:
 	_measure()
 	var m := get_global_mouse_position()
 	_hover = Iso.pick(m, _statics, world.planes())
+
+
+## 4 direções de losango com histerese de 15° (não fica trocando andando reto na tela).
+func _snap4(ang: float, current: String) -> String:
+	var best := current
+	var best_e := absf(wrapf(ang - ARTE_ANG[current], -180.0, 180.0)) - 15.0
+	for k in ARTE_ANG:
+		var e := absf(wrapf(ang - ARTE_ANG[k], -180.0, 180.0))
+		if e < best_e:
+			best_e = e
+			best = k
+	return best
 
 
 ## Conta pares ipezinho × coisa que se sobrepõem na tela e se a ordem desenhada bate com a 3D.

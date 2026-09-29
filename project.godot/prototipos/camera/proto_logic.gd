@@ -46,6 +46,8 @@ var gap := Vector2()  # x inicial/final da abertura na borda de baixo (sul) do p
 var ramp := Rect2()  # rota A: rampa que desce da abertura
 ## Obstáculos extras de terreno (beiras do penhasco, face do penhasco na rota B).
 var terrain_blocks: Array[Rect2] = []
+## Folga da navegação (metade da largura do corpo).
+var agent_radius := 7.0
 
 var _map: RID
 var _region: RID
@@ -67,7 +69,7 @@ func free_nav() -> void:
 ## Refaz a navegação (ao construir): o mesmo esquema do jogo — chão andável menos obstáculos.
 func rebuild_nav() -> void:
 	var poly := NavigationPolygon.new()
-	poly.agent_radius = 7.0
+	poly.agent_radius = agent_radius
 	var src := NavigationMeshSourceGeometryData2D.new()
 	src.add_traversable_outline(_outline(bounds))
 	for b in buildings:
