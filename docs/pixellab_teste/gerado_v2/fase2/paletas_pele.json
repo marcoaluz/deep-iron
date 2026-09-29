@@ -1,0 +1,21 @@
+{
+  "_descricao": "Fase 2 — tons de pele como DADOS (não sprite). O corpo base de cada função é gerado com pele em 'parda' (marrom médio, tom neutro) numa rampa de 4-5 tons chapados; o código troca essa rampa por uma das três abaixo. Derivadas de SKIN_TONE_LIGHT/TAN/DEEP do tools/gen_sprites.py, escurecidas e dessaturadas para a paleta suja do estilo novo (sprite inteiro fica com brilho médio ~0,22-0,23; a pele é a região mais clara depois da lanterna).",
+  "_ordem_da_rampa": ["sombra_profunda", "sombra", "meio", "luz", "brilho"],
+  "_mapeamento": "Pixels de pele do sprite gerado (identificados pela rampa-base 'parda' registrada por personagem) são ordenados por luminância e mapeados 1:1 para os 5 índices; 'bochecha' substitui o tom rosado/avermelhado do rosto quando existir. Fuligem e contorno (quase preto) NÃO fazem parte da rampa e ficam intactos.",
+  "branca": {
+    "rampa": ["#4a302a", "#704c40", "#986c58", "#ba8c70", "#cea484"],
+    "bochecha": "#a05c50",
+    "equivale_a": "SKIN_TONE_LIGHT"
+  },
+  "parda": {
+    "rampa": ["#3a241e", "#5a3a2c", "#7c543c", "#986c4e", "#ac805e"],
+    "bochecha": "#8c4e3e",
+    "equivale_a": "SKIN_TONE_TAN",
+    "_nota": "tom-base dos sprites gerados"
+  },
+  "negra": {
+    "rampa": ["#221614", "#36221c", "#4e3428", "#644434", "#765440"],
+    "bochecha": "#62342e",
+    "equivale_a": "SKIN_TONE_DEEP"
+  }
+}
