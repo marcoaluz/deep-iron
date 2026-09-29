@@ -9,6 +9,12 @@ Pasta de revisão — **nada aqui está ligado ao jogo**. `atual/` = o que o jog
 `gerado/comparacao_lado_a_lado.png`. Resumo: a paleta e o tamanho 16×17 nativo batem;
 contorno, rosto, lanterna e caminhada não batem. Não substitui o sprite atual.
 
+**v2, do zero, estilo CraftPix (2026-09-29)**: veja `gerado_v2/RELATORIO.md` e
+`gerado_v2/comparacao_craftpix_vs_gerado.png`. As referências estão em `referencia_estilo/`.
+Resumo: proporção adulta, lanterna, rosto e paleta suja batem; a caminhada skeleton-v3 mantém
+o mesmo boneco. Faltam as luvas e o corpo saiu mais atarracado. A escala (73 px de altura)
+não combina com a arte atual do jogo, feita em 16 px.
+
 ## Passo 0 — o minerador de hoje (referência)
 
 | Item | Como é hoje |
