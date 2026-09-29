@@ -1,14 +1,28 @@
 extends Camera2D
 ## Câmera RTS: zoom suave na direção do cursor, pan com botão do meio / setas / WASD,
 ## pan pela borda da tela (opcional), limites no mapa e seguir o ipezinho selecionado (F).
+##
+## Bloco 48: a roda do mouse anda por PARADAS NÍTIDAS — zooms em que 1 pixel de arte vira um
+## número INTEIRO de pixels na tela (nada de colunas de pixel desiguais). A parada depende da
+## escala da janela sobre a base 1280×720 (×1,5 em 1080p, ×2 em 1440p, ×3 em 4K): trocar de
+## janela pra tela cheia reassenta o zoom na parada mais perto. O movimento continua suave e
+## na direção do cursor.
 
 @export_group("Zoom")
-@export var zoom_min: float = 0.6
+## Bloco 48: 0,6 -> 0,5 (em 720p a parada nítida mais afastada é 0,5: 1 px de arte = 1 px de tela).
+@export var zoom_min: float = 0.5
 @export var zoom_max: float = 3.0
+## Zoom ao abrir (assenta na parada nítida mais perto).
 @export var start_zoom: float = 1.3
-## Multiplicador por "clique" da roda do mouse.
+## Multiplicador por "clique" da roda do mouse (só com crisp_zoom desligado).
 @export var zoom_step: float = 1.15
 @export var zoom_smoothing: float = 12.0
+## Bloco 48: a roda anda de parada nítida em parada nítida (pixel de arte inteiro na tela).
+## Desligado: zoom livre como antes (zoom_step por clique).
+@export var crisp_zoom: bool = true
+## Pixels de MUNDO por pixel de ARTE. Hoje a arte é desenhada pequena e mostrada em escala 2;
+## se a densidade da arte mudar (ver docs/escala_visual), é só trocar aqui.
+@export var art_pixel_world: float = 2.0
 
 @export_group("Pan")
 @export var pan_speed: float = 650.0
@@ -32,10 +46,70 @@ var _cam_origin := Vector2.ZERO
 
 
 func _ready() -> void:
-	_target_zoom = start_zoom
-	zoom = Vector2.ONE * start_zoom
+	_target_zoom = snap_zoom(start_zoom)
+	zoom = Vector2.ONE * _target_zoom
 	_target_pos = position
 	make_current()
+	get_tree().root.size_changed.connect(_on_window_resized)
+
+
+## Janela mudou de tamanho (tela cheia, redimensionar): a escala mudou, então as paradas
+## também — assenta na mais perto do zoom atual (zoom no centro da tela).
+func _on_window_resized() -> void:
+	if not crisp_zoom:
+		return
+	_zoom_anchor_screen = get_viewport_rect().size * 0.5
+	_target_zoom = snap_zoom(_target_zoom)
+
+
+# ------------------------------------------------------------ paradas nítidas (Bloco 48)
+## Quanto a janela está esticada sobre a resolução base (canvas_items/expand):
+## 1 em 1280×720, 1,5 em 1920×1080, 2 em 2560×1440, 3 em 3840×2160.
+func screen_scale() -> float:
+	var win := get_tree().root
+	if win.has_meta("screen_scale"):
+		return float(win.get_meta("screen_scale"))  # (testes headless: a janela lá é 64×64)
+	var base := Vector2(win.content_scale_size)
+	var size := Vector2(win.size)
+	if base.x <= 0.0 or base.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
+		return 1.0
+	return minf(size.x / base.x, size.y / base.y) * win.content_scale_factor
+
+
+## Quantos pixels de tela 1 pixel de arte ocupa nesse zoom.
+func art_pixel_screen(z: float, win_scale: float = -1.0) -> float:
+	return art_pixel_world * z * (screen_scale() if win_scale <= 0.0 else win_scale)
+
+
+## Os zooms nítidos entre zoom_min e zoom_max (1 px de arte = 1, 2, 3... px de tela).
+func zoom_stops(win_scale: float = -1.0) -> Array[float]:
+	var out: Array[float] = []
+	var unit := art_pixel_screen(1.0, win_scale)  # px de tela por px de arte com zoom 1
+	if unit <= 0.0:
+		return out
+	var n := maxi(ceili(zoom_min * unit - 0.001), 1)
+	while n / unit <= zoom_max + 0.001:
+		out.append(n / unit)
+		n += 1
+	return out
+
+
+## A parada nítida mais perto de z (na proporção: 1,3 fica mais perto de 1,33 que de 1,0).
+## Sem parada no intervalo (ou crisp_zoom desligado): z dentro dos limites.
+func snap_zoom(z: float) -> float:
+	var stops := zoom_stops() if crisp_zoom else ([] as Array[float])
+	if stops.is_empty():
+		return clampf(z, zoom_min, zoom_max)
+	var best := stops[0]
+	for st in stops:
+		if absf(log(st / z)) < absf(log(best / z)):
+			best = st
+	return best
+
+
+## Zoom pedido de fora (ex.: o save): vai pra parada nítida mais perto.
+func set_target_zoom(z: float) -> void:
+	_target_zoom = snap_zoom(clampf(z, zoom_min, zoom_max))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -63,8 +137,24 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _zoom_by(factor: float, screen_pos: Vector2) -> void:
-	_target_zoom = clampf(_target_zoom * factor, zoom_min, zoom_max)
 	_zoom_anchor_screen = screen_pos
+	var stops := zoom_stops() if crisp_zoom else ([] as Array[float])
+	if stops.is_empty():
+		_target_zoom = clampf(_target_zoom * factor, zoom_min, zoom_max)
+		return
+	# Bloco 48: próxima parada nítida pra dentro (factor > 1) ou pra fora
+	if factor > 1.0:
+		for st in stops:
+			if st > _target_zoom + 0.0001:
+				_target_zoom = st
+				return
+		_target_zoom = stops[-1]
+	else:
+		for i in range(stops.size() - 1, -1, -1):
+			if stops[i] < _target_zoom - 0.0001:
+				_target_zoom = stops[i]
+				return
+		_target_zoom = stops[0]
 
 
 func _process(delta: float) -> void:

@@ -575,7 +575,11 @@ func apply_pending(main: Node) -> void:
 	var cam: Node = main.get_node_or_null("Camera2D")
 	if cam and not cam_data.is_empty():
 		cam.focus_on(SaveUtil.vec2(cam_data, "position", cam.global_position))
-		cam.set("_target_zoom", clampf(SaveUtil.num(cam_data, "zoom", cam.zoom.x), cam.zoom_min, cam.zoom_max))
+		var z := clampf(SaveUtil.num(cam_data, "zoom", cam.zoom.x), cam.zoom_min, cam.zoom_max)
+		if cam.has_method("set_target_zoom"):
+			cam.set_target_zoom(z)  # Bloco 48: assenta na parada nítida mais perto
+		else:
+			cam.set("_target_zoom", z)
 	print("SaveManager: save carregado (versão %d, salvo em %s)" % [
 		SaveUtil.integer(data, "save_version", 0), SaveUtil.text(data, "saved_at", "?")])
 	loaded.emit()

@@ -188,3 +188,7 @@ func test_b46_menu_construcao() -> void:
 
 func test_b47_varios_predios() -> void:
 	run_bloco("b47_varios_predios.gd")
+
+
+func test_b48_janela_zoom() -> void:
+	run_bloco("b48_janela_zoom.gd")

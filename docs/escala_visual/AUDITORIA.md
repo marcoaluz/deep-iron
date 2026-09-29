@@ -3,6 +3,10 @@
 Data: 2026-09-29. **Só leitura.** Nenhum asset, cena, `project.godot` ou código de jogo foi
 alterado. Este documento serve pro Marco escolher o número antes de qualquer arte começar.
 
+> **Andamento:** a **Fase 0** (seção 3: base 1280×720, tela cheia F11/Alt+Enter, paradas de
+> zoom nítidas) foi feita no **Bloco 48**. A escolha A/B/C da arte continua em aberto. A câmera
+> tem `art_pixel_world` (hoje 2): se a densidade da arte mudar, as paradas se ajustam por ali.
+
 Base: o código e os assets do repositório, `docs/pixellab_teste/gerado/RELATORIO.md` e o
 briefing. (O `deep-iron-dev-log.md` citado no briefing não está no repositório. A conclusão
 do teste do PixelLab veio do RELATORIO.md.)

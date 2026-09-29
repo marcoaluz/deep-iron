@@ -1,5 +1,5 @@
 extends VBoxContainer
-## Tela de configurações (volumes, música, dicas do HUD). Usada no menu de pausa
+## Tela de configurações (volumes, música, tela cheia, dicas do HUD). Usada no menu de pausa
 ## e na tela inicial. Cada mudança já vale na hora e fica salva em settings.cfg.
 
 signal back_pressed
@@ -7,6 +7,8 @@ signal back_pressed
 const Settings := preload("res://scripts/core/settings.gd")
 const COLOR_TITLE := Color(1.0, 0.8, 0.35)
 const COLOR_TEXT := Color(0.92, 0.88, 0.8)
+
+var _fullscreen: CheckBox
 
 
 func _ready() -> void:
@@ -28,6 +30,16 @@ func _ready() -> void:
 			Audio.toggle_music())
 	add_child(music)
 
+	# Bloco 48: tela cheia (F11 / Alt+Enter também alternam; a escolha fica salva)
+	_fullscreen = CheckBox.new()
+	_fullscreen.text = "Tela cheia  (F11 / Alt+Enter)"
+	_fullscreen.button_pressed = WindowManager.is_fullscreen()
+	_fullscreen.toggled.connect(func(on: bool):
+		Audio.click()
+		WindowManager.set_fullscreen(on))
+	add_child(_fullscreen)
+	WindowManager.fullscreen_changed.connect(_on_fullscreen_changed)
+
 	var hints := CheckBox.new()
 	hints.text = "Mostrar dicas de controle  (H)"
 	hints.button_pressed = Settings.get_value("hud", "show_hints", false)
@@ -45,6 +57,12 @@ func _ready() -> void:
 		Audio.click()
 		back_pressed.emit())
 	add_child(back)
+
+
+## F11 com a janela aberta: a caixinha acompanha.
+func _on_fullscreen_changed(on: bool) -> void:
+	if _fullscreen:
+		_fullscreen.set_pressed_no_signal(on)
 
 
 ## Linha "nome  [====slider====]  75%" ligada a uma variável de volume do Audio.

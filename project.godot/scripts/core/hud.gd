@@ -526,7 +526,7 @@ func _build_hints() -> void:
 		"Economia:  V vender minério  •  R recrutar",
 		"Construir:  Espaço = menu de construção (casas, comedouro, lazer, pesquisa, defesa, coleta automática…)",
 		"Prédios:  U Centro da Vila  •  E Escavadeira  •  O Oficina  •  I Enfermaria  •  B Bem-estar  •  G Defesa  •  Q Laboratório  •  Y Sol  •  J Diário  (ou clique no prédio)",
-		"Câmera:  roda = zoom  •  botão do meio / WASD / setas = mover  •  Home = centralizar",
+		"Câmera:  roda = zoom (paradas nítidas)  •  botão do meio / WASD / setas = mover  •  Home = centralizar  •  F11 / Alt+Enter = tela cheia",
 		"Jogo:  F5 salvar  •  F9 carregar  •  M música  •  Esc/P pausa  •  N pular fase (teste)  •  K machucar (teste; Shift+K grave)",
 	]
 	for line in lines:

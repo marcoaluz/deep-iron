@@ -15,6 +15,15 @@ Resumo: proporção adulta, lanterna, rosto e paleta suja batem; a caminhada ske
 o mesmo boneco. Faltam as luvas e o corpo saiu mais atarracado. A escala (73 px de altura)
 não combina com a arte atual do jogo, feita em 16 px.
 
+**Fase 1 do redesenho (2026-09-29)**: veja `gerado_v2/fase1/RELATORIO_FASE1.md`.
+- Minerador corrigido: mais esguio, pose em 3/4, luvas.
+- Estados: picareta nas costas, picareta na mão, golpe, machucado leve, machucado grave.
+- Animações estáveis: caminhada, golpe (por interpolação) e machucado leve.
+- Teste de consistência (guarda + casa) em `teste_consistencia/`.
+
+Pendente de aprovação do Marco: escala dos prédios, picareta na opção (a) híbrida e troca
+do texto de estilo para "contorno quase preto".
+
 ## Passo 0 — o minerador de hoje (referência)
 
 | Item | Como é hoje |
