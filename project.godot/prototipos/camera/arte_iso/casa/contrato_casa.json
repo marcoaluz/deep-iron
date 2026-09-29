@@ -1,0 +1,107 @@
+{
+ "ancora_no_quadro": [
+  120,
+  222
+ ],
+ "obs": "pegada relativa a ancora (chao); fundo (y0=-50) fixo = parede de tras",
+ "caixas": {
+  "obra_1": {
+   "pegada_rel_ancora": [
+    -72,
+    -50,
+    74,
+    52
+   ],
+   "altura": 97,
+   "pegada": [
+    146,
+    102
+   ],
+   "fora": 2
+  },
+  "obra_2": {
+   "pegada_rel_ancora": [
+    -65,
+    -50,
+    68,
+    100
+   ],
+   "altura": 180,
+   "pegada": [
+    133,
+    150
+   ],
+   "fora": 3
+  },
+  "obra_3": {
+   "pegada_rel_ancora": [
+    -65,
+    -50,
+    98,
+    88
+   ],
+   "altura": 203,
+   "pegada": [
+    163,
+    138
+   ],
+   "fora": 0
+  },
+  "casa_v0": {
+   "pegada_rel_ancora": [
+    -65,
+    -50,
+    68,
+    64
+   ],
+   "altura": 201,
+   "pegada": [
+    133,
+    114
+   ],
+   "fora": 4
+  },
+  "casa_v1": {
+   "pegada_rel_ancora": [
+    -65,
+    -50,
+    68,
+    70
+   ],
+   "altura": 203,
+   "pegada": [
+    133,
+    120
+   ],
+   "fora": 0
+  },
+  "casa_v2": {
+   "pegada_rel_ancora": [
+    -65,
+    -50,
+    68,
+    64
+   ],
+   "altura": 201,
+   "pegada": [
+    133,
+    114
+   ],
+   "fora": 4
+  },
+  "casa_v3": {
+   "pegada_rel_ancora": [
+    -65,
+    -50,
+    74,
+    64
+   ],
+   "altura": 203,
+   "pegada": [
+    139,
+    114
+   ],
+   "fora": 0
+  }
+ }
+}

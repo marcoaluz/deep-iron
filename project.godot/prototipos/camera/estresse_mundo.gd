@@ -64,9 +64,17 @@ var ramps := [
 const RIM := 24.0  # espessura da "massa de chão" em volta dos buracos (ela tapa quem está dentro)
 
 
+## Catálogo trocado (teste de arte: `arte=casa`): [nome, retângulo, altura, nível]. Sem relevo.
+var catalog_override := []
+
+
 func build() -> void:
 	bounds = Rect2(-700, -500, 1400, 960)
-	for c in CATALOG:
+	if not catalog_override.is_empty():
+		raised.clear()
+		pits.clear()
+		ramps.clear()
+	for c in (catalog_override if not catalog_override.is_empty() else CATALOG):
 		buildings.append(Building.new(c[0], c[1], c[2], c[3]))
 	# beiras (penhasco) com abertura onde a rampa encosta
 	for r in raised:
@@ -80,7 +88,8 @@ func build() -> void:
 		terrain_blocks.append(Rect2(rr.position.x - 6, rr.position.y, 6, rr.size.y))
 		terrain_blocks.append(Rect2(rr.end.x, rr.position.y, 6, rr.size.y))
 	# o abismo não tem acesso: o fundo inteiro é bloqueado
-	terrain_blocks.append(pits[1][1])
+	if pits.size() > 1:
+		terrain_blocks.append(pits[1][1])
 	setup_nav()
 
 
@@ -180,6 +189,7 @@ func wander_points() -> Array:
 		pts.append(Vector2(r.get_center().x, r.position.y - 14))  # atrás
 	for r in raised:
 		pts.append(r[1].get_center() + Vector2(40, 30))
-	pts.append(pits[0][1].get_center())
-	pts.append(pits[0][1].get_center() + Vector2(70, 50))
+	if not pits.is_empty():
+		pts.append(pits[0][1].get_center())
+		pts.append(pits[0][1].get_center() + Vector2(70, 50))
 	return pts.filter(func(p): return bounds.grow(-10).has_point(p))

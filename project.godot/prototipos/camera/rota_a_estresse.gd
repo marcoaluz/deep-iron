@@ -32,6 +32,12 @@ const ARTE_ANG := {"SE": 26.57, "SO": 153.43, "NO": 206.57, "NE": 333.43}
 var _arte := false
 var _arte_tex := {}  # "SE" -> [Texture2D x4]
 var _arte_dir := {}  # Worker -> direção atual
+## Casas de verdade (linha de comando `arte=casa`): cada desenho com a SUA caixa declarada
+## (arte_iso/casa/contrato_casa.json), âncora no quadro (120, 222) = ponto do chão.
+const CASA_DIR := "res://prototipos/camera/arte_iso/casa/"
+var _casa := false
+var _casa_tex := {}  # nome do desenho -> Texture2D
+var _casa_rel := {}  # nome do prédio -> [desenho, pegada relativa à âncora]
 
 var world := World.new()
 var mode := 2
@@ -66,6 +72,21 @@ func _ready() -> void:
 				var img := Image.load_from_file(ProjectSettings.globalize_path(ARTE_DIR + "%s/%d.png" % [d, i]))
 				fs.append(ImageTexture.create_from_image(img))
 			_arte_tex[d] = fs
+	if "arte=casa" in OS.get_cmdline_user_args():
+		_casa = true
+		var contrato: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(CASA_DIR + "contrato_casa.json"))
+		var names := ["casa_v0", "casa_v1", "casa_v2", "casa_v3", "obra_1", "obra_2", "obra_3"]
+		var over := []
+		for i in names.size():
+			var n: String = names[i]
+			var cx: Dictionary = contrato.caixas[n]
+			var rel: Array = cx.pegada_rel_ancora
+			var anchor := Vector2(-520 + (i % 4) * 330, -250 + (i / 4) * 360)
+			var r := Rect2(anchor + Vector2(rel[0], rel[1]), Vector2(float(rel[2]) - float(rel[0]), float(rel[3]) - float(rel[1])))
+			over.append([n, r, float(cx.altura), 0.0])
+			_casa_rel[n] = anchor
+			_casa_tex[n] = ImageTexture.create_from_image(Image.load_from_file(ProjectSettings.globalize_path(CASA_DIR + n + ".png")))
+		world.catalog_override = over
 	world.build()
 	_statics = world.static_boxes()
 	_wander = world.wander_points()
@@ -174,10 +195,21 @@ func _build_views() -> void:
 				piece.hide = b.hide
 				parts.append(piece)
 		for p in parts:
-			var v: Node2D = BoxView.new()
-			var c := _colors(b)
-			v.setup(p, c[0], c[1], use_key)
-			v.outline = mode != 1 or true
+			var v: Node2D
+			if _casa and _casa_rel.has(b.name):
+				# desenho de verdade no lugar das faces (a caixa declarada continua valendo pra ordenar)
+				v = Node2D.new()
+				v.position = Vector2(Iso.iso(p.rect.get_center()).x, Iso.key(p)) if use_key else Vector2.ZERO
+				var spr := Sprite2D.new()
+				spr.texture = _casa_tex[b.name]
+				spr.centered = false
+				spr.offset = -Vector2(120, 222)
+				spr.position = Iso.iso(_casa_rel[b.name]) - v.position
+				v.add_child(spr)
+			else:
+				v = BoxView.new()
+				var c := _colors(b)
+				v.setup(p, c[0], c[1], use_key)
 			_container.add_child(v)
 			if mode == 3:
 				v.z_index = _inc.ranks[p] * Incremental.K - 2000
@@ -259,8 +291,12 @@ func _step(delta: float) -> void:
 			for w in by_slot[sl]:
 				boxes.append(_wbox[w])
 			var ordered := _inc.order_within(boxes)
+			# todos da mesma vaga no mesmo z; a ordem entre eles é a da árvore (sem limite de
+			# quantos cabem numa vaga — antes eram K-2 = 6 e o 7º empatava)
 			for i in ordered.size():
-				_wview[owner_of[ordered[i]]].z_index = sl * Incremental.K + 1 + mini(i, Incremental.K - 2) - 2000
+				var wv: Node2D = _wview[owner_of[ordered[i]]]
+				wv.z_index = sl * Incremental.K + 1 - 2000
+				_container.move_child(wv, -1)
 	_measure()
 	var m := get_global_mouse_position()
 	_hover = Iso.pick(m, _statics, world.planes())
