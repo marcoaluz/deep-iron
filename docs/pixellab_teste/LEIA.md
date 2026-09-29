@@ -21,8 +21,14 @@ não combina com a arte atual do jogo, feita em 16 px.
 - Animações estáveis: caminhada, golpe (por interpolação) e machucado leve.
 - Teste de consistência (guarda + casa) em `teste_consistencia/`.
 
-Pendente de aprovação do Marco: escala dos prédios, picareta na opção (a) híbrida e troca
-do texto de estilo para "contorno quase preto".
+**Fechamento da Fase 1 (2026-09-29)**: veja `gerado_v2/fase1/RELATORIO_FECHAMENTO.md` e a
+página **`revisao_fase1.html`** (abre no navegador).
+- Casa em escala real: 250×202 px.
+- Guarda refeito com contorno quase preto.
+- Gesto de chegada resolvido por interpolação.
+- Machucado grave: pose parada + respiração por código.
+
+Fase 1 pronta para aprovação; a lista da Fase 2 (elenco completo) está no relatório.
 
 ## Passo 0 — o minerador de hoje (referência)
 

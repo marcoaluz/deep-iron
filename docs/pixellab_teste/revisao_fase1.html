@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão Fase 1 — Deep Iron</title>
+<style>
+  :root {
+    --bg: #1f1e22; --panel: #2a292e; --sprite-bg: #5a5860; --ink: #ecebef; --muted: #a9a7b0;
+    --line: #3a3940; --ok: #7fb069; --warn: #e0b04a; --bad: #d9674e; --accent: #f2b33d;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 19px; margin: 44px 0 12px; padding-top: 16px; border-top: 1px solid var(--line); }
+  h3 { font-size: 15px; margin: 0 0 6px; }
+  p { margin: 6px 0; }
+  .sub { color: var(--muted); margin-bottom: 20px; }
+  nav { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 14px 0 8px; font-size: 14px; }
+  nav a { color: var(--accent); text-decoration: none; }
+  nav a:hover { text-decoration: underline; }
+  .decisions { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; margin-top: 12px; }
+  .decision { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .decision b { display: block; margin-bottom: 2px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .grid.wide { grid-template-columns: 1fr; }
+  figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  figure .img { background: var(--sprite-bg); display: flex; align-items: flex-end; justify-content: center;
+                min-height: 120px; padding: 8px; }
+  figure a { display: block; }
+  figure img { image-rendering: pixelated; image-rendering: crisp-edges; max-width: 100%; height: auto; display: block; }
+  figcaption { padding: 10px 12px 12px; font-size: 14px; }
+  figcaption .tool { color: var(--muted); font-size: 13px; display: block; margin-top: 2px; }
+  .badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; margin-right: 6px; }
+  .ok { background: color-mix(in srgb, var(--ok) 25%, transparent); color: var(--ok); }
+  .warn { background: color-mix(in srgb, var(--warn) 25%, transparent); color: var(--warn); }
+  .bad { background: color-mix(in srgb, var(--bad) 25%, transparent); color: var(--bad); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; background: var(--panel); border-radius: 8px; overflow: hidden; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .note { color: var(--muted); font-size: 13px; }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f3f2f5; --panel: #ffffff; --ink: #1d1c21; --muted: #5e5c66; --line: #dcdae1; --accent: #9a5b00;
+            --ok: #3c7a2a; --warn: #8a6100; --bad: #a8391f; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Deep Iron — revisão da Fase 1</h1>
+  <p class="sub">Clique numa imagem para abrir em tamanho real. Redesenho visual no estilo CraftPix: minerador corrigido, animações de trabalho e machucado, teste de consistência.
+    Nada disto está integrado ao jogo. Os relatórios completos estão em
+    <code>gerado_v2/fase1/RELATORIO_FASE1.md</code> e <code>gerado_v2/fase1/RELATORIO_FECHAMENTO.md</code>.</p>
+
+  <nav>
+    <a href="#decisoes">Decisões</a><a href="#minerador">Minerador</a><a href="#estados">Estados</a>
+    <a href="#animacoes">Animações</a><a href="#picareta">Picareta</a><a href="#guarda">Guarda</a>
+    <a href="#casa">Casa</a><a href="#custo">Custo</a>
+  </nav>
+
+  <section id="decisoes">
+    <h2>Decisões do Marco, aplicadas no fechamento</h2>
+    <div class="decisions">
+      <div class="decision"><b>Prédios em escala real</b>A casa foi refeita em canvas 256×224 (conteúdo 250×202 px). A porta tem ~66 px para um minerador de 71 px.</div>
+      <div class="decision"><b>Picareta híbrida</b>Sobreposta pelo código nas costas, embutida só no golpe de minerar. Aprovada sem mudanças.</div>
+      <div class="decision"><b>Contorno de 1 px quase preto</b>Virou o texto de estilo padrão. O guarda foi regerado com ele.</div>
+      <div class="decision"><b>Personagens em 48×84</b>Canvas padrão daqui pra frente. O modelo estica o boneco até a altura do canvas.</div>
+    </div>
+  </section>
+
+  <section id="minerador">
+    <h2>Minerador: v1 × v2 corrigido × CraftPix</h2>
+    <div class="grid wide">
+      <figure><div class="img"><a href="gerado_v2/fase1/comparacao_v1_v2corrigido_craftpix.png" title="abrir em tamanho real"><img src="gerado_v2/fase1/comparacao_v1_v2corrigido_craftpix.png" alt="CraftPix, minerador v1 e v2 corrigido lado a lado, em 5x"></a></div>
+        <figcaption><span class="badge ok">corrigido</span>Corpo mais esguio (coxa de 33 → 26 px; CraftPix: 22–24), pose em 3/4 com a mão no cinto e luvas nas duas mãos. Brilho 0,23. Mantém lanterna, fuligem e remendos.</figcaption></figure>
+      <figure><div class="img"><a href="gerado_v2/fase1/minerador_corrigido_8_direcoes.png" title="abrir em tamanho real"><img src="gerado_v2/fase1/minerador_corrigido_8_direcoes.png" alt="Minerador corrigido nas 8 direções"></a></div>
+        <figcaption>Personagem v3 nas 8 direções. O sul é idêntico ao candidato escolhido.<span class="tool">create_image_pro 48×80 → create_character v3</span></figcaption></figure>
+    </div>
+  </section>
+
+  <section id="estados">
+    <h2>Estados do mesmo personagem</h2>
+    <div class="grid wide">
+      <figure><div class="img"><a href="gerado_v2/fase1/estados_revisao.png" title="abrir em tamanho real"><img src="gerado_v2/fase1/estados_revisao.png" alt="Estados parado, picareta nas costas, picareta na mão, machucado leve e machucado grave, em 6 direções"></a></div>
+        <figcaption>Parado, picareta nas costas, picareta na mão, machucado leve (tipoia) e machucado grave (sentado, com tala, sem sangue). Mesmo rosto e mesma roupa em todas as direções.<span class="tool">create_character_state</span></figcaption></figure>
+    </div>
+  </section>
+
+  <section id="animacoes">
+    <h2>Animações</h2>
+    <div class="grid">
+      <figure><div class="img"><a href="gerado_v2/fase1/anim_caminhada_base_skeleton.gif" title="abrir em tamanho real"><img src="gerado_v2/fase1/anim_caminhada_base_skeleton.gif" alt="Caminhada base"></a></div>
+        <figcaption><span class="badge ok">estável</span>Caminhada base<span class="tool">skeleton-v3 walking-4-frames</span></figcaption></figure>
+      <figure><div class="img"><a href="gerado_v2/fase1/anim_caminhada_picareta_costas_skeleton.gif" title="abrir em tamanho real"><img src="gerado_v2/fase1/anim_caminhada_picareta_costas_skeleton.gif" alt="Caminhada com picareta embutida nas costas"></a></div>
+        <figcaption><span class="badge ok">estável</span>Caminhada com a picareta embutida nas costas (opção b)<span class="tool">estado + skeleton-v3</span></figcaption></figure>
+      <figure><div class="img"><a href="gerado_v2/fase1/opcao_a_overlay.gif" title="abrir em tamanho real"><img src="gerado_v2/fase1/opcao_a_overlay.gif" alt="Caminhada com picareta sobreposta"></a></div>
+        <figcaption><span class="badge ok">escolhida</span>Caminhada com a picareta sobreposta (opção a, montagem local)<span class="tool">caminhada base + sprite da picareta</span></figcaption></figure>
+      <figure><div class="img"><a href="gerado_v2/fase1/anim_chegada_tentativa2_paleta.gif" title="abrir em tamanho real"><img src="gerado_v2/fase1/anim_chegada_tentativa2_paleta.gif" alt="Gesto de chegada, tentativa 2"></a></div>
+        <figcaption><span class="badge ok">estável</span>Chegada: tira a picareta das costas (2ª tentativa, a única do fechamento)<span class="tool">v3 interpolação costas → erguida, 6 quadros + correção de paleta</span></figcaption></figure>
+      <figure><div class="img"><a href="gerado_v2/fase1/anim_chegada_interpolacao.gif" title="abrir em tamanho real"><img src="gerado_v2/fase1/anim_chegada_interpolacao.gif" alt="Gesto de chegada, tentativa 1"></a></div>
+        <figcaption><span class="badge warn">descartada</span>Chegada, 1ª tentativa (Fase 1): a picareta pula das costas para a frente<span class="tool">v3 interpolação, 4 quadros</span></figcaption></figure>
+      <figure><div class="img"><a href="gerado_v2/fase1/anim_minerar_interpolacao_paleta_ciclo.gif" title="abrir em tamanho real"><img src="gerado_v2/fase1/anim_minerar_interpolacao_paleta_ciclo.gif" alt="Golpe de minerar"></a></div>
+        <figcaption><span class="badge ok">estável</span>Minerar: golpe em ciclo de ida e volta<span class="tool">estados erguida/golpe + v3 interpolação + correção de paleta</span></figcaption></figure>
+      <figure><div class="img"><a href="gerado_v2/fase1/anim_minerar_v3_texto.gif" title="abrir em tamanho real"><img src="gerado_v2/fase1/anim_minerar_v3_texto.gif" alt="Golpe com v3 texto"></a></div>
+        <figcaption><span class="badge bad">falhou</span>Minerar com texto: a picareta some e aparece um rastro branco<span class="tool">v3 texto</span></figcaption></figure>
+      <figure><div class="img"><a href="gerado_v2/fase1/anim_leve_v3_texto.gif" title="abrir em tamanho real"><img src="gerado_v2/fase1/anim_leve_v3_texto.gif" alt="Machucado leve mancando"></a></div>
+        <figcaption><span class="badge ok">recomendada</span>Machucado leve: mancando, com tipoia<span class="tool">v3 texto, 4 quadros</span></figcaption></figure>
+      <figure><div class="img"><a href="gerado_v2/fase1/anim_leve_skeleton_sadwalk.gif" title="abrir em tamanho real"><img src="gerado_v2/fase1/anim_leve_skeleton_sadwalk.gif" alt="Machucado leve curvado"></a></div>
+        <figcaption><span class="badge ok">estável</span>Machucado leve: andar curvado (alternativa)<span class="tool">skeleton-v3 sad-walk, 8 quadros</span></figcaption></figure>
+      <figure><div class="img"><a href="gerado_v2/fase1/grave_respiracao_codigo.gif" title="abrir em tamanho real"><img src="gerado_v2/fase1/grave_respiracao_codigo.gif" alt="Machucado grave com respiração por código"></a></div>
+        <figcaption><span class="badge ok">definido</span>Machucado grave: pose parada + respiração por código (simulação: o tronco sobe 1 px)<span class="tool">estado + código, sem animação de IA</span></figcaption></figure>
+      <figure><div class="img"><a href="gerado_v2/fase1/anim_grave_v3_texto.gif" title="abrir em tamanho real"><img src="gerado_v2/fase1/anim_grave_v3_texto.gif" alt="Machucado grave com v3 texto"></a></div>
+        <figcaption><span class="badge warn">descartada</span>Grave com texto: o corpo fica estável, mas o rosto muda<span class="tool">v3 texto</span></figcaption></figure>
+      <figure><div class="img"><a href="gerado_v2/fase1/anim_grave_skeleton_breathing.gif" title="abrir em tamanho real"><img src="gerado_v2/fase1/anim_grave_skeleton_breathing.gif" alt="Machucado grave com skeleton"></a></div>
+        <figcaption><span class="badge bad">falhou</span>Grave com skeleton: o personagem levanta<span class="tool">skeleton-v3 breathing-idle</span></figcaption></figure>
+    </div>
+  </section>
+
+  <section id="picareta">
+    <h2>Picareta: sobreposta × embutida</h2>
+    <div class="grid wide">
+      <figure><div class="img"><a href="gerado_v2/fase1/picareta_opcao_a_vs_b.png" title="abrir em tamanho real"><img src="gerado_v2/fase1/picareta_opcao_a_vs_b.png" alt="Comparação das opções a e b"></a></div>
+        <figcaption>Visualmente dá empate. A opção (a) custa um sprite pequeno por skin, e as caminhadas servem para todas. A (b) exige um estado novo e caminhadas novas por skin. No golpe a picareta vai embutida, porque um sprite girado não acompanha os braços.</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="guarda">
+    <h2>Guarda: contorno corrigido</h2>
+    <div class="grid wide">
+      <figure><div class="img"><a href="teste_consistencia/fechamento/guarda_antigo_vs_novo_vs_minerador.png" title="abrir em tamanho real"><img src="teste_consistencia/fechamento/guarda_antigo_vs_novo_vs_minerador.png" alt="Minerador, guarda antigo e guarda novo"></a></div>
+        <figcaption><span class="badge ok">corrigido</span>Borda escura: guarda antigo 84% → novo 95% (minerador 100%, CraftPix 95%). Mesmo prompt, trocando só a frase do contorno. Canvas 48×84.</figcaption></figure>
+      <figure><div class="img"><a href="teste_consistencia/fechamento/guarda_v2b_8_direcoes.png" title="abrir em tamanho real"><img src="teste_consistencia/fechamento/guarda_v2b_8_direcoes.png" alt="Guarda novo nas 8 direções"></a></div>
+        <figcaption>Guarda novo nas 8 direções.<span class="tool">create_character v3</span></figcaption></figure>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <figure><div class="img"><a href="teste_consistencia/fechamento/guarda_v2b_caminhada_skeleton.gif" title="abrir em tamanho real"><img src="teste_consistencia/fechamento/guarda_v2b_caminhada_skeleton.gif" alt="Caminhada do guarda novo"></a></div>
+        <figcaption><span class="badge ok">estável</span>Caminhada do guarda novo<span class="tool">skeleton-v3 walking-4-frames</span></figcaption></figure>
+      <figure><div class="img"><a href="teste_consistencia/guarda_caminhada_skeleton.gif" title="abrir em tamanho real"><img src="teste_consistencia/guarda_caminhada_skeleton.gif" alt="Caminhada do guarda antigo"></a></div>
+        <figcaption>Guarda antigo, para comparar</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="casa">
+    <h2>Casa nível 1: escala real</h2>
+    <div class="grid wide">
+      <figure><div class="img"><a href="teste_consistencia/fechamento/casa_escala_real_vs_reduzida.png" title="abrir em tamanho real"><img src="teste_consistencia/fechamento/casa_escala_real_vs_reduzida.png" alt="Casa reduzida, casa em escala real, minerador e guarda no mesmo chão"></a></div>
+        <figcaption>Reduzida (119×105 px, porta ~33 px) × escala real (250×202 px, porta ~66 px), com os personagens no mesmo chão, em 3×.<span class="tool">create_image_pro 256×224, 1 candidato</span></figcaption></figure>
+      <figure><div class="img"><a href="teste_consistencia/fechamento/casa_escala_real_com_minerador.png" title="abrir em tamanho real"><img src="teste_consistencia/fechamento/casa_escala_real_com_minerador.png" alt="Minerador na porta da casa em escala real"></a></div>
+        <figcaption>O minerador na porta: o arco chega na altura do capacete. Ajuste de câmera e zoom fica para o Bloco 48 e a Fase 3.</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="custo">
+    <h2>Custo</h2>
+    <table>
+      <tr><th>Etapa</th><th>Gerações</th></tr>
+      <tr><td>Teste v2 inicial (minerador CraftPix)</td><td class="num">25</td></tr>
+      <tr><td>Fase 1 (minerador corrigido, estados, animações, guarda, casa reduzida)</td><td class="num">247</td></tr>
+      <tr><td>Fechamento (casa 2×, guarda com contorno, chegada, caminhada do guarda)</td><td class="num">45</td></tr>
+      <tr><td><b>Total usado</b></td><td class="num"><b>317</b></td></tr>
+    </table>
+    <p class="note">Assinatura Tier 1: 2000 gerações por ciclo. Sobram 1683 até 2026-10-29. A estimativa da Fase 2 está no RELATORIO_FECHAMENTO.md.</p>
+  </section>
+</main>
+</body>
+</html>
