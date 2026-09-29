@@ -1,0 +1,52 @@
+{
+ "caixa": [
+  34,
+  34,
+  78
+ ],
+ "pixels_fora": 3,
+ "direcoes": {
+  "SE": {
+   "ancora": [
+    57.5,
+    100
+   ],
+   "fora_28x28x70": 4,
+   "pixels": 5506,
+   "corpo_varia_px": 1.0
+  },
+  "NE": {
+   "ancora": [
+    57.2,
+    99
+   ],
+   "fora_28x28x70": 65,
+   "pixels": 5651,
+   "corpo_varia_px": 1.1
+  },
+  "SO": {
+   "ancora": [
+    53.5,
+    100
+   ],
+   "fora_28x28x70": 0,
+   "pixels": 5506,
+   "corpo_varia_px": 1.0
+  },
+  "NO": {
+   "ancora": [
+    53.8,
+    99
+   ],
+   "fora_28x28x70": 74,
+   "pixels": 5651,
+   "corpo_varia_px": 1.1
+  }
+ },
+ "caixa_corpo": [
+  30,
+  30,
+  78
+ ],
+ "caixa_corpo_pixels_fora": 80
+}

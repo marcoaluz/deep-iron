@@ -1,0 +1,162 @@
+{
+ "_obs": "rastreio do elenco isométrico: job = create_image_pro (16 candidatos), escolhido = índice, char = create_character v3",
+ "minerador": {
+  "genero": "h",
+  "char": "bb4bd3f2-6661-445c-a546-ffe7bee5d2cc",
+  "estado": "pronto"
+ },
+ "engenheiro": {
+  "genero": "h",
+  "char": "9542d1ef-5035-4a50-bd17-f011dbab16c0",
+  "estado": "pronto"
+ },
+ "medica": {
+  "genero": "m",
+  "char": "af135e1a-771f-4127-811c-44c66ce3f549",
+  "estado": "pronto"
+ },
+ "guarda": {
+  "genero": "h",
+  "job": "a4ae04c7-d93b-4ce6-90c2-4ca3118edc9a",
+  "escolhido": 0,
+  "char": "bda3ad85-c260-4af3-b307-c833dce62da8",
+  "estado": "pronto",
+  "caixa": [
+   36,
+   36,
+   74
+  ]
+ },
+ "medico": {
+  "genero": "h",
+  "job": "762200af-c19b-4201-8fbf-9ddb410babdd",
+  "escolhido": 8,
+  "char": "cb0945b1-e43e-4301-b197-ae0a1be41014",
+  "estado": "pronto",
+  "caixa": [
+   38,
+   38,
+   80
+  ]
+ },
+ "mineradora": {
+  "genero": "m",
+  "job": "3051e93b-351a-49fd-b0e5-3a0a8c26f6c6",
+  "escolhido": 3,
+  "char": "982ed841-504b-4ea5-8ea4-ee9f888fdab7",
+  "estado": "pronto",
+  "caixa": [
+   40,
+   40,
+   78
+  ]
+ },
+ "engenheira": {
+  "genero": "m",
+  "job": "a940396b-8884-433f-b0f7-64c6a3ca38a1",
+  "estado": "pronto",
+  "escolhido": 1,
+  "char": "e221cda0-b59f-42f3-95ed-c26bb83189e7",
+  "caixa": [
+   38,
+   38,
+   78
+  ]
+ },
+ "guarda_mulher": {
+  "genero": "m",
+  "job": "a2183435-9e7a-46f3-986f-559c838490c0",
+  "estado": "pronto",
+  "escolhido": 8,
+  "char": "57b6ee36-f3b5-40b9-8b2f-4dc37677bcac",
+  "caixa": [
+   38,
+   38,
+   78
+  ]
+ },
+ "cacador": {
+  "genero": "h",
+  "job": "c2abeef0-694c-4290-b9ff-a2af230d53b4",
+  "estado": "caminhada NE refazendo",
+  "escolhido": 7,
+  "char": "b177ad39-b24e-4197-a4fa-d836d0071f6f",
+  "obs": "o #7 NAO tem arco na mao: segura um rolo de corda (laco/armadilha) e leva aljava nas costas. No jogo o arco e ferramenta a parte (b34), entra por sobreposicao como a picareta. Caminhada NE do lote1 espetava o rolo pra frente (caixa 54) -> NE refeito; lote1 guardado em caminhada_lote1/"
+ },
+ "cacadora": {
+  "genero": "m",
+  "job": "2bda7f35-d128-4b48-974d-e2787cce5984",
+  "estado": "pronto",
+  "job_antigo": "6c7a3d9b-00df-46b7-aa18-f476d52b2e0d",
+  "obs": "1o lote saiu com rosto masculino (serve de variacao de cacador)",
+  "char": "8b8bf714-47f1-41a9-810f-5b4dd5d52429",
+  "caixa": [
+   42,
+   42,
+   80
+  ]
+ },
+ "pesquisador": {
+  "genero": "h",
+  "job": "29b8b286-513d-4794-9ebb-206831c52964",
+  "estado": "rotacao",
+  "escolhido": 0,
+  "char": "20be8a3a-8cf9-4a32-9634-eed53757fcd0"
+ },
+ "pesquisadora": {
+  "genero": "m",
+  "job": "67d6b673-ba01-46d0-8f3f-dedf4ca5e278",
+  "estado": "rotacao",
+  "escolhido": 0,
+  "char": "ece6a9f2-01ed-4f52-894d-9c57bd9ad08e"
+ },
+ "lenhador": {
+  "genero": "h",
+  "estado": "rotacao",
+  "job": "baed14a2-93f5-47c6-819a-97ee07cfe4f1",
+  "corpo": "forte",
+  "escolhido": 0,
+  "char": "f6a18428-2edf-4b43-919d-65f7de8338ac"
+ },
+ "lenhadora": {
+  "genero": "m",
+  "estado": "rotacao",
+  "corpo": "forte, curva leve",
+  "job": "52c8244f",
+  "escolhido": 0,
+  "char": "d5f6da71-8492-473a-8d52-cda2f8332f4a"
+ },
+ "civil": {
+  "genero": "h",
+  "estado": "rotacao",
+  "corpo": "magro",
+  "job": "bb7a8a84",
+  "escolhido": 0,
+  "char": "df8ac588-d322-4329-a42f-fd9f2eee76c4"
+ },
+ "civil_mulher": {
+  "genero": "m",
+  "estado": "rotacao",
+  "corpo": "um pouco cheinha, curva leve",
+  "job": "1533e361",
+  "escolhido": 1,
+  "char": "13bff093-f91f-4868-9a0d-1f2fe9ee261d"
+ },
+ "cozinheiro": {
+  "genero": "h",
+  "estado": "rotacao",
+  "job": "30c02894-50b3-4222-bc57-baa66124956f",
+  "corpo": "meio gordinho",
+  "escolhido": 2,
+  "char": "9740df2e-1e9f-41b4-9322-37c4d9aaca7c"
+ },
+ "cozinheira": {
+  "genero": "m",
+  "estado": "rotacao",
+  "corpo": "curva leve",
+  "job": "ff409b80-c3b0-448d-99c3-2b21ebc90b5b",
+  "escolhido": 6,
+  "char": "4db9aa55-ddcb-4847-a2a8-1ab562ac22c1",
+  "obs": "avental cobre o corpo: curva nao aparece em nenhum candidato; #6 = rosto mais suave"
+ }
+}
