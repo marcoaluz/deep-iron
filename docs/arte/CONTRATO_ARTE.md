@@ -217,6 +217,14 @@ quando a roupa muda a silhueta inteira (trajes, casaco).
     `https://api.pixellab.ai/mcp/pixel-tools/4b650f57-ce46-48ee-a5f0-fd6a44c15f4e/assets/south/full.png`
   - casa aprovada (240×288):
     `https://api.pixellab.ai/mcp/pixel-tools/31a6e399-011f-46c5-a845-e80e7731747b/assets/south/full.png`
+  - bloco da rocha da caverna:
+    `https://api.pixellab.ai/mcp/pixel-tools/6facf27a-b316-46a9-9617-0558f321ef26/assets/south/full.png`
+  - bloco do nível 2:
+    `https://api.pixellab.ai/mcp/pixel-tools/22223b00-5301-44ac-96a6-b4335815f8d8/assets/south/full.png`
+  - bloco do abismo:
+    `https://api.pixellab.ai/mcp/pixel-tools/0c8f99a7-89e8-4c17-a782-fd433bbe7e4d/assets/south/full.png`
+  - guia da parede com abertura (2×1 tiles, 3 degraus):
+    `https://api.pixellab.ai/mcp/pixel-tools/1050100b-0a14-4f57-9ac3-029a0e098369/assets/south/full.png`
   - guia do bloco 2:1:
     `https://api.pixellab.ai/mcp/pixel-tools/7ec9c9c8-5821-4595-a69e-a7873765c8a0/assets/south/full.png`
   - As poses dos personagens (`backblaze.pixellab.ai/.../rotations/...`) não expiram.

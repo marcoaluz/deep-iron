@@ -1,0 +1,32 @@
+{
+ "_obs": "Prompt 7: terreno da mina. Refs permanentes: rocha 6facf27a, nível 2 22223b00, abismo 0c8f99a7, bloco colônia 4b650f57 (pixel-tools).",
+ "zona_gas": "0eae68ac-c25e-4aca-a1ce-b381d446a413",
+ "zona_calor": "819da4c2-d573-48ac-9c66-8c6f687dbae3",
+ "zona_radiacao": "d6e088c1-0fc1-4384-aef6-06eb66831ad7",
+ "trilho_reto": "441e305f-4526-4261-bc3b-b78fbf72fc4d",
+ "trilho_curva": "5f670321-454e-4c25-b7fc-e7593a319e86",
+ "trilho_fim": "80b13448-3e2d-4d0a-a9f7-45928323cc7f",
+ "galeria_aberta": "051b2ce5-fc7b-4d11-bca9-1d061e2f9fa3",
+ "escora": "470ac239-0dab-4956-a4a0-89f9355af203",
+ "galeria_lacrada": "783a8279-4d18-41f8-bfd3-38699ebed3ae",
+ "galeria_abrindo": "b792fd76-960d-4e12-b2b7-cc9907fd2c4a",
+ "escolhidos": {
+  "zona_gas": [
+   2,
+   9,
+   13,
+   3,
+   7
+  ],
+  "zona_calor": [
+   1,
+   2,
+   3,
+   7,
+   13
+  ],
+  "galeria_aberta": 0,
+  "escora": 1
+ },
+ "trilhos": "por script (relevo/trilhos.py): a IA cortou no quadro e fora do eixo"
+}

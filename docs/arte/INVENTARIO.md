@@ -61,6 +61,7 @@ prompts 0–31).
 | Ferrugento (invasor) | 16–17 | falta | — | 4 | andar, atacar, morrer | ~35 |
 | Robô antigo GIGANTE (218 px, ~80% da casa): achado + arrastado + 3 estágios de conserto (deitado, mesma âncora) + ativo; fluxo em prompt05/FLUXO_ROBO.md | 5 | **gerado** | 4 estados parados + retrato + ícone | 8 paradas, 4 andando | andar, atacar, dano, desligar/derrubado | ~425 (feito) |
 | Coelho + toca (coelho fora / só orelhas / toca vazia) | 15 | falta | 3 estados | — | — | ~45 |
+| **Javalizinho** + toca (visão do mapa, `MAPA_VISAO.md`) | 15 | falta | — | 4 | andar, fugir | ~35 |
 
 ## 5. Prédios (cada construível: obra_1 · obra_2 · obra_3 · pronto; upgrade com obra entre níveis)
 
@@ -79,8 +80,9 @@ prompts 0–31).
 | Parque | 11 | falta | obra 1–3 + pronto | ~100 |
 | Campo de treino | 12 | falta | obra 1–3 + pronto | ~100 |
 | Vestiário | 12 | falta | obra 1–3 + pronto | ~100 |
-| Coletor de madeira | 10 | falta | obra 1–3 + pronto; produzindo = luz/partícula no código | ~100 |
+| Coletor de madeira = **máquina grande de cortar árvores**, estragada → consertada (`MAPA_VISAO.md`) | 13 | falta | quebrada + obra 1–3 + pronta; produzindo = luz/partícula no código | ~100 |
 | Barricada (em pé/deitada = espelho) | 12 | falta | obra 1–3 + 4 níveis de material + obra entre níveis | ~200 |
+| **Portão da vila** (única entrada): quebrado → obra → pronto (`MAPA_VISAO.md`) | 12 | falta | 3 estados | ~75 |
 | Centro da Vila | 10 | falta | obra 1–3 + 5 estágios visuais + obra entre estágios (4) | ~350 |
 | Escavadeira (máquina em camadas) | 13 | falta | base, estrutura, hidráulica, motor, broca, cabine (luz = código) + 5 reatores (Caldeira + 4) + obra do reator | ~360 |
 | Elevador (ruína → obra → pronto) | 13 | falta | ruína, obra, pronto | ~100 |
@@ -97,7 +99,11 @@ prompts 0–31).
 | Relevo da colônia (terra batida): chão ×4, bloco ×2 (+ sem borda), escada N/O | 6 | **aprovado** (checkpoint relevo 1) | platô, 2 degraus, escada | 40 (feito) |
 | Clareira (grama), nível 2 (ardósia), abismo (basalto), rocha da caverna (parede) | 6–7 | **gerado** | chão, bloco, sem borda; rocha com 4 blocos | 80 (feito) |
 | Buraco/galeria, transição entre chãos, parede da caverna | 6–7 | **gerado** (montagem por código) | — | 0 |
-| Entradas de túnel / galeria com escoras (liga mina ↔ clareira ↔ níveis) | 7 | falta | 2 orientações (espelho) | ~40 |
+| Galeria na parede de rocha: lacrada → abrindo → aberta (também serve de túnel entre áreas) | 7 | **gerado** (`relevo/final/mina/`) | 3 estágios, mesma âncora | 75 (feito) |
+| Pisos das zonas de perigo: gás, calor, radiação (5 variações cada) | 7 | **gerado** | — | 60 (feito) |
+| Trilhos: reto, curva, cruzamento, fim de linha (script, encaixe exato) | 7 | **gerado** (`relevo/trilhos.py`) | 11 peças | 60 (feito; a IA só deu a cor) |
+| Escora de madeira (pesquisa "Escoramento") | 7 | **gerado** | — | 20 (feito) |
+| Poço do elevador / da escavadeira | 7 | **código** (buraco fundo do relevo) | — | 0 |
 | Variante por estação do chão/árvore | 6 | **não precisa hoje** (o jogo só usa estação no clima) | — | 0 |
 | Pisos da superfície: grama alta (5), trilha (5), cascalho (4), lama (1+espelho), laje (4), canteiro (2+espelho) | 6 | **gerado** (`relevo/final/superficie/`) | — | 120 (feito) |
 | Escada de pedra, rampa (+ espelho) | 6 | **gerado** | — | 40 (feito) |
@@ -126,10 +132,14 @@ prompts 0–31).
 | Item | Prompt | Status | Gerações |
 |---|---|---|---|
 | Tocha acesa / apagada (`torch`, `torch_unlit`) | 14 | falta | ~20 |
-| Escora de madeira (`support_beam`, pesquisa "Escoramento") | 14 | falta | ~20 |
+| Escora de madeira (`support_beam`, pesquisa "Escoramento") | 7 | **gerado** (ver seção 6) | 0 |
 | Placas de área de perigo: gás, calor, radiação (`placa_perigo`) | 14 | falta | ~20 |
 | Cova (`grave`), entulho (`entulho`) | 14 | falta | ~40 |
 | Trilhos + vagonete (pesquisa "Carrinhos de mina"), caixotes, barris | 14 | falta | ~60 |
+| **Trilho com vagonete da boca da mina até o Armazém da pedreira** (aceito, `MAPA_VISAO.md`) | 14 / 27 | falta (trilho pronto; falta o vagonete) | incluído |
+| **Guindaste de madeira da pedreira** (aceito) | 14 | falta | ~25 |
+| **Cerca de estacas** até o portão ser reconstruído (aceito) | 14 | falta | ~20 |
+| **Vila em 2–3 terraços de pedreira** com escadas entre eles (aceito) | 27 | montagem (relevo pronto) | 0 |
 | Explosivos (pesquisa), antena do rádio (pesquisa "Rádio da vila") | 14 | falta | ~40 |
 | Itens soltos/carregados: lenha, galho, pilha de minério, comida crua, cestos, moeda, bilhete, cadeado | 14 | falta | ~40 |
 | Sombra | 19 | **código** (gerada da pegada, regra 7) | 0 |
@@ -172,8 +182,8 @@ prompts 0–31).
 
 ## Plano de crédito
 
-**Atualização 2026-09-30 (fim do Prompt 6):** saldo do ciclo **3.863** (recarga de +5.000 em
-2026-10-30). Casaco por função (~600), robô gigante (~425) e terreno da superfície (~215) já descontados. O que falta dos
+**Atualização 2026-09-30 (fim do Prompt 7):** saldo do ciclo **3.663** (recarga de +5.000 em
+2026-10-30). Casaco por função (~600), robô gigante (~425) terreno da superfície (~215) e da mina (~200) já descontados. O que falta dos
 prompts 6–27 é estimado em ~4.000 (ver resposta de planejamento). Cabe no saldo, com pouca
 folga pra refações; o Prompt 31 fica pra depois da recarga.
 
