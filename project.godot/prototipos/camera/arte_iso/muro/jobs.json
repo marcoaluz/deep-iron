@@ -1,0 +1,7 @@
+{
+ "_obs": "Prompt 12: muro modular (1 segmento = 1 tile, eixo i e eixo j) em 3 níveis + portão (quebrado, 1, 2, 3). Dano e brecha por script.",
+ "guia_muro_i": "https://api.pixellab.ai/mcp/pixel-tools/88eb442a-71e1-4101-8abe-b13d3e773922/assets/south/full.png",
+ "guia_muro_j": "https://api.pixellab.ai/mcp/pixel-tools/c2ce78d0-7a5a-4cae-99ca-a7fc5109e678/assets/south/full.png",
+ "guia_portao": "https://api.pixellab.ai/mcp/pixel-tools/db76085b-ef62-4b76-8d5a-37d86bdd8209/assets/south/full.png",
+ "muro_1_i": "e20f87c3-4a14-492f-acd3-e93ff5d607c6"
+}

@@ -52,3 +52,17 @@ descendo). O mapa do jogo é **isométrico** (o corte lateral é a tela do Promp
   reconstruído (Prompt 14).
 - **Terraços da pedreira em degraus** (2–3 platôs, com escada de pedra ou rampa entre eles),
   do mesmo jeito do mini-mapa da superfície. A vila fica em patamares, e o relevo aparece.
+
+## Pedidos do Marco depois do Prompt 10 (2026-09-30)
+
+- **Fundição** (prédio novo, não é a Oficina): refina o que vem da mina, **pedra → carvão**,
+  **ferro → aço**. Serve pra upar e evoluir equipamento. Arte no **Prompt 12**; a mecânica é
+  código (integração).
+- **Arsenal** também faz **armas e armaduras** (criação), não só guarda. Arte no Prompt 12.
+- **Laboratório de pesquisa**: o pesquisador fica lá pesquisando itens novos. Prompt 12.
+- **Muro + portão bonito, com níveis 1, 2 e 3** (upgrade), além do portão quebrado do começo.
+  Prompt 12.
+- **Criaturas mais fortes e uma criatura mestre (chefe)**: Prompts 16–17.
+- **"Comedouro" passa a se chamar "Cozinha"** (o nome antigo lembrava bicho). Na arte já é a
+  cozinha comunitária (Prompt 11). No jogo, trocar o nome no menu, nos textos e na cena
+  (`comedouro.gd`, `build_menu.gd`...) na integração.

@@ -59,6 +59,7 @@ prompts 0–31).
 |---|---|---|---|---|---|---|
 | Lumívoro (invasor) | 16–17 | falta | — | 4 | andar, atacar, morrer (sóbrio) | ~35 |
 | Ferrugento (invasor) | 16–17 | falta | — | 4 | andar, atacar, morrer | ~35 |
+| **Criaturas mais fortes + criatura mestre (chefe)** (pedido do Marco) | 16–17 | falta (conceito com checkpoint) | — | 4 | andar, atacar, morrer | ~120 |
 | Robô antigo GIGANTE (218 px, ~80% da casa): achado + arrastado + 3 estágios de conserto (deitado, mesma âncora) + ativo; fluxo em prompt05/FLUXO_ROBO.md | 5 | **gerado** | 4 estados parados + retrato + ícone | 8 paradas, 4 andando | andar, atacar, dano, desligar/derrubado | ~425 (feito) |
 | Coelho + toca (coelho fora / só orelhas / toca vazia) | 15 | falta | 3 estados | — | — | ~45 |
 | **Javalizinho** + toca (visão do mapa, `MAPA_VISAO.md`) | 15 | falta | — | 4 | andar, fugir | ~35 |
@@ -75,14 +76,15 @@ prompts 0–31).
 | Taverna + ampliação | 11 | falta | obra 1–3 + pronto nív. 1 + obra de ampliação + nív. 2; luz = código | ~150 |
 | Enfermaria + ampliação | 11 | falta | igual à taverna | ~150 |
 | Laboratório (+ satélite no telhado, pesquisa "Satélite") | 12 | falta | obra 1–3 + pronto; satélite em sobreposição | ~120 |
-| Comedouro | 11 | falta | obra 1–3 + pronto; comida cheia/metade/vazia (sobreposição) | ~110 |
+| **Cozinha** (antes "Comedouro"; renomear no jogo na integração) | 11 | falta | obra 1–3 + pronto; comida cheia/metade/vazia (sobreposição) | ~110 |
 | Horta (+ hidroponia, pesquisa) | 9 | falta | obra 1–3 + pronto; plantação em 3 estágios (sobreposição) | ~110 |
 | Parque | 11 | falta | obra 1–3 + pronto | ~100 |
 | Campo de treino | 12 | falta | obra 1–3 + pronto | ~100 |
 | Vestiário | 12 | falta | obra 1–3 + pronto | ~100 |
 | Coletor de madeira = **máquina grande de cortar árvores**, estragada → consertada (`MAPA_VISAO.md`) | 13 | falta | quebrada + obra 1–3 + pronta; produzindo = luz/partícula no código | ~100 |
 | Barricada (em pé/deitada = espelho) | 12 | falta | obra 1–3 + 4 níveis de material + obra entre níveis | ~200 |
-| **Portão da vila** (única entrada): quebrado → obra → pronto (`MAPA_VISAO.md`) | 12 | falta | 3 estados | ~75 |
+| **Muro e portão da vila** (única entrada): portão quebrado → níveis 1, 2, 3 (upgrade com obra); muro modular com dano (`MAPA_VISAO.md`) | 12 | falta | 3 níveis + quebrado + dano | ~150 |
+| **Fundição** (prédio novo: pedra → carvão, ferro → aço) | 12 | falta | obra 1–3 + pronto; fornalha acesa = luz no código | ~100 |
 | Centro da Vila | 10 | **gerado** (`centro/`) | 5 estágios + 4 obras entre estágios; caixas ≤ 4 px fora | ~280 (feito) |
 | Escavadeira (máquina em camadas) | 13 | falta | base, estrutura, hidráulica, motor, broca, cabine (luz = código) + 5 reatores (Caldeira + 4) + obra do reator | ~360 |
 | Elevador (ruína → obra → pronto) | 13 | falta | ruína, obra, pronto | ~100 |
