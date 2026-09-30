@@ -210,6 +210,16 @@ quando a roupa muda a silhueta inteira (trajes, casaco).
 | Obra/variação | mesma chamada, com o prédio pronto como referência de estrutura | 25 cada |
 | Bloco de terreno | `create_image_pro` 64×64 + guia + bloco aprovado | 16 candidatos, 20 |
 
+- **Links de referência expiram.** `api.pixellab.ai/mcp/images/<job>/download` dá 404 depois
+  de ~1 dia. `get_image(job)` devolve um link assinado de 7 dias. Pra ficar permanente, copiar
+  pra bancada (`pixelart_workbench draw` com `--sources`). Links permanentes (bancada):
+  - bloco aprovado da colônia (64×64):
+    `https://api.pixellab.ai/mcp/pixel-tools/4b650f57-ce46-48ee-a5f0-fd6a44c15f4e/assets/south/full.png`
+  - casa aprovada (240×288):
+    `https://api.pixellab.ai/mcp/pixel-tools/31a6e399-011f-46c5-a845-e80e7731747b/assets/south/full.png`
+  - guia do bloco 2:1:
+    `https://api.pixellab.ai/mcp/pixel-tools/7ec9c9c8-5821-4595-a69e-a7873765c8a0/assets/south/full.png`
+  - As poses dos personagens (`backblaze.pixellab.ai/.../rotations/...`) não expiram.
 - **Personagem gigante** (robô, 218 px, Prompt 5): base `create_image_pro` ~176×224 (1
   candidato, 20); rotação v3 custa 5; cada animação v3 custa **8 por direção**.
 - **Estágios de um objeto deitado/parado** (achado, conserto): gerar com o desenho base como
