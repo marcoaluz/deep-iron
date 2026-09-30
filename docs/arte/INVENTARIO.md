@@ -99,6 +99,9 @@ prompts 0–31).
 | Buraco/galeria, transição entre chãos, parede da caverna | 6–7 | **gerado** (montagem por código) | — | 0 |
 | Entradas de túnel / galeria com escoras (liga mina ↔ clareira ↔ níveis) | 7 | falta | 2 orientações (espelho) | ~40 |
 | Variante por estação do chão/árvore | 6 | **não precisa hoje** (o jogo só usa estação no clima) | — | 0 |
+| Pisos da superfície: grama alta (5), trilha (5), cascalho (4), lama (1+espelho), laje (4), canteiro (2+espelho) | 6 | **gerado** (`relevo/final/superficie/`) | — | 120 (feito) |
+| Escada de pedra, rampa (+ espelho) | 6 | **gerado** | — | 40 (feito) |
+| Boca de mina no paredão (vigas de madeira, 3 degraus, 2×1 tiles) | 6 | **gerado** | — | 75 (feito) |
 
 ## 7. Jazidas, minérios e pedras
 
@@ -169,8 +172,8 @@ prompts 0–31).
 
 ## Plano de crédito
 
-**Atualização 2026-09-30 (fim do Prompt 5):** saldo do ciclo **4.103** (recarga de +5.000 em
-2026-10-30). Casaco por função (~600) e robô gigante (~400) já descontados. O que falta dos
+**Atualização 2026-09-30 (fim do Prompt 6):** saldo do ciclo **3.863** (recarga de +5.000 em
+2026-10-30). Casaco por função (~600), robô gigante (~425) e terreno da superfície (~215) já descontados. O que falta dos
 prompts 6–27 é estimado em ~4.000 (ver resposta de planejamento). Cabe no saldo, com pouca
 folga pra refações; o Prompt 31 fica pra depois da recarga.
 

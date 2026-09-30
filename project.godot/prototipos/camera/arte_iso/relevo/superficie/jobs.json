@@ -7,5 +7,70 @@
  "laje": "7cbff8e9-0905-4289-abc3-19f22df9e632",
  "canteiro": "30545ef8-bfe8-4681-abe3-4f7f6db286d3",
  "escada_pedra": "99ee157d-49aa-45e0-ad2b-4be08cfbc91e",
- "rampa": "cc4a8c64-4b75-4d7c-af5d-84997930b9e1"
+ "rampa": "cc4a8c64-4b75-4d7c-af5d-84997930b9e1",
+ "boca_mina": "daa64dd6-d9ce-4d1d-b7dd-54e8dd6b0fea",
+ "guia_boca_mina": "https://api.pixellab.ai/mcp/pixel-tools/1050100b-0a14-4f57-9ac3-029a0e098369/assets/south/full.png",
+ "escolhidos": {
+  "grama_alta": [
+   0,
+   4,
+   8,
+   12,
+   13
+  ],
+  "trilha": [
+   0,
+   12,
+   1,
+   10,
+   2
+  ],
+  "cascalho": [
+   2,
+   7,
+   10,
+   14
+  ],
+  "lama": [
+   5
+  ],
+  "laje": [
+   1,
+   5,
+   6,
+   15
+  ],
+  "canteiro": [
+   15,
+   10
+  ],
+  "escada_pedra": 1,
+  "rampa": 0,
+  "boca_mina": "boca_mina3 c0 (job 56329f98)"
+ },
+ "boca_mina_contrato": {
+  "caixa": {
+   "pegada_tiles": [
+    2,
+    1
+   ],
+   "altura_degraus": 3,
+   "guia": "https://api.pixellab.ai/mcp/pixel-tools/1050100b-0a14-4f57-9ac3-029a0e098369/assets/south/full.png"
+  },
+  "posicao": "o canto N do topo da caixa fica em (34, 2) do quadro: desenhar em tela(i, j, 3) - (2, 2), ocupando os tiles (i, j) e (i+1, j); o topo é coberto pelo chão do platô",
+  "quadro": [
+   100,
+   150
+  ],
+  "bbox": [
+   2,
+   1,
+   92,
+   142
+  ]
+ },
+ "refeitas": {
+  "boca_mina_1": "daa64dd6: saiu barraco de tábuas",
+  "boca_mina_2": "57ef9391: paredão certo, mas encolhido (abertura menor que o minerador)"
+ }
 }
