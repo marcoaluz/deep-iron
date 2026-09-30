@@ -1,0 +1,27 @@
+{
+ "_obs": "Prompt 3: trajes de perigo = estado (create_character_state) do minerador/mineradora, ~16 gerações cada; depois caminhada (skeleton), minerar (v3), carregar (caminhada + saco).",
+ "traje_gas_m": {
+  "char": "8326ae45-29dc-403c-b00e-ec7001cbb61b",
+  "base": "minerador"
+ },
+ "traje_calor_m": {
+  "char": "0124c8c2-d70d-4e66-87df-f97d1ef8e775",
+  "base": "minerador"
+ },
+ "traje_radiacao_m": {
+  "char": "ef717041-6c45-4883-b0e8-c8f49604ca24",
+  "base": "minerador"
+ },
+ "traje_gas_f": {
+  "char": "4738d2b8-2ce6-4aee-ad36-32b018224dd8",
+  "base": "mineradora"
+ },
+ "traje_calor_f": {
+  "char": "1a56c461-2136-403f-8d77-b0f5a56bab57",
+  "base": "mineradora"
+ },
+ "traje_radiacao_f": {
+  "char": "97a21043-1726-49c2-8c59-0159b33853ad",
+  "base": "mineradora"
+ }
+}

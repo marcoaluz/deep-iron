@@ -26,8 +26,9 @@ prompts 0–31).
 | Caçadora "com arco" (referência pro visual com arco) | 1 | gerado (guardada em `cacadora/com_arco_ref/`) | — | 8 | caminhada | incluído |
 | Animações de trabalho (1 por função, h/m): minerar, construir/martelar, atacar com porrete, atender ajoelhado, cozinhar (tigela no braço), caçar com arco (só com a Oficina), cortar lenha, pesquisar na bancada | 1 | **gerado** | 16 | SE+NE +espelho (4) | 8 quadros cada | ~97 (feito) |
 | Colher fruta (caçador sem arco), treinar no campo | 2 | falta | h/m | SE+NE +espelho | — | ~30 |
-| Animações comuns (18 personagens): carregar/entregar, comer sentado, lutar (golpe), caído + morte sóbria | 2 | falta | 18 | SE+NE +espelho | 4 × 18 | ~200 |
-| Machucado: ícone curativo/tala + pose parada + respiração por código | 2 (+ícone no 21) | falta | — | — | código | 0 (+ícone) |
+| Animações comuns (18): comer, ferido (tala), deitar (morte sóbria / dormir na rua), mancar (sad-walk) | 2 | **gerado** | 18 | SE+NE +espelho | 4 × 18 | ~345 (feito) |
+| Carregar (caminhada + saco em sobreposição, `itens/saco_costas.png`) | 2 | **gerado** | 18 + 6 trajes | 4 | caminhada | 0 |
+| Festa (pulinho), respiração, curativo | 2 | código | — | — | — | 0 |
 | Dormindo / na taverna / na enfermaria (dentro do prédio) | 2 | não precisa | — | — | some dentro | 0 |
 | Greve: placa na mão | 2 | falta | — | 2 + espelho | parado + placa | incluído |
 | Crianças (reservado: "Escola — pra quando a vila tiver crianças") | 31 | falta | menino/menina, 3 tons | 8/4 | caminhada | ~100 |
@@ -36,8 +37,10 @@ prompts 0–31).
 
 | Item | Prompt | Status | Variações | Direções | Animações | Gerações |
 |---|---|---|---|---|---|---|
-| Casaco de inverno (`equipment.gd`, vestido no inverno) | 3 | falta | 18 personagens | 4 | parado + caminhada | ~180 |
-| Traje de perigo (pesquisa "Trajes de proteção") | 3 | falta | 18 personagens | 4 | parado + caminhada | ~180 |
+| Casaco de inverno (`equipment.gd`, vestido no inverno) | 3 | **piloto** (minerador) · decisão pendente: por função ~37/personagem | 18 | 8 paradas | andar, trabalho | ~30 feito; ~630 pra fazer |
+| Trajes de perigo: gás (amarelo), calor (prata), radiação (oliva), h/m | 3 | **gerado** | 6 | 8 paradas, 4 andando | andar, minerar, carregar (saco) | ~220 (feito) |
+| Desgaste das peças (novo/gasto/rasgado) | 3 | só ícone na UI (sem arte) | — | — | — | 0 |
+| Ícones de vestiário (3 trajes + casaco), recortados da arte | 3 | **gerado** | 4 | — | — | 0 |
 | Chapéu de cozinheiro solto (`cook_hat.png`, ícone) | 21 | falta | — | — | — | incluído |
 | Acessórios antigos (bota, lenço, detalhe: `acc_*.png`) | 3 | **substituído** | a variedade agora vem das roupas por função + tons + corpos | — | — | 0 |
 
@@ -165,20 +168,20 @@ prompts 0–31).
 
 ## Plano de crédito
 
-Atualizado depois do Prompt 1 (2026-09-30).
+Atualizado depois dos Prompts 2 e 3 (2026-09-30).
 
 | | Gerações |
 |---|---|
-| Já gasto na arte isométrica (minerador, casa, elenco, relevo, animações de trabalho) | ~934 |
-| Saldo agora | **749** |
+| Já gasto na arte isométrica (até o Prompt 3) | ~1.530 |
+| Saldo agora | **162** |
 | Decisão do Marco | gastar o saldo até acabar e então subir a assinatura (US$ 24) → **+5.000** |
 | Estimativa do que falta (prompts 2–27, arte) | ~4.650 |
 | Conteúdo futuro (prompt 31) | ~420 |
 
 **Ordem** (a do pacote de prompts; cada prompt estima o custo e para no limite do saldo):
 
-1. Com o saldo atual (749): Prompt 2 (animações comuns, ~200) e Prompt 3 (trajes, ~360). O
-   que sobrar vai pro Prompt 4 (ferramentas e armas, ~220).
+1. Prompts 2 e 3 feitos (~595). Sobram 162: o Prompt 4 (ferramentas e armas, ~220) começa
+   com eles e termina depois do upgrade. O casaco por função (~630) fica pro upgrade.
 2. Com os +5.000:
    - prompts 4–13 (ferramentas, robô, terreno, mina, jazidas, vegetação, prédios, máquinas):
      ~3.200;

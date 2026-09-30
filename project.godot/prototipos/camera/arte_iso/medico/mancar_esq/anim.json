@@ -1,0 +1,46 @@
+{
+ "SE": {
+  "quadros": 8,
+  "ancora": [
+   64.8,
+   116
+  ],
+  "quadro_px": [
+   128,
+   128
+  ]
+ },
+ "NE": {
+  "quadros": 8,
+  "ancora": [
+   67.5,
+   111
+  ],
+  "quadro_px": [
+   128,
+   128
+  ]
+ },
+ "SO": {
+  "quadros": 8,
+  "ancora": [
+   62.2,
+   116
+  ],
+  "quadro_px": [
+   128,
+   128
+  ]
+ },
+ "NO": {
+  "quadros": 8,
+  "ancora": [
+   59.5,
+   111
+  ],
+  "quadro_px": [
+   128,
+   128
+  ]
+ }
+}

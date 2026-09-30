@@ -1,0 +1,314 @@
+{
+ "_obs": "Prompt 2: animações comuns por personagem. v3 texto (carregar, comer, ferido=claro, deitar) + skeleton sad-walk (mancar_esq). pesquisadora: direção de trás pela NO. | carregar: trocado por caminhada + saco em sobreposição (v3 inconsistente: mineradora NE sem saco); só minerador/mineradora/engenheiro têm a versão v3, guardada como alternativa",
+ "personagens": {
+  "minerador": {
+   "char": "bb4bd3f2-6661-445c-a546-ffe7bee5d2cc",
+   "genero": "m",
+   "enviado": [
+    "carregar",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "carregar",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "mineradora": {
+   "char": "982ed841-504b-4ea5-8ea4-ee9f888fdab7",
+   "genero": "f",
+   "enviado": [
+    "carregar",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "carregar",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "engenheiro": {
+   "char": "9542d1ef-5035-4a50-bd17-f011dbab16c0",
+   "genero": "m",
+   "enviado": [
+    "carregar",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "carregar",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "engenheira": {
+   "char": "e221cda0-b59f-42f3-95ed-c26bb83189e7",
+   "genero": "f",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "guarda": {
+   "char": "bda3ad85-c260-4af3-b307-c833dce62da8",
+   "genero": "m",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "guarda_mulher": {
+   "char": "57b6ee36-f3b5-40b9-8b2f-4dc37677bcac",
+   "genero": "f",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "medico": {
+   "char": "cb0945b1-e43e-4301-b197-ae0a1be41014",
+   "genero": "m",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "medica": {
+   "char": "af135e1a-771f-4127-811c-44c66ce3f549",
+   "genero": "f",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "cozinheiro": {
+   "char": "9740df2e-1e9f-41b4-9322-37c4d9aaca7c",
+   "genero": "m",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "cozinheira": {
+   "char": "4db9aa55-ddcb-4847-a2a8-1ab562ac22c1",
+   "genero": "f",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "cacador": {
+   "char": "b177ad39-b24e-4197-a4fa-d836d0071f6f",
+   "genero": "m",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "cacadora": {
+   "char": "8a70c1ac-efa4-4ad1-b6fb-15a8b470acd3",
+   "genero": "f",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "lenhador": {
+   "char": "f6a18428-2edf-4b43-919d-65f7de8338ac",
+   "genero": "m",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "lenhadora": {
+   "char": "d5f6da71-8492-473a-8d52-cda2f8332f4a",
+   "genero": "f",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "pesquisador": {
+   "char": "20be8a3a-8cf9-4a32-9634-eed53757fcd0",
+   "genero": "m",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "pesquisadora": {
+   "char": "ece6a9f2-01ed-4f52-894d-9c57bd9ad08e",
+   "genero": "f",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "civil": {
+   "char": "df8ac588-d322-4329-a42f-fd9f2eee76c4",
+   "genero": "m",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  },
+  "civil_mulher": {
+   "char": "13bff093-f91f-4868-9a0d-1f2fe9ee261d",
+   "genero": "f",
+   "enviado": [
+    "carregar(sobreposicao)",
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ],
+   "processado": [
+    "comer",
+    "ferido",
+    "deitar",
+    "mancar_esq"
+   ]
+  }
+ }
+}

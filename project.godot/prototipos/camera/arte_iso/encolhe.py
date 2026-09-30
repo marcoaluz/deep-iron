@@ -26,7 +26,7 @@ def encolhe(im, pe_y, linhas):
 # barriga, peito... O corte de n linhas usa as n primeiras.
 PRIORIDADE = [10, 17, 24, 31, 40, 50, 58, 64, 45, 35]
 # corte aprovado pelo Marco (2026-09-30): mulher 3-4 px abaixo do homem da mesma função
-CORTE = {"mineradora": 8, "guarda_mulher": 6, "cozinheira": 6, "engenheira": 4, "pesquisadora": 3, "lenhadora": 3}
+CORTE = {"mineradora": 8, "traje_gas_f": 8, "traje_calor_f": 8, "traje_radiacao_f": 8, "guarda_mulher": 6, "cozinheira": 6, "engenheira": 4, "pesquisadora": 3, "lenhadora": 3}
 
 
 def linhas(n):

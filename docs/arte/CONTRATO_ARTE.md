@@ -150,6 +150,22 @@ recortados na âncora).
 - **Direção de trás que gira** (o personagem vira de frente no meio do golpe): animar a **NO**
   e espelhar pra NE.
 
+**Objeto carregado = sobreposição, não animação.** O v3 desenha o objeto de um jeito
+diferente em cada direção. Por isso:
+
+- saco, e depois cesto, tora e caixa: **caminhada + sprite por cima** (`saco.py`);
+- atrás do corpo de frente pra câmera, na frente de costas;
+- acompanha o balanço do passo.
+
+**Variante de personagem** (`create_character_state`) custa **~28 gerações**, não 16. Usar só
+quando a roupa muda a silhueta inteira (trajes, casaco).
+
+**Filtros de limpeza** do `trabalho.py`:
+
+- sangue (vermelho escuro incluído) sempre sai;
+- a opção `claro` preserva branco de tipoia, tala e curativo;
+- a opção `estado=<Pasta>` escolhe a variante no zip do grupo.
+
 **Altura relativa do elenco.**
 
 - A mulher fica **3–4 px mais baixa** que o homem da mesma função.

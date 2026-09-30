@@ -22,7 +22,8 @@ PAR = {"SE": "SO", "NE": "NO", "NO": "NE", "SO": "SE"}
 BRANCO = 230   # rastro de movimento que o v3 desenha mesmo pedindo pra não: quase branco puro
 
 
-PALETA = set()   # cores das poses paradas do personagem (preenchida no main)
+PALETA = {}   # cor -> maior contagem numa pose parada do personagem (preenchida no main)
+MANTER_CLARO = False   # opção "claro": não apaga branco/claro (tipoia, tala, curativo)
 SOLTO_MAX = 6    # pedaço solto menor que isso some (com a opção "soltos", até 45: cavacos e tocos soltos)
 
 
@@ -33,13 +34,22 @@ def limpa(caminho):
     im = Image.open(caminho).convert("RGBA")
     px = im.load()
     n = 0
+    from collections import Counter
+    conta = Counter(px[x, y][:3] for y in range(im.height) for x in range(im.width) if px[x, y][3] > 40)
     for y in range(im.height):
         for x in range(im.width):
             p = px[x, y]
             if p[3] == 0:
                 continue
-            l = (max(p[:3]) + min(p[:3])) / 510.0
-            if min(p[:3]) >= BRANCO or (l >= 0.80 and p[:3] not in PALETA):
+            c = p[:3]
+            l = (max(c) + min(c)) / 510.0
+            # cor clara que aparece muito mais aqui do que em qualquer pose parada = rastro
+            # (o brilho da lanterna tem essa cor em 1-2 px; o rastro, em dezenas)
+            demais = conta[c] > max(3 * PALETA.get(c, 0), 12)
+            claro = min(c) >= BRANCO or (l >= 0.80 and (c not in PALETA or demais))
+            # vermelho vivo que o personagem não tem = parece sangue (contrato: sem gore)
+            sangue = c[0] > 60 and c[0] > 2.5 * max(c[1], c[2], 1) and c not in PALETA
+            if (claro and not MANTER_CLARO) or sangue:
                 px[x, y] = (0, 0, 0, 0)
                 n += 1
     # manchas claras soltas (sopro/poeira de efeito): componente que não encosta no corpo
@@ -70,7 +80,7 @@ def limpa(caminho):
             ys, xs = zip(*pts)
             cor = a[list(ys), list(xs), :3].astype(float)
             lum = (0.299 * cor[:, 0] + 0.587 * cor[:, 1] + 0.114 * cor[:, 2]).mean()
-            if lum > 140 or len(pts) < SOLTO_MAX:
+            if (lum > 140 and not MANTER_CLARO) or len(pts) < SOLTO_MAX:
                 a[list(ys), list(xs), 3] = 0
                 n += len(pts)
         im = Image.fromarray(a)
@@ -79,16 +89,27 @@ def limpa(caminho):
 
 
 def main():
-    global SOLTO_MAX
+    global SOLTO_MAX, MANTER_CLARO
+    estado = None   # opção estado=<Pasta>: o zip de um "state" traz todos os states do grupo
+    for a in list(sys.argv):
+        if a.startswith("estado="):
+            estado = a.split("=", 1)[1]
+            sys.argv.remove(a)
+    if "claro" in sys.argv:
+        sys.argv.remove("claro")
+        MANTER_CLARO = True
     if "soltos" in sys.argv:
         sys.argv.remove("soltos")
         SOLTO_MAX = 45
     pasta, nome, cid = sys.argv[1:4]
     base = os.path.join(pasta, nome)
     rot = os.path.join(pasta, "_original", "rotacoes") if os.path.isdir(os.path.join(pasta, "_original")) else os.path.join(pasta, "rotacoes")
-    for f in os.listdir(rot):
+    for f in (os.listdir(rot) if os.path.isdir(rot) else []):
         if f.endswith(".png"):
-            PALETA.update(q[:3] for q in Image.open(os.path.join(rot, f)).convert("RGBA").getdata() if q[3] > 40)
+            from collections import Counter
+            cc = Counter(q[:3] for q in Image.open(os.path.join(rot, f)).convert("RGBA").get_flattened_data() if q[3] > 40)
+            for k, v2 in cc.items():
+                PALETA[k] = max(PALETA.get(k, 0), v2)
     feitos = {}
     if sys.argv[4] == "zip":
         import zipfile, io
@@ -100,6 +121,8 @@ def main():
         por_dir = {}
         for nm in z.namelist():
             partes = nm.split("/")
+            if estado and (len(partes) < 5 or partes[-5] != estado):
+                continue
             if len(partes) >= 4 and partes[-4] == "animations" and partes[-3] == nome and partes[-2] in inv:
                 por_dir.setdefault(inv[partes[-2]], []).append(nm)
         for d, nms in por_dir.items():
