@@ -92,3 +92,25 @@ do saldo saiu antes da cobrança completa.
 3. **Nomes e cores:** o jogo pinta as zonas de verde (gás), laranja (calor) e verde-limão
    (radiação). Os trajes seguem as cores do prompt (amarelo, prata, oliva), que se distinguem
    bem das zonas e entre si.
+
+## Atualização (depois da validação): casaco por função começou
+
+O Marco aprovou a **opção A (casaco por função)**. Com o saldo que sobrou do Prompt 4:
+
+| Personagem | Com casaco | Andar | Trabalho |
+|---|---|---|---|
+| Minerador | ✅ | ✅ | ✅ minerar |
+| Mineradora | ✅ (com o corte de altura) | ✅ | ✅ minerar |
+| Lenhador | ✅ | ✅ | ✅ cortar |
+| Guarda | ✅ (8 direções) | falta | falta |
+
+Todos mantêm o que identifica a função: capacete com lanterna, gorro, capacete de aço.
+
+- `casaco_por_funcao.png`: sem casaco × com casaco.
+- `casaco_animacoes.gif`: andar e trabalho de casaco.
+- Arte em `arte_iso/casaco_*/`; IDs em `arte_iso/casaco_ids.json`.
+
+**Falta (depois do upgrade):**
+
+- andar e ataque do guarda de casaco (~8);
+- os outros 14 personagens (~37 cada, **~520**).

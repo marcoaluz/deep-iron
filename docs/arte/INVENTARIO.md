@@ -37,24 +37,21 @@ prompts 0–31).
 
 | Item | Prompt | Status | Variações | Direções | Animações | Gerações |
 |---|---|---|---|---|---|---|
-| Casaco de inverno (`equipment.gd`, vestido no inverno) | 3 | **piloto** (minerador) · decisão pendente: por função ~37/personagem | 18 | 8 paradas | andar, trabalho | ~30 feito; ~630 pra fazer |
+| Casaco de inverno por função (`equipment.gd`) | 3 | **gerado**: minerador, mineradora, lenhador · **parcial**: guarda · **falta**: 14 | 18 | 8 paradas, 4 andando | andar, trabalho | ~110 feito; ~530 pra fazer |
 | Trajes de perigo: gás (amarelo), calor (prata), radiação (oliva), h/m | 3 | **gerado** | 6 | 8 paradas, 4 andando | andar, minerar, carregar (saco) | ~220 (feito) |
 | Desgaste das peças (novo/gasto/rasgado) | 3 | só ícone na UI (sem arte) | — | — | — | 0 |
 | Ícones de vestiário (3 trajes + casaco), recortados da arte | 3 | **gerado** | 4 | — | — | 0 |
 | Chapéu de cozinheiro solto (`cook_hat.png`, ícone) | 21 | falta | — | — | — | incluído |
 | Acessórios antigos (bota, lenço, detalhe: `acc_*.png`) | 3 | **substituído** | a variedade agora vem das roupas por função + tons + corpos | — | — | 0 |
 
-## 3. Ferramentas e armas (sobreposição, 2 conjuntos de posição frente/costas)
+## 3. Ferramentas e armas (Prompt 4, feito)
 
-| Item | Prompt | Status | Variações | Direções | Gerações |
-|---|---|---|---|---|---|
-| Picareta (nas costas + no golpe) | 4 | **aprovado** (`picareta_overlay.py`) | — | 4 | feito |
-| Picareta de aço (`pickaxe_aco`) | 4 | falta | — | 4 | ~20 |
-| Machado (`axe`), martelo (`hammer`) | 4 | falta | — | 4 | ~40 |
-| Arco (`bow`, só com a Oficina), besta (`besta`) | 4 | falta | — | 4 | ~40 |
-| Lança, lança de prata, porrete, arma quebrada | 4 | falta | — | 4 | ~80 |
-| Cesto de coleta / cesto de comida na mão | 4 | falta | — | 4 | ~20 |
-| Placa de greve (`strike_sign`) | 4 | falta | — | 4 | ~20 |
+| Item | Prompt | Status | Versões | Gerações |
+|---|---|---|---|---|
+| Picareta, picareta de aço, machado, martelo, broca manual, lampião, arco (+aljava) | 4 | **gerado** | base, gasta, quebrada, no chão, ícone; nas costas (regra da picareta) | 40 |
+| Porrete, lança de ferro, besta de cobre, lança de prata, arma quebrada | 4 | **gerado** | idem | 20 |
+| Arma trocada na mão no ataque (lança/besta no lugar do porrete) | 29 | falta | posição da mão por quadro (integração) ou animação por arma (~8 cada) | 0–48 |
+| Cesto de coleta, placa de greve (sobreposição) | 14 | falta | — | ~20 |
 
 ## 4. Criaturas, robô e animais
 
@@ -166,6 +163,15 @@ prompts 0–31).
 
 ---
 
+## Pendências (decididas pelo Marco, esperando crédito)
+
+- **Casaco de inverno por função** (Prompt 3, opção A aprovada). Situação:
+  - **feito:** minerador, mineradora, lenhador (variante + andar + trabalho);
+  - **parcial:** guarda (só a variante, falta andar + ataque, ~8);
+  - **falta:** os outros 14 (~37 cada, ~520).
+
+  Fazer logo depois do upgrade. IDs em `arte_iso/casaco_ids.json`.
+
 ## Plano de crédito
 
 Atualizado depois dos Prompts 2 e 3 (2026-09-30).
@@ -173,7 +179,7 @@ Atualizado depois dos Prompts 2 e 3 (2026-09-30).
 | | Gerações |
 |---|---|
 | Já gasto na arte isométrica (até o Prompt 3) | ~1.530 |
-| Saldo agora | **162** |
+| Saldo agora | **0** (ciclo esgotado; o Marco vai subir a assinatura: +5.000) |
 | Decisão do Marco | gastar o saldo até acabar e então subir a assinatura (US$ 24) → **+5.000** |
 | Estimativa do que falta (prompts 2–27, arte) | ~4.650 |
 | Conteúdo futuro (prompt 31) | ~420 |

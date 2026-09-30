@@ -1,0 +1,256 @@
+{
+ "_obs": "Casaco de inverno por função (opção A aprovada pelo Marco). Estado 'Casaco inverno' de cada personagem (~30) + caminhada (esqueleto) + trabalho (v3). Pasta no zip: Casaco_inverno.",
+ "casaco_minerador": {
+  "char": "cb44184f-be54-4205-b3b3-34a15477db88",
+  "base": "minerador",
+  "trabalho": "minerar",
+  "enviado": [
+   "caminhada",
+   "minerar"
+  ],
+  "processado": [
+   "caminhada",
+   "minerar"
+  ]
+ },
+ "casaco_mineradora": {
+  "char": "c7765769-2551-4b5d-8466-36c189567e2b",
+  "base": "mineradora",
+  "trabalho": "minerar",
+  "enviado": [
+   "caminhada",
+   "minerar"
+  ],
+  "processado": [
+   "caminhada",
+   "minerar"
+  ]
+ },
+ "casaco_lenhador": {
+  "char": "882e104c-177a-4a0f-8f63-302ae77e50f9",
+  "base": "lenhador",
+  "trabalho": "cortar",
+  "enviado": [
+   "caminhada",
+   "cortar"
+  ],
+  "processado": [
+   "caminhada",
+   "cortar"
+  ]
+ },
+ "casaco_guarda": {
+  "char": "43dc5aa9-b60f-4864-9908-bb3a3dde52ea",
+  "base": "guarda",
+  "trabalho": "atacar",
+  "obs": "só a variante (8 direções); caminhada e ataque depois do upgrade",
+  "enviado": [
+   "caminhada",
+   "atacar"
+  ],
+  "processado": [
+   "caminhada",
+   "atacar"
+  ]
+ },
+ "casaco_engenheiro": {
+  "char": "c73deda0-9754-42b5-9150-c46e6f8f3bc4",
+  "base": "engenheiro",
+  "trabalho": "construir",
+  "enviado": [
+   "caminhada",
+   "construir"
+  ],
+  "processado": [
+   "caminhada",
+   "construir"
+  ]
+ },
+ "casaco_engenheira": {
+  "char": "6246ee3f-106a-48f4-8567-8ef43b95a07c",
+  "base": "engenheira",
+  "trabalho": "construir",
+  "enviado": [
+   "caminhada",
+   "construir"
+  ],
+  "processado": [
+   "caminhada",
+   "construir"
+  ]
+ },
+ "casaco_guarda_mulher": {
+  "char": "ce608dda-3628-47ea-905d-0004b0454e51",
+  "base": "guarda_mulher",
+  "trabalho": "atacar",
+  "enviado": [
+   "caminhada",
+   "atacar"
+  ],
+  "processado": [
+   "caminhada",
+   "atacar"
+  ]
+ },
+ "casaco_medico": {
+  "char": "1928308d-d791-4452-8c5e-83af745e67c5",
+  "base": "medico",
+  "trabalho": "atender",
+  "enviado": [
+   "caminhada",
+   "atender"
+  ],
+  "processado": [
+   "caminhada",
+   "atender"
+  ]
+ },
+ "casaco_medica": {
+  "char": "b2a519b5-014f-4c74-a457-3d75a6d6bdec",
+  "base": "medica",
+  "trabalho": "atender",
+  "enviado": [
+   "caminhada",
+   "atender"
+  ],
+  "processado": [
+   "caminhada",
+   "atender"
+  ]
+ },
+ "casaco_cozinheiro": {
+  "char": "b5acbd49-91c8-422e-af63-a82b6c02b70e",
+  "base": "cozinheiro",
+  "trabalho": "cozinhar",
+  "enviado": [
+   "caminhada",
+   "cozinhar"
+  ],
+  "processado": [
+   "caminhada",
+   "cozinhar"
+  ],
+  "troca": {
+   "cozinhar": [
+    "NE:6:5"
+   ]
+  }
+ },
+ "casaco_cozinheira": {
+  "char": "0888e4d3-f03e-4a16-bc8c-920e89230e66",
+  "base": "cozinheira",
+  "trabalho": "cozinhar",
+  "enviado": [
+   "caminhada",
+   "cozinhar"
+  ],
+  "processado": [
+   "caminhada"
+  ],
+  "atras": {
+   "cozinhar": "cozinhar_no"
+  },
+  "troca": {
+   "cozinhar": [
+    "SE:0:1"
+   ]
+  }
+ },
+ "casaco_cacador": {
+  "char": "9654b3f7-eded-439a-b8b0-65155eaaa38a",
+  "base": "cacador",
+  "trabalho": "cacar",
+  "enviado": [
+   "caminhada",
+   "cacar"
+  ],
+  "processado": [
+   "caminhada",
+   "cacar"
+  ],
+  "atras": {
+   "cacar": "cacar_no"
+  }
+ },
+ "casaco_cacadora": {
+  "char": "66d75b06-6833-4483-a751-0c2b3b2db071",
+  "base": "cacadora",
+  "trabalho": "cacar",
+  "enviado": [
+   "caminhada",
+   "cacar"
+  ],
+  "processado": [
+   "caminhada",
+   "cacar"
+  ],
+  "opcoes": {
+   "cacar": [
+    "sem_brilho"
+   ]
+  }
+ },
+ "casaco_lenhadora": {
+  "char": "8ecd0064-50a8-4fa8-bfb6-03617fedb951",
+  "base": "lenhadora",
+  "trabalho": "cortar",
+  "enviado": [
+   "caminhada",
+   "cortar"
+  ],
+  "processado": [
+   "caminhada"
+  ],
+  "de": {
+   "cortar": [
+    "SE:cortar_se"
+   ]
+  }
+ },
+ "casaco_pesquisador": {
+  "char": "074ab234-8db9-4921-b87c-71f62394bd21",
+  "base": "pesquisador",
+  "trabalho": "pesquisar",
+  "enviado": [
+   "caminhada",
+   "pesquisar"
+  ],
+  "processado": [
+   "caminhada"
+  ]
+ },
+ "casaco_pesquisadora": {
+  "char": "43570c95-975c-461f-8800-cc20c467ff0e",
+  "base": "pesquisadora",
+  "trabalho": "pesquisar",
+  "enviado": [
+   "caminhada",
+   "pesquisar"
+  ],
+  "processado": [
+   "caminhada"
+  ]
+ },
+ "casaco_civil": {
+  "char": "77f0f3e0-f11d-45cb-9165-253d97ca5908",
+  "base": "civil",
+  "trabalho": null,
+  "enviado": [
+   "caminhada"
+  ],
+  "processado": [
+   "caminhada"
+  ]
+ },
+ "casaco_civil_mulher": {
+  "char": "20402821-dead-4083-9f21-04295874cf6e",
+  "base": "civil_mulher",
+  "trabalho": null,
+  "enviado": [
+   "caminhada"
+  ],
+  "processado": [
+   "caminhada"
+  ]
+ }
+}

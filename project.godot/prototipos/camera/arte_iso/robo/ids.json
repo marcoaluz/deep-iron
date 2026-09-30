@@ -1,0 +1,15 @@
+{
+ "_obs": "Prompt 5: robô antigo GIGANTE (~210 px, quase a altura da casa; pedido do Marco). O 64x96 (b1) virou referência de design; a rotação 2a07f635 no tamanho pequeno foi descartada.",
+ "base_job": "7ac26f87-f9fa-402e-a0bc-b36b17b5fa28",
+ "base_job_64x96": "2b10aeaf-6848-413d-b2f5-03f1817bafc0",
+ "guia_64x96": "https://api.pixellab.ai/mcp/pixel-tools/62a70cdc-7928-4544-8fb3-1bc7b3d55c46/assets/south/full.png",
+ "escolhido": "b1 (2b10aeaf index=1)",
+ "guia_gigante": "https://api.pixellab.ai/mcp/pixel-tools/d8801242-ebac-475d-a88f-2308b79b6337/assets/south/full.png",
+ "gigante_jobs": [
+  "732946f2-bc66-4a88-879f-113b55d19f83",
+  "be5df772-645e-4790-a46d-bb385c8c1303"
+ ],
+ "char_pequeno_descartado": "2a07f635-ad76-4a88-a42d-c6b920a67eac",
+ "escolhido_gigante": "g_42 (be5df772), 217 px",
+ "char": "1c107cb5-a531-4c18-9b45-30f3351e6db7"
+}
