@@ -1,0 +1,88 @@
+{
+ "_obs": "Prompt 9: árvores (3 espécies), toco, tora, muda, vegetação rasteira, horta de cogumelos, madeira",
+ "guia_arvore": "https://api.pixellab.ai/mcp/pixel-tools/73c4f724-dbb4-48f3-815b-f5ddfefc2d6a/assets/south/full.png",
+ "pinheiro": "57d78257-a969-4f03-8a70-4445b282c104",
+ "carvalho": "21889b58-49b8-4129-b26d-4012382c7505",
+ "betula": "2a0a7151-7ea8-4f64-9de6-7e134554468f",
+ "toco": "690b2c9b-36d4-4c34-b0b1-a4bd2b6d4f10",
+ "tora": "a71fcdb8-eceb-4525-9599-c8822c51cc4a",
+ "muda": "9770afb6-43d0-4e89-bffc-5337c12dd730",
+ "rasteira": "bcdf46f7-52b2-4f5d-9a18-aaec161e609a",
+ "horta": "2be87d80-48f2-49cb-a92d-24103c072565",
+ "madeira": "972cd4cb-243e-425a-a15c-a65231db7790",
+ "arbustos": "af12b8a0-790c-45cb-a453-51958463804d",
+ "escolhidos": {
+  "pinheiro": [
+   1,
+   3
+  ],
+  "carvalho": [
+   0,
+   1,
+   3
+  ],
+  "betula": [
+   0,
+   1
+  ],
+  "arvore_seca": "betula 2",
+  "toco": {
+   "pinheiro": 0,
+   "carvalho": 5,
+   "betula": 8
+  },
+  "tora": "do lote madeira (c0, c1): o lote tora saiu cortado",
+  "muda": {
+   "carvalho": 2,
+   "pinheiro": 12,
+   "betula": 7
+  },
+  "horta": {
+   "vazio": 0,
+   "preparado": 1,
+   "plantado": 2,
+   "crescendo": 4,
+   "pronto": 6,
+   "colhido": 10
+  },
+  "madeira": {
+   "tora": 1,
+   "toras_p": 3,
+   "toras_m": 4,
+   "toras_g": 7,
+   "lenha_p": 9,
+   "lenha_g": 10,
+   "tabuas_p": 11,
+   "tabuas_m": 13,
+   "tabuas_g": 14
+  },
+  "rasteira": {
+   "flores": [
+    32,
+    33,
+    35,
+    37
+   ],
+   "capim": [
+    42,
+    43,
+    44
+   ],
+   "galho": [
+    50,
+    51
+   ],
+   "tronco_musgo": [
+    52,
+    58
+   ],
+   "cogumelos": [
+    57,
+    59
+   ],
+   "raizes": [
+    60
+   ]
+  }
+ }
+}

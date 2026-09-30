@@ -68,9 +68,9 @@ prompts 0–31).
 | Item | Prompt | Status | Estágios / estados | Gerações |
 |---|---|---|---|---|
 | Casa | 10 | **aprovado** | obra 1–3 + pronto + 3 variações (v1–v3) | 175 (feito) |
-| Casa nível 2 e 3 (reservado, "em breve") | 31 | falta | 2 níveis + obra entre níveis | ~100 |
-| Armazém | 10 | falta | obra 1–3 + pronto; pilha de estoque em 4 estágios (sobreposição) | ~120 |
-| Oficina (forja; "vem com a vila", sem obra) | 12 | falta | pronto; forja acesa = luz no código | ~25 |
+| Casa nível 2 e 3 | 10 | **gerado** (`casa/nivel_2.png`, `nivel_3.png`) | upgrade por cima da casa aprovada | 80 (feito) |
+| Armazém | 10 | **gerado** (`armazem/`) | obra 1–3 + pronto; lotação vazio/médio/cheio (sobreposição) | 100 (feito) |
+| Oficina (forja; hoje vem com a vila) | 10 | **gerado** (`oficina/`) | obra 1–3 + pronto; forja acesa = luz no código | 100 (feito) |
 | Arsenal | 12 | falta | obra 1–3 + pronto; armas no suporte + forja trabalhando (sobreposição) | ~120 |
 | Taverna + ampliação | 11 | falta | obra 1–3 + pronto nív. 1 + obra de ampliação + nív. 2; luz = código | ~150 |
 | Enfermaria + ampliação | 11 | falta | igual à taverna | ~150 |
@@ -83,7 +83,7 @@ prompts 0–31).
 | Coletor de madeira = **máquina grande de cortar árvores**, estragada → consertada (`MAPA_VISAO.md`) | 13 | falta | quebrada + obra 1–3 + pronta; produzindo = luz/partícula no código | ~100 |
 | Barricada (em pé/deitada = espelho) | 12 | falta | obra 1–3 + 4 níveis de material + obra entre níveis | ~200 |
 | **Portão da vila** (única entrada): quebrado → obra → pronto (`MAPA_VISAO.md`) | 12 | falta | 3 estados | ~75 |
-| Centro da Vila | 10 | falta | obra 1–3 + 5 estágios visuais + obra entre estágios (4) | ~350 |
+| Centro da Vila | 10 | **gerado** (`centro/`) | 5 estágios + 4 obras entre estágios; caixas ≤ 4 px fora | ~280 (feito) |
 | Escavadeira (máquina em camadas) | 13 | falta | base, estrutura, hidráulica, motor, broca, cabine (luz = código) + 5 reatores (Caldeira + 4) + obra do reator | ~360 |
 | Elevador (ruína → obra → pronto) | 13 | falta | ruína, obra, pronto | ~100 |
 | Elevador do abismo | 13 | falta | obra + pronto | ~75 |
@@ -113,19 +113,20 @@ prompts 0–31).
 
 | Item | Prompt | Status | Variações | Gerações |
 |---|---|---|---|---|
-| Jazidas: carvão, cobre, ferro, prata, solarita | 8 | falta | 3 estágios de esgotamento cada (15) | ~125 |
-| Nó mineral comum (`mineral_node` / `ore_rock`) | 8 | falta | 3 estágios | incluído |
-| Pedaços de minério soltos (carvão, cobre, prata, solarita, genérico) | 8 | falta | 5 | ~20 |
-| Cristais (4), pedregulhos (5), pedrinhas (4) | 8 | falta | 13 | ~60 |
-| Achados (bobina, cristal, peça, painel solar) | 8 | falta | 4 | ~20 |
+| Jazidas: carvão, cobre, ferro, prata, solarita | 8 | **gerado** (`jazidas/final/`) | 4 estados × 5 (cheia, meia, quase, esgotada) | ~25 (feito; recolor por minério) |
+| Nó mineral comum (`mineral_node` / `ore_rock`) | 8 | **gerado** (= jazida) | 4 estados | incluído |
+| Pedaços de minério soltos + pilhas (3 tamanhos) + lascas do golpe | 8 | **gerado** | 6 formas + 3 pilhas por minério | ~40 (feito) |
+| Cristais (4 cores × 2), rochas (6 + 6 com musgo + 3 da mina), pedrinhas (8) | 8 | **gerado** | — | ~80 (feito) |
+| Achados (bobina, cristal, peça, painel solar) + entulho (4 tamanhos) | 8 | **gerado** | — | ~40 (feito) |
 
 ## 8. Vegetação
 
 | Item | Prompt | Status | Variações | Gerações |
 |---|---|---|---|---|
-| Árvore da clareira: cheia / meio cortada / toco | 9 | falta | 3 estágios × 2–3 formas | ~100 |
-| Tufos, arbustos, cogumelos (enfeite de chão, quebra a repetição do tile) | 9 | falta | ~8 | ~40 |
-| Plantas da horta (3 estágios) | 9 | falta | — | incluído na horta |
+| Árvores: pinheiro, carvalho, bétula, seca; toco, tora caída, muda rebrotando | 9 | **gerado** (`vegetacao/final/`) | 8 árvores + ciclo por espécie | ~145 (feito) |
+| Vegetação rasteira: arbusto, samambaia, moita, espinheiro, flores, capim alto, galho, tronco com musgo, cogumelos, raízes | 9 | **gerado** | 3+ de cada | ~45 (feito) |
+| Horta de cogumelos: vazio, preparado, plantado, crescendo, pronto, colhido | 9 | **gerado** | 6 estágios | 20 (feito) |
+| Madeira: tora, toras P/M/G, lenha P/G, tábuas P/M/G + lascas do machado | 9 | **gerado** | 9 + efeito | 20 (feito) |
 
 ## 9. Objetos (mina e vila)
 
@@ -182,8 +183,8 @@ prompts 0–31).
 
 ## Plano de crédito
 
-**Atualização 2026-09-30 (fim do Prompt 7):** saldo do ciclo **3.663** (recarga de +5.000 em
-2026-10-30). Casaco por função (~600), robô gigante (~425) terreno da superfície (~215) e da mina (~200) já descontados. O que falta dos
+**Atualização 2026-09-30 (fim do Prompt 10):** saldo do ciclo **2.748** (recarga de +5.000 em
+2026-10-30). Casaco por função (~600), robô gigante (~425) terreno da superfície (~215) e da mina (~200), jazidas (~185), vegetação (~230) e prédios da vila (~500) já descontados. O que falta dos
 prompts 6–27 é estimado em ~4.000 (ver resposta de planejamento). Cabe no saldo, com pouca
 folga pra refações; o Prompt 31 fica pra depois da recarga.
 

@@ -1,0 +1,21 @@
+{
+ "_obs": "Prompt 10: Centro da Vila, 5 estágios (Acampamento, Vilarejo, Vila, Vila Mineira, Cidade Mineira); mesma âncora (centro da pegada). Caixas: 100x80x70, 120x100x110, 140x110x150, 170x130x190, 190x150x240.",
+ "guias": {
+  "1": "5c8ce263-5fc1-4772-81bf-2564b0a4b84c",
+  "2": "9f83c905-f654-4158-a904-303de90b99b2",
+  "3": "4fc8ba44-1ad1-4121-bf3c-1a0507835123",
+  "4": "2cb4a905-9d43-411b-a44d-2f811c9737f0",
+  "5": "8e36c63e-66ed-4fe2-a122-719ea75283d6"
+ },
+ "estagio_1": "9325a186-9063-4c1f-84bf-617cbeb1b56c",
+ "estagio_2": "93fb0475-48b7-4322-905e-6510ce548eae",
+ "estagio_3": "ae80c9e0-45e7-402e-9985-8c1d668caed3",
+ "estagio_4": "6b1172e9-2fcb-49f6-97d0-605e1af5607e",
+ "estagio_5": "d4a87c35-95f6-4084-82bd-20de2025f7a2",
+ "obra_para": {
+  "2": "796179f1-98ce-44b6-9126-c484e35c0ba0",
+  "3": "9ab033b3-6f04-456d-a814-c1c935eafcef",
+  "4": "08f0913a-9d0c-4b1f-997c-fee2ae587a1a",
+  "5": "98a43425-858d-4e88-a5e8-9867ed4c73b0"
+ }
+}

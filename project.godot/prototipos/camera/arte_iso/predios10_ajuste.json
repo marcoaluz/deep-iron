@@ -1,0 +1,66 @@
+{
+ "armazem/obra_1.png": [
+  0,
+  0
+ ],
+ "armazem/obra_2.png": [
+  0,
+  0
+ ],
+ "armazem/obra_3.png": [
+  -2,
+  5
+ ],
+ "oficina/obra_1.png": [
+  0,
+  0
+ ],
+ "oficina/obra_2.png": [
+  0,
+  0
+ ],
+ "oficina/obra_3.png": [
+  0,
+  7
+ ],
+ "casa/nivel_2.png": [
+  0,
+  -1
+ ],
+ "casa/nivel_3.png": [
+  0,
+  0
+ ],
+ "centro/estagio_2/obra.png": [
+  0,
+  0
+ ],
+ "centro/estagio_2/pronto.png": [
+  0,
+  0
+ ],
+ "centro/estagio_3/obra.png": [
+  0,
+  0
+ ],
+ "centro/estagio_3/pronto.png": [
+  0,
+  0
+ ],
+ "centro/estagio_4/obra.png": [
+  0,
+  0
+ ],
+ "centro/estagio_4/pronto.png": [
+  0,
+  0
+ ],
+ "centro/estagio_5/obra.png": [
+  0,
+  0
+ ],
+ "centro/estagio_5/pronto.png": [
+  0,
+  0
+ ]
+}

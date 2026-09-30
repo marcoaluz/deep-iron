@@ -228,6 +228,14 @@ quando a roupa muda a silhueta inteira (trajes, casaco).
   - guia do bloco 2:1:
     `https://api.pixellab.ai/mcp/pixel-tools/7ec9c9c8-5821-4595-a69e-a7873765c8a0/assets/south/full.png`
   - As poses dos personagens (`backblaze.pixellab.ai/.../rotations/...`) não expiram.
+- **Uma geração, várias cores (Prompt 8):** gerar o objeto com o material numa cor de
+  marcação (turquesa, longe da paleta da rocha) e trocar por script pela rampa de cada
+  material (`jazidas/jazidas.py`). Estágios de desgaste podem sair do mesmo lote de 16
+  candidatos, que já variam de "cheio" a "vazio".
+- **Lote de 64 candidatos (≤ 42 px)** vaza pedaços do vizinho na borda: guardar só a peça
+  principal (`vegetacao/vegetacao.py so_o_maior`).
+- **Obra e estágios de prédio:** gerar no mesmo quadro do pronto, com o pronto como
+  referência. `predio.py caixa` confere a caixa (busca binária, ~40 s por prédio).
 - **Personagem gigante** (robô, 218 px, Prompt 5): base `create_image_pro` ~176×224 (1
   candidato, 20); rotação v3 custa 5; cada animação v3 custa **8 por direção**.
 - **Estágios de um objeto deitado/parado** (achado, conserto): gerar com o desenho base como

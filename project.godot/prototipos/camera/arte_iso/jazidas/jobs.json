@@ -1,0 +1,13 @@
+{
+ "_obs": "Prompt 8: jazidas (cor neutra turquesa -> recolor por minério), rochas, pedras, cristais, achado, entulho, minério solto, pilhas",
+ "guia_jazida": "https://api.pixellab.ai/mcp/pixel-tools/1e0dd153-2d40-429b-b527-39d8132b10b9/assets/south/full.png",
+ "jazida_cheia": "beb71db6-c5fb-4937-b83f-2732ad803c4a",
+ "pedras": "8f8fad78-4d2e-42b7-be86-5739b1139c37",
+ "rochas": "a6e5dfcb-4033-4050-944d-af24aac997dd",
+ "rochas_musgo": "1c5435ff-fd4b-4e22-9f5b-65fc4d82174a",
+ "cristais": "11b3467d-8365-4767-83f4-8d18891e1009",
+ "achado": "96fc8271-786b-4f47-ad9d-b6c65adac6bb",
+ "entulho": "2516f0c8-cedf-4e93-b77e-2eaac037622d",
+ "minerio_solto": "c567abc7-01d3-43ba-ab85-564e0e60ad39",
+ "pilha_minerio": "141bd96c-4c68-4a7b-ba6f-cc7a0d4c419b"
+}

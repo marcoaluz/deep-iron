@@ -98,12 +98,22 @@ def caixa(pasta, imgs):
         melhor = None
         for x1 in np.arange(x0 + 20, fw / 2 + 60, 2):
             for y1 in np.arange(y0 + 20, fd / 2 + 60, 2):
-                for h in np.arange(10, h0 + 160, 2):
-                    if _fora(sx, sy, x0, x1, y0, y1, h) <= 4:
-                        v = (x1 - x0) * (y1 - y0) * h
-                        if melhor is None or v < melhor[0]:
-                            melhor = (v, x1, y1, h)
-                        break
+                # pixels fora só diminui quando a altura cresce: busca binária da menor altura
+                # (antes era linear, ~19 min por prédio)
+                hs = np.arange(10, h0 + 160, 2)
+                if _fora(sx, sy, x0, x1, y0, y1, hs[-1]) > 4:
+                    continue
+                lo, hi = 0, len(hs) - 1
+                while lo < hi:
+                    mid = (lo + hi) // 2
+                    if _fora(sx, sy, x0, x1, y0, y1, hs[mid]) <= 4:
+                        hi = mid
+                    else:
+                        lo = mid + 1
+                h = hs[lo]
+                v = (x1 - x0) * (y1 - y0) * h
+                if melhor is None or v < melhor[0]:
+                    melhor = (v, x1, y1, h)
         v, x1, y1, h = melhor
         nome = os.path.splitext(os.path.basename(f))[0]
         contrato["caixas"][nome] = {"pegada_rel_ancora": [x0, y0, float(x1), float(y1)], "altura": float(h),

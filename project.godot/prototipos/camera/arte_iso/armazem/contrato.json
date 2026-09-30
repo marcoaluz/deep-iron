@@ -1,0 +1,64 @@
+{
+ "ancora_no_quadro": [
+  135.0,
+  220.0
+ ],
+ "caixas": {
+  "obra_1": {
+   "pegada_rel_ancora": [
+    -75.0,
+    -55.0,
+    75.0,
+    61.0
+   ],
+   "altura": 160.0,
+   "pegada": [
+    150.0,
+    116.0
+   ],
+   "fora": 4
+  },
+  "obra_2": {
+   "pegada_rel_ancora": [
+    -75.0,
+    -55.0,
+    93.0,
+    83.0
+   ],
+   "altura": 192.0,
+   "pegada": [
+    168.0,
+    138.0
+   ],
+   "fora": 3
+  },
+  "obra_3": {
+   "pegada_rel_ancora": [
+    -75.0,
+    -55.0,
+    81.0,
+    83.0
+   ],
+   "altura": 192.0,
+   "pegada": [
+    156.0,
+    138.0
+   ],
+   "fora": 0
+  },
+  "pronto": {
+   "pegada_rel_ancora": [
+    -75.0,
+    -55.0,
+    81.0,
+    83.0
+   ],
+   "altura": 192.0,
+   "pegada": [
+    156.0,
+    138.0
+   ],
+   "fora": 3
+  }
+ }
+}
