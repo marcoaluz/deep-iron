@@ -93,24 +93,37 @@ do saldo saiu antes da cobrança completa.
    (radiação). Os trajes seguem as cores do prompt (amarelo, prata, oliva), que se distinguem
    bem das zonas e entre si.
 
-## Atualização (depois da validação): casaco por função começou
+## Atualização: casaco por função COMPLETO (18 personagens)
 
-O Marco aprovou a **opção A (casaco por função)**. Com o saldo que sobrou do Prompt 4:
+O Marco aprovou a **opção A (casaco por função)**. Terminado depois do upgrade.
 
-| Personagem | Com casaco | Andar | Trabalho |
-|---|---|---|---|
-| Minerador | ✅ | ✅ | ✅ minerar |
-| Mineradora | ✅ (com o corte de altura) | ✅ | ✅ minerar |
-| Lenhador | ✅ | ✅ | ✅ cortar |
-| Guarda | ✅ (8 direções) | falta | falta |
+- **Os 18** têm o casaco (8 direções), o **andar** e o **trabalho da função** de casaco. O
+  civil e a civil mulher não têm trabalho.
+- Todos mantêm o que identifica a função: capacete com lanterna, capacete laranja, capacete
+  de aço, gorro de médico, chapéu de cozinheiro, chapéu de caçador, óculos do pesquisador,
+  boné, lenço.
+- As mulheres têm o mesmo corte de altura das versões sem casaco (`encolhe.CORTE`).
 
-Todos mantêm o que identifica a função: capacete com lanterna, gorro, capacete de aço.
+Entregas (nesta pasta, geradas por `python casacos.py entrega docs/arte/prompt03`):
 
-- `casaco_por_funcao.png`: sem casaco × com casaco.
-- `casaco_animacoes.gif`: andar e trabalho de casaco.
-- Arte em `arte_iso/casaco_*/`; IDs em `arte_iso/casaco_ids.json`.
+- `casaco_por_funcao.png`: os 18, sem casaco × com casaco;
+- `casaco_animacoes.gif` (+ `_q0.png`): andar em cima e trabalho embaixo, todos de casaco.
 
-**Falta (depois do upgrade):**
+Arte em `arte_iso/casaco_*/`; IDs e o que foi refeito em `arte_iso/casaco_ids.json`.
 
-- andar e ataque do guarda de casaco (~8);
-- os outros 14 personagens (~37 cada, **~520**).
+**Custo do casaco inteiro:** ~600 gerações (17 variantes de ~28 + andares + trabalhos + 8
+refações).
+
+**Correções feitas nesta leva (reportando):**
+
+1. **Caçador e cozinheira:** a direção de trás virava o rosto → refeita pela NO e
+   espelhada (opção `atras=` do `trabalho.py`).
+2. **Lenhadora (SE):** veio com um retângulo de fundo marrom e arcos brancos → refeita só a
+   SE (opção `de=SE:<anim>`).
+3. **Cozinheiro (NE, quadro 6)** com a cor estourada e **cozinheira (SE, quadro 0)** com a
+   tigela solta → quadro trocado pelo vizinho (opção `troca=`).
+4. **Caçadora:** ponta da flecha em laranja vivo, parecendo fogo → escurecida (opção
+   `sem_brilho`).
+5. **Restos pequenos aceitos:** 2–3 pixels amarelos soltos no instrumento do pesquisador
+   (NE, 1 quadro) e um risco cinza curto no casaco do caçador (NO, 2 quadros). Somem na
+   escala do jogo.

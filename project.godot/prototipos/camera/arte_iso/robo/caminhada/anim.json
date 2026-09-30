@@ -1,0 +1,50 @@
+{
+ "SE": {
+  "quadros": 4,
+  "ancora": [
+   146.0,
+   246
+  ],
+  "quadro_px": [
+   256,
+   256
+  ],
+  "origem": "caminhada4 (walking-4-frames)"
+ },
+ "NE": {
+  "quadros": 4,
+  "ancora": [
+   133.4,
+   248
+  ],
+  "quadro_px": [
+   256,
+   256
+  ],
+  "origem": "caminhada8 (walking-8-frames), quadros 0,2,4,6"
+ },
+ "SO": {
+  "quadros": 4,
+  "ancora": [
+   109.0,
+   246
+  ],
+  "quadro_px": [
+   256,
+   256
+  ],
+  "origem": "caminhada4 (walking-4-frames)"
+ },
+ "NO": {
+  "quadros": 4,
+  "ancora": [
+   121.6,
+   248
+  ],
+  "quadro_px": [
+   256,
+   256
+  ],
+  "origem": "caminhada8 (walking-8-frames), quadros 0,2,4,6"
+ }
+}

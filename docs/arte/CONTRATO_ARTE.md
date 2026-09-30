@@ -210,6 +210,12 @@ quando a roupa muda a silhueta inteira (trajes, casaco).
 | Obra/variação | mesma chamada, com o prédio pronto como referência de estrutura | 25 cada |
 | Bloco de terreno | `create_image_pro` 64×64 + guia + bloco aprovado | 16 candidatos, 20 |
 
+- **Personagem gigante** (robô, 218 px, Prompt 5): base `create_image_pro` ~176×224 (1
+  candidato, 20); rotação v3 custa 5; cada animação v3 custa **8 por direção**.
+- **Estágios de um objeto deitado/parado** (achado, conserto): gerar com o desenho base como
+  referência **no mesmo tamanho de quadro que ele**. Com o quadro maior que a referência, o
+  modelo desloca e corta. Conferir a sobreposição com o base (≥ 95%) e as bordas; o que
+  encostar na borda se completa com inpaint num quadro ampliado.
 - `create_image_pro` **ignora** texto de ângulo ("30° camera"): é a guia que garante o 2:1.
 - Limite de **8 jobs** ao mesmo tempo.
 - Link do Backblaze precisa de User-Agent de curl.

@@ -5,7 +5,8 @@
   python trabalho.py <pasta> <nome> <character_id> zip
   (baixa o zip do personagem e pega a animação chamada <nome>, nas direções que ela tiver)
   opções: atras=<anim> (a de trás vem da NO de outra animação), de=<DIR>:<anim> (idem pra qualquer direção), troca=<dir>:<i>:<j> (quadro i = cópia do j),
-          sem_brilho (laranja vivo fora da paleta vira madeira escura)
+          sem_brilho (laranja vivo fora da paleta vira madeira escura),
+          sem_fundo (apaga retângulo de fundo liso)
 
 - baixa os quadros em <pasta>/<nome>/{SE,NE}/i.png e espelha SO/NO (contrato: 2 desenhos +
   espelho por animação)
@@ -30,6 +31,38 @@ SOLTO_MAX = 6    # pedaço solto menor que isso some (com a opção "soltos", at
 
 
 SEM_BRILHO = False
+SEM_FUNDO = False
+
+
+def tira_fundo(im):
+    """retângulo de fundo liso que o v3 às vezes desenha: a cor mais comum na borda da área
+    opaca é apagada por preenchimento a partir da borda (o que está dentro do boneco fica)."""
+    from collections import Counter, deque
+    px = im.load(); W, H = im.size; b = im.getbbox()
+    if not b:
+        return
+    cnt = Counter()
+    for x in range(b[0], b[2]):
+        cnt[px[x, b[1]][:3]] += 1; cnt[px[x, b[3] - 1][:3]] += 1
+    fundo = cnt.most_common(1)[0][0]
+    q = deque([(x, y) for x in range(b[0], b[2]) for y in (b[1], b[3] - 1)] +
+              [(x, y) for y in range(b[1], b[3]) for x in (b[0], b[2] - 1)])
+    vis = set()
+    while q:
+        x, y = q.popleft()
+        if (x, y) in vis or not (0 <= x < W and 0 <= y < H):
+            continue
+        vis.add((x, y)); p = px[x, y]
+        if p[3] < 40 or max(abs(p[i] - fundo[i]) for i in range(3)) > 14:
+            continue
+        px[x, y] = (0, 0, 0, 0)
+        q.extend([(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)])
+    # bolsões presos (entre o braço e o corpo): a mesma cor, se o personagem não a tem
+    for y in range(H):
+        for x in range(W):
+            p = px[x, y]
+            if p[3] >= 40 and p[:3] not in PALETA and max(abs(p[i] - fundo[i]) for i in range(3)) <= 14:
+                px[x, y] = (0, 0, 0, 0)
 
 
 def limpa(caminho):
@@ -37,6 +70,8 @@ def limpa(caminho):
     cor muito clara (luminosidade >= 0,80) que não existe nas poses paradas do personagem. O
     metal mais claro das ferramentas fica abaixo de ~0,78."""
     im = Image.open(caminho).convert("RGBA")
+    if SEM_FUNDO:
+        tira_fundo(im)
     px = im.load()
     n = 0
     from collections import Counter
@@ -100,7 +135,7 @@ def limpa(caminho):
 
 
 def main():
-    global SOLTO_MAX, MANTER_CLARO, SEM_BRILHO
+    global SOLTO_MAX, MANTER_CLARO, SEM_BRILHO, SEM_FUNDO
     estado = None   # opção estado=<Pasta>: o zip de um "state" traz todos os states do grupo
     for a in list(sys.argv):
         if a.startswith("estado="):
@@ -123,6 +158,9 @@ def main():
             d, i, j = a.split("=", 1)[1].split(":")
             trocas.append((d, int(i), int(j)))
             sys.argv.remove(a)
+    if "sem_fundo" in sys.argv:
+        sys.argv.remove("sem_fundo")
+        SEM_FUNDO = True
     if "sem_brilho" in sys.argv:
         sys.argv.remove("sem_brilho")
         SEM_BRILHO = True

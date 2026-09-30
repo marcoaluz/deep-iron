@@ -1,0 +1,63 @@
+{
+ "_obs": "Prompt 5: robô antigo gigante. Estados parados = objeto no chão (como obra de prédio): mesmo quadro 288x216 e mesma âncora nos 4 estágios. Animações: personagem de 4 direções (SE/NE desenhadas, SO/NO espelho), âncora por direção no anim.json de cada pasta.",
+ "altura_em_pe_px": 218,
+ "caixa_em_pe": {
+  "pegada": [
+   52,
+   52
+  ],
+  "altura": 166,
+  "guia": "https://api.pixellab.ai/mcp/pixel-tools/d8801242-ebac-475d-a88f-2308b79b6337/assets/south/full.png"
+ },
+ "estados_parados": {
+  "quadro": [
+   288,
+   216
+  ],
+  "caixa_deitado": {
+   "pegada_x": 190,
+   "pegada_y": 70,
+   "altura": 50,
+   "guia": "https://api.pixellab.ai/mcp/pixel-tools/494bfdce-c65b-4335-8098-145a24111a21/assets/south/full.png"
+  },
+  "ancora_no_quadro": [
+   136,
+   121
+  ],
+  "ordem": {
+   "achado": "achado na exploração do pesquisador (com entulho)",
+   "arrastado": "5 NPCs arrastam até o portão (corda por código)",
+   "conserto_1": "parado perto do portão / estágio 1",
+   "conserto_2": "estágio 2",
+   "conserto_3": "estágio 3 (último)",
+   "ativo": "levanta: ronda de dia, parado na entrada à noite"
+  },
+  "caixa_de_cada": {
+   "achado": [
+    1,
+    4,
+    285,
+    204
+   ],
+   "conserto_1": [
+    17,
+    4,
+    269,
+    214
+   ],
+   "conserto_2": [
+    5,
+    4,
+    279,
+    207
+   ],
+   "conserto_3": [
+    14,
+    4,
+    261,
+    207
+   ],
+   "deitado_inteiro_v3": [
+    18,
+    4,
+    2

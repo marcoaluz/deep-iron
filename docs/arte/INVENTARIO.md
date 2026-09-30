@@ -37,7 +37,7 @@ prompts 0–31).
 
 | Item | Prompt | Status | Variações | Direções | Animações | Gerações |
 |---|---|---|---|---|---|---|
-| Casaco de inverno por função (`equipment.gd`) | 3 | **gerado**: minerador, mineradora, lenhador · **parcial**: guarda · **falta**: 14 | 18 | 8 paradas, 4 andando | andar, trabalho | ~110 feito; ~530 pra fazer |
+| Casaco de inverno por função (`equipment.gd`) | 3 | **gerado** (os 18) | 18 | 8 paradas, 4 andando | andar, trabalho da função | ~600 (feito) |
 | Trajes de perigo: gás (amarelo), calor (prata), radiação (oliva), h/m | 3 | **gerado** | 6 | 8 paradas, 4 andando | andar, minerar, carregar (saco) | ~220 (feito) |
 | Desgaste das peças (novo/gasto/rasgado) | 3 | só ícone na UI (sem arte) | — | — | — | 0 |
 | Ícones de vestiário (3 trajes + casaco), recortados da arte | 3 | **gerado** | 4 | — | — | 0 |
@@ -59,7 +59,7 @@ prompts 0–31).
 |---|---|---|---|---|---|---|
 | Lumívoro (invasor) | 16–17 | falta | — | 4 | andar, atacar, morrer (sóbrio) | ~35 |
 | Ferrugento (invasor) | 16–17 | falta | — | 4 | andar, atacar, morrer | ~35 |
-| Robô (parado / ativo / conserto piscando) | 5 | falta | 3 estados | 4 | andar, trabalhar | ~35 |
+| Robô antigo GIGANTE (218 px, ~80% da casa): achado + 3 estágios de conserto (deitado, mesma âncora) + ativo | 5 | **gerado** | 4 estados parados + retrato + ícone | 8 paradas, 4 andando | andar, atacar, dano, desligar/derrubado | ~400 (feito) |
 | Coelho + toca (coelho fora / só orelhas / toca vazia) | 15 | falta | 3 estados | — | — | ~45 |
 
 ## 5. Prédios (cada construível: obra_1 · obra_2 · obra_3 · pronto; upgrade com obra entre níveis)
@@ -163,16 +163,16 @@ prompts 0–31).
 
 ---
 
-## Pendências (decididas pelo Marco, esperando crédito)
+## Pendências
 
-- **Casaco de inverno por função** (Prompt 3, opção A aprovada). Situação:
-  - **feito:** minerador, mineradora, lenhador (variante + andar + trabalho);
-  - **parcial:** guarda (só a variante, falta andar + ataque, ~8);
-  - **falta:** os outros 14 (~37 cada, ~520).
-
-  Fazer logo depois do upgrade. IDs em `arte_iso/casaco_ids.json`.
+- Nenhuma do Prompt 3: o casaco por função ficou completo (os 18, 2026-09-30).
 
 ## Plano de crédito
+
+**Atualização 2026-09-30 (fim do Prompt 5):** saldo do ciclo **4.103** (recarga de +5.000 em
+2026-10-30). Casaco por função (~600) e robô gigante (~400) já descontados. O que falta dos
+prompts 6–27 é estimado em ~4.000 (ver resposta de planejamento). Cabe no saldo, com pouca
+folga pra refações; o Prompt 31 fica pra depois da recarga.
 
 Atualizado depois dos Prompts 2 e 3 (2026-09-30).
 

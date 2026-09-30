@@ -145,7 +145,8 @@
    "cozinhar"
   ],
   "processado": [
-   "caminhada"
+   "caminhada",
+   "cozinhar"
   ],
   "atras": {
    "cozinhar": "cozinhar_no"
@@ -199,7 +200,8 @@
    "cortar"
   ],
   "processado": [
-   "caminhada"
+   "caminhada",
+   "cortar"
   ],
   "de": {
    "cortar": [
@@ -216,7 +218,8 @@
    "pesquisar"
   ],
   "processado": [
-   "caminhada"
+   "caminhada",
+   "pesquisar"
   ]
  },
  "casaco_pesquisadora": {
@@ -228,7 +231,8 @@
    "pesquisar"
   ],
   "processado": [
-   "caminhada"
+   "caminhada",
+   "pesquisar"
   ]
  },
  "casaco_civil": {
