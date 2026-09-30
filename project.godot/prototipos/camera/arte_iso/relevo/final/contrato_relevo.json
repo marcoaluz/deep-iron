@@ -1,0 +1,32 @@
+{
+ "tile_no_chao": [
+  32,
+  32
+ ],
+ "degrau": 32,
+ "losango_tela": [
+  64,
+  32
+ ],
+ "quadro_bloco": [
+  64,
+  64
+ ],
+ "ancora": "canto de cima do quadro (32,0) = canto norte do tile na altura do TOPO do bloco; tela(i,j,k) = ((i-j)*32, (i+j)*16 - k*32)",
+ "chao": "chao_0..3.png (64x32): sorteio fixo por tile + espelho sorteado; o topo do bloco usa as mesmas variações",
+ "bloco": "bloco.png = topo da coluna (com a borda de terra pendurada); bloco_sem_beira.png = blocos de baixo de uma coluna de 2+ degraus",
+ "escada": "sempre na frente de uma face VISÍVEL (sul ou leste do platô) ou encostada na parede do fundo de um buraco; escada descendo pra longe da câmera fica escondida atrás do próprio platô",
+ "ordem": "por coluna (i+j) crescente, dentro da coluna de baixo pra cima; faces escondidas somem sozinhas (não há tile de canto)",
+ "na_integracao": "cada platô (retângulo do mapa de altura) vira UMA imagem montada destes tiles = a caixa dele na ordenação (regra 2)",
+ "ambientes": {
+  "colonia": "final/colonia/ (terra batida; faces #15 e #13 alternadas)",
+  "clareira": "final/clareira/ (grama; faces de terra)",
+  "nivel2": "final/nivel2/ (ardósia azulada, casa com floor_deep)",
+  "abismo": "final/abismo/ (basalto com brasa)",
+  "rocha": "final/rocha/ (rocha maciça: parede da caverna, 4 blocos alternados, sem borda)"
+ },
+ "espelho": "só o CHÃO espelha; bloco nunca (o espelho troca a face clara com a escura)",
+ "buraco": "nível negativo no mapa de altura; o chão em volta é coluna cheia desde o fundo, então só as paredes de dentro do fundo aparecem e a borda da frente fica tão grossa quanto o fundo (regra 6) sem tile especial; cada degrau abaixo do chão escurece 20%",
+ "transicao": "tipo de chão nos VÉRTICES do grid; a borda irregular vem de um ruído em coordenada de mundo (tiles.topo_misto), então emenda entre tiles sem desenhar os 16 cantos de cada par",
+ "parede_da_caverna": "colunas de rocha: altas (3 degraus) nas bordas do fundo (N/O), baixas (1) nas da frente (S/L), pra não tapar a vila"
+}

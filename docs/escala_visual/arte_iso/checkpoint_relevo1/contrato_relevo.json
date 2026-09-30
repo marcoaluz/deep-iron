@@ -1,0 +1,21 @@
+{
+ "tile_no_chao": [
+  32,
+  32
+ ],
+ "degrau": 32,
+ "losango_tela": [
+  64,
+  32
+ ],
+ "quadro_bloco": [
+  64,
+  64
+ ],
+ "ancora": "canto de cima do quadro (32,0) = canto norte do tile na altura do TOPO do bloco; tela(i,j,k) = ((i-j)*32, (i+j)*16 - k*32)",
+ "chao": "chao_0..3.png (64x32): sorteio fixo por tile + espelho sorteado; o topo do bloco usa as mesmas variações",
+ "bloco": "bloco.png = topo da coluna (com a borda de terra pendurada); bloco_sem_beira.png = blocos de baixo de uma coluna de 2+ degraus",
+ "escada": "escada_N.png sobe pro norte (fica na frente da face da esquerda), escada_O.png = espelho, sobe pro oeste (frente da face da direita). Desenha em tela(i,j,k0+1)",
+ "ordem": "por coluna (i+j) crescente, dentro da coluna de baixo pra cima; faces escondidas somem sozinhas (não há tile de canto)",
+ "na_integracao": "cada platô (retângulo do mapa de altura) vira UMA imagem montada destes tiles = a caixa dele na ordenação (regra 2)"
+}

@@ -1,10 +1,10 @@
 {
  "caixa": [
-  34,
-  34,
-  74
+  32,
+  32,
+  76
  ],
- "pixels_fora": 0,
+ "pixels_fora": 1,
  "direcoes": {
   "SE": {
    "ancora": [
@@ -17,12 +17,12 @@
   },
   "NE": {
    "ancora": [
-    57.9,
-    98
+    58.4,
+    97
    ],
    "fora_28x28x70": 0,
-   "pixels": 5352,
-   "corpo_varia_px": 1.4
+   "pixels": 4930,
+   "corpo_varia_px": 0.2
   },
   "SO": {
    "ancora": [
@@ -35,12 +35,18 @@
   },
   "NO": {
    "ancora": [
-    53.1,
-    98
+    52.6,
+    97
    ],
    "fora_28x28x70": 0,
-   "pixels": 5352,
-   "corpo_varia_px": 1.4
+   "pixels": 4930,
+   "corpo_varia_px": 0.2
   }
- }
+ },
+ "caixa_corpo": [
+  28,
+  28,
+  76
+ ],
+ "caixa_corpo_pixels_fora": 89
 }

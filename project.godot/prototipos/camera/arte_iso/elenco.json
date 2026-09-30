@@ -8,12 +8,32 @@
  "engenheiro": {
   "genero": "h",
   "char": "9542d1ef-5035-4a50-bd17-f011dbab16c0",
-  "estado": "pronto"
+  "estado": "pronto",
+  "caixa": [
+   38,
+   38,
+   78
+  ],
+  "caixa_corpo": [
+   34,
+   34,
+   78
+  ]
  },
  "medica": {
   "genero": "m",
   "char": "af135e1a-771f-4127-811c-44c66ce3f549",
-  "estado": "pronto"
+  "estado": "pronto",
+  "caixa": [
+   36,
+   36,
+   74
+  ],
+  "caixa_corpo": [
+   32,
+   32,
+   74
+  ]
  },
  "guarda": {
   "genero": "h",
@@ -24,6 +44,11 @@
   "caixa": [
    36,
    36,
+   74
+  ],
+  "caixa_corpo": [
+   32,
+   32,
    74
   ]
  },
@@ -37,6 +62,11 @@
    38,
    38,
    80
+  ],
+  "caixa_corpo": [
+   34,
+   34,
+   80
   ]
  },
  "mineradora": {
@@ -48,6 +78,11 @@
   "caixa": [
    40,
    40,
+   78
+  ],
+  "caixa_corpo": [
+   34,
+   34,
    78
   ]
  },
@@ -61,6 +96,11 @@
    38,
    38,
    78
+  ],
+  "caixa_corpo": [
+   34,
+   34,
+   78
   ]
  },
  "guarda_mulher": {
@@ -73,90 +113,195 @@
    38,
    38,
    78
+  ],
+  "caixa_corpo": [
+   34,
+   34,
+   78
   ]
  },
  "cacador": {
   "genero": "h",
   "job": "c2abeef0-694c-4290-b9ff-a2af230d53b4",
-  "estado": "caminhada NE refazendo",
+  "estado": "pronto",
   "escolhido": 7,
   "char": "b177ad39-b24e-4197-a4fa-d836d0071f6f",
-  "obs": "o #7 NAO tem arco na mao: segura um rolo de corda (laco/armadilha) e leva aljava nas costas. No jogo o arco e ferramenta a parte (b34), entra por sobreposicao como a picareta. Caminhada NE do lote1 espetava o rolo pra frente (caixa 54) -> NE refeito; lote1 guardado em caminhada_lote1/"
+  "obs": "o #7 NAO tem arco na mao: segura um rolo de corda (laco/armadilha) e leva aljava nas costas. No jogo o arco e ferramenta a parte (b34), entra por sobreposicao como a picareta. Caminhada NE do lote1 espetava o rolo pra frente (caixa 54) -> NE refeito; lote1 guardado em caminhada_lote1/ | NE refeito 1x | sem arco na mao = correto (arco so com a Oficina)",
+  "caixa": [
+   54,
+   54,
+   74
+  ],
+  "caixa_corpo": [
+   48,
+   48,
+   74
+  ]
  },
  "cacadora": {
   "genero": "m",
-  "job": "2bda7f35-d128-4b48-974d-e2787cce5984",
+  "job": "78b2ad12-3da0-4f78-bf91-894d0f71b6ef",
   "estado": "pronto",
   "job_antigo": "6c7a3d9b-00df-46b7-aa18-f476d52b2e0d",
-  "obs": "1o lote saiu com rosto masculino (serve de variacao de cacador)",
-  "char": "8b8bf714-47f1-41a9-810f-5b4dd5d52429",
+  "obs": "3o lote: SEM arco/aljava (arco so depois da Oficina liberar 'caca de animais'); cesto de frutas. lote2 (com vara/arco nas costas) guardado em com_arco_ref/ como referencia do visual com arco; lote1 = rosto masculino",
+  "char": "8a70c1ac-efa4-4ad1-b6fb-15a8b470acd3",
   "caixa": [
-   42,
-   42,
-   80
-  ]
+   36,
+   36,
+   76
+  ],
+  "caixa_corpo": [
+   34,
+   34,
+   74
+  ],
+  "escolhido": 8,
+  "char_com_arco_ref": "8b8bf714-47f1-41a9-810f-5b4dd5d52429",
+  "job_lote2": "2bda7f35-d128-4b48-974d-e2787cce5984"
  },
  "pesquisador": {
   "genero": "h",
   "job": "29b8b286-513d-4794-9ebb-206831c52964",
-  "estado": "rotacao",
+  "estado": "pronto",
   "escolhido": 0,
-  "char": "20be8a3a-8cf9-4a32-9634-eed53757fcd0"
+  "char": "20be8a3a-8cf9-4a32-9634-eed53757fcd0",
+  "caixa": [
+   32,
+   32,
+   74
+  ],
+  "caixa_corpo": [
+   30,
+   30,
+   74
+  ]
  },
  "pesquisadora": {
   "genero": "m",
   "job": "67d6b673-ba01-46d0-8f3f-dedf4ca5e278",
-  "estado": "rotacao",
+  "estado": "pronto",
   "escolhido": 0,
-  "char": "ece6a9f2-01ed-4f52-894d-9c57bd9ad08e"
+  "char": "ece6a9f2-01ed-4f52-894d-9c57bd9ad08e",
+  "caixa": [
+   32,
+   32,
+   76
+  ],
+  "caixa_corpo": [
+   28,
+   28,
+   76
+  ],
+  "obs": "pose NE da rotacao saiu quase de costas (= N); a caminhada NE virava o rosto (2 tentativas, guardadas em caminhada_lote1/ e caminhada_lote2/). Solucao: caminhada NW animada e NE por espelho"
  },
  "lenhador": {
   "genero": "h",
-  "estado": "rotacao",
+  "estado": "pronto",
   "job": "baed14a2-93f5-47c6-819a-97ee07cfe4f1",
   "corpo": "forte",
   "escolhido": 0,
-  "char": "f6a18428-2edf-4b43-919d-65f7de8338ac"
+  "char": "f6a18428-2edf-4b43-919d-65f7de8338ac",
+  "caixa": [
+   54,
+   54,
+   72
+  ],
+  "caixa_corpo": [
+   36,
+   36,
+   76
+  ]
  },
  "lenhadora": {
   "genero": "m",
-  "estado": "rotacao",
+  "estado": "pronto",
   "corpo": "forte, curva leve",
   "job": "52c8244f",
   "escolhido": 0,
-  "char": "d5f6da71-8492-473a-8d52-cda2f8332f4a"
+  "char": "d5f6da71-8492-473a-8d52-cda2f8332f4a",
+  "caixa": [
+   42,
+   42,
+   74
+  ],
+  "caixa_corpo": [
+   32,
+   32,
+   76
+  ]
  },
  "civil": {
   "genero": "h",
-  "estado": "rotacao",
+  "estado": "pronto",
   "corpo": "magro",
   "job": "bb7a8a84",
   "escolhido": 0,
-  "char": "df8ac588-d322-4329-a42f-fd9f2eee76c4"
+  "char": "df8ac588-d322-4329-a42f-fd9f2eee76c4",
+  "caixa": [
+   36,
+   36,
+   82
+  ],
+  "caixa_corpo": [
+   32,
+   32,
+   82
+  ]
  },
  "civil_mulher": {
   "genero": "m",
-  "estado": "rotacao",
+  "estado": "pronto",
   "corpo": "um pouco cheinha, curva leve",
   "job": "1533e361",
   "escolhido": 1,
-  "char": "13bff093-f91f-4868-9a0d-1f2fe9ee261d"
+  "char": "13bff093-f91f-4868-9a0d-1f2fe9ee261d",
+  "caixa": [
+   40,
+   40,
+   74
+  ],
+  "caixa_corpo": [
+   36,
+   36,
+   74
+  ]
  },
  "cozinheiro": {
   "genero": "h",
-  "estado": "rotacao",
+  "estado": "pronto",
   "job": "30c02894-50b3-4222-bc57-baa66124956f",
   "corpo": "meio gordinho",
   "escolhido": 2,
-  "char": "9740df2e-1e9f-41b4-9322-37c4d9aaca7c"
+  "char": "9740df2e-1e9f-41b4-9322-37c4d9aaca7c",
+  "caixa": [
+   34,
+   34,
+   78
+  ],
+  "caixa_corpo": [
+   30,
+   30,
+   78
+  ]
  },
  "cozinheira": {
   "genero": "m",
-  "estado": "rotacao",
+  "estado": "pronto",
   "corpo": "curva leve",
   "job": "ff409b80-c3b0-448d-99c3-2b21ebc90b5b",
   "escolhido": 6,
   "char": "4db9aa55-ddcb-4847-a2a8-1ab562ac22c1",
-  "obs": "avental cobre o corpo: curva nao aparece em nenhum candidato; #6 = rosto mais suave"
- }
+  "obs": "avental cobre o corpo: curva nao aparece em nenhum candidato; #6 = rosto mais suave",
+  "caixa": [
+   36,
+   36,
+   78
+  ],
+  "caixa_corpo": [
+   32,
+   32,
+   80
+  ]
+ },
+ "_custo": "elenco completo: 1427 -> 993 (434) + cacadora sem arco 27 = 461"
 }

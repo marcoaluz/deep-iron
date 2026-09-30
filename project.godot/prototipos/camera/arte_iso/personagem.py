@@ -38,6 +38,8 @@ def main():
         for i, u in enumerate(urls):
             curl(u, os.path.join(PASTA, "caminhada", d, "%d.png" % i))
     for s, t in (("SE", "SO"), ("NE", "NO")):
+        if t in links["caminhada"] and s not in links["caminhada"]:
+            s, t = t, s     # o desenho de origem é o do lado oeste (pose leste saiu ruim)
         os.makedirs(os.path.join(PASTA, "caminhada", t), exist_ok=True)
         for i in range(4):
             ImageOps.mirror(Image.open(os.path.join(PASTA, "caminhada", s, "%d.png" % i))).save(
