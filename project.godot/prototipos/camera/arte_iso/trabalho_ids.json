@@ -1,0 +1,80 @@
+{
+ "_obs": "animação de trabalho (Prompt 1): v3 com texto, 8 quadros, SE+NE (espelho SO/NO), keep_first_frame=false (menos o minerador, que tem o quadro 0 de referência)",
+ "minerador": {
+  "char": "bb4bd3f2-6661-445c-a546-ffe7bee5d2cc",
+  "anim": "minerar",
+  "grupo": "51a84c74-7041-4f14-b8b0-f7767d44359e",
+  "feito": true
+ },
+ "mineradora": {
+  "char": "982ed841-504b-4ea5-8ea4-ee9f888fdab7",
+  "anim": "minerar",
+  "grupo": "19dd90b4-c9f8-4d22-86f0-6e2b19f05928"
+ },
+ "engenheiro": {
+  "char": "9542d1ef-5035-4a50-bd17-f011dbab16c0",
+  "anim": "construir",
+  "grupo": "6cfe0412-65b9-481f-906c-b4bc7f1ccb0d"
+ },
+ "engenheira": {
+  "char": "e221cda0-b59f-42f3-95ed-c26bb83189e7",
+  "anim": "construir",
+  "grupo": "2124e6e6-724f-476c-bbb3-3814e2097e1d",
+  "obs": "NE refeito 1x (quase não mexia)"
+ },
+ "guarda": {
+  "char": "bda3ad85-c260-4af3-b307-c833dce62da8",
+  "anim": "atacar",
+  "grupo": "64b059b9-dcd7-4bd7-800d-a2d431538476",
+  "obs": "1a tentativa v3 ruim (efeito azul, virava de frente) -> atacar_lote1/; esqueleto cross-punch testado (atacar_esq): soco sem arma, fraco; refeito v3 com texto reforçado"
+ },
+ "guarda_mulher": {
+  "char": "57b6ee36-f3b5-40b9-8b2f-4dc37677bcac",
+  "anim": "atacar",
+  "grupo": "19deec9c-26e0-4cb6-9b5a-69599feacdac",
+  "obs": "SE bom; NE virava de lado -> refeito (atacar_lote1/ guarda a 1a)"
+ },
+ "medico": {
+  "char": "cb0945b1-e43e-4301-b197-ae0a1be41014",
+  "anim": "atender",
+  "grupo": "475edef9-7d46-4e93-bf44-f21479c94671"
+ },
+ "medica": {
+  "char": "af135e1a-771f-4127-811c-44c66ce3f549",
+  "anim": "atender",
+  "grupo": "45ea9cad-b1db-4dad-929b-1efc54c5f6fc"
+ },
+ "cozinheiro": {
+  "char": "9740df2e-1e9f-41b4-9322-37c4d9aaca7c",
+  "anim": "cozinhar",
+  "grupo": "ef618b63-2b8d-4228-9897-453fdfb5d000",
+  "obs": "1a: panela+vapor apesar do pedido, NE com balde -> cozinhar_lote1/; refazer aceitando a panela no chão, sem vapor"
+ },
+ "cozinheira": {
+  "char": "4db9aa55-ddcb-4847-a2a8-1ab562ac22c1",
+  "anim": "cozinhar",
+  "grupo": "bb0f8a25-c16a-433d-833d-03dcf69acba4",
+  "obs": "1a: objeto azulado e NE virava de frente -> cozinhar_lote1/; refazer igual ao cozinheiro"
+ },
+ "cacador": {
+  "char": "b177ad39-b24e-4197-a4fa-d836d0071f6f",
+  "anim": "cacar",
+  "grupo": "8ef171c1-3cd0-4905-85dd-c244b36b4387",
+  "obs": "bom: arco só nesta animação (liberado pela Oficina)"
+ },
+ "cacadora": {
+  "char": "8a70c1ac-efa4-4ad1-b6fb-15a8b470acd3",
+  "anim": "cacar",
+  "grupo": "e6ec82dc-7308-4d7e-8115-5e57f91e9130"
+ },
+ "lenhador": {
+  "char": "f6a18428-2edf-4b43-919d-65f7de8338ac",
+  "anim": "cortar",
+  "grupo": "7c920648-935a-4e71-a577-33500b8cce33"
+ },
+ "lenhadora": {
+  "char": "d5f6da71-8492-473a-8d52-cda2f8332f4a",
+  "anim": "cortar",
+  "grupo": "c7c4258f-0681-461a-9dc4-59339d2682ee"
+ }
+}

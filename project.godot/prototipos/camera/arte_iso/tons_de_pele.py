@@ -9,13 +9,12 @@ no PixelLab: no jogo isso vira um shader/tabela de troca de cor por ipezinho.
 import sys, colorsys
 from PIL import Image
 
-# rampas (escuro -> claro), no mesmo espírito "gasto" da paleta do jogo
-RAMPAS = {
-    "clara": [(92, 58, 48), (150, 100, 80), (196, 146, 118), (226, 184, 152)],
-    "parda": [(70, 42, 32), (118, 76, 54), (160, 110, 78), (192, 146, 104)],
-    "negra": [(40, 24, 20), (70, 44, 34), (102, 66, 48), (132, 92, 66)],
-}
-LUM_PELE = (0.22, 0.62)   # faixa de luminosidade da pele nos sprites gerados (sombra -> luz)
+# rampas (escuro -> claro), no mesmo espírito "gasto" da paleta do jogo: fonte única em
+# paletas_pele.json (o jogo lê o mesmo arquivo na integração)
+import json as _json, os as _os
+_P = _json.load(open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "paletas_pele.json"), encoding="utf-8"))
+RAMPAS = {k: [tuple(c) for c in v] for k, v in _P["rampas"].items()}
+LUM_PELE = tuple(_P["luminosidade_da_pele"])   # faixa de luminosidade da pele (sombra -> luz)
 
 
 def is_skin(r, g, b):

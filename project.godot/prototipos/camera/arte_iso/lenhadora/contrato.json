@@ -2,7 +2,7 @@
  "caixa": [
   42,
   42,
-  74
+  71
  ],
  "pixels_fora": 2,
  "direcoes": {
@@ -46,7 +46,15 @@
  "caixa_corpo": [
   32,
   32,
-  76
+  74
  ],
- "caixa_corpo_pixels_fora": 96
+ "caixa_corpo_pixels_fora": 91,
+ "corte_altura": {
+  "linhas": 3,
+  "acima_do_pe": [
+   10,
+   17,
+   24
+  ]
+ }
 }
