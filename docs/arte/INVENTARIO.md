@@ -59,7 +59,7 @@ prompts 0–31).
 |---|---|---|---|---|---|---|
 | Lumívoro (invasor) | 16–17 | falta | — | 4 | andar, atacar, morrer (sóbrio) | ~35 |
 | Ferrugento (invasor) | 16–17 | falta | — | 4 | andar, atacar, morrer | ~35 |
-| Robô antigo GIGANTE (218 px, ~80% da casa): achado + 3 estágios de conserto (deitado, mesma âncora) + ativo | 5 | **gerado** | 4 estados parados + retrato + ícone | 8 paradas, 4 andando | andar, atacar, dano, desligar/derrubado | ~400 (feito) |
+| Robô antigo GIGANTE (218 px, ~80% da casa): achado + arrastado + 3 estágios de conserto (deitado, mesma âncora) + ativo; fluxo em prompt05/FLUXO_ROBO.md | 5 | **gerado** | 4 estados parados + retrato + ícone | 8 paradas, 4 andando | andar, atacar, dano, desligar/derrubado | ~425 (feito) |
 | Coelho + toca (coelho fora / só orelhas / toca vazia) | 15 | falta | 3 estados | — | — | ~45 |
 
 ## 5. Prédios (cada construível: obra_1 · obra_2 · obra_3 · pronto; upgrade com obra entre níveis)

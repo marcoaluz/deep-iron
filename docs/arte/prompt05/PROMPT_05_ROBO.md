@@ -34,16 +34,21 @@ O robô de 84 px (`robo/candidatos/b_1.png`) serviu de referência de design pro
 | dano | 6 | v3: tranco pra trás e volta à guarda |
 | desligar / derrubado | 8 | v3: perde a força, cai de joelhos e apoia as mãos; **o último quadro fica parado** (derrubado até de manhã, `stunned` no `robo.gd`). Sem explosão. |
 
-**Deitado: 4 estados parados**, no mesmo quadro (288×216) e com a **mesma âncora**. Trocam no
+**Fluxo de jogo decidido pelo Marco** (exploração do pesquisador → 5 NPCs arrastam até o
+portão → conserto em 3 estágios com itens → ronda de dia e entrada à noite; debuff no guarda):
+`FLUXO_ROBO.md`, pra integração.
+
+**Deitado: 5 estados parados**, no mesmo quadro (288×216) e com a **mesma âncora**. Trocam no
 lugar, como a obra de um prédio. A sobreposição com o robô base é de 96–100%, sem pulo.
 
 | Estado | No jogo (`robo.gd`) | Desenho |
 |---|---|---|
-| `achado` | `found`, no fundo da mina | quebrado: antebraço arrancado com cabos, ombreira caída, peito aberto, entulho nas pernas |
-| `conserto_1` | `base` / conserto 0–33% | limpo na Oficina, ainda desmontado; lona com peças e caixote ao lado |
-| `conserto_2` | conserto 33–66% | braço e ombreira no chão, prontos pra voltar; placas novas, caixa de ferramentas, chaves, martelo, cabo |
-| `conserto_3` | conserto 66–100% | montado, remendos de cobre, cabos do peito até uma bateria |
-| ativo | `active` | levanta: passa pra arte em pé |
+| `achado` | achado na exploração | quebrado: antebraço arrancado com cabos, ombreira caída, peito aberto, entulho nas pernas |
+| `arrastado` | 5 NPCs arrastam (corda por código) | igual, sem entulho, amarrado com cordas no peito, tornozelos e braço |
+| `conserto_1` | parado perto do portão / estágio 1 | ainda desmontado; lona com peças e caixote ao lado |
+| `conserto_2` | estágio 2 | braço e ombreira no chão, prontos pra voltar; placas novas, caixa de ferramentas, chaves, martelo, cabo |
+| `conserto_3` | estágio 3 (último) | montado, remendos de cobre, cabos do peito até uma bateria |
+| ativo | levanta | passa pra arte em pé |
 
 **Retrato** (96×96, busto com o olho ciano), pro Prompt 23, e **ícone** de 32 px, tirado do
 retrato por script (`itens/icones/robo.png`).
@@ -56,7 +61,8 @@ código.
 | Arquivo | O que é |
 |---|---|
 | `prancha_robo.png` | escala (casa × minerador × robô), 8 direções, retrato e ícone, 4 estados, animações |
-| `robo_estados.gif` | achado → conserto 1, 2, 3 → em pé |
+| `robo_estados.gif` | achado → arrastado → estágios 1, 2, 3 → em pé |
+| `FLUXO_ROBO.md` | o fluxo de jogo do robô e o que muda no código |
 | `robo_animacoes.gif` | andar, atacar, dano e desligar (SE e NE) |
 
 Gerado por `arte_iso/robo/prancha_robo.py docs/arte/prompt05`. As folhas de revisão quadro a
@@ -64,7 +70,7 @@ quadro ficam em `robo/<anim>_folha.png` (`folha_robo.py`).
 
 ## Custo
 
-**~400 gerações**, um pouco acima do previsto por causa do tamanho e das refações:
+**~425 gerações**, um pouco acima do previsto por causa do tamanho e das refações:
 
 | Item | Gerações |
 |---|---|
@@ -72,7 +78,7 @@ quadro ficam em `robo/<anim>_folha.png` (`folha_robo.py`).
 | Base gigante (2 versões) + 8 direções | 45 |
 | Animações (andar ×3 tentativas, atacar, dano, desligar, 2 refações de SE) | ~90 |
 | Robô deitado + pé completado | 70 |
-| 4 estados + 2 ombreiras completadas + 2 estados refeitos | ~200 |
+| 5 estados + 2 ombreiras completadas + 2 estados refeitos | ~225 |
 | Retrato | 20 |
 
 Um personagem desse tamanho custa **8 gerações por direção** em cada animação v3 (contra 2 do

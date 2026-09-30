@@ -76,4 +76,7 @@ for i in range(n):
             j = min(i, q["quadros"] - 1) if a == "desligar" else i % q["quadros"]
             im = Image.open("%s/%s/%d.png" % (a, dr, j)).convert("RGBA")
             im = im.crop((int(ax - CW / 2), int(ay - CH + 8), int(ax + CW / 2), int(ay + 8)))
-            g.paste(im, (k * CW, 16 + r_ * C
+            g.paste(im, (k * CW, 16 + r_ * CH), im)
+    fr.append(g)
+fr[0].save(os.path.join(out, "robo_animacoes.gif"), save_all=True, append_images=fr[1:], duration=150, loop=0)
+print("ok")

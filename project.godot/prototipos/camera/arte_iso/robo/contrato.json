@@ -60,4 +60,16 @@
    "deitado_inteiro_v3": [
     18,
     4,
-    2
+    254,
+    203
+   ],
+   "arrastado": [
+    18,
+    4,
+    269,
+    203
+   ]
+  }
+ },
+ "fluxo": "docs/arte/prompt05/FLUXO_ROBO.md"
+}
