@@ -236,6 +236,13 @@ quando a roupa muda a silhueta inteira (trajes, casaco).
   principal (`vegetacao/vegetacao.py so_o_maior`).
 - **Obra e estágios de prédio:** gerar no mesmo quadro do pronto, com o pronto como
   referência. `predio.py caixa` confere a caixa (busca binária, ~40 s por prédio).
+- **Obra barata (Prompt 11 em diante):** só a obra 2 (esqueleto) vem da IA. A obra 1 é a faixa
+  de baixo do esqueleto, e a obra 3 é o pronto embaixo com o esqueleto em cima
+  (`arte_iso/obras.py`, corte que acompanha a base 2:1).
+- **Etapas por peça** (escavadeira, escudo): esqueleto/fundação pela IA; cada etapa seguinte
+  cola a região da peça tirada do pronto (`maquinas13.py`). Vão aberto no chão → inpaint.
+- **Muro fino:** gerar com a guia de parede fina no eixo i; os níveis seguintes usam o
+  primeiro segmento aprovado como referência de ORIENTAÇÃO (sem isso saem "de frente").
 - **Personagem gigante** (robô, 218 px, Prompt 5): base `create_image_pro` ~176×224 (1
   candidato, 20); rotação v3 custa 5; cada animação v3 custa **8 por direção**.
 - **Estágios de um objeto deitado/parado** (achado, conserto): gerar com o desenho base como

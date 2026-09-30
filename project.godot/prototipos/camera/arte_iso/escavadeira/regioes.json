@@ -1,0 +1,7 @@
+{
+ "_obs": "regiões (x0,y0,x1,y1) das peças no quadro 330x470 do pronto; cada etapa do jogo acrescenta a peça por cima do esqueleto (escavadeira.gd PART_NAMES)",
+ "motor": [[138, 310, 202, 368]],
+ "hidraulica": [[194, 236, 238, 334], [238, 256, 294, 320]],
+ "cabine": [[32, 248, 98, 318]],
+ "broca": [[152, 146, 188, 334]]
+}

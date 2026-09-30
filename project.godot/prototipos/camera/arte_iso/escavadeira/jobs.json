@@ -1,0 +1,14 @@
+{
+ "_obs": "Prompt 13",
+ "guia": "62cbc5d9-4453-4bff-a5d4-a030985cb1a1",
+ "pronto": "edceeec9-25df-4cba-9d25-5c996cdec2d1",
+ "reatores": "4a15ac2f-454c-47ec-b5b2-925e271558c0",
+ "estrutura": "2c88ab5b-9ecf-4d4f-8a6d-7fdfad8ed825",
+ "reatores_escolhidos": {
+  "vapor": 1,
+  "diesel": 5,
+  "cristal": 6,
+  "solar": 10,
+  "fusao": 13
+ }
+}

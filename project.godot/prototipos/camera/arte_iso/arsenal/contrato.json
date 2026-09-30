@@ -1,0 +1,22 @@
+{
+ "ancora_no_quadro": [
+  135.0,
+  220.0
+ ],
+ "caixas": {
+  "pronto": {
+   "pegada_rel_ancora": [
+    -75.0,
+    -55.0,
+    71.0,
+    49.0
+   ],
+   "altura": 182.0,
+   "pegada": [
+    146.0,
+    104.0
+   ],
+   "fora": 3
+  }
+ }
+}

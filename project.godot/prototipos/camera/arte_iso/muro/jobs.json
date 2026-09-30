@@ -3,5 +3,14 @@
  "guia_muro_i": "https://api.pixellab.ai/mcp/pixel-tools/88eb442a-71e1-4101-8abe-b13d3e773922/assets/south/full.png",
  "guia_muro_j": "https://api.pixellab.ai/mcp/pixel-tools/c2ce78d0-7a5a-4cae-99ca-a7fc5109e678/assets/south/full.png",
  "guia_portao": "https://api.pixellab.ai/mcp/pixel-tools/db76085b-ef62-4b76-8d5a-37d86bdd8209/assets/south/full.png",
- "muro_1_i": "e20f87c3-4a14-492f-acd3-e93ff5d607c6"
+ "muro_1_i": "e20f87c3-4a14-492f-acd3-e93ff5d607c6",
+ "muro_2": "3a2f1c0f-de95-4ec1-8224-c2559895cb69",
+ "muro_3": "96d02020-1ed9-4c9f-ad9f-e309eb6c90bc",
+ "portao_quebrado": "97b77cd1-41cb-465a-a91f-0938e465c2c7",
+ "portao_1": "eeba13b3-4334-43f9-8e4a-6a65e17933f8",
+ "portao_2": "836775ae-2203-4a92-8599-a5d2ff24c3f3",
+ "portao_3": "15f4d50d-6fc4-4aa2-b084-ae14f6902d9f",
+ "muro_2_v2": "0ba7d73e-7f7b-4652-9ccd-ec86f82500c9",
+ "muro_3_v2": "df8e7dd3-4e48-4d6f-9314-902b474e5c4d",
+ "_nota": "muro_2/3 v1 saíram de frente (não encaixam na diagonal); v2 com a paliçada n1 c0 como referência de orientação"
 }

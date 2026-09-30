@@ -72,26 +72,26 @@ prompts 0–31).
 | Casa nível 2 e 3 | 10 | **gerado** (`casa/nivel_2.png`, `nivel_3.png`) | upgrade por cima da casa aprovada | 80 (feito) |
 | Armazém | 10 | **gerado** (`armazem/`) | obra 1–3 + pronto; lotação vazio/médio/cheio (sobreposição) | 100 (feito) |
 | Oficina (forja; hoje vem com a vila) | 10 | **gerado** (`oficina/`) | obra 1–3 + pronto; forja acesa = luz no código | 100 (feito) |
-| Arsenal | 12 | falta | obra 1–3 + pronto; armas no suporte + forja trabalhando (sobreposição) | ~120 |
-| Taverna + ampliação | 11 | falta | obra 1–3 + pronto nív. 1 + obra de ampliação + nív. 2; luz = código | ~150 |
-| Enfermaria + ampliação | 11 | falta | igual à taverna | ~150 |
-| Laboratório (+ satélite no telhado, pesquisa "Satélite") | 12 | falta | obra 1–3 + pronto; satélite em sobreposição | ~120 |
-| **Cozinha** (antes "Comedouro"; renomear no jogo na integração) | 11 | falta | obra 1–3 + pronto; comida cheia/metade/vazia (sobreposição) | ~110 |
-| Horta (+ hidroponia, pesquisa) | 9 | falta | obra 1–3 + pronto; plantação em 3 estágios (sobreposição) | ~110 |
-| Parque | 11 | falta | obra 1–3 + pronto | ~100 |
-| Campo de treino | 12 | falta | obra 1–3 + pronto | ~100 |
-| Vestiário | 12 | falta | obra 1–3 + pronto | ~100 |
-| Coletor de madeira = **máquina grande de cortar árvores**, estragada → consertada (`MAPA_VISAO.md`) | 13 | falta | quebrada + obra 1–3 + pronta; produzindo = luz/partícula no código | ~100 |
-| Barricada (em pé/deitada = espelho) | 12 | falta | obra 1–3 + 4 níveis de material + obra entre níveis | ~200 |
-| **Muro e portão da vila** (única entrada): portão quebrado → níveis 1, 2, 3 (upgrade com obra); muro modular com dano (`MAPA_VISAO.md`) | 12 | falta | 3 níveis + quebrado + dano | ~150 |
-| **Fundição** (prédio novo: pedra → carvão, ferro → aço) | 12 | falta | obra 1–3 + pronto; fornalha acesa = luz no código | ~100 |
+| Arsenal (criação de armas e armaduras) | 12 | **gerado** (`arsenal/`) | obra 1–3 + pronto | ~50 (feito) |
+| Taverna + ampliação | 11 | **gerado** (`taverna/`) | obra 1–3 + pronto + ampliada (2º andar) | ~90 (feito) |
+| Enfermaria + ampliação | 11 | **gerado** (`enfermaria/`) | obra 1–3 + pronto + ampliada | ~90 (feito) |
+| Laboratório (+ satélite no telhado) | 12 | **gerado** (`laboratorio/`) | obra 1–3 + pronto; satélite (Prompt 13) | ~50 (feito) |
+| **Cozinha** (antes "Comedouro"; renomear no jogo na integração) | 11 | **gerado** (`cozinha/`) | obra 1–3 + pronto; vazia / com comida | ~50 (feito) |
+| Horta (+ hidroponia, pesquisa) | 9/11 | **gerado** (canteiros no Prompt 9; cerca, galpão, espantalho, estufa no 11) | 6 estágios + estruturas | ~40 (feito) |
+| Parque | 11 | **gerado** (`parque/`) | obra 1–3 + coreto (resto montado com o Prompt 9) | ~40 (feito) |
+| Campo de treino | 12 | **gerado** (`campo_treino/`) | obra 1–3 (script) + pronto | ~25 (feito) |
+| Vestiário | 12 | **gerado** (`vestiario/`) | obra 1–3 + pronto (3 trajes pendurados) | ~50 (feito) |
+| Coletor de madeira = **máquina grande de cortar árvores** | 13 | **gerado** | quebrada → consertada | ~50 (feito) |
+| Barricada / Muro modular | 12 | **gerado** (`muro/final/`) | 3 níveis × reta i/j, canto, ponta, danificada, brecha | ~100 (feito) |
+| **Portão da vila** (única entrada) | 12 | **gerado** (`muro/final/`) | quebrado + níveis 1, 2, 3 | ~80 (feito) |
+| **Fundição** (pedra → carvão, ferro → aço) | 12 | **gerado** (`fundicao/`) | obra 1–3 + pronto | ~50 (feito) |
 | Centro da Vila | 10 | **gerado** (`centro/`) | 5 estágios + 4 obras entre estágios; caixas ≤ 4 px fora | ~280 (feito) |
-| Escavadeira (máquina em camadas) | 13 | falta | base, estrutura, hidráulica, motor, broca, cabine (luz = código) + 5 reatores (Caldeira + 4) + obra do reator | ~360 |
-| Elevador (ruína → obra → pronto) | 13 | falta | ruína, obra, pronto | ~100 |
-| Elevador do abismo | 13 | falta | obra + pronto | ~75 |
-| Escudo solar | 13 | falta | 5 estágios de montagem (os próprios `frame 0–4`) | ~125 |
-| Holofotes (pesquisa, exclusiva com o satélite) | 13 | falta | postes com luz | ~25 |
-| Coletor de minério (reservado, "em breve") | 13 | falta | obra 1–3 + pronto | ~100 |
+| Escavadeira (plataforma de perfuração) + 5 reatores | 13 | **gerado** (`final_maquinas/`) | 5 etapas (peças) + animação perfurando + 5 reatores | ~105 (feito) |
+| Elevador (ruína → pronto) + gaiola separada | 13 | **gerado** | ruína, pronto, gaiola | ~50 (feito) |
+| Elevador do abismo | 13 | **gerado** (o elevador escurecido) | ruína, pronto | 0 |
+| Escudo solar | 13 | **gerado** | 4 etapas do jogo (fundação, bobinas, núcleo, emissor); cúpula = efeito (Prompt 18) | ~80 (feito) |
+| Holofotes + satélite (4 ângulos, girando) | 13 | **gerado** | — | ~25 (feito) |
+| Coletor de minério (reservado, "em breve") | 13 | **gerado** (pronto) | pronto | 25 (feito) |
 | Escola (reservado, "em breve") | 31 | falta | obra 1–3 + pronto | ~100 |
 
 ## 6. Terreno (superfície e mina, por nível)
@@ -185,8 +185,8 @@ prompts 0–31).
 
 ## Plano de crédito
 
-**Atualização 2026-09-30 (fim do Prompt 10):** saldo do ciclo **2.748** (recarga de +5.000 em
-2026-10-30). Casaco por função (~600), robô gigante (~425) terreno da superfície (~215) e da mina (~200), jazidas (~185), vegetação (~230) e prédios da vila (~500) já descontados. O que falta dos
+**Atualização 2026-09-30 (fim do Prompt 13):** saldo do ciclo **1.758** (recarga de +5.000 em
+2026-10-30). Casaco por função (~600), robô gigante (~425) terreno da superfície (~215) e da mina (~200), jazidas (~185), vegetação (~230), prédios da vila (~500) e prompts 11–13 (~990) já descontados. Com 1.758, dá pros prompts 14–15 (~450) e parte do 16–18; o resto espera a recarga de 30/10. O que falta dos
 prompts 6–27 é estimado em ~4.000 (ver resposta de planejamento). Cabe no saldo, com pouca
 folga pra refações; o Prompt 31 fica pra depois da recarga.
 
