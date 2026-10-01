@@ -140,7 +140,12 @@ func _process(delta: float) -> bool:
 		check(tav[0] == mor.taverna_credits and tav[1] == mor.taverna_wood and str(tav[2]) == str(mor.taverna_bonus) and tav[3] == mor.taverna_build_time, "taverna continua igual")
 		check(mor.taverna_block_reason() == "", "taverna segue construível como antes")
 		# segundo parque + save/load
+		# (Prompt 29) o lugar sai do posicionador DO PARQUE aberto (pegada do desenho novo e os
+		# bloqueios de agora, com o 1º parque); antes usava a pegada e os bloqueios que tinham ficado
+		var plc = g("house_placer")
+		plc.begin(func(_q): return false, mor.PARQUE_TEXTURE, 1, "o parque", {})
 		var q2 := spot_near(hub.global_position + Vector2(0, 0), 150.0, hub.house_radius() - 5.0)
+		plc.cancel()
 		var p2 = mor.spawn_park(q2)
 		set_meta("both", [mor.parks()[0].global_position, p2.global_position])
 		root.get_node("SaveManager").save_game("teste")

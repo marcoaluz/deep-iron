@@ -9,6 +9,8 @@ extends Area2D
 ## Só interage com a estação quem "está trabalhando nela" (can_work_at), então
 ## um ipezinho passando por perto a caminho de outro lugar não come/minera sem querer.
 
+const IsoArt := preload("res://scripts/iso/iso_art.gd")
+
 @export_group("Slots")
 @export var slot_count: int = 3
 ## Raio (elíptico) onde ficam os slots, em pixels.
@@ -36,7 +38,9 @@ func _ready() -> void:
 	_slot_owners.resize(slot_count)
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
-	if auto_fit_area:
+	# Prompt 29: com a arte nova os slots vão pra beira da pegada do desenho; a área cresce até
+	# cobrir todos (senão quem está no slot não "chega" na estação), mesmo sem o ajuste automático
+	if auto_fit_area or IsoArt.base_rect(self).has_area():
 		_fit_area()
 
 
@@ -45,13 +49,19 @@ func _fit_area() -> void:
 	if shape_node == null or not (shape_node.shape is CircleShape2D):
 		return
 	var circle := shape_node.shape.duplicate() as CircleShape2D
-	circle.radius = maxf(slot_radius.x, slot_radius.y) + area_margin
+	var sr := _slot_ellipse()
+	var need := sr.position.length() + maxf(sr.size.x, sr.size.y) + area_margin
+	circle.radius = need if auto_fit_area else maxf(circle.radius, need)
 	shape_node.shape = circle
 
 
 ## Contorno (em coordenadas globais) que a malha de navegação deve contornar.
 func get_obstacle_outline() -> PackedVector2Array:
 	var outline := PackedVector2Array()
+	var art := IsoArt.base_rect(self)  # Prompt 29: a pegada do desenho novo (fundo de verdade)
+	if art.has_area() and obstacle_size.x > 0.0:
+		outline.append_array([art.position, Vector2(art.end.x, art.position.y), art.end, Vector2(art.position.x, art.end.y)])
+		return outline
 	if obstacle_size.x <= 0.0 or obstacle_size.y <= 0.0:
 		return outline
 	var c := global_position + obstacle_offset
@@ -147,6 +157,17 @@ func release_slot(worker: Node) -> void:
 			_slot_owners[i] = null
 
 
+## Elipse que contém os slots: centro (relativo ao pé) e raios. Com a arte nova (Prompt 29) os
+## slots ficam na beira da pegada do desenho (+ folga); a elipse passa pelos cantos dela (×√2),
+## pra área de interação e o ponto de espera cobrirem todos.
+func _slot_ellipse() -> Rect2:
+	var art := IsoArt.base_rect(self) if is_inside_tree() else Rect2()
+	if not art.has_area():
+		return Rect2(Vector2.ZERO, slot_radius)
+	var half := (art.size * 0.5 + Vector2.ONE * IsoArt.FRONT_GAP) * 1.4143
+	return Rect2(art.get_center() - global_position, Vector2(maxf(slot_radius.x, half.x), maxf(slot_radius.y, half.y)))
+
+
 func get_slot_position(i: int) -> Vector2:
 	var angle: float
 	if slot_count <= 1:
@@ -156,6 +177,13 @@ func get_slot_position(i: int) -> Vector2:
 	else:
 		var start := slot_arc_center_deg - slot_arc_deg * 0.5
 		angle = deg_to_rad(start + slot_arc_deg * float(i) / float(slot_count - 1))
+	var art := IsoArt.base_rect(self)
+	if art.has_area():
+		# Prompt 29: na direção do slot, logo fora da parede (o retângulo da pegada + folga)
+		var dir := Vector2(cos(angle) * slot_radius.x, sin(angle) * slot_radius.y).normalized()
+		var half := art.size * 0.5 + Vector2.ONE * IsoArt.FRONT_GAP
+		var k := minf(half.x / maxf(absf(dir.x), 0.001), half.y / maxf(absf(dir.y), 0.001))
+		return art.get_center() + dir * k
 	return global_position + Vector2(cos(angle) * slot_radius.x, sin(angle) * slot_radius.y)
 
 
@@ -164,4 +192,5 @@ func get_wait_position(worker: Node2D) -> Vector2:
 	var dir := worker.global_position - global_position
 	if dir.length_squared() < 1.0:
 		dir = Vector2.DOWN
-	return global_position + dir.normalized() * (maxf(slot_radius.x, slot_radius.y) + 34.0)
+	var e := _slot_ellipse()
+	return global_position + e.position + dir.normalized() * (maxf(e.size.x, e.size.y) + 34.0)

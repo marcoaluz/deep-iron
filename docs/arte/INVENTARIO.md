@@ -68,28 +68,28 @@ prompts 0–31).
 
 | Item | Prompt | Status | Estágios / estados | Gerações |
 |---|---|---|---|---|
-| Casa | 10 | **aprovado** | obra 1–3 + pronto + 3 variações (v1–v3) | 175 (feito) |
-| Casa nível 2 e 3 | 10 | **gerado** (`casa/nivel_2.png`, `nivel_3.png`) | upgrade por cima da casa aprovada | 80 (feito) |
-| Armazém | 10 | **gerado** (`armazem/`) | obra 1–3 + pronto; lotação vazio/médio/cheio (sobreposição) | 100 (feito) |
-| Oficina (forja; hoje vem com a vila) | 10 | **gerado** (`oficina/`) | obra 1–3 + pronto; forja acesa = luz no código | 100 (feito) |
-| Arsenal (criação de armas e armaduras) | 12 | **gerado** (`arsenal/`) | obra 1–3 + pronto | ~50 (feito) |
-| Taverna + ampliação | 11 | **gerado** (`taverna/`) | obra 1–3 + pronto + ampliada (2º andar) | ~90 (feito) |
-| Enfermaria + ampliação | 11 | **gerado** (`enfermaria/`) | obra 1–3 + pronto + ampliada | ~90 (feito) |
-| Laboratório (+ satélite no telhado) | 12 | **gerado** (`laboratorio/`) | obra 1–3 + pronto; satélite (Prompt 13) | ~50 (feito) |
-| **Cozinha** (antes "Comedouro"; renomear no jogo na integração) | 11 | **gerado** (`cozinha/`) | obra 1–3 + pronto; vazia / com comida | ~50 (feito) |
+| Casa | 10 | **integrado** | obra 1–3 + pronto + 3 variações (v1–v3) | 175 (feito) |
+| Casa nível 2 e 3 | 10 | **gerado** (`casa/nivel_2.png`, `nivel_3.png`; no jogo não há nível de casa: guardadas em `assets/game/iso/predios/casa/`) | upgrade por cima da casa aprovada | 80 (feito) |
+| Armazém | 10 | **integrado** (lotação: sobreposição ainda não feita) | obra 1–3 + pronto; lotação vazio/médio/cheio (sobreposição) | 100 (feito) |
+| Oficina (forja; hoje vem com a vila) | 10 | **integrado** | obra 1–3 + pronto; forja acesa = luz no código | 100 (feito) |
+| Arsenal (criação de armas e armaduras) | 12 | **integrado** | obra 1–3 + pronto | ~50 (feito) |
+| Taverna + ampliação | 11 | **integrado** | obra 1–3 + pronto + ampliada (2º andar) | ~90 (feito) |
+| Enfermaria + ampliação | 11 | **integrado** | obra 1–3 + pronto + ampliada | ~90 (feito) |
+| Laboratório (+ satélite no telhado) | 12 | **integrado** (o satélite ainda não) | obra 1–3 + pronto; satélite (Prompt 13) | ~50 (feito) |
+| **Cozinha** (antes "Comedouro"; renomear no jogo na integração) | 11 | **integrado** (o nome no jogo ainda é "Comedouro") | obra 1–3 + pronto; vazia / com comida | ~50 (feito) |
 | Horta (+ hidroponia, pesquisa) | 9/11 | **gerado** (canteiros no Prompt 9; cerca, galpão, espantalho, estufa no 11) | 6 estágios + estruturas | ~40 (feito) |
-| Parque | 11 | **gerado** (`parque/`) | obra 1–3 + coreto (resto montado com o Prompt 9) | ~40 (feito) |
-| Campo de treino | 12 | **gerado** (`campo_treino/`) | obra 1–3 (script) + pronto | ~25 (feito) |
-| Vestiário | 12 | **gerado** (`vestiario/`) | obra 1–3 + pronto (3 trajes pendurados) | ~50 (feito) |
-| Coletor de madeira = **máquina grande de cortar árvores** | 13 | **gerado** | quebrada → consertada | ~50 (feito) |
+| Parque | 11 | **integrado** (o coreto) | obra 1–3 + coreto (resto montado com o Prompt 9) | ~40 (feito) |
+| Campo de treino | 12 | **integrado** | obra 1–3 (script) + pronto | ~25 (feito) |
+| Vestiário | 12 | **integrado** | obra 1–3 + pronto (3 trajes pendurados) | ~50 (feito) |
+| Coletor de madeira = **máquina grande de cortar árvores** | 13 | **integrado** (pronto; obra pelo corte) | quebrada → consertada | ~50 (feito) |
 | Barricada / Muro modular | 12 | **gerado** (`muro/final/`) | 3 níveis × reta i/j, canto, ponta, danificada, brecha | ~100 (feito) |
-| **Portão da vila** (única entrada) | 12 | **gerado** (`muro/final/`) | quebrado + níveis 1, 2, 3 | ~80 (feito) |
+| **Portão da vila** (única entrada) | 12 | **integrado** (espelhado pro eixo da paliçada) | quebrado + níveis 1, 2, 3 | ~80 (feito) |
 | **Fundição** (pedra → carvão, ferro → aço) | 12 | **gerado** (`fundicao/`) | obra 1–3 + pronto | ~50 (feito) |
-| Centro da Vila | 10 | **gerado** (`centro/`) | 5 estágios + 4 obras entre estágios; caixas ≤ 4 px fora | ~280 (feito) |
-| Escavadeira (plataforma de perfuração) + 5 reatores | 13 | **gerado** (`final_maquinas/`) | 5 etapas (peças) + animação perfurando + 5 reatores | ~105 (feito) |
+| Centro da Vila | 10 | **integrado** | 5 estágios + 4 obras entre estágios; caixas ≤ 4 px fora | ~280 (feito) |
+| Escavadeira (plataforma de perfuração) + 5 reatores | 13 | **integrado** (peças como camadas; animação perfurando ainda não) | 5 etapas (peças) + animação perfurando + 5 reatores | ~105 (feito) |
 | Elevador (ruína → pronto) + gaiola separada | 13 | **gerado** | ruína, pronto, gaiola | ~50 (feito) |
 | Elevador do abismo | 13 | **gerado** (o elevador escurecido) | ruína, pronto | 0 |
-| Escudo solar | 13 | **gerado** | 4 etapas do jogo (fundação, bobinas, núcleo, emissor); cúpula = efeito (Prompt 18) | ~80 (feito) |
+| Escudo solar | 13 | **integrado** (as 4 etapas) | 4 etapas do jogo (fundação, bobinas, núcleo, emissor); cúpula = efeito (Prompt 18) | ~80 (feito) |
 | Holofotes + satélite (4 ângulos, girando) | 13 | **gerado** | — | ~25 (feito) |
 | Coletor de minério (reservado, "em breve") | 13 | **gerado** (pronto) | pronto | 25 (feito) |
 | Escola (reservado, "em breve") | 31 | falta | obra 1–3 + pronto | ~100 |
@@ -141,7 +141,7 @@ prompts 0–31).
 | Trilhos + vagonete (vazio/cheio), caixotes, barris, sacos, sucata, pneus, corrente, corda | 14 | **gerado** | — | ~40 (feito) |
 | **Trilho com vagonete da boca da mina até o Armazém da pedreira** (aceito, `MAPA_VISAO.md`) | 14 / 27 | falta (trilho pronto; falta o vagonete) | incluído |
 | **Guindaste de madeira da pedreira** (aceito) | 14 | **gerado** | — | 20 (feito) |
-| **Cerca de estacas** (aceito) | 12/11 | **gerado** (paliçada do muro + cerca da horta) | — | 0 |
+| **Cerca de estacas** (aceito) | 12/11 | paliçada **integrada** (Prompt 29 parte 2); cerca da horta **gerada** | — | 0 |
 | **Vila em 2–3 terraços de pedreira** com escadas entre eles (aceito) | 27 | montagem (relevo pronto) | 0 |
 | Explosivos (pesquisa), antena do rádio (pesquisa "Rádio da vila") | 14 | falta | ~40 |
 | Pilhas de recurso P/M/G (pedra, tijolo, comida, couro, carvão, aço) + destroços pré-colapso e ossos | 14 | **gerado** | — | ~40 (feito) |
@@ -184,6 +184,12 @@ prompts 0–31).
 - Nenhuma do Prompt 3: o casaco por função ficou completo (os 18, 2026-09-30).
 
 ## Plano de crédito
+
+**Atualização 2026-10-01 (Prompt 29, parte 2):** os **prédios** estão no jogo com a arte nova
+(casa, armazém, oficina, arsenal, taverna, enfermaria, laboratório, cozinha/comedouro, parque,
+campo de treino, vestiário, coletor de madeira, escudo, escavadeira, Centro nos 5 estágios, portão
+e a paliçada), com obra por estágios e pegada de navegação do desenho. Status desses itens =
+**integrado**. Sem geração (saldo **1.439**). Relatório: `docs/arte/prompt29/PROMPT_29_PARTE2_PREDIOS.md`.
 
 **Atualização 2026-10-01 (Prompt 29, parte 1):** o mapa novo está no jogo (terreno do
 Prompt 27 assado em imagens, céu do cenário, andares de baixo empilhados com os chãos do Prompt

@@ -125,7 +125,7 @@ func obra_progress() -> float:
 
 
 func obra_position(worker: Node) -> Vector2:
-	return global_position + Vector2(-24, 30) + _obra.offset_for(worker)
+	return IsoArt.front(self, Vector2(-24, 30)) + _obra.offset_for(worker)
 
 
 func obra_work(seconds: float) -> void:

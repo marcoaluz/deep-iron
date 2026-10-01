@@ -69,9 +69,13 @@ determinístico) só mudou o que o bloco pretendia — instruções no topo do a
 | `p28_iso.gd` | Prompt 28 — vista isométrica no jogo (F3): espelhos, ordem por caixas, clique pelo raio, construir/demolir, prédio em "L", fantasma, câmera/save, desligar |
 | `p28_save.gd` | Prompt 28 — save de antes do Prompt 28 carrega igual nas duas vistas (md5 do arquivo, ipezinhos, posições, créditos); com `DEEP_IRON_SAVE_FIXTURE=<cópia de um save antigo>` usa a cópia, sem ela faz o próprio save |
 | `p29_mapa.gd` | Prompt 29 — mapa novo: alturas dos terraços e rampa da escada, navegação (escada e portão), construir só em chão plano, ordem com os terraços, andares de baixo empilhados (clique volta pro andar), céu e luz por hora, migração do save |
+| `p29_predios.gd` | Prompt 29 parte 2 — prédios com a arte nova: desenho por estado (variação, obra 1/2/3 pelo progresso, estágio do Centro, peças da escavadeira, nível do portão), caixa do desenho, pegada de navegação = desenho ÷ 1,5, camas/slots fora da parede e alcançáveis, posicionador e fantasma novos, migração de prédios sobrepostos, paliçada, ordem sem erro |
 | `../test_iso.gd` (GUT, rápido) | Prompt 28 — núcleo: projeção, verdade 3D, ordem incremental, raio da câmera, direção de losango |
-| `../test_iso_arte.gd` (GUT, rápido) | Prompt 28 — verificador "o sprite cabe na caixa" contra a arte dos prédios |
+| `../test_iso_arte.gd` (GUT, rápido) | Prompt 28 — verificador "o sprite cabe na caixa" contra a arte dos prédios; Prompt 29 — toda a arte integrada (`assets/game/iso/predios/predios.json`) |
 | `../test_iso_pele.gd` (GUT, rápido) | Prompt 28 — paletas de pele por código (igual ao `tons_de_pele.py`; dados em `tests/data/pele/`) |
+
+**Prompt 29 parte 2 mudou de propósito** `b41_parque`: o lugar do 2º parque sai do posicionador
+do parque aberto (pegada do desenho novo), não de uma pegada/bloqueios que tinham sobrado.
 
 (Bloco 44 mudou de propósito o `b42_equipamento`: ele ergue um Vestiário pronto no começo,
 porque desde o 44 o equipamento só funciona com o prédio.)
@@ -117,6 +121,18 @@ Os Godot filhos de cada bloco herdam a variável.
 "fantasma que fica nítido" saiu e a obra aparece por **estágios** (0–33 / 33–66 / 66–100%,
 `scripts/core/obra_estagio.gd`). As checagens de nitidez (alfa) viraram checagens de
 estágio.
+
+## Capturas pros relatórios (Prompt 29)
+
+`tests/capturas_iso.gd` não é teste: abre a partida, ergue os prédios no layout aprovado, põe
+obras em estágios diferentes e salva PNGs. Precisa de JANELA (renderizar) e da pasta isolada:
+
+```
+<Godot>.exe --path . -s res://tests/capturas_iso.gd -- <pasta de saída>
+```
+
+(com `APPDATA` apontando pra uma pasta com `fake_appdata` no caminho; não rode ao mesmo tempo
+que a bateria usando a MESMA pasta: ele apaga o save de lá ao começar.)
 
 ## Conhecido
 

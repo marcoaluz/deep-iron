@@ -204,3 +204,7 @@ func test_p28_save() -> void:
 
 func test_p29_mapa() -> void:
 	run_bloco("p29_mapa.gd")
+
+
+func test_p29_predios() -> void:
+	run_bloco("p29_predios.gd")

@@ -11,6 +11,7 @@ extends Node2D
 ## progresso e poeira enquanto trabalham.
 ## Vai pro save (SaveManager, lista "canteiros").
 
+const IsoArt := preload("res://scripts/iso/iso_art.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
 const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
@@ -163,6 +164,10 @@ func _draw() -> void:
 func get_obstacle_outline() -> PackedVector2Array:
 	if _ghost == null:
 		return PackedVector2Array()
+	var art := IsoArt.base_rect(self)
+	if art.has_area():
+		return IsoArt.outline(art)  # Prompt 29: a pegada do desenho novo
+
 	var w := _ghost.texture.get_width() / float(_ghost.hframes) * 2.0 * 0.8
 	var c := global_position + Vector2(0, -8)
 	return PackedVector2Array([c + Vector2(-w * 0.5, -10), c + Vector2(w * 0.5, -10), c + Vector2(w * 0.5, 8), c + Vector2(-w * 0.5, 8)])
@@ -182,7 +187,7 @@ func obra_progress() -> float:
 
 
 func obra_position(worker: Node) -> Vector2:
-	return global_position + Vector2(0, 26) + _obra.offset_for(worker)
+	return IsoArt.front(self, Vector2(0, 26)) + _obra.offset_for(worker)
 
 
 func obra_work(seconds: float) -> void:

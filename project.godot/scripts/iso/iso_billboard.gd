@@ -6,13 +6,18 @@ extends Node2D
 ## Nada aqui mexe na coisa de verdade: ela continua andando/trabalhando no chão cartesiano.
 ## A CAIXA (pegada + altura) decide a ordem de desenho e o clique.
 ##
-## No Prompt 29 a arte nova entra no lugar do espelho, presa na mesma caixa.
+## Prompt 29 (parte 2): quando a coisa tem ARTE NOVA (iso_art.gd: prédios, portões), o desenho
+## antigo some do espelho e as camadas novas entram no lugar, cada uma na sua âncora; a caixa
+## passa a ser a do desenho novo. Rótulos, luzes e partículas continuam (espelhados), levados
+## pra proporção do desenho novo.
 ##
 ## Prédio em "L" (côncavo) = VÁRIAS caixas: a coisa declara `iso_parts()` -> [{rect, h}]
 ## (rect no chão relativo ao pé). Cada parte vira uma caixa na ordem e um pedaço da arte,
 ## recortado pela silhueta da sua caixa (clip), desenhado com o z da sua caixa.
 
 const Iso := preload("res://scripts/iso/iso_core.gd")
+const IsoArt := preload("res://scripts/iso/iso_art.gd")
+const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 
 ## Tipos que não são desenho (física, navegação, som...): não espelha.
 const SKIP := ["CollisionShape2D", "CollisionPolygon2D", "Area2D", "StaticBody2D", "CharacterBody2D",
@@ -67,6 +72,11 @@ var _body_pair: Array = []
 var _root_children := 0  # quantos filhos a coisa tinha quando espelhou
 var _parts: Array = []  # [{rect, h}] relativas ao pé (vazio = uma caixa só, a de sempre)
 var _part_clips: Array = []  # Polygon2D de recorte por parte (só com 2+ partes)
+## Arte nova (Prompt 29): o nó com as camadas, o que está desenhado e a caixa dela
+var _art: Node2D = null
+var _art_key := ""
+var _art_box := {}  # {rect, h}: px de arte, relativa ao pé ({} = sem arte nova)
+var _old_size := Vector2.ZERO  # tamanho do desenho antigo (px da lógica): pra levar rótulos/luzes
 
 
 func setup(n: Node2D, is_dynamic: bool, view: Node) -> void:
@@ -82,6 +92,8 @@ func setup(n: Node2D, is_dynamic: bool, view: Node) -> void:
 		boxes.append(Iso.Box.new(Rect2(), 0.0, 1.0, kind, "%s#%d" % [n.name, k], n))
 	box = boxes[0]
 	_build_mirror()
+	if not dynamic:
+		_sync_art()  # arte nova: já nasce com a caixa do desenho (não troca no 1º quadro)
 	_update_box()
 	position = Iso.iso(_view.art(src.global_position), box.zb).round()
 
@@ -95,6 +107,8 @@ func _build_mirror() -> void:
 	_tool_pair = []
 	_body_pair = []
 	_part_clips.clear()
+	_art = null
+	_art_key = ""
 	_root_children = src.get_child_count()
 	if _parts.size() > 1:
 		for k in _parts.size():  # um recorte por parte, cada um com uma cópia da arte
@@ -200,6 +214,70 @@ func _sync_props() -> void:
 		scale = Vector2(k, k)
 	if _flip < 0.0:
 		_unflip_labels()
+	if not dynamic:
+		_sync_art()
+
+
+# ------------------------------------------------------------ arte nova (Prompt 29)
+## Troca o desenho antigo pelas camadas da arte nova (iso_art.gd), quando a coisa tem.
+func _sync_art() -> void:
+	var layers: Array = IsoArt.layers(src)
+	if layers.is_empty():
+		if _art:
+			_art.queue_free()
+			_art = null
+			_art_key = ""
+			_art_box = {}
+		return
+	if _old_size == Vector2.ZERO:
+		var vr := _visual_rect()
+		_old_size = Vector2(maxf(vr.size.x, 1.0), maxf(-vr.position.y, 1.0))
+	var key := ""
+	for l in layers:
+		key += "%s|%s;" % [l.tex.resource_path, l.obra >= 0.0]
+	if _art == null:
+		_art = Node2D.new()
+		_art.name = "ArteNova"
+		add_child(_art)
+		move_child(_art, 0)
+	if key != _art_key:
+		_art_key = key
+		for c in _art.get_children():
+			c.queue_free()
+		for l in layers:
+			var sp := Sprite2D.new()
+			sp.texture = l.tex
+			sp.centered = false
+			sp.offset = -l.ancora
+			sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			sp.light_mask = 2
+			_art.add_child(sp)
+	for i in mini(layers.size(), _art.get_child_count()):
+		var sp: Sprite2D = _art.get_child(i)
+		if layers[i].obra >= 0.0:
+			ObraEstagio.apply(sp, layers[i].obra)  # a peça em montagem sobe por estágios
+		else:
+			ObraEstagio.clear(sp)
+	_art_box = IsoArt.box_of(layers)
+	pickable = true
+	# a arte nova é desenhada no tamanho dela (px de arte): desfaz a escala do espelho
+	_art.scale = Vector2(1.0 / scale.x, 1.0 / scale.y) if scale.x != 0.0 and scale.y != 0.0 else Vector2.ONE
+	# o desenho antigo some; rótulos, luzes e partículas vão pra proporção do desenho novo
+	var k: float = _view.S
+	var new_size := Vector2(240.0, 200.0)
+	if not _art_box.is_empty():
+		var r: Rect2 = _art_box.rect
+		new_size = Vector2(r.size.x + r.size.y, _art_box.h) / k
+	var ratio := Vector2(new_size.x / _old_size.x, new_size.y / _old_size.y)
+	var lift := new_size.y - _old_size.y
+	for pr in _pairs:
+		var d = pr[1]
+		if d is Sprite2D or d is AnimatedSprite2D or d is Polygon2D or d is Line2D:
+			d.visible = false
+		elif d is Control and d.get_parent() == self:
+			d.position.y = pr[0].position.y - lift  # rótulo: a mesma folga acima do telhado novo
+		elif d is Node2D and d.get_parent() == self:
+			d.position = pr[0].position * ratio  # luz, fumaça: no mesmo lugar do desenho
 
 
 func _copy(s: Object, d: Object, props: Array) -> void:
@@ -264,6 +342,10 @@ func _update_box() -> bool:
 		rect = _footprint(feet, vr)
 	rect = _view.art_rect(rect)  # caixa em px de arte (escala da vista; andar de baixo na laje dele)
 	top *= k
+	if not _art_box.is_empty():  # arte nova: a caixa declarada do desenho (px de arte)
+		var ar: Rect2 = _art_box.rect
+		rect = Rect2(_view.art(feet) + ar.position, ar.size)
+		top = _art_box.h
 	var zb: float = _view.height_at(feet) if _view.has_method("height_at") else 0.0
 	if _parts.size() > 1:
 		return _update_parts(feet, zb)
@@ -406,6 +488,8 @@ func _draw_top() -> void:
 		return
 	if src.is_in_group("canteiros") and src.has_method("obra_progress") and src.has_method("_top"):
 		var y: float = -(src._top() + 8.0)
+		if not _art_box.is_empty():
+			y = -(_art_box.h / _view.S + 8.0)  # em cima do desenho novo
 		var eng: bool = src._obra.has_engineer() if src.get("_obra") else false
 		_top.draw_rect(Rect2(-26, y, 52, 5), Color(0.05, 0.04, 0.03, 0.85))
 		_top.draw_rect(Rect2(-25, y + 1, 50 * src.obra_progress(), 3), Color(1.0, 0.6, 0.25) if eng else Color(0.7, 0.5, 0.3))

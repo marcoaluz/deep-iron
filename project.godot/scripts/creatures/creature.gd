@@ -10,6 +10,7 @@ extends Node2D
 ## (defense.gd: raid — uma parte do minério e dos créditos, uma vez por portão por invasão).
 ## Ao amanhecer: o Lumívoro foge da luz e o Ferrugento desliga.
 
+const IsoArt := preload("res://scripts/iso/iso_art.gd")
 signal died(killed: bool)
 
 @export_enum("lumivoro", "ferrugento") var kind: String = "lumivoro"
@@ -84,6 +85,11 @@ func _process(delta: float) -> void:
 	var tpos := _target.global_position
 	var d := global_position.distance_to(tpos)
 	var reach := attack_range + (22.0 if _target.is_in_group("barricadas") or _is_building(_target) else 0.0)
+	var wall := IsoArt.base_rect(_target) if _is_building(_target) else Rect2()
+	if wall.has_area():
+		# Prompt 29: o prédio novo tem fundo de verdade; conta até a parede (o centro fica longe)
+		d = global_position.distance_to(global_position.clamp(wall.position, wall.end))
+		reach = attack_range + 10.0
 	if d > reach:
 		if _agent.target_position.distance_to(tpos) > 8.0:
 			_agent.target_position = tpos

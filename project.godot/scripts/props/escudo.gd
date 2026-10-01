@@ -4,6 +4,7 @@ extends Node2D
 ## Fundação -> Bobinas -> Núcleo de solarita -> Emissor. Com a última: VITÓRIA (sun.gd).
 ## Bloco 31b: cada etapa paga vira OBRA — só anda com um engenheiro trabalhando aqui.
 
+const IsoArt := preload("res://scripts/iso/iso_art.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
 const STAGE_IDS := ["fundacao", "bobinas", "nucleo", "emissor"]
@@ -55,6 +56,9 @@ func contains_point(p: Vector2) -> bool:
 
 ## Navegação contorna a base (environment.gd, NAV_EXTRA_GROUPS).
 func get_obstacle_outline() -> PackedVector2Array:
+	var art := IsoArt.base_rect(self)
+	if art.has_area():
+		return IsoArt.outline(art)  # Prompt 29: a pegada do desenho novo
 	var c := global_position + Vector2(0, -8)
 	return PackedVector2Array([c + Vector2(-26, -6), c + Vector2(26, -6), c + Vector2(26, 6), c + Vector2(-26, 6)])
 
@@ -148,7 +152,7 @@ func obra_progress() -> float:
 
 
 func obra_position(worker: Node) -> Vector2:
-	return global_position + Vector2(0, 30) + _obra.offset_for(worker)
+	return IsoArt.front(self, Vector2(0, 30)) + _obra.offset_for(worker)
 
 
 ## O engenheiro trabalhou `seconds` aqui: só assim a etapa anda.

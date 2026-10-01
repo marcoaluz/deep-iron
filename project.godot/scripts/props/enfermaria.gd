@@ -145,7 +145,7 @@ func _nearest_ward(worker: Node2D, wards: Array) -> Node:
 # ------------------------------------------------------------ médico (Bloco 30)
 ## Onde o médico entra (a porta, na frente da fachada).
 func doctor_spot() -> Vector2:
-	return global_position + Vector2(0, 26)
+	return IsoArt.front(self, Vector2(0, 26))
 
 
 func add_doctor(worker: Node) -> void:

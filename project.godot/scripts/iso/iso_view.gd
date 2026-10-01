@@ -22,6 +22,7 @@ const Iso := preload("res://scripts/iso/iso_core.gd")
 const Order := preload("res://scripts/iso/iso_order.gd")
 const Billboard := preload("res://scripts/iso/iso_billboard.gd")
 const Ceu := preload("res://scripts/iso/iso_sky.gd")
+const IsoArt := preload("res://scripts/iso/iso_art.gd")
 
 const LAYER_DEFAULT := 1
 const LAYER_WORLD := 2
@@ -288,6 +289,41 @@ func _build_terrain() -> void:
 		var lr := Rect2(a.rect[0], a.rect[1], a.rect[2], a.rect[3])
 		_levels.append({"nome": nome, "art_rect": Rect2(art(lr.position), lr.size * S), "z": float(a.z_chao),
 			"sprite": sp2, "rect": lr, "tint": LEVEL_TINT.get(nome, Color.WHITE)})
+	_build_palisade()
+
+
+## A paliçada entre a floresta e a vila (Prompt 29 parte 2): um trecho do muro do Prompt 12 por
+## tile, ao longo da linha da navegação (Environment.palisade_y), menos a abertura do portão.
+## Cada trecho é uma caixa fina na ordem (como o terreno: não é coisa do jogo, não tem clique).
+func _build_palisade() -> void:
+	if IsoArt.entry("palicada").is_empty():
+		return
+	var g: Rect2 = _env.iso_ground_rect()
+	var step := 32.0 / S  # 1 tile da arte
+	var y: float = _env.palisade_y
+	var gap: float = _env.gate_half_width + step * 0.5
+	var n := 0
+	var x := g.position.x + step * 0.5
+	while x < g.end.x:
+		if absf(x) > gap:
+			var l := IsoArt.state("palicada", "danificada" if n % 7 == 3 else "reta")
+			var ground := Vector2(x, y)
+			var z := height_at(ground)
+			var sp := Sprite2D.new()
+			sp.name = "Palicada%d" % n
+			sp.texture = l.tex
+			sp.centered = false
+			sp.offset = -l.ancora
+			sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			sp.light_mask = 2
+			sp.position = Iso.iso(art(ground), z).round()
+			_terrain_node.add_child(sp)
+			var p: Array = l.peg
+			var b := Iso.Box.new(Rect2(art(ground) + Vector2(p[0], p[1]), Vector2(p[2] - p[0], p[3] - p[1])), z, z + l.h,
+				"predio", "palicada%d" % n, null)
+			_terrain.append([b, sp])
+		x += step
+		n += 1
 
 # ------------------------------------------------------------ quem é chão, quem fica em pé
 ## Chão de verdade: vai inteiro pra textura achatada (piso, paredes, pedrinhas: z <= -5).
@@ -472,12 +508,23 @@ func _sync_ghost() -> void:
 	_ghost_bb.visible = on
 	if not on:
 		return
-	_ghost_bb.texture = g.texture
-	_ghost_bb.hframes = g.hframes
-	_ghost_bb.vframes = g.vframes
-	_ghost_bb.frame = g.frame
-	_ghost_bb.offset = g.offset
-	_ghost_bb.scale = g.scale * S
+	var art: Dictionary = IsoArt.preview(_placer.art_name) if _placer.get("art_name") else {}
+	if not art.is_empty():  # Prompt 29: o fantasma é o desenho novo, na âncora dele
+		_ghost_bb.texture = art.tex
+		_ghost_bb.hframes = 1
+		_ghost_bb.vframes = 1
+		_ghost_bb.frame = 0
+		_ghost_bb.centered = false
+		_ghost_bb.offset = -art.ancora
+		_ghost_bb.scale = Vector2.ONE
+	else:
+		_ghost_bb.texture = g.texture
+		_ghost_bb.hframes = g.hframes
+		_ghost_bb.vframes = g.vframes
+		_ghost_bb.frame = g.frame
+		_ghost_bb.centered = true
+		_ghost_bb.offset = g.offset
+		_ghost_bb.scale = g.scale * S
 	_ghost_bb.modulate = g.modulate
 	_ghost_bb.position = to_screen(_placer._pos).round()
 
@@ -547,6 +594,8 @@ func pick(canvas_pos: Vector2) -> Dictionary:
 		if bb.visible_src() and bb.pickable:
 			solids.append_array(bb.boxes)
 	for t in _terrain:
+		if t[0].kind == "predio":
+			continue  # paliçada: enfeite fino, o clique passa pro chão
 		solids.append(t[0])  # terraço/escada: acerta o chão de cima (ou a parede do penhasco)
 	var wr: Rect2 = _env.iso_ground_rect() if _env.has_method("has_iso_map") and _env.has_iso_map() else _env.world_rect()
 	var planes := [{"rect": Rect2(wr.position * S, wr.size * S), "z": 0.0, "name": "chão"}]

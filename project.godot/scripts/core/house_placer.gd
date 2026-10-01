@@ -26,6 +26,7 @@ extends Node2D
 signal finished(confirmed: bool)
 
 const CASA_TEXTURE := preload("res://assets/game/casa.png")
+const IsoArt := preload("res://scripts/iso/iso_art.gd")
 ## Pegada da casa em volta do ponto clicado (o ponto é o pé da casa): do telhado
 ## (-54) até o degrau da porta, onde ficam as camas (+24).
 const FOOTPRINT := Rect2(-32, -54, 64, 78)
@@ -48,6 +49,8 @@ var _radius := 0.0
 var _radius_center := Vector2.ZERO
 var _area := Rect2()
 var _area_name := ""
+## Prompt 29: o prédio da arte nova sendo posicionado ("" = sem arte nova): a pegada é a do desenho
+var art_name := ""
 
 
 func _ready() -> void:
@@ -88,6 +91,10 @@ func begin(on_confirm: Callable, texture: Texture2D = CASA_TEXTURE, hframes: int
 	_ghost.offset = Vector2(0, -texture.get_height() * 0.5)
 	_what = what
 	_footprint = opts.get("footprint", FOOTPRINT)
+	art_name = IsoArt.name_for_texture(texture)
+	var af := IsoArt.placer_footprint(get_tree(), art_name)
+	if af.has_area():
+		_footprint = af  # o prédio novo tem fundo de verdade (a pegada antiga era o desenho de frente)
 	_ignore = opts.get("ignore", [])
 	_cancelable = opts.get("cancelable", true)
 	_radius = opts.get("radius", 0.0)
@@ -234,6 +241,14 @@ func _collect_blockers() -> void:
 			if _ignore.has(node):
 				continue
 			var r := Rect2(node.global_position, Vector2.ZERO)
+			var art := IsoArt.blocker_rect(node)
+			if art.has_area():
+				# Prompt 29: a pegada do desenho novo + a faixa dos slots em volta (a porta/o acesso)
+				r = art
+				if int(node.get("slot_count") if node.get("slot_count") != null else 0) > 0:
+					r = art.grow(IsoArt.FRONT_GAP + 2.0)
+				_blockers.append({"rect": r.grow(6.0), "name": _display_name(node)})
+				continue
 			if node.has_method("get_obstacle_outline"):
 				var outline: PackedVector2Array = node.get_obstacle_outline()
 				if outline.size() >= 3:

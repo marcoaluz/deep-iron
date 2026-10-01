@@ -12,6 +12,7 @@ extends Node2D
 signal navigation_ready
 
 ## Grupos de estruturas que bloqueiam a navegação e afastam a decoração.
+const IsoArt := preload("res://scripts/iso/iso_art.gd")
 const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village_hub", "escavadeira", "oficina", "coleta_comida", "arvores"]
 ## Estruturas que bloqueiam a navegação mas NÃO entram no sorteio da decoração
 ## (pra não mudar as pedras/cristais da mina de saves antigos). A decoração que
@@ -519,7 +520,63 @@ func migrate_positions() -> int:
 				migrated.append({"nome": String(node.name), "de": p, "para": q})
 				print("environment: %s mudou de %s pra %s (lugar inválido no mapa novo)" % [node.name, p.round(), q.round()])
 				n += 1
+	return n + _migrate_overlaps()
+
+
+## Prompt 29 parte 2: com a arte nova o prédio tem fundo de verdade (a pegada cresceu). Prédio
+## posicionado num save antigo que ficou em cima de outro vai pro ponto livre mais perto (chão
+## plano, sem encostar em ninguém). Os da cena (layout aprovado) ficam onde estão.
+func _migrate_overlaps() -> int:
+	var fixed: Array = []
+	var movers: Array = []
+	var seen := {}
+	for group in STATION_GROUPS + NAV_EXTRA_GROUPS:
+		for node in get_tree().get_nodes_in_group(group):
+			if seen.has(node) or not (node is Node2D) or is_deep(node.global_position):
+				continue
+			seen[node] = true
+			var r := IsoArt.base_rect(node)
+			if not r.has_area():
+				continue
+			if node.owner != null:  # da cena (main.tscn)
+				fixed.append(r)
+			else:
+				movers.append(node)
+	var n := 0
+	for node in movers:
+		var r := IsoArt.base_rect(node)
+		if not _overlaps(r, fixed):
+			fixed.append(r)
+			continue
+		var p: Vector2 = node.global_position
+		var off := r.position - p
+		var q := p
+		for ring in range(1, 60):
+			var rad := ring * 8.0
+			var found := false
+			for k in maxi(8, int(rad * 0.8)):
+				var c := p + Vector2.RIGHT.rotated(TAU * k / maxi(8, int(rad * 0.8))) * rad
+				var rr := Rect2(c + off, r.size)
+				if footprint_reason(rr) == "" and not _overlaps(rr, fixed):
+					q = c
+					found = true
+					break
+			if found:
+				break
+		if q != p:
+			node.global_position = q
+			migrated.append({"nome": String(node.name), "de": p, "para": q})
+			print("environment: %s mudou de %s pra %s (em cima de outro prédio com a arte nova)" % [node.name, p.round(), q.round()])
+			n += 1
+		fixed.append(IsoArt.base_rect(node))
 	return n
+
+
+func _overlaps(r: Rect2, others: Array) -> bool:
+	for o in others:
+		if r.grow(-2.0).intersects(o):
+			return true
+	return false
 
 
 ## Esse ponto é no fundo (nível 2 ou abismo)?

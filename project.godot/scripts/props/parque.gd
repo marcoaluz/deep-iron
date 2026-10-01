@@ -6,6 +6,8 @@ extends Node2D
 ## Construído pelo engenheiro (canteiro "parque"), posicionado como as casas (no raio do
 ## Centro da Vila). Clicar abre a janela de Bem-estar. Pode ter mais de um.
 
+const IsoArt := preload("res://scripts/iso/iso_art.gd")
+
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 var panel_id := "moral"
 
@@ -23,12 +25,16 @@ func contains_point(p: Vector2) -> bool:
 
 ## Só o tronco da árvore grande bloqueia: o resto do parque é de andar por dentro.
 func get_obstacle_outline() -> PackedVector2Array:
+	var art := IsoArt.base_rect(self)
+	if art.has_area():
+		return IsoArt.outline(art)  # Prompt 29: a pegada do desenho novo
 	var c := global_position + Vector2(-32, -8)
 	return PackedVector2Array([c + Vector2(-4, -3), c + Vector2(4, -3), c + Vector2(4, 3), c + Vector2(-4, 3)])
 
 
 func decor_clear_rect() -> Rect2:
-	return Rect2(global_position + Vector2(-50, -72), Vector2(100, 76))
+	var art := IsoArt.base_rect(self)
+	return Rect2(global_position + Vector2(-50, -72), Vector2(100, 76)).merge(art) if art.has_area() else Rect2(global_position + Vector2(-50, -72), Vector2(100, 76))
 
 
 func radius() -> float:

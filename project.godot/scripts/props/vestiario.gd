@@ -5,6 +5,8 @@ extends Node2D
 ## O jogador escolhe o lugar e o engenheiro ergue (canteiro "vestiario"). Clicar abre a
 ## janela da Oficina, onde está a seção de equipamento. Um só por vila.
 
+const IsoArt := preload("res://scripts/iso/iso_art.gd")
+
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 var panel_id := "oficina"
 
@@ -23,12 +25,16 @@ func contains_point(p: Vector2) -> bool:
 
 
 func get_obstacle_outline() -> PackedVector2Array:
+	var art := IsoArt.base_rect(self)
+	if art.has_area():
+		return IsoArt.outline(art)  # Prompt 29: a pegada do desenho novo
 	var c := global_position + Vector2(-8, -8)
 	return PackedVector2Array([c + Vector2(-28, -8), c + Vector2(28, -8), c + Vector2(28, 6), c + Vector2(-28, 6)])
 
 
 func decor_clear_rect() -> Rect2:
-	return Rect2(global_position + Vector2(-44, -70), Vector2(88, 76))
+	var art := IsoArt.base_rect(self)
+	return Rect2(global_position + Vector2(-44, -70), Vector2(88, 76)).merge(art) if art.has_area() else Rect2(global_position + Vector2(-44, -70), Vector2(88, 76))
 
 
 func _process(_delta: float) -> void:
