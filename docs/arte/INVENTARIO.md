@@ -185,6 +185,10 @@ prompts 0–31).
 
 ## Plano de crédito
 
+**Atualização 2026-10-01 (fundo do mapa, Prompt 27):** céu + montanhas por hora do dia custou
+**75**. Saldo **1.439** (conferido no PixelLab), recarga de +5.000 em 2026-10-30. Os Prompts
+28–29 são código: não gastam geração.
+
 **Atualização 2026-09-30 (fim do Prompt 15):** saldo do ciclo **1.514** (recarga de +5.000 em
 2026-10-30). Casaco por função (~600), robô gigante (~425) terreno da superfície (~215) e da mina (~200), jazidas (~185), vegetação (~230), prédios da vila (~500) e prompts 11–13 (~990) já descontados. Com 1.758, dá pros prompts 14–15 (~450) e parte do 16–18; o resto espera a recarga de 30/10. O que falta dos
 prompts 6–27 é estimado em ~4.000 (ver resposta de planejamento). Cabe no saldo, com pouca
