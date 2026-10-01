@@ -180,6 +180,10 @@ func check_spot(pos: Vector2) -> String:
 			return "fora %s" % _area_name
 	elif env and not env.walkable_rect().encloses(fp):
 		return "fora da área da mina"
+	if env and env.has_method("footprint_reason"):
+		var why: String = env.footprint_reason(fp)  # Prompt 29: terraços (chão plano)
+		if why != "":
+			return why
 	if _radius > 0.0 and pos.distance_to(_radius_center) > _radius:
 		return "longe demais do Centro da Vila (a vila cresce e o raio aumenta)"
 	for b in _blockers:

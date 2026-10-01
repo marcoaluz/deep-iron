@@ -8,6 +8,10 @@ floresta e terraço de cima = 3; terraço das oficinas (oeste) = 2; fundo da ped
 As bocas de mina ficam no paredão de 3 degraus entre o terraço de cima e o fundo (a face
 que olha pra câmera). Paredão de terra e rocha (4) nas bordas de trás (oeste).
 Desenho: terreno coluna a coluna (tiles.py) + objetos ordenados pela frente da pegada.
+
+  python monta.py exporta [pasta]  -> Prompt 29: o TERRENO do jogo, por região (ver exporta()):
+      fundo + moldura = imagens de fundo; alto, meio, paredão = imagem + caixa; cada escada/rampa
+      = caixa de rampa; mapa.json com o mapa de altura, escadas e bocas (lido pelo environment.gd)
 """
 import sys, os, json, glob, math, random
 from PIL import Image, ImageOps
@@ -20,6 +24,7 @@ OX, OY = -760 * FATOR, -1040 * FATOR            # canto do mapa (mundo novo)
 NI = int(1520 * FATOR / T)                        # 99
 NJ = int(1480 * FATOR / T)                        # 97
 REL = "../relevo/final"
+BOCAS_X = (200, 290, 380, 540)   # bocas de mina no paredão do terraço de cima (uma por galeria do jogo)
 TOPO_MOLDURA = 18    # a moldura é aparada no alto (i + j > -18): o topo fica na horizontal, na altura da serra pintada
 MARGEM = 26          # moldura fora da área jogável (só decoração): morros com mata que sobem até a serra do cenário
 
@@ -72,7 +77,7 @@ def tipo_chao(xo, yo, z):
     return "grama_alta" if rnd > 0.6 else "colonia"
 
 
-def monta():
+def monta(exporta_em=None):
     TEX = {"colonia": ld(REL + "/colonia"), "clareira": ld(REL + "/clareira"), "rocha": ld(REL + "/rocha")}
     for p in ("grama_alta", "trilha", "cascalho", "laje"):
         TEX[p] = ld(REL + "/superficie/" + p)
@@ -131,24 +136,34 @@ def monta():
                 tipo_v[(i, j)] = "grama_alta" if ruido(i * 1.7, j * 1.9, 2.2) > -0.25 else "clareira"
     # escadas e rampas (no tile de baixo, subindo pro norte): (x, y antigos)
     # subidas: (x, y antigos, imagem, quantos degraus abaixo do topo) - escada N sobe pro norte
-    subidas = [(-80, -165, esc_pedra, 1), (-300, -165, esc_pedra, 1), (640, -160, esc_pedra, 3), (0, 172, rampa, 2), (-420, 172, esc_pedra, 2)]
+    # (x antigo, y antigo da borda do terraço de cima, imagem). A escada acha sozinha a 1ª fileira
+    # abaixo da borda (onde a altura cai) e desce um lance por degrau de diferença (Prompt 29: antes
+    # o y era fixo e algumas escadas ficavam uma fileira fora, sem ligar os terraços)
+    bordas = [(-80, -180, esc_pedra), (-300, -180, esc_pedra), (640, -180, esc_pedra), (0, 160, rampa), (-420, 160, esc_pedra)]
+    subidas = []
     esc_tiles = {}
-    for xo, yo, im, n in subidas:
-        i, j = map(int, tile(xo, yo))
-        h0 = alt[(i, j - 1)]          # topo de onde a escada desce
+    for xo, yb, im in bordas:
+        i, j = map(int, tile(xo, yb - 40))
+        while alt[(i, j + 1)] >= alt[(i, j)]:     # desce até a beira do terraço de cima
+            j += 1
+        h0, h1 = alt[(i, j)], alt[(i, j + 1)]
+        n = h0 - h1
+        subidas.append((xo, (OY + (j + 1.5) * T) / FATOR, im, n))
         for d in range(n):            # um lance por degrau, descendo pro sul
             for di in (0, 1):
-                esc_tiles[(i + di, j + d)] = im
-                alt[(i + di, j + d)] = h0 - 1 - d
+                esc_tiles[(i + di, j + 1 + d)] = im
+                alt[(i + di, j + 1 + d)] = h0 - 1 - d
 
     # bocas de mina: cavadas no paredão (as 2 colunas da borda do terraço de cima viram a boca)
     bocas = []
-    for xo in (200, 380, 540):
+    for xo in BOCAS_X:
         i, j = map(int, tile(xo, -181))
         while alt.get((i, j + 1), 0) >= 3:      # desce até a última fileira do terraço
             j += 1
         bocas.append((i, j))
     tiles_boca = {(i + d, j) for i, j in bocas for d in (0, 1)}
+    for t in tiles_boca:    # a boca é rocha do paredão (altura do terraço de cima): ninguém anda por dentro
+        alt[t] = 3
 
     def topo_fn(i, j):
         if mat[(i, j)] == "rocha":
@@ -161,9 +176,32 @@ def monta():
         return ((u - v) * T + 32, (u + v) * 16 - k * 32)
 
     itens = []
+    regiao = {}       # índice do item -> região (exporta)
+    sub_de = {}       # tile de escada -> índice da subida
+    for k_sub, (xo, yo, im, n) in enumerate(subidas):
+        i, j = map(int, tile(xo, yo))
+        for d in range(n):
+            for di in (0, 1):
+                sub_de[(i + di, j + d)] = k_sub
+
+    def reg_tile(i, j):
+        if (i, j) in longe:
+            return "moldura"
+        if (i, j) in sub_de:
+            return "escada_%d" % sub_de[(i, j)]
+        if i < 0 or j < 0 or i >= NI or j >= NJ:
+            return "moldura"
+        z, _ = zona(*antigo(i, j))
+        return {"paredao": "paredao", "floresta": "alto", "terraco_alto": "alto", "terraco_meio": "meio"}.get(z, "fundo")
+
+    def add(item, r):
+        regiao[len(itens)] = r
+        itens.append(item)
+
     for (i, j), h in alt.items():
         if (i, j) in tiles_boca:
             continue
+        rt = reg_tile(i, j)
         com, sem = BL[mat[(i, j)]]
         # bordas da FRENTE do mapa (i ou j máximos): o terreno desce 4 degraus (corte do relevo
         # visto pela câmera) em vez de acabar no vazio; as de trás ficam escondidas
@@ -172,23 +210,25 @@ def monta():
         base = min(min(viz), h)
         if (i, j) in esc_tiles:
             for k in range(base + 1, h + 1):
-                itens.append((i + j, k, 0, tiles.escolhe(sem, i, j, k, False), tiles.tela(i, j, k)))
-            itens.append((i + j, h + 1, 0, esc_tiles[(i, j)], tiles.tela(i, j, h + 1)))
+                add((i + j, k, 0, tiles.escolhe(sem, i, j, k, False), tiles.tela(i, j, k)), rt)
+            add((i + j, h + 1, 0, esc_tiles[(i, j)], tiles.tela(i, j, h + 1)), rt)
             continue
         nv = longe.get((i, j), 0)
         tp = topo_fn(i, j)
         if h == base:
-            itens.append((i + j, base, 0, tp, tiles.tela(i, j, base), nv))
+            add((i + j, base, 0, tp, tiles.tela(i, j, base), nv), rt)
         for k in range(base + 1, h + 1):
             b = tiles.escolhe(com if k == h else sem, i, j, k, False).copy()
             if k == h:
                 b.paste(tp, (0, 0), tp)
             if k < 0:      # o corte escurece pra baixo (vai sumir na névoa do cenário)
                 b = tiles.escurece(b, 0.82 ** (-k))
-            itens.append((i + j, k, 0, b, tiles.tela(i, j, k), nv))
+            add((i + j, k, 0, b, tiles.tela(i, j, k), nv), rt)
 
     # ------------------------------------------------------------ objetos
     def obj(img, xo, yo, anc, pegada_tiles=(1, 1), h=None):
+        if exporta_em:
+            return  # o jogo põe os objetos dele
         u, v = tile(xo, yo)
         if h is None:
             h = alt.get((int(u), int(v)), 0)
@@ -231,16 +271,16 @@ def monta():
     boca = Image.open("../relevo/final/superficie/boca_mina.png").convert("RGBA")
     for i, j in bocas:          # quadro da boca: canto N do topo em (34, 2) -> tela(i, j, 3) - (2, 2)
         x, y = tiles.tela(i, j, 3)
-        itens.append((i + j + 1, 3.5, 0, boca, (x - 2, y - 2)))
+        add((i + j + 1, 3.5, 0, boca, (x - 2, y - 2)), "alto")
         for d in (0, 1):        # o topo da boca = o chão do terraço
-            itens.append((i + j + 2, 3.6, 0, topo_fn(i + d, j), tiles.tela(i + d, j, 3)))
+            add((i + j + 2, 3.6, 0, topo_fn(i + d, j), tiles.tela(i + d, j, 3)), "alto")
     # trilho mina -> armazém (por cima do chão: peças retas ao longo do eixo j)
     tr = Image.open("../relevo/final/mina/trilhos/reto_j.png").convert("RGBA")
     for yo in range(-140, 60, int(T / FATOR)):
         u, v = tile(200, yo)
         h = alt.get((int(u), int(v)), 0)
         x, y = P(int(u) + 0.5, int(v) + 0.5, h)
-        itens.append((int(u) + int(v) + 0.1, h + 0.05, 0, tr, (int(x - 32), int(y - 16))))
+        add((int(u) + int(v) + 0.1, h + 0.05, 0, tr, (int(x - 32), int(y - 16))), reg_tile(int(u), int(v)))
     solto("../objetos/final/vagonete_cheio_SE.png", 200, -60)
     # jazidas no fundo
     for k, (xo, yo) in enumerate([(-300, 300), (-120, 360), (60, 300), (300, 330), (420, 120), (640, 200)]):
@@ -314,7 +354,10 @@ def monta():
             im = recorte(f)
             u, v = i + rm.uniform(0.15, 0.85), j + rm.uniform(0.15, 0.85)
             x, y = P(u, v, alt[(i, j)])
-            itens.append((u + v + 1, alt[(i, j)] + 0.5, 1, im, (int(x - im.width / 2), int(y - im.height + 3)), nv))
+            add((u + v + 1, alt[(i, j)] + 0.5, 1, im, (int(x - im.width / 2), int(y - im.height + 3)), nv), "moldura")
+    if exporta_em:
+        exporta(exporta_em, itens, regiao, alt, esc_tiles, sub_de, subidas, bocas, longe)
+        return
     # ------------------------------------------------------------ desenha
     xs = [t[4][0] for t in itens]; ys = [t[4][1] for t in itens]
     ox, oy = -min(xs) + 20, -min(ys) + 20
@@ -336,5 +379,78 @@ def monta():
     print(c.size, len(itens))
 
 
+def exporta(pasta, itens, regiao, alt, esc_tiles, sub_de, subidas, bocas, longe):
+    """Prompt 29: o terreno do jogo por região.
+
+    Coordenadas: tela do jogo (px de arte) = iso(chão em px de arte) = tela do python + OXY;
+    chão em px de arte = chão da lógica × FATOR (a vista do jogo usa a mesma escala 1,5).
+    Cada região: imagem recortada + onde ela fica na tela do jogo + a caixa (retângulo no chão
+    da LÓGICA e alturas em px de arte). Bloco no degrau k ocupa [(k-1)*32, k*32]."""
+    os.makedirs(pasta, exist_ok=True)
+    # P(u, v, k) do python tem o vértice norte do tile em x + 32; no jogo iso(chão) não tem esse +32
+    oxy = (OX - OY - 32, (OX + OY) / 2.0)
+    por = {}
+    tiles_de = {}
+    for idx, r in regiao.items():
+        por.setdefault(r, []).append(itens[idx])
+    for (i, j) in alt:
+        r = "moldura" if (i, j) in longe else None
+        if r is None:
+            if (i, j) in sub_de:
+                r = "escada_%d" % sub_de[(i, j)]
+            else:
+                z, _ = zona((OX + (i + 0.5) * T) / FATOR, (OY + (j + 0.5) * T) / FATOR)
+                r = {"paredao": "paredao", "floresta": "alto", "terraco_alto": "alto", "terraco_meio": "meio"}.get(z, "fundo")
+        tiles_de.setdefault(r, []).append((i, j))
+    for i, j in bocas:          # a boca faz parte do paredão do terraço de cima
+        for d in (0, 1):
+            if (i + d, j) in tiles_de.get("fundo", []):
+                tiles_de["fundo"].remove((i + d, j))
+            tiles_de.setdefault("alto", []).append((i + d, j))
+    meta = {"fator": FATOR, "tile_arte": T, "nivel_arte": 32, "origem_arte": [OX, OY], "ni": NI, "nj": NJ,
+            "regioes": {}, "escadas": [], "bocas": []}
+    for r, its in por.items():
+        its.sort(key=lambda t: (t[0], t[1], t[2]))
+        x0 = min(t[4][0] for t in its); y0 = min(t[4][1] for t in its)
+        x1 = max(t[4][0] + t[3].width for t in its); y1 = max(t[4][1] + t[3].height for t in its)
+        c = Image.new("RGBA", (x1 - x0, y1 - y0))
+        nev = Image.new("L", c.size, 0) if r == "moldura" else None
+        for t in its:
+            c.alpha_composite(t[3], (t[4][0] - x0, t[4][1] - y0))
+            if nev is not None:
+                nev.paste(int(255 * (t[5] if len(t) > 5 else 0)), (t[4][0] - x0, t[4][1] - y0,
+                          t[4][0] - x0 + t[3].width, t[4][1] - y0 + t[3].height), t[3].split()[3])
+        bb = c.getbbox()
+        c = c.crop(bb)
+        c.save(os.path.join(pasta, "terreno_%s.png" % r))
+        if nev is not None:
+            nev.crop(bb).save(os.path.join(pasta, "terreno_%s_nevoa.png" % r))
+        ks = [t[1] for t in its if t[2] == 0 and float(t[1]).is_integer()]
+        ts = tiles_de.get(r, [])
+        info = {"img": "terreno_%s.png" % r, "tela": [x0 + bb[0] + oxy[0], y0 + bb[1] + oxy[1]],
+                "z": [(min(ks) - 1) * 32 if ks else 0, max(ks) * 32 if ks else 0]}
+        if ts and r not in ("moldura", "fundo"):
+            imin = min(i for i, _ in ts); imax = max(i for i, _ in ts)
+            jmin = min(j for _, j in ts); jmax = max(j for _, j in ts)
+            info["chao"] = [(OX + imin * T) / FATOR, (OY + jmin * T) / FATOR,
+                            (imax - imin + 1) * T / FATOR, (jmax - jmin + 1) * T / FATOR]
+        if r.startswith("escada_"):
+            k = int(r.split("_")[1])
+            info["rampa"] = True
+            info["z"][0] = max(0, info["z"][0])
+        meta["regioes"][r] = info
+        print("%-10s %5d x %4d  z %s" % (r, c.width, c.height, info["z"]))
+    # mapa de altura (só a área jogável): linhas de dígitos, j = linha, i = coluna
+    meta["altura"] = ["".join(str(max(0, alt[(i, j)])) for i in range(NI)) for j in range(NJ)]
+    for k, (xo, yo, im, n) in enumerate(subidas):
+        meta["escadas"].append({"tiles": [[i, j] for (i, j), s in sub_de.items() if s == k], "lances": n})
+    meta["bocas"] = [[i, j] for i, j in bocas]
+    json.dump(meta, open(os.path.join(pasta, "mapa.json"), "w"), indent=1)
+    print("mapa.json:", NI, "x", NJ, "tiles;", len(meta["escadas"]), "subidas;", len(bocas), "bocas")
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "exporta":
+        monta(sys.argv[2] if len(sys.argv) > 2 else "../../../../assets/game/iso/mapa")
+        sys.exit(0)
     monta()

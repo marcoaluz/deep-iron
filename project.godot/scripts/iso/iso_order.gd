@@ -22,6 +22,10 @@ var _grid := {}  # célula da tela -> [Box]
 var _srect := {}  # Box -> retângulo na tela
 ## Quantas vezes um encaixe não coube no lugar e caiu na reordenação completa (teste/relatório).
 var full_rebuilds := 0
+## A ordem das fixas mudou por um conserto local (quem usa reaplica os z das fixas).
+var dirty := false
+## Consertos locais feitos (teste/relatório).
+var repairs := 0
 
 
 func build(statics: Array) -> void:
@@ -126,11 +130,7 @@ func place(dynamic: Array) -> Dictionary:
 	for d in dynamic:
 		var r := Iso.screen_rect(d)
 		rects[d] = r
-		var lo := -1
-		for s in _near(r):
-			if Iso.behind(s, d) == true:
-				lo = maxi(lo, ranks[s])
-		out[d] = lo
+		out[d] = _slot(d, r)
 	# se A fica atrás de B mas caiu num espaço DEPOIS do de B, B sobe pro espaço de A (nunca
 	# desce: tem que continuar depois das fixas que ficam atrás dele)
 	for _pass in 4:
@@ -151,6 +151,41 @@ func place(dynamic: Array) -> Dictionary:
 		if not changed:
 			break
 	return out
+
+
+## O espaço de quem anda: depois da última fixa atrás dele. Se alguma fixa que está NA FRENTE
+## dele vem antes desse ponto (duas fixas sem relação entre si ficaram na ordem "errada" pra
+## ele), conserta: adianta essa fixa pra depois do ponto, se isso não quebra outra relação.
+func _slot(d, r: Rect2) -> int:
+	var near := _near(r)
+	var lo := -1
+	for s in near:
+		if Iso.behind(s, d) == true:
+			lo = maxi(lo, ranks[s])
+	for s in near:
+		if ranks[s] <= lo and Iso.behind(d, s) == true:
+			if _move_after(s, lo):
+				lo -= 1  # a fixa de rank lo andou uma casa pra trás
+	return lo
+
+
+## Leva a fixa s pra logo depois da posição `target` (que vem depois dela), se nenhuma fixa
+## entre as duas tiver que ficar na frente de s. true = moveu.
+func _move_after(s, target: int) -> bool:
+	var from: int = ranks[s]
+	if target <= from:
+		return true
+	var rs: Rect2 = _srect[s]
+	for k in range(from + 1, target + 1):
+		var t = order[k]
+		if rs.intersects(_srect[t]) and Iso.behind(s, t) == true:
+			return false
+	order.remove_at(from)
+	order.insert(target, s)
+	_reindex(from)
+	dirty = true
+	repairs += 1
+	return true
 
 
 ## z_index de cada um que anda: {Box: z}. Os que caíram no mesmo espaço são ordenados entre

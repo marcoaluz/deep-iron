@@ -83,7 +83,7 @@ func setup(n: Node2D, is_dynamic: bool, view: Node) -> void:
 	box = boxes[0]
 	_build_mirror()
 	_update_box()
-	position = Iso.iso(src.global_position, box.zb).round()
+	position = Iso.iso(_view.art(src.global_position), box.zb).round()
 
 
 # ------------------------------------------------------------ espelho
@@ -191,10 +191,13 @@ func _sync_props() -> void:
 		if pr[0] == src:
 			pr[1].position = Vector2.ZERO  # o pé já é a posição do espelho
 	visible = src.visible
-	modulate = src.modulate
+	modulate = src.modulate * _view.level_tint(src.global_position)  # subsolo: mais escuro
+	var k: float = _view.S  # a arte de hoje cresce junto com o mapa novo (escala da vista)
 	if not _root_copy:
-		scale = Vector2(src.scale.x * _flip, src.scale.y)
+		scale = Vector2(src.scale.x * _flip * k, src.scale.y * k)
 		rotation = src.rotation
+	else:
+		scale = Vector2(k, k)
 	if _flip < 0.0:
 		_unflip_labels()
 
@@ -252,12 +255,15 @@ func _update_box() -> bool:
 	var feet := src.global_position
 	var vr := _visual_rect()
 	var rect: Rect2
+	var k: float = _view.S
 	var top := maxf(MIN_HEIGHT, -vr.position.y)
 	if dynamic:
 		rect = Rect2(feet - Vector2.ONE * WALKER_FOOT * 0.5, Vector2.ONE * WALKER_FOOT)
 		top = maxf(16.0, top)
 	else:
 		rect = _footprint(feet, vr)
+	rect = _view.art_rect(rect)  # caixa em px de arte (escala da vista; andar de baixo na laje dele)
+	top *= k
 	var zb: float = _view.height_at(feet) if _view.has_method("height_at") else 0.0
 	if _parts.size() > 1:
 		return _update_parts(feet, zb)
@@ -271,12 +277,14 @@ func _update_box() -> bool:
 ## Prédio em "L": cada parte tem a sua caixa (declarada) e o seu recorte da arte.
 func _update_parts(feet: Vector2, zb: float) -> bool:
 	var changed := false
-	var origin := Iso.iso(feet, zb)
+	var sk: float = _view.S
+	var origin := Iso.iso(_view.art(feet), zb)
 	for k in _parts.size():
 		var b = boxes[k]
 		var r: Rect2 = _parts[k].rect
 		r.position += feet
-		var zt: float = zb + float(_parts[k].h)
+		r = _view.art_rect(r)
+		var zt: float = zb + float(_parts[k].h) * sk
 		if r != b.rect or b.zb != zb or absf(b.zt - zt) > 0.01:
 			changed = true
 		b.rect = r
@@ -326,13 +334,13 @@ func sync_static(view_rect: Rect2) -> bool:
 		_top.queue_redraw()
 		queue_redraw()
 	var changed := _update_box()
-	position = Iso.iso(src.global_position, box.zb).round()
+	position = Iso.iso(_view.art(src.global_position), box.zb).round()
 	return changed
 
 
 func sync_dynamic() -> void:
 	_update_box()
-	var scr := Iso.iso(src.global_position, box.zb)
+	var scr := Iso.iso(_view.art(src.global_position), box.zb)
 	if _last_screen != Vector2.INF:
 		_vel = _vel.lerp(scr - _last_screen, 0.35)
 	_last_screen = scr

@@ -100,8 +100,8 @@ func _process(delta: float) -> bool:
 	if step == 0 and t > 3.0:
 		step = 1
 		print("== liga a vista iso (F3)")
-		if iso and iso.enabled and OS.get_environment("DEEP_IRON_ISO") == "1":
-			iso.set_enabled(false)  # bateria rodando com a iso ligada: volta pra de cima primeiro
+		if iso and iso.enabled:
+			iso.set_enabled(false)  # Prompt 29: a iso já abre ligada com o mapa novo; volta pra de cima primeiro
 		check(iso != null and not iso.enabled, "vista iso existe e começa desligada")
 		snap = snapshot()
 		ground_before = cam.ground_center()
@@ -146,8 +146,8 @@ func _process(delta: float) -> bool:
 		check(absf(fh.ground.y - bb.box.rect.end.y) < 1.0, "a ordem de andar vai pro pé da parede")
 		hit = iso.pick(face)
 		check(hit.node == hub or (hit.node != null and hit.node.is_in_group("ipezinhos")), "na vista: a parede, ou um ipezinho na frente dela")
-		var empty := Vector2(-600, 380)  # canto vazio da mina
-		hit = iso.pick(Iso.iso(empty))
+		var empty := Vector2(550, -950)  # canto vazio da floresta (terraço de cima)
+		hit = iso.pick(iso.to_screen(empty))
 		check(hit.node == null or hit.ground.distance_to(empty) < 40.0, "chão livre: ponto certo (%s)" % hit.ground)
 		# o ipezinho mais afastado dos outros (dois colados: o clique pega o da frente, certo)
 		var ips: Array = main.get_tree().get_nodes_in_group("ipezinhos")
@@ -157,17 +157,19 @@ func _process(delta: float) -> bool:
 			var near := INF
 			for b in ips:
 				if a != b:
-					near = minf(near, Iso.iso(a.global_position).distance_to(Iso.iso(b.global_position)))
+					near = minf(near, iso.to_screen(a.global_position).distance_to(iso.to_screen(b.global_position)))
 			if near > best:
 				best = near
 				ip = a
-		main._press_canvas = Iso.iso(ip.global_position) + Vector2(0, -14)
+		main._press_canvas = iso.to_screen(ip.global_position) + Vector2(0, -14)
+		var seen: Dictionary = iso.pick(main._press_canvas)
+		var expected: Node2D = seen.node if seen.node and seen.node.is_in_group("ipezinhos") else ip
 		main._finish_left_click_iso(false)
-		check(main.selected == ip, "clique no boneco seleciona ele")
+		check(main.selected == expected, "clique no boneco seleciona o que se vê ali (%s)" % expected.name)
 		print("== construir e demolir (encaixe incremental)")
 		n_static_before = iso._order.order.size()
 		extra = load("res://scenes/props/arvore.tscn").instantiate()
-		extra.position = Vector2(-560, 300)
+		extra.position = Vector2(150, 250)
 		main.get_node("World").add_child(extra)
 		t_mark = t
 	elif step == 2 and t > t_mark + 0.5:
@@ -210,12 +212,12 @@ func _process(delta: float) -> bool:
 		print("== fantasma do posicionador em pé")
 		var placer = main.get_tree().get_first_node_in_group("house_placer")
 		placer.begin(func(_p): return false)
-		var spot := Vector2(-300, 200)
+		var spot := Vector2(-300, 220)
 		placer.move_to(spot)
 		iso._process(0.016)
 		var gb: Sprite2D = iso._ghost_bb
 		check(gb != null and gb.visible, "o fantasma aparece em pé na vista iso")
-		check(gb != null and gb.position.distance_to(Iso.iso(spot)) < 1.0, "no ponto isométrico do mouse")
+		check(gb != null and gb.position.distance_to(iso.to_screen(spot)) < 1.0, "no ponto isométrico do mouse")
 		check(placer._ghost.visibility_layer == iso.LAYER_STANDING, "fora da textura do chão (não fica deitado)")
 		check(gb != null and gb.modulate == placer._ghost.modulate, "mesma cor de pode/não pode")
 		# mirando na PAREDE do Centro da Vila: o chão embaixo do mouse é o pé da parede -> recusa
@@ -270,7 +272,7 @@ func iso_parts() -> Array:
 	var n := Node2D.new()
 	n.set_script(sc)
 	n.name = "PredioL"
-	n.position = Vector2(-500, 250)
+	n.position = Vector2(-100, 250)
 	var spr := Sprite2D.new()
 	spr.texture = load("res://icon.svg")
 	spr.offset = Vector2(0, -50)

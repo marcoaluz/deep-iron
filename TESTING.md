@@ -68,6 +68,7 @@ determinístico) só mudou o que o bloco pretendia — instruções no topo do a
 | `b44_vestiario.gd` | 44 — Vestiário como prédio físico |
 | `p28_iso.gd` | Prompt 28 — vista isométrica no jogo (F3): espelhos, ordem por caixas, clique pelo raio, construir/demolir, prédio em "L", fantasma, câmera/save, desligar |
 | `p28_save.gd` | Prompt 28 — save de antes do Prompt 28 carrega igual nas duas vistas (md5 do arquivo, ipezinhos, posições, créditos); com `DEEP_IRON_SAVE_FIXTURE=<cópia de um save antigo>` usa a cópia, sem ela faz o próprio save |
+| `p29_mapa.gd` | Prompt 29 — mapa novo: alturas dos terraços e rampa da escada, navegação (escada e portão), construir só em chão plano, ordem com os terraços, andares de baixo empilhados (clique volta pro andar), céu e luz por hora, migração do save |
 | `../test_iso.gd` (GUT, rápido) | Prompt 28 — núcleo: projeção, verdade 3D, ordem incremental, raio da câmera, direção de losango |
 | `../test_iso_arte.gd` (GUT, rápido) | Prompt 28 — verificador "o sprite cabe na caixa" contra a arte dos prédios |
 | `../test_iso_pele.gd` (GUT, rápido) | Prompt 28 — paletas de pele por código (igual ao `tons_de_pele.py`; dados em `tests/data/pele/`) |

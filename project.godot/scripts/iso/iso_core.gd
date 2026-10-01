@@ -68,10 +68,15 @@ const EPS := 0.01
 
 ## A VERDADE: a está atrás de b (a desenha antes)? Separação por eixo: a está inteira do lado
 ## "de trás" de b em x, em y, ou embaixo em z. Se nenhum eixo separa, se atravessam (null).
+## Prompt 29 (terraços): se separam em sentidos OPOSTOS (a mais pro fundo em y, mas mais alta em
+## z — um boneco no terraço de cima ao norte do terraço do meio), uma não cobre a outra na
+## tela: também null (sem restrição), senão a resposta dependeria da ordem da pergunta.
 static func behind(a: Box, b: Box):
-	if a.rect.end.x <= b.rect.position.x + EPS or a.rect.end.y <= b.rect.position.y + EPS or a.zt <= b.zb + EPS:
+	var ab: bool = a.rect.end.x <= b.rect.position.x + EPS or a.rect.end.y <= b.rect.position.y + EPS or a.zt <= b.zb + EPS
+	var ba: bool = b.rect.end.x <= a.rect.position.x + EPS or b.rect.end.y <= a.rect.position.y + EPS or b.zt <= a.zb + EPS
+	if ab and not ba:
 		return true
-	if b.rect.end.x <= a.rect.position.x + EPS or b.rect.end.y <= a.rect.position.y + EPS or b.zt <= a.zb + EPS:
+	if ba and not ab:
 		return false
 	return null
 

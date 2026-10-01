@@ -110,11 +110,17 @@ func _process(delta: float) -> bool:
 			var ws := get_nodes_in_group("ipezinhos")
 			freeze(ws[1], p.global_position + Vector2(40, 10))
 			freeze(ws[2], p.global_position + Vector2(mor.park_radius + 200.0, 0))
-			step = 3
-			t_mark = t
+			step = 25
 		elif t - t_mark > 300.0:
 			check(false, "parque não ficou pronto")
 			step = 99
+	elif step == 25:
+		# (Prompt 29) um quadro depois: o quadro em que o parque nasce é longo (refaz a navegação)
+		# e ainda corria a 8×; a medição começa limpa daqui
+		for w in get_nodes_in_group("ipezinhos").slice(1, 3):
+			w.happiness = 40.0
+		step = 3
+		t_mark = t
 	elif step == 3 and t - t_mark > 4.0:
 		var ws := get_nodes_in_group("ipezinhos")
 		var near: float = ws[1].happiness

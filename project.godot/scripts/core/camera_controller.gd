@@ -226,7 +226,7 @@ func _to_cam(world_pos: Vector2) -> Vector2:
 ## O ponto do CHÃO no centro da tela (save, troca de vista).
 func ground_center() -> Vector2:
 	var c := get_screen_center_position()
-	return iso_view.to_ground_plane(c) if iso_view else c
+	return iso_view.ground_under(c) if iso_view else c  # Prompt 29: o raio acha o terraço
 
 
 ## Prompt 28: trocou de vista — continua olhando o mesmo ponto do chão.

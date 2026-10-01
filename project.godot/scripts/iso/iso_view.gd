@@ -21,6 +21,7 @@ extends Node2D
 const Iso := preload("res://scripts/iso/iso_core.gd")
 const Order := preload("res://scripts/iso/iso_order.gd")
 const Billboard := preload("res://scripts/iso/iso_billboard.gd")
+const Ceu := preload("res://scripts/iso/iso_sky.gd")
 
 const LAYER_DEFAULT := 1
 const LAYER_WORLD := 2
@@ -66,6 +67,18 @@ var _saved_layers := {}  # filhos do Main que mudam de camada no modo iso -> cam
 ## chão); o desenho do prédio fica EM PÉ aqui, no ponto isométrico do mouse.
 var _placer: Node2D
 var _ghost_bb: Sprite2D
+## Prompt 29: px de ARTE por px do mundo. A lógica continua no chão de sempre; a vista desenha
+## a arte nova no tamanho dela (o mapa novo foi montado com as posições do jogo × 1,5).
+var S := 1.0
+## Terreno do mapa novo: [[Box, Sprite2D]] dos terraços e escadas (entram na ordem e no clique)
+var _terrain: Array = []
+var _terrain_node: Node2D
+## Céu, montanhas e nuvens (só com o mapa novo: a vila é a céu aberto)
+var _sky: Node2D
+## Andares de baixo empilhados: [{nome, art_rect, z, sprite, tint}]
+var _levels: Array = []
+## Tom de cada andar (o subsolo é sempre mais escuro que a superfície, de dia e de noite)
+const LEVEL_TINT := {"nivel2": Color(0.62, 0.66, 0.82), "abismo": Color(0.7, 0.55, 0.5)}
 
 
 func setup(main: Node2D) -> void:
@@ -102,6 +115,8 @@ func set_enabled(on: bool) -> void:
 	enabled = on
 	var vp := get_viewport()
 	if on:
+		S = _env.iso_scale() if _env.has_method("has_iso_map") and _env.has_iso_map() else 1.0
+		_build_terrain()
 		_build_ground()
 		RenderingServer.set_default_clear_color(VOID_COLOR)
 		_hide_main_children(true)
@@ -128,6 +143,8 @@ func set_enabled(on: bool) -> void:
 		_ground_layer.visible = false
 	visible = on
 	set_process(on)
+	if _sky:
+		_sky.set_active(on)
 	if "iso_view" in _camera:
 		_camera.iso_view = self if on else null
 	if _camera.has_method("on_view_changed"):
@@ -180,9 +197,97 @@ func _build_ground() -> void:
 	_ground_sv.canvas_transform = Transform2D(0.0, -_ground_rect.position)
 	_ground_sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_ground_sprite.texture = _ground_sv.get_texture()
-	_ground_sprite.transform = Transform2D(Vector2(1.0, 0.5), Vector2(-1.0, 0.5), Iso.iso(_ground_rect.position))
+	_ground_sprite.transform = Transform2D(Vector2(1.0, 0.5) * S, Vector2(-1.0, 0.5) * S, Iso.iso(_ground_rect.position * S))
 	_ground_layer.visible = true
+	if not _levels.is_empty():
+		# mapa novo: o chão da superfície é o terreno; da textura do chão (o que o jogo desenha no
+		# chão: manchas das zonas, pedrinhas, luz) só entram os pedaços dos andares de baixo, por
+		# cima do chão novo de cada laje
+		_ground_layer.visible = false
+		for lv in _levels:
+			var dec: Sprite2D = lv.get("decal")
+			if dec == null:
+				dec = Sprite2D.new()
+				dec.name = "ChaoDoJogo"
+				dec.centered = false
+				dec.region_enabled = true
+				dec.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+				dec.light_mask = 0
+				lv.sprite.add_child(dec)
+				lv["decal"] = dec
+			dec.texture = _ground_sv.get_texture()
+			var r: Rect2 = lv.rect
+			dec.region_rect = Rect2(r.position - _ground_rect.position, r.size)
+			var o: Vector2 = Iso.iso(art(r.position), lv.z) - lv.sprite.position
+			dec.transform = Transform2D(Vector2(1.0, 0.5) * S, Vector2(-1.0, 0.5) * S, o)
 
+
+# ------------------------------------------------------------ terreno do mapa novo (Prompt 29)
+## As imagens do terreno (monta.py exporta): o fundo da pedreira e a moldura de morros ficam
+## embaixo de tudo; os terraços (alto, meio, paredão) e as escadas são CAIXAS na ordem e no
+## clique, como qualquer coisa em pé (regra do contrato: cada platô = uma imagem = uma caixa).
+const BACK_Z := {"moldura": Order.BASE - 60, "fundo": Order.BASE - 50}
+
+
+func _build_terrain() -> void:
+	if _terrain_node != null or not (_env.has_method("has_iso_map") and _env.has_iso_map()):
+		return
+	_terrain_node = Node2D.new()
+	_terrain_node.name = "Terreno"
+	add_child(_terrain_node)
+	move_child(_terrain_node, 0)
+	var dir: String = _env.iso_map_file.get_base_dir()
+	var regs: Dictionary = _env.iso_map.get("regioes", {})
+	for r in regs:
+		var info: Dictionary = regs[r]
+		var tex: Texture2D = load(dir.path_join(info.img))
+		if tex == null:
+			continue
+		var sp := Sprite2D.new()
+		sp.name = "Terreno_" + r
+		sp.texture = tex
+		sp.centered = false
+		sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sp.position = Vector2(info.tela[0], info.tela[1])
+		sp.light_mask = 2
+		_terrain_node.add_child(sp)
+		if BACK_Z.has(r):
+			sp.z_index = BACK_Z[r]
+			if r == "moldura":
+				_sky = Ceu.new()
+				_terrain_node.add_child(_sky)
+				var wr: Rect2 = _env.iso_ground_rect()
+				_sky.setup(self, sp.position, Iso.iso(wr.get_center() * S, 0.0), sp)
+			continue
+		if not info.has("chao"):
+			continue
+		var c: Array = info.chao
+		var b := Iso.Box.new(Rect2(c[0] * S, c[1] * S, c[2] * S, c[3] * S), float(info.z[0]), float(info.z[1]),
+			"rampa" if info.get("rampa", false) else "terreno", r, null)
+		_terrain.append([b, sp])
+	# os andares de baixo (nível 2, abismo): uma laje cada, empilhada embaixo da superfície
+	var levels: Dictionary = _env.andares.get("andares", {})
+	for nome in levels:
+		var a: Dictionary = levels[nome]
+		var tex2: Texture2D = load(dir.path_join(a.img))
+		if tex2 == null:
+			continue
+		var sp2 := Sprite2D.new()
+		sp2.name = "Andar_" + nome
+		sp2.texture = tex2
+		sp2.centered = false
+		sp2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sp2.position = Vector2(a.tela[0], a.tela[1])
+		sp2.light_mask = 2
+		sp2.self_modulate = LEVEL_TINT.get(nome, Color.WHITE)
+		_terrain_node.add_child(sp2)
+		var cx: Array = a.caixa
+		var art_r := Rect2(cx[0], cx[1], cx[2], cx[3])
+		var b2 := Iso.Box.new(art_r, float(a.z[0]), float(a.z[1]), "terreno", nome, null)
+		_terrain.append([b2, sp2])
+		var lr := Rect2(a.rect[0], a.rect[1], a.rect[2], a.rect[3])
+		_levels.append({"nome": nome, "art_rect": Rect2(art(lr.position), lr.size * S), "z": float(a.z_chao),
+			"sprite": sp2, "rect": lr, "tint": LEVEL_TINT.get(nome, Color.WHITE)})
 
 # ------------------------------------------------------------ quem é chão, quem fica em pé
 ## Chão de verdade: vai inteiro pra textura achatada (piso, paredes, pedrinhas: z <= -5).
@@ -265,6 +370,8 @@ func _rebuild_order() -> void:
 	for bb in _ents.values():
 		if not bb.dynamic:
 			statics.append_array(bb.boxes)
+	for t in _terrain:
+		statics.append(t[0])
 	_order.build(statics)
 	_apply_static_z()
 
@@ -276,6 +383,8 @@ func _apply_static_z() -> void:
 		bb.z_index = _order.z_of_static(bb.box)
 		if bb.boxes.size() > 1:
 			bb.set_part_z(bb.boxes.map(func(b): return _order.z_of_static(b)))
+	for t in _terrain:
+		t[1].z_index = _order.z_of_static(t[0])
 
 
 # ------------------------------------------------------------ a cada quadro
@@ -304,6 +413,10 @@ func _process(_delta: float) -> void:
 	else:
 		_refresh_static_z_if_needed()
 	var zs := _order.dynamic_z(dyn_boxes)
+	if _order.dirty:  # conserto local na ordem das fixas: os z delas mudaram
+		_order.dirty = false
+		_apply_static_z()
+		zs = _order.dynamic_z(dyn_boxes)
 	for b in zs:
 		dyn_bbs[b].z_index = zs[b]
 	_sync_ghost()
@@ -311,6 +424,30 @@ func _process(_delta: float) -> void:
 
 
 # ------------------------------------------------------------ fantasma do posicionador
+## Mapa novo: a pegada (verde/vermelha) e o raio das casas, na altura do terraço (a textura
+## antiga do chão da superfície não aparece mais).
+func _draw_placer() -> void:
+	var fp := Rect2(_placer._pos + _placer._footprint.position, _placer._footprint.size)
+	var col: Color = _placer.COLOR_OK if _placer._reason == "" else _placer.COLOR_BAD
+	var h := height_at(_placer._pos)
+	var pts := PackedVector2Array()
+	for c in [fp.position, Vector2(fp.end.x, fp.position.y), fp.end, Vector2(fp.position.x, fp.end.y)]:
+		pts.append(to_screen(c, h))
+	_overlay.draw_colored_polygon(pts, Color(col, 0.16))
+	var closed := pts.duplicate()
+	closed.append(pts[0])
+	_overlay.draw_polyline(closed, Color(col, 0.9), 1.5)
+	if _placer._radius > 0.0:
+		var c0: Vector2 = _placer._radius_center
+		var hc := height_at(c0)
+		var n := 72
+		for i in n:
+			if i % 2 == 0:
+				var a0 := to_screen(c0 + Vector2.RIGHT.rotated(TAU * i / n) * _placer._radius, hc)
+				var a1 := to_screen(c0 + Vector2.RIGHT.rotated(TAU * (i + 1) / n) * _placer._radius, hc)
+				_overlay.draw_line(a0, a1, Color(1.0, 0.88, 0.5, 0.85), 2.0)
+
+
 func _setup_ghost(on: bool) -> void:
 	_placer = get_tree().get_first_node_in_group("house_placer")
 	if _placer == null:
@@ -340,9 +477,9 @@ func _sync_ghost() -> void:
 	_ghost_bb.vframes = g.vframes
 	_ghost_bb.frame = g.frame
 	_ghost_bb.offset = g.offset
-	_ghost_bb.scale = g.scale
+	_ghost_bb.scale = g.scale * S
 	_ghost_bb.modulate = g.modulate
-	_ghost_bb.position = Iso.iso(_placer._pos, height_at(_placer._pos)).round()
+	_ghost_bb.position = to_screen(_placer._pos).round()
 
 
 ## Construir/demolir muda os ranks de quem vem depois: os z de todas as fixas se ajustam
@@ -364,21 +501,41 @@ func _screen_view() -> Rect2:
 ## A parte do CHÃO que a tela mostra (retângulo que contém os 4 cantos da tela no chão).
 func ground_view_rect() -> Rect2:
 	var v := _screen_view()
-	var r := Rect2(Iso.iso_inv(v.position), Vector2.ZERO)
+	var r := Rect2(Iso.iso_inv(v.position) / S, Vector2.ZERO)
 	for c in [Vector2(v.end.x, v.position.y), v.end, Vector2(v.position.x, v.end.y)]:
-		r = r.expand(Iso.iso_inv(c))
+		r = r.expand(Iso.iso_inv(c) / S)
 	return r
 
 
 # ------------------------------------------------------------ chão <-> tela
-## Chão -> canvas iso (pé no nível do relevo; hoje o mapa é plano).
-func to_screen(ground: Vector2, z: float = 0.0) -> Vector2:
-	return Iso.iso(ground, z)
+## Chão do mundo -> canvas iso (z em px de arte; sem z = no nível do relevo ali).
+func to_screen(ground: Vector2, z: float = NAN) -> Vector2:
+	return Iso.iso(art(ground), height_at(ground) if is_nan(z) else z)
 
 
-## Canvas iso -> chão, no plano z = 0 (sem olhar o que está em cima).
+## Ponto da lógica -> chão da vista em px de arte (escala 1,5; os andares de baixo vão pra
+## laje deles, empilhada embaixo da superfície).
+func art(ground: Vector2) -> Vector2:
+	if _env.has_method("view_ground") and _env.has_iso_map():
+		return _env.view_ground(ground)
+	return ground * S
+
+
+## Retângulo da lógica -> retângulo na vista (px de arte).
+func art_rect(r: Rect2) -> Rect2:
+	return Rect2(art(r.position), r.size * S)
+
+
+## Chão da vista (px de arte) numa altura -> lógica.
+func logic_of(art_pos: Vector2, z: float) -> Vector2:
+	if _env.has_method("logic_from_view") and _env.has_iso_map():
+		return _env.logic_from_view(art_pos, z)
+	return art_pos / S
+
+
+## Canvas iso -> chão do mundo, no plano z = 0 (sem olhar o que está em cima).
 func to_ground_plane(canvas_pos: Vector2) -> Vector2:
-	return Iso.iso_inv(canvas_pos, 0.0)
+	return Iso.iso_inv(canvas_pos, 0.0) / S
 
 
 ## O RAIO DA CÂMERA no ponto do canvas: {what, node, ground, z, face}. node = a coisa em pé
@@ -389,13 +546,25 @@ func pick(canvas_pos: Vector2) -> Dictionary:
 	for bb in _ents.values():
 		if bb.visible_src() and bb.pickable:
 			solids.append_array(bb.boxes)
-	var planes := [{"rect": _env.world_rect(), "z": 0.0, "name": "chão"}]
+	for t in _terrain:
+		solids.append(t[0])  # terraço/escada: acerta o chão de cima (ou a parede do penhasco)
+	var wr: Rect2 = _env.iso_ground_rect() if _env.has_method("has_iso_map") and _env.has_iso_map() else _env.world_rect()
+	var planes := [{"rect": Rect2(wr.position * S, wr.size * S), "z": 0.0, "name": "chão"}]
+	for lv in _levels:  # o chão de cada andar de baixo, na laje dele
+		planes.append({"rect": lv.art_rect, "z": lv.z, "name": lv.nome})
 	var hit := Iso.pick(canvas_pos, solids, planes)
-	var out := {"what": hit.what, "node": null, "z": hit.get("z", 0.0), "face": hit.what == "face",
-		"ground": hit.get("ground", Iso.iso_inv(canvas_pos, 0.0))}
+	var gz: float = hit.get("z", 0.0)
+	var out := {"what": hit.what, "node": null, "z": gz, "face": hit.what == "face",
+		"ground": logic_of(hit.get("ground", Iso.iso_inv(canvas_pos, 0.0)), gz)}
 	if hit.has("box"):
 		out.node = hit.box.owner
 	return out
+
+
+## O ponto do chão que se vê nesse ponto do canvas (o raio acerta o terraço, a escada, o
+## chão do fundo). A câmera usa pra saber pra onde está olhando.
+func ground_under(canvas_pos: Vector2) -> Vector2:
+	return pick(canvas_pos).ground
 
 
 ## Pra ordens de andar: o ponto do chão de um clique (pé da parede se caiu numa face; o pé
@@ -412,6 +581,14 @@ func ground_at(canvas_pos: Vector2) -> Vector2:
 ## traz os terraços.
 func height_at(ground: Vector2) -> float:
 	return _env.height_at(ground) if _env.has_method("height_at") else 0.0
+
+
+## Tom do andar onde fica esse ponto (branco na superfície).
+func level_tint(ground: Vector2) -> Color:
+	for lv in _levels:
+		if lv.rect.grow(48.0).has_point(ground):
+			return lv.tint
+	return Color.WHITE
 
 
 func billboard_of(src: Node) -> Node2D:
@@ -455,10 +632,12 @@ func _draw_overlay() -> void:
 	# marcador da ordem (o anel do Main, achatado no chão)
 	if _main.get("_marker_timer") != null and _main._marker_timer > 0.0:
 		var t: float = _main._marker_timer / _main.MARKER_TIME
-		var c := Iso.iso(_main._marker_pos)
+		var c := to_screen(_main._marker_pos)
 		_overlay.draw_set_transform(c, 0.0, Vector2(1.0, 0.5))
-		_overlay.draw_arc(Vector2.ZERO, lerpf(18.0, 6.0, t) * 1.41, 0.0, TAU, 24, Color(1.0, 0.84, 0.25, t), 2.0)
+		_overlay.draw_arc(Vector2.ZERO, lerpf(18.0, 6.0, t) * 1.41 * S, 0.0, TAU, 24, Color(1.0, 0.84, 0.25, t), 2.0)
 		_overlay.draw_set_transform(Vector2.ZERO)
+	if _placer and _placer.active and _placer.visible and not _levels.is_empty():
+		_draw_placer()
 	if not show_boxes:
 		return
 	var w := 1.0 / maxf(_camera.zoom.x, 0.1)

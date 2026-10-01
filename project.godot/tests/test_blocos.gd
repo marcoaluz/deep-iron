@@ -200,3 +200,7 @@ func test_p28_iso() -> void:
 
 func test_p28_save() -> void:
 	run_bloco("p28_save.gd")
+
+
+func test_p29_mapa() -> void:
+	run_bloco("p29_mapa.gd")

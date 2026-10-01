@@ -105,7 +105,27 @@ const NAV_EXTRA_GROUPS := ["enfermarias", "tavernas", "campos", "laboratorios", 
 @export var light_cull_margin: float = 260.0
 @export var light_cull_interval: float = 0.2
 
+@export_group("Mapa isométrico (Prompt 29)")
+## O terreno novo (floresta, paliçada, vila em terraços, mina): o mapa.json exportado por
+## prototipos/camera/arte_iso/mapa/monta.py (`python monta.py exporta`). Vazio = o mapa antigo
+## (caverna plana). Com ele: altura por ponto do chão (escadas = rampa), penhasco bloqueia a
+## navegação, escada passa; construir só em chão plano.
+@export_file("*.json") var iso_map_file: String = ""
+## Paliçada entre a floresta e a vila: y da linha e meia largura da abertura do portão.
+@export var palisade_y: float = -462.0
+@export var gate_half_width: float = 40.0
+## Espessura (px do mundo) da "parede" que a navegação vê na beira de um penhasco.
+@export var cliff_thickness: float = 6.0
+
 var navigation_region: NavigationRegion2D
+## mapa.json (vazio = mapa antigo)
+var iso_map: Dictionary = {}
+var _alt_rows: PackedStringArray = PackedStringArray()
+var _stair_tiles := {}  # Vector2i -> true
+## Prompt 29: os andares de baixo empilhados na vista (andares.json): nome -> {rect, z_chao, ...}
+var andares: Dictionary = {}
+## Coisas que estavam em lugar inválido no mapa novo e foram mudadas de lugar: [{nome, de, para}]
+var migrated: Array = []
 
 var _rng := RandomNumberGenerator.new()
 var _placed: Array[Vector2] = []
@@ -121,10 +141,15 @@ var _cull_timer: float = 0.0
 func _ready() -> void:
 	add_to_group("environment")
 	_rng.seed = map_seed
-	_build_ground()
+	_load_iso_map()
+	if not has_iso_map():
+		_build_ground()  # mapa novo: o chão é o terreno isométrico (vista iso)
 	# as estações são irmãs deste nó; espera um frame pra elas entrarem nos grupos
 	await get_tree().process_frame
-	_build_edges()
+	if has_iso_map():
+		migrate_positions()  # o que caiu em penhasco/escada/paliçada vai pro lugar válido mais perto
+	else:
+		_build_edges()
 	_scatter(pebble_count, pebble_textures, 10.0, 0.4, _add_pebble)
 	_scatter(boulder_count, boulder_textures, 40.0, 1.0, _add_boulder)
 	_scatter(crystal_count, crystal_textures, 50.0, 1.0, _add_crystal)
@@ -190,8 +215,14 @@ func _bake_navigation() -> NavigationPolygon:
 	var nav_poly := NavigationPolygon.new()
 	nav_poly.agent_radius = nav_agent_radius
 	var source := NavigationMeshSourceGeometryData2D.new()
-	source.add_traversable_outline(_rect_outline(walkable_rect()))
-	if clearing_rect.has_area():
+	if has_iso_map():
+		# mapa novo: a superfície inteira (floresta + vila) anda; penhascos e paliçada bloqueiam
+		source.add_traversable_outline(_rect_outline(iso_ground_rect().grow(-8.0)))
+		for o in _iso_blockers():
+			source.add_obstruction_outline(o)
+	else:
+		source.add_traversable_outline(_rect_outline(walkable_rect()))
+	if clearing_rect.has_area() and not has_iso_map():
 		source.add_traversable_outline(_rect_outline(clearing_rect.grow(-30.0)))
 		source.add_traversable_outline(_rect_outline(_tunnel_nav_rect()))
 	if deep_rect.has_area():
@@ -214,8 +245,9 @@ func _bake_navigation() -> NavigationPolygon:
 
 
 ## Área onde dá pra andar DENTRO DA MINA (dentro da borda de pedras). Casas só aqui.
+## (Mapa novo: a vila em terraços, do portão pra baixo; a borda é o corte do terreno.)
 func walkable_rect() -> Rect2:
-	return map_rect.grow(-nav_edge_inset)
+	return map_rect.grow(-12.0 if has_iso_map() else -nav_edge_inset)
 
 
 ## Mapa inteiro, mina + clareira (câmera e ordens de mover).
@@ -230,11 +262,264 @@ func world_rect() -> Rect2:
 	return r
 
 
-## Prompt 28: o relevo é um MAPA DE ALTURA (uma altura por ponto do chão; sem ponte nem túnel
-## por cima de caminho, então a navegação continua 2D). O mapa de hoje é plano; os terraços do
-## mapa novo entram no Prompt 29.
-func height_at(_pos: Vector2) -> float:
-	return 0.0
+## Prompt 28/29: o relevo é um MAPA DE ALTURA (uma altura por ponto do chão; sem ponte nem
+## túnel por cima de caminho, então a navegação continua 2D). Altura em px de arte (32 por
+## degrau). Na escada a altura desce em rampa do norte (degrau de cima) pro sul.
+func height_at(pos: Vector2) -> float:
+	if not has_iso_map():
+		return 0.0
+	var lv := level_of(pos)
+	if not lv.is_empty():
+		return float(lv.z_chao)  # andar de baixo: o chão da laje dele (bem abaixo da superfície)
+	var t := tile_at(pos)
+	if t.x < 0:
+		return 0.0
+	var nivel := float(iso_map.nivel_arte)
+	var h := tile_level(t)
+	if _stair_tiles.has(t):
+		var frac := clampf((pos.y * iso_scale() - float(iso_map.origem_arte[1])) / float(iso_map.tile_arte) - t.y, 0.0, 1.0)
+		return (h + 1.0 - frac) * nivel
+	return h * nivel
+
+
+# ------------------------------------------------------------ mapa isométrico (Prompt 29)
+func _load_iso_map() -> void:
+	if iso_map_file == "":
+		return
+	var d = JSON.parse_string(FileAccess.get_file_as_string(iso_map_file))
+	if typeof(d) != TYPE_DICTIONARY or not d.has("altura"):
+		push_error("environment: mapa isométrico ilegível: %s" % iso_map_file)
+		return
+	iso_map = d
+	_alt_rows = PackedStringArray(d.altura)
+	var fa := iso_map_file.get_base_dir().path_join("andares.json")
+	if FileAccess.file_exists(fa):
+		var da = JSON.parse_string(FileAccess.get_file_as_string(fa))
+		if typeof(da) == TYPE_DICTIONARY:
+			andares = da
+	for e in d.get("escadas", []):
+		for t in e.tiles:
+			_stair_tiles[Vector2i(int(t[0]), int(t[1]))] = true
+
+
+func has_iso_map() -> bool:
+	return not iso_map.is_empty()
+
+
+## Prompt 29: o andar de baixo onde fica esse ponto da lógica ({} = superfície). Os andares
+## ficam empilhados na vista (andares.json): o canto da frente do retângulo do andar encosta
+## no canto da frente do mapa, e o chão fica em z_chao (px de arte).
+func level_of(pos: Vector2) -> Dictionary:
+	for nome in andares.get("andares", {}):
+		var a: Dictionary = andares.andares[nome]
+		var r := Rect2(a.rect[0], a.rect[1], a.rect[2], a.rect[3])
+		if r.grow(48.0).has_point(pos):  # (a borda de pedras fica um pouco pra fora do retângulo)
+			return {"nome": nome, "rect": r, "z_chao": float(a.z_chao), "info": a}
+	return {}
+
+
+## Ponto da lógica -> chão da VISTA (px de arte): na superfície é só a escala; num andar de
+## baixo, o canto da frente dele vai pro canto da frente do mapa.
+func view_ground(pos: Vector2) -> Vector2:
+	var f := iso_scale()
+	var lv := level_of(pos)
+	if lv.is_empty():
+		return pos * f
+	var c: Array = andares.canto_frente_arte
+	return (pos - lv.rect.end) * f + Vector2(c[0], c[1])
+
+
+## Chão da vista (px de arte) numa altura z -> ponto da lógica (o contrário de view_ground).
+func logic_from_view(art: Vector2, z: float) -> Vector2:
+	var f := iso_scale()
+	for nome in andares.get("andares", {}):
+		var a: Dictionary = andares.andares[nome]
+		if z <= float(a.z[1]) + 200.0 and z >= float(a.z[0]) - 64.0:
+			var c: Array = andares.canto_frente_arte
+			return (art - Vector2(c[0], c[1])) / f + Vector2(a.rect[0] + a.rect[2], a.rect[1] + a.rect[3])
+	return art / f
+
+
+## Px de arte por px do mundo (a vista iso desenha a arte nova nessa escala; a lógica não muda).
+func iso_scale() -> float:
+	return float(iso_map.get("fator", 1.0))
+
+
+## O retângulo (no chão do mundo) coberto pelo terreno novo.
+func iso_ground_rect() -> Rect2:
+	var f := iso_scale()
+	var t := float(iso_map.tile_arte)
+	return Rect2(Vector2(iso_map.origem_arte[0], iso_map.origem_arte[1]) / f,
+		Vector2(int(iso_map.ni), int(iso_map.nj)) * t / f)
+
+
+## Tile do terreno novo embaixo de um ponto do chão (Vector2i(-1, -1) = fora do mapa).
+func tile_at(pos: Vector2) -> Vector2i:
+	var f := iso_scale()
+	var t := float(iso_map.tile_arte)
+	var i := floori((pos.x * f - float(iso_map.origem_arte[0])) / t)
+	var j := floori((pos.y * f - float(iso_map.origem_arte[1])) / t)
+	if i < 0 or j < 0 or i >= int(iso_map.ni) or j >= int(iso_map.nj):
+		return Vector2i(-1, -1)
+	return Vector2i(i, j)
+
+
+## Degraus de altura de um tile (0 = fundo da pedreira).
+func tile_level(t: Vector2i) -> int:
+	if t.x < 0 or t.y >= _alt_rows.size():
+		return 0
+	return _alt_rows[t.y].unicode_at(t.x) - 48
+
+
+func is_stair_tile(t: Vector2i) -> bool:
+	return _stair_tiles.has(t)
+
+
+## Dá pra passar de um tile pro vizinho? Mesma altura; ou 1 degrau numa escada, no sentido
+## dela (norte-sul).
+func tiles_connect(a: Vector2i, b: Vector2i) -> bool:
+	var ha := tile_level(a)
+	var hb := tile_level(b)
+	if ha == hb:
+		return true
+	if absi(ha - hb) != 1 or a.x != b.x:
+		return false
+	return _stair_tiles.has(a) or _stair_tiles.has(b)
+
+
+## O que a navegação vê como parede no mapa novo: a beira dos penhascos (onde dois tiles
+## vizinhos não se ligam) e a paliçada (menos a abertura do portão).
+func _iso_blockers() -> Array[PackedVector2Array]:
+	var out: Array[PackedVector2Array] = []
+	var f := iso_scale()
+	var t := float(iso_map.tile_arte)
+	var ox := float(iso_map.origem_arte[0])
+	var oy := float(iso_map.origem_arte[1])
+	var ni := int(iso_map.ni)
+	var nj := int(iso_map.nj)
+	var half := cliff_thickness * 0.5
+	# beiras verticais (entre a coluna i e i+1), juntando os trechos seguidos
+	for i in ni - 1:
+		var start := -1
+		for j in nj + 1:
+			var cut := j < nj and not tiles_connect(Vector2i(i, j), Vector2i(i + 1, j))
+			if cut and start < 0:
+				start = j
+			elif not cut and start >= 0:
+				var x := (ox + (i + 1) * t) / f
+				out.append(_rect_outline(Rect2(x - half, (oy + start * t) / f, half * 2.0, (j - start) * t / f)))
+				start = -1
+	# beiras horizontais (entre a linha j e j+1)
+	for j in nj - 1:
+		var start := -1
+		for i in ni + 1:
+			var cut := i < ni and not tiles_connect(Vector2i(i, j), Vector2i(i, j + 1))
+			if cut and start < 0:
+				start = i
+			elif not cut and start >= 0:
+				var y := (oy + (j + 1) * t) / f
+				out.append(_rect_outline(Rect2((ox + start * t) / f, y - half, (i - start) * t / f, half * 2.0)))
+				start = -1
+	# paliçada: da borda até o portão, dos dois lados
+	var g := iso_ground_rect()
+	out.append(_rect_outline(Rect2(g.position.x, palisade_y - 4.0, -gate_half_width - g.position.x, 8.0)))
+	out.append(_rect_outline(Rect2(gate_half_width, palisade_y - 4.0, g.end.x - gate_half_width, 8.0)))
+	return out
+
+
+## Dá pra ficar parado/construir aqui? Chão plano em volta (raio `margin`), fora de escada,
+## do paredão (degrau 4), da paliçada e do mapa.
+func spot_ok(pos: Vector2, margin: float = 16.0, walker: bool = false) -> bool:
+	if not has_iso_map():
+		return true
+	var t := tile_at(pos)
+	if t.x < 0 or tile_level(t) >= 4:
+		return false
+	if walker:  # boneco: anda em escada e na beira; impossível só paredão, paliçada e fora do mapa
+		return not (absf(pos.y - palisade_y) < 4.0 and absf(pos.x) >= gate_half_width)
+	if _stair_tiles.has(t):
+		return false
+	if absf(pos.y - palisade_y) < margin + 4.0 and absf(pos.x) >= gate_half_width:
+		return false
+	for d in [Vector2(margin, 0), Vector2(-margin, 0), Vector2(0, margin), Vector2(0, -margin)]:
+		var u := tile_at(pos + d)
+		if u.x < 0 or u != t and (not tiles_connect(t, u) or tile_level(u) != tile_level(t) or _stair_tiles.has(u)):
+			return false
+	return true
+
+
+## Pegada de construção no mapa novo: "" se dá pra construir; senão o motivo. O chão
+## embaixo tem que ser plano (um degrau só), fora de escada, do paredão e da paliçada.
+func footprint_reason(fp: Rect2) -> String:
+	if not has_iso_map():
+		return ""
+	if fp.position.y < palisade_y + 6.0 and fp.end.y > palisade_y - 6.0:
+		return "em cima da paliçada"
+	var lv := -1
+	var sx := maxf(minf(10.0, fp.size.x), 1.0)
+	var sy := maxf(minf(10.0, fp.size.y), 1.0)
+	var x := fp.position.x
+	while x <= fp.end.x + 0.01:
+		var y := fp.position.y
+		while y <= fp.end.y + 0.01:
+			var t := tile_at(Vector2(x, y))
+			if t.x < 0:
+				return "fora do mapa"
+			if _stair_tiles.has(t):
+				return "em cima da escada"
+			var l := tile_level(t)
+			if l >= 4:
+				return "no paredão"
+			if lv >= 0 and l != lv:
+				return "na beira do penhasco (o chão tem que ser plano)"
+			lv = l
+			y += sy
+		x += sx
+	return ""
+
+
+## O ponto válido mais perto (procura em anéis de 8 px, até 600 px).
+func nearest_ok(pos: Vector2, margin: float = 16.0, walker: bool = false) -> Vector2:
+	if spot_ok(pos, margin, walker):
+		return pos
+	for ring in range(1, 76):
+		var r := ring * 8.0
+		var n := maxi(8, int(r * 0.8))
+		for k in n:
+			var p := pos + Vector2.RIGHT.rotated(TAU * k / n) * r
+			if spot_ok(p, 10.0 if walker else margin):  # boneco mudado vai pra chão plano mesmo
+				return p
+	return pos
+
+
+## Prompt 29, migração: tudo que ficou em lugar inválido no mapa novo (cena antiga, save
+## antigo) vai pro ponto válido mais perto. Fica registrado em `migrated` (e no console).
+## Retorna quantos mudaram (quem chama refaz a navegação se precisar).
+func migrate_positions() -> int:
+	if not has_iso_map():
+		return 0
+	var n := 0
+	var groups: Array = STATION_GROUPS + NAV_EXTRA_GROUPS + ["ipezinhos", "barricadas", "elevador", "robos"]
+	var seen := {}
+	for group in groups:
+		for node in get_tree().get_nodes_in_group(group):
+			if seen.has(node) or not (node is Node2D) or is_deep(node.global_position):
+				continue
+			seen[node] = true
+			if node.is_in_group("barricadas"):
+				continue  # portões: ficam na abertura da paliçada / junto do poço (posição da cena)
+			# folga pequena: só muda o que está DE FATO em lugar impossível (em cima da beira, da
+			# escada, do paredão, da paliçada). Mais branda que a regra de construir, senão um
+			# prédio construído certinho perto da beira "andaria" ao carregar o save.
+			var margin := 4.0
+			var p: Vector2 = node.global_position
+			var q := nearest_ok(p, margin, node.is_in_group("ipezinhos") or node is CharacterBody2D)
+			if q != p:
+				node.global_position = q
+				migrated.append({"nome": String(node.name), "de": p, "para": q})
+				print("environment: %s mudou de %s pra %s (lugar inválido no mapa novo)" % [node.name, p.round(), q.round()])
+				n += 1
+	return n
 
 
 ## Esse ponto é no fundo (nível 2 ou abismo)?
@@ -275,7 +560,7 @@ func _build_deep() -> void:
 		return
 	var drng := RandomNumberGenerator.new()
 	drng.seed = map_seed + 13  # sorteio próprio: não mexe na mina nem na clareira
-	if deep_floor_texture:
+	if deep_floor_texture and not has_iso_map():
 		_tiled_sprite(deep_floor_texture, deep_rect, -10)
 	# pedras grandes na borda
 	var r := deep_rect
@@ -331,7 +616,7 @@ func _build_abyss() -> void:
 		return
 	var arng := RandomNumberGenerator.new()
 	arng.seed = map_seed + 29  # sorteio próprio: não mexe na mina nem no nível 2
-	if abyss_floor_texture:
+	if abyss_floor_texture and not has_iso_map():
 		_tiled_sprite(abyss_floor_texture, abyss_rect, -10)
 	var r := abyss_rect
 	var edge: Array[Vector2] = []
@@ -419,6 +704,9 @@ func _build_clearing() -> void:
 		return
 	var crng := RandomNumberGenerator.new()
 	crng.seed = map_seed + 7  # sorteio próprio: não mexe na decoração da mina
+	if has_iso_map():
+		_build_sun()
+		return
 	if clearing_floor_texture:
 		_tiled_sprite(clearing_floor_texture, clearing_rect, -10)
 	# chão do túnel cortando a rocha entre a mina e a clareira
@@ -481,7 +769,11 @@ func _build_clearing() -> void:
 	sign_label.add_theme_constant_override("outline_size", 3)
 	sign_label.z_index = 5
 	add_child(sign_label)
-	# sol da superfície: luz grande e quente que some à noite (fica sempre ligado, sem cull)
+	_build_sun()
+
+
+## Sol da superfície: luz grande e quente que some à noite (fica sempre ligado, sem cull).
+func _build_sun() -> void:
 	if light_texture:
 		_sun = PointLight2D.new()
 		_sun.texture = light_texture
@@ -594,6 +886,8 @@ func _scatter(count: int, textures: Array, min_spacing: float, clear_factor: flo
 
 
 func _is_free(p: Vector2, min_spacing: float, clear_radius: float) -> bool:
+	if has_iso_map() and not spot_ok(p, 18.0):
+		return false  # mapa novo: decoração só em chão plano (fora de penhasco, escada, paliçada)
 	for group in STATION_GROUPS:
 		for node in get_tree().get_nodes_in_group(group):
 			# estruturas grandes informam o próprio centro/raio livre

@@ -570,6 +570,11 @@ func apply_pending(main: Node) -> void:
 		shaft.sync_state()  # escavadeira pronta => descida aberta (save antigo sem "elevador")
 	if data.has("workers") and typeof(data.workers) == TYPE_ARRAY:
 		_apply_workers(main, data.workers)
+	# Prompt 29: save de antes do mapa novo — o que caiu em penhasco, escada, paliçada ou paredão
+	# vai pro lugar válido mais perto (fica anotado em environment.migrated)
+	var map_env := get_tree().get_first_node_in_group("environment")
+	if map_env and map_env.has_method("migrate_positions") and map_env.migrate_positions() > 0:
+		map_env.rebuild_navigation()
 
 	var cam_data := SaveUtil.dict(data, "camera")
 	var cam: Node = main.get_node_or_null("Camera2D")

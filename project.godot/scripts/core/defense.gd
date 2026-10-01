@@ -275,7 +275,7 @@ func nearest_gate_id(pos: Vector2) -> String:
 
 
 func gate_label(id: String) -> String:
-	return {"tunel": "portão do túnel", "poco": "portão do poço"}.get(id, "portão")
+	return {"tunel": "portão da floresta", "poco": "portão do poço"}.get(id, "portão")
 
 
 ## O portão está aberto pra saque? (guarda dele caído, numa invasão, e ainda não saquearam)

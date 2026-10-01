@@ -188,7 +188,7 @@ func _process(delta: float) -> bool:
 		check(names.has("CasaNova9"), "save antigo: casa posicionada longe (fora do raio) continua")
 		var far = main.get_node("World/CasaNova9")
 		check(far.built and far.beds_total() == 4 and far.global_position.distance_to(hub.global_position) > hub.house_radius(), "ela funciona (4 camas) mesmo a %d px do Centro" % far.global_position.distance_to(hub.global_position))
-		check(hub.global_position == Vector2(-300, 190) and get_nodes_in_group("comedouros").size() == 1, "save antigo: Centro e comedouro no layout da cena")
+		check(hub.global_position == Vector2(-300, -300) and get_nodes_in_group("comedouros").size() == 1, "save antigo: Centro e comedouro no layout da cena")  # Prompt 29: o Centro foi pro terraço de cima
 		check(hub.founded and not placer().active, "save antigo: não pede fundação")
 		root.get_node("SaveManager").save_game("teste")
 		root.get_node("SaveManager").load_game()

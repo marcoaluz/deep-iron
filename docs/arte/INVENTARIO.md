@@ -185,6 +185,12 @@ prompts 0–31).
 
 ## Plano de crédito
 
+**Atualização 2026-10-01 (Prompt 29, parte 1):** o mapa novo está no jogo (terreno do
+Prompt 27 assado em imagens, céu do cenário, andares de baixo empilhados com os chãos do Prompt
+7). Terreno, céu e chão do nível 2/abismo = **integrado**; o resto (personagens, prédios,
+objetos...) segue nas próximas partes. Sem geração (saldo **1.439**). Relatório:
+`docs/arte/prompt29/PROMPT_29_PARTE1_MAPA.md`.
+
 **Atualização 2026-10-01 (Prompt 28, branch `isometrico`):** motor isométrico no jogo
 principal (F3 liga/desliga), ainda com a arte de hoje; nada desta lista passou pra
 "integrado" (isso é o Prompt 29). Já prontos pra receber a arte: verificador "cabe na caixa"

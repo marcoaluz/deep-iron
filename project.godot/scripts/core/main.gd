@@ -75,8 +75,10 @@ func _ready() -> void:
 	add_child(_iso)
 	_iso.setup(self)
 	_box_drawer.visibility_layer = IsoView.LAYER_ISO  # o retângulo é da tela, fora da textura do chão
-	# testes: DEEP_IRON_ISO=1 roda a partida com a vista iso ligada (a lógica tem que dar igual)
-	if OS.get_environment("DEEP_IRON_ISO") == "1":
+	# Prompt 29: com o mapa novo a vista iso é a padrão (o F3 ainda volta pra de cima, pra
+	# conferir). DEEP_IRON_ISO=0 começa na de cima; =1 força a iso (testes).
+	var iso_env := OS.get_environment("DEEP_IRON_ISO")
+	if iso_env == "1" or (iso_env != "0" and _environment.has_method("has_iso_map") and _environment.has_iso_map()):
 		_iso.set_enabled.call_deferred(true)
 	# modo de posicionar casa (último filho: recebe o input antes do main e o "consome")
 	add_child(preload("res://scripts/core/house_placer.gd").new())

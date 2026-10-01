@@ -68,6 +68,10 @@ color = Color(0.4, 0.42, 0.54, 1)
 
 [node name="DayNight" type="Node" parent="."]
 script = ExtResource("32_daynight")
+day_color = Color(1, 0.99, 0.96, 1)
+dusk_color = Color(1, 0.8, 0.62, 1)
+night_color = Color(0.34, 0.4, 0.62, 1)
+dawn_color = Color(1, 0.92, 0.84, 1)
 
 [node name="World" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -89,6 +93,9 @@ abyss_floor_texture = ExtResource("48_floor_abyss")
 support_texture = ExtResource("25_support")
 light_texture = ExtResource("26_light")
 shadow_texture = ExtResource("30_shadow")
+map_rect = Rect2(-700, -454, 1452, 884)
+clearing_rect = Rect2(-700, -1040, 1452, 570)
+iso_map_file = "res://assets/game/iso/mapa/mapa.json"
 
 [node name="Armazem" parent="World" unique_id=758176732 instance=ExtResource("6_g38uy")]
 position = Vector2(-30, 40)
@@ -97,76 +104,76 @@ position = Vector2(-30, 40)
 position = Vector2(170, 70)
 
 [node name="MineralNode" parent="World" unique_id=1887962547 instance=ExtResource("5_j7lav")]
-position = Vector2(-360, -190)
+position = Vector2(-300, 300)
 
 [node name="MineralNode2" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(-470, 170)
+position = Vector2(-120, 360)
 
 [node name="MineralNode3" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(320, -220)
+position = Vector2(60, 300)
 
 [node name="MineralNode4" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(500, 200)
+position = Vector2(300, 330)
 
 [node name="MineralNode5" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(-20, -310)
+position = Vector2(420, 120)
 ore_total = 350.0
 
 [node name="MineralNode6" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(110, 320)
+position = Vector2(330, -60)
 ore_total = 120.0
 
 [node name="Casa" parent="World" instance=ExtResource("31_casa")]
-position = Vector2(-310, 300)
+position = Vector2(-560, -380)
 
 [node name="Casa2" parent="World" instance=ExtResource("31_casa")]
-position = Vector2(-200, 340)
+position = Vector2(-620, -260)
 
 [node name="Casa3" parent="World" instance=ExtResource("31_casa")]
-position = Vector2(-420, 345)
+position = Vector2(-470, -240)
 
 [node name="CentroVila" parent="World" instance=ExtResource("33_hub")]
-position = Vector2(-300, 190)
+position = Vector2(-300, -300)
 
 [node name="Escavadeira" parent="World" instance=ExtResource("34_dig")]
-position = Vector2(560, -60)
+position = Vector2(-560, 330)
 
 [node name="Oficina" parent="World" instance=ExtResource("35_oficina")]
-position = Vector2(160, -120)
+position = Vector2(-560, -90)
 
 [node name="Enfermaria" parent="World" instance=ExtResource("45_enfermaria")]
-position = Vector2(-170, 160)
+position = Vector2(300, -380)
 
 [node name="JazidaCobre" parent="World" instance=ExtResource("36_cobre")]
-position = Vector2(-560, -300)
+position = Vector2(160, 380)
 
 [node name="JazidaCobre2" parent="World" instance=ExtResource("36_cobre")]
-position = Vector2(260, 360)
+position = Vector2(460, 260)
 
 [node name="JazidaCarvao" parent="World" instance=ExtResource("37_carvao")]
-position = Vector2(-200, -380)
+position = Vector2(300, -120)
 
 [node name="JazidaCarvao2" parent="World" instance=ExtResource("37_carvao")]
-position = Vector2(390, -370)
+position = Vector2(480, -60)
 
 [node name="GaleriaOeste" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(-630, 30)
+position = Vector2(380, -144)
 ore_total = 300.0
 min_village_level = 2
 gallery_name = "oeste"
 
 [node name="GaleriaSudeste" parent="World" instance=ExtResource("36_cobre")]
-position = Vector2(620, 340)
+position = Vector2(540, -144)
 min_village_level = 3
 gallery_name = "sudeste"
 
 [node name="GaleriaNorte" parent="World" instance=ExtResource("37_carvao")]
-position = Vector2(190, -350)
+position = Vector2(200, -144)
 min_village_level = 4
 gallery_name = "norte"
 
 [node name="GaleriaNordeste" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(630, -310)
+position = Vector2(290, -144)
 ore_total = 500.0
 regen_rate = 0.8
 min_village_level = 5
@@ -197,7 +204,7 @@ position = Vector2(-120, -840)
 position = Vector2(230, -760)
 
 [node name="Elevador" parent="World" instance=ExtResource("42_elevador")]
-position = Vector2(500, 25)
+position = Vector2(580, 320)
 bottom_position = Vector2(440, 790)
 
 [node name="JazidaPrata" parent="World" instance=ExtResource("43_prata")]
@@ -216,12 +223,12 @@ position = Vector2(-220, 1180)
 position = Vector2(200, 890)
 
 [node name="BarricadaTunel" parent="World" instance=ExtResource("53_barricada")]
-position = Vector2(0, -372)
+position = Vector2(0, -462)
 gate_id = "tunel"
-display_name = "Portão do túnel"
+display_name = "Portão da floresta"
 
 [node name="BarricadaPoco" parent="World" instance=ExtResource("53_barricada")]
-position = Vector2(500, 66)
+position = Vector2(580, 361)
 gate_id = "poco"
 display_name = "Portão do poço"
 
