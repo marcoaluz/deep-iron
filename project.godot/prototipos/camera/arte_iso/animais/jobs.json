@@ -1,0 +1,13 @@
+{
+ "_obs": "Prompt 15: animais (coelho, javali), tocas e restos, fauna de ambiente",
+ "coelho_base": "2e3e7bf8-3d9b-44e2-b9a3-96a8c7cbe97c",
+ "javali_base": "0021b54b-93df-4298-9ab3-b41a3aa26616",
+ "tocas_carne": "fe1e95da-1534-41b8-a58c-81835224ed11",
+ "coelho_char": "bb9a9938-7280-4299-a004-cc0f3c8deb7e",
+ "javali_char": "546ebb6a-2544-4366-8557-6762f4545080",
+ "fauna": "7dcf4df8-85de-43ad-9631-1fadebb7b450",
+ "escolhidos": {
+  "coelho": 1,
+  "javali": 9
+ }
+}

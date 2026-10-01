@@ -61,8 +61,8 @@ prompts 0–31).
 | Ferrugento (invasor) | 16–17 | falta | — | 4 | andar, atacar, morrer | ~35 |
 | **Criaturas mais fortes + criatura mestre (chefe)** (pedido do Marco) | 16–17 | falta (conceito com checkpoint) | — | 4 | andar, atacar, morrer | ~120 |
 | Robô antigo GIGANTE (218 px, ~80% da casa): achado + arrastado + 3 estágios de conserto (deitado, mesma âncora) + ativo; fluxo em prompt05/FLUXO_ROBO.md | 5 | **gerado** | 4 estados parados + retrato + ícone | 8 paradas, 4 andando | andar, atacar, dano, desligar/derrubado | ~425 (feito) |
-| Coelho + toca (coelho fora / só orelhas / toca vazia) | 15 | falta | 3 estados | — | — | ~45 |
-| **Javalizinho** + toca (visão do mapa, `MAPA_VISAO.md`) | 15 | falta | — | 4 | andar, fugir | ~35 |
+| Coelho + toca (coelho fora / só orelhas / toca vazia) | 15 | **gerado** (`animais/`) | 8 dir. + andar, fugir, abatido; 3 estados da toca | ~40 (feito) |
+| **Javali** + toca | 15 | **gerado** | 8 dir. + andar, fugir, abatido | ~25 (feito) |
 
 ## 5. Prédios (cada construível: obra_1 · obra_2 · obra_3 · pronto; upgrade com obra entre níveis)
 
@@ -134,17 +134,17 @@ prompts 0–31).
 
 | Item | Prompt | Status | Gerações |
 |---|---|---|---|
-| Tocha acesa / apagada (`torch`, `torch_unlit`) | 14 | falta | ~20 |
+| Tochas (parede, chão, apagada), lampiões, fogueira, braseiro, poste | 14 | **gerado** (`objetos/final/`) | chama animada por script | ~20 (feito) |
 | Escora de madeira (`support_beam`, pesquisa "Escoramento") | 7 | **gerado** (ver seção 6) | 0 |
-| Placas de área de perigo: gás, calor, radiação (`placa_perigo`) | 14 | falta | ~20 |
-| Cova (`grave`), entulho (`entulho`) | 14 | falta | ~40 |
-| Trilhos + vagonete (pesquisa "Carrinhos de mina"), caixotes, barris | 14 | falta | ~60 |
+| Placas com pictograma (caveira, raio, gás, perigo), postes, andaime, escada, varal, poço, banco, mesa, bigorna | 14 | **gerado** | — | ~25 (feito) |
+| Cova (`grave`), entulho | 14/8 | entulho **gerado** (Prompt 8); cova **falta** | — | ~20 |
+| Trilhos + vagonete (vazio/cheio), caixotes, barris, sacos, sucata, pneus, corrente, corda | 14 | **gerado** | — | ~40 (feito) |
 | **Trilho com vagonete da boca da mina até o Armazém da pedreira** (aceito, `MAPA_VISAO.md`) | 14 / 27 | falta (trilho pronto; falta o vagonete) | incluído |
-| **Guindaste de madeira da pedreira** (aceito) | 14 | falta | ~25 |
-| **Cerca de estacas** até o portão ser reconstruído (aceito) | 14 | falta | ~20 |
+| **Guindaste de madeira da pedreira** (aceito) | 14 | **gerado** | — | 20 (feito) |
+| **Cerca de estacas** (aceito) | 12/11 | **gerado** (paliçada do muro + cerca da horta) | — | 0 |
 | **Vila em 2–3 terraços de pedreira** com escadas entre eles (aceito) | 27 | montagem (relevo pronto) | 0 |
 | Explosivos (pesquisa), antena do rádio (pesquisa "Rádio da vila") | 14 | falta | ~40 |
-| Itens soltos/carregados: lenha, galho, pilha de minério, comida crua, cestos, moeda, bilhete, cadeado | 14 | falta | ~40 |
+| Pilhas de recurso P/M/G (pedra, tijolo, comida, couro, carvão, aço) + destroços pré-colapso e ossos | 14 | **gerado** | — | ~40 (feito) |
 | Sombra | 19 | **código** (gerada da pegada, regra 7) | 0 |
 
 ## 10. Efeitos e luzes
@@ -185,7 +185,7 @@ prompts 0–31).
 
 ## Plano de crédito
 
-**Atualização 2026-09-30 (fim do Prompt 13):** saldo do ciclo **1.758** (recarga de +5.000 em
+**Atualização 2026-09-30 (fim do Prompt 15):** saldo do ciclo **1.514** (recarga de +5.000 em
 2026-10-30). Casaco por função (~600), robô gigante (~425) terreno da superfície (~215) e da mina (~200), jazidas (~185), vegetação (~230), prédios da vila (~500) e prompts 11–13 (~990) já descontados. Com 1.758, dá pros prompts 14–15 (~450) e parte do 16–18; o resto espera a recarga de 30/10. O que falta dos
 prompts 6–27 é estimado em ~4.000 (ver resposta de planejamento). Cabe no saldo, com pouca
 folga pra refações; o Prompt 31 fica pra depois da recarga.
