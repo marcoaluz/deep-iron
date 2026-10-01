@@ -6,11 +6,13 @@ extends Node2D
 ## (interface de obra, ver obra_site.gd) e, quando termina, o sistema dono ergue o
 ## prédio de verdade (finish_build) e o canteiro some. Nenhum prédio precisou mudar.
 ##
-## Visual: as estacas do lote no chão + o "fantasma" do prédio, que vai ficando mais
-## nítido conforme a obra avança, barrinha de progresso e poeira enquanto trabalham.
+## Visual: as estacas do lote no chão + o prédio em OBRA POR ESTÁGIOS (Prompt 28:
+## fundação 0–33%, paredes 33–66%, prédio cru 66–100%; ver obra_estagio.gd), barrinha de
+## progresso e poeira enquanto trabalham.
 ## Vai pro save (SaveManager, lista "canteiros").
 
 const ObraSite := preload("res://scripts/core/obra_site.gd")
+const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const SELF := "res://scripts/props/canteiro.gd"
 const LOT_TEXTURE := preload("res://assets/game/casa.png")  # quadro 2 = lote com estacas
@@ -143,8 +145,8 @@ func _refresh() -> void:
 	var p := obra_progress()
 	var working := _obra.has_engineer()
 	if _ghost:
-		# o prédio "aparece" conforme a obra anda
-		_ghost.modulate = ObraSite.ghost_color(p)
+		# Prompt 28: o prédio sobe por estágios conforme a obra anda
+		ObraEstagio.apply(_ghost, p)
 	_dust.emitting = working
 	_label.text = "obra: %s\n%s" % [obra_title(), _obra.status(p)]
 	_label.modulate = Color(1.0, 0.8, 0.5) if working else Color(1.0, 0.62, 0.3)

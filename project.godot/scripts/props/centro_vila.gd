@@ -57,6 +57,7 @@ signal upgrade_bought(id: String, new_level: int)
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
+const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 const Ores := preload("res://scripts/core/ores.gd")
 const STAGE_NAMES := ["Acampamento", "Vilarejo", "Vila", "Vila Mineira", "Cidade Mineira"]
 const UPGRADE_IDS := ["moradias", "enfermaria", "trilhas"]
@@ -884,13 +885,13 @@ func _update_visual() -> void:
 	if not _growing:
 		_visual.frame = _stage_index()
 		_apply_stage_look(_stage_index())
-	# expansão em obra: o próximo estágio aparece como fantasma que fica nítido
+	# expansão em obra: o próximo estágio sobe por estágios de obra (Prompt 28)
 	var expanding := pending_upgrade == "expandir" and level < max_level()
 	if not _growing:
 		_next_stage.visible = expanding
 		if expanding:
 			_next_stage.frame = clampi(level, 0, 4)
-			_next_stage.modulate = ObraSite.ghost_color(obra_progress())
+			ObraEstagio.apply(_next_stage, obra_progress())
 	_name_label.text = "Centro da Vila\n%s" % stage_name()
 	if obra_pending():
 		_name_label.text += "\nobra: " + obra_status()
@@ -911,14 +912,14 @@ func _apply_stage_look(i: int) -> void:
 	_shadow.scale = Vector2(5.2 * STAGE_HALF_W[i] / 58.0, 2.6)
 
 
-## Subiu de estágio: o fantasma do prédio novo fica sólido em ~0,6 s e só então vira o
-## quadro de verdade (sem troca seca), com poeira e um "assentar" de leve.
+## Subiu de estágio: a obra do prédio novo termina (a cor crua vira a de verdade em ~0,6 s) e
+## só então vira o quadro de verdade (sem troca seca), com poeira e um "assentar" de leve.
 func _grow_to_stage(i: int) -> void:
 	_growing = true
 	_next_stage.frame = i
 	_next_stage.visible = true
-	if not _next_stage.modulate.a > 0.0:
-		_next_stage.modulate = ObraSite.ghost_color(0.0)
+	ObraEstagio.clear(_next_stage)
+	_next_stage.modulate = ObraEstagio.TINT[2]
 	var tw := create_tween()
 	tw.tween_property(_next_stage, "modulate", Color.WHITE, 0.6)
 	tw.tween_callback(func():

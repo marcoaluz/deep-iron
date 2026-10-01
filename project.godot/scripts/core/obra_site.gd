@@ -19,10 +19,8 @@ var ordered_at: float = 0.0
 var _workers: Array[Node] = []
 
 
-## Cor do "fantasma" do que está sendo construído: fica nítido conforme a obra anda
-## (canteiro e peças/reatores da Escavadeira usam a mesma, pra obra parecer obra).
-static func ghost_color(progress: float) -> Color:
-	return Color(0.8, 0.7, 0.55, 0.18 + 0.6 * clampf(progress, 0.0, 1.0))
+## (Prompt 28: o "fantasma que fica nítido" saiu; a obra aparece por estágios, ver
+## obra_estagio.gd.)
 
 
 ## Obra nova encomendada agora.

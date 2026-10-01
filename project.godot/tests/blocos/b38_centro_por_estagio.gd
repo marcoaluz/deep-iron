@@ -5,8 +5,9 @@ var t := 0.0
 var step := 0
 var fails := 0
 var t_mark := 0.0
-var alphas: Array[float] = []
+var alphas: Array[int] = []  # Prompt 28: os estágios de obra vistos (era a nitidez do fantasma)
 var saw_blend := false
+const OE := preload("res://scripts/core/obra_estagio.gd")
 
 
 func _initialize() -> void:
@@ -60,27 +61,27 @@ func _process(delta: float) -> bool:
 		check(tops[4] < tops[2] and tops[2] < tops[0], "prédio fica mais alto (texto sobe junto)")
 		hub.level = 1
 		hub._update_visual()
-		check(not hub._next_stage.visible, "sem obra: nada de fantasma")
+		check(not hub._next_stage.visible, "sem obra: nada de obra por cima")
 		print("== subir de estágio com engenheiro")
 		main.get_node("Economy").credits = 999999
 		g("armazens").lifetime_stored = 999999.0
 		check(hub.level_up(), "expansão encomendada")
-		check(hub._next_stage.visible and hub._next_stage.frame == 1 and hub._visual.frame == 0, "fantasma do Vilarejo por cima do Acampamento")
+		check(hub._next_stage.visible and hub._next_stage.frame == 1 and hub._visual.frame == 0, "obra do Vilarejo por cima do Acampamento")
 		get_nodes_in_group("ipezinhos")[0].set_job("engenheiro")
 		Engine.time_scale = 4.0
 		step = 1
 		t_mark = t
 	elif step == 1:
 		if hub.pending_upgrade == "expandir":
-			var a: float = hub._next_stage.modulate.a
-			if alphas.is_empty() or a > alphas[-1] + 0.1:
+			var a: int = OE.shown(hub._next_stage)
+			if alphas.is_empty() or a > alphas[-1]:
 				alphas.append(a)
-				print("  obra %d%%  fantasma a=%.2f" % [roundi(hub.obra_progress() * 100), a])
+				print("  obra %d%%  estágio %d" % [roundi(hub.obra_progress() * 100), a])
 		else:
 			# acabou agora: no mesmo quadro o prédio velho ainda está lá e o novo assentando
 			Engine.time_scale = 1.0
 			check(hub.level == 2, "vila no estágio 2")
-			check(alphas.size() >= 3, "fantasma ficou nítido aos poucos %s" % str(alphas.map(func(x): return snappedf(x, 0.01))))
+			check(alphas == [1, 2, 3], "subiu pelos 3 estágios de obra %s" % str(alphas))
 			check(hub._growing and hub._visual.frame == 0 and hub._next_stage.visible, "sem troca seca: o novo ainda assentando por cima do velho")
 			step = 2
 			t_mark = t
@@ -88,18 +89,18 @@ func _process(delta: float) -> bool:
 			check(false, "expansão não terminou")
 			step = 99
 	elif step == 2:
-		if hub._growing and hub._next_stage.modulate.a > 0.9 and hub._next_stage.modulate.a < 0.999:
+		if hub._growing and OE.shown(hub._next_stage) == 0 and hub._next_stage.modulate != Color.WHITE:
 			saw_blend = true
 		if not hub._growing:
-			check(saw_blend or true, "transição rodou")
-			check(hub._visual.frame == 1 and not hub._next_stage.visible, "assentou: quadro do Vilarejo, fantasma sumiu")
+			check(saw_blend, "acabamento: a cor crua da obra vira a de verdade")
+			check(hub._visual.frame == 1 and not hub._next_stage.visible, "assentou: quadro do Vilarejo, a obra sumiu")
 			check(t - t_mark >= 0.4, "levou %.2f s (gradual)" % (t - t_mark))
 			# salva com a próxima expansão pela metade
 			get_nodes_in_group("ipezinhos")[0].set_job("ocioso")
 			check(hub.level_up(), "próxima expansão encomendada")
 			hub.upgrade_left = hub.upgrade_total * 0.6
 			hub._update_visual()
-			set_meta("ghost_a", hub._next_stage.modulate.a)
+			set_meta("ghost_a", OE.shown(hub._next_stage))
 			check(root.get_node("SaveManager").save_game("teste"), "salvou com a expansão em 40%")
 			root.get_node("SaveManager").load_game()
 			step = 3
@@ -108,10 +109,10 @@ func _process(delta: float) -> bool:
 			check(false, "transição não terminou")
 			step = 99
 	elif step == 3 and t - t_mark > 2.0:
-		print("  depois do load: estágio %d quadro %d  fantasma visível=%s quadro %d a=%.2f  trocando=%s" % [hub.level, hub._visual.frame, hub._next_stage.visible, hub._next_stage.frame, hub._next_stage.modulate.a, hub._growing])
+		print("  depois do load: estágio %d quadro %d  obra visível=%s quadro %d estágio de obra %d  trocando=%s" % [hub.level, hub._visual.frame, hub._next_stage.visible, hub._next_stage.frame, OE.shown(hub._next_stage), hub._growing])
 		check(get_nodes_in_group("village_hub").size() == 1, "(teste) um mundo só")
 		check(hub.level == 2 and hub._visual.frame == 1, "save/load: quadro do estágio salvo")
-		check(hub._next_stage.visible and hub._next_stage.frame == 2 and absf(hub._next_stage.modulate.a - get_meta("ghost_a")) < 0.02, "save/load: fantasma da obra na mesma nitidez")
+		check(hub._next_stage.visible and hub._next_stage.frame == 2 and OE.shown(hub._next_stage) == get_meta("ghost_a") and get_meta("ghost_a") == 2, "save/load: obra no mesmo estágio (2, em 40%)")
 		check(not hub._growing, "save/load: sem refazer a transição")
 		# pula pro 4 e salva/carrega de novo
 		hub.pending_upgrade = ""

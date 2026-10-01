@@ -99,7 +99,7 @@ func begin(on_confirm: Callable, texture: Texture2D = CASA_TEXTURE, hframes: int
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud and hud.has_method("close_panels"):
 		hud.close_panels()
-	_pos = opts.get("start", get_global_mouse_position())
+	_pos = opts.get("start", _to_world(get_viewport().get_mouse_position()))
 	_refresh()
 	_set_visible(true)
 
@@ -270,4 +270,8 @@ func _bbox(points: PackedVector2Array) -> Rect2:
 
 
 func _to_world(screen_pos: Vector2) -> Vector2:
-	return get_viewport().get_canvas_transform().affine_inverse() * screen_pos
+	var canvas := get_viewport().get_canvas_transform().affine_inverse() * screen_pos
+	var iso := get_tree().get_first_node_in_group("iso_view")
+	if iso and iso.enabled:
+		return iso.ground_at(canvas)  # Prompt 28: o chão embaixo do mouse na vista iso
+	return canvas

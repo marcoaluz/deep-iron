@@ -66,6 +66,11 @@ determinístico) só mudou o que o bloco pretendia — instruções no topo do a
 | `b31_obras_engenheiro.gd`, `b31b_obras_restantes.gd` | 31 e 31b — engenheiro e obras |
 | `b32_…` a `b42_…` | 32 a 42 (um arquivo por bloco) |
 | `b44_vestiario.gd` | 44 — Vestiário como prédio físico |
+| `p28_iso.gd` | Prompt 28 — vista isométrica no jogo (F3): espelhos, ordem por caixas, clique pelo raio, construir/demolir, prédio em "L", fantasma, câmera/save, desligar |
+| `p28_save.gd` | Prompt 28 — save de antes do Prompt 28 carrega igual nas duas vistas (md5 do arquivo, ipezinhos, posições, créditos); com `DEEP_IRON_SAVE_FIXTURE=<cópia de um save antigo>` usa a cópia, sem ela faz o próprio save |
+| `../test_iso.gd` (GUT, rápido) | Prompt 28 — núcleo: projeção, verdade 3D, ordem incremental, raio da câmera, direção de losango |
+| `../test_iso_arte.gd` (GUT, rápido) | Prompt 28 — verificador "o sprite cabe na caixa" contra a arte dos prédios |
+| `../test_iso_pele.gd` (GUT, rápido) | Prompt 28 — paletas de pele por código (igual ao `tons_de_pele.py`; dados em `tests/data/pele/`) |
 
 (Bloco 44 mudou de propósito o `b42_equipamento`: ele ergue um Vestiário pronto no começo,
 porque desde o 44 o equipamento só funciona com o prédio.)
@@ -96,8 +101,27 @@ comportamento de propósito (cada troca está comentada com `(Bloco 43)` no arqu
 - `test_blocos.gd` — cada bloco começa com a pasta de usuário temporária **limpa**
   (sem save, backup ou `settings.cfg` deixado pelo bloco anterior).
 
+## Rodar tudo com a vista isométrica ligada (Prompt 28)
+
+`DEEP_IRON_ISO=1` faz toda partida começar com a vista iso ligada (o `main.gd` liga no
+início). A lógica não pode mudar com a vista, então a bateria inteira tem que passar igual:
+
+```
+DEEP_IRON_ISO=1 <Godot>.exe --headless --path . -s addons/gut/gut_cmdln.gd
+```
+
+Os Godot filhos de cada bloco herdam a variável.
+
+**Prompt 28 mudou de propósito** `b32_escavadeira_visual` e `b38_centro_por_estagio`: o
+"fantasma que fica nítido" saiu e a obra aparece por **estágios** (0–33 / 33–66 / 66–100%,
+`scripts/core/obra_estagio.gd`). As checagens de nitidez (alfa) viraram checagens de
+estágio.
+
 ## Conhecido
 
+- `b45_coletor_madeira` às vezes falha em "lenhador manual trabalha em paralelo": o lenhador
+  sorteou um acidente cortando árvore e está internado na hora da conferência (visto 1 vez
+  em 4 rodadas no Prompt 28; sozinho passou 2 de 2). É o sorteio do jogo, não a regra.
 - `b31b_obras_restantes` às vezes falha com "engenheiro preso a caminho de uma obra"
   depois de carregar (visto 2 em 15 rodadas; causa ainda não achada). Se falhar, rode
   de novo; se repetir, vale investigar.

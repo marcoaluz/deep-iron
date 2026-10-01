@@ -25,6 +25,7 @@ signal completed
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
+const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 const PART_IDS := ["estrutura", "motor", "hidraulica", "cabine", "broca"]
 const PART_NAMES := {
 	"estrutura": "Estrutura",
@@ -368,13 +369,14 @@ func _complete() -> void:
 
 
 # ------------------------------------------------------------ visual
-## Bloco 32: só aparece o que existe. Peça instalada = sólida; peça em montagem =
-## fantasma que fica nítido com o progresso; o resto não aparece (plataforma vazia).
+## Bloco 32: só aparece o que existe. Peça instalada = sólida; peça em montagem = obra
+## por estágios (Prompt 28, obra_estagio.gd); o resto não aparece (plataforma vazia).
 func _update_visual() -> void:
 	for id in PART_IDS:
 		var layer: Sprite2D = _layers[id]
 		layer.visible = installed[id] or id == fabricating
 		if installed[id]:
+			ObraEstagio.clear(layer)
 			layer.modulate = Color.WHITE
 	_layers.cabine.frame = 1 if complete else 0  # janelas acesas + giroflex
 	# reator instalado: embaixo do convés (só depois de pronta)
@@ -398,13 +400,13 @@ func _update_visual() -> void:
 	_update_label()
 
 
-## O fantasma do que está em obra acompanha o progresso (mesma cor do canteiro).
+## O que está em obra sobe por estágios com o progresso (a mesma regra do canteiro).
 func _update_obra_visual() -> void:
 	if fabricating != "":
 		var layer: Sprite2D = _layers[fabricating]
-		layer.modulate = ObraSite.ghost_color(fab_progress())
+		ObraEstagio.apply(layer, fab_progress())
 	if building_reactor != "":
-		_reactor_new.modulate = ObraSite.ghost_color(obra_progress())
+		ObraEstagio.apply(_reactor_new, obra_progress())
 
 
 func _update_label() -> void:

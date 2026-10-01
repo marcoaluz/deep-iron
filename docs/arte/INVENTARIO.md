@@ -185,6 +185,13 @@ prompts 0–31).
 
 ## Plano de crédito
 
+**Atualização 2026-10-01 (Prompt 28, branch `isometrico`):** motor isométrico no jogo
+principal (F3 liga/desliga), ainda com a arte de hoje; nada desta lista passou pra
+"integrado" (isso é o Prompt 29). Já prontos pra receber a arte: verificador "cabe na caixa"
+(`scripts/iso/iso_art_check.gd`), pele por paleta (`scripts/iso/skin_palette.gd`, lê
+`paletas_pele.json`) e obra por estágios 0–33/33–66/66–100% (`scripts/core/obra_estagio.gd`).
+Sem geração: saldo **1.439**. Relatório: `docs/arte/prompt28/PROMPT_28_MOTOR_ISO.md`.
+
 **Atualização 2026-10-01 (fundo do mapa, Prompt 27):** céu + montanhas por hora do dia custou
 **75**. Saldo **1.439** (conferido no PixelLab), recarga de +5.000 em 2026-10-30. Os Prompts
 28–29 são código: não gastam geração.

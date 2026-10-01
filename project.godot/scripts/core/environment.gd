@@ -163,6 +163,9 @@ func _process(delta: float) -> void:
 func _cull_offscreen_lights() -> void:
 	var vp := get_viewport()
 	var view := vp.get_canvas_transform().affine_inverse() * vp.get_visible_rect()
+	var iso := get_tree().get_first_node_in_group("iso_view")
+	if iso and iso.enabled:
+		view = iso.ground_view_rect()  # Prompt 28: a tela em iso mostra este pedaço do chão
 	view = view.grow(light_cull_margin)
 	for light in get_tree().get_nodes_in_group("cullable_lights"):
 		light.visible = view.has_point(light.global_position)
@@ -225,6 +228,13 @@ func world_rect() -> Rect2:
 	if abyss_rect.has_area():
 		r = r.merge(abyss_rect)
 	return r
+
+
+## Prompt 28: o relevo é um MAPA DE ALTURA (uma altura por ponto do chão; sem ponte nem túnel
+## por cima de caminho, então a navegação continua 2D). O mapa de hoje é plano; os terraços do
+## mapa novo entram no Prompt 29.
+func height_at(_pos: Vector2) -> float:
+	return 0.0
 
 
 ## Esse ponto é no fundo (nível 2 ou abismo)?

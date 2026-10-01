@@ -483,7 +483,7 @@ func _collect() -> Dictionary:
 	data["layout"] = _collect_layout(tree)
 	var cam: Node = _game.get_node_or_null("Camera2D")
 	if cam:
-		data["camera"] = {"position": SaveUtil.vec2_to_array(cam.get_screen_center_position()), "zoom": cam.zoom.x}
+		data["camera"] = {"position": SaveUtil.vec2_to_array(cam.ground_center() if cam.has_method("ground_center") else cam.get_screen_center_position()), "zoom": cam.zoom.x}  # Prompt 28: sempre o ponto do chão
 	data["summary"] = _summary()
 	return data
 

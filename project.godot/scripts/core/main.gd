@@ -22,6 +22,8 @@ const FORMATION_SPACING := 18.0
 const ORE_CLICK_RADIUS := 30.0
 ## Constantes de função (job) do ipezinho — Bloco 25.
 const Worker := preload("res://scripts/workers/ipezinho.gd")
+## Prompt 28: a vista isométrica.
+const IsoView := preload("res://scripts/iso/iso_view.gd")
 
 ## Bloco 37: partida nova começa com a FUNDAÇÃO (o jogador escolhe onde ficam o Centro da
 ## Vila e o Armazém; ver founding.gd). false = começa com o layout da cena (testes).
@@ -47,6 +49,10 @@ var _box_drawer: Node2D
 var _group_focus := 0  # Tab no modo grupo: qual deles a câmera mostra
 var _pause: CanvasLayer
 var _founding: Node
+## Prompt 28: vista isométrica (F3 liga/desliga). A lógica continua no chão cartesiano.
+var _iso: Node2D
+var _press_canvas := Vector2.ZERO  # ponto do clique no canvas (na vista iso = tela isométrica)
+var _drag_canvas := Vector2.ZERO
 
 @onready var _camera: Camera2D = $Camera2D
 @onready var _environment: Node2D = $World/Environment
@@ -64,6 +70,14 @@ func _ready() -> void:
 	_box_drawer.z_index = 50
 	_box_drawer.draw.connect(_draw_box)
 	add_child(_box_drawer)
+	# Prompt 28: a vista isométrica (desligada até o F3)
+	_iso = IsoView.new()
+	add_child(_iso)
+	_iso.setup(self)
+	_box_drawer.visibility_layer = IsoView.LAYER_ISO  # o retângulo é da tela, fora da textura do chão
+	# testes: DEEP_IRON_ISO=1 roda a partida com a vista iso ligada (a lógica tem que dar igual)
+	if OS.get_environment("DEEP_IRON_ISO") == "1":
+		_iso.set_enabled.call_deferred(true)
 	# modo de posicionar casa (último filho: recebe o input antes do main e o "consome")
 	add_child(preload("res://scripts/core/house_placer.gd").new())
 	_pause = preload("res://scripts/ui/pause_menu.gd").new()
@@ -97,15 +111,24 @@ func _unhandled_input(event: InputEvent) -> void:
 				_press_screen = event.position
 				_press_world = _to_world(event.position)
 				_drag_world = _press_world
+				_press_canvas = _to_canvas(event.position)
+				_drag_canvas = _press_canvas
 				_additive = event.shift_pressed
 			elif _lmb_down:
 				_drag_world = _to_world(event.position)
+				_drag_canvas = _to_canvas(event.position)
 				_additive = _additive or event.shift_pressed
 				_finish_left_click()
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-			_give_order(_to_world(event.position))
+			var hit_ore: Node2D = null
+			if _iso.enabled:
+				var hit: Dictionary = _iso.pick(_to_canvas(event.position))
+				if hit.node and hit.node.is_in_group("minerios"):
+					hit_ore = hit.node
+			_give_order(_to_world(event.position), hit_ore)
 	elif event is InputEventMouseMotion and _lmb_down:
 		_drag_world = _to_world(event.position)
+		_drag_canvas = _to_canvas(event.position)
 		if not _dragging and event.position.distance_to(_press_screen) > DRAG_THRESHOLD:
 			_dragging = true
 		if _dragging:
@@ -161,6 +184,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				_hud.toggle_build_menu()  # Bloco 46: menu de construção
 			KEY_M:
 				Audio.toggle_music()
+			KEY_F3:
+				_iso.toggle()  # Prompt 28: vista isométrica
+			KEY_F4:
+				if _iso.enabled:
+					_iso.show_boxes = not _iso.show_boxes  # Prompt 28: mostra as caixas
 			KEY_F5:
 				SaveManager.save_game("manual")
 			KEY_F9:
@@ -202,6 +230,9 @@ func _finish_left_click() -> void:
 		_box_select(_selection_rect(), additive)
 		return
 
+	if _iso.enabled:
+		_finish_left_click_iso(additive)
+		return
 	var click_pos := _press_world
 	var clicked_unit := _find_ipezinho_at(click_pos)
 	if clicked_unit:
@@ -218,12 +249,55 @@ func _finish_left_click() -> void:
 		select(null)  # chão vazio: solta todo mundo
 
 
+## Prompt 28: clique na vista iso = o RAIO DA CÂMERA (a 1ª coisa que ele acerta é a que se
+## vê). Ipezinho tem uma folga (SELECT_RADIUS na tela) porque a caixa dele é fina.
+func _finish_left_click_iso(additive: bool) -> void:
+	var hit: Dictionary = _iso.pick(_press_canvas)
+	var node: Node2D = hit.node
+	var clicked_unit: Node2D = node if node and node.is_in_group("ipezinhos") else _find_ipezinho_at_canvas(_press_canvas)
+	if clicked_unit:
+		if additive:
+			toggle_selected(clicked_unit)
+		else:
+			select(clicked_unit)
+		return
+	if not additive:
+		if node and node.is_in_group("clickable"):
+			_hud.open_panel_for(node)
+			return
+		select(null)
+
+
+func _find_ipezinho_at_canvas(canvas_pos: Vector2) -> Node2D:
+	var best: Node2D = null
+	var best_dist := SELECT_RADIUS
+	for ip in get_tree().get_nodes_in_group("ipezinhos"):
+		if not ip.visible:
+			continue
+		var d: float = (_iso.to_screen(ip.global_position) + Vector2(0, -14)).distance_to(canvas_pos)
+		if d <= best_dist:
+			best_dist = d
+			best = ip
+	return best
+
+
 func _selection_rect() -> Rect2:
+	if _iso.enabled:
+		return Rect2(_press_canvas, _drag_canvas - _press_canvas).abs()  # retângulo na TELA
 	return Rect2(_press_world, _drag_world - _press_world).abs()
 
 
 ## Posição de um evento de mouse (tela) -> mundo, levando em conta câmera e zoom.
+## Prompt 28: na vista iso, o ponto do CHÃO embaixo do mouse (raio da câmera).
 func _to_world(screen_pos: Vector2) -> Vector2:
+	var canvas := _to_canvas(screen_pos)
+	if _iso and _iso.enabled:
+		return _iso.ground_at(canvas)
+	return canvas
+
+
+## Tela -> canvas (com câmera e zoom). Na vista de cima é o próprio chão.
+func _to_canvas(screen_pos: Vector2) -> Vector2:
 	return get_viewport().get_canvas_transform().affine_inverse() * screen_pos
 
 
@@ -233,7 +307,8 @@ func _box_select(rect: Rect2, additive: bool) -> void:
 		picked.assign(selection)
 	for ip in get_tree().get_nodes_in_group("ipezinhos"):
 		# conta o meio do corpo (a origem fica no pé), igual ao clique
-		if rect.has_point(ip.global_position + Vector2(0, -14)) and not picked.has(ip):
+		var body: Vector2 = (_iso.to_screen(ip.global_position) if _iso.enabled else ip.global_position) + Vector2(0, -14)
+		if rect.has_point(body) and not picked.has(ip):
 			picked.append(ip)
 	set_selection(picked)
 
@@ -248,11 +323,11 @@ func _draw_box() -> void:
 
 
 # ------------------------------------------------------------ ordens (botão direito)
-func _give_order(pos: Vector2) -> void:
+func _give_order(pos: Vector2, ore_hint: Node2D = null) -> void:
 	_prune_selection()
 	if selection.is_empty():
 		return
-	var ore := _find_ore_at(pos)
+	var ore := ore_hint if ore_hint else _find_ore_at(pos)
 	if ore:
 		_order_mine(ore)
 	else:
@@ -480,8 +555,8 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	if _marker_timer <= 0.0:
-		return
+	if _marker_timer <= 0.0 or (_iso and _iso.enabled):
+		return  # na vista iso o marcador é desenhado achatado no chão (iso_view.gd)
 	var t := _marker_timer / MARKER_TIME
 	draw_set_transform(_marker_pos, 0.0, Vector2(1.0, 0.5))
 	draw_arc(Vector2.ZERO, lerpf(18.0, 6.0, t), 0.0, TAU, 24, Color(1.0, 0.84, 0.25, t), 2.0)

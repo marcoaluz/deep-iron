@@ -36,6 +36,10 @@ extends Camera2D
 @export var bounds_margin: float = 80.0
 
 var follow_target: Node2D = null
+## Prompt 28: vista isométrica ligada (iso_view.gd). A câmera passa a andar na TELA
+## isométrica, mas quem a usa continua falando em pontos do CHÃO (focus_on, follow_target,
+## bounds, save) — a conversão é aqui.
+var iso_view: Node = null
 
 var _target_zoom: float = 1.0
 var _target_pos: Vector2
@@ -132,7 +136,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
 			KEY_HOME:
-				_target_pos = bounds.get_center() if bounds.has_area() else Vector2.ZERO
+				_target_pos = _to_cam(bounds.get_center()) if bounds.has_area() else Vector2.ZERO
 				follow_target = null
 
 
@@ -192,7 +196,7 @@ func _process(delta: float) -> void:
 	# --- seguir alvo
 	if follow_target != null:
 		if is_instance_valid(follow_target):
-			_target_pos = follow_target.global_position + Vector2(0, -16)
+			_target_pos = _to_cam(follow_target.global_position) + Vector2(0, -16)
 		else:
 			follow_target = null
 
@@ -205,8 +209,32 @@ func _clamp_to_bounds(p: Vector2) -> Vector2:
 	if not bounds.has_area():
 		return p
 	var r := bounds.grow(bounds_margin)
+	if iso_view:  # o losango do mapa na tela: o retângulo que contém os 4 cantos
+		var a: Vector2 = iso_view.to_screen(r.position)
+		var sr := Rect2(a, Vector2.ZERO)
+		for c in [Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]:
+			sr = sr.expand(iso_view.to_screen(c))
+		r = sr
 	return p.clamp(r.position, r.end)
 
 
+## Ponto do chão -> onde a câmera fica (na vista iso, a tela isométrica).
+func _to_cam(world_pos: Vector2) -> Vector2:
+	return iso_view.to_screen(world_pos) if iso_view else world_pos
+
+
+## O ponto do CHÃO no centro da tela (save, troca de vista).
+func ground_center() -> Vector2:
+	var c := get_screen_center_position()
+	return iso_view.to_ground_plane(c) if iso_view else c
+
+
+## Prompt 28: trocou de vista — continua olhando o mesmo ponto do chão.
+func on_view_changed(ground: Vector2) -> void:
+	position = _to_cam(ground)
+	_target_pos = position
+	reset_smoothing()
+
+
 func focus_on(world_pos: Vector2) -> void:
-	_target_pos = _clamp_to_bounds(world_pos)
+	_target_pos = _clamp_to_bounds(_to_cam(world_pos))

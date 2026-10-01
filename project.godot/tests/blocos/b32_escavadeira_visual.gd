@@ -5,8 +5,9 @@ var t := 0.0
 var step := 0
 var fails := 0
 var t_mark := 0.0
-var alphas: Array[float] = []
+var alphas: Array[int] = []  # Prompt 28: os estágios de obra vistos (era a nitidez do fantasma)
 const OS_ := preload("res://scripts/core/obra_site.gd")
+const OE := preload("res://scripts/core/obra_estagio.gd")
 
 
 func _initialize() -> void:
@@ -40,11 +41,11 @@ func vis(dig) -> String:
 	for id in dig.PART_IDS:
 		var l: Sprite2D = dig._layers[id]
 		if l.visible:
-			parts.append("%s(a=%.2f)" % [id, l.modulate.a])
+			parts.append("%s(obra %d)" % [id, OE.shown(l)])
 	if dig._reactor_layer.visible:
 		parts.append("reator[%s]" % dig.REACTOR_IDS[dig._reactor_layer.frame])
 	if dig._reactor_new.visible:
-		parts.append("novo[%s a=%.2f]" % [dig.REACTOR_IDS[dig._reactor_new.frame], dig._reactor_new.modulate.a])
+		parts.append("novo[%s obra %d]" % [dig.REACTOR_IDS[dig._reactor_new.frame], OE.shown(dig._reactor_new)])
 	return " ".join(parts) if not parts.is_empty() else "(só a plataforma)"
 
 
@@ -82,26 +83,24 @@ func _process(delta: float) -> bool:
 		g("village_hub").level = 4
 		check(dig.start_part("estrutura"), "estrutura encomendada")
 		print("  encomendada: ", vis(dig))
-		check(only_visible(dig, ["estrutura"]), "só a estrutura aparece (fantasma)")
-		check(absf(dig._layers.estrutura.modulate.a - 0.18) < 0.01, "fantasma bem fraco sem engenheiro (a=%.2f)" % dig._layers.estrutura.modulate.a)
+		check(only_visible(dig, ["estrutura"]), "só a estrutura aparece (em obra)")
+		check(OE.shown(dig._layers.estrutura) == 1, "sem engenheiro: obra no estágio 1, a fundação (%d)" % OE.shown(dig._layers.estrutura))
 		get_nodes_in_group("ipezinhos")[0].set_job("engenheiro")
 		Engine.time_scale = 4.0
 		step = 1
 		t_mark = t
 	elif step == 1:
 		if dig.fabricating == "estrutura" and dig._obra.has_engineer():
-			var a: float = dig._layers.estrutura.modulate.a
-			if alphas.is_empty() or a > alphas[-1] + 0.1:
+			var a: int = OE.shown(dig._layers.estrutura)
+			if alphas.is_empty() or a > alphas[-1]:
 				alphas.append(a)
 				print("  montando: %d%%  %s" % [roundi(dig.fab_progress() * 100), vis(dig)])
-			if alphas.size() == 2 and a == alphas[1]:
-				var c: Color = dig._layers.estrutura.modulate
-				check(c.is_equal_approx(OS_.ghost_color(dig.fab_progress())), "cor = do canteiro")
+				check(a == OE.stage(dig.fab_progress()), "estágio = o do progresso (mesma regra do canteiro)")
 		if dig.installed.estrutura:
 			Engine.time_scale = 1.0
 			print("  instalada: ", vis(dig))
-			check(alphas.size() >= 3, "fantasma ficou nítido aos poucos (%s)" % str(alphas.map(func(x): return snappedf(x, 0.01))))
-			check(dig._layers.estrutura.modulate == Color.WHITE, "estrutura sólida")
+			check(alphas == [1, 2, 3], "subiu pelos 3 estágios de obra (%s)" % str(alphas))
+			check(dig._layers.estrutura.modulate == Color.WHITE and OE.shown(dig._layers.estrutura) == 0, "estrutura pronta, sem corte de obra")
 			check(only_visible(dig, ["estrutura"]), "só a estrutura (as outras não aparecem)")
 			check(dig.start_part("broca"), "broca encomendada (fora de ordem)")
 			step = 2
@@ -111,16 +110,16 @@ func _process(delta: float) -> bool:
 			step = 9
 	elif step == 2 and t - t_mark > 1.0:
 		print("  broca em obra: ", vis(dig))
-		check(only_visible(dig, ["estrutura", "broca"]), "estrutura + fantasma da broca")
-		# pausa: tira o engenheiro -> o fantasma para onde está
-		var a0: float = dig._layers.broca.modulate.a
+		check(only_visible(dig, ["estrutura", "broca"]), "estrutura + broca em obra")
+		# pausa: tira o engenheiro -> a obra para onde está
+		var a0: int = OE.shown(dig._layers.broca)
 		get_nodes_in_group("ipezinhos")[0].set_job("ocioso")
 		set_meta("a0", a0)
 		step = 3
 		t_mark = t
 	elif step == 3 and t - t_mark > 3.0:
-		var a1: float = dig._layers.broca.modulate.a
-		check(absf(a1 - OS_.ghost_color(dig.fab_progress()).a) < 0.001, "pausado: fantasma parado no progresso (a=%.2f)" % a1)
+		var a1: int = OE.shown(dig._layers.broca)
+		check(a1 == OE.stage(dig.fab_progress()) and a1 == get_meta("a0"), "pausado: obra parada no estágio do progresso (%d)" % a1)
 		# salva no meio da broca e carrega
 		var sm = root.get_node("SaveManager")
 		set_meta("before", vis(dig))
@@ -145,12 +144,12 @@ func _process(delta: float) -> bool:
 		g("finds").rare_parts = 99
 		check(dig.build_reactor("diesel"), "reator diesel encomendado")
 		print("  diesel em obra: ", vis(dig))
-		check(dig._reactor_new.visible and dig._reactor_new.frame == 1, "fantasma do diesel ao lado da plataforma")
+		check(dig._reactor_new.visible and dig._reactor_new.frame == 1, "obra do diesel ao lado da plataforma")
 		check(dig._reactor_layer.frame == 0, "caldeira continua instalada enquanto isso")
 		dig.obra_work(20.0)
 		dig._process(0.0)
 		print("  diesel 50%: ", vis(dig))
-		check(absf(dig._reactor_new.modulate.a - (0.18 + 0.6 * 0.5)) < 0.02, "fantasma do diesel ~metade nítido")
+		check(OE.shown(dig._reactor_new) == 2, "diesel na metade: estágio 2 (%d)" % OE.shown(dig._reactor_new))
 		dig.obra_work(999.0)
 		print("  diesel pronto: ", vis(dig))
 		check(not dig._reactor_new.visible and dig._reactor_layer.frame == 1, "diesel entrou no lugar da caldeira")

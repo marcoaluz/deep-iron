@@ -192,3 +192,11 @@ func test_b47_varios_predios() -> void:
 
 func test_b48_janela_zoom() -> void:
 	run_bloco("b48_janela_zoom.gd")
+
+
+func test_p28_iso() -> void:
+	run_bloco("p28_iso.gd")
+
+
+func test_p28_save() -> void:
+	run_bloco("p28_save.gd")
