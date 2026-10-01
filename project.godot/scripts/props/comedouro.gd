@@ -98,7 +98,7 @@ func _update_visual() -> void:
 	# quadro 0 = cheio, 1 = pela metade, 2 = vazio
 	_visual.frame = 2 if food_stock <= 0.0 else (1 if ratio < 0.5 else 0)
 	var empty := food_stock <= 0.0
-	_name_label.text = "Comedouro\n%s" % ("SEM COMIDA" if empty else "%d / %d" % [int(food_stock), int(food_capacity)])
+	_name_label.text = "Cozinha\n%s" % ("SEM COMIDA" if empty else "%d / %d" % [int(food_stock), int(food_capacity)])
 	if is_cooking:
 		_name_label.text += "\npreparando..."
 	_name_label.modulate = Color(1.0, 0.45, 0.4) if empty else (Color(1.0, 0.8, 0.45) if ratio < 0.25 else Color.WHITE)

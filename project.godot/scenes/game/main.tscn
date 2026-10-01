@@ -228,7 +228,7 @@ gate_id = "tunel"
 display_name = "Portão da floresta"
 
 [node name="BarricadaPoco" parent="World" instance=ExtResource("53_barricada")]
-position = Vector2(580, 361)
+position = Vector2(430, 400)
 gate_id = "poco"
 display_name = "Portão do poço"
 

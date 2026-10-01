@@ -104,19 +104,24 @@ func _process(delta: float) -> bool:
 		var need_wd: int = hub.starter_house_cost.z * 3 + hub.comedouro_cost.z
 		check(eco.credits >= need_cr and arm.stock["ferro"] >= need_fe and arm.wood_stored >= need_wd, "dá pra 3 casas + 1 comedouro (%d cr, %d ferro, %d madeira)" % [need_cr, need_fe, need_wd])
 		check(hub.starter_houses_left == 3, "3 casas iniciais")
-		print("== casas no raio")
+		# Prompt 29 (decisão do Marco): sem raio — casa em qualquer lugar da pedreira; a floresta
+		# (além da paliçada) não pode. Antes: só até house_radius() do Centro.
+		print("== casas em qualquer lugar da pedreira")
 		check(hub.build_starter_house(), "escolher lugar da casa")
-		check(is_equal_approx(placer()._radius, hub.house_radius()) and placer()._radius_center == hub.global_position, "posicionador mostra o raio (%d px)" % roundi(placer()._radius))
-		var far: Vector2 = hub.global_position + Vector2(hub.house_radius() + 60.0, 0)
-		placer().move_to(far)
-		print("  fora do raio: '%s'" % placer()._reason)
-		check(placer()._reason.begins_with("longe demais"), "fora do raio: inválido")
-		check(not placer().try_confirm() and get_nodes_in_group("casas").is_empty(), "clique fora do raio não constrói")
+		check(hub.house_radius() == 0.0 and placer()._radius == 0.0, "sem raio do Centro")
+		var forest := Vector2(0, -700)
+		placer().move_to(forest)
+		print("  na floresta: '%s'" % placer()._reason)
+		check("pedreira" in placer()._reason, "na floresta (além da paliçada): inválido")
+		check(not placer().try_confirm() and get_nodes_in_group("casas").is_empty(), "clique na floresta não constrói")
+		var far_q := spot_near(Vector2(420, 300), 0.0, 300.0)  # fundo da pedreira, longe do Centro
+		placer().move_to(far_q)
+		check(placer()._reason == "" and far_q.distance_to(hub.global_position) > 400.0, "longe do Centro, no fundo da pedreira: pode (%s, a %d px)" % [far_q, far_q.distance_to(hub.global_position)])
 		var houses: Array = []
 		for i in 3:
 			if i > 0:
 				hub.build_starter_house()
-			var q := spot_near(hub.global_position, 110.0, hub.house_radius() - 5.0)
+			var q := spot_near(hub.global_position, 110.0, 600.0)
 			placer().move_to(q)
 			check(placer().try_confirm(), "casa inicial %d em %s (a %d px do Centro)" % [i + 1, q, q.distance_to(hub.global_position)])
 			houses.append(q)
@@ -141,11 +146,9 @@ func _process(delta: float) -> bool:
 			check(eco.max_workers == get_meta("max0"), "casas iniciais não mexem no limite (%d)" % eco.max_workers)
 			var com = g("comedouros")
 			check(com.global_position == get_meta("com") and com.food_stock > 0.0, "comedouro pronto no lugar, com comida (%d)" % com.food_stock)
-			print("== raio cresce com o estágio")
-			var r1: float = hub.house_radius()
+			print("== raio desligado em qualquer estágio")
 			hub.level = 2
-			var r2: float = hub.house_radius()
-			check(r2 > r1, "estágio 2: raio %d -> %d" % [r1, r2])
+			check(hub.house_radius() == 0.0, "estágio 2: continua sem raio")
 			hub.level = 1
 			var sm = root.get_node("SaveManager")
 			set_meta("snap", [hub.global_position, g("armazens").global_position, com.global_position, get_nodes_in_group("casas").size(), hub.starter_houses_left])
@@ -187,7 +190,7 @@ func _process(delta: float) -> bool:
 		check(names.has("Casa") and names.has("Casa2") and names.has("Casa3"), "save antigo: as casas da cena continuam")
 		check(names.has("CasaNova9"), "save antigo: casa posicionada longe (fora do raio) continua")
 		var far = main.get_node("World/CasaNova9")
-		check(far.built and far.beds_total() == 4 and far.global_position.distance_to(hub.global_position) > hub.house_radius(), "ela funciona (4 camas) mesmo a %d px do Centro" % far.global_position.distance_to(hub.global_position))
+		check(far.built and far.beds_total() == 4 and far.global_position.distance_to(hub.global_position) > 400.0, "ela funciona (4 camas) mesmo a %d px do Centro" % far.global_position.distance_to(hub.global_position))
 		check(hub.global_position == Vector2(-300, -300) and get_nodes_in_group("comedouros").size() == 1, "save antigo: Centro e comedouro no layout da cena")  # Prompt 29: o Centro foi pro terraço de cima
 		check(hub.founded and not placer().active, "save antigo: não pede fundação")
 		root.get_node("SaveManager").save_game("teste")

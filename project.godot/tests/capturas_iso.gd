@@ -15,6 +15,11 @@ const SHOTS := [
 	["obras", Vector2(120, -120), 1.0],
 	["escavadeira", Vector2(-520, 300), 1.0],
 	["centro", Vector2(-300, -320), 2.0],
+	["bonecos", Vector2(0, -60), 3.0],
+	["floresta", Vector2(0, -700), 1.0],
+	["galerias", Vector2(330, -160), 1.5],
+	["nivel2", Vector2(300, 950), 1.0],
+	["elevador_cima", Vector2(560, 300), 1.5],
 ]
 ## prédios a mais (cena, posição): o layout do Prompt 27 (mapa/monta.py)
 const EXTRA := [
@@ -68,6 +73,8 @@ func _process(delta: float) -> bool:
 		step = 2
 		t_shot = t
 		_aim(shot)
+	elif step == 2 and SHOTS[shot][0] == "bonecos" and t - t_shot <= 1.2:
+		_pose_bonecos(SHOTS[shot][1])  # segura parados até a foto
 	elif step == 2 and t - t_shot > 1.2:
 		var s: Array = SHOTS[shot]
 		var img := root.get_texture().get_image()
@@ -87,6 +94,8 @@ func _aim(i: int) -> void:
 	cam.zoom = Vector2(s[2], s[2])
 	cam.set_target_zoom(s[2])
 	cam.on_view_changed(s[1])
+	if s[0] == "bonecos":
+		_pose_bonecos(s[1])
 
 
 func _setup() -> void:
@@ -120,3 +129,22 @@ func _setup() -> void:
 		esc._update_visual()
 	var env := main.get_node("World/Environment")
 	env.rebuild_navigation()
+	var ws: Array = main.get_tree().get_nodes_in_group("ipezinhos")
+	var jobs := ["minerador", "engenheiro", "cozinheiro"]
+	for i in ws.size():
+		ws[i].set_job(jobs[i % jobs.size()])
+		ws[i].auto_mode = false
+
+
+## Bonecos lado a lado, parados, em estados diferentes (na hora da foto deles).
+func _pose_bonecos(c: Vector2) -> void:
+	var ws: Array = main.get_tree().get_nodes_in_group("ipezinhos")
+	for i in ws.size():
+		var w = ws[i]
+		w._moving = false
+		w.velocity = Vector2.ZERO
+		w.global_position = c + Vector2(-36 + 36 * i, 12 * (i % 2))
+	if ws.size() > 1:
+		ws[1].injured = true
+	if ws.size() > 2:
+		ws[2]._work_timer = 5.0

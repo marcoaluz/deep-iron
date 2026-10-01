@@ -1,7 +1,8 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-01 (fim do Prompt 29 parte 2). Branch `isometrico`. Último commit:
-`e92362ec adad`; a parte 2 está no working tree, **ainda sem commit** (o Marco revisa antes).
+Atualizado em 2026-10-01 (Prompt 29 concluído: partes 1 a 6). Branch `isometrico`. Último
+commit: `e92362ec adad`; as partes 2–6 estão no working tree, **ainda sem commit** (o Marco valida
+antes).
 
 Isso existe porque estamos trocando entre duas contas do Claude Code
 (`marco.luz1994@gmail.com` e `marcoa.luz@hotmail.com`, essa segunda via
@@ -25,34 +26,29 @@ outra — este arquivo é o resumo pra colar/apontar na sessão nova.
 
 ## Onde estamos
 
-- Motor isométrico (Prompt 28), mapa novo jogável (Prompt 29 parte 1) e **prédios com a arte
-  nova (Prompt 29 parte 2)** estão no jogo, branch `isometrico`. Relatório mais recente:
-  `docs/arte/prompt29/PROMPT_29_PARTE2_PREDIOS.md`.
-- Como a arte nova entra: `prototipos/camera/arte_iso/integra.py predios` copia os desenhos
-  pra `assets/game/iso/predios/` + `predios.json` (estado → imagem, âncora, caixa);
-  `scripts/iso/iso_art.gd` escolhe o desenho pelo estado do jogo e dá a pegada de navegação
-  (desenho ÷ 1,5); `iso_billboard.gd` troca o desenho antigo pelas camadas novas. As próximas
-  partes (bonecos, natureza...) devem seguir o mesmo caminho (acrescentar ao `integra.py` e ao
-  `iso_art.gd`).
-- **Ainda arte antiga**: bonecos (elenco, trajes, ferramentas), robô, criaturas, animais,
-  árvores, pedras, cristais, jazidas, tochas, objetos; nível 2 e abismo (bordas, elevadores,
-  poço). Os elevadores ficaram pra parte dos andares de baixo.
-- Saldo de geração no PixelLab: **1.439** (conferido no PixelLab; recarga de
-  +5.000 prevista para 2026-10-30). Prompts de código (28-29) não gastam
-  geração.
-- A vista de cima (F3) continua só como conferência temporária e sai no fim
-  do Prompt 29.
-- Pendências anotadas: "Comedouro" → "Cozinha" nos textos; sobreposição de lotação do armazém;
-  satélite do laboratório; animação da escavadeira perfurando.
+- **Prompt 29 concluído** (tudo o que já tem arte aprovada está no jogo). Relatórios:
+  `docs/arte/prompt29/PROMPT_29_PARTE1_MAPA.md`, `PROMPT_29_PARTE2_PREDIOS.md`,
+  `PROMPT_29_PARTES3A6.md`.
+- Como a arte nova entra: `prototipos/camera/arte_iso/integra.py` (`predios`, `bonecos`, `props`)
+  copia os desenhos pra `assets/game/iso/{predios,bonecos,props}/` com os `.json` (âncora, caixa);
+  `scripts/iso/iso_art.gd` (prédios, natureza/objetos, elevadores) e `scripts/iso/iso_bonecos.gd`
+  (bonecos, robô) escolhem o desenho pelo estado do jogo; `iso_billboard.gd` troca o desenho
+  antigo pelo novo. Prédios têm pegada de navegação do desenho (÷ 1,5).
+- Decisões do Marco nesta rodada: portão refeito no eixo i (PixelLab, 80 gerações); casa em
+  qualquer lugar da pedreira (raio do Centro desligado); análise: cabem 31 casas a mais, o jogo
+  pede no máximo 7 → **não precisa aumentar o mapa** (rever se o Prompt 31 trouxer escola).
+- PixelLab: esta conta (`claude-luz`) não tem o MCP; dá pra chamar o servidor HTTP do PixelLab com
+  a configuração da outra conta (`~/.claude.json`, `mcpServers.pixellab`). Saldo **1.359**
+  (recarga +5.000 em 2026-10-30).
+- F3 (vista de cima) saiu do jogo; "Comedouro" virou "Cozinha" nos textos.
+- **Sem arte ainda** (fica como "falta" no inventário): invasores (16–17), efeitos (18), UI/ícones/
+  fonte (20–22), retratos/ilustrações (23–24), telas (25–26).
 
 ## O que falta fazer daqui pra frente
 
-1. **Prompt 29, partes 3+** (proposta, uma por vez com revisão): 3 = bonecos (elenco nas 4
-   direções, caminhada/trabalho, pele por paleta, trajes, ferramenta nas costas); 4 = natureza
-   e objetos (árvores, vegetação, pedras, cristais, jazidas, minérios, tochas, animais, robô);
-   5 = nível 2 e abismo (bordas, coluna de rocha, poço, elevadores); 6 = janela/zoom (Bloco 48)
-   + remover a vista de cima (F3). Invasores, efeitos, UI, ícones, fonte, retratos e telas
-   dependem dos prompts 16–26 (arte ainda não feita).
+1. **Próximos: Prompt 30** (revisão final: QA visual, consistência de brilho/paleta, desempenho
+   com o mapa cheio, limpeza de arte provisória e protótipos não usados, lista do futuro) e
+   **Prompt 31** (conteúdo futuro: crianças/escola — precisa de gameplay novo e de gerar arte).
 2. Seguir a ordem dos prompts restantes listada em `docs/arte/INVENTARIO.md`
    (ferramentas/armas, robô, terreno, mina, jazidas, vegetação, prédios,
    máquinas, objetos, animais, criaturas, efeitos, luz, UI, ícones, fonte,

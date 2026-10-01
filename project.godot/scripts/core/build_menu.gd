@@ -120,7 +120,7 @@ func _defs(tab: String) -> Array:
 			out.append({"name": "Escola", "tex": "", "soon": true, "desc": "Pra quando a vila tiver crianças."})
 		"Alimentação":
 			if hub:
-				out.append({"name": "Comedouro", "tex": "comedouro", "frames": 3, "many": true,
+				out.append({"name": "Cozinha", "tex": "comedouro", "frames": 3, "many": true,
 					"desc": "Onde a vila come. O cozinheiro enche.",
 					"cost": func(): return hub.comedouro_cost_text(),
 					"reason": func(): return hub.comedouro_block_reason(),

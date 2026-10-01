@@ -23,6 +23,14 @@ extends Camera2D
 ## Pixels de MUNDO por pixel de ARTE. Hoje a arte é desenhada pequena e mostrada em escala 2;
 ## se a densidade da arte mudar (ver docs/escala_visual), é só trocar aqui.
 @export var art_pixel_world: float = 2.0
+## Prompt 29: na vista iso com a arte nova, 1 px de arte = 1 unidade da tela isométrica (a arte
+## nova é desenhada no tamanho real). As paradas usam essa densidade, e ganham uma parada "longe"
+## de meio pixel de tela por pixel de arte (o mapa novo tem ~6.000 px de largura: sem ela, não dá
+## pra ver a vila inteira). Abaixo de 1:1 o pixel não tem como ser inteiro: fica nítido (filtro
+## mais próximo), com algum serrilhado.
+@export var iso_art_pixel_world: float = 1.0
+@export var iso_overview_stop: float = 0.5  # px de tela por px de arte na parada "longe" (0 = sem)
+@export var iso_zoom_min: float = 0.3
 
 @export_group("Pan")
 @export var pan_speed: float = 650.0
@@ -80,9 +88,18 @@ func screen_scale() -> float:
 	return minf(size.x / base.x, size.y / base.y) * win.content_scale_factor
 
 
+## Pixels de mundo (da tela onde a câmera anda) por pixel de arte agora.
+func art_density() -> float:
+	return iso_art_pixel_world if _iso_new_art() else art_pixel_world
+
+
+func _iso_new_art() -> bool:
+	return iso_view != null and float(iso_view.get("S")) > 1.0
+
+
 ## Quantos pixels de tela 1 pixel de arte ocupa nesse zoom.
 func art_pixel_screen(z: float, win_scale: float = -1.0) -> float:
-	return art_pixel_world * z * (screen_scale() if win_scale <= 0.0 else win_scale)
+	return art_density() * z * (screen_scale() if win_scale <= 0.0 else win_scale)
 
 
 ## Os zooms nítidos entre zoom_min e zoom_max (1 px de arte = 1, 2, 3... px de tela).
@@ -92,6 +109,10 @@ func zoom_stops(win_scale: float = -1.0) -> Array[float]:
 	if unit <= 0.0:
 		return out
 	var n := maxi(ceili(zoom_min * unit - 0.001), 1)
+	if _iso_new_art():
+		if iso_overview_stop > 0.0 and iso_overview_stop / unit >= iso_zoom_min - 0.001:
+			out.append(iso_overview_stop / unit)  # parada "longe" (meio pixel de tela por px de arte)
+		n = 1
 	while n / unit <= zoom_max + 0.001:
 		out.append(n / unit)
 		n += 1
@@ -144,7 +165,7 @@ func _zoom_by(factor: float, screen_pos: Vector2) -> void:
 	_zoom_anchor_screen = screen_pos
 	var stops := zoom_stops() if crisp_zoom else ([] as Array[float])
 	if stops.is_empty():
-		_target_zoom = clampf(_target_zoom * factor, zoom_min, zoom_max)
+		_target_zoom = clampf(_target_zoom * factor, iso_zoom_min if _iso_new_art() else zoom_min, zoom_max)
 		return
 	# Bloco 48: próxima parada nítida pra dentro (factor > 1) ou pra fora
 	if factor > 1.0:
@@ -231,6 +252,9 @@ func ground_center() -> Vector2:
 
 ## Prompt 28: trocou de vista — continua olhando o mesmo ponto do chão.
 func on_view_changed(ground: Vector2) -> void:
+	# a densidade da arte mudou (vista iso com a arte nova): o zoom assenta numa parada nítida dela
+	_target_zoom = snap_zoom(_target_zoom)
+	zoom = Vector2.ONE * _target_zoom
 	position = _to_cam(ground)
 	_target_pos = position
 	reset_smoothing()

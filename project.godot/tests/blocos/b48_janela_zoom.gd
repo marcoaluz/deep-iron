@@ -99,12 +99,18 @@ func _process(delta: float) -> bool:
 			var px: Array = stops.map(func(z): return snappedf(cam.art_pixel_screen(z, sc), 0.01))
 			print("  escala %.1f (%s): zoom %s -> px de arte na tela %s" % [sc, {1.0: "720p", 1.5: "1080p", 2.0: "1440p", 3.0: "4K"}[sc],
 				str(stops.map(func(z): return snappedf(z, 0.001))), str(px)])
+			# (Prompt 29) vista iso com a arte nova: 1 px de arte = 1 unidade, mínimo iso_zoom_min e uma
+			# parada "longe" de meio pixel de tela por px de arte no começo (o mapa novo é grande)
+			var zmin: float = cam.iso_zoom_min if cam._iso_new_art() else cam.zoom_min
 			var ok := not stops.is_empty()
-			for i in stops.size():
-				ok = ok and whole(cam.art_pixel_screen(stops[i], sc)) and stops[i] >= cam.zoom_min - 0.0001 and stops[i] <= cam.zoom_max + 0.0001
-				if i > 0:
+			var first := 0
+			if cam._iso_new_art() and not stops.is_empty() and is_equal_approx(cam.art_pixel_screen(stops[0], sc), cam.iso_overview_stop):
+				first = 1
+			for i in range(first, stops.size()):
+				ok = ok and whole(cam.art_pixel_screen(stops[i], sc)) and stops[i] >= zmin - 0.0001 and stops[i] <= cam.zoom_max + 0.0001
+				if i > first:
 					ok = ok and absf(cam.art_pixel_screen(stops[i], sc) - cam.art_pixel_screen(stops[i - 1], sc) - 1.0) < 0.0001
-			check(ok, "escala %.1f: toda parada = pixel de arte inteiro (1 px a mais por parada)" % sc)
+			check(ok, "escala %.1f: toda parada = pixel de arte inteiro (1 px a mais por parada)%s" % [sc, " + a parada longe" if first == 1 else ""])
 		check(cam.zoom_stops(3.0).size() > cam.zoom_stops(1.5).size(), "4K tem paradas mais finas que 1080p")
 		check(whole(cam.art_pixel_screen(cam.zoom.x)) and is_equal_approx(cam.zoom.x, cam._target_zoom),
 			"zoom inicial %.3f já é nítido (%.2f px por px de arte)" % [cam.zoom.x, cam.art_pixel_screen(cam.zoom.x)])
@@ -144,7 +150,7 @@ func _process(delta: float) -> bool:
 		check(is_equal_approx(cam._target_zoom, stops[-1]) and cam._target_zoom <= cam.zoom_max, "não passa do zoom máximo (%.2f)" % cam._target_zoom)
 		for k in 30:
 			cam._zoom_by(1.0 / cam.zoom_step, get_meta("p"))
-		check(is_equal_approx(cam._target_zoom, stops[0]) and cam._target_zoom >= cam.zoom_min, "nem do mínimo (%.2f)" % cam._target_zoom)
+		check(is_equal_approx(cam._target_zoom, stops[0]) and cam._target_zoom >= (cam.iso_zoom_min if cam._iso_new_art() else cam.zoom_min) - 0.0001, "nem do mínimo (%.2f)" % cam._target_zoom)
 		cam.set_target_zoom(1.3)
 		check(whole(cam.art_pixel_screen(cam._target_zoom)), "zoom pedido de fora (save antigo 1,3) assenta numa parada: %.3f" % cam._target_zoom)
 		cam.crisp_zoom = false

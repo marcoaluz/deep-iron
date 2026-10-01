@@ -99,14 +99,17 @@ func _process(delta: float) -> bool:
 	var cam: Camera2D = main.get_node("Camera2D")
 	if step == 0 and t > 3.0:
 		step = 1
-		print("== liga a vista iso (F3)")
+		print("== liga a vista iso")
 		if iso and iso.enabled:
 			iso.set_enabled(false)  # Prompt 29: a iso já abre ligada com o mapa novo; volta pra de cima primeiro
 		check(iso != null and not iso.enabled, "vista iso existe e começa desligada")
 		snap = snapshot()
 		ground_before = cam.ground_center()
+		# (Prompt 29) o F3 saiu do jogo: o teste liga/desliga direto (a vista de cima ficou só pra conferir)
 		main._unhandled_input(key(KEY_F3))
-		check(iso.enabled, "F3 liga")
+		check(not iso.enabled, "F3 não troca mais de vista (Prompt 29)")
+		iso.set_enabled(true)
+		check(iso.enabled, "liga")
 		check(same_as_snapshot(snap) == 0, "ligar não mexe em nada do World (posição, grupos, visível)")
 		var mask: int = main.get_viewport().canvas_cull_mask
 		check(mask & iso.LAYER_WORLD == 0, "a tela deixa de mostrar o World cartesiano")
@@ -243,11 +246,11 @@ func _process(delta: float) -> bool:
 		var data = JSON.parse_string(FileAccess.get_file_as_string("user://savegame.json"))
 		var p: Array = data.camera.position
 		check(Vector2(p[0], p[1]).distance_to(cam.ground_center()) < 2.0, "posição da câmera no save = ponto do chão (%s)" % [p])
-		print("== desliga (F3)")
+		print("== desliga")
 		snap = snapshot()
 		ground_before = cam.ground_center()
-		main._unhandled_input(key(KEY_F3))
-		check(not iso.enabled and iso._ents.is_empty(), "F3 desliga e solta os espelhos")
+		iso.set_enabled(false)
+		check(not iso.enabled and iso._ents.is_empty(), "desliga e solta os espelhos")
 		check(main.get_viewport().canvas_cull_mask & iso.LAYER_WORLD != 0, "a tela volta a mostrar o World")
 		check(same_as_snapshot(snap) == 0, "desligar não mexe em nada do World")
 		check(cam.ground_center().distance_to(ground_before) < 2.0, "a câmera continua no mesmo ponto do chão")

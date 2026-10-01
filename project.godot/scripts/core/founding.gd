@@ -133,7 +133,7 @@ func _finish() -> void:
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
 		hud.show_banner("VILA FUNDADA!",
-			"Você tem recurso pra %d casas e 1 comedouro. Faça um engenheiro (tecla 4) e construa pelo Centro da Vila (U)." % hub.starter_houses_left)
+			"Você tem recurso pra %d casas e 1 cozinha. Faça um engenheiro (tecla 4) e construa pelo Centro da Vila (U)." % hub.starter_houses_left)
 	done.emit()
 
 

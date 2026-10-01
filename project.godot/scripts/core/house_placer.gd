@@ -185,6 +185,8 @@ func check_spot(pos: Vector2) -> String:
 	if _area.has_area():
 		if not _area.encloses(fp):
 			return "fora %s" % _area_name
+	elif env and env.has_method("in_forest") and env.in_forest(fp):
+		return "fora da pedreira (além da paliçada é a floresta)"  # Prompt 29: a vila é a pedreira
 	elif env and not env.walkable_rect().encloses(fp):
 		return "fora da área da mina"
 	if env and env.has_method("footprint_reason"):

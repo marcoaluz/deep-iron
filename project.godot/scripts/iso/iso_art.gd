@@ -24,6 +24,7 @@ const KIND_OF_SCENE := {
 	"comedouro": "comedouro", "parque": "parque", "campo_treino": "campo_treino",
 	"vestiario": "vestiario", "coletor_madeira": "coletor_madeira", "escudo": "escudo",
 	"escavadeira": "escavadeira", "centro_vila": "centro", "barricada": "portao",
+	"elevador": "elevador", "elevador_abismo": "elevador_abismo",
 }
 ## canteiro (canteiro.gd KINDS) -> prédio que vai nascer
 const KIND_OF_CANTEIRO := {
@@ -103,7 +104,7 @@ static func layers(node: Node) -> Array:
 		return []
 	var kind := kind_of(node)
 	if kind == "" or (entry(kind).is_empty() and kind != "centro"):
-		return []
+		return prop_layers(node)  # natureza e objetos (parte 4)
 	var out: Array = []
 	if _is_canteiro(node):  # o prédio que vai nascer, subindo pelos desenhos de obra
 		if node.obra_pending():
@@ -140,6 +141,20 @@ static func layers(node: Node) -> Array:
 				out.append(l)
 		"escavadeira":
 			out = _escavadeira(node)
+		"elevador", "elevador_abismo":
+			# em cima: ruína até abrir (o do abismo, em conserto, sobe pelo corte); embaixo: a gaiola
+			# de chegada, desenhada no chão do andar de baixo (camada com "em" = ponto da lógica)
+			var open: bool = node.get("unlocked") == true
+			if not open and node.get("repairing") == true:
+				var tot: float = maxf(float(node.get("repair_time")), 0.001)
+				out.append(state(kind, "pronto", 1.0 - float(node.get("repair_left")) / tot))
+			else:
+				out.append(state(kind, "pronto" if open else "ruina"))
+			var g := state("gaiola", "gaiola")
+			if not g.is_empty() and node.get("bottom_position") != null:
+				g["peg"] = []
+				g["em"] = node.bottom_position
+				out.append(g)
 		"portao":
 			var lvp := int(node.get("level"))
 			var standing: bool = node.is_standing() if node.has_method("is_standing") else lvp > 0
@@ -288,3 +303,131 @@ static func preview(name: String) -> Dictionary:
 ## Contorno (4 cantos) de um retângulo do chão: pra get_obstacle_outline.
 static func outline(r: Rect2) -> PackedVector2Array:
 	return PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
+
+
+# ------------------------------------------------------------ natureza e objetos (parte 4)
+## As peças soltas (assets/game/iso/props/props.json, `python integra.py props`): árvores, toco,
+## horta, tocas, jazidas, rochas, cristais, achados, entulho, placa, tocha, escora. O desenho
+## novo sai do desenho ANTIGO que a coisa usa hoje (textura + quadro) — vale pra decoração do
+## Environment e pros props, sem mexer neles. A navegação dessas peças continua a de sempre.
+const PROPS_FILE := "res://assets/game/iso/props/props.json"
+const PROPS_DIR := "res://assets/game/iso/props/"
+const TREE_SPECIES := ["pinheiro", "carvalho", "betula"]
+const TREE_VARIANTS := {"pinheiro": 2, "carvalho": 3, "betula": 2}
+const CRYSTAL_COLORS := ["violeta", "ciano", "lima", "brasa"]
+const FINDS := {"find_bobina": "achado_bobina", "find_cristal": "achado_cristal", "find_peca": "achado_peca", "find_solar": "achado_painel_solar"}
+const TORCH_FPS := 8.0
+
+static var _props: Dictionary = {}
+
+
+static func props() -> Dictionary:
+	if _props.is_empty() and FileAccess.file_exists(PROPS_FILE):
+		var d = JSON.parse_string(FileAccess.get_file_as_string(PROPS_FILE))
+		_props = d.get("props", {}) if typeof(d) == TYPE_DICTIONARY else {}
+	return _props
+
+
+static func prop(name: String, mod: Color = Color.WHITE) -> Dictionary:
+	var s: Dictionary = props().get(name, {})
+	if s.is_empty():
+		return {}
+	if not _tex.has("p:" + name):
+		_tex["p:" + name] = load(PROPS_DIR + s.img)
+	return {"tex": _tex["p:" + name], "ancora": Vector2(s.ancora[0], s.ancora[1]), "peg": s.get("peg", []),
+		"h": float(s.get("h", 0.0)), "obra": -1.0, "mod": mod}
+
+
+## O sprite que desenha a coisa hoje: ela mesma, o "Visual", ou o 1º filho com desenho conhecido.
+static func _main_sprite(node: Node) -> Sprite2D:
+	if node is Sprite2D:
+		return node
+	var v := node.get_node_or_null("Visual") as Sprite2D
+	if v and v.texture:
+		return v
+	for c in node.get_children():
+		if c is Sprite2D and c.texture and _old_name(c.texture) in ["placa_perigo", "support_beam", "entulho"]:
+			return c
+	return null
+
+
+static func _old_name(t: Texture2D) -> String:
+	return t.resource_path.get_file().get_basename() if t else ""
+
+
+static func _hash(node: Node) -> int:
+	var p: Vector2 = (node as Node2D).global_position
+	return absi(int(p.x * 3.0) * 73856093 ^ int(p.y * 3.0) * 19349663)
+
+
+## Camadas da peça nova pra essa coisa ([] = não tem). Uma camada pode ter "anim" (quadros) e "mod".
+static func prop_layers(node: Node) -> Array:
+	var env := _env(node)
+	if env == null or props().is_empty():
+		return []
+	var h := _hash(node)
+	if node.is_in_group("minerios") and node.get("ore_type") != null:
+		return _ore_layers(node, env)
+	var sp := _main_sprite(node)
+	if sp == null:
+		return []
+	var old := _old_name(sp.texture)
+	var mod := sp.modulate
+	var out: Array = []
+	match old:
+		"arvore":
+			var esp: String = TREE_SPECIES[h % TREE_SPECIES.size()]
+			if sp.frame >= 2:
+				out.append(prop("toco_" + esp))  # cortada: o toco até rebrotar
+			else:
+				out.append(prop("arvore_%s_%d" % [esp, (h / 7) % TREE_VARIANTS[esp]]))
+		"toca":
+			out.append(prop(["toca_coelho_fora", "toca_coelho_orelhas", "toca_coelho_vazia"][clampi(sp.frame, 0, 2)]))
+		"horta":
+			out.append(prop(["horta_pronto", "horta_crescendo", "horta_colhido"][clampi(sp.frame, 0, 2)]))
+		"torch", "torch_unlit":
+			var lit := old == "torch"
+			for c in sp.get_children():
+				if c is Sprite2D and _old_name(c.texture) == "torch":
+					lit = c.modulate.a > 0.5  # a chama acende com o escuro (Environment)
+			if lit:
+				var l := prop("tocha_chao_f0")
+				l["anim"] = [0, 1, 2, 3].map(func(k): return prop("tocha_chao_f%d" % k).tex)
+				out.append(l)
+			else:
+				out.append(prop("tocha_apagada"))
+		"placa_perigo":
+			out.append(prop("placa_perigo"))
+		"support_beam":
+			out.append(prop("escora"))
+		"entulho":
+			out.append(prop("entulho_medio"))
+		_:
+			if old.begins_with("boulder_"):
+				var deep: bool = env.has_method("is_deep") and env.is_deep((node as Node2D).global_position)
+				out.append(prop("rocha_mina_%d" % (h % 3) if deep else "rocha_musgo_%d" % (int(old.trim_prefix("boulder_")) % 6)))
+			elif old.begins_with("crystal_"):
+				out.append(prop("cristal_%s_%d" % [CRYSTAL_COLORS[int(old.trim_prefix("crystal_")) % 4], h % 2]))
+			elif FINDS.has(old):
+				out.append(prop(FINDS[old]))
+	for l in out:
+		if not l.is_empty():
+			l["mod"] = mod
+	return out.filter(func(l): return not l.is_empty())
+
+
+## Jazida: o estado pela quantidade (cheia, meia, quase; esgotada no descanso) e o entulho da
+## galeria lacrada por cima. O cinza de "travada" vem junto.
+static func _ore_layers(node: Node, env: Node) -> Array:
+	var ore: String = node.ore_type
+	var total: float = float(node.get("ore_total"))
+	var left: float = float(node.get("ore_remaining"))
+	var r := left / total if total > 0.0 else 0.0
+	var vis := node.get_node_or_null("Visual") as CanvasItem
+	var mod: Color = vis.modulate if vis else Color.WHITE
+	var st := "esgotada" if float(node.get("_cooldown")) > 0.0 or r <= 0.0 else ("cheia" if r > 0.6 else ("meia" if r > 0.25 else "quase"))
+	var out: Array = [prop("jazida_esgotada" if st == "esgotada" else "jazida_%s_%s" % [ore, st], mod)]
+	var rub = node.get("_rubble")
+	if rub != null and is_instance_valid(rub) and rub.visible:
+		out.append(prop("entulho_medio"))
+	return out.filter(func(l): return not l.is_empty())

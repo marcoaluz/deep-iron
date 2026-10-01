@@ -1,0 +1,995 @@
+{
+ "_obs": "Prompt 29 parte 4 (integra.py props): peça -> img, âncora (pé), caixa (px de arte)",
+ "props": {
+  "arvore_pinheiro_0": {
+   "img": "arvore_pinheiro_0.png",
+   "ancora": [
+    31.0,
+    146.0
+   ],
+   "peg": [
+    -10.85,
+    -8.68,
+    22.0,
+    19.0
+   ],
+   "h": 138.0,
+   "fora": 2
+  },
+  "arvore_pinheiro_1": {
+   "img": "arvore_pinheiro_1.png",
+   "ancora": [
+    30.0,
+    144.0
+   ],
+   "peg": [
+    -10.5,
+    -8.4,
+    22.0,
+    18.0
+   ],
+   "h": 136.0,
+   "fora": 4
+  },
+  "toco_pinheiro": {
+   "img": "toco_pinheiro.png",
+   "ancora": [
+    20.5,
+    36.0
+   ],
+   "peg": [
+    -7.175,
+    -5.74,
+    15.0,
+    11.0
+   ],
+   "h": 34.0,
+   "fora": 4
+  },
+  "muda_pinheiro": {
+   "img": "muda_pinheiro.png",
+   "ancora": [
+    12.0,
+    35.0
+   ],
+   "peg": [
+    -4.199999999999999,
+    -3.3599999999999994,
+    9.0,
+    6.0
+   ],
+   "h": 32.0,
+   "fora": 4
+  },
+  "arvore_carvalho_0": {
+   "img": "arvore_carvalho_0.png",
+   "ancora": [
+    48.0,
+    121.0
+   ],
+   "peg": [
+    -16.799999999999997,
+    -13.439999999999998,
+    34.0,
+    30.0
+   ],
+   "h": 114.0,
+   "fora": 4
+  },
+  "arvore_carvalho_1": {
+   "img": "arvore_carvalho_1.png",
+   "ancora": [
+    47.5,
+    125.0
+   ],
+   "peg": [
+    -16.625,
+    -13.3,
+    33.0,
+    30.0
+   ],
+   "h": 118.0,
+   "fora": 4
+  },
+  "arvore_carvalho_2": {
+   "img": "arvore_carvalho_2.png",
+   "ancora": [
+    47.5,
+    128.0
+   ],
+   "peg": [
+    -16.625,
+    -13.3,
+    34.0,
+    31.0
+   ],
+   "h": 128.0,
+   "fora": 0
+  },
+  "toco_carvalho": {
+   "img": "toco_carvalho.png",
+   "ancora": [
+    21.0,
+    33.0
+   ],
+   "peg": [
+    -7.35,
+    -5.88,
+    15.0,
+    13.0
+   ],
+   "h": 30.0,
+   "fora": 2
+  },
+  "muda_carvalho": {
+   "img": "muda_carvalho.png",
+   "ancora": [
+    11.5,
+    34.0
+   ],
+   "peg": [
+    -4.0249999999999995,
+    -3.2199999999999998,
+    8.0,
+    6.0
+   ],
+   "h": 32.0,
+   "fora": 4
+  },
+  "arvore_betula_0": {
+   "img": "arvore_betula_0.png",
+   "ancora": [
+    27.0,
+    137.0
+   ],
+   "peg": [
+    -9.45,
+    -7.56,
+    19.0,
+    17.0
+   ],
+   "h": 134.0,
+   "fora": 2
+  },
+  "arvore_betula_1": {
+   "img": "arvore_betula_1.png",
+   "ancora": [
+    32.0,
+    130.0
+   ],
+   "peg": [
+    -11.2,
+    -8.959999999999999,
+    22.0,
+    20.0
+   ],
+   "h": 136.0,
+   "fora": 3
+  },
+  "toco_betula": {
+   "img": "toco_betula.png",
+   "ancora": [
+    19.5,
+    38.0
+   ],
+   "peg": [
+    -6.824999999999999,
+    -5.46,
+    14.0,
+    11.0
+   ],
+   "h": 36.0,
+   "fora": 4
+  },
+  "muda_betula": {
+   "img": "muda_betula.png",
+   "ancora": [
+    13.0,
+    34.0
+   ],
+   "peg": [
+    -4.55,
+    -3.64,
+    8.0,
+    7.0
+   ],
+   "h": 34.0,
+   "fora": 4
+  },
+  "arvore_seca": {
+   "img": "arvore_seca.png",
+   "ancora": [
+    36.0,
+    133.0
+   ],
+   "peg": [
+    -12.6,
+    -10.08,
+    25.0,
+    22.0
+   ],
+   "h": 126.0,
+   "fora": 4
+  },
+  "horta_pronto": {
+   "img": "horta_pronto.png",
+   "ancora": [
+    32.0,
+    43.0
+   ],
+   "peg": [
+    -11.2,
+    -8.959999999999999,
+    23.0,
+    21.0
+   ],
+   "h": 38.0,
+   "fora": 2
+  },
+  "horta_crescendo": {
+   "img": "horta_crescendo.png",
+   "ancora": [
+    32.0,
+    41.0
+   ],
+   "peg": [
+    -11.2,
+    -8.959999999999999,
+    23.0,
+    21.0
+   ],
+   "h": 36.0,
+   "fora": 0
+  },
+  "horta_colhido": {
+   "img": "horta_colhido.png",
+   "ancora": [
+    32.0,
+    40.0
+   ],
+   "peg": [
+    -11.2,
+    -8.959999999999999,
+    23.0,
+    21.0
+   ],
+   "h": 36.0,
+   "fora": 0
+  },
+  "toca_coelho_fora": {
+   "img": "toca_coelho_fora.png",
+   "ancora": [
+    22.5,
+    28.0
+   ],
+   "peg": [
+    -7.874999999999999,
+    -6.3,
+    16.0,
+    14.0
+   ],
+   "h": 22.0,
+   "fora": 4
+  },
+  "toca_coelho_orelhas": {
+   "img": "toca_coelho_orelhas.png",
+   "ancora": [
+    22.5,
+    26.0
+   ],
+   "peg": [
+    -7.874999999999999,
+    -6.3,
+    16.0,
+    14.0
+   ],
+   "h": 20.0,
+   "fora": 4
+  },
+  "toca_coelho_vazia": {
+   "img": "toca_coelho_vazia.png",
+   "ancora": [
+    22.5,
+    25.0
+   ],
+   "peg": [
+    -7.874999999999999,
+    -6.3,
+    16.0,
+    14.0
+   ],
+   "h": 20.0,
+   "fora": 3
+  },
+  "toca_javali": {
+   "img": "toca_javali.png",
+   "ancora": [
+    24.0,
+    41.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    15.0
+   ],
+   "h": 40.0,
+   "fora": 3
+  },
+  "jazida_ferro_cheia": {
+   "img": "jazida_ferro_cheia.png",
+   "ancora": [
+    30.5,
+    58.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 52.0,
+   "fora": 0
+  },
+  "jazida_ferro_meia": {
+   "img": "jazida_ferro_meia.png",
+   "ancora": [
+    30.5,
+    62.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 54.0,
+   "fora": 0
+  },
+  "jazida_ferro_quase": {
+   "img": "jazida_ferro_quase.png",
+   "ancora": [
+    30.5,
+    50.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 48.0,
+   "fora": 3
+  },
+  "jazida_cobre_cheia": {
+   "img": "jazida_cobre_cheia.png",
+   "ancora": [
+    30.5,
+    58.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 52.0,
+   "fora": 0
+  },
+  "jazida_cobre_meia": {
+   "img": "jazida_cobre_meia.png",
+   "ancora": [
+    30.5,
+    62.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 54.0,
+   "fora": 0
+  },
+  "jazida_cobre_quase": {
+   "img": "jazida_cobre_quase.png",
+   "ancora": [
+    30.5,
+    50.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 48.0,
+   "fora": 3
+  },
+  "jazida_carvao_cheia": {
+   "img": "jazida_carvao_cheia.png",
+   "ancora": [
+    30.5,
+    58.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 52.0,
+   "fora": 0
+  },
+  "jazida_carvao_meia": {
+   "img": "jazida_carvao_meia.png",
+   "ancora": [
+    30.5,
+    62.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 54.0,
+   "fora": 0
+  },
+  "jazida_carvao_quase": {
+   "img": "jazida_carvao_quase.png",
+   "ancora": [
+    30.5,
+    50.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 48.0,
+   "fora": 3
+  },
+  "jazida_prata_cheia": {
+   "img": "jazida_prata_cheia.png",
+   "ancora": [
+    30.5,
+    58.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 52.0,
+   "fora": 0
+  },
+  "jazida_prata_meia": {
+   "img": "jazida_prata_meia.png",
+   "ancora": [
+    30.5,
+    62.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 54.0,
+   "fora": 0
+  },
+  "jazida_prata_quase": {
+   "img": "jazida_prata_quase.png",
+   "ancora": [
+    30.5,
+    50.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 48.0,
+   "fora": 3
+  },
+  "jazida_solarita_cheia": {
+   "img": "jazida_solarita_cheia.png",
+   "ancora": [
+    30.5,
+    58.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 52.0,
+   "fora": 0
+  },
+  "jazida_solarita_meia": {
+   "img": "jazida_solarita_meia.png",
+   "ancora": [
+    30.5,
+    62.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 54.0,
+   "fora": 0
+  },
+  "jazida_solarita_quase": {
+   "img": "jazida_solarita_quase.png",
+   "ancora": [
+    30.5,
+    50.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 48.0,
+   "fora": 3
+  },
+  "jazida_esgotada": {
+   "img": "jazida_esgotada.png",
+   "ancora": [
+    30.5,
+    57.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 56.0,
+   "fora": 0
+  },
+  "rocha_musgo_0": {
+   "img": "rocha_musgo_0.png",
+   "ancora": [
+    28.5,
+    47.0
+   ],
+   "peg": [
+    -9.975,
+    -7.98,
+    21.0,
+    18.0
+   ],
+   "h": 44.0,
+   "fora": 1
+  },
+  "rocha_musgo_1": {
+   "img": "rocha_musgo_1.png",
+   "ancora": [
+    28.5,
+    47.0
+   ],
+   "peg": [
+    -9.975,
+    -7.98,
+    21.0,
+    19.0
+   ],
+   "h": 44.0,
+   "fora": 0
+  },
+  "rocha_musgo_2": {
+   "img": "rocha_musgo_2.png",
+   "ancora": [
+    30.0,
+    55.0
+   ],
+   "peg": [
+    -10.5,
+    -8.4,
+    22.0,
+    19.0
+   ],
+   "h": 48.0,
+   "fora": 0
+  },
+  "rocha_musgo_3": {
+   "img": "rocha_musgo_3.png",
+   "ancora": [
+    30.0,
+    51.0
+   ],
+   "peg": [
+    -10.5,
+    -8.4,
+    22.0,
+    19.0
+   ],
+   "h": 50.0,
+   "fora": 0
+  },
+  "rocha_musgo_4": {
+   "img": "rocha_musgo_4.png",
+   "ancora": [
+    30.0,
+    35.0
+   ],
+   "peg": [
+    -10.5,
+    -8.4,
+    22.0,
+    19.0
+   ],
+   "h": 32.0,
+   "fora": 0
+  },
+  "rocha_musgo_5": {
+   "img": "rocha_musgo_5.png",
+   "ancora": [
+    32.0,
+    47.0
+   ],
+   "peg": [
+    -11.2,
+    -8.959999999999999,
+    22.0,
+    20.0
+   ],
+   "h": 44.0,
+   "fora": 4
+  },
+  "rocha_mina_0": {
+   "img": "rocha_mina_0.png",
+   "ancora": [
+    26.0,
+    44.0
+   ],
+   "peg": [
+    -9.1,
+    -7.28,
+    19.0,
+    17.0
+   ],
+   "h": 42.0,
+   "fora": 3
+  },
+  "rocha_mina_1": {
+   "img": "rocha_mina_1.png",
+   "ancora": [
+    26.5,
+    44.0
+   ],
+   "peg": [
+    -9.274999999999999,
+    -7.419999999999999,
+    19.0,
+    16.0
+   ],
+   "h": 40.0,
+   "fora": 4
+  },
+  "rocha_mina_2": {
+   "img": "rocha_mina_2.png",
+   "ancora": [
+    26.0,
+    44.0
+   ],
+   "peg": [
+    -9.1,
+    -7.28,
+    19.0,
+    17.0
+   ],
+   "h": 42.0,
+   "fora": 0
+  },
+  "cristal_violeta_0": {
+   "img": "cristal_violeta_0.png",
+   "ancora": [
+    24.0,
+    56.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    16.0
+   ],
+   "h": 50.0,
+   "fora": 0
+  },
+  "cristal_violeta_1": {
+   "img": "cristal_violeta_1.png",
+   "ancora": [
+    24.0,
+    54.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    16.0
+   ],
+   "h": 46.0,
+   "fora": 4
+  },
+  "cristal_ciano_0": {
+   "img": "cristal_ciano_0.png",
+   "ancora": [
+    24.0,
+    54.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    16.0
+   ],
+   "h": 46.0,
+   "fora": 1
+  },
+  "cristal_ciano_1": {
+   "img": "cristal_ciano_1.png",
+   "ancora": [
+    24.0,
+    58.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    16.0
+   ],
+   "h": 56.0,
+   "fora": 2
+  },
+  "cristal_lima_0": {
+   "img": "cristal_lima_0.png",
+   "ancora": [
+    24.0,
+    55.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    16.0
+   ],
+   "h": 54.0,
+   "fora": 0
+  },
+  "cristal_lima_1": {
+   "img": "cristal_lima_1.png",
+   "ancora": [
+    24.0,
+    54.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    16.0
+   ],
+   "h": 52.0,
+   "fora": 2
+  },
+  "cristal_brasa_0": {
+   "img": "cristal_brasa_0.png",
+   "ancora": [
+    24.0,
+    58.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    16.0
+   ],
+   "h": 52.0,
+   "fora": 0
+  },
+  "cristal_brasa_1": {
+   "img": "cristal_brasa_1.png",
+   "ancora": [
+    24.0,
+    55.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    15.0
+   ],
+   "h": 54.0,
+   "fora": 4
+  },
+  "achado_bobina": {
+   "img": "achado_bobina.png",
+   "ancora": [
+    24.0,
+    41.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    16.0
+   ],
+   "h": 40.0,
+   "fora": 2
+  },
+  "achado_cristal": {
+   "img": "achado_cristal.png",
+   "ancora": [
+    24.0,
+    40.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    16.0
+   ],
+   "h": 34.0,
+   "fora": 1
+  },
+  "achado_peca": {
+   "img": "achado_peca.png",
+   "ancora": [
+    24.0,
+    39.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    16.0
+   ],
+   "h": 36.0,
+   "fora": 0
+  },
+  "achado_painel_solar": {
+   "img": "achado_painel_solar.png",
+   "ancora": [
+    24.0,
+    44.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    16.0
+   ],
+   "h": 38.0,
+   "fora": 0
+  },
+  "entulho_medio": {
+   "img": "entulho_medio.png",
+   "ancora": [
+    32.0,
+    30.0
+   ],
+   "peg": [
+    -11.2,
+    -8.959999999999999,
+    23.0,
+    20.0
+   ],
+   "h": 28.0,
+   "fora": 4
+  },
+  "placa_perigo": {
+   "img": "placa_perigo.png",
+   "ancora": [
+    17.0,
+    62.0
+   ],
+   "peg": [
+    -5.949999999999999,
+    -4.76,
+    12.0,
+    10.0
+   ],
+   "h": 58.0,
+   "fora": 3
+  },
+  "tocha_apagada": {
+   "img": "tocha_apagada.png",
+   "ancora": [
+    17.0,
+    47.0
+   ],
+   "peg": [
+    -5.949999999999999,
+    -4.76,
+    12.0,
+    10.0
+   ],
+   "h": 44.0,
+   "fora": 3
+  },
+  "tocha_chao_f0": {
+   "img": "tocha_chao_f0.png",
+   "ancora": [
+    5.0,
+    49.0
+   ],
+   "peg": [
+    -4.0,
+    -3.2,
+    3.0,
+    2.0
+   ],
+   "h": 48.0,
+   "fora": 4
+  },
+  "tocha_chao_f1": {
+   "img": "tocha_chao_f1.png",
+   "ancora": [
+    5.0,
+    49.0
+   ],
+   "peg": [
+    -4.0,
+    -3.2,
+    3.0,
+    2.0
+   ],
+   "h": 48.0,
+   "fora": 4
+  },
+  "tocha_chao_f2": {
+   "img": "tocha_chao_f2.png",
+   "ancora": [
+    5.0,
+    48.0
+   ],
+   "peg": [
+    -4.0,
+    -3.2,
+    3.0,
+    2.0
+   ],
+   "h": 46.0,
+   "fora": 4
+  },
+  "tocha_chao_f3": {
+   "img": "tocha_chao_f3.png",
+   "ancora": [
+    5.0,
+    49.0
+   ],
+   "peg": [
+    -4.0,
+    -3.2,
+    3.0,
+    2.0
+   ],
+   "h": 48.0,
+   "fora": 4
+  },
+  "escora": {
+   "img": "escora.png",
+   "ancora": [
+    27.0,
+    86.0
+   ],
+   "peg": [
+    -9.45,
+    -7.56,
+    19.0,
+    18.0
+   ],
+   "h": 86.0,
+   "fora": 1
+  }
+ }
+}

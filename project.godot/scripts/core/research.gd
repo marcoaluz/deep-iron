@@ -44,7 +44,7 @@ const TECHS := {
 		"desc": "Música o dia todo: +6 de ânimo pra todo mundo."},
 	"hidroponia": {"name": "Hidroponia", "branch": "Vila", "req": "medicina", "excl": "radio", "points": 120,
 		"cost": Vector3i(250, 0, 60), "ore": "",
-		"desc": "A horta rende o dobro e o comedouro guarda +60 de comida."},
+		"desc": "A horta rende o dobro e a cozinha guarda +60 de comida."},
 	"estudo_solar": {"name": "Estudo da explosão solar", "branch": "Sol", "req": "", "excl": "", "points": 150,
 		"cost": Vector3i(300, 30, 0), "ore": "prata",
 		"desc": "Entender o que aconteceu com o sol. Abre os projetos do ramo (e o aviso das ondas solares)."},

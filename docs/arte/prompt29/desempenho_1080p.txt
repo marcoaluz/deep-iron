@@ -1,0 +1,3 @@
+vila de perto (1 px de arte = 2 px de tela): 75 fps em média (13.3 ms), 99% dos quadros até 13.3 ms, pior 15.3 ms
+parada longe (mapa quase inteiro): 75 fps em média (13.3 ms), 99% dos quadros até 13.3 ms, pior 13.3 ms
+parada longe + 20 ipezinhos a mais trabalhando: 66 fps em média (15.1 ms), 99% dos quadros até 27.1 ms, pior 71.7 ms

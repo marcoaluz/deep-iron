@@ -39,6 +39,7 @@ extends "res://scripts/props/station.gd"
 ##     de ipezinhos (o limite inicial, 8, já conta com elas — eram as 3 casas prontas da
 ##     cena). Depois delas, casa nova é a melhoria Moradias, como antes.
 ##   - Casa (inicial ou Moradias) só pode ser posicionada até house_radius() do Centro.
+##     (Prompt 29: raio desligado por padrão — casa em qualquer lugar da pedreira.)
 ##     ESCOLHA: o raio cresce a cada ESTÁGIO da vila (Expandir) — Moradias já é a própria
 ##     casa, e "a vila cresceu" é o que o estágio mede. O mapa continua do mesmo tamanho.
 ##     Casas que já existem (saves antigos) não são checadas: a regra é só pra posicionar.
@@ -159,7 +160,9 @@ const UPGRADE_NAMES := {
 ## ...e o raio cresce isso a cada estágio da vila.
 @export var house_radius_per_stage: float = 70.0
 ## false = sem limite (casa em qualquer lugar livre da mina).
-@export var house_radius_enabled: bool = true
+## Prompt 29 (decisão do Marco, 2026-10-01): DESLIGADO — casa em qualquer lugar da pedreira (o
+## lado da vila da paliçada), não precisa ficar perto do Centro. O parque também (usa o mesmo raio).
+@export var house_radius_enabled: bool = false
 
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 var panel_id := "hub"
@@ -596,7 +599,7 @@ func build_comedouro() -> bool:
 	var placer := get_tree().get_first_node_in_group("house_placer")
 	if placer == null:
 		return false
-	placer.begin(_confirm_comedouro, COMEDOURO_TEXTURE, 3, "o comedouro", {"footprint": COMEDOURO_FOOTPRINT})
+	placer.begin(_confirm_comedouro, COMEDOURO_TEXTURE, 3, "a cozinha", {"footprint": COMEDOURO_FOOTPRINT})
 	return true
 
 
@@ -610,7 +613,7 @@ func _confirm_comedouro(pos: Vector2) -> bool:
 	Audio.click()
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
-		hud.show_toast("Comedouro encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+		hud.show_toast("Cozinha encomendada — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
 	return true
 
 
@@ -782,7 +785,7 @@ func finish_build(kind: String, pos: Vector2) -> void:
 	Audio.recruit()
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
-		hud.show_toast("Comedouro pronto! O cozinheiro (tecla C) enche ele de comida.", Color(0.55, 1.0, 0.5))
+		hud.show_toast("Cozinha pronta! O cozinheiro (tecla C) enche ela de comida.", Color(0.55, 1.0, 0.5))
 
 
 ## Cria um comedouro (também ao carregar o save, com o mesmo nome).

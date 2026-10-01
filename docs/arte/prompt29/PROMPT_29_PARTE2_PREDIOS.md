@@ -1,6 +1,6 @@
 # Prompt 29, parte 2: os prédios com a arte nova
 
-Data: 2026-10-01. Branch `isometrico`. Sem geração no PixelLab (saldo **1.439**).
+Data: 2026-10-01. Branch `isometrico`. Geração: só o portão refeito (80; saldo 1.439 → **1.359**).
 
 A 2ª parte do Prompt 29 troca a arte antiga dos **prédios** pela arte isométrica aprovada
 (Prompts 10–13), no mapa novo da parte 1. Bonecos, árvores, pedras, jazidas e os andares de
@@ -57,7 +57,7 @@ As capturas saem de `tests/capturas_iso.gd` (com janela, pasta de usuário isola
 | Obra **com** desenhos (casa, taverna, armazém...): obra_1/2/3 pelo progresso. **Sem** desenhos (coletor, peças da escavadeira, etapas do escudo): o desenho pronto subindo pelo corte do Prompt 28 | regra do contrato (estágios pelo progresso, nunca o fantasma) com o que existe |
 | Centro expandindo: o desenho de **obra** do próximo estágio (andaime sobre o de agora) durante toda a expansão | o Prompt 10 fez 1 obra entre estágios |
 | Escavadeira: estrutura + **cada peça como camada** (a região dela recortada do pronto, `regioes.json`) | o jogo instala as peças em qualquer ordem; as etapas do Prompt 13 eram numa ordem fixa |
-| **Portão espelhado** (eixo i) | foi desenhado no eixo j, mas a paliçada do mapa corre no eixo i. Muro fino: a troca de luz quase não aparece (mesma regra da reta_j do Prompt 12). **Desvio do contrato** (espelho), aceito pra muro fino; reportado |
+| **Portão refeito no eixo i** (PixelLab, 4 desenhos, 80 gerações) | o do Prompt 12 saiu no eixo j (o modelo ignorou a guia), mas a paliçada do mapa corre no eixo i. Primeiro espelhei; o Marco pediu o certo: gerado de novo com a guia do Prompt 12 + o portão antigo espelhado (estrutura) + a reta do muro (orientação e luz), piloto (nível 1) antes dos outros 3. Arquivos: `muro/final/portao_i_*.png`, ids em `muro/jobs.json` |
 | Paliçada: um trecho do muro nível 1 por tile ao longo da linha da navegação, um danificado a cada 7; entra na ordem como caixa fina, sem clique | a parte 1 tinha só a parede invisível da navegação |
 | **Migração** (save antigo): prédio posto pelo jogador que ficou em cima de outro com a pegada nova vai pro ponto livre mais perto (chão plano), anotado em `environment.migrated`; os da cena ficam | a regra antiga deixava casas a ~60 px uma da outra; com a pegada nova elas se sobrepõem |
 | Taverna ampliada = `nivel_2` com nível 2; enfermaria ampliada = `nivel_2` com a melhoria Enfermaria ≥ 2 | o jogo não tem "ampliação" da enfermaria como estado próprio; escolhi a metade das melhorias |
@@ -94,14 +94,28 @@ Tudo com a pasta de usuário isolada; md5 do save real conferido antes e depois.
 | GUT completo (30 blocos + 12 testes rápidos) | 1ª rodada **39/42**: achou 2 defeitos desta parte (invasor não alcançava a parede nova: b36; caixa trocando no 1º quadro: p28_iso) e 1 teste com pegada velha (b41). Corrigidos. 2ª rodada **41/42**: a falha foi o `b45_coletor_madeira` conhecido (o lenhador sorteou um acidente e estava internado na conferência, ver TESTING.md); sozinho passou 2 de 2 |
 | Save real | md5 igual antes e depois de todas as rodadas (`savegame.json` f70b569b…) |
 
+## Ajustes pedidos na revisão (2026-10-01)
+
+1. **Portão certo:** refeito no eixo i (ver Decisões).
+2. **Casa em qualquer lugar da pedreira:** o raio do Centro (Bloco 37) foi **desligado**
+   (`house_radius_enabled = false`); vale qualquer chão plano livre do lado da vila da paliçada. Na
+   floresta (além da paliçada): "fora da pedreira". O parque usava o mesmo raio: também ficou livre.
+   O coletor continua na clareira (regra própria). Testes mudados de propósito: `b37_fundacao_raio`
+   (agora confere floresta recusada e casa a ~500 px do Centro aceita) e `b41_parque`.
+3. **Quantas casas cabem** (`tests/analise_capacidade.gd`): com os prédios do layout **e** os extras
+   de fim de jogo (taverna, parque, laboratório, vestiário, arsenal, campo de treino), encaixando
+   casas com o posicionador de verdade (pegada nova + porta, chão plano, sem encostar), ainda
+   cabem **31 casas** (8 no terraço de cima, 5 no do meio, 18 no fundo da pedreira). O jogo pede
+   no máximo **7** (3 iniciais + 4 níveis de Moradias). **Não precisa aumentar o mapa agora.**
+   Se o Prompt 31 trouxer escola/crianças (mais prédios), vale rodar a análise de novo.
+
 ## Limites e desvios
 
 1. **Ainda arte antiga:** bonecos, criaturas, robô, animais, árvores, pedras, cristais, jazidas,
    tochas e objetos; o nível 2 e o abismo (bordas, elevadores, poço). Próximas partes.
 2. **Elevadores** (do poço e do abismo) ficam pra parte dos andares de baixo: eles têm uma ponta
    em cima e outra embaixo, e o poço entre as lajes ainda não existe.
-3. **Portão espelhado** (desvio do contrato, ver Decisões). A âncora dele saiu da prancha do
-   `muro.py`; a caixa ficou 84×42 (o desenho tem os mourões de lado).
+3. **Portão nível 1** ficou com brilho **0,153** (faixa do contrato 0,18–0,26): reportado, sem mexer. Os outros: quebrado 0,194, nível 2 0,172 (também abaixo), nível 3 0,201.
 4. **Coletor de madeira, peças da escavadeira e escudo** não têm desenhos de obra: sobem pelo corte.
 5. **Casa nível 2/3** existem na arte, mas o jogo não tem nível de casa: ficam guardadas.
 6. **"Comedouro" → "Cozinha"** (pedido do inventário) ainda não: são ~15 textos de interface; entra

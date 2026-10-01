@@ -12,10 +12,10 @@ O jogo (scripts/iso/iso_art.gd) lê o predios.json: a vista desenha o estado cer
 âncora e usa a caixa na ordem e no clique; a pegada de navegação é a do pronto / escala.
 Pastas e arquivos em minúsculas (sem problema de case no export).
 """
-import sys, os, json, shutil
+import sys, os, json, shutil, glob
 from multiprocessing import Pool
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import predio
@@ -46,6 +46,10 @@ PREDIOS = {
     "escavadeira": ("escavadeira", {"estrutura": "../%s/escavadeira_1_estrutura.png" % MAQ,
                                     "pronto": "../%s/escavadeira_pronta.png" % MAQ}),
 }
+# elevadores (Prompt 13): a ponta de cima (ruína -> pronto); a de baixo é a gaiola (SOLTOS)
+PREDIOS["elevador"] = ("elevador", {"ruina": "../%s/elevador_ruina.png" % MAQ, "pronto": "../%s/elevador_pronto.png" % MAQ})
+PREDIOS["elevador_abismo"] = ("elevador", {"ruina": "../%s/elevador_abismo_ruina.png" % MAQ,
+                                           "pronto": "../%s/elevador_abismo_pronto.png" % MAQ})
 for k in range(1, 6):
     PREDIOS["centro_%d" % k] = ("centro/estagio_%d" % k, {"pronto": "pronto.png"} if k == 1 else
                                 {"pronto": "pronto.png", "obra": "obra.png"})
@@ -55,20 +59,56 @@ DESCE = {("casa", "nivel_2"): 72, ("casa", "nivel_3"): 72, ("taverna", "nivel_2"
 PADRAO = {"pronto": "pronto.png", "obra_1": "obra_1.png", "obra_2": "obra_2.png", "obra_3": "obra_3.png"}
 
 # portão (1 por nível, Prompt 12) e o trecho de paliçada: sem predio.json; guia declarada aqui.
-# Âncora = centro da pegada no chão (o portão cobre 2 tiles; o trecho, 1 tile), no eixo i (a
-# paliçada do mapa corre em x). O portão foi desenhado no eixo j: sai ESPELHADO (muro fino: a
-# troca de luz quase não aparece, a mesma regra da reta_j do Prompt 12). A âncora dele vem da
-# prancha do muro.py (portão na peça 3 do trecho, quadro deslocado (-10, -88)): pés dos 2 postes.
+# Âncora = centro da pegada no chão (o portão cobre 3 tiles; o trecho, 1 tile), no eixo i (a
+# paliçada do mapa corre em x). O portão do Prompt 12 saiu no eixo j; foi REFEITO no eixo i no
+# Prompt 29 (muro/final/portao_i_*.png, muro/jobs.json). Âncora e guia do Prompt 12
+# (muro/portao/predio.json: 96×20, âncora 63,164).
 SOLTOS = {
-    "portao": ({"quebrado": "muro/final/portao_quebrado.png", "nivel_1": "muro/final/portao_1.png",
-                "nivel_2": "muro/final/portao_2.png", "nivel_3": "muro/final/portao_3.png"},
-               (126.0 - 60.0, 172.0), (64.0, 16.0, 150.0), True),
+    "portao": ({"quebrado": "muro/final/portao_i_quebrado.png", "nivel_1": "muro/final/portao_i_nivel_1.png",
+                "nivel_2": "muro/final/portao_i_nivel_2.png", "nivel_3": "muro/final/portao_i_nivel_3.png"},
+               (63.0, 164.0), (96.0, 20.0, 150.0)),
     "palicada": ({"reta": "muro/final/muro_1_reta_i.png", "danificada": "muro/final/muro_1_danificada.png"},
-                 (32.0, 95.0), (32.0, 8.0, 70.0), False),
+                 (32.0, 95.0), (32.0, 8.0, 70.0)),
+    # a gaiola de chegada (ponta de baixo dos elevadores): pé no meio da base
+    "gaiola": ({"gaiola": "final_maquinas/elevador_gaiola.png"}, (29.0, 85.0), (36.0, 36.0, 80.0)),
 }
 # escavadeira: as peças instaladas por cima da estrutura (região do pronto, regioes.json)
 PECAS = ["motor", "hidraulica", "cabine", "broca"]
 REATORES = ["vapor", "diesel", "cristal", "solar", "fusao"]
+
+
+# Prompt 30 (consistência): desenhos que ficaram escuros demais pra categoria deles (brilho médio
+# abaixo da faixa 0,18–0,26 do contrato, sem motivo de material) sobem até o piso da faixa. O
+# arquivo original no protótipo fica como está; só a cópia do jogo é ajustada.
+BRILHO_MIN = 0.18
+AJUSTA_BRILHO = {"elevador", "portao/nivel_1", "portao/nivel_2",
+                 "achado_bobina", "achado_cristal", "achado_peca"}
+
+
+def _brilho(a):
+    m = a[..., 3] > 40
+    return (a[..., :3].max(-1)[m] / 255.0).mean() if m.any() else 1.0
+
+
+def ajusta_brilho(path, alvo=BRILHO_MIN, teto=1.45):
+    """Multiplica o valor (HSV) dos pixels até o brilho médio chegar no alvo; o contorno quase
+    preto fica como está. Devolve (antes, depois)."""
+    a = np.array(Image.open(path).convert("RGBA")).astype(float)
+    antes = _brilho(a)
+    if antes >= alvo:
+        return antes, antes
+    k = min(teto, alvo / antes)
+    for _ in range(4):  # o contorno não sobe: corrige o fator até bater o alvo
+        b = a.copy()
+        v = b[..., :3].max(-1)
+        m = (b[..., 3] > 0) & (v > 0.12 * 255)
+        b[..., :3][m] = np.clip(b[..., :3][m] * k, 0, 255)
+        depois = _brilho(b)
+        if depois >= alvo - 0.002 or k >= teto:
+            break
+        k = min(teto, k * alvo / depois)
+    Image.fromarray(b.astype(np.uint8), "RGBA").save(path)
+    return antes, depois
 
 
 def encaixa(args):
@@ -128,7 +168,7 @@ def predios(so=None):
         caixas = contrato_de(pasta).get("caixas", {})
         est = dict(PADRAO)
         if estados:
-            est = dict(estados) if nome in ("casa", "coletor_madeira", "escudo", "escavadeira") or nome.startswith("centro_") else {**PADRAO, **estados}
+            est = dict(estados) if nome in ("casa", "coletor_madeira", "escudo", "escavadeira") or nome.startswith(("centro_", "elevador")) else {**PADRAO, **estados}
         os.makedirs(os.path.join(DEST, nome), exist_ok=True)
         info = {"estados": {}}
         for e, arq in est.items():
@@ -138,6 +178,8 @@ def predios(so=None):
                 continue
             dst = os.path.join(DEST, nome, e + ".png")
             shutil.copyfile(src, dst)
+            if nome in AJUSTA_BRILHO or "%s/%s" % (nome, e) in AJUSTA_BRILHO:
+                print("  brilho %s/%s: %.3f -> %.3f" % ((nome, e) + ajusta_brilho(dst)))
             cx = caixas.get(os.path.splitext(os.path.basename(arq))[0])
             ay = float(anc[1]) + DESCE.get((nome, e), 0)
             d = {"img": "%s/%s.png" % (nome, e), "ancora": [float(anc[0]), ay]}
@@ -148,15 +190,16 @@ def predios(so=None):
                 pendentes.append((nome, e, (src, anc[0], ay, fw, fd, h0 + DESCE.get((nome, e), 0))))
             info["estados"][e] = d
         saida["predios"][nome] = info
-    for nome, (est, anc, (fw, fd, h0), espelha) in SOLTOS.items():
+    for nome, (est, anc, (fw, fd, h0)) in SOLTOS.items():
         if so and nome not in so:
             continue
         os.makedirs(os.path.join(DEST, nome), exist_ok=True)
         info = {"estados": {}}
         for e, arq in est.items():
             dst = os.path.join(DEST, nome, e + ".png")
-            im = Image.open(os.path.join(AQUI, arq)).convert("RGBA")
-            (ImageOps.mirror(im) if espelha else im).save(dst)
+            shutil.copyfile(os.path.join(AQUI, arq), dst)
+            if "%s/%s" % (nome, e) in AJUSTA_BRILHO:
+                print("  brilho %s/%s: %.3f -> %.3f" % ((nome, e) + ajusta_brilho(dst)))
             info["estados"][e] = {"img": "%s/%s.png" % (nome, e), "ancora": list(anc)}
             pendentes.append((nome, e, (dst, anc[0], anc[1], fw, fd, h0)))
         saida["predios"][nome] = info
@@ -179,7 +222,7 @@ def predios(so=None):
         if so and nome not in so:
             continue
         base = info["estados"].get("pronto") or info["estados"].get("pronto_0") or info["estados"].get("etapa_4") \
-            or info["estados"].get("nivel_1") or info["estados"].get("reta")
+            or info["estados"].get("nivel_1") or info["estados"].get("reta") or info["estados"].get("gaiola")
         if base and "peg" in base:
             info["base"] = base["peg"]
         for e, d in info["estados"].items():
@@ -213,8 +256,303 @@ def pecas_escavadeira(saida):
                                           "ancora": [im.width / 2.0 + 70.0, im.height - 2.0 - 62.0]}
 
 
+# ------------------------------------------------------------ bonecos (Prompt 29, parte 3)
+BON = os.path.normpath(os.path.join(AQUI, "../../../assets/game/iso/bonecos"))
+DIRS = ["SE", "NE", "SO", "NO"]
+ROT = {"SE": "south-east", "NE": "north-east", "SO": "south-west", "NO": "north-west"}
+# função do jogo -> (pasta do homem, pasta da mulher, animação de trabalho)
+FUNCOES = {"minerador": ("minerador", "mineradora", "minerar"), "guarda": ("guarda", "guarda_mulher", "atacar"),
+           "medico": ("medico", "medica", "atender"), "engenheiro": ("engenheiro", "engenheira", "construir"),
+           "cacador": ("cacador", "cacadora", "cacar"), "pesquisador": ("pesquisador", "pesquisadora", "pesquisar"),
+           "lenhador": ("lenhador", "lenhadora", "cortar"), "civil": ("civil", "civil_mulher", None),
+           "cozinheiro": ("cozinheiro", "cozinheira", "cozinhar")}
+COMUNS = ["caminhada", "comer", "ferido", "deitar", "mancar_esq", "com_picareta"]
+
+
+def _pe(im):
+    """Âncora calculada (quando não há anotação): centro dos pixels das 3 linhas de baixo, linha do pé."""
+    a = np.array(im)[..., 3] > 40
+    ys, xs = np.nonzero(a)
+    if len(ys) == 0:
+        return (im.width / 2.0, im.height - 1.0)
+    yb = ys.max()
+    m = ys >= yb - 2
+    return (float(xs[m].mean()), float(yb + 1))
+
+
+def _ancoras(pasta, anim, d, frames):
+    """Âncora de cada quadro: verificacao.json (por quadro) > anim.json (por direção) >
+    contrato.json (direções da caminhada) > calculada."""
+    base = os.path.join(AQUI, pasta, anim)
+    for vf in (os.path.join(base, d, "verificacao.json"), os.path.join(base, "verificacao.json")):
+        if os.path.exists(vf):
+            q = {os.path.normpath(x["arquivo"]): x["ancora"] for x in json.load(open(vf, encoding="utf-8")).get("quadros", [])}
+            out = [q.get(os.path.normpath(os.path.join(d, os.path.basename(f))), q.get(os.path.basename(f))) for f in frames]
+            if all(out):
+                return [tuple(x) for x in out]
+    aj = os.path.join(base, "anim.json")
+    if os.path.exists(aj):
+        a = json.load(open(aj, encoding="utf-8")).get(d, {}).get("ancora")
+        if a:
+            return [tuple(a)] * len(frames)
+    cj = os.path.join(AQUI, pasta, "contrato.json")
+    if anim == "caminhada" and os.path.exists(cj):
+        a = json.load(open(cj, encoding="utf-8")).get("direcoes", {}).get(d, {}).get("ancora")
+        if a:
+            return [tuple(a)] * len(frames)
+    return [_pe(Image.open(f).convert("RGBA")) for f in frames]
+
+
+def _tira(frames, ancs):
+    """Os quadros numa tira com a MESMA âncora (cada um deslocado pra o pé dele cair no mesmo
+    ponto). Devolve (imagem, âncora, tamanho do quadro, topo por quadro [x, y] relativo à âncora)."""
+    ims = [Image.open(f).convert("RGBA") for f in frames]
+    ax = max(a[0] for a in ancs); ay = max(a[1] for a in ancs)
+    w = int(np.ceil(max(ax + im.width - a[0] for im, a in zip(ims, ancs))))
+    h = int(np.ceil(max(ay + im.height - a[1] for im, a in zip(ims, ancs))))
+    tira = Image.new("RGBA", (w * len(ims), h))
+    topos = []
+    for k, (im, a) in enumerate(zip(ims, ancs)):
+        ox, oy = int(round(ax - a[0])), int(round(ay - a[1]))
+        tira.alpha_composite(im, (k * w + ox, oy))
+        bb = im.getbbox() or (0, 0, im.width, im.height)
+        topos.append([round((bb[0] + bb[2]) / 2.0 - a[0], 1), round(bb[1] - a[1], 1)])
+    return tira, [round(ax, 1), round(ay, 1)], [w, h], topos
+
+
+# ---- pele em 3 tons, quadro a quadro (a regra do tons_de_pele.py / skin_palette.gd, vetorizada)
+import tons_de_pele as _tp
+
+
+def _hls(rgb):
+    r, g, b = [rgb[..., k] / 255.0 for k in range(3)]
+    mx = np.maximum(np.maximum(r, g), b); mn = np.minimum(np.minimum(r, g), b)
+    l = (mx + mn) / 2.0
+    d = mx - mn
+    s = np.where(d == 0, 0.0, np.where(l <= 0.5, d / np.where(mx + mn == 0, 1, mx + mn), d / np.where(2.0 - mx - mn == 0, 1, 2.0 - mx - mn)))
+    dd = np.where(d == 0, 1, d)
+    rc, gc, bc = (mx - r) / dd, (mx - g) / dd, (mx - b) / dd
+    h = np.where(r == mx, bc - gc, np.where(g == mx, 2.0 + rc - bc, 4.0 + gc - rc))
+    h = np.where(d == 0, 0.0, (h / 6.0) % 1.0)
+    return h, l, s
+
+
+def _recolor_quadro(a, rampa):
+    """a: quadro RGBA (numpy, uint8). Troca a pele no lugar, igual ao tons_de_pele.recolor."""
+    al = a[..., 3] > 40
+    ys, xs = np.nonzero(al)
+    if len(ys) == 0:
+        return
+    y0b, y1b, x0b, x1b = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
+    hh = y1b - y0b
+    fy0, fy1 = y0b + int(hh * 0.10), y0b + int(hh * 0.30)
+    rgb = a[..., :3].astype(np.int64)
+    key = (rgb[..., 0] << 16) | (rgb[..., 1] << 8) | rgb[..., 2]
+    h, l, sat = _hls(a[..., :3].astype(float))
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    skin = (h >= 0.0) & (h <= 0.11) & (l >= 0.18) & (l <= 0.82) & (sat >= 0.18) & (sat <= 0.75) & (r > g) & (g > b) & (sat <= 0.6)
+    band = np.zeros_like(al); band[fy0:fy1, x0b:x1b] = True
+    m = al & skin & band
+    if not m.any():
+        return
+    ks, cnt = np.unique(key[m], return_counts=True)
+    cols = dict(zip(ks.tolist(), cnt.tolist()))
+    body = np.zeros_like(al); body[fy1:y1b, x0b:x1b] = True
+    mb = al & body & np.isin(key, ks)
+    kb, cb = np.unique(key[mb], return_counts=True)
+    corpo = dict(zip(kb.tolist(), cb.tolist()))
+    solta = [k for k, n in cols.items() if n >= 2]
+    estrita = {k for k in solta if corpo.get(k, 0) <= cols[k]}
+    if not solta:
+        return
+    lo, hi = _tp.LUM_PELE
+    mapa = {}
+    for k in solta:
+        c = ((k >> 16) & 255, (k >> 8) & 255, k & 255)
+        lum = _hls(np.array(c, dtype=float).reshape(1, 1, 3))[1][0, 0]
+        t = min(1.0, max(0.0, (lum - lo) / (hi - lo)))
+        i = t * (len(rampa) - 1)
+        p0, p1 = rampa[int(i)], rampa[min(int(i) + 1, len(rampa) - 1)]
+        f = i - int(i)
+        mapa[k] = [round(p0[q] + (p1[q] - p0[q]) * f) for q in range(3)]
+    rows = np.arange(a.shape[0])[:, None]
+    for k, c in mapa.items():
+        sel = al & (key == k) & ((rows < fy1) | (k in estrita))
+        a[sel, 0], a[sel, 1], a[sel, 2] = c
+
+
+def _tons(tira_path, n, w):
+    """Grava <tira>__<tom>.png pros 3 tons (quadro a quadro)."""
+    im = np.array(Image.open(tira_path).convert("RGBA"))
+    for tom, rampa in _tp.RAMPAS.items():
+        a = im.copy()
+        for k in range(n):
+            q = a[:, k * w:(k + 1) * w]
+            _recolor_quadro(q, rampa)
+            a[:, k * w:(k + 1) * w] = q
+        Image.fromarray(a, "RGBA").save(tira_path[:-4] + "__%s.png" % tom)
+
+
+def _tons_job(args):
+    _tons(*args)
+    return args[0]
+
+
+def _exporta_boneco(pasta, anims):
+    info = {"anims": {}}
+    os.makedirs(os.path.join(BON, pasta), exist_ok=True)
+    # parado: a pose de cada direção (rotações v3)
+    par = {}
+    for d in DIRS:
+        f = os.path.join(AQUI, pasta, "rotacoes", ROT[d] + ".png")
+        if os.path.exists(f):
+            t, a, sz, top = _tira([f], [_pe(Image.open(f).convert("RGBA"))])
+            t.save(os.path.join(BON, pasta, "parado_%s.png" % d))
+            par[d] = {"img": "%s/parado_%s.png" % (pasta, d), "n": 1, "quadro": sz, "ancora": a, "topo": top}
+    if par:
+        info["anims"]["parado"] = par
+    for anim in anims:
+        dd = {}
+        for d in DIRS:
+            fr = sorted(glob.glob(os.path.join(AQUI, pasta, anim, d, "*.png")), key=lambda f: int(os.path.basename(f)[:-4]) if os.path.basename(f)[:-4].isdigit() else 0)
+            fr = [f for f in fr if os.path.basename(f)[:-4].isdigit()]
+            if not fr:
+                continue
+            t, a, sz, top = _tira(fr, _ancoras(pasta, anim, d, fr))
+            t.save(os.path.join(BON, pasta, "%s_%s.png" % (anim, d)))
+            dd[d] = {"img": "%s/%s_%s.png" % (pasta, anim, d), "n": len(fr), "quadro": sz, "ancora": a, "topo": top}
+        if dd:
+            info["anims"][anim] = dd
+    return info
+
+
+def bonecos():
+    os.makedirs(BON, exist_ok=True)
+    out = {"_obs": "Prompt 29 parte 3 (integra.py bonecos): pasta -> animação -> direção (SE/NE/SO/NO) -> tira "
+                   "(n quadros de 'quadro' px), âncora (pé) comum na tira, topo da cabeça por quadro (relativo à âncora).",
+           "funcoes": {k: list(v) for k, v in FUNCOES.items()}, "pastas": {}}
+    for f, (h, m, trab) in FUNCOES.items():
+        for pasta in (h, m):
+            anims = COMUNS + ([trab] if trab else [])
+            out["pastas"][pasta] = _exporta_boneco(pasta, anims)
+            print("%-14s %s" % (pasta, sorted(out["pastas"][pasta]["anims"])))
+            cas = "casaco_" + pasta
+            if os.path.isdir(os.path.join(AQUI, cas)):
+                out["pastas"][cas] = _exporta_boneco(cas, ["caminhada"] + ([trab] if trab else []))
+    for k in ("gas", "calor", "radiacao"):
+        for g in ("m", "f"):
+            p = "traje_%s_%s" % (k, g)
+            if os.path.isdir(os.path.join(AQUI, p)):
+                out["pastas"][p] = _exporta_boneco(p, ["caminhada", "minerar"])
+    # os 3 tons de pele de cada tira (o jogo só escolhe o arquivo do tom)
+    jobs = []
+    for pasta, info in out["pastas"].items():
+        for an, dd in info["anims"].items():
+            for d, i in dd.items():
+                jobs.append((os.path.join(BON, i["img"]), i["n"], i["quadro"][0]))
+    with Pool() as pool:
+        for _ in pool.imap_unordered(_tons_job, jobs, chunksize=8):
+            pass
+    out["tons"] = list(_tp.RAMPAS.keys())
+    print("tons de pele:", len(jobs), "tiras x", len(_tp.RAMPAS))
+    # robô (Prompt 5): animações de 4 direções + os estados parados no chão (mesmo quadro e âncora)
+    out["pastas"]["robo"] = _exporta_boneco("robo", ["caminhada", "atacar", "dano", "desligar"])
+    rc = json.load(open(os.path.join(AQUI, "robo", "contrato.json"), encoding="utf-8"))["estados_parados"]
+    out["robo_parado"] = {"ancora": rc["ancora_no_quadro"], "estados": {}}
+    for st in ("achado", "arrastado", "conserto_1", "conserto_2", "conserto_3"):
+        shutil.copyfile(os.path.join(AQUI, "robo", "estados", st + ".png"), os.path.join(BON, "robo", "parado_%s.png" % st))
+        out["robo_parado"]["estados"][st] = "robo/parado_%s.png" % st
+    print("robo", sorted(out["pastas"]["robo"]["anims"]))
+    # saco nas costas (carregar = caminhada + saco por cima) e as ferramentas nas costas
+    shutil.copyfile(os.path.join(AQUI, "itens", "saco_costas.png"), os.path.join(BON, "saco_costas.png"))
+    out["saco"] = dict(json.load(open(os.path.join(AQUI, "itens", "saco_costas.json"), encoding="utf-8")), img="saco_costas.png")
+    out["ferramentas"] = {}
+    for it in ("picareta", "picareta_aco", "machado", "martelo", "porrete", "lanca", "lanca_prata", "besta", "arco"):
+        f = os.path.join(AQUI, "itens", it + ".png")
+        if os.path.exists(f):
+            im = Image.open(f).convert("RGBA")
+            im = im.crop(im.getbbox())
+            im.save(os.path.join(BON, "item_%s.png" % it))
+            out["ferramentas"][it] = "item_%s.png" % it
+    json.dump(out, open(os.path.join(BON, "bonecos.json"), "w", encoding="utf-8"), indent=1, ensure_ascii=False)
+    print("->", os.path.join(BON, "bonecos.json"), len(out["pastas"]), "pastas")
+
+
+# ------------------------------------------------------------ natureza e objetos (Prompt 29, parte 4)
+PROPS_DEST = os.path.normpath(os.path.join(AQUI, "../../../assets/game/iso/props"))
+# nome no jogo -> arquivo da arte (Prompts 7, 8, 9, 14, 15)
+PROPS = {}
+for esp, n in (("pinheiro", 2), ("carvalho", 3), ("betula", 2)):
+    for k in range(n):
+        PROPS["arvore_%s_%d" % (esp, k)] = "vegetacao/final/arvore_%s_%d.png" % (esp, k)
+    PROPS["toco_" + esp] = "vegetacao/final/toco_%s.png" % esp
+    PROPS["muda_" + esp] = "vegetacao/final/muda_%s.png" % esp
+PROPS["arvore_seca"] = "vegetacao/final/arvore_seca.png"
+for st in ("pronto", "crescendo", "colhido"):
+    PROPS["horta_" + st] = "vegetacao/final/horta_%s.png" % st
+for st in ("fora", "orelhas", "vazia"):
+    PROPS["toca_coelho_" + st] = "animais/final/toca_coelho_%s.png" % st
+PROPS["toca_javali"] = "animais/final/toca_javali.png"
+for m in ("ferro", "cobre", "carvao", "prata", "solarita"):
+    for st in ("cheia", "meia", "quase"):
+        PROPS["jazida_%s_%s" % (m, st)] = "jazidas/final/jazida_%s_%s.png" % (m, st)
+PROPS["jazida_esgotada"] = "jazidas/final/jazida_esgotada.png"
+for k in range(6):
+    PROPS["rocha_musgo_%d" % k] = "jazidas/final/rocha_musgo_%d.png" % k
+for k in range(3):
+    PROPS["rocha_mina_%d" % k] = "jazidas/final/rocha_mina_%d.png" % k
+for cor in ("violeta", "ciano", "lima", "brasa"):
+    for k in range(2):
+        PROPS["cristal_%s_%d" % (cor, k)] = "jazidas/final/cristal_%s_%d.png" % (cor, k)
+for a in ("bobina", "cristal", "peca", "painel_solar"):
+    PROPS["achado_" + a] = "jazidas/final/achado_%s.png" % a
+PROPS["entulho_medio"] = "jazidas/final/entulho_medio.png"
+PROPS["placa_perigo"] = "objetos/final/placa_perigo.png"
+PROPS["tocha_apagada"] = "objetos/final/tocha_apagada.png"
+for k in range(4):
+    PROPS["tocha_chao_f%d" % k] = "objetos/final/tocha_chao_f%d.png" % k
+PROPS["escora"] = "relevo/final/mina/escora.png"
+
+
+def props():
+    """Cada peça: recortada no desenho, âncora = (meio, base - 3) como o `solto` do mapa aprovado
+    (mapa/monta.py), caixa encaixada com uma guia pequena (pegada ~1/3 da largura: tronco, pé)."""
+    os.makedirs(PROPS_DEST, exist_ok=True)
+    out = {"_obs": "Prompt 29 parte 4 (integra.py props): peça -> img, âncora (pé), caixa (px de arte)", "props": {}}
+    pend = []
+    for nome, arq in PROPS.items():
+        src = os.path.join(AQUI, arq)
+        if not os.path.exists(src):
+            print("  falta:", nome, arq)
+            continue
+        im = Image.open(src).convert("RGBA")
+        im = im.crop(im.getbbox())
+        dst = os.path.join(PROPS_DEST, nome + ".png")
+        im.save(dst)
+        if nome in AJUSTA_BRILHO:
+            print("  brilho %s: %.3f -> %.3f" % ((nome,) + ajusta_brilho(dst)))
+        anc = (im.width / 2.0, im.height - 3.0)
+        g = max(8.0, min(64.0, im.width * 0.35))
+        out["props"][nome] = {"img": nome + ".png", "ancora": list(anc)}
+        pend.append((nome, (dst, anc[0], anc[1], g, g * 0.8, float(im.height))))
+    with Pool() as pool:
+        res = dict(pool.map(encaixa, [p[1] for p in pend]))
+    for nome, args in pend:
+        r = res[args[0]]
+        if r:
+            out["props"][nome].update(r)
+        else:
+            print("  SEM CAIXA:", nome)
+    json.dump(out, open(os.path.join(PROPS_DEST, "props.json"), "w", encoding="utf-8"), indent=1, ensure_ascii=False)
+    print("->", len(out["props"]), "peças")
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["predios"]:
         predios(sys.argv[2:] or None)
+    elif sys.argv[1:2] == ["bonecos"]:
+        bonecos()
+    elif sys.argv[1:2] == ["props"]:
+        props()
     else:
         print(__doc__)

@@ -207,7 +207,7 @@ func refresh() -> void:
 		if sr == "" else "Casa inicial: " + sr
 	_starter_button.disabled = sr != ""
 	var cr: String = _hub.comedouro_block_reason()
-	_comedouro_button.text = ("Comedouro — escolher lugar  (%s)" % _hub.comedouro_cost_text()) if cr == "" else "Comedouro: " + cr
+	_comedouro_button.text = ("Cozinha — escolher lugar  (%s)" % _hub.comedouro_cost_text()) if cr == "" else "Cozinha: " + cr
 	_comedouro_button.disabled = cr != ""
 	var colr: String = _hub.coletor_block_reason()
 	_coletor_button.text = ("Coletor de madeira — escolher lugar na clareira  (%s)" % _hub.coletor_cost_text()) if colr == "" \

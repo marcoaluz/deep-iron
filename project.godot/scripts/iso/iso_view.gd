@@ -1,5 +1,5 @@
 extends Node2D
-## Prompt 28: a VISTA ISOMÉTRICA do jogo (F3 liga/desliga). A lógica não muda: o nó World
+## Prompt 28: a VISTA ISOMÉTRICA do jogo (Prompt 29: é a vista do jogo; o F3 saiu). A lógica não muda: o nó World
 ## continua no chão cartesiano (navegação, física, saves). Esta vista só DESENHA o mundo de
 ## outro jeito:
 ##
@@ -37,6 +37,11 @@ const GROUND_MARGIN := 400.0
 const VOID_COLOR := Color(0.086, 0.078, 0.075)
 ## Maior lado da textura do chão (px). O mapa de hoje cabe (≈ 1500 × 2950).
 const GROUND_MAX := 4096
+## Mapa novo: a textura do chão só serve pras manchas dos andares de baixo (zonas, marcador):
+## refaz a cada N quadros em vez de todo quadro (renderizar o mundo inteiro numa textura custa).
+const GROUND_REFRESH_EVERY := 6
+## Até quantos que andam a ordem deles é refeita todo quadro (acima disso, a cada 2).
+const DYN_ORDER_EVERY_FRAME := 24
 ## Coisas em pé que não mudam muito: confere caixa/arte a cada N quadros.
 const STATIC_SYNC_EVERY := 6
 ## Histerese da direção de losango (graus além dos 45° da fatia).
@@ -196,7 +201,7 @@ func _build_ground() -> void:
 		_ground_layer.add_child(_ground_sprite)
 	_ground_sv.size = size
 	_ground_sv.canvas_transform = Transform2D(0.0, -_ground_rect.position)
-	_ground_sv.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_ground_sv.render_target_update_mode = SubViewport.UPDATE_ONCE if not _levels.is_empty() else SubViewport.UPDATE_ALWAYS
 	_ground_sprite.texture = _ground_sv.get_texture()
 	_ground_sprite.transform = Transform2D(Vector2(1.0, 0.5) * S, Vector2(-1.0, 0.5) * S, Iso.iso(_ground_rect.position * S))
 	_ground_layer.visible = true
@@ -338,7 +343,7 @@ func _is_mixed(n: Node) -> bool:
 
 
 func _is_dynamic(n: Node) -> bool:
-	return n is CharacterBody2D or n.is_in_group("ipezinhos") or n.is_in_group("criaturas")
+	return n is CharacterBody2D or n.is_in_group("ipezinhos") or n.is_in_group("criaturas") or n.is_in_group("robos")
 
 
 func _wants(n: Node) -> bool:
@@ -426,6 +431,8 @@ func _apply_static_z() -> void:
 # ------------------------------------------------------------ a cada quadro
 func _process(_delta: float) -> void:
 	_frame += 1
+	if not _levels.is_empty() and _ground_sv and _frame % GROUND_REFRESH_EVERY == 0:
+		_ground_sv.render_target_update_mode = SubViewport.UPDATE_ONCE
 	var view := _screen_view().grow(256.0)
 	var moved_static := false
 	var dyn_boxes := []
@@ -436,7 +443,7 @@ func _process(_delta: float) -> void:
 			_drop(src)
 			continue
 		if bb.dynamic:
-			bb.sync_dynamic()
+			bb.sync_dynamic(view)
 			dyn_boxes.append(bb.box)
 			dyn_bbs[bb.box] = bb
 		elif (_frame + bb.get_instance_id()) % STATIC_SYNC_EVERY == 0 or bb.never_synced:
@@ -448,13 +455,16 @@ func _process(_delta: float) -> void:
 		_apply_static_z()
 	else:
 		_refresh_static_z_if_needed()
-	var zs := _order.dynamic_z(dyn_boxes)
-	if _order.dirty:  # conserto local na ordem das fixas: os z delas mudaram
-		_order.dirty = false
-		_apply_static_z()
-		zs = _order.dynamic_z(dyn_boxes)
-	for b in zs:
-		dyn_bbs[b].z_index = zs[b]
+	# Prompt 30: com muita gente andando, a ordem de quem anda é refeita a cada 2 quadros (1 quadro de
+	# atraso no "quem fica na frente" não se vê; com poucos, todo quadro)
+	if dyn_boxes.size() <= DYN_ORDER_EVERY_FRAME or _frame % 2 == 0:
+		var zs := _order.dynamic_z(dyn_boxes)
+		if _order.dirty:  # conserto local na ordem das fixas: os z delas mudaram
+			_order.dirty = false
+			_apply_static_z()
+			zs = _order.dynamic_z(dyn_boxes)
+		for b in zs:
+			dyn_bbs[b].z_index = zs[b]
 	_sync_ghost()
 	_overlay.queue_redraw()
 

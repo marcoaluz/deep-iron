@@ -17,6 +17,7 @@ extends Node2D
 
 const Iso := preload("res://scripts/iso/iso_core.gd")
 const IsoArt := preload("res://scripts/iso/iso_art.gd")
+const IsoBonecos := preload("res://scripts/iso/iso_bonecos.gd")
 const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 
 ## Tipos que não são desenho (física, navegação, som...): não espelha.
@@ -77,6 +78,18 @@ var _art: Node2D = null
 var _art_key := ""
 var _art_box := {}  # {rect, h}: px de arte, relativa ao pé ({} = sem arte nova)
 var _old_size := Vector2.ZERO  # tamanho do desenho antigo (px da lógica): pra levar rótulos/luzes
+## Boneco com a arte nova (Prompt 29 parte 3): [atrás, corpo, na frente] e a altura dele (px de arte)
+var _char: Node2D = null
+var _char_h := 0.0
+var _char_foot := 0.0  # pegada da caixa do boneco novo (px da lógica; 0 = a de sempre)
+var _clock := 0.0
+var _moving_now := false
+## Pedaços do desenho antigo que o boneco novo esconde: não precisam ser copiados a cada quadro
+var _hidden_by_char := {}
+var _c_back: Sprite2D
+var _c_body: Sprite2D
+var _c_front: Sprite2D
+var _props_synced := false
 
 
 func setup(n: Node2D, is_dynamic: bool, view: Node) -> void:
@@ -109,6 +122,8 @@ func _build_mirror() -> void:
 	_part_clips.clear()
 	_art = null
 	_art_key = ""
+	_char = null
+	_hidden_by_char = {}
 	_root_children = src.get_child_count()
 	if _parts.size() > 1:
 		for k in _parts.size():  # um recorte por parte, cada um com uma cópia da arte
@@ -193,6 +208,12 @@ func _sync_props() -> void:
 	for pr in _pairs:
 		var s: CanvasItem = pr[0]
 		var d: CanvasItem = pr[1]
+		if _char != null and _hidden_by_char.has(d):
+			continue  # escondido pelo boneco novo (corpo, acessórios, ferramenta antigos)
+		if dynamic and not s.visible:
+			if d.visible:
+				d.visible = false  # ícone escondido (zanga, greve...): o resto não precisa copiar
+			continue
 		_copy(s, d, SYNC_ITEM)
 		if s is Node2D:
 			_copy(s, d, SYNC_NODE2D)
@@ -258,6 +279,13 @@ func _sync_art() -> void:
 			ObraEstagio.apply(sp, layers[i].obra)  # a peça em montagem sobe por estágios
 		else:
 			ObraEstagio.clear(sp)
+			sp.modulate = layers[i].get("mod", Color.WHITE)  # jazida travada fica cinza
+		if layers[i].has("em"):  # outra ponta (gaiola do elevador): no chão do andar dela
+			var e: Vector2 = layers[i].em
+			sp.position = Iso.iso(_view.art(e), _view.height_at(e)) - Iso.iso(_view.art(src.global_position), _view.height_at(src.global_position))
+		if layers[i].has("anim"):  # chama da tocha
+			var fr: Array = layers[i].anim
+			sp.texture = fr[int(Time.get_ticks_msec() / 1000.0 * IsoArt.TORCH_FPS) % fr.size()]
 	_art_box = IsoArt.box_of(layers)
 	pickable = true
 	# a arte nova é desenhada no tamanho dela (px de arte): desfaz a escala do espelho
@@ -278,6 +306,14 @@ func _sync_art() -> void:
 			d.position.y = pr[0].position.y - lift  # rótulo: a mesma folga acima do telhado novo
 		elif d is Node2D and d.get_parent() == self:
 			d.position = pr[0].position * ratio  # luz, fumaça: no mesmo lugar do desenho
+	# elevador: a ponta de baixo (rótulo, luz) vai pro andar de baixo, junto da gaiola
+	var bottom = src.get_node_or_null("Bottom")
+	if bottom and src.get("bottom_position") != null:
+		var e: Vector2 = src.bottom_position
+		var off := Iso.iso(_view.art(e), _view.height_at(e)) - Iso.iso(_view.art(src.global_position), _view.height_at(src.global_position))
+		for pr in _pairs:
+			if pr[0] == bottom and scale.x != 0.0 and scale.y != 0.0:
+				pr[1].position = Vector2(off.x / scale.x, off.y / scale.y)
 
 
 func _copy(s: Object, d: Object, props: Array) -> void:
@@ -331,13 +367,19 @@ func _visual_rect() -> Rect2:
 ## Recalcula a caixa. true = mudou (a ordem precisa re-encaixar).
 func _update_box() -> bool:
 	var feet := src.global_position
-	var vr := _visual_rect()
+	# boneco novo: a altura vem dele (medir o desenho antigo a cada quadro custa)
+	var vr := Rect2(0, -_char_h / _view.S, 1, 1) if dynamic and _char_h > 0.0 else _visual_rect()
 	var rect: Rect2
 	var k: float = _view.S
 	var top := maxf(MIN_HEIGHT, -vr.position.y)
 	if dynamic:
 		rect = Rect2(feet - Vector2.ONE * WALKER_FOOT * 0.5, Vector2.ONE * WALKER_FOOT)
 		top = maxf(16.0, top)
+		if _char_h > 0.0:
+			top = _char_h / k  # boneco novo: a altura dele (vira px de arte logo abaixo)
+		if _char_foot > 0.0:
+			rect = Rect2(feet - Vector2(_char_foot, _char_foot * (70.0 / 190.0 if _char_h <= 60.0 else 1.0)) * 0.5,
+				Vector2(_char_foot, _char_foot * (70.0 / 190.0 if _char_h <= 60.0 else 1.0)))
 	else:
 		rect = _footprint(feet, vr)
 	rect = _view.art_rect(rect)  # caixa em px de arte (escala da vista; andar de baixo na laje dele)
@@ -420,13 +462,23 @@ func sync_static(view_rect: Rect2) -> bool:
 	return changed
 
 
-func sync_dynamic() -> void:
+## view_rect: a parte da tela que se vê (com folga). Fora dela, o boneco só atualiza posição e caixa
+## (sem animação, rótulos, ícones): voltando pra tela, sincroniza tudo de novo.
+func sync_dynamic(view_rect: Rect2 = Rect2()) -> void:
 	_update_box()
 	var scr := Iso.iso(_view.art(src.global_position), box.zb)
+	if view_rect.has_area() and not view_rect.has_point(scr) and _char != null:
+		position = scr.round()
+		_last_screen = scr
+		never_synced = true  # na volta pra tela: tudo de novo
+		return
 	if _last_screen != Vector2.INF:
 		_vel = _vel.lerp(scr - _last_screen, 0.35)
 	_last_screen = scr
 	var moving: bool = src is CharacterBody2D and (src as CharacterBody2D).velocity.length() > 5.0
+	if src.is_in_group("robos"):
+		moving = _vel.length() > 0.2  # o robô anda mexendo a posição (não é CharacterBody)
+	_moving_now = moving
 	if moving:
 		iso_dir = _view.diamond_dir(_vel, iso_dir)
 	src.set_meta("iso_dir", iso_dir)
@@ -439,10 +491,109 @@ func sync_dynamic() -> void:
 		var want := 1.0 if _view.faces_right(iso_dir) else -1.0
 		_flip = want * src_f
 	position = scr.round()
-	_sync_props()
+	# rótulos/ícones/luz copiados a cada 2 quadros (alternando entre os bonecos): a cópia por
+	# reflexão é o que mais custa; posição, animação e direção continuam a cada quadro
+	_props_synced = false
+	if _char == null or never_synced or (Engine.get_process_frames() + get_instance_id()) % 2 == 0:
+		never_synced = false
+		_sync_props()
+		_props_synced = true
 	_tool_rule(moving)
+	_sync_char()
 	_top.queue_redraw()
 	queue_redraw()
+
+
+# ------------------------------------------------------------ boneco com a arte nova (Prompt 29)
+## O corpo antigo (Body e os acessórios) e a ferramenta da mão somem; o boneco novo entra no
+## tamanho dele (px de arte) com a animação/direção/pele do estado (iso_bonecos.gd), o saco e a
+## ferramenta nas costas por cima ou por trás. Ícones (machucado, zanga, carga) ficam, acima da
+## cabeça nova; a cor de estado do corpo (fome, frio, traje) passa pro boneco novo.
+func _sync_char() -> void:
+	_clock += get_process_delta_time()
+	var p: Dictionary = IsoBonecos.robo_pose(src, iso_dir, _clock, _moving_now) if src.is_in_group("robos") 		else IsoBonecos.pose(src, iso_dir, _clock)
+	if p.is_empty():
+		if _char:
+			_char.queue_free()
+			_char = null
+			_char_h = 0.0
+		return
+	if _char == null:
+		_char = Node2D.new()
+		_char.name = "BonecoNovo"
+		for nm in ["Atras", "Corpo", "Frente"]:  # nessa ordem: atrás, corpo, na frente
+			var sp := Sprite2D.new()
+			sp.name = nm
+			sp.centered = false
+			sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			sp.light_mask = 2
+			_char.add_child(sp)
+		_c_back = _char.get_child(0)
+		_c_body = _char.get_child(1)
+		_c_front = _char.get_child(2)
+		add_child(_char)
+		move_child(_char, 0)
+		_props_synced = true
+	var sc := Vector2(1.0 / scale.x, 1.0 / scale.y) if scale.x != 0.0 and scale.y != 0.0 else Vector2.ONE
+	if _char.scale != sc:
+		_char.scale = sc
+	_char.visible = not p.get("hidden", false)
+	if _hidden_by_char.is_empty():
+		for pr in _pairs:
+			var s = pr[0]
+			if is_instance_valid(s) and (s == _body_pair_src() or s.name == "Tool" or s.name == "Visual" or (s.get_parent() != null and s.get_parent().name == "Body")):
+				_hidden_by_char[pr[1]] = true
+	for d in _hidden_by_char:
+		if is_instance_valid(d) and d.visible:
+			d.visible = false
+	if not _char.visible:
+		return
+	var body: Sprite2D = _c_body
+	if body.texture != p.tex:  # (só mexe no que mudou: trocar textura/grade a cada quadro custa)
+		body.texture = p.tex
+	if body.hframes != p.n:
+		body.hframes = p.n
+	if body.frame != p.frame:
+		body.frame = p.frame
+	if body.offset != -p.ancora:
+		body.offset = -p.ancora
+	# cor de estado do boneco antigo: fome e frio continuam; machucado e traje a arte nova já mostra
+	var bs = _body_pair_src()
+	var tint_ok: bool = not src.get("injured") and not String(p.pasta).begins_with("traje_")
+	body.modulate = bs.modulate if tint_ok and bs != null and is_instance_valid(bs) else Color.WHITE
+	var used := {}
+	for k in ["saco", "item"]:
+		if p.has(k):
+			var l: Dictionary = p[k]
+			var sp: Sprite2D = _c_front if l.front else _c_back
+			if used.has(sp):  # saco e ferramenta do mesmo lado: o saco ganha (carregando)
+				continue
+			used[sp] = true
+			if sp.texture != l.tex:
+				sp.texture = l.tex
+			sp.flip_h = l.flip
+			sp.position = l.pos
+	_c_back.visible = used.has(_c_back)
+	_c_front.visible = used.has(_c_front)
+	# ícones acima da cabeça nova (eles ficavam acima do boneco antigo, mais baixo)
+	if _char_h == 0.0:
+		var vr := _visual_rect()
+		_old_size = Vector2(maxf(vr.size.x, 1.0), maxf(-vr.position.y, 1.0))
+	_char_h = maxf(float(p.altura), 16.0)
+	# robô: deitado no chão ocupa a pegada dele (190×70); em pé, 52 (contrato do Prompt 5)
+	_char_foot = (190.0 if p.get("deitado", false) else 52.0) / _view.S if src.is_in_group("robos") else 0.0
+	if not _props_synced:
+		return  # os ícones só mudam quando foram copiados (a cada 2 quadros)
+	var lift: float = _char_h / _view.S - _old_size.y
+	for pr in _pairs:
+		var d = pr[1]
+		if d is Node2D and d.get_parent() == self and d.visible and pr[0].name != "Body" and pr[0].name != "Tool":
+			if pr[0].position.y < -16.0:
+				d.position.y = pr[0].position.y - lift
+
+
+func _body_pair_src():
+	return _body_pair[0] if not _body_pair.is_empty() else null
 
 
 ## Picareta/ferramenta nas costas: de frente pra câmera (SE/SW) fica ATRÁS do corpo; de

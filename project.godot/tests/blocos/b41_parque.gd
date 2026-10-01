@@ -82,8 +82,9 @@ func _process(delta: float) -> bool:
 		check("Construir parque" in hud._panels["moral"]._park_button.text and "100 cr" in hud._panels["moral"]._park_button.text, "parque aparece como construção, com custo")
 		check(mor.build_park(), "escolher lugar do parque")
 		var placer = g("house_placer")
-		check(placer._radius == hub.house_radius() and placer._radius_center == hub.global_position, "segue o raio das casas (%d px do Centro)" % placer._radius)
-		var q := spot_near(hub.global_position, 110.0, hub.house_radius() - 5.0)
+		# (Prompt 29: o raio das casas está desligado — parque em qualquer lugar da pedreira também)
+		check(placer._radius == hub.house_radius() and (placer._radius == 0.0 or placer._radius_center == hub.global_position), "segue o raio das casas (%d px do Centro; 0 = sem raio)" % placer._radius)
+		var q := spot_near(hub.global_position, 110.0, maxf(hub.house_radius(), 400.0) - 5.0)  # (Prompt 29: sem raio)
 		placer.move_to(q)
 		var c0: float = eco.credits
 		var f0: float = arm.stock["ferro"]
@@ -144,7 +145,7 @@ func _process(delta: float) -> bool:
 		# bloqueios de agora, com o 1º parque); antes usava a pegada e os bloqueios que tinham ficado
 		var plc = g("house_placer")
 		plc.begin(func(_q): return false, mor.PARQUE_TEXTURE, 1, "o parque", {})
-		var q2 := spot_near(hub.global_position + Vector2(0, 0), 150.0, hub.house_radius() - 5.0)
+		var q2 := spot_near(hub.global_position + Vector2(0, 0), 150.0, maxf(hub.house_radius(), 400.0) - 5.0)
 		plc.cancel()
 		var p2 = mor.spawn_park(q2)
 		set_meta("both", [mor.parks()[0].global_position, p2.global_position])

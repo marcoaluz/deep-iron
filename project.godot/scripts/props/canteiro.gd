@@ -24,7 +24,7 @@ const KINDS := {
 	"laboratorio": ["Laboratório", "research", "res://assets/game/laboratorio.png", 2],
 	"campo": ["Campo de treino", "defense", "res://assets/game/campo_treino.png", 1],
 	"arsenal": ["Arsenal", "defense", "res://assets/game/arsenal.png", 4],  # Bloco 35
-	"comedouro": ["Comedouro", "village_hub", "res://assets/game/comedouro.png", 3],  # Bloco 37
+	"comedouro": ["Cozinha", "village_hub", "res://assets/game/comedouro.png", 3],  # Bloco 37
 	"parque": ["Parque", "morale", "res://assets/game/parque.png", 1],  # Bloco 41
 	"vestiario": ["Vestiário", "equipment", "res://assets/game/vestiario.png", 1],  # Bloco 44
 	"coletor": ["Coletor de madeira", "village_hub", "res://assets/game/coletor_madeira.png", 2],  # Bloco 45

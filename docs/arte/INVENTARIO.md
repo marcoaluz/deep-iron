@@ -21,13 +21,13 @@ prompts 0–31).
 
 | Item | Prompt | Status | Variações | Direções | Animações | Gerações |
 |---|---|---|---|---|---|---|
-| Minerador (homem) + picareta nas costas | 1 | **aprovado** (caminhada) · **gerado** (minerar) | 3 tons por paleta | 8 paradas, 4 andando | caminhada, minerar | 27 + 6 (feito) |
-| Elenco: mineradora, guarda (h/m), médico (h/m), engenheiro (h/m), caçador (h/m), pesquisador (h/m), lenhador (h/m), sem função (h/m), cozinheiro (h/m) = 17 | 1 | **gerado** (Prompt 1 completo) | 3 tons por paleta; corpo forte/magro/gordinho/cheinho; mulheres 3–4 px mais baixas (corte de linhas) | 8 paradas, 4 andando | caminhada + 1 de trabalho por função (sem função: nenhuma) | 515 + 91 (feito) |
+| Minerador (homem) + picareta nas costas | 1 | **integrado** (Prompt 29 parte 3) | 3 tons por paleta | 8 paradas, 4 andando | caminhada, minerar | 27 + 6 (feito) |
+| Elenco: mineradora, guarda (h/m), médico (h/m), engenheiro (h/m), caçador (h/m), pesquisador (h/m), lenhador (h/m), sem função (h/m), cozinheiro (h/m) = 17 | 1 | **integrado** (Prompt 29 parte 3) | 3 tons por paleta; corpo forte/magro/gordinho/cheinho; mulheres 3–4 px mais baixas (corte de linhas) | 8 paradas, 4 andando | caminhada + 1 de trabalho por função (sem função: nenhuma) | 515 + 91 (feito) |
 | Caçadora "com arco" (referência pro visual com arco) | 1 | gerado (guardada em `cacadora/com_arco_ref/`) | — | 8 | caminhada | incluído |
-| Animações de trabalho (1 por função, h/m): minerar, construir/martelar, atacar com porrete, atender ajoelhado, cozinhar (tigela no braço), caçar com arco (só com a Oficina), cortar lenha, pesquisar na bancada | 1 | **gerado** | 16 | SE+NE +espelho (4) | 8 quadros cada | ~97 (feito) |
+| Animações de trabalho (1 por função, h/m): minerar, construir/martelar, atacar com porrete, atender ajoelhado, cozinhar (tigela no braço), caçar com arco (só com a Oficina), cortar lenha, pesquisar na bancada | 1 | **integrado** | 16 | SE+NE +espelho (4) | 8 quadros cada | ~97 (feito) |
 | Colher fruta (caçador sem arco), treinar no campo | 2 | falta | h/m | SE+NE +espelho | — | ~30 |
-| Animações comuns (18): comer, ferido (tala), deitar (morte sóbria / dormir na rua), mancar (sad-walk) | 2 | **gerado** | 18 | SE+NE +espelho | 4 × 18 | ~345 (feito) |
-| Carregar (caminhada + saco em sobreposição, `itens/saco_costas.png`) | 2 | **gerado** | 18 + 6 trajes | 4 | caminhada | 0 |
+| Animações comuns (18): comer, ferido (tala), deitar (morte sóbria / dormir na rua), mancar (sad-walk) | 2 | **integrado** | 18 | SE+NE +espelho | 4 × 18 | ~345 (feito) |
+| Carregar (caminhada + saco em sobreposição, `itens/saco_costas.png`) | 2 | **integrado** | 18 + 6 trajes | 4 | caminhada | 0 |
 | Festa (pulinho), respiração, curativo | 2 | código | — | — | — | 0 |
 | Dormindo / na taverna / na enfermaria (dentro do prédio) | 2 | não precisa | — | — | some dentro | 0 |
 | Greve: placa na mão | 2 | falta | — | 2 + espelho | parado + placa | incluído |
@@ -37,8 +37,8 @@ prompts 0–31).
 
 | Item | Prompt | Status | Variações | Direções | Animações | Gerações |
 |---|---|---|---|---|---|---|
-| Casaco de inverno por função (`equipment.gd`) | 3 | **gerado** (os 18) | 18 | 8 paradas, 4 andando | andar, trabalho da função | ~600 (feito) |
-| Trajes de perigo: gás (amarelo), calor (prata), radiação (oliva), h/m | 3 | **gerado** | 6 | 8 paradas, 4 andando | andar, minerar, carregar (saco) | ~220 (feito) |
+| Casaco de inverno por função (`equipment.gd`) | 3 | **integrado** (andar e trabalho) | 18 | 8 paradas, 4 andando | andar, trabalho da função | ~600 (feito) |
+| Trajes de perigo: gás (amarelo), calor (prata), radiação (oliva), h/m | 3 | **integrado** (andar e minerar) | 6 | 8 paradas, 4 andando | andar, minerar, carregar (saco) | ~220 (feito) |
 | Desgaste das peças (novo/gasto/rasgado) | 3 | só ícone na UI (sem arte) | — | — | — | 0 |
 | Ícones de vestiário (3 trajes + casaco), recortados da arte | 3 | **gerado** | 4 | — | — | 0 |
 | Chapéu de cozinheiro solto (`cook_hat.png`, ícone) | 21 | falta | — | — | — | incluído |
@@ -48,8 +48,8 @@ prompts 0–31).
 
 | Item | Prompt | Status | Versões | Gerações |
 |---|---|---|---|---|
-| Picareta, picareta de aço, machado, martelo, broca manual, lampião, arco (+aljava) | 4 | **gerado** | base, gasta, quebrada, no chão, ícone; nas costas (regra da picareta) | 40 |
-| Porrete, lança de ferro, besta de cobre, lança de prata, arma quebrada | 4 | **gerado** | idem | 20 |
+| Picareta, picareta de aço, machado, martelo, broca manual, lampião, arco (+aljava) | 4 | **integrado** (nas costas; broca e lampião ainda não) | base, gasta, quebrada, no chão, ícone; nas costas (regra da picareta) | 40 |
+| Porrete, lança de ferro, besta de cobre, lança de prata, arma quebrada | 4 | **integrado** (nas costas; arma quebrada ainda não) | idem | 20 |
 | Arma trocada na mão no ataque (lança/besta no lugar do porrete) | 29 | falta | posição da mão por quadro (integração) ou animação por arma (~8 cada) | 0–48 |
 | Cesto de coleta, placa de greve (sobreposição) | 14 | falta | — | ~20 |
 
@@ -60,8 +60,8 @@ prompts 0–31).
 | Lumívoro (invasor) | 16–17 | falta | — | 4 | andar, atacar, morrer (sóbrio) | ~35 |
 | Ferrugento (invasor) | 16–17 | falta | — | 4 | andar, atacar, morrer | ~35 |
 | **Criaturas mais fortes + criatura mestre (chefe)** (pedido do Marco) | 16–17 | falta (conceito com checkpoint) | — | 4 | andar, atacar, morrer | ~120 |
-| Robô antigo GIGANTE (218 px, ~80% da casa): achado + arrastado + 3 estágios de conserto (deitado, mesma âncora) + ativo; fluxo em prompt05/FLUXO_ROBO.md | 5 | **gerado** | 4 estados parados + retrato + ícone | 8 paradas, 4 andando | andar, atacar, dano, desligar/derrubado | ~425 (feito) |
-| Coelho + toca (coelho fora / só orelhas / toca vazia) | 15 | **gerado** (`animais/`) | 8 dir. + andar, fugir, abatido; 3 estados da toca | ~40 (feito) |
+| Robô antigo GIGANTE (218 px, ~80% da casa): achado + arrastado + 3 estágios de conserto (deitado, mesma âncora) + ativo; fluxo em prompt05/FLUXO_ROBO.md | 5 | **integrado** (estados + andar/atacar/desligar; dano ainda não) | 4 estados parados + retrato + ícone | 8 paradas, 4 andando | andar, atacar, dano, desligar/derrubado | ~425 (feito) |
+| Coelho + toca (coelho fora / só orelhas / toca vazia) | 15 | toca **integrada**; o coelho andando não existe no jogo | 8 dir. + andar, fugir, abatido; 3 estados da toca | ~40 (feito) |
 | **Javali** + toca | 15 | **gerado** | 8 dir. + andar, fugir, abatido | ~25 (feito) |
 
 ## 5. Prédios (cada construível: obra_1 · obra_2 · obra_3 · pronto; upgrade com obra entre níveis)
@@ -83,12 +83,12 @@ prompts 0–31).
 | Vestiário | 12 | **integrado** | obra 1–3 + pronto (3 trajes pendurados) | ~50 (feito) |
 | Coletor de madeira = **máquina grande de cortar árvores** | 13 | **integrado** (pronto; obra pelo corte) | quebrada → consertada | ~50 (feito) |
 | Barricada / Muro modular | 12 | **gerado** (`muro/final/`) | 3 níveis × reta i/j, canto, ponta, danificada, brecha | ~100 (feito) |
-| **Portão da vila** (única entrada) | 12 | **integrado** (espelhado pro eixo da paliçada) | quebrado + níveis 1, 2, 3 | ~80 (feito) |
+| **Portão da vila** (única entrada) | 12 / 29 | **integrado** (refeito no eixo da paliçada no Prompt 29: `muro/final/portao_i_*.png`) | quebrado + níveis 1, 2, 3 | ~80 (feito) |
 | **Fundição** (pedra → carvão, ferro → aço) | 12 | **gerado** (`fundicao/`) | obra 1–3 + pronto | ~50 (feito) |
 | Centro da Vila | 10 | **integrado** | 5 estágios + 4 obras entre estágios; caixas ≤ 4 px fora | ~280 (feito) |
 | Escavadeira (plataforma de perfuração) + 5 reatores | 13 | **integrado** (peças como camadas; animação perfurando ainda não) | 5 etapas (peças) + animação perfurando + 5 reatores | ~105 (feito) |
-| Elevador (ruína → pronto) + gaiola separada | 13 | **gerado** | ruína, pronto, gaiola | ~50 (feito) |
-| Elevador do abismo | 13 | **gerado** (o elevador escurecido) | ruína, pronto | 0 |
+| Elevador (ruína → pronto) + gaiola separada | 13 | **integrado** | ruína, pronto, gaiola | ~50 (feito) |
+| Elevador do abismo | 13 | **integrado** | ruína, pronto | 0 |
 | Escudo solar | 13 | **integrado** (as 4 etapas) | 4 etapas do jogo (fundação, bobinas, núcleo, emissor); cúpula = efeito (Prompt 18) | ~80 (feito) |
 | Holofotes + satélite (4 ângulos, girando) | 13 | **gerado** | — | ~25 (feito) |
 | Coletor de minério (reservado, "em breve") | 13 | **gerado** (pronto) | pronto | 25 (feito) |
@@ -102,9 +102,9 @@ prompts 0–31).
 | Clareira (grama), nível 2 (ardósia), abismo (basalto), rocha da caverna (parede) | 6–7 | **gerado** | chão, bloco, sem borda; rocha com 4 blocos | 80 (feito) |
 | Buraco/galeria, transição entre chãos, parede da caverna | 6–7 | **gerado** (montagem por código) | — | 0 |
 | Galeria na parede de rocha: lacrada → abrindo → aberta (também serve de túnel entre áreas) | 7 | **gerado** (`relevo/final/mina/`) | 3 estágios, mesma âncora | 75 (feito) |
-| Pisos das zonas de perigo: gás, calor, radiação (5 variações cada) | 7 | **gerado** | — | 60 (feito) |
+| Pisos das zonas de perigo: gás, calor, radiação (5 variações cada) | 7 | **integrado** (lajes dos andares, parte 1) | — | 60 (feito) |
 | Trilhos: reto, curva, cruzamento, fim de linha (script, encaixe exato) | 7 | **gerado** (`relevo/trilhos.py`) | 11 peças | 60 (feito; a IA só deu a cor) |
-| Escora de madeira (pesquisa "Escoramento") | 7 | **gerado** | — | 20 (feito) |
+| Escora de madeira (pesquisa "Escoramento") | 7 | **integrado** | — | 20 (feito) |
 | Poço do elevador / da escavadeira | 7 | **código** (buraco fundo do relevo) | — | 0 |
 | Variante por estação do chão/árvore | 6 | **não precisa hoje** (o jogo só usa estação no clima) | — | 0 |
 | Pisos da superfície: grama alta (5), trilha (5), cascalho (4), lama (1+espelho), laje (4), canteiro (2+espelho) | 6 | **gerado** (`relevo/final/superficie/`) | — | 120 (feito) |
@@ -115,28 +115,28 @@ prompts 0–31).
 
 | Item | Prompt | Status | Variações | Gerações |
 |---|---|---|---|---|
-| Jazidas: carvão, cobre, ferro, prata, solarita | 8 | **gerado** (`jazidas/final/`) | 4 estados × 5 (cheia, meia, quase, esgotada) | ~25 (feito; recolor por minério) |
+| Jazidas: carvão, cobre, ferro, prata, solarita | 8 | **integrado** | 4 estados × 5 (cheia, meia, quase, esgotada) | ~25 (feito; recolor por minério) |
 | Nó mineral comum (`mineral_node` / `ore_rock`) | 8 | **gerado** (= jazida) | 4 estados | incluído |
 | Pedaços de minério soltos + pilhas (3 tamanhos) + lascas do golpe | 8 | **gerado** | 6 formas + 3 pilhas por minério | ~40 (feito) |
-| Cristais (4 cores × 2), rochas (6 + 6 com musgo + 3 da mina), pedrinhas (8) | 8 | **gerado** | — | ~80 (feito) |
-| Achados (bobina, cristal, peça, painel solar) + entulho (4 tamanhos) | 8 | **gerado** | — | ~40 (feito) |
+| Cristais (4 cores × 2), rochas (6 + 6 com musgo + 3 da mina), pedrinhas (8) | 8 | cristais e rochas **integrados**; pedrinhas não (o chão novo já tem) | — | ~80 (feito) |
+| Achados (bobina, cristal, peça, painel solar) + entulho (4 tamanhos) | 8 | **integrado** (entulho médio) | — | ~40 (feito) |
 
 ## 8. Vegetação
 
 | Item | Prompt | Status | Variações | Gerações |
 |---|---|---|---|---|
-| Árvores: pinheiro, carvalho, bétula, seca; toco, tora caída, muda rebrotando | 9 | **gerado** (`vegetacao/final/`) | 8 árvores + ciclo por espécie | ~145 (feito) |
+| Árvores: pinheiro, carvalho, bétula, seca; toco, tora caída, muda rebrotando | 9 | **integrado** (árvores e toco) | 8 árvores + ciclo por espécie | ~145 (feito) |
 | Vegetação rasteira: arbusto, samambaia, moita, espinheiro, flores, capim alto, galho, tronco com musgo, cogumelos, raízes | 9 | **gerado** | 3+ de cada | ~45 (feito) |
-| Horta de cogumelos: vazio, preparado, plantado, crescendo, pronto, colhido | 9 | **gerado** | 6 estágios | 20 (feito) |
+| Horta de cogumelos: vazio, preparado, plantado, crescendo, pronto, colhido | 9 | **integrado** (pronto, crescendo, colhido) | 6 estágios | 20 (feito) |
 | Madeira: tora, toras P/M/G, lenha P/G, tábuas P/M/G + lascas do machado | 9 | **gerado** | 9 + efeito | 20 (feito) |
 
 ## 9. Objetos (mina e vila)
 
 | Item | Prompt | Status | Gerações |
 |---|---|---|---|
-| Tochas (parede, chão, apagada), lampiões, fogueira, braseiro, poste | 14 | **gerado** (`objetos/final/`) | chama animada por script | ~20 (feito) |
-| Escora de madeira (`support_beam`, pesquisa "Escoramento") | 7 | **gerado** (ver seção 6) | 0 |
-| Placas com pictograma (caveira, raio, gás, perigo), postes, andaime, escada, varal, poço, banco, mesa, bigorna | 14 | **gerado** | — | ~25 (feito) |
+| Tochas (parede, chão, apagada), lampiões, fogueira, braseiro, poste | 14 | tocha de chão (acesa animada/apagada) **integrada** | chama animada por script | ~20 (feito) |
+| Escora de madeira (`support_beam`, pesquisa "Escoramento") | 7 | **integrado** | 0 |
+| Placas com pictograma (caveira, raio, gás, perigo), postes, andaime, escada, varal, poço, banco, mesa, bigorna | 14 | placa de perigo **integrada** | — | ~25 (feito) |
 | Cova (`grave`), entulho | 14/8 | entulho **gerado** (Prompt 8); cova **falta** | — | ~20 |
 | Trilhos + vagonete (vazio/cheio), caixotes, barris, sacos, sucata, pneus, corrente, corda | 14 | **gerado** | — | ~40 (feito) |
 | **Trilho com vagonete da boca da mina até o Armazém da pedreira** (aceito, `MAPA_VISAO.md`) | 14 / 27 | falta (trilho pronto; falta o vagonete) | incluído |
@@ -185,11 +185,18 @@ prompts 0–31).
 
 ## Plano de crédito
 
+**Atualização 2026-10-01 (Prompt 29, partes 3 a 6):** bonecos (elenco, animações, casacos, trajes,
+ferramentas e saco nas costas, pele por paleta), natureza e objetos (árvores, jazidas, tocas, horta,
+rochas, cristais, tocha, achados, escora, placa), robô e elevadores = **integrado**. Zoom com a
+densidade da arte nova, F3 saiu, "Comedouro" → "Cozinha". Sem geração (saldo **1.359**). Relatório:
+`docs/arte/prompt29/PROMPT_29_PARTES3A6.md`. O que ainda não tem arte (prompts 16–26) segue como
+"falta".
+
 **Atualização 2026-10-01 (Prompt 29, parte 2):** os **prédios** estão no jogo com a arte nova
 (casa, armazém, oficina, arsenal, taverna, enfermaria, laboratório, cozinha/comedouro, parque,
 campo de treino, vestiário, coletor de madeira, escudo, escavadeira, Centro nos 5 estágios, portão
 e a paliçada), com obra por estágios e pegada de navegação do desenho. Status desses itens =
-**integrado**. Sem geração (saldo **1.439**). Relatório: `docs/arte/prompt29/PROMPT_29_PARTE2_PREDIOS.md`.
+**integrado**. Geração: o portão refeito no eixo i (80; saldo **1.359**). Relatório: `docs/arte/prompt29/PROMPT_29_PARTE2_PREDIOS.md`.
 
 **Atualização 2026-10-01 (Prompt 29, parte 1):** o mapa novo está no jogo (terreno do
 Prompt 27 assado em imagens, céu do cenário, andares de baixo empilhados com os chãos do Prompt

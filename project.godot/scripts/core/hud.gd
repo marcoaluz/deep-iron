@@ -74,7 +74,7 @@ const ORDER_JOBS := [
 	["engenheiro", "Engenheiro", "4", "res://assets/game/hammer.png", "toggle_engineer", COLOR_ENGINEER,
 		"Vai até as obras encomendadas (casa, melhoria da Vila, ferramenta, peça da Escavadeira) e constrói. Sem engenheiro, nada sai do lugar."],
 	["cozinheiro", "Cozinheiro", "C", "res://assets/game/food_basket.png", "toggle_cook", COLOR_COOK,
-		"Busca matéria-prima no armazém e prepara a comida no comedouro."],
+		"Busca matéria-prima no armazém e prepara a comida na cozinha."],
 	["lenhador", "Lenhador", "L", "res://assets/game/axe.png", "toggle_lumber", COLOR_LUMBER,
 		"Corta madeira na clareira e leva pro armazém."],
 	["guarda", "Guarda", "X", "res://assets/game/lanca.png", "toggle_guard", COLOR_GUARD,
@@ -340,7 +340,7 @@ func _build_order_bar() -> void:
 	v.add_child(row)
 	# Bloco 46: CONSTRUIR abre o menu de construção por abas (também na barra de espaço)
 	var build := _order_button(row, "Construir", "Espaço", load("res://assets/game/hammer.png"), COLOR_TITLE,
-		"Menu de construção: casas, comedouro, lazer, pesquisa, defesa, coleta automática…")
+		"Menu de construção: casas, cozinha, lazer, pesquisa, defesa, coleta automática…")
 	build.button.pressed.connect(toggle_build_menu)
 	_build_button = build.button
 	row.add_child(VSeparator.new())
@@ -524,7 +524,7 @@ func _build_hints() -> void:
 		"Ordens:  botão direito = mover / minerar a jazida clicada",
 		"Funções:  1 minerador  •  2 caçador  •  3 médico  •  4 engenheiro  •  C cozinheiro  •  L lenhador  •  X guarda  •  Z pesquisador  •  0 sem função  •  T turno extra",
 		"Economia:  V vender minério  •  R recrutar",
-		"Construir:  Espaço = menu de construção (casas, comedouro, lazer, pesquisa, defesa, coleta automática…)",
+		"Construir:  Espaço = menu de construção (casas, cozinha, lazer, pesquisa, defesa, coleta automática…)",
 		"Prédios:  U Centro da Vila  •  E Escavadeira  •  O Oficina  •  I Enfermaria  •  B Bem-estar  •  G Defesa  •  Q Laboratório  •  Y Sol  •  J Diário  (ou clique no prédio)",
 		"Câmera:  roda = zoom (paradas nítidas)  •  botão do meio / WASD / setas = mover  •  Home = centralizar  •  F11 / Alt+Enter = tela cheia",
 		"Jogo:  F5 salvar  •  F9 carregar  •  M música  •  Esc/P pausa  •  N pular fase (teste)  •  K machucar (teste; Shift+K grave)",
@@ -867,7 +867,7 @@ func _refresh_top_bar(workers: Array) -> void:
 	elif capacity > 0.0 and stock / capacity < 0.25:
 		food_color = COLOR_HUNGER_LOW
 	_set_chip("food", "ACABOU" if stock <= 0.0 else "%d/%d" % [int(stock), int(capacity)], food_color,
-		"No comedouro." + ("\nNinguém cozinhando!" if cooks == 0 else ""))
+		"Na cozinha." + ("\nNinguém cozinhando!" if cooks == 0 else ""))
 
 	# camas
 	var beds := 0

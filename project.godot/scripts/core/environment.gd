@@ -449,6 +449,11 @@ func spot_ok(pos: Vector2, margin: float = 16.0, walker: bool = false) -> bool:
 	return true
 
 
+## Mapa novo: a pegada fica na floresta (além da paliçada)? Prédio da vila vai na pedreira.
+func in_forest(fp: Rect2) -> bool:
+	return has_iso_map() and fp.end.y <= palisade_y + 6.0
+
+
 ## Pegada de construção no mapa novo: "" se dá pra construir; senão o motivo. O chão
 ## embaixo tem que ser plano (um degrau só), fora de escada, do paredão e da paliçada.
 func footprint_reason(fp: Rect2) -> String:
@@ -965,6 +970,9 @@ func _add_pebble(tex: Texture2D, p: Vector2) -> void:
 	s.z_index = -5  # sempre no chão, por baixo de todo mundo
 	s.flip_h = _rng.randf() < 0.5
 	s.modulate = Color(1, 1, 1, 0.9)
+	# Prompt 29: no mapa novo o chão (superfície e lajes dos andares) já tem os detalhes dele; a
+	# pedrinha antiga só some (o sorteio continua igual: as pedras/cristais ficam onde sempre)
+	s.visible = not has_iso_map()
 
 
 func _add_boulder(tex: Texture2D, p: Vector2) -> void:

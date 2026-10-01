@@ -49,7 +49,8 @@ var _box_drawer: Node2D
 var _group_focus := 0  # Tab no modo grupo: qual deles a câmera mostra
 var _pause: CanvasLayer
 var _founding: Node
-## Prompt 28: vista isométrica (F3 liga/desliga). A lógica continua no chão cartesiano.
+## Prompt 28: vista isométrica. A lógica continua no chão cartesiano. (Prompt 29: o F3 saiu;
+## a vista de cima ficou só pro mapa antigo e pros testes.)
 var _iso: Node2D
 var _press_canvas := Vector2.ZERO  # ponto do clique no canvas (na vista iso = tela isométrica)
 var _drag_canvas := Vector2.ZERO
@@ -70,13 +71,13 @@ func _ready() -> void:
 	_box_drawer.z_index = 50
 	_box_drawer.draw.connect(_draw_box)
 	add_child(_box_drawer)
-	# Prompt 28: a vista isométrica (desligada até o F3)
+	# Prompt 28: a vista isométrica
 	_iso = IsoView.new()
 	add_child(_iso)
 	_iso.setup(self)
 	_box_drawer.visibility_layer = IsoView.LAYER_ISO  # o retângulo é da tela, fora da textura do chão
-	# Prompt 29: com o mapa novo a vista iso é a padrão (o F3 ainda volta pra de cima, pra
-	# conferir). DEEP_IRON_ISO=0 começa na de cima; =1 força a iso (testes).
+	# Prompt 29: com o mapa novo a vista iso é A vista do jogo (o F3, que voltava pra de cima pra
+	# conferir, saiu no fim do Prompt 29). DEEP_IRON_ISO=0 começa na de cima (só testes); =1 força a iso.
 	var iso_env := OS.get_environment("DEEP_IRON_ISO")
 	if iso_env == "1" or (iso_env != "0" and _environment.has_method("has_iso_map") and _environment.has_iso_map()):
 		_iso.set_enabled.call_deferred(true)
@@ -186,8 +187,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				_hud.toggle_build_menu()  # Bloco 46: menu de construção
 			KEY_M:
 				Audio.toggle_music()
-			KEY_F3:
-				_iso.toggle()  # Prompt 28: vista isométrica
 			KEY_F4:
 				if _iso.enabled:
 					_iso.show_boxes = not _iso.show_boxes  # Prompt 28: mostra as caixas
