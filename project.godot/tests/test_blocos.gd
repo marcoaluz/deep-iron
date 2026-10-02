@@ -284,3 +284,7 @@ func test_b64_vagonete() -> void:
 
 func test_b67_mapa_leste() -> void:
 	run_bloco("b67_mapa_leste.gd")
+
+
+func test_b68_niveis() -> void:
+	run_bloco("b68_niveis.gd")

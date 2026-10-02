@@ -25,6 +25,30 @@ const CAGE := preload("res://assets/game/elevador.png")
 
 var panel_id := "abismo"
 var unlocked: bool = false
+
+@export_group("Viagem (Bloco 68)")
+## Segundos na gaiola por viagem e quantos cabem nela de uma vez (mais gente = espera a próxima).
+@export var travel_time: float = 1.6
+@export var capacity: int = 4
+var _riders: Array = []  # fim da viagem (s do relógio) de quem está na gaiola
+
+
+## Bloco 68: quanto tempo esse ipezinho fica na gaiola (a viagem + a fila, se lotou).
+func ride_wait() -> float:
+	var now := Time.get_ticks_msec() / 1000.0
+	_riders = _riders.filter(func(t): return t > now)
+	var fila := int(_riders.size() / maxi(capacity, 1))
+	var espera := travel_time * (1 + fila) / maxf(Engine.time_scale, 0.01)
+	_riders.append(now + espera)
+	return travel_time * (1 + fila)
+
+
+## Bloco 68: por que a plataforma ainda está fechada (o nível S3 lê daqui).
+func reason_locked() -> String:
+	if unlocked:
+		return ""
+	var r := repair_block_reason()
+	return "consertar a plataforma" + ((" (%s)" % r) if r != "" and r != "consertando" else (" (consertando)" if r == "consertando" else ""))
 var repairing: bool = false
 var repair_left: float = 0.0
 var _sound_timer := 0.0
@@ -68,6 +92,9 @@ func repair_block_reason() -> String:
 		return "consertando"
 	if not level2_open():
 		return "o nível 2 ainda está fechado"
+	var pq := preload("res://scripts/core/niveis.gd").pesquisa_falta(get_tree(), "S3")  # Bloco 68: o nível pede pesquisa
+	if pq != "":
+		return pq
 	var hub := get_tree().get_first_node_in_group("village_hub")
 	if hub and hub.level < repair_min_stage:
 		return "requer vila nível %d" % repair_min_stage

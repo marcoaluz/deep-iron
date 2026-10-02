@@ -18,6 +18,27 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 
 var unlocked: bool = false
 
+@export_group("Viagem (Bloco 68)")
+## Segundos na gaiola por viagem e quantos cabem nela de uma vez (mais gente = espera a próxima).
+@export var travel_time: float = 1.6
+@export var capacity: int = 4
+var _riders: Array = []  # fim da viagem (s do relógio) de quem está na gaiola
+
+
+## Bloco 68: quanto tempo esse ipezinho fica na gaiola (a viagem + a fila, se lotou).
+func ride_wait() -> float:
+	var now := Time.get_ticks_msec() / 1000.0
+	_riders = _riders.filter(func(t): return t > now)
+	var fila := int(_riders.size() / maxi(capacity, 1))
+	var espera := travel_time * (1 + fila) / maxf(Engine.time_scale, 0.01)
+	_riders.append(now + espera)
+	return travel_time * (1 + fila)
+
+
+## Bloco 68: por que a descida ainda está fechada (o nível S2 lê daqui).
+func reason_locked() -> String:
+	return "" if unlocked else "abre quando a escavadeira ficar pronta"
+
 @onready var _top: Node2D = $Top
 @onready var _bottom: Node2D = $Bottom
 @onready var _link: NavigationLink2D = $Link

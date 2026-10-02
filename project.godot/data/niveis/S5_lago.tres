@@ -1,0 +1,24 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/nivel_mina.gd" id="1_nivel"]
+
+[resource]
+script = ExtResource("1_nivel")
+id = "S5"
+nome = "S5 — LAGO AZUL"
+profundidade = 5
+area = ""
+perigo = "radiacao"
+traje = "radiacao"
+pesquisa = ""
+ligacao = ""
+em_breve = true
+minerios = PackedStringArray("cristal_azul")
+criaturas = PackedStringArray()
+cor_ambiente = Color(0.75, 0.85, 1, 1)
+cor_nevoa = Color(0.3, 0.5, 1, 0.12)
+particulas = "bolhas"
+faixa = ""
+cor_faixa = Color(0.08, 0.14, 0.3, 1)
+descricao = "O lago subterrâneo com gemas azuis: o fundo do mundo. Em breve."
+decoracao = []

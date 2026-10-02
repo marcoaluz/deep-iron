@@ -1,0 +1,24 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/nivel_mina.gd" id="1_nivel"]
+
+[resource]
+script = ExtResource("1_nivel")
+id = "S3"
+nome = "S3 — LAVA (abismo)"
+profundidade = 3
+area = "abyss"
+perigo = "calor"
+traje = "calor"
+pesquisa = "trajes"
+ligacao = "elevador_abismo"
+em_breve = false
+minerios = PackedStringArray("solarita", "cristal_vermelho")
+criaturas = PackedStringArray("ferrugento", "lava")
+cor_ambiente = Color(1, 0.82, 0.68, 1)
+cor_nevoa = Color(1, 0.45, 0.15, 0.12)
+particulas = "calor"
+faixa = "faixa_abismo"
+cor_faixa = Color(0.32, 0.14, 0.08, 1)
+descricao = "Poços de lava e fendas de calor (traje térmico). A escavadeira e os reatores rendem mais aqui. Cristais vermelhos."
+decoracao = []

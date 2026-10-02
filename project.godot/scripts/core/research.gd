@@ -35,7 +35,7 @@ const TECHS := {
 		"desc": "Vigas nas galerias: acidentes na mina 40% menos comuns."},
 	"trajes": {"name": "Trajes de proteção", "branch": "Mina", "req": "carrinhos", "excl": "", "points": 120,
 		"cost": Vector3i(250, 40, 0), "ore": "cobre",
-		"desc": "A Oficina passa a fazer máscara de gás, traje térmico e traje antirradiação — pras zonas de perigo do fundo (Bloco 42)."},
+		"desc": "A Oficina passa a fazer máscara de gás, traje térmico e traje antirradiação — pras zonas de perigo do fundo (Bloco 42). Sem ela, a plataforma do abismo (S3, lava) não desce."},
 	"medicina": {"name": "Medicina de campo", "branch": "Vila", "req": "", "excl": "", "points": 80,
 		"cost": Vector3i(200, 40, 0), "ore": "cobre",
 		"desc": "Cura no leito 30% mais rápida; machucado sem leito aguenta 50% mais tempo."},

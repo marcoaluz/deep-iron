@@ -18,12 +18,12 @@ const Icones := preload("res://scripts/ui/icones.gd")
 const Retratos := preload("res://scripts/ui/retratos.gd")
 const IsoBonecos := preload("res://scripts/iso/iso_bonecos.gd")
 const DIR := "res://assets/game/ui/corte/"
-const ANDARES := [
-	{"id": "superficie", "nome": "SUPERFÍCIE — clareira", "faixa": "faixa_superficie", "perigo": ""},
-	{"id": "mina", "nome": "MINA E VILA — pedreira (poeira)", "faixa": "faixa_mina", "perigo": "poeira"},
-	{"id": "nivel2", "nome": "NÍVEL 2 — gás e radiação", "faixa": "faixa_nivel2", "perigo": "gás"},
-	{"id": "abismo", "nome": "ABISMO — calor", "faixa": "faixa_abismo", "perigo": "calor"},
-]
+## Bloco 68: os andares vêm de res://data/niveis (Niveis.todos()): os jogáveis com a faixa deles e os
+## "em breve" como uma faixa escura trancada embaixo.
+const Niveis := preload("res://scripts/core/niveis.gd")
+var ANDARES: Array = []
+var EM_BREVE: Array = []
+const FAIXA_BREVE := 26.0
 const ALTURA := 128.0  # px de cada faixa (a arte tem 128)
 const LARGURA := 1024.0  # a faixa de 512 em 2x
 const FX_PERIGO := {"gas": "nuvem_gas", "calor": "brasa", "radiacao": "radiacao"}
@@ -43,6 +43,14 @@ const ORE_COR := {"ferro": Color(0.72, 0.62, 0.55), "cobre": Color(0.9, 0.5, 0.2
 
 func setup(main: Node) -> void:
 	_main = main
+	ANDARES.clear()
+	EM_BREVE.clear()
+	for n in Niveis.todos():
+		if n.em_breve:
+			EM_BREVE.append(n)  # (uma faixa baixa embaixo, não uma faixa inteira)
+			continue
+		ANDARES.append({"id": n.id, "nome": n.nome, "faixa": n.faixa, "perigo": n.perigo, "em_breve": false,
+			"cor": n.cor_faixa, "nivel": n})
 	layer = 15
 	visible = false
 	name = "CorteDaMina"
@@ -86,7 +94,7 @@ func setup(main: Node) -> void:
 	x.pressed.connect(fecha)
 	head.add_child(x)
 	_area = Control.new()
-	_area.custom_minimum_size = Vector2(LARGURA, ALTURA * ANDARES.size() + 22.0)  # + a legenda (Bloco 63)
+	_area.custom_minimum_size = Vector2(LARGURA, ALTURA * maxi(ANDARES.size(), 4) + FAIXA_BREVE + 22.0)  # + em breve (68) + legenda (63)
 	_area.mouse_filter = Control.MOUSE_FILTER_STOP
 	_area.draw.connect(_desenha)
 	_area.gui_input.connect(_clique)
@@ -144,6 +152,7 @@ func _onde(p: Vector2) -> Array:
 		i = 0; r = _env.clearing_rect
 	else:
 		r = _env.map_rect
+	# (o índice é a ordem dos dados: S0 superfície, S1 mina, S2 nível 2, S3 abismo)
 	return [i, clampf((p.x - r.position.x) / maxf(r.size.x, 1.0), 0.03, 0.97)]
 
 
@@ -172,9 +181,16 @@ func _desenha() -> void:
 		var a: Dictionary = ANDARES[i]
 		var r := Rect2(0, i * ALTURA, LARGURA, ALTURA)
 		_rects.append(r)
-		var t := _tex(a.faixa)
+		var t := _tex(a.faixa) if a.faixa != "" else null
 		if t:
 			_area.draw_texture_rect(t, r, false)  # 512x128 em 2x na horizontal (faixas de rocha)
+		else:
+			_area.draw_rect(r, a.cor)
+		var motivo: String = Niveis.motivo(get_tree(), a.nivel)
+		if motivo != "":  # Bloco 68: nível fechado (ou em breve): escurece e diz por quê
+			_area.draw_rect(r, Color(0, 0, 0, 0.55))
+			_area.draw_string(ThemeDB.fallback_font, r.position + Vector2(LARGURA * 0.5 - 160, ALTURA * 0.55), "FECHADO — " + motivo,
+				HORIZONTAL_ALIGNMENT_LEFT, 360, 13, Color(1.0, 0.7, 0.5))
 		_area.draw_rect(Rect2(r.position, Vector2(LARGURA, 18)), Color(0, 0, 0, 0.55))
 		_area.draw_string(f, r.position + Vector2(8, 13), a.nome, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiSkin.COLOR_TITLE)
 		var n := _gente_no_andar(i)
@@ -358,7 +374,16 @@ func _bichos() -> void:
 
 func _legenda() -> void:
 	var f := ThemeDB.fallback_font
-	var y := ANDARES.size() * ALTURA + 14.0
+	# Bloco 68: os níveis declarados que ainda não existem
+	if not EM_BREVE.is_empty():
+		var yb := ANDARES.size() * ALTURA
+		var xb := 0.0
+		var w := LARGURA / EM_BREVE.size()
+		for n in EM_BREVE:
+			_area.draw_rect(Rect2(xb, yb, w - 2.0, FAIXA_BREVE - 2.0), n.cor_faixa.darkened(0.3))
+			_area.draw_string(f, Vector2(xb + 8.0, yb + 17.0), "%s — em breve" % n.nome, HORIZONTAL_ALIGNMENT_LEFT, w - 16.0, 11, Color(0.75, 0.8, 0.95))
+			xb += w
+	var y := ANDARES.size() * ALTURA + FAIXA_BREVE + 14.0
 	var x := 6.0
 	var itens := [["●", Color(0.72, 0.62, 0.55), "jazida aberta (anel = quanto tem)"], ["✕", Color(0.85, 0.7, 0.45), "galeria lacrada (clique: ir até ela)"],
 		["▣", Color(0.9, 0.8, 0.4), "trancada (ferramenta/descida)"], ["■", Color(1.0, 0.75, 0.3), "reator instalado"],
@@ -390,6 +415,8 @@ func _clique(e: InputEvent) -> void:
 			return
 	for i in _rects.size():
 		if _rects[i].has_point(p) and _env:
+			if i >= 4:
+				return  # Bloco 68: os "em breve" não têm lugar no mapa ainda
 			var alvo: Vector2 = [_env.clearing_rect, _env.map_rect, _env.deep_rect, _env.abyss_rect][i].get_center()
 			var cam = _main.get_node_or_null("Camera2D") if _main else null
 			if cam and cam.has_method("focus_on"):

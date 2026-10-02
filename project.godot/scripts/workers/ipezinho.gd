@@ -327,6 +327,8 @@ var _last_hunger_int: int = -1
 var _home: Node2D = null  # casa com a cama fixa deste ipezinho (null = sem teto)
 ## Bloco 61: bichos que ele já abateu (caçador novato x experiente pro javali).
 var hunt_kills := 0
+## Bloco 68: segundos que ainda faltam na gaiola do elevador (0 = fora).
+var _cage_wait := 0.0
 var _home_slot: int = -1
 var _resting: bool = false  # chegou e está dormindo
 var _inside: bool = false  # dormindo DENTRO de casa (fica invisível)
@@ -610,6 +612,10 @@ func can_work_at(station: Node) -> bool:
 
 # ------------------------------------------------------------ movimento
 func _physics_process(delta: float) -> void:
+	if _cage_wait > 0.0:  # Bloco 68: na gaiola do elevador (viagem / fila)
+		_cage_wait -= delta
+		_apply_velocity(Vector2.ZERO)
+		return
 	_agent.max_speed = speed * _speed_bonus() * 1.2  # o desvio (RVO) limita a velocidade nisso
 	var desired := Vector2.ZERO
 	if _moving:
@@ -1167,8 +1173,13 @@ func _on_link_reached(details: Dictionary) -> void:
 	var exit: Vector2 = details.get("link_exit_position", global_position)
 	global_position = exit
 	Audio.elevator(exit)  # corrente + "clanc" da gaiola
+	# Bloco 68: a viagem leva tempo e a gaiola tem lugar limitado (lotou: espera a próxima)
+	var shaft: Node = link.get_parent()
+	_cage_wait = shaft.ride_wait() if shaft.has_method("ride_wait") else 0.0
 	_body.modulate.a = 0.0
-	create_tween().tween_property(_body, "modulate:a", 1.0, 0.35)
+	var tw := create_tween()
+	tw.tween_interval(_cage_wait)
+	tw.tween_property(_body, "modulate:a", 1.0, 0.35)
 
 
 ## Multiplicador de acidente pela profundidade (nível 2 = mais perigoso).
