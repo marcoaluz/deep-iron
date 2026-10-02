@@ -21,4 +21,4 @@ particulas = "acido"
 faixa = "faixa_nivel2"
 cor_faixa = Color(0.18, 0.26, 0.18, 1)
 descricao = "Galerias úmidas com poças de ácido e bolsões de gás (máscara de gás). Cristais verdes."
-decoracao = [["cristal_lima_0", -330, 880], ["cristal_lima_1", 120, 1010], ["cristal_lima_0", 360, 840], ["cristal_lima_1", -160, 1190], ["cristal_violeta_0", -420, 1100], ["cristal_lima_0", 250, 1220]]
+decoracao = [["cristal_lima_0", -250, 820], ["cristal_lima_1", 120, 1010], ["cristal_lima_0", 360, 840], ["cristal_lima_1", -80, 1250], ["cristal_violeta_0", -420, 1100], ["cristal_lima_0", 250, 1220]]

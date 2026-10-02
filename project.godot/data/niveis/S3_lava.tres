@@ -21,4 +21,4 @@ particulas = "calor"
 faixa = "faixa_abismo"
 cor_faixa = Color(0.32, 0.14, 0.08, 1)
 descricao = "Poços de lava e fendas de calor (traje térmico). A escavadeira e os reatores rendem mais aqui. Cristais vermelhos."
-decoracao = [["cristal_brasa_0", -250, 1600], ["cristal_brasa_1", 150, 1720], ["cristal_brasa_0", 320, 1540], ["cristal_brasa_1", -380, 1820], ["cristal_brasa_0", 60, 1880]]
+decoracao = [["cristal_brasa_0", -250, 1600], ["cristal_brasa_1", 150, 1720], ["cristal_brasa_0", 200, 1500], ["cristal_brasa_1", -380, 1820], ["cristal_brasa_0", 60, 1880]]

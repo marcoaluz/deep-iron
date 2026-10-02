@@ -328,6 +328,7 @@ const LUZ_ZONA := {"calor": Color(1.0, 0.5, 0.2), "gas": Color(0.45, 1.0, 0.35),
 const AREA_DO_ANDAR := {"nivel2": "deep", "abismo": "abyss"}
 var _atmos: Array = []  # [{nivel, raiz, nevoa, part, alfa, qtd}]
 var _luzes_zona: Array = []  # [luz, energia base, fase]
+var _pulso_k := 1.0  # força do pulso das luzes (guardada: o settings.cfg só é lido quando muda)
 
 
 func _nivel_da_area(area: String) -> Resource:
@@ -421,6 +422,7 @@ func _build_atmosfera() -> void:
 		l.range_z_min = RenderingServer.CANVAS_ITEM_Z_MIN
 		l.range_z_max = RenderingServer.CANVAS_ITEM_Z_MAX
 		l.position = to_screen((zn as Node2D).global_position)
+		l.set_meta("tela_iso", true)
 		l.add_to_group("cullable_lights")
 		_terrain_node.add_child(l)
 		_luzes_zona.append([l, l.energy, randf() * TAU])
@@ -431,6 +433,7 @@ func _build_atmosfera() -> void:
 func atmosfera_aplica() -> void:
 	var k := atmosfera_intensidade()
 	var red := Efeitos.reduzidos()
+	_pulso_k = k * (0.3 if red else 1.0)
 	for a in _atmos:
 		a.raiz.visible = k > 0.01
 		var c: Color = a.nevoa.color
@@ -447,7 +450,7 @@ func _pulsa_luzes() -> void:
 	if _luzes_zona.is_empty() or _frame % 3 != 0:
 		return
 	var t := Time.get_ticks_msec() / 1000.0
-	var k := atmosfera_intensidade() * (0.3 if Efeitos.reduzidos() else 1.0)
+	var k := _pulso_k
 	for e in _luzes_zona:
 		var l = e[0]
 		if is_instance_valid(l):
@@ -586,6 +589,8 @@ func _build_lava() -> void:
 		l.range_z_min = RenderingServer.CANVAS_ITEM_Z_MIN  # todo o z da ordem de desenho
 		l.range_z_max = RenderingServer.CANVAS_ITEM_Z_MAX
 		l.position = to_screen((z as Node2D).global_position)
+		l.set_meta("tela_iso", true)  # Bloco 69: entra no corte das luzes fora da tela (já na tela)
+		l.add_to_group("cullable_lights")
 		_terrain_node.add_child(l)
 		# Prompt 18: o ar tremendo em cima da fenda (lê a tela e entorta em degraus de pixel)
 		var r: float = float(z.get("radius")) * S if z.get("radius") != null else 60.0

@@ -288,3 +288,7 @@ func test_b67_mapa_leste() -> void:
 
 func test_b68_niveis() -> void:
 	run_bloco("b68_niveis.gd")
+
+
+func test_b69_atmosfera() -> void:
+	run_bloco("b69_atmosfera.gd")

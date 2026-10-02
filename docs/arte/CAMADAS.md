@@ -22,7 +22,9 @@ Composição A→D da referência: **A base** = camadas 0–1, **B detalhes** = 
 - Efeito que cobre a tela (névoa, atmosfera, clima) fica na camada 4 e respeita **Reduzir efeitos**
   (`scripts/core/efeitos.gd`) e, se for de nível, a **Atmosfera dos níveis** (Configurações).
 - Luzes: cada luz nova entra no grupo `cullable_lights` (o ambiente apaga as fora da tela) e usa
-  `range_item_cull_mask = LIGHT_ISO`.
+  `range_item_cull_mask = LIGHT_ISO`. Luz que a vista põe **direto na tela iso** (filha do `Terreno`,
+  posição já em `to_screen`: lava, brilho das zonas) leva `set_meta("tela_iso", true)` — sem isso o
+  corte converte a posição de novo e apaga a luz no lugar errado.
 
 ## Atmosfera por nível (dados)
 
@@ -31,3 +33,7 @@ andar), `cor_nevoa` (névoa por cima, camada 4), `particulas` (`poeira`, `acido`
 `bolhas`) e `decoracao` (`[prop, x, y]` na lógica: o ambiente põe esses props quando o nível existe).
 As zonas de perigo do nível ganham luz pulsando (calor laranja, gás verde, radiação ciano).
 Mudar a atmosfera de um nível = editar o `.tres`.
+
+Custo medido (`tools/bench_cena.ps1 -Rapido`, vila cheia, cenário C): atmosfera ligada 19,9 ms / 50 FPS,
+desligada 19,1 ms / 52 FPS (~0,8 ms; `docs/bench/bench_2026-10-02_bloco69_*.txt`). Fotos de conferência:
+`tests/capturas_atmosfera.gd` (S1, S2, S3, reduzido, sem atmosfera, de longe).

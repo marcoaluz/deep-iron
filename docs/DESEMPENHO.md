@@ -81,3 +81,10 @@ passam iguais.
   luzes); dá pra copiar só o que mudou.
 - `ipezinho.gd`: ~50 µs por ipezinho entre `_process` e `_physics_process`.
 - Luzes 2D: ~165 na vila cheia; com muitas mais, vale juntar as das janelas.
+
+## Bloco 69 (atmosfera por nível) — 2026-10-02
+
+`bench_cena -Rapido`, vila cheia (C): atmosfera ligada **19,86 ms / 50 FPS**, desligada **19,07 ms / 52 FPS**
+(+13 nós, +6 draws). O pulso das luzes guarda a intensidade em memória (antes lia o `settings.cfg` do disco
+a cada 3 quadros). Desde a medida da manhã (C = 17,97 ms / 56 FPS) a cena cresceu de 6.351 pra 7.879 nós
+com os blocos 64–68 (trilho/vagonete, leste, níveis): é daí a maior parte da diferença, não da atmosfera.

@@ -198,6 +198,13 @@ func leste_rect() -> Rect2:
 
 ## Bloco 69: decoração por dados — cada NivelMina declara [prop, x, y]; aqui vira um Deco no lugar.
 func _build_decoracao_niveis() -> void:
+	# nos andares de baixo o chão não é o dos ladrilhos da superfície: vale a regra da decoração de lá
+	var placed: Array[Vector2] = []
+	var avoid: Array[Vector2] = []
+	for grupo in ["elevador", "elevador_abismo"]:
+		var sh := get_tree().get_first_node_in_group(grupo)
+		if sh and sh.get("bottom_position") != null:
+			avoid.append(sh.bottom_position)
 	for n in preload("res://scripts/core/niveis.gd").todos():
 		if n.em_breve:
 			continue
@@ -205,8 +212,10 @@ func _build_decoracao_niveis() -> void:
 			if not (d is Array) or d.size() < 3:
 				continue
 			var p := Vector2(float(d[1]), float(d[2]))
-			if not _is_free(p, 18.0, 24.0):
+			var livre := _deep_spot_free(p, 40.0, placed, avoid) if not level_of(p).is_empty() else _is_free(p, 18.0, 24.0)
+			if not livre:
 				continue
+			placed.append(p)
 			_decor_node(String(d[0]), p, false)
 			get_child(get_child_count() - 1).add_to_group("nivel_deco")
 
@@ -329,7 +338,9 @@ func _cull_offscreen_lights() -> void:
 		# apagadas como se estivessem fora da tela.
 		var tela := view.grow(light_cull_margin * 1.5)
 		for light in get_tree().get_nodes_in_group("cullable_lights"):
-			light.visible = tela.has_point(iso.to_screen(light.global_position))
+			# (Bloco 69: as luzes que a vista põe direto na tela — lava, zonas de perigo — já estão lá)
+			var p: Vector2 = light.global_position if light.has_meta("tela_iso") else iso.to_screen(light.global_position)
+			light.visible = tela.has_point(p)
 		return
 	view = view.grow(light_cull_margin)
 	for light in get_tree().get_nodes_in_group("cullable_lights"):
