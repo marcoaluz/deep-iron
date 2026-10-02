@@ -17,6 +17,7 @@ extends RefCounted
 const FILE := "res://assets/game/iso/predios/predios.json"
 const DIR := "res://assets/game/iso/predios/"
 const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
+const IsoFx := preload("res://scripts/iso/iso_fx.gd")
 ## cena do jogo (nome do .tscn) -> prédio no predios.json
 const KIND_OF_SCENE := {
 	"casa": "casa", "armazem": "armazem", "oficina": "oficina", "arsenal": "arsenal",
@@ -85,8 +86,15 @@ static func state(entry_name: String, st: String, obra: float = -1.0) -> Diction
 	if not e.has(st):
 		return {}
 	var s: Dictionary = e[st]
-	return {"tex": texture(s.img), "ancora": Vector2(s.ancora[0], s.ancora[1]),
+	var out := {"tex": texture(s.img), "ancora": Vector2(s.ancora[0], s.ancora[1]),
 		"peg": s.get("peg", []), "h": float(s.get("h", 0.0)), "obra": obra}
+	# Prompt 19: pontos de luz e janelas acesas anotados no desenho (só no pronto, sem obra)
+	if obra < 0.0:
+		if s.has("luzes"):
+			out["luzes"] = s.luzes.map(func(l): return {"tipo": l.tipo, "pos": Vector2(l.pos[0], l.pos[1])})
+		if s.has("janelas"):
+			out["janelas"] = texture(s.janelas)
+	return out
 
 
 ## Obra por estágios com os desenhos obra_1/2/3 do prédio; sem eles, o pronto subindo pelo corte.
@@ -366,6 +374,8 @@ static func prop_layers(node: Node) -> Array:
 	if env == null or props().is_empty():
 		return []
 	var h := _hash(node)
+	if node.has_meta("iso_fx"):  # Prompt 18: efeito animado solto (barril em chamas da greve)
+		return [IsoFx.fx_layer(String(node.get_meta("iso_fx")))].filter(func(l): return not l.is_empty())
 	if node.has_meta("iso_prop"):  # Prompt 30: decoração do mapa novo, desenhada pelo nome
 		return [prop(String(node.get_meta("iso_prop")))].filter(func(l): return not l.is_empty())
 	if node.is_in_group("minerios") and node.get("ore_type") != null:
@@ -404,6 +414,8 @@ static func prop_layers(node: Node) -> Array:
 			out.append(prop("escora"))
 		"entulho":
 			out.append(prop("entulho_medio"))
+		"grave":
+			out.append(prop("cova"))  # Prompt 14: cova do cemitério da enfermaria
 		_:
 			if old.begins_with("boulder_"):
 				var deep: bool = env.has_method("is_deep") and env.is_deep((node as Node2D).global_position)

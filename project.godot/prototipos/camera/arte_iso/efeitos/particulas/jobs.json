@@ -1,0 +1,142 @@
+{
+ "poeira": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\poeira.png"
+ },
+ "lascas": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\lascas.png"
+ },
+ "faisca": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\faisca.png"
+ },
+ "serragem": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\serragem.png"
+ },
+ "martelada": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\martelada.png"
+ },
+ "fumaca": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\fumaca.png"
+ },
+ "fumaca_escura": {
+  "job": "dfe4a6f0-3ed3-44af-9cbd-9275a19f264d",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\fumaca_escura.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "vapor": {
+  "job": "e68925e2-1bc5-434b-909c-32a2135c3fbe",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\vapor.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "gas": {
+  "job": "598d2ffe-4d79-405c-a261-f93fcca831e5",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\gas.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "radiacao": {
+  "job": "f984db4a-f29b-47bc-bc17-4baa43a8e010",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\radiacao.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "gota": {
+  "job": "76b31bbf-fa0e-460c-b10c-0ef5482d0cd4",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\gota.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "chuva": {
+  "job": "42a27a80-659d-4389-9eaf-b1c2b7d90045",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\chuva.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "neve": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\neve.png"
+ },
+ "folha": {
+  "job": "48833efe-68d2-4f44-8448-9e1d0658af48",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\folha.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "polen": {
+  "job": "ebb9e3ad-3198-44e6-91cd-be179b55b13c",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\polen.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "neblina": {
+  "job": "4d711b57-3cd3-4481-a7aa-bfadd46b31f5",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\neblina.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "fogos": {
+  "job": "a5a025d6-6590-45c4-b416-7369459fa8a8",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\fogos.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "confete": {
+  "job": "24880a6f-9491-4a51-8cbd-65074d312bed",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\confete.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "bandeirinha": {
+  "job": "ebefffa4-7ea1-4594-bdd4-0422a939ab0b",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\bandeirinha.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "brilho_achado": {
+  "job": "f94e1007-6d05-4eb2-a61d-b084e023d8c3",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\brilho_achado.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "brasa": {
+  "job": "3e162358-c47f-42a4-bbe7-5c56ef54a249",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\brasa.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "pedrinha_caindo": {
+  "job": "21355006-3e14-44fa-ab92-27dc7549e974",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos/particulas\\pedrinha_caindo.png",
+  "ok": true,
+  "candidatos": 1
+ }
+}

@@ -70,6 +70,7 @@ determinístico) só mudou o que o bloco pretendia — instruções no topo do a
 | `p28_save.gd` | Prompt 28 — save de antes do Prompt 28 carrega igual nas duas vistas (md5 do arquivo, ipezinhos, posições, créditos); com `DEEP_IRON_SAVE_FIXTURE=<cópia de um save antigo>` usa a cópia, sem ela faz o próprio save |
 | `p29_mapa.gd` | Prompt 29 — mapa novo: alturas dos terraços e rampa da escada, navegação (escada e portão), construir só em chão plano, ordem com os terraços, andares de baixo empilhados (clique volta pro andar), céu e luz por hora, migração do save |
 | `p29_predios.gd` | Prompt 29 parte 2 — prédios com a arte nova: desenho por estado (variação, obra 1/2/3 pelo progresso, estágio do Centro, peças da escavadeira, nível do portão), caixa do desenho, pegada de navegação = desenho ÷ 1,5, camas/slots fora da parede e alcançáveis, posicionador e fantasma novos, migração de prédios sobrepostos, paliçada, ordem sem erro |
+| `p19_luz.gd` | Prompt 19 — luz e noite: texturas por tipo, ponto de luz do desenho, janelas acesas só à noite e com o prédio aceso, alcance de z das luzes, tocha/cristal/lanterna, lava, tom por estação |
 | `p29_bonecos.gd` | Prompt 29 parte 3 — bonecos com a arte nova: pasta por função × gênero, animação pelo estado, direção, pele por paleta, casaco/traje, picareta e saco nas costas, corpo antigo escondido |
 | `p29_natureza.gd` | Prompt 29 partes 4–5 — natureza/objetos pelo desenho antigo (árvores, toco, tocas, horta, jazidas pela quantidade, galeria lacrada, rochas, cristais, tocha), elevadores (gaiola no andar de baixo) e robô |
 | `../test_iso.gd` (GUT, rápido) | Prompt 28 — núcleo: projeção, verdade 3D, ordem incremental, raio da câmera, direção de losango |
@@ -129,6 +130,9 @@ qualquer lugar da pedreira, a floresta recusa), `b41_parque` (lugar do parque pe
 sem raio), `b48_janela_zoom` (paradas com a densidade da arte nova + a parada "longe"), `p28_iso`
 (o F3 saiu: liga/desliga direto e confere que o F3 não troca mais), `b46_menu_construcao` (cartão
 "Cozinha").
+
+**Prompt 19 mudou de propósito** `p29_predios`: a camada de janelas acesas não conta como desenho
+do prédio. Fotos/GIF do ciclo dia/noite: `tests/ciclo_luz.gd` (com janela, pasta isolada).
 
 ## Análise de capacidade (Prompt 29)
 

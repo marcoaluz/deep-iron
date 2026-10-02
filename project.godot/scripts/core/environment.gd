@@ -192,8 +192,14 @@ func _cull_offscreen_lights() -> void:
 	var vp := get_viewport()
 	var view := vp.get_canvas_transform().affine_inverse() * vp.get_visible_rect()
 	var iso := get_tree().get_first_node_in_group("iso_view")
-	if iso and iso.enabled:
-		view = iso.ground_view_rect()  # Prompt 28: a tela em iso mostra este pedaço do chão
+	if iso and iso.enabled and iso.has_method("to_screen"):
+		# Prompt 19: confere na TELA iso (to_screen leva cada luz pro andar dela). Pelo retângulo do
+		# chão da superfície, as luzes dos andares de baixo (empilhados mais embaixo na tela) eram
+		# apagadas como se estivessem fora da tela.
+		var tela := view.grow(light_cull_margin * 1.5)
+		for light in get_tree().get_nodes_in_group("cullable_lights"):
+			light.visible = tela.has_point(iso.to_screen(light.global_position))
+		return
 	view = view.grow(light_cull_margin)
 	for light in get_tree().get_nodes_in_group("cullable_lights"):
 		light.visible = view.has_point(light.global_position)

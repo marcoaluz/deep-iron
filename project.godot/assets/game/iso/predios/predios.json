@@ -15,7 +15,17 @@
       68.0,
       64.0
      ],
-     "h": 201.0
+     "h": 201.0,
+     "janelas": "casa/pronto_0__janelas.png",
+     "luzes": [
+      {
+       "tipo": "janela",
+       "pos": [
+        18.4,
+        -60.9
+       ]
+      }
+     ]
     },
     "pronto_1": {
      "img": "casa/pronto_1.png",
@@ -29,7 +39,17 @@
       68.0,
       70.0
      ],
-     "h": 203.0
+     "h": 203.0,
+     "janelas": "casa/pronto_1__janelas.png",
+     "luzes": [
+      {
+       "tipo": "janela",
+       "pos": [
+        3.5,
+        -70.2
+       ]
+      }
+     ]
     },
     "pronto_2": {
      "img": "casa/pronto_2.png",
@@ -43,7 +63,24 @@
       68.0,
       64.0
      ],
-     "h": 201.0
+     "h": 201.0,
+     "janelas": "casa/pronto_2__janelas.png",
+     "luzes": [
+      {
+       "tipo": "janela",
+       "pos": [
+        57.0,
+        -37.0
+       ]
+      },
+      {
+       "tipo": "lampiao",
+       "pos": [
+        -17.0,
+        -15.0
+       ]
+      }
+     ]
     },
     "pronto_3": {
      "img": "casa/pronto_3.png",
@@ -57,7 +94,17 @@
       74.0,
       64.0
      ],
-     "h": 203.0
+     "h": 203.0,
+     "janelas": "casa/pronto_3__janelas.png",
+     "luzes": [
+      {
+       "tipo": "janela",
+       "pos": [
+        21.7,
+        -50.4
+       ]
+      }
+     ]
     },
     "obra_1": {
      "img": "casa/obra_1.png",
@@ -153,7 +200,16 @@
       81.0,
       83.0
      ],
-     "h": 192.0
+     "h": 192.0,
+     "luzes": [
+      {
+       "tipo": "lampiao",
+       "pos": [
+        -55.0,
+        -30.0
+       ]
+      }
+     ]
     },
     "obra_1": {
      "img": "armazem/obra_1.png",
@@ -219,7 +275,17 @@
       67.0,
       57.0
      ],
-     "h": 204.0
+     "h": 204.0,
+     "janelas": "oficina/pronto__janelas.png",
+     "luzes": [
+      {
+       "tipo": "forja",
+       "pos": [
+        -17.0,
+        -40.0
+       ]
+      }
+     ]
     },
     "obra_1": {
      "img": "oficina/obra_1.png",
@@ -285,7 +351,16 @@
       71.0,
       49.0
      ],
-     "h": 182.0
+     "h": 182.0,
+     "luzes": [
+      {
+       "tipo": "forja",
+       "pos": [
+        90.0,
+        -15.0
+       ]
+      }
+     ]
     },
     "obra_1": {
      "img": "arsenal/obra_1.png",
@@ -354,7 +429,17 @@
       104.0,
       91.0
      ],
-     "h": 200.0
+     "h": 200.0,
+     "janelas": "taverna/pronto__janelas.png",
+     "luzes": [
+      {
+       "tipo": "janela",
+       "pos": [
+        -7.0,
+        -65.3
+       ]
+      }
+     ]
     },
     "obra_1": {
      "img": "taverna/obra_1.png",
@@ -414,7 +499,17 @@
       91.0
      ],
      "h": 292.0,
-     "fora": 4
+     "fora": 4,
+     "janelas": "taverna/nivel_2__janelas.png",
+     "luzes": [
+      {
+       "tipo": "janela",
+       "pos": [
+        -54.6,
+        -114.7
+       ]
+      }
+     ]
     }
    },
    "base": [
@@ -438,7 +533,16 @@
       69.0,
       50.0
      ],
-     "h": 166.0
+     "h": 166.0,
+     "luzes": [
+      {
+       "tipo": "janela",
+       "pos": [
+        -53.0,
+        -37.5
+       ]
+      }
+     ]
     },
     "obra_1": {
      "img": "enfermaria/obra_1.png",
@@ -498,7 +602,16 @@
       50.0
      ],
      "h": 260.0,
-     "fora": 3
+     "fora": 3,
+     "luzes": [
+      {
+       "tipo": "janela",
+       "pos": [
+        -53.0,
+        -37.5
+       ]
+      }
+     ]
     }
    },
    "base": [
@@ -522,7 +635,17 @@
       56.0,
       53.0
      ],
-     "h": 214.0
+     "h": 214.0,
+     "janelas": "laboratorio/pronto__janelas.png",
+     "luzes": [
+      {
+       "tipo": "janela",
+       "pos": [
+        -11.1,
+        -128.5
+       ]
+      }
+     ]
     },
     "obra_1": {
      "img": "laboratorio/obra_1.png",
@@ -968,7 +1091,16 @@
       97.0
      ],
      "h": 262.0,
-     "fora": 0
+     "fora": 0,
+     "luzes": [
+      {
+       "tipo": "reator",
+       "pos": [
+        0.0,
+        -110.0
+       ]
+      }
+     ]
     }
    },
    "base": [
@@ -1008,7 +1140,30 @@
       85.0
      ],
      "h": 302.0,
-     "fora": 0
+     "fora": 0,
+     "luzes": [
+      {
+       "tipo": "cabine",
+       "pos": [
+        -100.0,
+        -102.0
+       ]
+      },
+      {
+       "tipo": "reator",
+       "pos": [
+        -70.0,
+        15.0
+       ]
+      },
+      {
+       "tipo": "giroflex",
+       "pos": [
+        -100.0,
+        -135.0
+       ]
+      }
+     ]
     }
    },
    "camadas": {
@@ -1097,7 +1252,16 @@
       56.0,
       72.0
      ],
-     "h": 132.0
+     "h": 132.0,
+     "luzes": [
+      {
+       "tipo": "fogueira",
+       "pos": [
+        3.0,
+        21.0
+       ]
+      }
+     ]
     }
    },
    "base": [
@@ -1121,7 +1285,16 @@
       66.0,
       72.0
      ],
-     "h": 174.0
+     "h": 174.0,
+     "luzes": [
+      {
+       "tipo": "lampiao",
+       "pos": [
+        -55.0,
+        -25.0
+       ]
+      }
+     ]
     },
     "obra": {
      "img": "centro_2/obra.png",
@@ -1159,7 +1332,23 @@
       62.0,
       67.0
      ],
-     "h": 202.0
+     "h": 202.0,
+     "luzes": [
+      {
+       "tipo": "lampiao",
+       "pos": [
+        37.0,
+        -52.5
+       ]
+      },
+      {
+       "tipo": "lampiao",
+       "pos": [
+        77.0,
+        -69.5
+       ]
+      }
+     ]
     },
     "obra": {
      "img": "centro_3/obra.png",
@@ -1197,7 +1386,24 @@
       85.0,
       81.0
      ],
-     "h": 248.0
+     "h": 248.0,
+     "janelas": "centro_4/pronto__janelas.png",
+     "luzes": [
+      {
+       "tipo": "janela",
+       "pos": [
+        5.0,
+        -20.0
+       ]
+      },
+      {
+       "tipo": "lampiao",
+       "pos": [
+        -53.0,
+        -214.0
+       ]
+      }
+     ]
     },
     "obra": {
      "img": "centro_4/obra.png",
@@ -1235,7 +1441,17 @@
       85.0,
       99.0
      ],
-     "h": 308.0
+     "h": 308.0,
+     "janelas": "centro_5/pronto__janelas.png",
+     "luzes": [
+      {
+       "tipo": "janela",
+       "pos": [
+        -9.3,
+        -76.0
+       ]
+      }
+     ]
     },
     "obra": {
      "img": "centro_5/obra.png",

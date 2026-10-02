@@ -199,7 +199,15 @@ static func pose(w: Node, iso_dir: int, clock: float) -> Dictionary:
 		"anim": anim, "pasta": hit[0], "dir": d}
 	if cargo and moving and not lying:
 		out["saco"] = _saco(d, out.top)
-	if with_item:
+	# Prompts 2 e 14: na MÃO — a placa de greve (protestando) e o cesto de coleta (caçador sem arco)
+	var hand := ""
+	if w.get("_ai_state") == "strike" and not lying:
+		hand = "placa_greve"
+	elif not lying and anim != "cacar" and _hand_tex_name(w) == "forage_basket":
+		hand = "cesto"
+	if hand != "":
+		out["item"] = _hand(hand, d, out.top)
+	elif with_item:
 		out["item"] = _item(item_name, d, out.top)
 	return out
 
@@ -210,6 +218,33 @@ static func _tone(w: Node) -> String:
 	if tones.is_empty() or lk < 0:
 		return ""
 	return tones[lk % tones.size()]
+
+
+static func _hand_tex_name(w: Node) -> String:
+	if not w.has_method("_hand_item"):
+		return ""
+	var t: Texture2D = w._hand_item()
+	return t.resource_path.get_file().get_basename() if t else ""
+
+
+const PROPS_DIR := "res://assets/game/iso/props/"
+
+
+## Coisa segura na mão (px de arte, relativo ao pé): a mão fica do lado da frente, na altura do
+## quadril; a placa vai erguida (o cabo na mão). De costas (NE/NO), atrás do corpo.
+static func _hand(name: String, d: String, top: Vector2) -> Dictionary:
+	if not _tex.has("p:" + name):
+		var p := PROPS_DIR + name + ".png"
+		_tex["p:" + name] = load(p) if ResourceLoader.exists(p) else null
+	var tex: Texture2D = _tex["p:" + name]
+	if tex == null:
+		return {}
+	var right := d == "SE" or d == "NE"
+	var hx: float = top.x + (7.0 if right else -7.0)
+	var hy: float = top.y * 0.45
+	var sz := tex.get_size()
+	var y: float = hy - sz.y + 4.0 if name == "placa_greve" else hy - sz.y * 0.3
+	return {"tex": tex, "pos": Vector2(hx - sz.x * 0.5, y).round(), "flip": not right, "front": d == "SE" or d == "SO"}
 
 
 static func _item_name(w: Node) -> String:
@@ -295,3 +330,60 @@ static func robo_pose(r: Node, iso_dir: int, clock: float, moving: bool) -> Dict
 	return {"hidden": false, "tex": texture(info.img), "n": n, "frame": frame, "ancora": Vector2(info.ancora[0], info.ancora[1]),
 		"quadro": Vector2(info.quadro[0], info.quadro[1]), "top": Vector2(top[0], top[1]), "altura": -float(top[1]),
 		"anim": anim, "pasta": "robo", "dir": d}
+
+
+# ------------------------------------------------------------ criaturas (Prompt 17)
+## Pasta da criatura (kind + variante) no bonecos.json.
+const CRIATURA_PASTA := {"lumivoro": ["criatura_lumivoro", "criatura_lumivoro_bruto"],
+	"ferrugento": ["criatura_ferrugento", "criatura_ferrugento_carregador"]}
+## Quanto tempo (s) cada reação fica na tela.
+const CRIATURA_DANO := 0.35
+const CRIATURA_ATAQUE := 0.6
+
+
+## Invasor com a arte nova: anda, ataca, leva golpe, cai (fica deitado no último quadro) e, o
+## Ferrugento, desliga ao amanhecer (a mesma queda). Só lê o estado da criatura (creature.gd).
+static func criatura_pose(c: Node, iso_dir: int, moving: bool) -> Dictionary:
+	var env := c.get_tree().get_first_node_in_group("environment") if c.is_inside_tree() else null
+	if env == null or not env.has_method("has_iso_map") or not env.has_iso_map():
+		return {}
+	var pastas: Array = CRIATURA_PASTA.get(String(c.get("kind")), [])
+	if pastas.is_empty():
+		return {}
+	var pasta: String = pastas[1] if c.get("variant") == "forte" else pastas[0]
+	if not data().get("pastas", {}).has(pasta):
+		return {}
+	var d: String = DIR_NAMES[clampi(iso_dir, 0, 3)]
+	var t: float = float(c.get("_anim"))
+	var anim := "parado"
+	var since := t
+	var once := false  # toca uma vez e para no último quadro
+	if c.get("_dying"):
+		anim = "morrer"; since = t - float(c._died_at); once = true
+	elif c.get("_leaving") and c.get("kind") == "ferrugento":
+		anim = "morrer"; since = t - float(c._left_at); once = true  # desliga
+	elif t - float(c.get("_hit_at")) < CRIATURA_DANO:
+		anim = "dano"; since = t - float(c._hit_at); once = true
+	elif t - float(c.get("_attack_at")) < CRIATURA_ATAQUE:
+		anim = "atacar"; since = t - float(c._attack_at); once = true
+	elif moving or c.get("_leaving"):
+		anim = "caminhada"
+	var hit := _find([pasta], anim, d)
+	if hit.is_empty():
+		hit = _find([pasta], "parado", d)
+	if hit.is_empty():
+		return {}
+	var info: Dictionary = hit[1]
+	var n: int = maxi(int(info.n), 1)
+	var frame: int = int(since * ANIM_FPS)
+	frame = mini(frame, n - 1) if once else frame % n
+	var top: Array = info.topo[mini(frame, info.topo.size() - 1)]
+	var out := {"hidden": false, "tex": texture(info.img), "n": n, "frame": frame, "ancora": Vector2(info.ancora[0], info.ancora[1]),
+		"quadro": Vector2(info.quadro[0], info.quadro[1]), "top": Vector2(top[0], top[1]), "altura": -float(top[1]),
+		"anim": anim, "pasta": pasta, "dir": d}
+	# Ferrugento que roubou: a caçamba cheia de minério por cima (na frente; de costas, também)
+	var carga: Dictionary = data().get("carga_ferrugento", {})
+	if c.get("looted") and not c.get("_dying") and carga.has(d) and pasta == pastas[0]:
+		var cg: Array = carga[d]  # [x, y, topo do desenho parado]: a carga sobe e desce com o corpo
+		out["item"] = {"tex": texture(carga.img), "pos": Vector2(cg[0], cg[1] + top[1] - float(cg[2])), "flip": false, "front": true}
+	return out

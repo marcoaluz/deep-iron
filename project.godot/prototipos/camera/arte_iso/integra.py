@@ -15,7 +15,7 @@ Pastas e arquivos em minúsculas (sem problema de case no export).
 import sys, os, json, shutil, glob
 from multiprocessing import Pool
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import predio
@@ -229,6 +229,7 @@ def predios(so=None):
             if "peg" in d:
                 p = d["peg"]
                 print("%-16s %-10s pegada %4.0f x %4.0f  altura %4.0f  fora %s" % (nome, e, p[2] - p[0], p[3] - p[1], d["h"], d.get("fora", "-")))
+    luzes_dos_predios(saida)
     json.dump(saida, open(os.path.join(DEST, "predios.json"), "w", encoding="utf-8"), indent=1, ensure_ascii=False)
     print("->", os.path.join(DEST, "predios.json"))
 
@@ -474,8 +475,95 @@ def bonecos():
             im = im.crop(im.getbbox())
             im.save(os.path.join(BON, "item_%s.png" % it))
             out["ferramentas"][it] = "item_%s.png" % it
+    criaturas(out)
     json.dump(out, open(os.path.join(BON, "bonecos.json"), "w", encoding="utf-8"), indent=1, ensure_ascii=False)
     print("->", os.path.join(BON, "bonecos.json"), len(out["pastas"]), "pastas")
+
+
+# ------------------------------------------------------------ criaturas (Prompt 17)
+# pasta em criaturas/ -> rótulo do PixelLab de cada direção desenhada (a base não era de frente,
+# então as rotações saíram giradas; criaturas/base/chars.json tem os ids)
+CRIATURAS = {"lumivoro": {"SE": "east", "NE": "north-east"}, "lumivoro_bruto": {"SE": "south-east", "NE": "north-east"},
+             "ferrugento": {"SE": "east", "NE": "north-east"}, "ferrugento_carregador": {"SE": "south-east", "NE": "east"}}
+ANIMS_CRIATURA = ["caminhada", "atacar", "dano", "morrer"]
+
+
+def _olho_vermelho(im):
+    """Ferrugento: o PixelLab trocou o olho vermelho por verde-água em alguns quadros; volta pro
+    vermelho mantendo o brilho de cada pixel (só os pixels saturados de tom 150-200 graus)."""
+    a = np.array(im).astype(np.float32)
+    h, l, sat = _hls(a[..., :3])
+    m = (a[..., 3] > 40) & (h > 150 / 360.0) & (h < 200 / 360.0) & (sat > 0.35) & (l > 0.25)
+    if m.any():
+        v = a[..., :3].max(-1)
+        a[..., 0] = np.where(m, v, a[..., 0])
+        a[..., 1] = np.where(m, v * 0.18, a[..., 1])
+        a[..., 2] = np.where(m, v * 0.15, a[..., 2])
+    return Image.fromarray(a.clip(0, 255).astype(np.uint8), "RGBA")
+
+
+CORRIGE = {"ferrugento": _olho_vermelho}
+
+
+def _criatura_tira(frames, mirror=False, fix=None):
+    """Quadros de uma direção numa tira com UMA âncora (a criatura não sai do lugar no quadro do
+    PixelLab): x = mediana do centro, y = o pé mais baixo. SO/NO = espelho de SE/NE."""
+    ims = [Image.open(f).convert("RGBA") for f in frames]
+    if fix:
+        ims = [fix(i) for i in ims]
+    if mirror:
+        ims = [ImageOps.mirror(i) for i in ims]
+    bbs = [i.getbbox() or (0, 0, i.width, i.height) for i in ims]
+    ax = float(np.median([(b[0] + b[2]) / 2.0 for b in bbs]))
+    ay = float(max(b[3] for b in bbs))
+    w, h = ims[0].size
+    tira = Image.new("RGBA", (w * len(ims), h))
+    topos = []
+    for k, (im, b) in enumerate(zip(ims, bbs)):
+        tira.alpha_composite(im, (k * w, 0))
+        topos.append([round((b[0] + b[2]) / 2.0 - ax, 1), round(b[1] - ay, 1)])
+    return tira, [round(ax, 1), round(ay, 1)], [w, h], topos
+
+
+def criaturas(out):
+    """Os 4 invasores (Prompt 17) no bonecos.json: pasta criatura_<nome>, parado + 4 animações,
+    SE/NE desenhadas e SO/NO espelhadas; e a carga do Ferrugento que roubou."""
+    for nome, mapa in CRIATURAS.items():
+        src = os.path.join(AQUI, "criaturas", nome)
+        pasta = "criatura_" + nome
+        os.makedirs(os.path.join(BON, pasta), exist_ok=True)
+        info = {"anims": {}}
+        lista = {"parado": {d: [os.path.join(src, "rotacoes", mapa[d] + ".png")] for d in ("SE", "NE")}}
+        for an in ANIMS_CRIATURA:
+            dd = {}
+            for d in ("SE", "NE"):
+                fr = sorted(glob.glob(os.path.join(src, an, d, "*.png")), key=lambda f: int(os.path.basename(f)[:-4]))
+                if fr:
+                    dd[d] = fr
+            if dd:
+                lista[an] = dd
+        for an, dd in lista.items():
+            info["anims"][an] = {}
+            for d, fr in dd.items():
+                for dest, mir in ((d, False), ({"SE": "SO", "NE": "NO"}[d], True)):
+                    t, a, sz, top = _criatura_tira(fr, mir, CORRIGE.get(nome))
+                    t.save(os.path.join(BON, pasta, "%s_%s.png" % (an, dest)))
+                    info["anims"][an][dest] = {"img": "%s/%s_%s.png" % (pasta, an, dest), "n": len(fr), "quadro": sz,
+                                               "ancora": a, "topo": top}
+        out["pastas"][pasta] = info
+        print("%-30s %s" % (pasta, sorted(info["anims"])))
+    cf = os.path.join(AQUI, "criaturas", "carga_ferrugento.json")
+    if os.path.exists(cf):
+        c = json.load(open(cf, encoding="utf-8"))
+        shutil.copyfile(os.path.join(AQUI, "criaturas", c["img"]), os.path.join(BON, "criatura_ferrugento", "carga.png"))
+        out["carga_ferrugento"] = dict(c, img="criatura_ferrugento/carga.png")
+
+
+def so_criaturas():
+    f = os.path.join(BON, "bonecos.json")
+    out = json.load(open(f, encoding="utf-8"))
+    criaturas(out)
+    json.dump(out, open(f, "w", encoding="utf-8"), indent=1, ensure_ascii=False)
 
 
 # ------------------------------------------------------------ natureza e objetos (Prompt 29, parte 4)
@@ -521,6 +609,10 @@ for nome in ("guindaste_pedreira", "vagonete_cheio_SE", "caixotes_2", "barris_2"
              "poco", "banco", "placa_caveira", "caixote"):
     PROPS[nome] = "objetos/final/%s.png" % nome
 
+# Prompts 14 e 18: cova (cemitério), explosivos (pesquisa), antena do satélite, cesto e placa de greve
+for nome in ("cova", "explosivos", "antena", "cesto", "placa_greve"):
+    PROPS[nome] = "efeitos/bases/%s.png" % nome
+
 
 def props():
     """Cada peça: recortada no desenho, âncora = (meio, base - 3) como o `solto` do mapa aprovado
@@ -555,6 +647,144 @@ def props():
     print("->", len(out["props"]), "peças")
 
 
+# ------------------------------------------------------------ efeitos (Prompt 18)
+FX_DEST = os.path.normpath(os.path.join(AQUI, "../../../assets/game/iso/fx"))
+# efeito animado (efeitos/anim/<nome>/c01..c08, animate_image; c00 = o desenho de entrada)
+FX_ANIM = ["chama_p", "chama_g", "barril_fogo", "bandeirinhas"]
+
+
+def fx():
+    """Texturas de partícula (efeitos/particulas.py) + tiras dos efeitos animados, recortadas na
+    caixa que cabe todos os quadros; âncora = meio da base (o fogo nasce do chão)."""
+    import runpy
+    runpy.run_path(os.path.join(AQUI, "efeitos", "particulas.py"))
+    out = {"_obs": "Prompt 18 (integra.py fx): efeito -> tira (n quadros de 'quadro' px), âncora (base)", "anim": {}}
+    for nome in FX_ANIM:
+        fr = sorted(glob.glob(os.path.join(AQUI, "efeitos", "anim", nome, "c*.png")))[1:]
+        ims = [Image.open(f).convert("RGBA") for f in fr]
+        bb = [i.getbbox() for i in ims if i.getbbox()]
+        x0, y0 = min(b[0] for b in bb), min(b[1] for b in bb)
+        x1, y1 = max(b[2] for b in bb), max(b[3] for b in bb)
+        w, h = x1 - x0, y1 - y0
+        tira = Image.new("RGBA", (w * len(ims), h))
+        for k, im in enumerate(ims):
+            tira.alpha_composite(im.crop((x0, y0, x1, y1)), (k * w, 0))
+        tira.save(os.path.join(FX_DEST, nome + ".png"))
+        out["anim"][nome] = {"img": nome + ".png", "n": len(ims), "quadro": [w, h], "ancora": [w / 2.0, h - 1.0]}
+        # caixa (ordem de desenho/clique): a mesma regra das peças, na soma dos quadros
+        uni = Image.new("RGBA", (w, h))
+        for im in ims:
+            uni = Image.alpha_composite(uni, im.crop((x0, y0, x1, y1)))
+        tmp = os.path.join(FX_DEST, "_uniao.png")
+        uni.save(tmp)
+        g = max(8.0, min(64.0, w * 0.35))
+        r = encaixa((tmp, w / 2.0, h - 1.0, g, g * 0.8, float(h)))[1]
+        os.remove(tmp)
+        if r:
+            out["anim"][nome].update(r)
+        print("  %-14s %d quadros de %dx%d" % (nome, len(ims), w, h))
+    json.dump(out, open(os.path.join(FX_DEST, "fx.json"), "w", encoding="utf-8"), indent=1, ensure_ascii=False)
+
+
+# ------------------------------------------------------------ luz e noite (Prompt 19)
+LUZ_DEST = os.path.normpath(os.path.join(AQUI, "../../../assets/game/iso/luz"))
+# textura de cada tipo de luz: (raio relativo do núcleo, nº de faixas, irregular?) — branca em
+# faixas (combina com pixel art); a COR vem do código (iso_luz.gd)
+TIPOS_LUZ = {"tocha": (0.18, 5, True), "lampiao": (0.22, 5, False), "fogueira": (0.15, 6, True),
+             "forja": (0.20, 5, True), "lanterna": (0.30, 4, False), "reator": (0.25, 5, False),
+             "cristal": (0.20, 5, False), "lava": (0.10, 6, True), "janela": (0.30, 4, False),
+             "cabine": (0.30, 4, False), "giroflex": (0.35, 3, False)}
+
+
+def texturas_de_luz(lado=128):
+    """Uma textura por tipo: disco claro no meio e o resto caindo em FAIXAS (sem degradê liso);
+    as de fogo têm a borda irregular (a chama não é um círculo)."""
+    os.makedirs(LUZ_DEST, exist_ok=True)
+    yy, xx = np.mgrid[0:lado, 0:lado]
+    c = (lado - 1) / 2.0
+    ang = np.arctan2(yy - c, xx - c)
+    for nome, (nucleo, faixas, irregular) in TIPOS_LUZ.items():
+        r = np.hypot(xx - c, yy - c) / c
+        if irregular:  # borda que oscila com o ângulo (estável: a mesma semente por tipo)
+            rng = np.random.RandomState(sum(map(ord, nome)))
+            fases = rng.uniform(0, 2 * np.pi, 3)
+            r = r * (1.0 + 0.06 * np.sin(5 * ang + fases[0]) + 0.04 * np.sin(9 * ang + fases[1]) + 0.03 * np.sin(13 * ang + fases[2]))
+        t = np.clip((r - nucleo) / max(1.0 - nucleo, 0.01), 0.0, 1.0)
+        a = (1.0 - t) ** 1.6
+        a = np.ceil(a * faixas) / faixas  # faixas
+        a[r >= 1.0] = 0.0
+        img = np.zeros((lado, lado, 4), np.uint8)
+        img[..., :3] = 255
+        img[..., 3] = (a * 255).astype(np.uint8)
+        Image.fromarray(img, "RGBA").save(os.path.join(LUZ_DEST, nome + ".png"))
+    print("texturas de luz:", len(TIPOS_LUZ))
+
+
+def _janela_acesa(a, mask):
+    """O vidro aceso: âmbar quente, mais claro onde o vidro já era mais claro (mantém o desenho)."""
+    out = np.zeros_like(a)
+    v = a[..., :3].max(-1) / 255.0
+    rampa = np.array([[150, 82, 30], [214, 134, 52], [246, 186, 92], [255, 222, 150]], float)
+    vv = v[mask]
+    t = (vv - vv.min()) / max(vv.max() - vv.min(), 1e-6) if vv.size else vv
+    i = np.clip(t * (len(rampa) - 1), 0, len(rampa) - 1)
+    lo = np.floor(i).astype(int); hi = np.minimum(lo + 1, len(rampa) - 1); f = (i - lo)[:, None]
+    out[mask, :3] = (rampa[lo] * (1 - f) + rampa[hi] * f).astype(np.uint8)
+    out[mask, 3] = 255
+    return out
+
+
+def luzes_dos_predios(saida):
+    """Prompt 19: pra cada estado anotado em luz/luzes.json, a máscara de janelas acesas
+    (<estado>__janelas.png) e os pontos de luz (relativos à âncora, px de arte) no predios.json."""
+    sys.path.insert(0, os.path.join(AQUI, "luz"))
+    from janelas_util import vidro_ambar
+    anot = json.load(open(os.path.join(AQUI, "luz", "luzes.json"), encoding="utf-8"))
+    n = 0
+    for chave, cfg in anot.items():
+        if chave.startswith("_"):
+            continue
+        nome, est = chave.split("/")
+        d = saida["predios"].get(nome, {}).get("estados", {}).get(est)
+        if d is None:
+            continue
+        a = np.array(Image.open(os.path.join(DEST, d["img"])).convert("RGBA"))
+        mask = np.zeros(a.shape[:2], bool)
+        if cfg.get("ambar"):
+            mask |= vidro_ambar(a)
+        v = a[..., :3].max(-1).astype(float)
+        for x0, y0, x1, y1 in cfg.get("janelas", []):
+            sub = (slice(y0, y1), slice(x0, x1))
+            vis = a[sub][..., 3] > 40
+            if vis.any():
+                med = np.median(v[sub][vis])
+                mask[sub] |= vis & (v[sub] <= med)  # os vidros (mais escuros que a moldura)
+        ax, ay = d["ancora"]
+        d.pop("janelas", None); d.pop("luzes", None)
+        if mask.any():
+            arq = d["img"][:-4] + "__janelas.png"
+            Image.fromarray(_janela_acesa(a, mask), "RGBA").save(os.path.join(DEST, arq))
+            d["janelas"] = arq
+        pts = cfg.get("pontos")
+        if not pts and mask.any():
+            ys, xs = np.nonzero(mask)
+            pts = [{"tipo": "janela", "xy": [float(xs.mean()), float(ys.mean())]}]
+        if pts:
+            d["luzes"] = [{"tipo": p["tipo"], "pos": [round(p["xy"][0] - ax, 1), round(p["xy"][1] - ay, 1)]} for p in pts]
+        n += 1
+        print("  luz %-22s janelas %4d px, pontos %s" % (chave, int(mask.sum()), [p["tipo"] for p in (pts or [])]))
+    print("luzes anotadas:", n)
+
+
+def luz():
+    """Só a parte de luz, por cima do predios.json que já existe."""
+    texturas_de_luz()
+    f = os.path.join(DEST, "predios.json")
+    saida = json.load(open(f, encoding="utf-8"))
+    luzes_dos_predios(saida)
+    json.dump(saida, open(f, "w", encoding="utf-8"), indent=1, ensure_ascii=False)
+
+
 def contorno():
     """Prompt 30: o contorno de 1 px nos desenhos que vieram sem ele (tools/contorno.py)."""
     sys.path.insert(0, os.path.normpath(os.path.join(AQUI, "../../../../tools")))
@@ -572,5 +802,11 @@ if __name__ == "__main__":
     elif sys.argv[1:2] == ["props"]:
         props()
         contorno()
+    elif sys.argv[1:2] == ["fx"]:  # Prompt 18: partículas e efeitos animados
+        fx()
+    elif sys.argv[1:2] == ["criaturas"]:  # Prompt 17: só os invasores (sem refazer os bonecos)
+        so_criaturas()
+    elif sys.argv[1:2] == ["luz"]:  # Prompt 19: texturas de luz + janelas acesas + pontos de luz
+        luz()
     else:
         print(__doc__)

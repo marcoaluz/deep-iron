@@ -1680,6 +1680,33 @@ func _pick_obra() -> Node:
 	return oldest_free if oldest_free != null else oldest_any
 
 
+## Prompt 18: acidente na mina — pedrinhas caindo do teto em cima dele (só visual; a vista iso
+## troca o quadradinho pela pedra de pixel, iso_fx.gd papel "pedra").
+func _rockfall() -> void:
+	var p := CPUParticles2D.new()
+	p.name = "Rocks"
+	p.one_shot = true
+	p.explosiveness = 0.6
+	p.amount = 9
+	p.lifetime = 0.8
+	p.position = Vector2(0, -70)
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = Vector2(14, 4)
+	p.direction = Vector2(0, 1)
+	p.spread = 10.0
+	p.gravity = Vector2(0, 260)
+	p.initial_velocity_min = 10.0
+	p.initial_velocity_max = 30.0
+	p.scale_amount_min = 2.0
+	p.scale_amount_max = 3.0
+	p.color = Color(0.55, 0.5, 0.45)
+	p.z_index = 6
+	get_parent().add_child(p)
+	p.global_position = global_position + Vector2(0, -70)
+	p.emitting = true
+	get_tree().create_timer(1.6).timeout.connect(p.queue_free)
+
+
 ## Bloco 31b: nuvenzinha de poeira/lascas onde o martelo bate (fica no mundo, não
 ## acompanha o ipezinho, e some sozinha).
 func _dust_puff() -> void:
@@ -2413,6 +2440,8 @@ func hurt(cause: String = "mina", severity: String = "") -> void:
 	_death_warned = false
 	_work_timer = 0.0
 	_decision_timer = 0.0  # larga a picareta e vai pra enfermaria já
+	if cause == "mina" and is_inside_tree():
+		_rockfall()
 	var grave := injury_severity == "grave"
 	var text := "Ai! Um galho!" if cause == "galho" else "Ai!"
 	_popup(text + (" (grave)" if grave else ""), Color(1.0, 0.25, 0.2) if grave else Color(1.0, 0.4, 0.35))

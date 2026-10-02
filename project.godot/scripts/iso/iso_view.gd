@@ -23,6 +23,8 @@ const Order := preload("res://scripts/iso/iso_order.gd")
 const Billboard := preload("res://scripts/iso/iso_billboard.gd")
 const Ceu := preload("res://scripts/iso/iso_sky.gd")
 const IsoArt := preload("res://scripts/iso/iso_art.gd")
+const IsoLuz := preload("res://scripts/iso/iso_luz.gd")
+const IsoFx := preload("res://scripts/iso/iso_fx.gd")
 
 const LAYER_DEFAULT := 1
 const LAYER_WORLD := 2
@@ -84,6 +86,7 @@ var _terrain: Array = []
 var _terrain_node: Node2D
 ## Céu, montanhas e nuvens (só com o mapa novo: a vila é a céu aberto)
 var _sky: Node2D
+var _fx: Node2D  # Prompt 18: efeitos dos grandes eventos (iso_fx.gd)
 ## Andares de baixo empilhados: [{nome, art_rect, z, sprite, tint}]
 var _levels: Array = []
 ## Tom de cada andar (o subsolo é sempre mais escuro que a superfície, de dia e de noite)
@@ -108,6 +111,10 @@ func setup(main: Node2D) -> void:
 	_overlay.z_as_relative = false
 	_overlay.draw.connect(_draw_overlay)
 	add_child(_overlay)
+	_fx = IsoFx.new()
+	_overlay.add_child(_fx)
+	_fx.setup(self)
+	_fx.set_active(false)
 	visible = false
 	set_process(false)
 
@@ -154,6 +161,7 @@ func set_enabled(on: bool) -> void:
 	set_process(on)
 	if _sky:
 		_sky.set_active(on)
+	_fx.set_active(on and _env.has_method("has_iso_map") and _env.has_iso_map())
 	if "iso_view" in _camera:
 		_camera.iso_view = self if on else null
 	if _camera.has_method("on_view_changed"):
@@ -260,6 +268,7 @@ func _build_terrain() -> void:
 		sp.position = Vector2(info.tela[0], info.tela[1])
 		sp.light_mask = 2
 		_terrain_node.add_child(sp)
+		_em_blocos(sp)
 		if BACK_Z.has(r):
 			sp.z_index = BACK_Z[r]
 			if r == "moldura":
@@ -290,6 +299,7 @@ func _build_terrain() -> void:
 		sp2.light_mask = 2
 		sp2.self_modulate = LEVEL_TINT.get(nome, Color.WHITE)
 		_terrain_node.add_child(sp2)
+		_em_blocos(sp2)
 		var cx: Array = a.caixa
 		var art_r := Rect2(cx[0], cx[1], cx[2], cx[3])
 		var b2 := Iso.Box.new(art_r, float(a.z[0]), float(a.z[1]), "terreno", nome, null)
@@ -298,11 +308,105 @@ func _build_terrain() -> void:
 		_levels.append({"nome": nome, "art_rect": Rect2(art(lr.position), lr.size * S), "z": float(a.z_chao),
 			"sprite": sp2, "rect": lr, "tint": LEVEL_TINT.get(nome, Color.WHITE)})
 	_build_palisade()
+	_build_lava()
 
 
 ## A paliçada entre a floresta e a vila (Prompt 29 parte 2): um trecho do muro do Prompt 12 por
 ## tile, ao longo da linha da navegação (Environment.palisade_y), menos a abertura do portão.
 ## Cada trecho é uma caixa fina na ordem (como o terreno: não é coisa do jogo, não tem clique).
+## Prompt 19: o terreno vem em imagens enormes (até 6.000 px) e o Godot só aplica um número
+## limitado de luzes por item desenhado: numa imagem dessas, com várias tochas e janelas no
+## alcance, parte das luzes era ignorada (a luz "cortava" na borda entre os pedaços de terreno).
+## O pedaço continua sendo o nó do terreno (caixa, z, tons do céu e da geada), mas quem desenha
+## são blocos de TERRAIN_BLOCK px (sem os vazios): cada bloco recebe só as luzes perto dele.
+const TERRAIN_BLOCK := 256
+var _blocados: Array = []  # [pedaço, [blocos]]: o tom (self_modulate) do pedaço vai pros blocos
+
+
+func _em_blocos(sp: Sprite2D) -> void:
+	var tex := sp.texture
+	if tex == null:
+		return
+	var img := tex.get_image()
+	var blocos: Array = []
+	var w := tex.get_width()
+	var h := tex.get_height()
+	for y in range(0, h, TERRAIN_BLOCK):
+		for x in range(0, w, TERRAIN_BLOCK):
+			var r := Rect2i(x, y, mini(TERRAIN_BLOCK, w - x), mini(TERRAIN_BLOCK, h - y))
+			if img and img.get_region(r).get_used_rect().size == Vector2i.ZERO:
+				continue  # bloco vazio
+			var b := Sprite2D.new()
+			b.texture = tex
+			b.region_enabled = true
+			b.region_rect = Rect2(r)
+			b.centered = false
+			b.position = Vector2(x, y)
+			b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			b.light_mask = sp.light_mask
+			b.self_modulate = sp.self_modulate
+			sp.add_child(b)
+			blocos.append(b)
+	sp.region_enabled = true
+	sp.region_rect = Rect2()  # o pedaço em si não desenha mais (só os blocos)
+	_blocados.append([sp, blocos])
+
+
+## O tom do pedaço (céu na moldura, subsolo nos andares) vai pros blocos dele.
+func _sync_blocos() -> void:
+	for e in _blocados:
+		var sp: Sprite2D = e[0]
+		if e[1].is_empty() or not is_instance_valid(sp) or e[1][0].self_modulate == sp.self_modulate:
+			continue
+		for b in e[1]:
+			b.self_modulate = sp.self_modulate
+
+
+const HEAT_SHADER := """
+shader_type canvas_item;
+uniform sampler2D screen_tex : hint_screen_texture, filter_nearest;
+void fragment() {
+	vec2 d = (UV - vec2(0.5, 0.8)) / vec2(0.5, 0.8);
+	float m = clamp(1.0 - length(d), 0.0, 1.0);
+	float w = floor(sin(UV.y * 48.0 - TIME * 5.0) * 2.0) / 2.0;
+	vec2 off = vec2(w * 2.0 * m, 0.0) * SCREEN_PIXEL_SIZE;
+	vec4 c = texture(screen_tex, SCREEN_UV + off);
+	COLOR = vec4(c.rgb + vec3(0.06, 0.02, 0.0) * m, step(0.05, m));
+}
+"""
+
+
+## Prompt 19: a luz da lava nas fendas de calor (abismo): brilho vermelho constante no chão.
+func _build_lava() -> void:
+	for z in get_tree().get_nodes_in_group("zonas_perigo"):
+		if z.get("kind") != "calor":
+			continue
+		var l := PointLight2D.new()
+		l.name = "Lava_" + String(z.name)
+		IsoLuz.aplica(l, "lava")
+		l.energy = IsoLuz.TIPOS.lava.forca
+		l.range_item_cull_mask = LIGHT_ISO
+		l.range_z_min = RenderingServer.CANVAS_ITEM_Z_MIN  # todo o z da ordem de desenho
+		l.range_z_max = RenderingServer.CANVAS_ITEM_Z_MAX
+		l.position = to_screen((z as Node2D).global_position)
+		_terrain_node.add_child(l)
+		# Prompt 18: o ar tremendo em cima da fenda (lê a tela e entorta em degraus de pixel)
+		var r: float = float(z.get("radius")) * S if z.get("radius") != null else 60.0
+		var hz := ColorRect.new()
+		hz.name = "Calor_" + String(z.name)
+		hz.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hz.size = Vector2(r * 2.0, r * 1.6)
+		hz.position = l.position - Vector2(r, r * 1.3)
+		hz.z_as_relative = false
+		hz.z_index = 4000
+		var mat := ShaderMaterial.new()
+		var sh := Shader.new()
+		sh.code = HEAT_SHADER
+		mat.shader = sh
+		hz.material = mat
+		_terrain_node.add_child(hz)
+
+
 func _build_palisade() -> void:
 	if IsoArt.entry("palicada").is_empty():
 		return
@@ -434,6 +538,7 @@ func _apply_static_z() -> void:
 # ------------------------------------------------------------ a cada quadro
 func _process(_delta: float) -> void:
 	_frame += 1
+	_sync_blocos()
 	var stops: Array = _camera.zoom_stops() if _camera.has_method("zoom_stops") else []
 	labels_on = stops.size() < 2 or _camera.zoom.x > float(stops[0]) + 0.001
 	if not _levels.is_empty() and _ground_sv and _frame % GROUND_REFRESH_EVERY == 0:
@@ -488,6 +593,12 @@ func _draw_placer() -> void:
 	var closed := pts.duplicate()
 	closed.append(pts[0])
 	_overlay.draw_polyline(closed, Color(col, 0.9), 1.5)
+	var mark := IsoFx.tex("obra_ok" if _placer._reason == "" else "obra_x")  # Prompt 18: pode / não pode
+	if mark:
+		var top := Vector2(INF, INF)
+		for p in pts:
+			top = p if p.y < top.y else top
+		_overlay.draw_texture(mark, (top + Vector2(-mark.get_width() * 0.5, -mark.get_height() - 6.0)).round())
 	if _placer._radius > 0.0:
 		var c0: Vector2 = _placer._radius_center
 		var hc := height_at(c0)
@@ -697,9 +808,16 @@ func _draw_overlay() -> void:
 	if _main.get("_marker_timer") != null and _main._marker_timer > 0.0:
 		var t: float = _main._marker_timer / _main.MARKER_TIME
 		var c := to_screen(_main._marker_pos)
-		_overlay.draw_set_transform(c, 0.0, Vector2(1.0, 0.5))
-		_overlay.draw_arc(Vector2.ZERO, lerpf(18.0, 6.0, t) * 1.41 * S, 0.0, TAU, 24, Color(1.0, 0.84, 0.25, t), 2.0)
-		_overlay.draw_set_transform(Vector2.ZERO)
+		var mk := IsoFx.tex("marcador_destino")
+		if mk:  # Prompt 18: o anel encolhendo e a setinha descendo (6 quadros)
+			var fw := mk.get_width() / 6.0
+			var fi := clampi(int((1.0 - t) * 6.0), 0, 5)
+			_overlay.draw_texture_rect_region(mk, Rect2((c - Vector2(fw * 0.5, mk.get_height() - 11.0)).round(), Vector2(fw, mk.get_height())),
+				Rect2(fi * fw, 0, fw, mk.get_height()), Color(1, 1, 1, clampf(t * 2.5, 0.0, 1.0)))
+		else:
+			_overlay.draw_set_transform(c, 0.0, Vector2(1.0, 0.5))
+			_overlay.draw_arc(Vector2.ZERO, lerpf(18.0, 6.0, t) * 1.41 * S, 0.0, TAU, 24, Color(1.0, 0.84, 0.25, t), 2.0)
+			_overlay.draw_set_transform(Vector2.ZERO)
 	if _placer and _placer.active and _placer.visible and not _levels.is_empty():
 		_draw_placer()
 	if not show_boxes:

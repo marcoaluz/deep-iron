@@ -54,7 +54,7 @@ func art_files(n: Node) -> Array:
 		return []
 	var out := []
 	for c in bb._art.get_children():
-		if c is Sprite2D and not c.is_queued_for_deletion():
+		if c is Sprite2D and not c.is_queued_for_deletion() and c.name != "Janelas":  # (Prompt 19: a máscara de janelas acesas é à parte)
 			out.append(c.texture.resource_path.trim_prefix(IsoArt.DIR))
 	return out
 

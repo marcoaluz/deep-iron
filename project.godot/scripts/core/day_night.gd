@@ -54,6 +54,12 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 ## Meio do amanhecer (mais frio que o entardecer).
 @export var dawn_color: Color = Color(0.42, 0.4, 0.5)
 
+@export_group("Estações (Prompt 19)")
+## A luz ambiente de cada estação multiplica a do horário: primavera neutra, verão quente e
+## claro, outono dourado, inverno frio e azulado. As noites de inverno ficam um pouco mais escuras.
+@export var season_tints: Array[Color] = [Color(1, 1, 1), Color(1.04, 1.0, 0.92), Color(1.02, 0.95, 0.86), Color(0.9, 0.95, 1.06)]
+@export var winter_night_darker: float = 0.88
+
 @export_group("Tochas")
 ## Escuridão (0 = dia, 1 = noite) em que as tochas começam a acender...
 @export_range(0.0, 1.0) var torch_on_at: float = 0.25
@@ -171,7 +177,21 @@ func _update_ambient() -> void:
 	var morning := time < day_duration * 0.5 or time >= cycle_length() - dawn_starts_before
 	var twilight := dawn_color if morning else dusk_color
 	var k := _darkness
-	_ambient.color = day_color.lerp(twilight, k * 2.0) if k < 0.5 else twilight.lerp(night_color, k * 2.0 - 1.0)
+	var c := day_color.lerp(twilight, k * 2.0) if k < 0.5 else twilight.lerp(night_color, k * 2.0 - 1.0)
+	# Prompt 19: tom da estação (o Sun conta as estações; sem ele, neutro)
+	var s := season_index()
+	if s >= 0 and s < season_tints.size():
+		var t := season_tints[s]
+		if s == 3:
+			t = t * lerpf(1.0, winter_night_darker, k)
+		c = Color(c.r * t.r, c.g * t.g, c.b * t.b, c.a)
+	_ambient.color = c
+
+
+## Estação agora (0 primavera, 1 verão, 2 outono, 3 inverno; -1 = sem o Sun).
+func season_index() -> int:
+	var sun := get_tree().get_first_node_in_group("sun") if is_inside_tree() else null
+	return sun.season_index(day) if sun and sun.has_method("season_index") else -1
 
 
 # ------------------------------------------------------------ save/load (SaveManager)

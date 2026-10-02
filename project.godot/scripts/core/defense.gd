@@ -119,6 +119,12 @@ const WEAPON_DESCRIPTIONS := {
 @export var warn_before: float = 40.0
 ## As criaturas vão chegando ao longo desses segundos do começo da noite.
 @export var spawn_spread: float = 20.0
+## Prompt 17: a partir dessa onda, 1 a cada `strong_every` criaturas vem na forma FORTE (Lumívoro
+## bruto, Ferrugento carregador), com mais vida e dano. 0 = nunca.
+@export var strong_from_wave: int = 4
+@export var strong_every: int = 3
+@export var strong_hp_mult: float = 1.6
+@export var strong_damage_mult: float = 1.3
 
 ## Armas que a vila já sabe fazer (forjou pelo menos uma vez; o porrete já vem).
 var weapons: Array = ["porrete"]
@@ -133,6 +139,8 @@ var wave: int = 0
 var start_day: int = -1
 var invasion_active: bool = false
 var killed_tonight: int = 0
+## Prompt 17: criaturas nascidas nesta noite (pra escolher a forma forte).
+var _spawned: int = 0
 var _warned_day: int = -1
 var _spawn_queue: Array = []  # [{kind, at}]
 ## Bloco 36: portões que já foram saqueados nesta invasão (brecha rouba uma vez só).
@@ -303,6 +311,8 @@ func raid(creature: Node, armazem: Node) -> void:
 		if cr_taken > 0:
 			eco.credits -= cr_taken
 			eco.credits_changed.emit(eco.credits)
+	if ore_taken > 0.0 and creature.get("looted") != null:
+		creature.looted = true  # Prompt 17: sai com a carga (caçamba cheia)
 	armazem.show_popup("ROUBO: -%d minério  -%d cr" % [roundi(ore_taken), cr_taken], Color(1.0, 0.35, 0.3))
 	Audio.alarm()
 	var who: Array = downed_guards().filter(func(w): return w.downed_gate == gid).map(func(w): return w.display_name)
@@ -702,6 +712,7 @@ func start_invasion() -> void:
 	killed_tonight = 0
 	_night_time = 0.0
 	_spawn_queue = []
+	_spawned = 0
 	var lumi := mini(lumi_base + lumi_per_wave * (wave - 1), lumi_max)
 	var ferr := mini(ferr_per_wave * maxi(wave - 1, 1), ferr_max) if level2_open() else 0
 	for i in lumi:
@@ -737,6 +748,9 @@ func _spawn(kind: String) -> void:
 	c.gate_id = "tunel" if kind == "lumivoro" else "poco"  # Bloco 36: de que portão ele vem
 	world.add_child(c)
 	c.setup(g, 1.0 + hp_growth * (wave - 1))
+	_spawned += 1
+	if strong_every > 0 and wave >= strong_from_wave and _spawned % strong_every == 0:
+		c.make_strong(strong_hp_mult, strong_damage_mult)
 	var res := get_tree().get_first_node_in_group("research")
 	if res and kind == "lumivoro":
 		c.speed *= res.lumivoro_speed_mult()  # holofotes

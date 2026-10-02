@@ -10,6 +10,7 @@ extends Node2D
 ## moldura de morros puxa pra cor do horizonte (névoa), como no cenário.
 
 const Order := preload("res://scripts/iso/iso_order.gd")
+const IsoFx := preload("res://scripts/iso/iso_fx.gd")
 const TEX_FAR := preload("res://assets/game/iso/ceu/montanhas_longe.png")
 const TEX_RIDGE := preload("res://assets/game/iso/ceu/serra.png")
 const TEX_CLOUDS := preload("res://assets/game/iso/ceu/nuvens.png")
@@ -49,6 +50,12 @@ var _moldura: CanvasItem
 ## com a intensidade de cada efeito; somem lá embaixo (andares). Geada = tom frio no terreno.
 var _wx: Node2D
 var _wx_pairs := {}  # efeito -> [emissor do Weather, cópia]
+## Prompt 18: textura de pixel de cada efeito do clima (assets/game/iso/fx) e a neblina
+const WX_TEX := {"leaves": "folha", "snow": "neve", "rain": "chuva", "pollen": "polen"}
+const FOG_PIECES := 6
+var _fog: Array[Sprite2D] = []
+var _fog_k := 0.0
+var _wx_zoom := -1.0
 var _weather_node: Node
 const WX_EXTENTS := Vector2(760, 460)  # px de tela: cobre 1280×720 com folga
 
@@ -130,8 +137,25 @@ func _setup_weather() -> void:
 		c.emission_rect_extents = WX_EXTENTS
 		c.light_mask = 0
 		c.emitting = false
+		var t := IsoFx.tex(WX_TEX.get(k, ""))
+		if t:
+			c.texture = t
+			c.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			if k == "leaves" or k == "pollen":
+				c.color_initial_ramp = null  # a folha/o pólen já vêm pintados
 		_wx.add_child(c)
 		_wx_pairs[k] = [src, c]
+	var ft := IsoFx.tex("neblina")
+	if ft:
+		for i in FOG_PIECES:
+			var s := Sprite2D.new()
+			s.texture = ft
+			s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			s.light_mask = 0
+			s.modulate.a = 0.0
+			s.position = Vector2(randf_range(-WX_EXTENTS.x, WX_EXTENTS.x), randf_range(-WX_EXTENTS.y * 0.6, WX_EXTENTS.y * 0.9))
+			_wx.add_child(s)
+			_fog.append(s)
 
 
 ## Uma faixa que repete na horizontal (normal e espelhada, pra a emenda casar).
@@ -210,6 +234,17 @@ func _sync_weather(cam: Vector2, hor_screen: float) -> void:
 	_wx.position = cam
 	_wx.scale = Vector2.ONE / maxf(z, 0.01)
 	_wx.visible = hor_screen > -1.2  # lá embaixo (nível 2, abismo) não chove nem neva
+	var pz := maxf(1.0, roundf(z))  # Prompt 18: 1 px da textura = 1 px de arte (pixel inteiro)
+	if pz != _wx_zoom:
+		_wx_zoom = pz
+		for k in _wx_pairs:
+			var cc: CPUParticles2D = _wx_pairs[k][1]
+			if cc.texture and WX_TEX.has(k):
+				cc.scale_amount_min = pz
+				cc.scale_amount_max = pz
+		for s in _fog:
+			s.scale = Vector2(pz * 3.0, pz * 3.0)
+	_sync_fog(get_process_delta_time())
 	for k in _wx_pairs:
 		var src: CPUParticles2D = _wx_pairs[k][0]
 		var c: CPUParticles2D = _wx_pairs[k][1]
@@ -224,6 +259,26 @@ func _sync_weather(cam: Vector2, hor_screen: float) -> void:
 	for n in get_parent().get_children():
 		if n is Sprite2D and String(n.name).begins_with("Terreno_") and n != _moldura:
 			(n as Sprite2D).modulate = cold
+
+
+## Prompt 18: neblina baixa de manhã cedo e com chuva (faixas soltas passando devagar).
+func _sync_fog(delta: float) -> void:
+	if _fog.is_empty():
+		return
+	var want := 0.0
+	if _weather_node and _weather_node.has_method("level"):
+		want = clampf(_weather_node.level("rain"), 0.0, 1.0) * 0.55
+	if _day_night and _day_night.get("time") != null and float(_day_night.day_duration) > 0.0:
+		var f: float = float(_day_night.time) / float(_day_night.day_duration)
+		if f < 0.15:
+			want = maxf(want, (1.0 - f / 0.15) * 0.5)
+	_fog_k = move_toward(_fog_k, want, delta * 0.1)
+	for i in _fog.size():
+		var s := _fog[i]
+		s.position.x += delta * (6.0 + i * 1.5)
+		if s.position.x > WX_EXTENTS.x + 200.0:
+			s.position.x = -WX_EXTENTS.x - 200.0
+		s.modulate.a = _fog_k
 
 
 ## Liga/desliga junto com a vista iso (a camada do céu não segue a visibilidade do pai).

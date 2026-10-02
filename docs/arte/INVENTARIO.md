@@ -153,7 +153,7 @@ prompts 0–31).
 |---|---|---|---|
 | Clima: folha, pólen, chuva, neve (partícula por estação) | 18 | falta | ~0–10 (desenho no workbench, grátis) |
 | Poeira de obra, faíscas (escavadeira/forja), fumaça de chaminé, explosão, brilho da onda solar | 18 | falta | ~30 |
-| Luzes (janelas, forja, tochas, cabine, giroflex) | 19 | **código**: 1 ponto por arte, anotado na importação | 0 |
+| Luzes (janelas, forja, tochas, cabine, giroflex) | 19 | **integrado** (Prompt 19: ponto de luz por desenho, texturas por tipo, janelas acesas, lava, tom por estação) | 0 |
 
 ## 11. Interface
 
@@ -184,6 +184,18 @@ prompts 0–31).
 - Nenhuma do Prompt 3: o casaco por função ficou completo (os 18, 2026-09-30).
 
 ## Plano de crédito
+
+**Atualização 2026-10-01 (Prompt 19, luz e noite):** feito sem geração. Texturas de luz por tipo
+(`assets/game/iso/luz/`), janelas acesas em 10 desenhos, pontos de luz em 19, lava no abismo, tom
+do ambiente por estação; corrigidos 5 defeitos de luz da vista iso (z da luz, tocha/cristal sem
+luz, escala da luz, luzes do subsolo apagadas, luz por item no terreno grande). Relatório:
+`docs/arte/prompt19/PROMPT_19_LUZ.md`.
+
+**Atualização 2026-10-01 (Prompt 31, verificação):** nenhum item do backlog do Prompt 31 tem
+gameplay hoje (escola, crianças, casa nível 2/3 e coletor de minério são cartões "em breve"; a
+oficina é fixa; reatores, armas, ferramentas e trajes do jogo já têm arte). **Nada gerado.**
+Prompts sem fazer: **16 a 26** (+ pendências pequenas dos Prompts 2, 14 e 29), ~1.100–1.200
+gerações no total. Relatório: `docs/arte/prompt31/PROMPT_31_CONTEUDO_FUTURO.md`.
 
 **Atualização 2026-10-01 (Prompt 30, revisão final):** decoração da montagem aprovada no jogo
 (guindaste, vagonete, caixotes, vegetação rasteira); contorno de 1 px nos desenhos que vieram

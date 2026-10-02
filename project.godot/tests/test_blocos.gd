@@ -216,3 +216,15 @@ func test_p29_bonecos() -> void:
 
 func test_p29_natureza() -> void:
 	run_bloco("p29_natureza.gd")
+
+
+func test_p19_luz() -> void:
+	run_bloco("p19_luz.gd")
+
+
+func test_p17_criaturas() -> void:
+	run_bloco("p17_criaturas.gd")
+
+
+func test_p18_efeitos() -> void:
+	run_bloco("p18_efeitos.gd")

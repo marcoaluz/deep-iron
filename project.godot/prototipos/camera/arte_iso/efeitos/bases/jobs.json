@@ -1,0 +1,61 @@
+{
+ "chama_p": {
+  "job": "77c52a96-4927-4473-991c-44b5f8f3fda1",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso\\efeitos\\bases\\chama_p.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "chama_g": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso\\efeitos\\bases\\chama_g.png"
+ },
+ "placa_greve": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso\\efeitos\\bases\\placa_greve.png"
+ },
+ "bandeirinhas": {
+  "job": "3ee6babe-f8dc-4319-9598-34e047c28f6c",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso\\efeitos\\bases\\bandeirinhas.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "barril_fogo": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso\\efeitos\\bases\\barril_fogo.png"
+ },
+ "carga_minerio": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso\\efeitos\\bases\\carga_minerio.png"
+ },
+ "antena": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso\\efeitos\\bases\\antena.png"
+ },
+ "cesto": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso\\efeitos\\bases\\cesto.png"
+ },
+ "cova": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso\\efeitos\\bases\\cova.png"
+ },
+ "explosivos": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso\\efeitos\\bases\\explosivos.png"
+ },
+ "placa_aviso": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso\\efeitos\\bases\\placa_aviso.png"
+ }
+}

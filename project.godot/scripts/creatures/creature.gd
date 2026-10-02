@@ -9,6 +9,10 @@ extends Node2D
 ## Bloco 36: com o guarda do portão dele CAÍDO (brecha), vai direto no armazém saquear
 ## (defense.gd: raid — uma parte do minério e dos créditos, uma vez por portão por invasão).
 ## Ao amanhecer: o Lumívoro foge da luz e o Ferrugento desliga.
+## Prompt 17: na vista iso a arte nova vem de iso_bonecos.gd (criatura_pose), pelo estado daqui:
+## andando, atacando (_attack_at), levando golpe (_hit_at), morrendo (_died_at, fica deitado um
+## pouco antes de sumir) e desligando ao amanhecer. Variante FORTE (bruto/carregador): defense.gd
+## escolhe nas ondas altas (make_strong).
 
 const IsoArt := preload("res://scripts/iso/iso_art.gd")
 signal died(killed: bool)
@@ -41,6 +45,15 @@ var _retarget := 0.0
 var _anim := 0.0
 var _dying := false
 var _leaving := false
+## Prompt 17: "" ou "forte" (Lumívoro bruto / Ferrugento carregador).
+var variant := ""
+## Quando (no relógio _anim) atacou, levou golpe, caiu e começou a ir embora: escolhem a animação.
+var _attack_at := -100.0
+var _hit_at := -100.0
+var _died_at := -100.0
+var _left_at := -100.0
+## Ferrugento que já roubou minério: a caçamba vai cheia.
+var looted := false
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _agent: NavigationAgent2D = $Agent
@@ -59,6 +72,16 @@ func setup(gate: Node2D, hp_mult: float) -> void:
 	max_hp *= hp_mult
 	hp = max_hp
 	inside = gate == null or not gate.is_standing()
+
+
+## Prompt 17: a variante forte (mais vida e dano, um pouco mais lenta).
+func make_strong(hp_mult: float, damage_mult: float) -> void:
+	variant = "forte"
+	max_hp *= hp_mult
+	hp = max_hp
+	damage *= damage_mult
+	speed *= 0.9
+	_visual.scale *= 1.25
 
 
 func is_alive() -> bool:
@@ -174,6 +197,7 @@ func _pick_target() -> Node2D:
 
 
 func _attack(t: Node2D) -> void:
+	_attack_at = _anim
 	_visual.position.y = -3.0
 	create_tween().tween_property(_visual, "position:y", 0.0, 0.15)
 	if t.is_in_group("barricadas"):
@@ -199,6 +223,7 @@ func _attack(t: Node2D) -> void:
 				break
 			left -= t.take(left, ore)
 		if left < steal_amount:
+			looted = true
 			t.show_popup("-%d (Ferrugento)" % roundi(steal_amount - left), Color(1.0, 0.45, 0.35))
 		Audio.clank(global_position)
 		return
@@ -214,6 +239,7 @@ func take_hit(amount: float, attacker: Node2D) -> void:
 	if not is_alive():
 		return
 	hp -= amount
+	_hit_at = _anim
 	_aggressor = attacker
 	_visual.modulate = Color(2.2, 2.2, 2.2)
 	create_tween().tween_property(_visual, "modulate", Color.WHITE, 0.15)
@@ -226,6 +252,7 @@ func die(killed: bool) -> void:
 	if _dying:
 		return
 	_dying = true
+	_died_at = _anim
 	_light.enabled = false
 	died.emit(killed)
 	if killed and kind == "ferrugento" and randf() < 0.35:
@@ -236,6 +263,8 @@ func die(killed: bool) -> void:
 			if hud:
 				hud.show_toast("Um Ferrugento virou sucata: +1 peça rara.", Color(1.0, 0.85, 0.45))
 	var t := create_tween()
+	if _iso_art():
+		t.tween_interval(1.4)  # Prompt 17: cai (animação) e fica um pouco no chão antes de sumir
 	t.tween_property(self, "modulate:a", 0.0, 0.6)
 	t.tween_callback(queue_free)
 
@@ -245,6 +274,7 @@ func leave_at_dawn() -> void:
 	if not is_alive():
 		return
 	_leaving = true
+	_left_at = _anim
 	var t := create_tween()
 	if kind == "lumivoro":
 		t.set_parallel(true)
@@ -256,6 +286,12 @@ func leave_at_dawn() -> void:
 		t.tween_interval(1.5)
 		t.tween_property(self, "modulate:a", 0.0, 1.2)
 	t.chain().tween_callback(queue_free)
+
+
+## A vista iso está desenhando esta criatura com a arte nova?
+func _iso_art() -> bool:
+	var env := get_tree().get_first_node_in_group("environment") if is_inside_tree() else null
+	return env != null and env.has_method("has_iso_map") and env.has_iso_map()
 
 
 func _draw() -> void:

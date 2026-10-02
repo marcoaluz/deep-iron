@@ -1,8 +1,8 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-01 (**Prompt 30 concluído**: revisão final). Branch `isometrico`. Último
-commit: `ecde7b4a A parte 2 do Prompt 29`; as partes 3–6 do Prompt 29 e todo o Prompt 30 estão no
-working tree, **ainda sem commit** (o Marco valida antes).
+Atualizado em 2026-10-01 (Prompt 19 feito; Prompt 31 verificado). Branch `isometrico`. Último
+commit: `30a60c51 Prompt 30`; o Prompt 19, o relatório do 31 e as atualizações de docs estão no
+working tree, **ainda sem commit**.
 
 Isso existe porque estamos trocando entre duas contas do Claude Code
 (`marco.luz1994@gmail.com` e `marcoa.luz@hotmail.com`, essa segunda via
@@ -29,6 +29,11 @@ outra — este arquivo é o resumo pra colar/apontar na sessão nova.
 - **Prompt 29 concluído** (tudo o que já tem arte aprovada está no jogo). Relatórios:
   `docs/arte/prompt29/PROMPT_29_PARTE1_MAPA.md`, `PROMPT_29_PARTE2_PREDIOS.md`,
   `PROMPT_29_PARTES3A6.md`.
+- **Prompt 30 concluído** (`docs/arte/prompt30/PROMPT_30_REVISAO.md`): QA visual com fotos, contorno
+  de 1 px (`tools/contorno.py`, chamado pelo `integra.py`), clima visível na vista iso, decoração
+  da montagem aprovada no mapa, tiras dos bonecos carregando em segundo plano, limpeza do
+  protótipo (`docs/arte/limpeza_prompt30.json`). Testes: rodar com `APPDATA`/`XDG_DATA_HOME`/
+  `TEMP`/`TMP` no D: se o C: apertar (ver TESTING.md).
 - Como a arte nova entra: `prototipos/camera/arte_iso/integra.py` (`predios`, `bonecos`, `props`)
   copia os desenhos pra `assets/game/iso/{predios,bonecos,props}/` com os `.json` (âncora, caixa);
   `scripts/iso/iso_art.gd` (prédios, natureza/objetos, elevadores) e `scripts/iso/iso_bonecos.gd`
@@ -46,13 +51,19 @@ outra — este arquivo é o resumo pra colar/apontar na sessão nova.
 
 ## O que falta fazer daqui pra frente
 
-1. **Prompt 30 feito** (`docs/arte/prompt30/PROMPT_30_REVISAO.md`): QA visual com fotos, contorno de
-   1 px (`tools/contorno.py`, chamado pelo `integra.py`), clima visível na vista iso, decoração da
-   montagem aprovada no mapa, tiras dos bonecos carregando em segundo plano (mapa cheio 39 → 47
-   fps). Lista do futuro no fim do relatório. **Próximo: Prompt 31** (crianças/escola: precisa de
-   gameplay novo) ou a arte dos Prompts 16–26 depois da recarga de 30/10.
-   **Disco C quase cheio** (~350 MB): rodar testes com `APPDATA`/`XDG_DATA_HOME`/`TEMP`/`TMP` no D:
-   (ver TESTING.md).
+1. **Prompt 19 feito** (`docs/arte/prompt19/PROMPT_19_LUZ.md`, sem geração): luz por tipo, janelas
+   acesas, pontos de luz no desenho, lava, tom por estação; 5 defeitos de luz da vista iso
+   corrigidos. Próximos da ordem sugerida: rascunhos dos checkpoints 16/20/25 (sem gastar) e
+   16→17, 18 com o saldo.
+1. **Prompt 31 verificado** (`docs/arte/prompt31/PROMPT_31_CONTEUDO_FUTURO.md`): nenhum item do
+   backlog tem gameplay ainda (escola/crianças, casa nível 2/3, coletor de minério = "em breve") →
+   **nada gerado**. Refazer o 31 quando algum desses entrar no jogo.
+   **Prompts sem fazer: 16 a 26** (+ pendências pequenas dos 2, 14 e 29). Ordem sugerida no
+   relatório do 31: 19 (luz, quase só código) e os rascunhos dos checkpoints 16/20/25 sem gastar;
+   16→17 (criaturas) e 18 com o saldo de agora; 20–26 depois da recarga de 30/10.
+   **Disco C:** limpo em 2026-10-01 (Temp antiga: 361 MB → ~6,1 GB livres). Plugins sem uso
+   (limboai, godotsteam, phantom_camera, dialogue_manager, state_charts, ~300 MB): o Marco pediu
+   pra **não mexer** por enquanto.
 2. Seguir a ordem dos prompts restantes listada em `docs/arte/INVENTARIO.md`
    (ferramentas/armas, robô, terreno, mina, jazidas, vegetação, prédios,
    máquinas, objetos, animais, criaturas, efeitos, luz, UI, ícones, fonte,

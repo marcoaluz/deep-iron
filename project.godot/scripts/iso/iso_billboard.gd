@@ -18,6 +18,8 @@ extends Node2D
 const Iso := preload("res://scripts/iso/iso_core.gd")
 const IsoArt := preload("res://scripts/iso/iso_art.gd")
 const IsoBonecos := preload("res://scripts/iso/iso_bonecos.gd")
+const IsoLuz := preload("res://scripts/iso/iso_luz.gd")
+const IsoFx := preload("res://scripts/iso/iso_fx.gd")
 const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 
 ## Tipos que não são desenho (física, navegação, som...): não espelha.
@@ -77,6 +79,7 @@ var _part_clips: Array = []  # Polygon2D de recorte por parte (só com 2+ partes
 var _art: Node2D = null
 var _art_key := ""
 var _art_box := {}  # {rect, h}: px de arte, relativa ao pé ({} = sem arte nova)
+var _janelas: Sprite2D = null  # Prompt 19: janelas acesas (máscara do desenho)
 var _old_size := Vector2.ZERO  # tamanho do desenho antigo (px da lógica): pra levar rótulos/luzes
 ## Boneco com a arte nova (Prompt 29 parte 3): [atrás, corpo, na frente] e a altura dele (px de arte)
 var _char: Node2D = null
@@ -90,6 +93,8 @@ var _c_back: Sprite2D
 var _c_body: Sprite2D
 var _c_front: Sprite2D
 var _props_synced := false
+var _caiu := false  # criatura: a poeira da queda já subiu
+var _chamas := {}  # Prompt 18: nome da luz -> chama animada no ponto de fogueira/forja
 
 
 func setup(n: Node2D, is_dynamic: bool, view: Node) -> void:
@@ -177,8 +182,14 @@ func _mirror(s: Node) -> Node:
 	(d as CanvasItem).light_mask = 2
 	if d is PointLight2D:
 		(d as PointLight2D).range_item_cull_mask = 2  # acende só os espelhos
+		# Prompt 19: a ordem de desenho usa z de -4060 a 4096 (iso_order.gd); o alcance padrão da
+		# luz (-1024..1024) deixava o terreno e boa parte das coisas sem luz nenhuma
+		(d as PointLight2D).range_z_min = RenderingServer.CANVAS_ITEM_Z_MIN
+		(d as PointLight2D).range_z_max = RenderingServer.CANVAS_ITEM_Z_MAX
 	if d is AnimatedSprite2D:
 		(d as AnimatedSprite2D).stop()  # o quadro vem da coisa de verdade
+	if d is CPUParticles2D and _view.get("S") != null:
+		IsoFx.particula(d, s, src, _view.S)  # Prompt 18: textura de pixel por papel
 	_pairs.append([s, d, s.get_child_count()])
 	if s.name == "Tool" and _tool_pair.is_empty():
 		_tool_pair = [s, d]
@@ -266,6 +277,7 @@ func _sync_art() -> void:
 	if key != _art_key:
 		_art_key = key
 		for c in _art.get_children():
+			_art.remove_child(c)  # sai na hora (a camada nova pode ter o mesmo nome)
 			c.queue_free()
 		for l in layers:
 			var sp := Sprite2D.new()
@@ -275,6 +287,16 @@ func _sync_art() -> void:
 			sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			sp.light_mask = 2
 			_art.add_child(sp)
+		_janelas = null
+		if layers[0].has("janelas"):  # Prompt 19: janelas acesas por cima do desenho
+			_janelas = Sprite2D.new()
+			_janelas.name = "Janelas"
+			_janelas.texture = layers[0].janelas
+			_janelas.centered = false
+			_janelas.offset = -layers[0].ancora
+			_janelas.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			_janelas.light_mask = 0  # a luz das janelas é dela mesma
+			_art.add_child(_janelas)
 	for i in mini(layers.size(), _art.get_child_count()):
 		var sp: Sprite2D = _art.get_child(i)
 		if layers[i].obra >= 0.0:
@@ -303,11 +325,17 @@ func _sync_art() -> void:
 	for pr in _pairs:
 		var d = pr[1]
 		if d is Sprite2D or d is AnimatedSprite2D or d is Polygon2D or d is Line2D:
-			d.visible = false
+			if d.get_child_count() > 0:
+				d.self_modulate.a = 0.0  # some só o desenho dele: os filhos (a luz da tocha) continuam
+			else:
+				d.visible = false
 		elif d is Control and d.get_parent() == self:
 			d.position.y = pr[0].position.y - lift  # rótulo: a mesma folga acima do telhado novo
 		elif d is Node2D and d.get_parent() == self:
 			d.position = pr[0].position * ratio  # luz, fumaça: no mesmo lugar do desenho
+	_sync_luzes(layers)
+	if layers[0].tex.resource_path.get_file().begins_with("achado_"):
+		_brilho_achado()
 	# elevador: a ponta de baixo (rótulo, luz) vai pro andar de baixo, junto da gaiola
 	var bottom = src.get_node_or_null("Bottom")
 	if bottom and src.get("bottom_position") != null:
@@ -478,8 +506,8 @@ func sync_dynamic(view_rect: Rect2 = Rect2()) -> void:
 		_vel = _vel.lerp(scr - _last_screen, 0.35)
 	_last_screen = scr
 	var moving: bool = src is CharacterBody2D and (src as CharacterBody2D).velocity.length() > 5.0
-	if src.is_in_group("robos"):
-		moving = _vel.length() > 0.2  # o robô anda mexendo a posição (não é CharacterBody)
+	if src.is_in_group("robos") or src.is_in_group("criaturas"):
+		moving = _vel.length() > 0.2  # robô e criaturas andam mexendo a posição (não são CharacterBody)
 	_moving_now = moving
 	if moving:
 		iso_dir = _view.diamond_dir(_vel, iso_dir)
@@ -506,6 +534,92 @@ func sync_dynamic(view_rect: Rect2 = Rect2()) -> void:
 	queue_redraw()
 
 
+# ------------------------------------------------------------ luz e noite (Prompt 19)
+## Cada luz copiada vai pro ponto de luz anotado no desenho (prédios) ou pro alto do desenho
+## novo (tocha, cristal), com a textura/cor do tipo dela; as janelas acendem quando a luz do
+## prédio está acesa e está escuro.
+func _sync_luzes(layers: Array) -> void:
+	var luzes: Array = layers[0].get("luzes", []) if not layers.is_empty() else []
+	var usados := {}
+	var acesa := false
+	var tem_luz_de_janela := false
+	var h: float = _art_box.get("h", 60.0)
+	for pr in _pairs:
+		var d = pr[1]
+		if not (d is PointLight2D):
+			continue
+		var s = pr[0]
+		d.global_scale = Vector2.ONE  # o alcance em px de arte (a luz da tocha herdava ~3x da peça antiga)
+		var tipo := IsoLuz.tipo_de(s)
+		var pt := IsoLuz.ponto_para(s, luzes, usados) if not luzes.is_empty() else {}
+		if not pt.is_empty():
+			tipo = pt.tipo
+			d.global_position = global_position + pt.pos
+		elif tipo == "tocha":
+			d.global_position = global_position + Vector2(0, -h * 0.8)  # a chama, no alto da tocha
+		elif tipo == "cristal":
+			d.global_position = global_position + Vector2(0, -h * 0.45)
+		if tipo != "":
+			IsoLuz.aplica(d, tipo, tipo == "cristal", s)  # o cristal mantém a cor dele
+		if not pt.is_empty() and (tipo == "fogueira" or tipo == "forja"):
+			_chama(String(s.name), pt.pos, s.enabled)  # Prompt 18: o fogo mexendo
+		if String(s.name) in ["WindowLight", "Glow", "Light", "ForgeLight"]:
+			tem_luz_de_janela = true
+			acesa = acesa or s.enabled  # (visível não: o Environment apaga as luzes fora da tela)
+	if _janelas:
+		if not is_inside_tree():
+			_janelas.visible = false  # (criando o espelho: ainda fora da árvore)
+			return
+		var c := IsoLuz.cor_janela(get_tree())
+		_janelas.visible = (acesa or not tem_luz_de_janela) and c.a > 0.01
+		_janelas.modulate = c
+
+
+## Prompt 18: brilho piscando em cima do achado (bobina, cristal, peça, painel no chão da mina).
+func _brilho_achado() -> void:
+	if _art.get_node_or_null("Brilho") != null:
+		return
+	var t := IsoFx.tex("brilho_achado")
+	if t == null:
+		return
+	var b := Sprite2D.new()
+	b.name = "Brilho"
+	b.texture = t
+	b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	b.light_mask = 0
+	var h: float = _art_box.get("h", 20.0)
+	b.position = Vector2(4, -h * 0.7).round()
+	_art.add_child(b)
+	var tw := b.create_tween().set_loops()
+	tw.tween_property(b, "modulate:a", 0.0, 0.5).set_delay(randf_range(0.6, 1.6))
+	tw.tween_property(b, "modulate:a", 1.0, 0.25)
+
+
+## Prompt 18: a chama animada (fx chama_p) no ponto de fogueira/forja do desenho, acesa junto
+## com a luz do prédio.
+func _chama(nome: String, pos: Vector2, on: bool) -> void:
+	var a = _chamas.get(nome)
+	if a == null or not is_instance_valid(a):
+		if not on or _art == null:
+			return
+		var sf := IsoFx.sprite_frames("chama_p")
+		if sf.get_frame_count("default") == 0:
+			return
+		var fr: Texture2D = sf.get_frame_texture("default", 0)
+		a = AnimatedSprite2D.new()
+		a.name = "Chama_" + nome
+		a.sprite_frames = sf
+		a.centered = false
+		a.offset = -Vector2(fr.get_width() * 0.5, fr.get_height() - 1.0)
+		a.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		a.light_mask = 0  # o fogo brilha sozinho
+		a.play("default")
+		_art.add_child(a)
+		_chamas[nome] = a
+	a.position = pos + Vector2(0, 5)
+	a.visible = on
+
+
 # ------------------------------------------------------------ boneco com a arte nova (Prompt 29)
 ## O corpo antigo (Body e os acessórios) e a ferramenta da mão somem; o boneco novo entra no
 ## tamanho dele (px de arte) com a animação/direção/pele do estado (iso_bonecos.gd), o saco e a
@@ -513,7 +627,13 @@ func sync_dynamic(view_rect: Rect2 = Rect2()) -> void:
 ## cabeça nova; a cor de estado do corpo (fome, frio, traje) passa pro boneco novo.
 func _sync_char() -> void:
 	_clock += get_process_delta_time()
-	var p: Dictionary = IsoBonecos.robo_pose(src, iso_dir, _clock, _moving_now) if src.is_in_group("robos") 		else IsoBonecos.pose(src, iso_dir, _clock)
+	var p: Dictionary
+	if src.is_in_group("robos"):
+		p = IsoBonecos.robo_pose(src, iso_dir, _clock, _moving_now)
+	elif src.is_in_group("criaturas"):
+		p = IsoBonecos.criatura_pose(src, iso_dir, _moving_now)  # Prompt 17
+	else:
+		p = IsoBonecos.pose(src, iso_dir, _clock)
 	if p.is_empty():
 		if _char:
 			_char.queue_free()
@@ -543,13 +663,19 @@ func _sync_char() -> void:
 	if _hidden_by_char.is_empty():
 		for pr in _pairs:
 			var s = pr[0]
-			if is_instance_valid(s) and (s == _body_pair_src() or s.name == "Tool" or s.name == "Visual" or (s.get_parent() != null and s.get_parent().name == "Body")):
+			if not is_instance_valid(s):
+				continue
+			var placa: bool = s is Sprite2D and s.texture != null and s.texture.resource_path.ends_with("strike_sign.png")  # Prompt 2: a placa vai na mão
+			if (placa or s == _body_pair_src() or s.name == "Tool" or s.name == "Visual" or (s.get_parent() != null and s.get_parent().name == "Body")):
 				_hidden_by_char[pr[1]] = true
 	for d in _hidden_by_char:
 		if is_instance_valid(d) and d.visible:
 			d.visible = false
 	if not _char.visible:
 		return
+	if p.get("anim") == "morrer" and not _caiu:
+		_caiu = true
+		IsoFx.puff(_char, Vector2(0, -4))  # Prompt 18: cai e levanta poeira
 	var body: Sprite2D = _c_body
 	if body.texture != p.tex:  # (só mexe no que mudou: trocar textura/grade a cada quadro custa)
 		body.texture = p.tex
@@ -565,7 +691,7 @@ func _sync_char() -> void:
 	body.modulate = bs.modulate if tint_ok and bs != null and is_instance_valid(bs) else Color.WHITE
 	var used := {}
 	for k in ["saco", "item"]:
-		if p.has(k):
+		if p.has(k) and not p[k].is_empty():
 			var l: Dictionary = p[k]
 			var sp: Sprite2D = _c_front if l.front else _c_back
 			if used.has(sp):  # saco e ferramenta do mesmo lado: o saco ganha (carregando)
@@ -586,6 +712,12 @@ func _sync_char() -> void:
 	_char_foot = (190.0 if p.get("deitado", false) else 52.0) / _view.S if src.is_in_group("robos") else 0.0
 	if not _props_synced:
 		return  # os ícones só mudam quando foram copiados (a cada 2 quadros)
+	for pr in _pairs:  # Prompt 19: lanterna do capacete, olho do robô
+		if pr[1] is PointLight2D:
+			pr[1].global_scale = Vector2.ONE
+			var tl := IsoLuz.tipo_de(pr[0])
+			if tl != "":
+				IsoLuz.aplica(pr[1], tl, false, pr[0])
 	var lift: float = _char_h / _view.S - _old_size.y
 	for pr in _pairs:
 		var d = pr[1]
@@ -625,7 +757,12 @@ func _draw() -> void:
 		if not src.get("_inside"):
 			draw_circle(Vector2(1.5, 0.5), 12.0, Color(0.02, 0.02, 0.05, 0.5))
 		if src.get("selected"):
-			draw_arc(Vector2.ZERO, 17.0, 0.0, TAU, 32, Color(1.0, 0.84, 0.25), 2.5)
+			var ring := IsoFx.tex("anel_selecao")
+			if ring and _char != null:  # Prompt 18: anel de pixel no chão (px de arte)
+				draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0 / scale.x, 1.0 / scale.y))
+				draw_texture(ring, -ring.get_size() * 0.5 + Vector2(0, 1))
+			else:
+				draw_arc(Vector2.ZERO, 17.0, 0.0, TAU, 32, Color(1.0, 0.84, 0.25), 2.5)
 	elif src.is_in_group("parques") and src.has_method("radius"):
 		var r: float = src.radius() * 1.4142
 		draw_set_transform(Iso.iso(Vector2(0, -10)), 0.0, Vector2(1.0, 0.5))
@@ -654,6 +791,9 @@ func _draw_top() -> void:
 	if hp == null or max_hp == null or src.get("_dying") or hp >= max_hp:
 		return
 	var w := 22.0
+	var y := -32.0
+	if _char != null and _char_h > 0.0:
+		y = -(_char_h / _view.S + 5.0)  # Prompt 17: em cima da arte nova
 	_top.draw_set_transform(Vector2.ZERO, 0.0, Vector2(_flip, 1.0))
-	_top.draw_rect(Rect2(-w * 0.5, -32, w, 3), Color(0, 0, 0, 0.7))
-	_top.draw_rect(Rect2(-w * 0.5, -32, w * clampf(hp / max_hp, 0.0, 1.0), 3), Color(0.9, 0.3, 0.25))
+	_top.draw_rect(Rect2(-w * 0.5, y, w, 3), Color(0, 0, 0, 0.7))
+	_top.draw_rect(Rect2(-w * 0.5, y, w * clampf(hp / max_hp, 0.0, 1.0), 3), Color(0.9, 0.3, 0.25))
