@@ -16,3 +16,13 @@ export_credentials.cfg
 data_*/
 mono_crash.*.json
 ~*.dll
+
+# Bloco 49: Python, builds, temporários
+__pycache__/
+*.pyc
+build/
+export/
+*.tmp
+# saves locais e saídas de teste que alguém copie pra dentro do repo
+savegame*.json
+fake_appdata*/
