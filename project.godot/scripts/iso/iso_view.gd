@@ -303,7 +303,7 @@ func _build_terrain() -> void:
 		sp2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		sp2.position = Vector2(a.tela[0], a.tela[1])
 		sp2.light_mask = 2
-		sp2.self_modulate = LEVEL_TINT.get(nome, Color.WHITE)
+		sp2.self_modulate = _tom_do_andar(nome)  # Bloco 69: a luz ambiente vem dos dados do nível
 		_terrain_node.add_child(sp2)
 		_em_blocos(sp2)
 		var cx: Array = a.caixa
@@ -316,6 +316,142 @@ func _build_terrain() -> void:
 	_build_palisade()
 	_build_lava()
 	_build_nevoa_leste()
+	_build_atmosfera()
+
+
+# ------------------------------------------------------------ atmosfera dos níveis (Bloco 69)
+const Niveis := preload("res://scripts/core/niveis.gd")
+const Efeitos := preload("res://scripts/core/efeitos.gd")
+const Settings := preload("res://scripts/core/settings.gd")
+const PARTICULA_TEX := {"poeira": "poeira_p", "acido": "nuvem_gas", "calor": "brasa", "gotas": "gota", "bolhas": "vapor"}
+const LUZ_ZONA := {"calor": Color(1.0, 0.5, 0.2), "gas": Color(0.45, 1.0, 0.35), "radiacao": Color(0.4, 0.95, 1.0)}
+const AREA_DO_ANDAR := {"nivel2": "deep", "abismo": "abyss"}
+var _atmos: Array = []  # [{nivel, raiz, nevoa, part, alfa, qtd}]
+var _luzes_zona: Array = []  # [luz, energia base, fase]
+
+
+func _nivel_da_area(area: String) -> Resource:
+	for n in Niveis.todos():
+		if n.area == area and not n.em_breve:
+			return n
+	return null
+
+
+func _tom_do_andar(nome: String) -> Color:
+	var n := _nivel_da_area(AREA_DO_ANDAR.get(nome, ""))
+	return n.cor_ambiente if n else LEVEL_TINT.get(nome, Color.WHITE)
+
+
+## Intensidade (Configurações > Atmosfera dos níveis, 0..1); reduzir efeitos tira as partículas.
+static func atmosfera_intensidade() -> float:
+	return clampf(Settings.get_value("video", "atmosfera", 1.0), 0.0, 1.0)
+
+
+func _build_atmosfera() -> void:
+	if not _env.has_method("has_iso_map") or not _env.has_iso_map():
+		return
+	add_to_group("efeitos")
+	# os andares de baixo (laje) e a pedreira (S1, só poeira leve)
+	var alvos := []
+	for lv in _levels:
+		alvos.append([_nivel_da_area(AREA_DO_ANDAR.get(lv.nome, "")), lv.rect, float(lv.z)])
+	alvos.append([_nivel_da_area("mapa"), _env.map_rect, 0.0])
+	for a in alvos:
+		var n: Resource = a[0]
+		if n == null:
+			continue
+		var r: Rect2 = a[1]
+		var z: float = a[2]
+		var raiz := Node2D.new()
+		raiz.name = "Atmosfera_" + n.id
+		raiz.z_as_relative = false
+		raiz.z_index = 3700
+		_things.add_child(raiz)
+		var pts := PackedVector2Array()
+		for c in [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]:
+			pts.append(to_screen(c, z))
+		var nev := Polygon2D.new()
+		nev.name = "Nevoa"
+		nev.polygon = pts
+		nev.color = n.cor_nevoa
+		raiz.add_child(nev)
+		var part: CPUParticles2D = null
+		var tex: Texture2D = IsoFx.tex(PARTICULA_TEX.get(n.particulas, "")) if n.particulas != "" else null
+		var qtd := 0
+		if tex:
+			var bb := Rect2(pts[0], Vector2.ZERO)
+			for p in pts:
+				bb = bb.expand(p)
+			part = CPUParticles2D.new()
+			part.name = "Particulas"
+			part.texture = tex
+			qtd = clampi(int(bb.get_area() / 9000.0), 12, 90)
+			part.amount = qtd
+			part.lifetime = 5.0
+			part.preprocess = 5.0
+			part.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+			part.position = bb.get_center()
+			part.emission_rect_extents = bb.size * 0.45
+			part.direction = Vector2(0, -1) if n.particulas in ["calor", "bolhas", "acido"] else Vector2(0.3, 0.2)
+			part.spread = 40.0
+			part.gravity = Vector2(0, -6) if n.particulas in ["calor", "bolhas", "acido"] else Vector2(2, 4)
+			part.initial_velocity_min = 4.0
+			part.initial_velocity_max = 12.0
+			part.scale_amount_min = 1.0
+			part.scale_amount_max = 2.0
+			var cor: Color = n.cor_nevoa
+			part.color = Color(cor.r, cor.g, cor.b, 0.55) if cor.a > 0.0 else Color(1, 1, 1, 0.4)
+			part.light_mask = 0
+			raiz.add_child(part)
+		_atmos.append({"nivel": n, "raiz": raiz, "nevoa": nev, "part": part, "alfa": n.cor_nevoa.a, "qtd": qtd})
+	# luz pulsando nas zonas de perigo (a da lava já existe: ganha o pulso; gás e radiação ganham a sua)
+	for c in _terrain_node.get_children():
+		if c is PointLight2D and String(c.name).begins_with("Lava_"):
+			_luzes_zona.append([c, (c as PointLight2D).energy, randf() * TAU])
+	for zn in get_tree().get_nodes_in_group("zonas_perigo"):
+		var k := String(zn.get("kind"))
+		if k == "calor" or not LUZ_ZONA.has(k):
+			continue
+		var l := PointLight2D.new()
+		l.name = "Brilho_" + String(zn.name)
+		IsoLuz.aplica(l, "cristal")
+		l.color = LUZ_ZONA[k]
+		l.energy = 0.9
+		l.range_item_cull_mask = LIGHT_ISO
+		l.range_z_min = RenderingServer.CANVAS_ITEM_Z_MIN
+		l.range_z_max = RenderingServer.CANVAS_ITEM_Z_MAX
+		l.position = to_screen((zn as Node2D).global_position)
+		l.add_to_group("cullable_lights")
+		_terrain_node.add_child(l)
+		_luzes_zona.append([l, l.energy, randf() * TAU])
+	efeitos_mudaram()
+
+
+## Reduzir efeitos / intensidade mudou.
+func atmosfera_aplica() -> void:
+	var k := atmosfera_intensidade()
+	var red := Efeitos.reduzidos()
+	for a in _atmos:
+		a.raiz.visible = k > 0.01
+		var c: Color = a.nevoa.color
+		c.a = a.alfa * k * (0.5 if red else 1.0)
+		a.nevoa.color = c
+		if a.part:
+			a.part.emitting = k > 0.01 and not red
+			var want := maxi(int(a.qtd * k), 1)
+			if a.part.amount != want:
+				a.part.amount = want
+
+
+func _pulsa_luzes() -> void:
+	if _luzes_zona.is_empty() or _frame % 3 != 0:
+		return
+	var t := Time.get_ticks_msec() / 1000.0
+	var k := atmosfera_intensidade() * (0.3 if Efeitos.reduzidos() else 1.0)
+	for e in _luzes_zona:
+		var l = e[0]
+		if is_instance_valid(l):
+			l.energy = e[1] * (1.0 + k * (0.12 * sin(t * 2.3 + e[2]) + 0.06 * sin(t * 7.1 + e[2] * 2.0)))
 
 
 # ------------------------------------------------------------ névoa do leste (Bloco 67)
@@ -478,6 +614,7 @@ func efeitos_mudaram() -> void:
 	for hz in _calor_rects:
 		if is_instance_valid(hz):
 			hz.visible = not preload("res://scripts/core/efeitos.gd").reduzidos()
+	atmosfera_aplica()  # Bloco 69
 
 
 func _build_palisade() -> void:
@@ -653,6 +790,7 @@ func _process(_delta: float) -> void:
 			dyn_bbs[b].z_index = zs[b]
 	_sync_ghost()
 	_sync_trilhos()
+	_pulsa_luzes()
 	_overlay.queue_redraw()
 
 

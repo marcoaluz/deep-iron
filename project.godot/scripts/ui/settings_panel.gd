@@ -82,6 +82,9 @@ func _build_main() -> void:
 	_percent(right, "Velocidade do zoom", Settings.get_value("camera", "zoom_mult", 1.0), 0.5, 2.0, 0.1, func(v: float):
 		Settings.set_value("camera", "zoom_mult", v)
 		Camera.load_speeds())
+	_percent(right, "Atmosfera dos níveis", Settings.get_value("video", "atmosfera", 1.0), 0.0, 1.0, 0.1, func(v: float):
+		Settings.set_value("video", "atmosfera", v)
+		get_tree().call_group("efeitos", "efeitos_mudaram"))  # Bloco 69
 	var fx := CheckBox.new()
 	fx.text = "Reduzir efeitos (clima, tremor, partículas)"
 	fx.button_pressed = Efeitos.reduzidos()

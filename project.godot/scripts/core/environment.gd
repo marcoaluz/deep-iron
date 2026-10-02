@@ -161,6 +161,7 @@ func _ready() -> void:
 	if has_iso_map():
 		_build_map_decor()  # Prompt 30: a decoração da montagem aprovada
 		_build_leste()  # Bloco 67: o conteúdo da área nova (trancada até desbravar)
+		_build_decoracao_niveis()  # Bloco 69: a decoração declarada em cada nível (data/niveis)
 	clear_decor_under_extras()
 	_build_navigation()
 
@@ -193,6 +194,21 @@ func leste_rect() -> Rect2:
 		return Rect2()
 	var g := iso_ground_rect()
 	return Rect2(leste_x(), g.position.y, g.end.x - leste_x(), g.size.y)
+
+
+## Bloco 69: decoração por dados — cada NivelMina declara [prop, x, y]; aqui vira um Deco no lugar.
+func _build_decoracao_niveis() -> void:
+	for n in preload("res://scripts/core/niveis.gd").todos():
+		if n.em_breve:
+			continue
+		for d in n.decoracao:
+			if not (d is Array) or d.size() < 3:
+				continue
+			var p := Vector2(float(d[1]), float(d[2]))
+			if not _is_free(p, 18.0, 24.0):
+				continue
+			_decor_node(String(d[0]), p, false)
+			get_child(get_child_count() - 1).add_to_group("nivel_deco")
 
 
 ## Esse ponto fica na área do leste ainda trancada?
