@@ -1,0 +1,43 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/creatures/creature.gd" id="1_cr"]
+[ext_resource type="Texture2D" path="res://assets/game/gosma.png" id="2_sprite"]
+[ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="3_light"]
+[ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="4_shadow"]
+
+[node name="Gosma" type="Node2D"]
+script = ExtResource("1_cr")
+kind = "gosma"
+max_hp = 24.0
+speed = 62.0
+damage = 5.0
+attack_interval = 1.1
+grave_chance = 0.2
+steal_amount = 4.0
+weapon_corrode = 2.0
+barricade_mult = 1.5
+drop_ore = "cristal_verde"
+drop_amount = 2
+drop_chance = 0.35
+
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -4
+scale = Vector2(0.9, 0.6)
+texture = ExtResource("4_shadow")
+
+[node name="Visual" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("2_sprite")
+hframes = 2
+offset = Vector2(0, -8)
+
+[node name="Light" type="PointLight2D" parent="."]
+position = Vector2(0, -16)
+color = Color(0.45, 1, 0.3, 1)
+energy = 0.5
+texture = ExtResource("3_light")
+texture_scale = 0.3
+
+[node name="Agent" type="NavigationAgent2D" parent="."]
+path_desired_distance = 6.0
+target_desired_distance = 6.0

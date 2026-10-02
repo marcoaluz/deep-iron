@@ -18,7 +18,7 @@ signal replenished
 
 @export_group("Mineração")
 ## Tipo de minério desta jazida: "ferro", "cobre" ou "carvao".
-@export_enum("ferro", "cobre", "carvao", "prata", "solarita") var ore_type: String = "ferro"
+@export_enum("ferro", "cobre", "carvao", "prata", "solarita", "cristal_verde", "cristal_rubro") var ore_type: String = "ferro"
 ## Minério tirado por segundo por ipezinho (ritmo: era 4.0).
 @export var MINE_RATE: float = 3.0
 @export var ore_total: float = 200.0

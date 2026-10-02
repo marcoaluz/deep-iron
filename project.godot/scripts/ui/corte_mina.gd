@@ -38,7 +38,8 @@ var _t := 0.0
 var _redraw_t := 0.0
 const REDRAW_EVERY := 0.05  # Bloco 63: ~20 quadros/s bastam pra os mini-bonecos andarem
 const ORE_COR := {"ferro": Color(0.72, 0.62, 0.55), "cobre": Color(0.9, 0.5, 0.25), "carvao": Color(0.3, 0.3, 0.32),
-	"prata": Color(0.85, 0.88, 0.95), "solarita": Color(1.0, 0.85, 0.3)}
+	"prata": Color(0.85, 0.88, 0.95), "solarita": Color(1.0, 0.85, 0.3), "cristal_verde": Color(0.55, 1.0, 0.35),
+	"cristal_rubro": Color(1.0, 0.3, 0.25)}
 
 
 func setup(main: Node) -> void:

@@ -1501,6 +1501,111 @@
    "h": 46.0,
    "fora": 0
   },
+  "jazida_cristal_verde_cheia": {
+   "img": "jazida_cristal_verde_cheia.png",
+   "ancora": [
+    30.0,
+    56.0
+   ],
+   "peg": [
+    -10.5,
+    -8.4,
+    22.0,
+    19.0
+   ],
+   "h": 54.0,
+   "fora": 1
+  },
+  "jazida_cristal_verde_meia": {
+   "img": "jazida_cristal_verde_meia.png",
+   "ancora": [
+    30.5,
+    62.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 54.0,
+   "fora": 0
+  },
+  "jazida_cristal_verde_quase": {
+   "img": "jazida_cristal_verde_quase.png",
+   "ancora": [
+    30.0,
+    48.0
+   ],
+   "peg": [
+    -10.5,
+    -8.4,
+    22.0,
+    19.0
+   ],
+   "h": 48.0,
+   "fora": 3
+  },
+  "jazida_cristal_rubro_cheia": {
+   "img": "jazida_cristal_rubro_cheia.png",
+   "ancora": [
+    30.0,
+    56.0
+   ],
+   "peg": [
+    -10.5,
+    -8.4,
+    22.0,
+    19.0
+   ],
+   "h": 52.0,
+   "fora": 1
+  },
+  "jazida_cristal_rubro_meia": {
+   "img": "jazida_cristal_rubro_meia.png",
+   "ancora": [
+    30.5,
+    62.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 54.0,
+   "fora": 0
+  },
+  "jazida_cristal_rubro_quase": {
+   "img": "jazida_cristal_rubro_quase.png",
+   "ancora": [
+    30.0,
+    48.0
+   ],
+   "peg": [
+    -10.5,
+    -8.4,
+    22.0,
+    19.0
+   ],
+   "h": 48.0,
+   "fora": 3
+  },
+  "ventilador": {
+   "img": "ventilador.png",
+   "ancora": [
+    27.0,
+    71.0
+   ],
+   "peg": [
+    -9.45,
+    -7.56,
+    19.0,
+    18.0
+   ],
+   "h": 74.0,
+   "fora": 0
+  },
   "cova": {
    "img": "cova.png",
    "ancora": [

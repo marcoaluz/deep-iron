@@ -93,6 +93,10 @@ func _ready() -> void:
 	var weather := preload("res://scripts/core/weather.gd").new()
 	weather.name = "Weather"
 	add_child(weather)
+	# Bloco 70: o conteúdo do S2/S3 (poças, ventiladores, cristais da broca)
+	var fundo := preload("res://scripts/core/fundo.gd").new()
+	fundo.name = "Fundo"
+	add_child(fundo)
 	SaveManager.register_game(self)
 	if SaveManager.pending_load:
 		# espera o ambiente montar (1 frame + navegação) e as estruturas entrarem nos grupos

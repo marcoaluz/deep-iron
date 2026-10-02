@@ -315,6 +315,7 @@ func _build_terrain() -> void:
 			"sprite": sp2, "rect": lr, "tint": LEVEL_TINT.get(nome, Color.WHITE)})
 	_build_palisade()
 	_build_lava()
+	_build_pocas()
 	_build_nevoa_leste()
 	_build_atmosfera()
 
@@ -434,10 +435,15 @@ func atmosfera_aplica() -> void:
 	var k := atmosfera_intensidade()
 	var red := Efeitos.reduzidos()
 	_pulso_k = k * (0.3 if red else 1.0)
+	for part in _poca_fx:
+		if is_instance_valid(part):
+			part.emitting = not red
+	var fundo := get_tree().get_first_node_in_group("fundo")
 	for a in _atmos:
 		a.raiz.visible = k > 0.01
 		var c: Color = a.nevoa.color
-		c.a = a.alfa * k * (0.5 if red else 1.0)
+		var vent: float = fundo.nevoa_mult() if fundo and a.nivel.id == "S2" else 1.0  # Bloco 70
+		c.a = a.alfa * k * (0.5 if red else 1.0) * vent
 		a.nevoa.color = c
 		if a.part:
 			a.part.emitting = k > 0.01 and not red
@@ -455,6 +461,80 @@ func _pulsa_luzes() -> void:
 		var l = e[0]
 		if is_instance_valid(l):
 			l.energy = e[1] * (1.0 + k * (0.12 * sin(t * 2.3 + e[2]) + 0.06 * sin(t * 7.1 + e[2] * 2.0)))
+
+
+# ------------------------------------------------------------ poças do fundo (Bloco 70)
+## A poça é um decalque deitado na laje do andar (assets/game/iso/chao/poca_<tipo>_<n>.png, filho do
+## desenho da laje: fica por cima do chão e embaixo de tudo que está em pé); aqui entram também a luz
+## pulsando e as bolhas (ácido) / brasas (lava), na camada 4.
+const POCA_FX := {"acido": ["vapor", Color(0.55, 1.0, 0.35, 0.7)], "lava": ["brasa", Color(1.0, 0.55, 0.2, 0.95)]}
+const POCA_LUZ := {"acido": Color(0.5, 1.0, 0.35), "lava": Color(1.0, 0.45, 0.15)}
+var _poca_fx: Array = []  # CPUParticles2D das poças (reduzir efeitos para)
+var _pocas_feitas := {}  # poça -> true (o ambiente põe as poças um quadro depois da vista ligar)
+
+
+func _build_pocas() -> void:
+	for p in get_tree().get_nodes_in_group("pocas_perigo"):
+		_poca_add(p)
+
+
+func _poca_add(p: Node) -> void:
+	if _terrain_node == null or not is_instance_valid(p) or not p.is_in_group("pocas_perigo") or _pocas_feitas.has(p):
+		return
+	_pocas_feitas[p] = true
+	var k := String(p.kind)
+	var tela := to_screen((p as Node2D).global_position)
+	var arte: Texture2D = load("res://assets/game/iso/chao/poca_%s_%d.png" % [k, absi(hash(String(p.name))) % 2]) 		if ResourceLoader.exists("res://assets/game/iso/chao/poca_%s_0.png" % k) else null
+	var laje: Sprite2D = null
+	for lv in _levels:
+		if (lv.rect as Rect2).grow(48.0).has_point((p as Node2D).global_position):
+			laje = lv.sprite
+	if arte and laje:
+		var dec := Sprite2D.new()
+		dec.name = "Poca_" + String(p.name)
+		dec.texture = arte
+		dec.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		dec.light_mask = 2
+		dec.position = (tela - laje.position).round()
+		laje.add_child(dec)
+	var l := PointLight2D.new()
+	l.name = "PocaLuz_" + String(p.name)
+	IsoLuz.aplica(l, "lava" if k == "lava" else "cristal")
+	l.color = POCA_LUZ.get(k, Color.WHITE)
+	l.energy = (IsoLuz.TIPOS.lava.forca if k == "lava" else 0.8)
+	l.range_item_cull_mask = LIGHT_ISO
+	l.range_z_min = RenderingServer.CANVAS_ITEM_Z_MIN
+	l.range_z_max = RenderingServer.CANVAS_ITEM_Z_MAX
+	l.position = tela
+	l.set_meta("tela_iso", true)
+	l.add_to_group("cullable_lights")
+	_terrain_node.add_child(l)
+	_luzes_zona.append([l, l.energy, randf() * TAU])
+	var fx: Array = POCA_FX.get(k, [])
+	var tex: Texture2D = IsoFx.tex(fx[0]) if not fx.is_empty() else null
+	if tex == null:
+		return
+	var r: float = float(p.radius) * S
+	var part := CPUParticles2D.new()
+	part.name = "PocaFx_" + String(p.name)
+	part.texture = tex
+	part.amount = 8 if k == "acido" else 12
+	part.lifetime = 2.2 if k == "acido" else 1.6
+	part.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	part.emission_rect_extents = Vector2(r * 0.8, r * 0.35)
+	part.position = tela
+	part.direction = Vector2(0, -1)
+	part.spread = 20.0
+	part.gravity = Vector2(0, -8)
+	part.initial_velocity_min = 6.0
+	part.initial_velocity_max = 14.0 if k == "acido" else 26.0
+	part.color = fx[1]
+	part.light_mask = 0
+	part.z_as_relative = false
+	part.z_index = 3650  # camada 4 (efeitos), embaixo da atmosfera
+	_things.add_child(part)
+	_poca_fx.append(part)
+	part.emitting = not Efeitos.reduzidos()
 
 
 # ------------------------------------------------------------ névoa do leste (Bloco 67)
@@ -687,6 +767,7 @@ func _scan_world() -> void:
 func _on_world_child_added(n: Node) -> void:
 	# entra no próximo quadro: o _ready dela (grupos, arte) ainda não rodou
 	_add.call_deferred(n)
+	_poca_add.call_deferred(n)  # Bloco 70: a luz e as bolhas da poça
 
 
 func _on_world_child_removed(n: Node) -> void:

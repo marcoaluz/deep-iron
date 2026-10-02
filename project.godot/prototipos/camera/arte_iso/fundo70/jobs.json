@@ -1,0 +1,51 @@
+{
+ "cristal_verde": {
+  "job": "eb2fb6e2-7756-4bc7-8414-144a4245aada",
+  "custo": null,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo70\\cristal_verde.png",
+  "ok": true,
+  "candidatos": 3
+ },
+ "cristal_rubro": {
+  "job": "37cf40f1-cc5a-41b8-a660-79fd64d1072a",
+  "custo": null,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo70\\cristal_rubro.png",
+  "ok": true,
+  "candidatos": 3
+ },
+ "ventilador": {
+  "job": "75fa4045-e0b1-48bf-855f-5ec4fc78347c",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo70\\ventilador.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "poca_acido": {
+  "job": "7c53cac1-30f3-46dd-ac17-2a32437d6e84",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo70\\poca_acido.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "poca_lava": {
+  "job": "4ae53f62-2ec8-4d6b-8083-fdc7a5617663",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo70\\poca_lava.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "poca_acido_iso": {
+  "job": "33877da2-f334-43e0-b953-e9a48d90174c",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo70\\poca_acido_iso.png",
+  "ok": true,
+  "candidatos": 4
+ },
+ "poca_lava_iso": {
+  "job": "9846d65f-85da-4598-9a17-443edb3df44e",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo70\\poca_lava_iso.png",
+  "ok": true,
+  "candidatos": 4
+ }
+}

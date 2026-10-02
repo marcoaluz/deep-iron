@@ -32,3 +32,8 @@ extends Resource
 @export_multiline var descricao: String = ""
 ## Decoração por dados (Bloco 69): [prop, x, y] na lógica, colocada pelo ambiente quando o nível existe.
 @export var decoracao: Array = []
+## Bloco 70: poças de perigo do chão (props/poca_perigo.gd): [tipo ("acido"/"lava"), x, y, raio].
+@export var perigos: Array = []
+## Bloco 70: jazidas do nível: [minério, x, y] ou [minério, x, y, total, ritmo, regeneração].
+## Nome fixo no save: Jazida<id>_<n> (JazidaS2_1...).
+@export var jazidas: Array = []

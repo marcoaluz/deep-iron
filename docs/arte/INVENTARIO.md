@@ -63,6 +63,7 @@ prompts 0–31).
 | Robô antigo GIGANTE (218 px, ~80% da casa): achado + arrastado + 3 estágios de conserto (deitado, mesma âncora) + ativo; fluxo em prompt05/FLUXO_ROBO.md | 5 | **integrado** (estados + andar/atacar/desligar; dano ainda não) | 4 estados parados + retrato + ícone | 8 paradas, 4 andando | andar, atacar, dano, desligar/derrubado | ~425 (feito) |
 | Coelho + toca (coelho fora / só orelhas / toca vazia) | 15 | toca **integrada**; o coelho andando não existe no jogo | 8 dir. + andar, fugir, abatido; 3 estados da toca | ~40 (feito) |
 | **Javali** + toca | 15 | **gerado** | 8 dir. + andar, fugir, abatido | ~25 (feito) |
+| **Gosma ácida** (S2) e **Magmante** (S3) — Bloco 70 | — | **integrado** (personagem pro no estilo do Lumívoro; Gosma escurecida na exportação 0,56 → 0,31) | — | 4 (SE/NE + espelho) | parado, andar, atacar, dano, morrer | ~90 (feito) |
 
 ## 5. Prédios (cada construível: obra_1 · obra_2 · obra_3 · pronto; upgrade com obra entre níveis)
 
@@ -120,6 +121,8 @@ prompts 0–31).
 | Pedaços de minério soltos + pilhas (3 tamanhos) + lascas do golpe | 8 | **gerado** | 6 formas + 3 pilhas por minério | ~40 (feito) |
 | Cristais (4 cores × 2), rochas (6 + 6 com musgo + 3 da mina), pedrinhas (8) | 8 | cristais e rochas **integrados**; pedrinhas não (o chão novo já tem) | — | ~80 (feito) |
 | Achados (bobina, cristal, peça, painel solar) + entulho (4 tamanhos) | 8 | **integrado** (entulho médio) | — | ~40 (feito) |
+| **Jazidas de cristal verde (S2) e rubro (S3)** — Bloco 70 | — | **integrado** | cheia, meia, quase (edit da jazida de prata, mesma âncora) | ~50 (feito) |
+| **Poças de ácido e poços de lava** (decalque deitado na laje, `assets/game/iso/chao/`) — Bloco 70 | — | **integrado** | 2 de cada | ~100 (feito) |
 
 ## 8. Vegetação
 
@@ -146,6 +149,7 @@ prompts 0–31).
 | Explosivos (pesquisa), antena do satélite (pesquisa "Satélite") | 14 | **integrados** (Prompt 18: caixote perto do poço; antena ao lado do laboratório, com pulsos) | 2 (feito) |
 | Pilhas de recurso P/M/G (pedra, tijolo, comida, couro, carvão, aço) + destroços pré-colapso e ossos | 14 | **gerado** | — | ~40 (feito) |
 | Sombra | 19 | **código** (gerada da pegada, regra 7) | 0 |
+| **Ventilador do nível 2** (prop + ícone do menu) — Bloco 70 | — | **integrado** | 25 (feito) |
 
 ## 10. Efeitos e luzes
 
@@ -186,6 +190,11 @@ prompts 0–31).
 - Prompts 16–26 e as pendências dos Prompts 2, 14 e 29: feitos em 2026-10-01/02 (ver o registro abaixo).
 
 ## Plano de crédito
+
+**Atualização 2026-10-02 (noite, Bloco 70 — conteúdo do S2/S3):** PixelLab no tier 3 (10.000 no
+ciclo, renova em 2026-11-02). Gasto no bloco ~260: jazidas de cristal (~50), ventilador (25), poças
+(100), Gosma e Magmante (~90). Arte em `prototipos/camera/arte_iso/fundo70/` e `criaturas/fundo.py`;
+relatório `docs/NIVEIS_S2_S3.md`.
 
 **Atualização 2026-10-02 (Prompts 16 a 26 + pendências dos Prompts 2, 14 e 29), sem checkpoint
 (o Marco liberou ir até o fim):** saldo 1.359 → **209** (1.150 gastas).

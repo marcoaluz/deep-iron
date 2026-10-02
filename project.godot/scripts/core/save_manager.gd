@@ -465,6 +465,7 @@ func _collect() -> Dictionary:
 		"research": "research",
 		"sun": "sun",
 		"equipment": "equipment",
+		"fundo": "fundo",  # Bloco 70: ventiladores e contadores
 	}
 	for key in singles:
 		var node := tree.get_first_node_in_group(singles[key])
@@ -539,6 +540,7 @@ func apply_pending(main: Node) -> void:
 	_apply_single("research", SaveUtil.dict(data, "research"))  # recria o laboratório
 	_apply_single("sun", SaveUtil.dict(data, "sun"))  # ondas, vitória e o gerador do escudo
 	_apply_single("equipment", SaveUtil.dict(data, "equipment"))  # Bloco 42: vestiário e fila
+	_apply_single("fundo", SaveUtil.dict(data, "fundo"))  # Bloco 70: ventiladores (save antigo: nenhum)
 	for c in get_tree().get_nodes_in_group("canteiros"):  # (troca pelos do save)
 		c.remove_from_group("canteiros")
 		c.remove_from_group("obras")

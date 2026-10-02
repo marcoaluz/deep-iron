@@ -151,6 +151,7 @@ func _ready() -> void:
 		migrate_positions()  # o que caiu em penhasco/escada/paliçada vai pro lugar válido mais perto
 	else:
 		_build_edges()
+	_build_conteudo_niveis()  # Bloco 70: poças e jazidas dos dados (antes da decoração: ela desvia)
 	_scatter(pebble_count, pebble_textures, 10.0, 0.4, _add_pebble)
 	_scatter(boulder_count, boulder_textures, 40.0, 1.0, _add_boulder)
 	_scatter(crystal_count, crystal_textures, 50.0, 1.0, _add_crystal)
@@ -194,6 +195,42 @@ func leste_rect() -> Rect2:
 		return Rect2()
 	var g := iso_ground_rect()
 	return Rect2(leste_x(), g.position.y, g.end.x - leste_x(), g.size.y)
+
+
+## Bloco 70: o conteúdo de jogo declarado em cada nível — poças de perigo e jazidas novas (nomes
+## fixos: o save das jazidas é pelo nome).
+func _build_conteudo_niveis() -> void:
+	var world := get_parent()
+	var ms := preload("res://scenes/props/mineral_node.tscn")
+	var Poca := preload("res://scripts/props/poca_perigo.gd")
+	for n in preload("res://scripts/core/niveis.gd").todos():
+		if n.em_breve:
+			continue
+		for i in n.perigos.size():
+			var d = n.perigos[i]
+			if not (d is Array) or d.size() < 3 or world.has_node("Poca%s_%d" % [n.id, i + 1]):
+				continue
+			var p: Node2D = Poca.new()
+			p.name = "Poca%s_%d" % [n.id, i + 1]
+			p.kind = String(d[0])
+			p.position = Vector2(float(d[1]), float(d[2]))
+			if d.size() >= 4:
+				p.radius = float(d[3])
+			world.add_child(p)
+		for i in n.jazidas.size():
+			var d = n.jazidas[i]
+			var nome := "Jazida%s_%d" % [n.id, i + 1]
+			if not (d is Array) or d.size() < 3 or world.has_node(nome):
+				continue
+			var m: Node2D = ms.instantiate()
+			m.name = nome
+			m.ore_type = String(d[0])
+			m.position = Vector2(float(d[1]), float(d[2]))
+			if d.size() >= 6:
+				m.ore_total = float(d[3])
+				m.MINE_RATE = float(d[4])
+				m.regen_rate = float(d[5])
+			world.add_child(m)
 
 
 ## Bloco 69: decoração por dados — cada NivelMina declara [prop, x, y]; aqui vira um Deco no lugar.
@@ -615,6 +652,9 @@ func in_forest(fp: Rect2) -> bool:
 func footprint_reason(fp: Rect2) -> String:
 	if not has_iso_map():
 		return ""
+	var andar := level_of(fp.get_center())  # Bloco 70: a laje de um andar de baixo é plana
+	if not andar.is_empty():
+		return "" if (andar.rect as Rect2).encloses(fp) else "fora do andar"
 	if fp.position.y < palisade_y + 6.0 and fp.end.y > palisade_y - 6.0:
 		return "em cima da paliçada"
 	var lv := -1
@@ -925,6 +965,9 @@ func _deep_spot_free(p: Vector2, spacing: float, placed: Array[Vector2], avoid: 
 			return false
 	for q in placed:
 		if p.distance_to(q) < spacing:
+			return false
+	for poca in get_tree().get_nodes_in_group("pocas_perigo"):  # Bloco 70: nada em cima da poça
+		if p.distance_to(poca.global_position) < float(poca.radius) + spacing * 0.5:
 			return false
 	return true
 

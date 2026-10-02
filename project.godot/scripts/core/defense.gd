@@ -43,6 +43,10 @@ signal invasion_ended(killed: int)
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const LUMIVORO := preload("res://scenes/creatures/lumivoro.tscn")
 const FERRUGENTO := preload("res://scenes/creatures/ferrugento.tscn")
+## Bloco 70: as criaturas do fundo (sobem pelo poço como o Ferrugento).
+const GOSMA := preload("res://scenes/creatures/gosma.tscn")
+const MAGMANTE := preload("res://scenes/creatures/magmante.tscn")
+const CENA := {"lumivoro": LUMIVORO, "ferrugento": FERRUGENTO, "gosma": GOSMA, "magmante": MAGMANTE}
 const CAMPO_SCENE := preload("res://scenes/props/campo_treino.tscn")
 const CAMPO_TEXTURE := preload("res://assets/game/campo_treino.png")
 const Canteiro := preload("res://scripts/props/canteiro.gd")
@@ -113,6 +117,13 @@ const WEAPON_DESCRIPTIONS := {
 @export var lumi_max: int = 10
 @export var ferr_per_wave: int = 1
 @export var ferr_max: int = 6
+## Bloco 70: Gosma ácida (com o S2 aberto) e Magmante (com o S3 aberto), a partir da onda indicada.
+@export var gosma_from_wave: int = 2
+@export var gosma_per_wave: int = 1
+@export var gosma_max: int = 4
+@export var magmante_from_wave: int = 3
+@export var magmante_per_wave: int = 1
+@export var magmante_max: int = 3
 ## Vida das criaturas cresce essa fração por onda.
 @export var hp_growth: float = 0.15
 ## Aviso quando faltar isso (s) pro anoitecer numa noite de invasão.
@@ -228,6 +239,21 @@ func campo_cost_text() -> String:
 func level2_open() -> bool:
 	var shaft := get_tree().get_first_node_in_group("elevador")
 	return shaft != null and shaft.unlocked
+
+
+## Bloco 70: a plataforma do abismo (S3) está aberta?
+func abyss_open() -> bool:
+	var ab := get_tree().get_first_node_in_group("elevador_abismo")
+	return ab != null and ab.unlocked
+
+
+## Bloco 70: quantas criaturas do fundo vêm nesta onda.
+func fundo_count(kind: String, w: int = wave) -> int:
+	if kind == "gosma":
+		return clampi(gosma_per_wave * (w - gosma_from_wave + 1), 0, gosma_max) if level2_open() and w >= gosma_from_wave else 0
+	if kind == "magmante":
+		return clampi(magmante_per_wave * (w - magmante_from_wave + 1), 0, magmante_max) if abyss_open() and w >= magmante_from_wave else 0
+	return 0
 
 
 func first_day() -> int:
@@ -851,15 +877,25 @@ func start_invasion() -> void:
 		_spawn_queue.append({"kind": "lumivoro", "at": randf_range(0.0, spawn_spread)})
 	for i in ferr:
 		_spawn_queue.append({"kind": "ferrugento", "at": randf_range(2.0, spawn_spread)})
+	var gosmas := fundo_count("gosma")
+	var magmantes := fundo_count("magmante")
+	for i in gosmas:
+		_spawn_queue.append({"kind": "gosma", "at": randf_range(3.0, spawn_spread)})
+	for i in magmantes:
+		_spawn_queue.append({"kind": "magmante", "at": randf_range(4.0, spawn_spread)})
 	var chefe := boss_due()
 	if chefe:
 		_spawn_queue.append({"kind": "chefe", "at": spawn_spread * 0.6})
 	_spawn_queue.sort_custom(func(a, b): return a.at < b.at)
-	last_result = {"onda": wave, "tier": tier(), "total": lumi + ferr + (1 if chefe else 0), "derrubadas": 0, "chefe": "veio" if chefe else ""}
+	last_result = {"onda": wave, "tier": tier(), "total": lumi + ferr + gosmas + magmantes + (1 if chefe else 0), "derrubadas": 0, "chefe": "veio" if chefe else ""}
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
+		var outros := []
+		for par in [[ferr, "Ferrugento"], [gosmas, "Gosma ácida"], [magmantes, "Magmante"]]:
+			if par[0] > 0:
+				outros.append("%d %s%s" % [par[0], par[1], "s" if par[0] > 1 and par[1] != "Gosma ácida" else ""])
 		hud.show_banner("INVASÃO! (onda %d, tier %d)" % [wave, tier()], "%d Lumívoros%s. Aguentem até o amanhecer." % [
-			lumi, (" e %d Ferrugentos" % ferr) if ferr > 0 else ""])
+			lumi, (", " + ", ".join(outros)) if not outros.is_empty() else ""])
 	Audio.alarm()
 	invasion_started.emit(wave)
 
@@ -867,7 +903,7 @@ func start_invasion() -> void:
 func _spawn(kind: String) -> Node2D:
 	var env := get_tree().get_first_node_in_group("environment")
 	var world := get_tree().get_first_node_in_group("village_hub").get_parent()
-	var c: Node2D = (LUMIVORO if kind == "lumivoro" else FERRUGENTO).instantiate()
+	var c: Node2D = (CENA.get(kind, FERRUGENTO) as PackedScene).instantiate()
 	var pos: Vector2
 	var g: Node2D
 	if kind == "lumivoro":
@@ -899,7 +935,7 @@ func _spawn(kind: String) -> Node2D:
 			killed_tonight += 1)
 	var diary := get_tree().get_first_node_in_group("diary")
 	if diary:
-		diary.unlock("lumivoros" if kind == "lumivoro" else "ferrugentos")
+		diary.unlock({"lumivoro": "lumivoros", "ferrugento": "ferrugentos", "gosma": "gosmas", "magmante": "magmantes"}.get(kind, ""))
 	return c
 
 

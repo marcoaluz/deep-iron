@@ -492,7 +492,9 @@ def bonecos():
 # então as rotações saíram giradas; criaturas/base/chars.json tem os ids)
 CRIATURAS = {"lumivoro": {"SE": "east", "NE": "north-east"}, "lumivoro_bruto": {"SE": "south-east", "NE": "north-east"},
              "ferrugento": {"SE": "east", "NE": "north-east"}, "ferrugento_carregador": {"SE": "south-east", "NE": "east"},
-             "lumivoro_matriarca": {"SE": "south-east", "NE": "north-east"}}  # Bloco 62: o chefe
+             "lumivoro_matriarca": {"SE": "south-east", "NE": "north-east"},  # Bloco 62: o chefe
+             "gosma": {"SE": "south-east", "NE": "north-east"},  # Bloco 70: criaturas do fundo (criaturas/fundo.py)
+             "magmante": {"SE": "south-east", "NE": "north-east"}}
 ANIMS_CRIATURA = ["caminhada", "atacar", "dano", "morrer"]
 
 
@@ -510,7 +512,23 @@ def _olho_vermelho(im):
     return Image.fromarray(a.clip(0, 255).astype(np.uint8), "RGBA")
 
 
-CORRIGE = {"ferrugento": _olho_vermelho}
+def _gosma_turva(im):
+    """Bloco 70: a Gosma veio neon (brilho 0,56; as outras criaturas 0,17-0,21). Curva no valor (2,2:
+    escurece os meios e guarda os realces das bolhas), x0,85 e um pouco menos de saturação -> ~0,31,
+    ácido turvo que ainda é o acento do nível."""
+    a = np.array(im).astype(np.float32) / 255.0
+    rgb = a[..., :3]
+    m = a[..., 3] > 0.15
+    v = rgb.max(-1)
+    k = np.where(v > 0, (v ** 2.2) * 0.85 / np.maximum(v, 1e-6), 0.0)
+    out = rgb * k[..., None]
+    cinza = out.max(-1, keepdims=True)
+    out = cinza + (out - cinza) * 0.8
+    a[..., :3] = np.where(m[..., None], out, rgb)
+    return Image.fromarray((a * 255.0).clip(0, 255).astype(np.uint8), "RGBA")
+
+
+CORRIGE = {"ferrugento": _olho_vermelho, "gosma": _gosma_turva}
 
 
 def _criatura_tira(frames, mirror=False, fix=None):
@@ -616,6 +634,12 @@ PROPS["horta_espantalho"] = "vegetacao/final/horta_espantalho.png"
 for nome in ("guindaste_pedreira", "vagonete_cheio_SE", "caixotes_2", "barris_2", "sacos", "pedra_g", "tijolo_m",
              "poco", "banco", "placa_caveira", "caixote"):
     PROPS[nome] = "objetos/final/%s.png" % nome
+
+# Bloco 70: jazidas de cristal verde (S2) e rubro (S3) e o ventilador do nível 2 (fundo70/)
+for m in ("cristal_verde", "cristal_rubro"):
+    for st in ("cheia", "meia", "quase"):
+        PROPS["jazida_%s_%s" % (m, st)] = "fundo70/jazida_%s_%s.png" % (m, st)
+PROPS["ventilador"] = "fundo70/ventilador.png"
 
 # Prompts 14 e 18: cova (cemitério), explosivos (pesquisa), antena do satélite, cesto e placa de greve
 for nome in ("cova", "explosivos", "antena", "cesto", "placa_greve"):

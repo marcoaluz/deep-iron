@@ -20,7 +20,7 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 const LAB_SCENE := preload("res://scenes/props/laboratorio.tscn")
 const LAB_TEXTURE := preload("res://assets/game/laboratorio.png")
 const Canteiro := preload("res://scripts/props/canteiro.gd")
-const ORDER := ["carrinhos", "explosivos", "escoramento", "trajes", "medicina", "radio", "hidroponia",
+const ORDER := ["carrinhos", "explosivos", "escoramento", "trajes", "ventilacao", "medicina", "radio", "hidroponia",
 	"estudo_solar", "satelite", "holofotes", "escudo"]
 ## points = pontos de pesquisa; cost = créditos, minério, madeira; ore = tipo do minério.
 const TECHS := {
@@ -36,6 +36,9 @@ const TECHS := {
 	"trajes": {"name": "Trajes de proteção", "branch": "Mina", "req": "carrinhos", "excl": "", "points": 120,
 		"cost": Vector3i(250, 40, 0), "ore": "cobre",
 		"desc": "A Oficina passa a fazer máscara de gás, traje térmico e traje antirradiação — pras zonas de perigo do fundo (Bloco 42). Sem ela, a plataforma do abismo (S3, lava) não desce."},
+	"ventilacao": {"name": "Ventilação", "branch": "Mina", "req": "trajes", "excl": "", "points": 120,
+		"cost": Vector3i(300, 40, 0), "ore": "prata",
+		"desc": "Ventiladores no nível 2 (menu de construção): em volta deles a máscara de gás gasta metade e o ácido das poças queima mais devagar; a névoa verde afina."},
 	"medicina": {"name": "Medicina de campo", "branch": "Vila", "req": "", "excl": "", "points": 80,
 		"cost": Vector3i(200, 40, 0), "ore": "cobre",
 		"desc": "Cura no leito 30% mais rápida; machucado sem leito aguenta 50% mais tempo."},

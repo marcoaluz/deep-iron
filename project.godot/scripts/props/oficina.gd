@@ -42,6 +42,9 @@ const TOOL_UNLOCKS := {
 	"broca": "prata",
 	"traje": "solarita",
 }
+## Bloco 70: minérios a mais que a mesma ferramenta libera (a broca fura o cristal verde do S2; o
+## traje de chumbo aguenta o calor do cristal rubro do S3).
+const TOOL_UNLOCKS_EXTRA := {"cristal_verde": "broca", "cristal_rubro": "traje"}
 
 @export_group("Ferramentas (na ordem de TOOL_IDS)")
 ## x = créditos, y = quantidade de minério, z = segundos na forja.
@@ -227,6 +230,8 @@ func is_ore_unlocked(ore_type: String) -> bool:
 
 ## Ferramenta que libera o minério ("" = não precisa de nenhuma).
 func tool_for_ore(ore_type: String) -> String:
+	if TOOL_UNLOCKS_EXTRA.has(ore_type):
+		return TOOL_UNLOCKS_EXTRA[ore_type]
 	for id in TOOL_UNLOCKS:
 		if TOOL_UNLOCKS[id] == ore_type:
 			return id

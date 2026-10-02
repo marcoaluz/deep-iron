@@ -25,6 +25,9 @@ signal worker_recruited(worker: Node2D, cost: int)
 @export var silver_price: float = 8.0
 ## Créditos por unidade de solarita (nível 3, o abismo).
 @export var solarita_price: float = 14.0
+## Bloco 70: cristal verde (S2, galerias de ácido) e cristal rubro (S3, poços de lava).
+@export var cristal_verde_price: float = 10.0
+@export var cristal_rubro_price: float = 18.0
 @export var starting_credits: float = 0.0
 ## Vende sozinho o que estiver no armazém a cada auto_sell_interval segundos.
 @export var auto_sell: bool = false
@@ -91,6 +94,10 @@ func price_of(ore_type: String) -> float:
 			return silver_price
 		"solarita":
 			return solarita_price
+		"cristal_verde":
+			return cristal_verde_price
+		"cristal_rubro":
+			return cristal_rubro_price
 	return ore_price
 
 

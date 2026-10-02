@@ -465,7 +465,7 @@ func drill_status() -> String:
 		return "PANE! volta em %ds" % ceili(outage_left)
 	if no_fuel:
 		return "SEM CARVÃO"
-	return "perfurando  %.2f minério/s" % reactor_rate()
+	return "perfurando  %.2f minério/s" % (reactor_rate() * _fundo_mult())
 
 
 ## Multiplicador da chance de achado (reator Cristal).
@@ -585,7 +585,7 @@ func _drill(delta: float) -> void:
 				no_fuel = true
 				_fuel_retry = 2.0
 				return
-	_drill_accum += reactor_rate() * delta
+	_drill_accum += reactor_rate() * delta * _fundo_mult()
 	while _drill_accum >= 1.0:
 		_drill_accum -= 1.0
 		_deliver_ore(_pick_ore())
@@ -606,7 +606,17 @@ func _take_coal(amount: float) -> bool:
 	return false
 
 
+## Bloco 70: com o abismo (S3) aberto a broca rende mais (Fundo.broca_s3_mult).
+func _fundo_mult() -> float:
+	var fundo := get_tree().get_first_node_in_group("fundo")
+	return fundo.broca_mult() if fundo else 1.0
+
+
 func _pick_ore() -> String:
+	var fundo := get_tree().get_first_node_in_group("fundo")
+	var cristal: String = fundo.cristal_da_broca() if fundo else ""
+	if cristal != "":
+		return cristal  # Bloco 70: no fundo aberto a broca também acha cristal
 	var mix: Dictionary = REACTOR_MIX.get(reactor, {"ferro": 1.0})
 	var r := randf()
 	for t in mix:

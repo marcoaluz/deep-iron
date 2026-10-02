@@ -6,7 +6,8 @@ extends Node
 
 const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre", "carvao", "prata", "solarita",
 	"madeira", "comida", "populacao", "feridos", "animo_medio", "mortes", "onda", "criaturas_derrubadas",
-	"invasao_ativa", "pesquisas", "greve", "estagio_vila", "tier", "ultima_onda_total", "ultima_onda_derrubadas", "chefe"]
+	"invasao_ativa", "pesquisas", "greve", "estagio_vila", "tier", "ultima_onda_total", "ultima_onda_derrubadas", "chefe",
+	"cristal_verde", "cristal_rubro", "queimaduras_acido", "queimaduras_lava", "ventiladores"]  # (Bloco 70: no fim)
 
 var arquivo := ""
 var _t0 := 0
@@ -42,6 +43,7 @@ func registra() -> void:
 	var defe := _g("defense")
 	var res := _g("research")
 	var hub := _g("village_hub")
+	var fundo := _g("fundo")  # Bloco 70
 	var ws := get_tree().get_nodes_in_group("ipezinhos")
 	var comida := 0.0
 	for c in get_tree().get_nodes_in_group("comedouros"):
@@ -63,7 +65,10 @@ func registra() -> void:
 		defe.tier() if defe and defe.has_method("tier") else 0,
 		int((defe.last_result as Dictionary).get("total", 0)) if defe and defe.get("last_result") != null else 0,
 		int((defe.last_result as Dictionary).get("derrubadas", 0)) if defe and defe.get("last_result") != null else 0,
-		String((defe.last_result as Dictionary).get("chefe", "")) if defe and defe.get("last_result") != null else ""]
+		String((defe.last_result as Dictionary).get("chefe", "")) if defe and defe.get("last_result") != null else "",
+		int(stock.get("cristal_verde", 0)), int(stock.get("cristal_rubro", 0)),
+		int(fundo.queimaduras.get("acido", 0)) if fundo else 0, int(fundo.queimaduras.get("lava", 0)) if fundo else 0,
+		fundo.ventiladores().size() if fundo else 0]
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return

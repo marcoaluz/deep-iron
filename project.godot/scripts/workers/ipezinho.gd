@@ -420,6 +420,10 @@ var wearing: Dictionary = {}
 ## Couro da caça na mochila (vai pro armazém junto com a carne).
 var leather_carrying: float = 0.0
 var _hazard_cd := 0.0
+## Bloco 70: a poça de perigo (ácido/lava) em que está pisando SEM o traje (null = nenhuma) e há quanto
+## tempo (s) está exposto; passou de Fundo.exposicao, queima.
+var _na_poca: Node = null
+var _poca_expo := 0.0
 ## Bloco 36: guarda que perdeu a luta — caído no lugar (grave), só o MÉDICO leva pra enfermaria.
 var downed: bool = false
 ## Portão onde ele caiu ("tunel"/"poco"): enquanto ele está caído, é a brecha na defesa.
@@ -705,6 +709,8 @@ func _get_effective_speed() -> float:
 		s *= starving_speed_mult
 	if injured:
 		s *= injured_speed_mult
+	if _na_poca != null and is_instance_valid(_na_poca):
+		s *= _na_poca.lentidao()  # Bloco 70: atolado no ácido/lava sem traje
 	if holding_robot != null:
 		s *= carry_robot_speed_mult
 	if carrying_patient != null:
@@ -2494,26 +2500,60 @@ func _equip_tick(delta: float) -> void:
 		eq.give_back("casaco", wearing.casaco)
 		wearing.erase("casaco")
 	# trajes: veste na entrada da zona, devolve na saída, gasta só lá dentro
-	var z: String = eq.hazard_at(global_position)
+	var zona: String = eq.hazard_at(global_position)
+	# Bloco 70: fora das zonas, a poça de perigo (ácido/lava) também pede o traje dela
+	var fundo := _fundo()
+	var poca: Node = fundo.poca_at(global_position) if zona == "" and fundo and not _inside else null
+	var z: String = zona if zona != "" else (String(poca.traje()) if poca else "")
+	_na_poca = null
 	for t in eq.SUITS:
 		if wearing.has(t) and t != z:
 			eq.give_back(t, wearing[t])
 			wearing.erase(t)
 	if z == "" or _carried_by != null:
+		_poca_expo = maxf(_poca_expo - delta * 0.5, 0.0)  # fora da poça o ardor passa
 		return
 	if not wearing.has(z):
 		var d: float = eq.take(z)
 		if d > 0.0:
 			wearing[z] = d
 			_popup("Vestiu: %s" % eq.NAMES[z].to_lower(), Color(0.8, 1.0, 0.7))
+		elif poca != null:
+			_poca_tick(poca, delta)  # sem traje no vestiário: passa pela poça e se arrisca
 		else:
 			_leave_hazard(eq, z, "sem %s no vestiário" % eq.NAMES[z].to_lower())
 		return
-	wearing[z] -= delta * eq.wear_rate(z)
+	var vent: float = fundo.ventilacao_mult(global_position) if fundo and z == "gas" else 1.0
+	wearing[z] -= delta * eq.wear_rate(z) * vent  # (Bloco 70: o ventilador poupa a máscara)
 	if wearing[z] <= 0.0:
 		wearing.erase(z)
 		eq.give_back(z, 0.0)
-		_leave_hazard(eq, z, "%s quebrou" % eq.NAMES[z].to_lower())
+		if poca == null:
+			_leave_hazard(eq, z, "%s quebrou" % eq.NAMES[z].to_lower())
+
+
+func _fundo() -> Node:
+	return get_tree().get_first_node_in_group("fundo")
+
+
+## Bloco 70: dentro da poça sem traje — devagar e, passou do tempo, queima (vai pra enfermaria como
+## qualquer machucado). O ventilador do S2 faz o ácido arder mais devagar.
+func _poca_tick(poca: Node, delta: float) -> void:
+	_na_poca = poca
+	var fundo := _fundo()
+	var k: float = fundo.ventilacao_mult(global_position) if fundo and poca.kind == "acido" else 1.0
+	_poca_expo += delta * k
+	if _hazard_cd <= 0.0:
+		_hazard_cd = 4.0
+		_popup("%s! Sem %s" % [poca.nome(), _equipment().NAMES[poca.traje()].to_lower()], Color(1.0, 0.6, 0.4))
+	if _poca_expo < poca.exposicao() or injured:
+		return
+	_poca_expo = 0.0
+	var grave: bool = randf() < poca.grave_chance()
+	if fundo:
+		fundo.registra_queimadura(poca.kind)
+	hurt(poca.kind, "grave" if grave else "leve")
+	_toast("%s se queimou no %s (sem %s)." % [_display(), poca.nome().to_lower(), _equipment().NAMES[poca.traje()].to_lower()])
 
 
 ## Sem traje (ou ele quebrou) dentro da zona: sai na hora, sem travar nada.
@@ -2581,7 +2621,7 @@ func hurt(cause: String = "mina", severity: String = "") -> void:
 			if hud and hud.has_method("show_banner"):
 				hud.show_banner("ACIDENTE NA MINA", "%s se machucou feio no desabamento. Precisa de leito na enfermaria." % _display())
 	var grave := injury_severity == "grave"
-	var text := "Ai! Um galho!" if cause == "galho" else ("Ai! O javali!" if cause == "javali" else "Ai!")
+	var text: String = {"galho": "Ai! Um galho!", "javali": "Ai! O javali!", "acido": "Ai! Ácido!", "lava": "Ai! Queimou!"}.get(cause, "Ai!")
 	_popup(text + (" (grave)" if grave else ""), Color(1.0, 0.25, 0.2) if grave else Color(1.0, 0.4, 0.35))
 	if grave and not downed:  # (caído em combate tem o aviso próprio)
 		_toast("%s se machucou feio! Precisa de leito na enfermaria." % _display())
@@ -2801,10 +2841,10 @@ func mine(amount: float, ore_type: String = "ferro") -> float:
 	var res := _research()
 	var boom: float = res.mining_speed_mult() if res else 1.0  # explosivos
 	var taken: float = minf(amount * work_mult() * boom, space)  # zangado minera menos
-	if ore_type == "solarita" and taken > 0.0:
+	if ore_type in ["solarita", "cristal_verde", "cristal_rubro"] and taken > 0.0:
 		var diary := get_tree().get_first_node_in_group("diary")
 		if diary:
-			diary.unlock("solarita")
+			diary.unlock("solarita" if ore_type == "solarita" else "cristais")
 	carrying += taken
 	if taken > 0.0:
 		_work_timer = 0.2

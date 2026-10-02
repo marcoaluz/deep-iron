@@ -19,6 +19,24 @@ const ENTRIES := {
 			+ "sobem pelo poço desde que abrimos o nível 2. Comem metal: vão direto no armazém. "
 			+ "Ao amanhecer, desligam.",
 	},
+	"gosmas": {
+		"title": "Gosmas ácidas",
+		"text": "No nível 2 o ácido das poças ganhou vida. As Gosmas sobem pelo poço à noite, "
+			+ "rápidas e moles: o golpe delas corrói o metal das armas e o ácido derrete as "
+			+ "barricadas. No armazém, dissolvem o ferro e o cobre. Às vezes deixam cristal verde.",
+	},
+	"magmantes": {
+		"title": "Magmantes",
+		"text": "Pedra viva do abismo, quente por dentro. Lentos e duros de derrubar, derretem a "
+			+ "barricada e, no armazém, comem o carvão. Quando caem, sobra cristal rubro no meio "
+			+ "da casca.",
+	},
+	"cristais": {
+		"title": "Cristais do fundo",
+		"text": "O cristal verde cresce nas galerias de ácido do nível 2; o rubro, em volta dos "
+			+ "poços de lava do abismo. Os dois valem mais que a prata e a broca da escavadeira "
+			+ "também acha. Pra chegar neles, máscara de gás e traje térmico: as poças queimam.",
+	},
 	"matriarca": {
 		"title": "A Matriarca",
 		"text": "Os Lumívoros têm uma rainha. É duas vezes maior, coberta de cristais roxos, e "

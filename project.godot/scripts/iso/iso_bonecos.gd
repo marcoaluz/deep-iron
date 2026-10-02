@@ -346,7 +346,8 @@ static func robo_pose(r: Node, iso_dir: int, clock: float, moving: bool) -> Dict
 # ------------------------------------------------------------ criaturas (Prompt 17)
 ## Pasta da criatura (kind + variante) no bonecos.json.
 const CRIATURA_PASTA := {"lumivoro": ["criatura_lumivoro", "criatura_lumivoro_bruto"],
-	"ferrugento": ["criatura_ferrugento", "criatura_ferrugento_carregador"]}
+	"ferrugento": ["criatura_ferrugento", "criatura_ferrugento_carregador"],
+	"gosma": ["criatura_gosma", "criatura_gosma"], "magmante": ["criatura_magmante", "criatura_magmante"]}  # Bloco 70
 ## Bloco 62: a arte do chefe de cada tipo.
 const CRIATURA_CHEFE := {"lumivoro": "criatura_lumivoro_matriarca"}
 ## Quanto tempo (s) cada reação fica na tela.

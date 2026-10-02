@@ -5,6 +5,10 @@ extends Node2D
 ##                lá fora e, nas casas/prédios acesos, assusta quem está dentro (ânimo cai).
 ##   Ferrugento — máquina de antes da explosão. Sobe pelo poço do elevador (só depois que
 ##                o nível 2 abre). Ataca quem estiver perto e rouba minério do armazém.
+##   Gosma ácida — Bloco 70: do S2 (ácido). Sobe pelo poço. O golpe corrói a arma do guarda e o
+##                ácido derrete barricada mais rápido; no armazém, dissolve o metal (ferro, cobre).
+##   Magmante   — Bloco 70: do S3 (lava). Lento e duro; derrete barricada; no armazém come o
+##                carvão. Derrubado, às vezes deixa cristal rubro.
 ## Antes de entrar, precisa derrubar a barricada do caminho (se tiver uma de pé).
 ## Bloco 36: com o guarda do portão dele CAÍDO (brecha), vai direto no armazém saquear
 ## (defense.gd: raid — uma parte do minério e dos créditos, uma vez por portão por invasão).
@@ -15,9 +19,10 @@ extends Node2D
 ## escolhe nas ondas altas (make_strong).
 
 const IsoArt := preload("res://scripts/iso/iso_art.gd")
+const Ores := preload("res://scripts/core/ores.gd")
 signal died(killed: bool)
 
-@export_enum("lumivoro", "ferrugento") var kind: String = "lumivoro"
+@export_enum("lumivoro", "ferrugento", "gosma", "magmante") var kind: String = "lumivoro"
 @export var max_hp: float = 18.0
 @export var speed: float = 68.0
 @export var damage: float = 4.0
@@ -31,6 +36,12 @@ signal died(killed: bool)
 @export var scare_amount: float = 1.0
 ## Distância em que ele larga o alvo e parte pra cima de quem está perto.
 @export var notice_range: float = 150.0
+## Bloco 70: multiplica o dano na barricada (o ácido e a lava derretem).
+@export var barricade_mult: float = 1.0
+## Bloco 70: derrubado, chance de deixar cristal (minério, quantidade) no armazém.
+@export var drop_ore: String = ""
+@export var drop_amount: int = 0
+@export_range(0.0, 1.0) var drop_chance: float = 0.0
 
 var hp: float = 0.0
 ## Portão por onde ele vem ("tunel"/"poco") — Bloco 36, pra saber se a brecha é a dele.
@@ -225,7 +236,7 @@ func _pick_target() -> Node2D:
 		if lit.is_empty():
 			lit = get_tree().get_nodes_in_group("village_hub")
 		return _nearest(lit)
-	# ferrugento: quem estiver perto; senão o minério do armazém
+	# ferrugento (e os do fundo): quem estiver perto; senão o minério do armazém
 	var near := _nearest(awake, notice_range)
 	if near:
 		return near
@@ -240,7 +251,7 @@ func _attack(t: Node2D) -> void:
 	_visual.position.y = -3.0
 	create_tween().tween_property(_visual, "position:y", 0.0, 0.15)
 	if t.is_in_group("barricadas"):
-		t.damage(damage)
+		t.damage(damage * barricade_mult)
 		if kind == "ferrugento":
 			Audio.clank(global_position)
 		return
@@ -258,9 +269,21 @@ func _attack(t: Node2D) -> void:
 		else:
 			Audio.clank(global_position)
 		return
+	if kind in ["gosma", "magmante"] and t.is_in_group("armazens"):
+		# Bloco 70: a Gosma dissolve o metal; o Magmante come o carvão (some, ninguém leva)
+		var tipos: Array = ["ferro", "cobre"] if kind == "gosma" else ["carvao"]
+		var gone := 0.0
+		for ore in tipos:
+			if gone >= steal_amount:
+				break
+			gone += t.take(steal_amount - gone, ore)
+		if gone > 0.0:
+			t.show_popup("-%d %s (%s)" % [roundi(gone), "metal" if kind == "gosma" else "carvão", "Gosma" if kind == "gosma" else "Magmante"], Color(1.0, 0.45, 0.35))
+		Audio.clank(global_position)
+		return
 	if kind == "ferrugento" and t.is_in_group("armazens"):
 		var left := steal_amount
-		for ore in ["ferro", "cobre", "carvao", "prata", "solarita"]:
+		for ore in Ores.TYPES:
 			if left <= 0.0:
 				break
 			left -= t.take(left, ore)
@@ -306,6 +329,13 @@ func die(killed: bool) -> void:
 			var hud := get_tree().get_first_node_in_group("hud")
 			if hud:
 				hud.show_toast("Um Ferrugento virou sucata: +1 peça rara.", Color(1.0, 0.85, 0.45))
+	if killed and drop_ore != "" and drop_amount > 0 and randf() < drop_chance:
+		var arm := get_tree().get_first_node_in_group("armazens")
+		if arm:
+			arm.add_ore(float(drop_amount), drop_ore)  # Bloco 70: o cristal que ele carregava
+			var hud := get_tree().get_first_node_in_group("hud")
+			if hud:
+				hud.show_toast("Dos restos: +%d %s no armazém." % [drop_amount, Ores.display_name(drop_ore).to_lower()], Color(1.0, 0.85, 0.45))
 	var t := create_tween()
 	if _iso_art():
 		t.tween_interval(1.4)  # Prompt 17: cai (animação) e fica um pouco no chão antes de sumir

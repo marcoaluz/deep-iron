@@ -33,6 +33,7 @@ const KINDS := {
 	"vagonete": ["Trilho e vagonete", "village_hub", "res://assets/game/iso/props/vagonete_cheio_SE.png", 1],  # Bloco 64
 	"desbravar": ["Desbravar o leste", "village_hub", "", 1],  # Bloco 67
 	"enfermaria": ["Enfermaria", "village_hub", "res://assets/game/enfermaria.png", 2],  # Bloco 47 (extra)
+	"ventilador": ["Ventilador", "fundo", "res://assets/game/ventilador.png", 1],  # Bloco 70 (nível 2)
 }
 
 var kind: String = ""

@@ -198,6 +198,14 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return def.campo_cost_text(),
 					"reason": func(): return def.campo_block_reason(),
 					"act": func(): def.build_campo()})
+			var fundo := _g("fundo")
+			if fundo:
+				out.append({"name": "Ventilador (nível 2)", "tex": "ventilador", "frames": 1, "many": true,
+					"desc": "Lá embaixo, no S2: em volta dele a máscara de gás gasta metade e o ácido das poças queima mais devagar. Afina a névoa verde.",
+					"count": func(): return _count("ventiladores"),
+					"cost": func(): return fundo.ventilador_cost_text(),
+					"reason": func(): return fundo.ventilador_block_reason(),
+					"act": func(): fundo.build_ventilador()})
 			if eq:
 				out.append({"name": "Vestiário", "tex": "vestiario", "frames": 1,
 					"desc": "Guarda casacos e trajes (a Oficina faz). Um só: o estoque é da vila toda.",
