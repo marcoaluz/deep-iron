@@ -400,6 +400,8 @@ func _visual_rect() -> Rect2:
 ## Recalcula a caixa. true = mudou (a ordem precisa re-encaixar).
 func _update_box() -> bool:
 	var feet := src.global_position
+	if not dynamic and not _art_box.is_empty():
+		return _update_box_art(feet)  # Bloco 53: fixa com a arte nova: a caixa é a do desenho
 	# boneco novo: a altura vem dele (medir o desenho antigo a cada quadro custa)
 	var vr := Rect2(0, -_char_h / _view.S, 1, 1) if dynamic and _char_h > 0.0 else _visual_rect()
 	var rect: Rect2
@@ -424,6 +426,22 @@ func _update_box() -> bool:
 	var zb: float = _view.height_at(feet) if _view.has_method("height_at") else 0.0
 	if _parts.size() > 1:
 		return _update_parts(feet, zb)
+	var changed: bool = rect != box.rect or absf(box.zt - (zb + top)) > 1.0 or box.zb != zb
+	box.rect = rect
+	box.zb = zb
+	box.zt = zb + top
+	return changed
+
+
+## Bloco 53: a mesma conta do _update_box pra fixa com a arte nova, sem medir o desenho antigo
+## nem a pegada (que a caixa declarada do desenho substitui).
+func _update_box_art(feet: Vector2) -> bool:
+	var zb: float = _view.height_at(feet) if _view.has_method("height_at") else 0.0
+	if _parts.size() > 1:
+		return _update_parts(feet, zb)
+	var ar: Rect2 = _art_box.rect
+	var rect := Rect2(_view.art(feet) + ar.position, ar.size)
+	var top: float = _art_box.h
 	var changed: bool = rect != box.rect or absf(box.zt - (zb + top)) > 1.0 or box.zb != zb
 	box.rect = rect
 	box.zb = zb
@@ -524,17 +542,32 @@ func sync_dynamic(view_rect: Rect2 = Rect2()) -> void:
 		var want := 1.0 if _view.faces_right(iso_dir) else -1.0
 		_flip = want * src_f
 	position = scr.round()
-	# rótulos/ícones/luz copiados a cada 2 quadros (alternando entre os bonecos): a cópia por
-	# reflexão é o que mais custa; posição, animação e direção continuam a cada quadro
+	_clock += get_process_delta_time()
+	# Bloco 53: rótulos/ícones/luz E a pose do boneco novo a cada 2 quadros (alternando entre os
+	# bonecos; a animação é de ~10 quadros/s, então não se vê): a posição continua a cada quadro.
+	# Chamado sem view_rect (testes, sincronizar já): tudo agora.
 	_props_synced = false
-	if _char == null or never_synced or (Engine.get_process_frames() + get_instance_id()) % 2 == 0:
+	if not view_rect.has_area() or _char == null or never_synced or (Engine.get_process_frames() + get_instance_id()) % 2 == 0:
 		never_synced = false
 		_sync_props()
 		_props_synced = true
-	_tool_rule(moving)
-	_sync_char()
-	_top.queue_redraw()
-	queue_redraw()
+		_tool_rule(moving)
+		_sync_char()
+		_redraw_if_changed()
+
+
+## Bloco 53: sombra/anel/barra de vida só se redesenham quando muda o que eles mostram (antes era
+## todo quadro, pra cada boneco).
+var _draw_sig := []
+
+
+func _redraw_if_changed() -> void:
+	var sig := [src.get("_inside"), src.get("selected"), _char != null, scale, src.get("hp"), src.get("_dying"),
+		_char_h, _flip, src.get("_target") if src.is_in_group("criaturas") else null]
+	if sig != _draw_sig:
+		_draw_sig = sig
+		_top.queue_redraw()
+		queue_redraw()
 
 
 # ------------------------------------------------------------ luz e noite (Prompt 19)
@@ -629,7 +662,6 @@ func _chama(nome: String, pos: Vector2, on: bool) -> void:
 ## ferramenta nas costas por cima ou por trás. Ícones (machucado, zanga, carga) ficam, acima da
 ## cabeça nova; a cor de estado do corpo (fome, frio, traje) passa pro boneco novo.
 func _sync_char() -> void:
-	_clock += get_process_delta_time()
 	var p: Dictionary
 	if src.is_in_group("robos"):
 		p = IsoBonecos.robo_pose(src, iso_dir, _clock, _moving_now)

@@ -59,6 +59,13 @@ roda a suíte no GitHub (manual ou em push na `main`; opcional, leva ~1 h).
   ou `[debug] telemetria=true` no `settings.cfg`). Resumo: `python tools/resumo_telemetria.py <pasta>`.
 - **Onde mexer em cada valor:** `docs/BALANCEAMENTO.md` (gerado por `python tools/lista_balanceamento.py`).
 
+## Desempenho (Bloco 53)
+
+`powershell -ExecutionPolicy Bypass -File toolsench_cena.ps1 [-Rapido]` abre uma janela 1920×1080 sem
+vsync e mede 3 cenários (início, vila média, vila cheia + invasão + chuva + noite), o detalhe da HUD e
+da vista iso e o custo por script. Resultado em `docs/bench/`; método e antes × depois em
+`docs/DESEMPENHO.md`. Não é teste do GUT (precisa de janela e de PC parado).
+
 ## Pela linha de comando
 
 Da pasta `project.godot/` (troque o caminho do Godot pelo seu):

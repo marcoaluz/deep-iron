@@ -1099,15 +1099,17 @@ func _refresh_worker_rows(workers: Array) -> void:
 	var bottom_limit := get_viewport().get_visible_rect().size.y - (_order_bar.size.y + SIDE_MARGIN * 3.0)
 	var room := bottom_limit - _rows_scroll.global_position.y
 	var max_h := clampf(room, 60.0, worker_list_max_height)
-	_rows_scroll.custom_minimum_size.y = minf(_rows_box.get_combined_minimum_size().y, max_h)
-	_left_panel.reset_size()
+	var want_h := minf(_rows_box.get_combined_minimum_size().y, max_h)
+	if not is_equal_approx(_rows_scroll.custom_minimum_size.y, want_h):  # Bloco 53: layout só quando muda
+		_rows_scroll.custom_minimum_size.y = want_h
+		_left_panel.reset_size()
 
 	var picked: int = _main.selection.size()
-	_workers_title.text = "IPEZINHOS  —  %d selecionados" % picked if picked > 1 else "IPEZINHOS  (clique pra selecionar)"
-	_workers_title.add_theme_color_override("font_color", COLOR_TITLE if picked > 1 else COLOR_DIM)
+	_set_text(_workers_title, "IPEZINHOS  —  %d selecionados" % picked if picked > 1 else "IPEZINHOS  (clique pra selecionar)")
+	_set_font_color(_workers_title, COLOR_TITLE if picked > 1 else COLOR_DIM)
 	for w in workers:
 		var row: Dictionary = _rows[w]
-		row.name.text = _worker_name(w)
+		_set_text(row.name, _worker_name(w))
 		var hunger_ratio: float = w.hunger / w.hunger_max
 		row.hunger.max_value = w.hunger_max
 		row.hunger.value = w.hunger
@@ -1116,15 +1118,17 @@ func _refresh_worker_rows(workers: Array) -> void:
 			fill = COLOR_HUNGER_BAD
 		elif w.hunger < w.hunger_threshold:
 			fill = COLOR_HUNGER_LOW if hunger_ratio > 0.15 else COLOR_HUNGER_BAD
-		(row.hunger.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = fill
+		_set_fill(row.hunger, fill)
 		row.cargo.max_value = w.cargo_capacity
 		row.cargo.value = w.carrying
 		row.joy.value = w.happiness
-		(row.joy.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = _joy_color(w.happiness)
-		row.joy.tooltip_text = "ânimo %d (%s)" % [roundi(w.happiness), w.happiness_label()]
-		(row.cargo.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = Ores.UI_COLORS.get(w.cargo_type, COLOR_CARGO)
+		_set_fill(row.joy, _joy_color(w.happiness))
+		var tip := "ânimo %d (%s)" % [roundi(w.happiness), w.happiness_label()]
+		if row.joy.tooltip_text != tip:
+			row.joy.tooltip_text = tip
+		_set_fill(row.cargo, Ores.UI_COLORS.get(w.cargo_type, COLOR_CARGO))
 		var state: String = w.get_state()
-		row.state.text = w.get_state_label() if w.hunger > 0.0 else "FAMINTO!"
+		_set_text(row.state, w.get_state_label() if w.hunger > 0.0 else "FAMINTO!")
 		var state_color: Color = STATE_COLORS.get(state, COLOR_DIM)
 		if w.hunger <= 0.0:
 			state_color = COLOR_HUNGER_BAD
@@ -1132,7 +1136,7 @@ func _refresh_worker_rows(workers: Array) -> void:
 			state_color = COLOR_INJURED
 		elif state == "idle" and w.has_no_job():
 			state_color = COLOR_NO_JOB
-		row.state.add_theme_color_override("font_color", state_color)
+		_set_font_color(row.state, state_color)
 		# etiqueta: função (na cor dela) + turno extra / zanga
 		var tags: Array[String] = []
 		var tag_color := COLOR_DIM
@@ -1150,9 +1154,31 @@ func _refresh_worker_rows(workers: Array) -> void:
 			tags.append(w.mood_label())
 			if not w.has_no_job():
 				tag_color = [COLOR_OVERTIME, COLOR_IRRITATED, COLOR_FURIOUS][w.mood()]
-		row.tag.text = "  ".join(tags)
-		row.tag.add_theme_color_override("font_color", tag_color)
-		row.panel.add_theme_stylebox_override("panel", _style_row_selected if _main.is_selected(w) else _style_row)
+		_set_text(row.tag, "  ".join(tags))
+		_set_font_color(row.tag, tag_color)
+		var st: StyleBox = _style_row_selected if _main.is_selected(w) else _style_row
+		if row.panel.get_meta("_sb", null) != st:
+			row.panel.set_meta("_sb", st)
+			row.panel.add_theme_stylebox_override("panel", st)
+
+
+## Bloco 53: só mexe no controle quando o valor muda (trocar cor/estilo dispara tema e layout de
+## novo; com 40 ipezinhos isso era a maior parte do custo da HUD).
+func _set_text(c: Control, t: String) -> void:
+	if c.text != t:
+		c.text = t
+
+
+func _set_font_color(c: Control, col: Color) -> void:
+	if not c.has_meta("_fc") or c.get_meta("_fc") != col:
+		c.set_meta("_fc", col)
+		c.add_theme_color_override("font_color", col)
+
+
+func _set_fill(bar: Range, col: Color) -> void:
+	var sb := bar.get_theme_stylebox("fill") as StyleBoxFlat
+	if sb and sb.bg_color != col:
+		sb.bg_color = col
 
 
 func _joy_color(h: float) -> Color:
@@ -1342,6 +1368,8 @@ func _mark_speed() -> void:
 # =================================================================== cursor (Prompt 20)
 var _cursor_now := ""
 var _cursor_cd := 0.0
+var _cursor_mouse := Vector2.INF
+var _cursor_pick_cd := 0.0
 
 
 ## Cursor pelo que está embaixo do mouse: construir/proibido com o posicionador, atacar em cima de
@@ -1359,6 +1387,12 @@ func _update_cursor(delta: float) -> void:
 		want = "construir" if String(placer.get("_reason")) == "" else "proibido"
 	elif get_viewport().gui_get_hovered_control() == null:
 		var iso := get_tree().get_first_node_in_group("iso_view") as Node2D
+		var mp := get_viewport().get_mouse_position()
+		if mp.distance_to(_cursor_mouse) < 2.0 and _cursor_pick_cd > 0.0 and _cursor_now != "construir" and _cursor_now != "proibido":
+			_cursor_pick_cd -= 0.1
+			return  # Bloco 53: mouse parado: o que está debaixo dele muda pouco (procura a cada 0,5 s)
+		_cursor_mouse = mp
+		_cursor_pick_cd = 0.5
 		if iso and iso.get("enabled"):
 			var n = iso.pick(iso.get_global_mouse_position()).get("node")
 			if n != null and is_instance_valid(n):

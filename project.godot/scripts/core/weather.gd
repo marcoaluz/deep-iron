@@ -47,6 +47,8 @@ const SEASON_SUMMER := 1
 @export var pollen_amount: int = 18
 
 var _fx: Dictionary = {}  # nome -> {node: CPUParticles2D, level: float}
+## Bloco 52/53: chuva forçada (painel de debug F3 e benchmark); não vai no save.
+var forcar_chuva := false
 var _frost: Polygon2D
 var _frost_level := 0.0
 var _rect := Rect2()
@@ -155,7 +157,7 @@ func is_raining() -> bool:
 ## Alvo de cada efeito agora (0..1).
 func targets() -> Dictionary:
 	var s := _season()
-	var rain := is_raining()
+	var rain := forcar_chuva or is_raining()
 	return {
 		"leaves": 1.0 if s == SEASON_AUTUMN else 0.0,
 		"snow": 1.0 if s == SEASON_WINTER else 0.0,

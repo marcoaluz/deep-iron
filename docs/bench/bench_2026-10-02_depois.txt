@@ -1,0 +1,73 @@
+Deep Iron — bench_cena (2026-10-02T09:36:59)
+máquina: Intel(R) Core(TM) i3-8100 CPU @ 3.60GHz, 4 núcleos | GPU: Radeon RX 580 Series | 12_0 | janela (1920, 1061), vsync desligado
+
+cenário                                        ms méd   ms p99    FPS    nós  draws
+A  início (3 ipezinhos, dia)                     7.27    10.00    138   4438    211
+B  vila média (15 ipezinhos, prédios)            9.80    11.11    102   5080    293
+C  vila cheia (40) + invasão + chuva + noite    17.97    23.43     56   6351    357
+
+Detalhe no cenário C (cada parte chamada 30x, média):
+  hud._refresh (inteiro; roda 10 x/s)                3.428 ms por chamada
+    hud._refresh_phase                               0.050 ms por chamada
+    hud._refresh_top_bar                             0.545 ms por chamada
+    hud._refresh_panels                              0.901 ms por chamada
+      painel hub.refresh                             0.001 ms por chamada
+      painel armazem.refresh                         0.001 ms por chamada
+      painel coletor.refresh                         0.001 ms por chamada
+      painel escavadeira.refresh                     0.001 ms por chamada
+      painel oficina.refresh                         0.001 ms por chamada
+      painel enfermaria.refresh                      0.001 ms por chamada
+      painel moral.refresh                           0.001 ms por chamada
+      painel robo.refresh                            0.001 ms por chamada
+      painel abismo.refresh                          0.001 ms por chamada
+      painel defesa.refresh                          0.001 ms por chamada
+      painel lab.refresh                             0.001 ms por chamada
+      painel sol.refresh                             0.001 ms por chamada
+      painel diario.refresh                          0.001 ms por chamada
+      build_menu.refresh                             0.001 ms por chamada
+    hud._refresh_workforce                           0.174 ms por chamada
+    hud._refresh_order_bar                           0.096 ms por chamada
+    hud._refresh_worker_rows                         1.247 ms por chamada
+  hud._update_cursor (a cada 0,1 s)                  0.175 ms por chamada
+  iso_view._process (inteiro, todo quadro)           6.603 ms por chamada
+    iso._sync_blocos                                 0.009 ms por chamada
+    camera.zoom_stops                                0.005 ms por chamada
+    sync_dynamic de 41 que andam                     3.781 ms por chamada
+      _update_box (que andam)                        0.553 ms por chamada
+      _sync_props (que andam; 1 quadro sim 1 não)    1.426 ms por chamada
+      _tool_rule (que andam)                         0.084 ms por chamada
+      _sync_char (que andam)                         2.185 ms por chamada
+        IsoBonecos.pose (40 ipezinhos)               1.132 ms por chamada
+          folders                                    0.160 ms por chamada
+          _tone                                      0.071 ms por chamada
+          _item_name                                 0.114 ms por chamada
+          work_anim                                  0.088 ms por chamada
+          enabled_for                                0.034 ms por chamada
+      src.set_meta + diamond_dir (que andam)         0.048 ms por chamada
+    sync_static de 368 fixas (1/6 por quadro)        7.577 ms por chamada
+      _sync_props das fixas (inclui _sync_art)      25.493 ms por chamada
+      _sync_art das fixas                           14.403 ms por chamada
+      _update_box das fixas                          4.573 ms por chamada
+    _apply_static_z                                  0.541 ms por chamada
+    _order.dynamic_z de 41                           2.076 ms por chamada
+    _sync_ghost                                      0.001 ms por chamada
+
+Custo no cenário C (quadro médio sem aquilo; base medida antes de cada um):
+  script iso_view.gd                                 8.13 ms  (1 nós)
+  script food_source.gd                              3.60 ms  (1 nós)
+  script ipezinho.gd                                 3.11 ms  (40 nós)
+  script creature.gd                                 2.10 ms  (1 nós)
+  script iso_fx.gd                                   1.67 ms  (1 nós)
+  script hud.gd                                      1.51 ms  (1 nós)
+  luzes 2D (PointLight2D)                            1.43 ms  (165 nós)
+  script day_night.gd                                0.76 ms  (1 nós)
+  script sun.gd                                      0.61 ms  (1 nós)
+  script iso_sky.gd                                  0.38 ms  (1 nós)
+  script mineral_node.gd                             0.30 ms  (27 nós)
+  script defense.gd                                  0.17 ms  (1 nós)
+  script taverna.gd                                  0.15 ms  (1 nós)
+  script main.gd                                     0.12 ms  (1 nós)
+  script enfermaria.gd                               0.10 ms  (1 nós)
+  script morale.gd                                   0.10 ms  (1 nós)
+  script tree_node.gd                                0.09 ms  (6 nós)
+  script hunt_spot.gd                                0.08 ms  (2 nós)

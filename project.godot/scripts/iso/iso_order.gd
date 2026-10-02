@@ -26,6 +26,10 @@ var full_rebuilds := 0
 var dirty := false
 ## Consertos locais feitos (teste/relatório).
 var repairs := 0
+## Bloco 53: muda sempre que a ordem das fixas muda; quem anda e não saiu do lugar reaproveita o
+## espaço calculado (caixa -> [retângulo, zb, zt, versão, espaço]).
+var version := 0
+var _slot_cache := {}
 
 
 func build(statics: Array) -> void:
@@ -38,6 +42,7 @@ func build(statics: Array) -> void:
 
 
 func _reindex(from: int = 0) -> void:
+	version += 1
 	for i in range(from, order.size()):
 		ranks[order[i]] = i
 
@@ -114,6 +119,7 @@ func remove_static(b) -> void:
 	var i: int = ranks[b]
 	order.remove_at(i)
 	ranks.erase(b)
+	_slot_cache.clear()
 	_reindex(i)
 	_grid_remove(b)
 
@@ -130,7 +136,16 @@ func place(dynamic: Array) -> Dictionary:
 	for d in dynamic:
 		var r := Iso.screen_rect(d)
 		rects[d] = r
-		out[d] = _slot(d, r)
+		var c = _slot_cache.get(d)
+		if c != null and c[3] == version and c[0] == d.rect and c[1] == d.zb and c[2] == d.zt:
+			out[d] = c[4]
+		else:
+			out[d] = _slot(d, r)
+			_slot_cache[d] = [d.rect, d.zb, d.zt, version, out[d]]
+	if _slot_cache.size() > dynamic.size() * 2 + 64:
+		for k in _slot_cache.keys():  # quem saiu (morreu, foi embora) não fica pra sempre
+			if not rects.has(k):
+				_slot_cache.erase(k)
 	# se A fica atrás de B mas caiu num espaço DEPOIS do de B, B sobe pro espaço de A (nunca
 	# desce: tem que continuar depois das fixas que ficam atrás dele)
 	for _pass in 4:

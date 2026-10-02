@@ -33,7 +33,7 @@ func setup(main: Node) -> void:
 	_linha(v, "Tempo:", [["x1", func(): _tempo(1.0)], ["x4", func(): _tempo(4.0)], ["x16", func(): _tempo(16.0)]])
 	_linha(v, "Dar:", [["+1000 cr", _creditos], ["+200 minério", _minerio], ["+200 madeira", _madeira], ["+100 comida", _comida]])
 	_linha(v, "Pular:", [["fase", _fase], ["dia", _dia], ["estação", _estacao]])
-	_linha(v, "Eventos:", [["invasão agora", _invasao], ["curar todos", _curar], ["liberar pesquisas", _pesquisas]])
+	_linha(v, "Eventos:", [["invasão agora", _invasao], ["chuva liga/desliga", _chuva], ["curar todos", _curar], ["liberar pesquisas", _pesquisas]])
 	_info = Label.new()
 	_info.add_theme_font_size_override("font_size", 11)
 	_info.add_theme_color_override("font_color", Color(0.75, 0.72, 0.68))
@@ -142,6 +142,12 @@ func _invasao() -> void:
 	var d := _g("defense")
 	if d and d.has_method("start_invasion") and not d.invasion_active:
 		d.start_invasion()
+
+
+func _chuva() -> void:
+	var w := _g("weather")
+	if w and w.get("forcar_chuva") != null:
+		w.forcar_chuva = not w.forcar_chuva
 
 
 func _curar() -> void:
