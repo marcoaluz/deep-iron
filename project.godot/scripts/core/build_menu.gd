@@ -132,7 +132,11 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return _upgrade_cost_text(hub, "moradias"),
 					"reason": func(): return hub.upgrade_block_reason("moradias"),
 					"act": func(): hub.buy_upgrade("moradias")})
-			out.append({"name": "Casa nível 2 e 3", "tex": "casa", "frames": 3, "soon": true, "desc": "Casas maiores (mais camas)."})
+			out.append({"name": "Casa nível 2 e 3", "tex": "casa", "frames": 3, "many": true, "open": "casa", "label": "Ampliar uma casa",
+				"desc": "Mais camas e conforto (ânimo de quem mora). Nível 2 pede a vila no estágio 2; nível 3, estágio 3 e a pesquisa de Medicina. Ou clique numa casa.",
+				"cost": func(): return _casa_cost_text(),
+				"reason": func(): return _casa_reason(),
+				"act": func(): _hud.open_panel("casa")})
 			out.append({"name": "Escola", "tex": "", "soon": true, "desc": "Pra quando a vila tiver crianças."})
 		"Alimentação":
 			if hub:
@@ -253,6 +257,29 @@ func _tag_text(d: Dictionary) -> String:
 	if d.get("scales", false) and eco and eco.extra_building_cost_growth != 1.0:
 		t += " • o próximo custa %+d%%" % roundi((eco.extra_building_cost_growth - 1.0) * 100.0)
 	return t
+
+
+## Bloco 56: a casa que o cartão amplia (a de menor nível que ainda sobe).
+func _casa_alvo() -> Node:
+	var melhor: Node = null
+	for c in get_tree().get_nodes_in_group("casas"):
+		if not c.built or not c.has_method("max_level") or c.level >= c.max_level() or c.upgrade_pending():
+			continue
+		if melhor == null or c.level < melhor.level:
+			melhor = c
+	return melhor
+
+
+func _casa_cost_text() -> String:
+	var c := _casa_alvo()
+	return ("próxima: nível %d — %s" % [c.level + 1, c.upgrade_cost_text()]) if c else ""
+
+
+func _casa_reason() -> String:
+	var c := _casa_alvo()
+	if c == null:
+		return "nenhuma casa pra ampliar"
+	return c.upgrade_block_reason()
 
 
 func _expand_reason(hub: Node) -> String:

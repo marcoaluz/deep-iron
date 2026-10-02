@@ -527,6 +527,12 @@ func _build_buildings_column() -> void:
 		_add_panel("sol", preload("res://scripts/core/sun_panel.gd"), _sun)
 	if _diary:
 		_add_panel("diario", preload("res://scripts/core/diary_panel.gd"), _diary)
+	# Bloco 56: janela da casa (sem botão na coluna: clique na casa ou o cartão do menu)
+	var casa_panel: PanelContainer = preload("res://scripts/core/casa_panel.gd").new()
+	add_child(casa_panel)
+	casa_panel.setup(self, null, _economy)
+	_wrap_scroll(casa_panel)
+	_panels["casa"] = casa_panel
 	# Prompt 25: o corte da mina (vista de lado, todos os andares)
 	_corte = preload("res://scripts/ui/corte_mina.gd").new()
 	add_child(_corte)
@@ -1260,6 +1266,9 @@ func _refresh_panels() -> void:
 		_build_button.set_pressed_no_signal(_build_menu.visible)
 	for id in _panels:
 		var panel: PanelContainer = _panels[id]
+		if not _panel_buttons.has(id):  # Bloco 56: janela sem botão na coluna (casa)
+			panel.refresh()
+			continue
 		var button: Button = _panel_buttons[id]
 		if panel.has_method("is_available"):
 			button.visible = panel.is_available()  # ex.: robô só depois de achado

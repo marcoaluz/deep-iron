@@ -120,8 +120,13 @@ static func layers(node: Node) -> Array:
 		return out.filter(func(l): return not l.is_empty())
 	match kind:
 		"casa":
-			if node.has_method("obra_pending") and node.obra_pending():
+			var nv := clampi(int(node.get("level")) if node.get("level") != null else 1, 1, 3)
+			if node.get("upgrade_total") != null and float(node.upgrade_total) > 0.0:
+				out.append(state("casa", "obra_3"))  # Bloco 56: ampliando (andaime por cima da casa)
+			elif node.has_method("obra_pending") and node.obra_pending():
 				out.append(_obra_layer("casa", node.obra_progress()))
+			elif node.get("built") and nv > 1:
+				out.append(state("casa", "nivel_%d" % nv))
 			elif not node.get("built"):
 				out.append(state("casa", "obra_1"))  # lote (formato antigo)
 			else:

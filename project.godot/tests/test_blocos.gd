@@ -252,3 +252,7 @@ func test_b54_configuracoes() -> void:
 
 func test_b55_audio() -> void:
 	run_bloco("b55_audio.gd")
+
+
+func test_b56_casas() -> void:
+	run_bloco("b56_casas.gd")

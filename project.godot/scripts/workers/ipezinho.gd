@@ -1305,6 +1305,8 @@ func _on_strike() -> bool:
 func happiness_factors() -> Array:
 	var f: Array = []
 	f.append(["tem cama", 8.0] if has_home() else ["sem cama", -15.0])
+	if has_home() and _home.has_method("comfort_bonus") and _home.comfort_bonus() > 0.0:
+		f.append(["casa nível %d" % _home.level, _home.comfort_bonus()])  # Bloco 56
 	if hunger <= 0.0:
 		f.append(["passando fome", -30.0])
 	elif hunger < hunger_threshold:
