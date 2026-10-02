@@ -37,6 +37,18 @@ const ENTRIES := {
 			+ "poços de lava do abismo. Os dois valem mais que a prata e a broca da escavadeira "
 			+ "também acha. Pra chegar neles, máscara de gás e traje térmico: as poças queimam.",
 	},
+	"nivel_S4": {
+		"title": "A cachoeira do fundo",
+		"text": "Embaixo do abismo a água achou o caminho: uma cachoeira despenca do teto da caverna "
+			+ "sobre a rocha quente. O vapor não deixa ninguém ouvir nada, mas quem passa pela água "
+			+ "fica molhado e aguenta mais perto da lava. Tem cristal de todas as cores nas paredes.",
+	},
+	"nivel_S5": {
+		"title": "O lago azul",
+		"text": "O fundo de tudo. Um lago parado de água azul, gemas brilhando na beira e casinhas de "
+			+ "pedra vazias — alguém morou aqui antes da explosão, longe do sol. É o lugar mais quieto "
+			+ "que a gente já viu: quem trabalha aqui volta mais calmo.",
+	},
 	"matriarca": {
 		"title": "A Matriarca",
 		"text": "Os Lumívoros têm uma rainha. É duas vezes maior, coberta de cristais roxos, e "

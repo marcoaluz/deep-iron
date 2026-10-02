@@ -86,13 +86,16 @@ func _dados() -> void:
 	var s3 := Niveis.por_id("S3")
 	check(s2.perigos.size() == 4 and s3.perigos.size() == 4, "S2 e S3 declaram 4 poças cada")
 	var pocas: Array = main.get_tree().get_nodes_in_group("pocas_perigo")
-	check(pocas.size() == s2.perigos.size() + s3.perigos.size(), "todas as poças no lugar (%d)" % pocas.size())
+	var total := 0
+	for n in Niveis.jogaveis():
+		total += n.perigos.size()
+	_antes["pocas"] = total
+	check(pocas.size() == total, "todas as poças no lugar (%d de %d)" % [pocas.size(), total])
 	var ok_area := true
 	for p in pocas:
-		var ok_kind: bool = (p.kind == "acido" and env.is_deep(p.global_position) and not env.is_abyss(p.global_position)) \
-			or (p.kind == "lava" and env.is_abyss(p.global_position))
-		ok_area = ok_area and ok_kind
-	check(ok_area, "ácido no S2, lava no S3")
+		var nv = Niveis.do_ponto(env, p.global_position)
+		ok_area = ok_area and nv != null and nv.perigos.any(func(e): return String(e[0]) == p.kind and Vector2(e[1], e[2]).distance_to(p.global_position) < 1.0)
+	check(ok_area, "cada poça no nível que a declara (ácido no S2, lava no S3...)")
 	var w := world()
 	var j2: Array = []
 	var j3: Array = []
@@ -296,7 +299,7 @@ func _carregado() -> void:
 	check(is_equal_approx(g("armazens").stock.cristal_verde, _antes.cristal_verde), "estoque de cristal verde (%.0f)" % g("armazens").stock.cristal_verde)
 	var j = world().get_node_or_null("JazidaS2_2")
 	check(j != null and absf(j.ore_remaining - _antes.ore) < 2.5, "jazida do .tres volta pelo nome (%.0f; regenera devagar)" % (j.ore_remaining if j else -1.0))
-	check(main.get_tree().get_nodes_in_group("pocas_perigo").size() == 8, "poças sem duplicar")
+	check(main.get_tree().get_nodes_in_group("pocas_perigo").size() == _antes.pocas, "poças sem duplicar")
 	var nomes := {}
 	for m in main.get_tree().get_nodes_in_group("minerios"):
 		nomes[m.name] = nomes.get(m.name, 0) + 1

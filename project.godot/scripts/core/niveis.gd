@@ -38,7 +38,9 @@ static func jogaveis() -> Array:
 ## O nível de um ponto do chão (S1 = a pedreira/vila e a clareira; S2 = nível 2; S3 = abismo).
 static func do_ponto(env: Node, pos: Vector2) -> Resource:
 	var area := "mapa"
-	if env and env.has_method("is_abyss") and env.is_abyss(pos):
+	if env and env.has_method("area_at"):
+		area = env.area_at(pos)  # Bloco 71: inclui os níveis novos (S4, S5)
+	elif env and env.has_method("is_abyss") and env.is_abyss(pos):
 		area = "abyss"
 	elif env and env.has_method("is_deep") and env.is_deep(pos):
 		area = "deep"

@@ -88,7 +88,7 @@ func _process(delta: float) -> bool:
 func _camadas() -> void:
 	print("== camadas (docs/arte/CAMADAS.md)")
 	var v := iso()
-	check(v._atmos.size() == 3, "atmosfera de S1, S2 e S3 (%d)" % v._atmos.size())
+	check(v._atmos.size() == 5, "atmosfera de S1 a S5 (%d)" % v._atmos.size())
 	_n_atmos = v._atmos.size()
 	var ids := []
 	var ok_z := true
@@ -96,7 +96,7 @@ func _camadas() -> void:
 		ids.append(a.nivel.id)
 		ok_z = ok_z and a.raiz.z_index == 3700 and not a.raiz.z_as_relative
 	ids.sort()
-	check(ids == ["S1", "S2", "S3"], "um nó por nível jogável (%s)" % str(ids))
+	check(ids == ["S1", "S2", "S3", "S4", "S5"], "um nó por nível jogável (%s)" % str(ids))
 	check(ok_z, "atmosfera na camada 4 (z 3700 absoluto)")
 	var fixas: int = (v._order as Order).order.size()
 	var topo_fixa: int = Order.BASE + fixas * Order.K
@@ -114,7 +114,7 @@ func _atmosfera_dos_dados() -> void:
 			var tex: Texture2D = IsoFx.tex(v.PARTICULA_TEX[n.particulas])
 			check(a.part != null and a.part.texture == tex and a.part.emitting, "%s: partículas '%s' ligadas" % [n.id, n.particulas])
 	for lv in v._levels:
-		var area: String = v.AREA_DO_ANDAR.get(lv.nome, "")
+		var area: String = v.AREA_DO_ANDAR.get(lv.nome, lv.nome)
 		var n: Resource = v._nivel_da_area(area)
 		check(n != null and lv.sprite.self_modulate.is_equal_approx(n.cor_ambiente), "laje %s com a luz ambiente do %s" % [lv.nome, n.id if n else "?"])
 	# mudar o .tres muda o tom (o recurso é o mesmo que o jogo lê)
@@ -146,7 +146,8 @@ func _decoracao() -> void:
 		por_nivel[id] = por_nivel.get(id, 0) + 1
 		var achou := false
 		for e in nv.decoracao if nv else []:
-			if String(e[0]) == String(d.get_meta("iso_prop", "")) and Vector2(e[1], e[2]).distance_to(d.global_position) < 1.0:
+			var nome := String(d.get_meta("iso_prop", "")) if d.has_meta("iso_prop") else "fx:" + String(d.get_meta("iso_fx", ""))
+			if String(e[0]) == nome and Vector2(e[1], e[2]).distance_to(d.global_position) < 1.0:
 				achou = true
 		ok_dados = ok_dados and achou
 	check(ok_dados, "cada prop = uma linha do .tres do nível dele")

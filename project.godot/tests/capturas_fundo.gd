@@ -1,6 +1,6 @@
 extends SceneTree
 ## Bloco 70 (não é teste): fotos do conteúdo do S2/S3 — poças de ácido e de lava, jazidas de cristal,
-## ventilador, Gosma e Magmante. Roda COM JANELA e APPDATA isolado:
+## ventilador, Gosma e Magmante; Bloco 71: S4 (cachoeira, água, lava) e S5 (lago, gemas, casinhas). Roda COM JANELA e APPDATA isolado:
 ##   <Godot>.exe --path . -s res://tests/capturas_fundo.gd -- <pasta de saída>
 const PATH := "user://savegame.json"
 var main: Node
@@ -54,6 +54,9 @@ func _prepara() -> void:
 		hud.visible = false
 	g("elevador").unlock(false)
 	g("elevador_abismo").unlocked = true
+	for e in main.get_tree().get_nodes_in_group("elevadores"):
+		e.unlocked = true
+		e._apply(false)
 	for m in main.get_tree().get_nodes_in_group("minerios"):
 		m.on_unlock_changed(false)
 	var world: Node = g("village_hub").get_parent()
@@ -77,6 +80,10 @@ func _prepara() -> void:
 		["s3_lava", p3, 2],
 		["s3_jazida", world.get_node("JazidaS3_2").global_position, 3],
 		["criaturas", perto + Vector2(30, 10), 3],
+		["s4_cachoeira", Vector2(-40, 2250), 2],
+		["s4_lava", Vector2(-150, 2480), 2],
+		["s5_lago", Vector2(0, 2990), 1],
+		["s5_casas", Vector2(-250, 3080), 2],
 	]
 
 

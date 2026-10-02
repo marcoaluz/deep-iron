@@ -7,7 +7,7 @@ extends Node
 const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre", "carvao", "prata", "solarita",
 	"madeira", "comida", "populacao", "feridos", "animo_medio", "mortes", "onda", "criaturas_derrubadas",
 	"invasao_ativa", "pesquisas", "greve", "estagio_vila", "tier", "ultima_onda_total", "ultima_onda_derrubadas", "chefe",
-	"cristal_verde", "cristal_rubro", "queimaduras_acido", "queimaduras_lava", "ventiladores"]  # (Bloco 70: no fim)
+	"cristal_verde", "cristal_rubro", "queimaduras_acido", "queimaduras_lava", "ventiladores", "gema_azul"]  # (Bloco 70: no fim)
 
 var arquivo := ""
 var _t0 := 0
@@ -68,7 +68,7 @@ func registra() -> void:
 		String((defe.last_result as Dictionary).get("chefe", "")) if defe and defe.get("last_result") != null else "",
 		int(stock.get("cristal_verde", 0)), int(stock.get("cristal_rubro", 0)),
 		int(fundo.queimaduras.get("acido", 0)) if fundo else 0, int(fundo.queimaduras.get("lava", 0)) if fundo else 0,
-		fundo.ventiladores().size() if fundo else 0]
+		fundo.ventiladores().size() if fundo else 0, int(stock.get("gema_azul", 0))]
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return

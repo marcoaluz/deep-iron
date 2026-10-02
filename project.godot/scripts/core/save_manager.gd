@@ -473,6 +473,12 @@ func _collect() -> Dictionary:
 			data[key] = node.get_save_data()
 	for key in ["casas", "armazens", "minerios", "comedouros", "coleta_comida", "arvores", "barricadas", "caca"]:
 		data[key] = _collect_group(key)
+	# Bloco 71: as plataformas dos níveis novos (S4, S5), pelo nome (a do abismo já vai em "abismo")
+	var ligacoes := {}
+	for e in tree.get_nodes_in_group("elevadores"):
+		if not e.is_in_group("elevador_abismo") and e.has_method("get_save_data"):
+			ligacoes[String(e.name)] = e.get_save_data()
+	data["ligacoes"] = ligacoes
 	# Bloco 31b: canteiros de obras encomendadas (taverna, laboratório, campo...)
 	var canteiros := []
 	for c in tree.get_nodes_in_group("canteiros"):
@@ -562,6 +568,10 @@ func apply_pending(main: Node) -> void:
 	_apply_single("oficina", SaveUtil.dict(data, "oficina"))
 	_apply_single("elevador", SaveUtil.dict(data, "elevador"))  # antes das jazidas (fundo tranca)
 	_apply_single("elevador_abismo", SaveUtil.dict(data, "abismo"))
+	var lig := SaveUtil.dict(data, "ligacoes")  # Bloco 71 (save antigo: fechadas)
+	for e in get_tree().get_nodes_in_group("elevadores"):
+		if lig.has(String(e.name)) and typeof(lig[String(e.name)]) == TYPE_DICTIONARY:
+			e.load_save_data(lig[String(e.name)])
 	_apply_group("minerios", SaveUtil.dict(data, "minerios"))
 	_apply_group("comedouros", SaveUtil.dict(data, "comedouros"))
 	_apply_group("coleta_comida", SaveUtil.dict(data, "coleta_comida"))

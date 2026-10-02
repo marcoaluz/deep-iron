@@ -20,7 +20,7 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 const LAB_SCENE := preload("res://scenes/props/laboratorio.tscn")
 const LAB_TEXTURE := preload("res://assets/game/laboratorio.png")
 const Canteiro := preload("res://scripts/props/canteiro.gd")
-const ORDER := ["carrinhos", "explosivos", "escoramento", "trajes", "ventilacao", "medicina", "radio", "hidroponia",
+const ORDER := ["carrinhos", "explosivos", "escoramento", "trajes", "ventilacao", "bombas", "medicina", "radio", "hidroponia",
 	"estudo_solar", "satelite", "holofotes", "escudo"]
 ## points = pontos de pesquisa; cost = créditos, minério, madeira; ore = tipo do minério.
 const TECHS := {
@@ -39,6 +39,9 @@ const TECHS := {
 	"ventilacao": {"name": "Ventilação", "branch": "Mina", "req": "trajes", "excl": "", "points": 120,
 		"cost": Vector3i(300, 40, 0), "ore": "prata",
 		"desc": "Ventiladores no nível 2 (menu de construção): em volta deles a máscara de gás gasta metade e o ácido das poças queima mais devagar; a névoa verde afina."},
+	"bombas": {"name": "Bombas d'água", "branch": "Mina", "req": "ventilacao", "excl": "", "points": 160,
+		"cost": Vector3i(600, 60, 0), "ore": "solarita",
+		"desc": "Bombas pra segurar a cachoeira do fundo: libera o conserto da plataforma que desce do abismo pro S4 (cachoeira e lava)."},
 	"medicina": {"name": "Medicina de campo", "branch": "Vila", "req": "", "excl": "", "points": 80,
 		"cost": Vector3i(200, 40, 0), "ore": "cobre",
 		"desc": "Cura no leito 30% mais rápida; machucado sem leito aguenta 50% mais tempo."},

@@ -111,6 +111,8 @@ prompts 0–31).
 | Pisos da superfície: grama alta (5), trilha (5), cascalho (4), lama (1+espelho), laje (4), canteiro (2+espelho) | 6 | **integrado** (terreno do mapa novo) | — | 120 (feito) |
 | Escada de pedra, rampa (+ espelho) | 6 | **integrado** (5 subidas entre os terraços) | — | 40 (feito) |
 | Boca de mina no paredão (vigas de madeira, 3 degraus, 2×1 tiles) | 6 | **integrado** (4 bocas, uma por galeria) | — | 75 (feito) |
+| **Pisos do S4 (rocha molhada), S5 (rocha azulada) e água rasa do lago** + lajes `andar_s4/s5` — Bloco 71 | — | **integrado** | 4 + 4 + 4 ladrilhos | 60 (feito) |
+| **Cachoeira** (efeito animado, 6 quadros por script) — Bloco 71 | — | **integrado** | 1 | 25 (feito) |
 
 ## 7. Jazidas, minérios e pedras
 
@@ -123,6 +125,8 @@ prompts 0–31).
 | Achados (bobina, cristal, peça, painel solar) + entulho (4 tamanhos) | 8 | **integrado** (entulho médio) | — | ~40 (feito) |
 | **Jazidas de cristal verde (S2) e rubro (S3)** — Bloco 70 | — | **integrado** | cheia, meia, quase (edit da jazida de prata, mesma âncora) | ~50 (feito) |
 | **Poças de ácido e poços de lava** (decalque deitado na laje, `assets/game/iso/chao/`) — Bloco 70 | — | **integrado** | 2 de cada | ~100 (feito) |
+| **Jazidas de gema azul (S5)** — Bloco 71 | — | **integrado** | cheia, meia, quase | ~25 (feito) |
+| **Poças d'água (S4)** — Bloco 71 | — | **integrado** | 2 | 25 (feito) |
 
 ## 8. Vegetação
 
@@ -150,6 +154,7 @@ prompts 0–31).
 | Pilhas de recurso P/M/G (pedra, tijolo, comida, couro, carvão, aço) + destroços pré-colapso e ossos | 14 | **gerado** | — | ~40 (feito) |
 | Sombra | 19 | **código** (gerada da pegada, regra 7) | 0 |
 | **Ventilador do nível 2** (prop + ícone do menu) — Bloco 70 | — | **integrado** | 25 (feito) |
+| **Casinhas de pedra** da vila antiga do lago — Bloco 71 | — | **integrado** | 25 (feito) |
 
 ## 10. Efeitos e luzes
 
@@ -195,6 +200,10 @@ prompts 0–31).
 ciclo, renova em 2026-11-02). Gasto no bloco ~260: jazidas de cristal (~50), ventilador (25), poças
 (100), Gosma e Magmante (~90). Arte em `prototipos/camera/arte_iso/fundo70/` e `criaturas/fundo.py`;
 relatório `docs/NIVEIS_S2_S3.md`.
+
+**Atualização 2026-10-02 (noite, Bloco 71 — S4 e S5):** ~160 gerações: pisos de rocha molhada, rocha
+azulada e água (60), cachoeira (25), casinhas de pedra (25), poças d'água (25), jazidas de gema azul (~25).
+Arte em `relevo/fundo71.py`, `fundo71/` e `fundo70/jazidas.py`; relatório `docs/NIVEIS_S4_S5.md`.
 
 **Atualização 2026-10-02 (Prompts 16 a 26 + pendências dos Prompts 2, 14 e 29), sem checkpoint
 (o Marco liberou ir até o fim):** saldo 1.359 → **209** (1.150 gastas).

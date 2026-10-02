@@ -640,6 +640,11 @@ for m in ("cristal_verde", "cristal_rubro"):
     for st in ("cheia", "meia", "quase"):
         PROPS["jazida_%s_%s" % (m, st)] = "fundo70/jazida_%s_%s.png" % (m, st)
 PROPS["ventilador"] = "fundo70/ventilador.png"
+# Bloco 71: gema azul (S5), casinhas de pedra da vila antiga do lago (fundo71/)
+for st in ("cheia", "meia", "quase"):
+    PROPS["jazida_gema_azul_%s" % st] = "fundo70/jazida_gema_azul_%s.png" % st
+for k in range(2):
+    PROPS["casa_pedra_%d" % k] = "fundo71/casa_pedra_%d.png" % k
 
 # Prompts 14 e 18: cova (cemitério), explosivos (pesquisa), antena do satélite, cesto e placa de greve
 for nome in ("cova", "explosivos", "antena", "cesto", "placa_greve"):
@@ -682,7 +687,7 @@ def props():
 # ------------------------------------------------------------ efeitos (Prompt 18)
 FX_DEST = os.path.normpath(os.path.join(AQUI, "../../../assets/game/iso/fx"))
 # efeito animado (efeitos/anim/<nome>/c01..c08, animate_image; c00 = o desenho de entrada)
-FX_ANIM = ["chama_p", "chama_g", "barril_fogo", "bandeirinhas"]
+FX_ANIM = ["chama_p", "chama_g", "barril_fogo", "bandeirinhas", "cachoeira"]  # (Bloco 71: a cachoeira do S4, por script)
 
 
 def fx():

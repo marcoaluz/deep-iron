@@ -28,7 +28,12 @@ REL = "../relevo/final"
 ANDARES = {
     "nivel2": {"rect": (-560, 700, 1120, 620), "k_chao": -53, "paredes": 4, "laje": 3, "pasta": "nivel2"},
     "abismo": {"rect": (-480, 1420, 960, 560), "k_chao": -100, "paredes": 4, "laje": 3, "pasta": "abismo"},
+    # Bloco 71: os níveis novos (data/niveis/S4_cachoeira.tres e S5_lago.tres: o mesmo `rect`)
+    "s4": {"rect": (-440, 2120, 880, 520), "k_chao": -147, "paredes": 5, "laje": 3, "pasta": "umido"},
+    "s5": {"rect": (-400, 2760, 800, 480), "k_chao": -194, "paredes": 4, "laje": 3, "pasta": "lago"},
 }
+# Bloco 71: o lago do S5 (o mesmo retângulo de `obstaculos` no .tres): chão de água rasa
+AGUA = [(-180, 2900, 360, 220)]
 K_CORTE = -4          # o corte da superfície desce até aqui (monta.py CORTE)
 # zonas de perigo da cena (main.tscn): centro na lógica, raio, tipo
 ZONAS = [((455, 1240), 85, "gas"), ((-470, 770), 80, "radiacao"), ((390, 1895), 80, "calor")]
@@ -56,6 +61,10 @@ def logica(a, i, j):
 
 
 def zona_em(p):
+    for x, y, w, h in AGUA:  # o lago é a elipse dentro do retângulo (o jogo usa a mesma no obstáculo)
+        dx, dy = (p[0] - (x + w / 2)) / (w / 2), (p[1] - (y + h / 2)) / (h / 2)
+        if dx * dx + dy * dy <= 1.0:
+            return "agua"
     for (cx, cy), r, kind in ZONAS:
         dx, dy = p[0] - cx, p[1] - cy
         if (dx * dx) / (r * r) + (dy * dy) / (r * r * 0.36) <= 1.0:
@@ -85,7 +94,7 @@ def main(pasta):
         salas[nome] = (i0, j0)
         chao = ld(REL + "/%s/chao_*.png" % a["pasta"])
         bloco = ld(REL + "/%s/bloco.png" % a["pasta"])
-        zchao = {k: ld(REL + "/mina/zona_%s/chao_*.png" % k) for k in ("gas", "calor", "radiacao")}
+        zchao = {k: ld(REL + "/mina/zona_%s/chao_*.png" % k) for k in ("gas", "calor", "radiacao", "agua")}
         kc = a["k_chao"]
         itens = []
         for i in range(i0 - 1, NI):

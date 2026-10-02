@@ -39,7 +39,7 @@ var _redraw_t := 0.0
 const REDRAW_EVERY := 0.05  # Bloco 63: ~20 quadros/s bastam pra os mini-bonecos andarem
 const ORE_COR := {"ferro": Color(0.72, 0.62, 0.55), "cobre": Color(0.9, 0.5, 0.25), "carvao": Color(0.3, 0.3, 0.32),
 	"prata": Color(0.85, 0.88, 0.95), "solarita": Color(1.0, 0.85, 0.3), "cristal_verde": Color(0.55, 1.0, 0.35),
-	"cristal_rubro": Color(1.0, 0.3, 0.25)}
+	"cristal_rubro": Color(1.0, 0.3, 0.25), "gema_azul": Color(0.4, 0.65, 1.0)}
 
 
 func setup(main: Node) -> void:
@@ -143,18 +143,30 @@ func _process(delta: float) -> void:
 func _onde(p: Vector2) -> Array:
 	if _env == null:
 		return [1, 0.5]
-	var r: Rect2
+	# (o índice é a ordem dos dados: S0 superfície, S1 mina, S2 nível 2, S3 abismo, S4, S5...)
+	var n := Niveis.do_ponto(_env, p)
 	var i := 1
-	if _env.abyss_rect.has_point(p):
-		i = 3; r = _env.abyss_rect
-	elif _env.deep_rect.has_point(p):
-		i = 2; r = _env.deep_rect
-	elif p.y < _env.map_rect.position.y:
-		i = 0; r = _env.clearing_rect
-	else:
-		r = _env.map_rect
-	# (o índice é a ordem dos dados: S0 superfície, S1 mina, S2 nível 2, S3 abismo)
+	for k in ANDARES.size():
+		if n and ANDARES[k].id == n.id:
+			i = k
+	var r := _rect_do(n)
 	return [i, clampf((p.x - r.position.x) / maxf(r.size.x, 1.0), 0.03, 0.97)]
+
+
+## Bloco 71: o retângulo na lógica de um nível (os antigos pelo ambiente; os novos pelo .tres).
+func _rect_do(n: Resource) -> Rect2:
+	if n == null:
+		return _env.map_rect
+	match String(n.area):
+		"abyss":
+			return _env.abyss_rect
+		"deep":
+			return _env.deep_rect
+		"clareira":
+			return _env.clearing_rect
+		"mapa":
+			return _env.map_rect
+	return n.rect if (n.rect as Rect2).has_area() else _env.map_rect
 
 
 func _no_corte(p: Vector2, alto := 0.72) -> Vector2:
@@ -222,7 +234,7 @@ func _ligacoes() -> void:
 	var tx: float = clampf((_env.tunnel_x - _env.map_rect.position.x) / _env.map_rect.size.x, 0.0, 1.0) * LARGURA
 	_escada(Vector2(tx, ALTURA * 0.75), Vector2(tx, ALTURA * 1.7))
 	var gaiola := _tex("gaiola_lado")
-	for g in ["elevador", "elevador_abismo"]:
+	for g in ["elevador", "elevadores"]:  # (Bloco 71: "elevadores" = a do abismo e as dos níveis novos)
 		for e in get_tree().get_nodes_in_group(g):
 			var topo: Vector2 = (e as Node2D).global_position
 			var fundo = e.get("bottom_position")
@@ -416,9 +428,9 @@ func _clique(e: InputEvent) -> void:
 			return
 	for i in _rects.size():
 		if _rects[i].has_point(p) and _env:
-			if i >= 4:
+			if i >= ANDARES.size():
 				return  # Bloco 68: os "em breve" não têm lugar no mapa ainda
-			var alvo: Vector2 = [_env.clearing_rect, _env.map_rect, _env.deep_rect, _env.abyss_rect][i].get_center()
+			var alvo: Vector2 = _rect_do(ANDARES[i].nivel).get_center()  # (Bloco 71: os níveis novos também)
 			var cam = _main.get_node_or_null("Camera2D") if _main else null
 			if cam and cam.has_method("focus_on"):
 				cam.focus_on(alvo)

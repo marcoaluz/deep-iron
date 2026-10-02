@@ -19,7 +19,7 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 ## Soma de todos os tipos (a pilha e o texto usam isso).
 var total_stored: float = 0.0
 ## Estoque por tipo de minério ("ferro", "cobre", "carvao").
-var stock: Dictionary = {"ferro": 0.0, "cobre": 0.0, "carvao": 0.0, "prata": 0.0, "solarita": 0.0, "cristal_verde": 0.0, "cristal_rubro": 0.0}
+var stock: Dictionary = {"ferro": 0.0, "cobre": 0.0, "carvao": 0.0, "prata": 0.0, "solarita": 0.0, "cristal_verde": 0.0, "cristal_rubro": 0.0, "gema_azul": 0.0}
 ## Tudo que já entrou neste armazém desde o começo (não diminui com venda/gasto).
 var lifetime_stored: float = 0.0
 ## Madeira (coluna separada: não é minério, não vende, não conta nos marcos da vila).

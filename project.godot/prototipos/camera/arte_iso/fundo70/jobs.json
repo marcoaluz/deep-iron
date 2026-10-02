@@ -1,17 +1,13 @@
 {
  "cristal_verde": {
-  "job": "eb2fb6e2-7756-4bc7-8414-144a4245aada",
-  "custo": null,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo70\\cristal_verde.png",
   "ok": true,
-  "candidatos": 3
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo70\\cristal_verde.png"
  },
  "cristal_rubro": {
-  "job": "37cf40f1-cc5a-41b8-a660-79fd64d1072a",
-  "custo": null,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo70\\cristal_rubro.png",
   "ok": true,
-  "candidatos": 3
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo70\\cristal_rubro.png"
  },
  "ventilador": {
   "job": "75fa4045-e0b1-48bf-855f-5ec4fc78347c",
@@ -47,5 +43,12 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo70\\poca_lava_iso.png",
   "ok": true,
   "candidatos": 4
+ },
+ "gema_azul": {
+  "job": "15f3c6ff-cbb9-4d17-ada5-75f8116002c6",
+  "custo": null,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo70\\gema_azul.png",
+  "ok": true,
+  "candidatos": 3
  }
 }

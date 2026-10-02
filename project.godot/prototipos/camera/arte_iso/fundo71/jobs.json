@@ -1,0 +1,23 @@
+{
+ "cachoeira": {
+  "job": "51ed06e4-a8a4-4c2c-93db-8beacd775607",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo71\\cachoeira.png",
+  "ok": true,
+  "candidatos": 4
+ },
+ "casas": {
+  "job": "51d0a5bd-9845-4c96-9925-f2ac4fe2e3bc",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo71\\casas.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "poca_agua": {
+  "job": "27e8f7f5-0547-4cd8-b7fb-3dc8ed4edcd2",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo71\\poca_agua.png",
+  "ok": true,
+  "candidatos": 4
+ }
+}

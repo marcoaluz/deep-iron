@@ -28,6 +28,8 @@ signal worker_recruited(worker: Node2D, cost: int)
 ## Bloco 70: cristal verde (S2, galerias de ácido) e cristal rubro (S3, poços de lava).
 @export var cristal_verde_price: float = 10.0
 @export var cristal_rubro_price: float = 18.0
+## Bloco 71: gema azul (S5, a beira do lago).
+@export var gema_azul_price: float = 30.0
 @export var starting_credits: float = 0.0
 ## Vende sozinho o que estiver no armazém a cada auto_sell_interval segundos.
 @export var auto_sell: bool = false
@@ -98,6 +100,8 @@ func price_of(ore_type: String) -> float:
 			return cristal_verde_price
 		"cristal_rubro":
 			return cristal_rubro_price
+		"gema_azul":
+			return gema_azul_price
 	return ore_price
 
 

@@ -239,6 +239,7 @@ func _build_ground() -> void:
 				lv["decal"] = dec
 			dec.texture = _ground_sv.get_texture()
 			var r: Rect2 = lv.rect
+			dec.visible = _ground_rect.encloses(r)  # Bloco 71: os andares novos ficam fora da textura do chão
 			dec.region_rect = Rect2(r.position - _ground_rect.position, r.size)
 			var o: Vector2 = Iso.iso(art(r.position), lv.z) - lv.sprite.position
 			dec.transform = Transform2D(Vector2(1.0, 0.5) * S, Vector2(-1.0, 0.5) * S, o)
@@ -326,7 +327,7 @@ const Efeitos := preload("res://scripts/core/efeitos.gd")
 const Settings := preload("res://scripts/core/settings.gd")
 const PARTICULA_TEX := {"poeira": "poeira_p", "acido": "nuvem_gas", "calor": "brasa", "gotas": "gota", "bolhas": "vapor"}
 const LUZ_ZONA := {"calor": Color(1.0, 0.5, 0.2), "gas": Color(0.45, 1.0, 0.35), "radiacao": Color(0.4, 0.95, 1.0)}
-const AREA_DO_ANDAR := {"nivel2": "deep", "abismo": "abyss"}
+const AREA_DO_ANDAR := {"nivel2": "deep", "abismo": "abyss"}  # (Bloco 71: os outros andares têm o nome da área: s4, s5)
 var _atmos: Array = []  # [{nivel, raiz, nevoa, part, alfa, qtd}]
 var _luzes_zona: Array = []  # [luz, energia base, fase]
 var _pulso_k := 1.0  # força do pulso das luzes (guardada: o settings.cfg só é lido quando muda)
@@ -340,7 +341,7 @@ func _nivel_da_area(area: String) -> Resource:
 
 
 func _tom_do_andar(nome: String) -> Color:
-	var n := _nivel_da_area(AREA_DO_ANDAR.get(nome, ""))
+	var n := _nivel_da_area(AREA_DO_ANDAR.get(nome, nome))
 	return n.cor_ambiente if n else LEVEL_TINT.get(nome, Color.WHITE)
 
 
@@ -356,7 +357,7 @@ func _build_atmosfera() -> void:
 	# os andares de baixo (laje) e a pedreira (S1, só poeira leve)
 	var alvos := []
 	for lv in _levels:
-		alvos.append([_nivel_da_area(AREA_DO_ANDAR.get(lv.nome, "")), lv.rect, float(lv.z)])
+		alvos.append([_nivel_da_area(AREA_DO_ANDAR.get(lv.nome, lv.nome)), lv.rect, float(lv.z)])
 	alvos.append([_nivel_da_area("mapa"), _env.map_rect, 0.0])
 	for a in alvos:
 		var n: Resource = a[0]
@@ -406,6 +407,26 @@ func _build_atmosfera() -> void:
 			part.light_mask = 0
 			raiz.add_child(part)
 		_atmos.append({"nivel": n, "raiz": raiz, "nevoa": nev, "part": part, "alfa": n.cor_nevoa.a, "qtd": qtd})
+	# Bloco 71: o lago do nível (obstáculo nos dados) brilha azul, de leve
+	for n in Niveis.jogaveis():
+		for o in n.obstaculos:
+			if not (o is Array and o.size() >= 4):
+				continue
+			var lr := Rect2(float(o[0]), float(o[1]), float(o[2]), float(o[3]))
+			var ll := PointLight2D.new()
+			ll.name = "Lago_" + n.id
+			IsoLuz.aplica(ll, "cristal")
+			ll.color = Color(0.35, 0.6, 1.0)
+			ll.energy = 0.9
+			ll.texture_scale *= maxf(lr.size.x, lr.size.y) / 120.0
+			ll.range_item_cull_mask = LIGHT_ISO
+			ll.range_z_min = RenderingServer.CANVAS_ITEM_Z_MIN
+			ll.range_z_max = RenderingServer.CANVAS_ITEM_Z_MAX
+			ll.position = to_screen(lr.get_center())
+			ll.set_meta("tela_iso", true)
+			ll.add_to_group("cullable_lights")
+			_terrain_node.add_child(ll)
+			_luzes_zona.append([ll, ll.energy, randf() * TAU])
 	# luz pulsando nas zonas de perigo (a da lava já existe: ganha o pulso; gás e radiação ganham a sua)
 	for c in _terrain_node.get_children():
 		if c is PointLight2D and String(c.name).begins_with("Lava_"):
@@ -467,8 +488,9 @@ func _pulsa_luzes() -> void:
 ## A poça é um decalque deitado na laje do andar (assets/game/iso/chao/poca_<tipo>_<n>.png, filho do
 ## desenho da laje: fica por cima do chão e embaixo de tudo que está em pé); aqui entram também a luz
 ## pulsando e as bolhas (ácido) / brasas (lava), na camada 4.
-const POCA_FX := {"acido": ["vapor", Color(0.55, 1.0, 0.35, 0.7)], "lava": ["brasa", Color(1.0, 0.55, 0.2, 0.95)]}
-const POCA_LUZ := {"acido": Color(0.5, 1.0, 0.35), "lava": Color(1.0, 0.45, 0.15)}
+const POCA_FX := {"acido": ["vapor", Color(0.55, 1.0, 0.35, 0.7)], "lava": ["brasa", Color(1.0, 0.55, 0.2, 0.95)],
+	"agua": ["gota", Color(0.6, 0.85, 1.0, 0.6)]}
+const POCA_LUZ := {"acido": Color(0.5, 1.0, 0.35), "lava": Color(1.0, 0.45, 0.15), "agua": Color(0.4, 0.7, 1.0)}
 var _poca_fx: Array = []  # CPUParticles2D das poças (reduzir efeitos para)
 var _pocas_feitas := {}  # poça -> true (o ambiente põe as poças um quadro depois da vista ligar)
 

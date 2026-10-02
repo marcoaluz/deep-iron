@@ -151,6 +151,7 @@ func _ready() -> void:
 		migrate_positions()  # o que caiu em penhasco/escada/paliçada vai pro lugar válido mais perto
 	else:
 		_build_edges()
+	_build_ligacoes()  # Bloco 71: as plataformas dos níveis novos (S4, S5), dos dados
 	_build_conteudo_niveis()  # Bloco 70: poças e jazidas dos dados (antes da decoração: ela desvia)
 	_scatter(pebble_count, pebble_textures, 10.0, 0.4, _add_pebble)
 	_scatter(boulder_count, boulder_textures, 40.0, 1.0, _add_boulder)
@@ -195,6 +196,29 @@ func leste_rect() -> Rect2:
 		return Rect2()
 	var g := iso_ground_rect()
 	return Rect2(leste_x(), g.position.y, g.end.x - leste_x(), g.size.y)
+
+
+## Bloco 71: a ligação de cada nível novo que ainda não está na cena — a mesma plataforma do abismo
+## (arruinada até consertar), com o grupo, os textos e o conserto vindos do .tres.
+func _build_ligacoes() -> void:
+	var world := get_parent()
+	for n in niveis_extra():
+		if n.ligacao == "" or get_tree().get_first_node_in_group(n.ligacao) != null:
+			continue
+		var e: Node2D = preload("res://scenes/props/elevador_abismo.tscn").instantiate()
+		e.name = "Elevador%s" % n.id
+		e.grupo = n.ligacao
+		e.nivel_id = n.id
+		e.requer_grupo = n.ligacao_acima
+		e.position = n.ligacao_topo
+		e.bottom_position = n.ligacao_fundo
+		e.repair_credits = n.conserto.x
+		e.repair_parts = n.conserto.y
+		e.repair_silver = n.conserto.z
+		e.repair_time = float(n.conserto.w)
+		e.repair_ore = n.conserto_minerio
+		e.repair_min_stage = n.conserto_estagio
+		world.add_child(e)
 
 
 ## Bloco 70: o conteúdo de jogo declarado em cada nível — poças de perigo e jazidas novas (nomes
@@ -249,6 +273,14 @@ func _build_decoracao_niveis() -> void:
 			if not (d is Array) or d.size() < 3:
 				continue
 			var p := Vector2(float(d[1]), float(d[2]))
+			if String(d[0]).begins_with("fx:"):  # Bloco 71: cenário animado (a cachoeira): fixo, sem sorteio de lugar
+				var fx := Node2D.new()
+				fx.name = "Fx_%s_%d" % [String(d[0]).trim_prefix("fx:"), get_child_count()]
+				fx.position = p
+				fx.set_meta("iso_fx", String(d[0]).trim_prefix("fx:"))
+				add_child(fx)
+				fx.add_to_group("nivel_deco")
+				continue
 			var livre := _deep_spot_free(p, 40.0, placed, avoid) if not level_of(p).is_empty() else _is_free(p, 18.0, 24.0)
 			if not livre:
 				continue
@@ -419,6 +451,11 @@ func _bake_navigation() -> NavigationPolygon:
 	if abyss_rect.has_area():
 		# outra ilha: só liga com o nível 2 pela plataforma do abismo
 		source.add_traversable_outline(_rect_outline(abyss_rect.grow(-nav_edge_inset)))
+	for n in niveis_extra():  # Bloco 71: os níveis novos (S4, S5): uma ilha cada, ligadas pelas plataformas
+		source.add_traversable_outline(_rect_outline((n.rect as Rect2).grow(-nav_edge_inset)))
+		for o in n.obstaculos:  # o lago não anda (a elipse dentro do retângulo, como o desenho da laje)
+			if o is Array and o.size() >= 4:
+				source.add_obstruction_outline(_elipse_outline(Rect2(float(o[0]), float(o[1]), float(o[2]), float(o[3]))))
 	if decorations_block:
 		for o in _obstacles:
 			source.add_obstruction_outline(o)
@@ -430,6 +467,15 @@ func _bake_navigation() -> NavigationPolygon:
 					source.add_obstruction_outline(outline)
 	NavigationServer2D.bake_from_source_geometry_data(nav_poly, source)
 	return nav_poly
+
+
+## Bloco 71: contorno (24 lados) da elipse dentro do retângulo.
+func _elipse_outline(r: Rect2) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for i in 24:
+		var a := TAU * i / 24.0
+		out.append(r.get_center() + Vector2(cos(a) * r.size.x * 0.5, sin(a) * r.size.y * 0.5))
+	return out
 
 
 ## Área onde dá pra andar DENTRO DA MINA (dentro da borda de pedras). Casas só aqui.
@@ -447,6 +493,8 @@ func world_rect() -> Rect2:
 		r = r.merge(deep_rect)
 	if abyss_rect.has_area():
 		r = r.merge(abyss_rect)
+	for n in niveis_extra():  # Bloco 71
+		r = r.merge(n.rect)
 	if has_leste():
 		r = r.merge(leste_rect())  # Bloco 67: a câmera vê a área nova (com névoa enquanto trancada)
 	return r
@@ -782,7 +830,7 @@ func _overlaps(r: Rect2, others: Array) -> bool:
 
 ## Esse ponto é no fundo (nível 2 ou abismo)?
 func is_deep(pos: Vector2) -> bool:
-	return (deep_rect.has_area() and deep_rect.has_point(pos)) or is_abyss(pos)
+	return (deep_rect.has_area() and deep_rect.has_point(pos)) or is_abyss(pos) or nivel_extra_em(pos) != null
 
 
 ## Esse ponto é no abismo (nível 3)?
@@ -790,18 +838,54 @@ func is_abyss(pos: Vector2) -> bool:
 	return abyss_rect.has_area() and abyss_rect.has_point(pos)
 
 
-## 0 = mina/clareira, 2 = nível 2, 3 = abismo.
+## 0 = mina/clareira, 2 = nível 2, 3 = abismo (Bloco 71: 4, 5... = a profundidade do nível novo).
 func level_at(pos: Vector2) -> int:
 	if is_abyss(pos):
 		return 3
+	var n := nivel_extra_em(pos)
+	if n:
+		return n.profundidade
 	return 2 if is_deep(pos) else 0
 
 
-## Multiplicador de acidente por profundidade (1 na mina/clareira).
+## Multiplicador de acidente por profundidade (1 na mina/clareira; os níveis novos = o do abismo).
 func danger_mult_at(pos: Vector2) -> float:
-	if is_abyss(pos):
+	if is_abyss(pos) or nivel_extra_em(pos) != null:
 		return abyss_injury_mult
 	return deep_injury_mult if is_deep(pos) else 1.0
+
+
+## Bloco 71: os níveis novos (dados com `rect`: S4, S5...) que já são jogáveis (os dados não mudam
+## durante a partida: guardado na primeira vez — is_deep é chamado o tempo todo).
+var _extra: Array = []
+var _extra_ok := false
+
+
+func niveis_extra() -> Array:
+	if not _extra_ok:
+		_extra = preload("res://scripts/core/niveis.gd").todos().filter(func(n): return not n.em_breve and (n.rect as Rect2).has_area())
+		_extra_ok = true
+	return _extra
+
+
+## Bloco 71: o nível novo onde fica esse ponto (null = nenhum).
+func nivel_extra_em(pos: Vector2) -> Resource:
+	for n in niveis_extra():
+		if (n.rect as Rect2).has_point(pos):
+			return n
+	return null
+
+
+## Bloco 71: a área (nome nos dados) de um ponto: "abyss", "deep", "s4"..., "clareira" ou "mapa".
+func area_at(pos: Vector2) -> String:
+	if is_abyss(pos):
+		return "abyss"
+	var n := nivel_extra_em(pos)
+	if n:
+		return n.area
+	if is_deep(pos):
+		return "deep"
+	return "clareira" if pos.y < map_rect.position.y else "mapa"
 
 
 ## Faixa andável do túnel (entra um pouco na mina e na clareira pra emendar).
@@ -925,7 +1009,7 @@ func _build_abyss() -> void:
 ## NAV_EXTRA_GROUPS. Não mexe no sorteio: as posições das outras pedras não mudam.
 ## (Chamado de novo quando uma estrutura dessas é construída durante o jogo.)
 func clear_decor_under_extras() -> void:
-	var groups: Array = NAV_EXTRA_GROUPS + ["elevador_abismo", "barricadas", "village_hub", "armazens", "comedouros"]
+	var groups: Array = NAV_EXTRA_GROUPS + ["elevador_abismo", "elevadores", "barricadas", "village_hub", "armazens", "comedouros"]
 	if has_iso_map():  # Prompt 30: os prédios novos são maiores; toda estrutura limpa a pegada dela
 		groups = groups + ["casas", "escavadeira", "oficina", "elevador"]
 	for group in groups:

@@ -424,6 +424,8 @@ var _hazard_cd := 0.0
 ## tempo (s) está exposto; passou de Fundo.exposicao, queima.
 var _na_poca: Node = null
 var _poca_expo := 0.0
+## Bloco 71: segundos que ainda está molhado (passou pela água do S4): a lava queima menos.
+var _molhado := 0.0
 ## Bloco 36: guarda que perdeu a luta — caído no lugar (grave), só o MÉDICO leva pra enfermaria.
 var downed: bool = false
 ## Portão onde ele caiu ("tunel"/"poco"): enquanto ele está caído, é a brecha na defesa.
@@ -1174,7 +1176,7 @@ func _station_ok_for(state: String) -> bool:
 func _on_link_reached(details: Dictionary) -> void:
 	var link = details.get("owner")
 	if not (link is Node) or not link.get_parent() \
-			or not (link.get_parent().is_in_group("elevador") or link.get_parent().is_in_group("elevador_abismo")):
+			or not (link.get_parent().is_in_group("elevador") or link.get_parent().is_in_group("elevadores")):
 		return
 	var exit: Vector2 = details.get("link_exit_position", global_position)
 	global_position = exit
@@ -1356,6 +1358,9 @@ func happiness_factors() -> Array:
 	var env := get_tree().get_first_node_in_group("environment")
 	if env and env.has_method("is_abyss") and env.is_abyss(global_position):
 		f.append(["calor do abismo", -8.0])
+	var nx: Resource = env.nivel_extra_em(global_position) if env and env.has_method("nivel_extra_em") else null
+	if nx and nx.animo != 0.0:  # Bloco 71: o nível novo pesa ou acalma (o lago azul)
+		f.append([nx.animo_motivo if nx.animo_motivo != "" else nx.nome, nx.animo])
 	var m := _morale()
 	if m:
 		f.append_array(m.village_factors())
@@ -2506,6 +2511,13 @@ func _equip_tick(delta: float) -> void:
 	var poca: Node = fundo.poca_at(global_position) if zona == "" and fundo and not _inside else null
 	var z: String = zona if zona != "" else (String(poca.traje()) if poca else "")
 	_na_poca = null
+	_molhado = maxf(_molhado - delta, 0.0)
+	if poca and poca.kind == "agua":  # Bloco 71: água não pede traje — atrasa e molha
+		_na_poca = poca
+		if _molhado <= 0.0 and _hazard_cd <= 0.0:
+			_hazard_cd = 4.0
+			_popup("Molhado: a lava queima menos", Color(0.6, 0.85, 1.0))
+		_molhado = fundo.agua_molhado if fundo else 20.0
 	for t in eq.SUITS:
 		if wearing.has(t) and t != z:
 			eq.give_back(t, wearing[t])
@@ -2542,6 +2554,8 @@ func _poca_tick(poca: Node, delta: float) -> void:
 	_na_poca = poca
 	var fundo := _fundo()
 	var k: float = fundo.ventilacao_mult(global_position) if fundo and poca.kind == "acido" else 1.0
+	if poca.kind == "lava" and _molhado > 0.0 and fundo:
+		k *= fundo.molhado_lava  # Bloco 71: molhado na água do S4, a lava queima menos
 	_poca_expo += delta * k
 	if _hazard_cd <= 0.0:
 		_hazard_cd = 4.0

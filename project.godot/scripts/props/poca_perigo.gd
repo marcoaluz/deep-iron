@@ -2,17 +2,18 @@ extends Node2D
 ## Bloco 70: POÇA DE PERIGO no chão de um nível de baixo (grupo "pocas_perigo"). Vem dos dados do
 ## nível (NivelMina.perigos: [tipo, x, y, raio]); o ambiente põe no lugar.
 ##   acido  Poça de ácido (S2)  -> Máscara de gás
-##   lava   Poço de lava  (S3)  -> Traje térmico
+##   lava   Poço de lava  (S3, S4) -> Traje térmico
+##   agua   Água da cachoeira (S4) -> nenhum: atrasa e MOLHA (Bloco 71: molhado, a lava queima menos)
 ## Diferente da zona de perigo (hazard_zone.gd: só entra quem tem traje), a poça é de PASSAGEM:
 ## quem pisa sem o traje anda mais devagar e, ficando, se queima (ipezinho.gd: _equip_tick). Com o
 ## traje, nada. Os números ficam no nó Fundo (scripts/core/fundo.gd). Na vista iso o desenho vem do
 ## iso_view (_poca_add: decalque na laje); aqui fica o desenho da vista de cima (mapa antigo).
 
-const NOMES := {"acido": "Poça de ácido", "lava": "Poço de lava"}
-const TRAJES := {"acido": "gas", "lava": "calor"}
-const CORES := {"acido": Color(0.5, 1.0, 0.3), "lava": Color(1.0, 0.45, 0.12)}
+const NOMES := {"acido": "Poça de ácido", "lava": "Poço de lava", "agua": "Água da cachoeira"}
+const TRAJES := {"acido": "gas", "lava": "calor", "agua": ""}
+const CORES := {"acido": Color(0.5, 1.0, 0.3), "lava": Color(1.0, 0.45, 0.12), "agua": Color(0.35, 0.65, 1.0)}
 
-@export_enum("acido", "lava") var kind: String = "acido"
+@export_enum("acido", "lava", "agua") var kind: String = "acido"
 ## Raio (px da lógica), achatado na vertical como o resto do mapa.
 @export var radius: float = 44.0
 

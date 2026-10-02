@@ -3,7 +3,7 @@ extends PanelContainer
 ## Cada ramo em uma coluna; os pares do 2º nível são escolhas (pesquisar um tranca o outro).
 
 const Icones := preload("res://scripts/ui/icones.gd")
-const BRANCHES := [["Mina", ["carrinhos", "explosivos", "escoramento", "trajes", "ventilacao"]],
+const BRANCHES := [["Mina", ["carrinhos", "explosivos", "escoramento", "trajes", "ventilacao", "bombas"]],
 	["Vila", ["medicina", "radio", "hidroponia"]],
 	["Sol", ["estudo_solar", "satelite", "holofotes", "escudo"]]]
 

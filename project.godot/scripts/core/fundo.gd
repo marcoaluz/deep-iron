@@ -30,6 +30,12 @@ const VENTILADOR_FOOTPRINT := Rect2(-16, -12, 32, 22)
 @export var lava_exposicao: float = 2.5
 @export_range(0.0, 1.0) var lava_grave: float = 0.3
 
+@export_group("Água (S4)")
+## Bloco 71: a água do S4 não pede traje: atrasa um pouco e molha; molhado, a lava queima x molhado_lava.
+@export var agua_lentidao: float = 0.8
+@export var agua_molhado: float = 20.0
+@export_range(0.0, 1.0) var molhado_lava: float = 0.3
+
 @export_group("Ventilador (S2)")
 @export var ventilador_credits: int = 400
 @export var ventilador_ore: int = 60
@@ -62,7 +68,7 @@ func _ready() -> void:
 
 # ------------------------------------------------------------ poças
 func lentidao(kind: String) -> float:
-	return lava_lentidao if kind == "lava" else acido_lentidao
+	return {"lava": lava_lentidao, "agua": agua_lentidao}.get(kind, acido_lentidao)
 
 
 func exposicao(kind: String) -> float:

@@ -22,6 +22,11 @@ CRISTAIS = {
                       "translucent deep crimson-red crystal shards growing out of the rock: hot orange-red highlights, "
                       "dark blood-red shadows, a faint ember glow. Keep the dark rock block exactly the same shape, "
                       "size, position, outline and lighting; transparent background. ", "crimson red crystals"),
+    # Bloco 71: a gema azul do S5 (a beira do lago)
+    "gema_azul": ("Replace every grey silver ore nugget embedded in the dark rock with small clusters of faceted "
+                  "deep blue sapphire gems growing out of the rock: bright icy-blue highlights, dark navy shadows, "
+                  "a faint cold inner glow. Keep the dark rock block exactly the same shape, size, position, outline "
+                  "and lighting; transparent background. ", "deep blue gems"),
 }
 
 

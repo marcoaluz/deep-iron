@@ -296,3 +296,7 @@ func test_b69_atmosfera() -> void:
 
 func test_b70_fundo() -> void:
 	run_bloco("b70_fundo.gd")
+
+
+func test_b71_s4_s5() -> void:
+	run_bloco("b71_s4_s5.gd")

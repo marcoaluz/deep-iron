@@ -8,8 +8,11 @@ extends Resource
 @export var nome: String = "Mina"
 ## Profundidade (0 = superfície; 1, 2, 3...). Ordem no corte da mina.
 @export var profundidade: int = 1
-## Onde fica na lógica: "mapa" (a pedreira/vila), "deep" (deep_rect), "abyss" (abyss_rect) ou "" (ainda não existe).
+## Onde fica na lógica: "mapa" (a pedreira/vila), "deep" (deep_rect), "abyss" (abyss_rect), um nome
+## próprio com `rect` (Bloco 71: "s4", "s5") ou "" (ainda não existe).
 @export var area: String = "mapa"
+## Bloco 71: o retângulo na lógica dos níveis novos (os antigos usam deep_rect/abyss_rect do ambiente).
+@export var rect: Rect2 = Rect2()
 ## Perigo principal: "" (nenhum), "poeira", "gas", "calor", "radiacao", "acido", "agua".
 @export var perigo: String = ""
 ## Traje que o perigo pede (equipment.gd: "gas", "calor", "radiacao"; "" = nenhum).
@@ -37,3 +40,22 @@ extends Resource
 ## Bloco 70: jazidas do nível: [minério, x, y] ou [minério, x, y, total, ritmo, regeneração].
 ## Nome fixo no save: Jazida<id>_<n> (JazidaS2_1...).
 @export var jazidas: Array = []
+## Bloco 71: a ligação que chega aqui, montada pelo ambiente quando não está na cena (grupo = `ligacao`):
+## a plataforma arruinada fica no nível de cima (`ligacao_topo`), a gaiola de chegada aqui
+## (`ligacao_fundo`); o conserto custa créditos (x), peças raras (y), minério (z, do tipo
+## `conserto_minerio`) e segundos (w), com a vila no estágio `conserto_estagio`. `ligacao_acima` = o
+## grupo da ligação que tem que estar aberta antes.
+@export var ligacao_topo: Vector2 = Vector2.ZERO
+@export var ligacao_fundo: Vector2 = Vector2.ZERO
+@export var ligacao_acima: String = ""
+@export var conserto: Vector4i = Vector4i(2000, 14, 150, 120)
+@export var conserto_minerio: String = "solarita"
+@export var conserto_estagio: int = 5
+## Bloco 71: áreas não andáveis do nível: a ELIPSE dentro de [x, y, w, h] (na lógica: o lago).
+@export var obstaculos: Array = []
+## Bloco 71: soma no alvo de ânimo de quem está no nível (o lago azul acalma; negativo = pesa), com o
+## motivo que aparece na janela do ipezinho.
+@export var animo: float = 0.0
+@export var animo_motivo: String = ""
+## Bloco 71: a faixa que aparece quando a ligação abre (título; o texto é a descrição).
+@export var titulo_abertura: String = ""
