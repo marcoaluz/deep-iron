@@ -66,6 +66,13 @@ vsync e mede 3 cenários (início, vila média, vila cheia + invasão + chuva + 
 da vista iso e o custo por script. Resultado em `docs/bench/`; método e antes × depois em
 `docs/DESEMPENHO.md`. Não é teste do GUT (precisa de janela e de PC parado).
 
+## Escala da interface em 1280×720 (Bloco 54)
+
+`tests/capturas_escala.gd` (com janela): abre cada janela, o menu de construção, as configurações e
+a página de teclas em 80%, 100% e na maior escala que cabe, confere que nada sai da tela e tira fotos
+(`<pasta>/escala.txt` + PNGs). Rodar com APPDATA isolado:
+`<Godot>.exe --path project.godot -s res://tests/capturas_escala.gd -- <pasta>`.
+
 ## Pela linha de comando
 
 Da pasta `project.godot/` (troque o caminho do Godot pelo seu):
@@ -116,6 +123,7 @@ determinístico) só mudou o que o bloco pretendia — instruções no topo do a
 | `p2_pendencias.gd` | Pendências dos Prompts 2 e 29 — colher fruta, treinar e ataque com lança/besta nas 4 direções; escolha pelo estado (porrete, lança, lança de prata, besta) |
 | `b51_engenheiro_estresse.gd` | 51 — 50 ciclos de salvar/carregar com obras longas e 3 engenheiros em estados diferentes (parado, indo, construindo): todo engenheiro retoma em até 25 s de jogo; o vigia age quando força "sem avançar" e não age enquanto ele se aproxima (~10 min) |
 | `b52_debug_telemetria.gd` | 52 — painel de debug (F3, só em build de debug): tempo, recursos, pular dia, curar, pesquisas, invasão; telemetria: 10 dias = 10 linhas no CSV com as 21 colunas |
+| `b54_configuracoes.gd` | 54 — escala da interface (persistida, limitada pra caber; janelas com rolagem), velocidade de câmera/zoom, reduzir efeitos, teclas (trocar, trocar entre duas, reservadas, valer no jogo, reabrir, restaurar), idioma (inglês na hora e volta), fonte com acentos, tela de configurações e página de teclas |
 | `p20_interface.gd` | Prompts 20–25 — pele (tema da raiz, botão/painel/cartão/aba 9-slice, cadeado, cursores), ícones (barra de cima, funções, prédios do menu), fontes (acentos, cabeçalho), velocidade, retrato (expressão pelo estado, cartão do selecionado), faixa com ilustração, janela de evento, corte da mina (4 andares, um boneco por ipezinho, clique seleciona) |
 | `../test_iso.gd` (GUT, rápido) | Prompt 28 — núcleo: projeção, verdade 3D, ordem incremental, raio da câmera, direção de losango |
 | `../test_iso_arte.gd` (GUT, rápido) | Prompt 28 — verificador "o sprite cabe na caixa" contra a arte dos prédios; Prompt 29 — toda a arte integrada (`assets/game/iso/predios/predios.json`) |

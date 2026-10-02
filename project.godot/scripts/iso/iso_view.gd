@@ -100,6 +100,7 @@ func setup(main: Node2D) -> void:
 	_camera = main.get_node("Camera2D")
 	name = "IsoView"
 	add_to_group("iso_view")
+	add_to_group("efeitos")
 	visibility_layer = LAYER_ISO
 	_world.visibility_layer = LAYER_WORLD
 	_things = Node2D.new()
@@ -404,7 +405,19 @@ func _build_lava() -> void:
 		sh.code = HEAT_SHADER
 		mat.shader = sh
 		hz.material = mat
+		hz.visible = not preload("res://scripts/core/efeitos.gd").reduzidos()  # Bloco 54
 		_terrain_node.add_child(hz)
+		_calor_rects.append(hz)
+
+
+## Bloco 54: "reduzir efeitos" esconde o ar tremendo do calor.
+var _calor_rects: Array = []
+
+
+func efeitos_mudaram() -> void:
+	for hz in _calor_rects:
+		if is_instance_valid(hz):
+			hz.visible = not preload("res://scripts/core/efeitos.gd").reduzidos()
 
 
 func _build_palisade() -> void:

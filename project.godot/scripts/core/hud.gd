@@ -35,6 +35,7 @@ const COLOR_DOCTOR := Color(0.6, 0.9, 0.85)
 const COLOR_ENGINEER := Color(1.0, 0.6, 0.25)
 const Ores := preload("res://scripts/core/ores.gd")
 const Settings := preload("res://scripts/core/settings.gd")
+const Teclas := preload("res://scripts/core/teclas.gd")
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const Icones := preload("res://scripts/ui/icones.gd")
 const Retratos := preload("res://scripts/ui/retratos.gd")
@@ -553,19 +554,39 @@ func _build_hints() -> void:
 	var v := VBoxContainer.new()
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(v)
-	v.add_child(_label("ATALHOS  (H fecha)", 14, COLOR_TITLE))
+	_hint_box = v
+	_fill_hints()
+
+
+## Bloco 54: as linhas da ajuda com as teclas de agora (remapeáveis nas Configurações).
+var _hint_box: VBoxContainer
+
+
+func _fill_hints() -> void:
+	if _hint_box == null:
+		return
+	for c in _hint_box.get_children():
+		c.queue_free()
+	var k := func(a: String) -> String: return Teclas.nome(a)
+	_hint_box.add_child(_label("ATALHOS  (%s fecha)" % k.call("dicas"), 14, COLOR_TITLE))
 	var lines := [
-		"Seleção:  clique  •  arrastar = vários  •  Shift+clique = somar/tirar  •  Esc = soltar  •  Tab = próximo  •  F = seguir",
+		"Seleção:  clique  •  arrastar = vários  •  Shift+clique = somar/tirar  •  Esc = soltar  •  %s = próximo  •  %s = seguir" % [k.call("proximo"), k.call("seguir")],
 		"Ordens:  botão direito = mover / minerar a jazida clicada",
-		"Funções:  1 minerador  •  2 caçador  •  3 médico  •  4 engenheiro  •  C cozinheiro  •  L lenhador  •  X guarda  •  Z pesquisador  •  0 sem função  •  T turno extra",
-		"Economia:  V vender minério  •  R recrutar",
-		"Construir:  Espaço = menu de construção (casas, cozinha, lazer, pesquisa, defesa, coleta automática…)",
-		"Prédios:  U Centro da Vila  •  E Escavadeira  •  O Oficina  •  I Enfermaria  •  B Bem-estar  •  G Defesa  •  Q Laboratório  •  Y Sol  •  J Diário  (ou clique no prédio)",
+		"Funções:  %s minerador  •  %s caçador  •  %s médico  •  %s engenheiro  •  %s cozinheiro  •  %s lenhador  •  %s guarda  •  %s pesquisador  •  %s sem função  •  %s turno extra" % [
+			k.call("minerador"), k.call("cacador"), k.call("medico"), k.call("engenheiro"), k.call("cozinheiro"), k.call("lenhador"),
+			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")],
+		"Economia:  %s vender minério  •  %s recrutar" % [k.call("vender"), k.call("recrutar")],
+		"Construir:  %s = menu de construção (casas, cozinha, lazer, pesquisa, defesa, coleta automática…)" % k.call("construir"),
+		"Prédios:  %s Centro da Vila  •  %s Escavadeira  •  %s Oficina  •  %s Enfermaria  •  %s Bem-estar  •  %s Defesa  •  %s Laboratório  •  %s Sol  •  %s Diário  (ou clique no prédio)" % [
+			k.call("painel_hub"), k.call("painel_escavadeira"), k.call("painel_oficina"), k.call("painel_enfermaria"), k.call("painel_moral"),
+			k.call("painel_defesa"), k.call("painel_lab"), k.call("painel_sol"), k.call("painel_diario")],
 		"Câmera:  roda = zoom (paradas nítidas)  •  botão do meio / WASD / setas = mover  •  Home = centralizar  •  F11 / Alt+Enter = tela cheia",
-		"Jogo:  F5 salvar  •  F9 carregar  •  M música  •  Esc/P pausa  •  N pular fase (teste)  •  K machucar (teste; Shift+K grave)",
+		"Jogo:  %s salvar  •  %s carregar  •  %s música  •  Esc/%s pausa  •  F2 corte da mina  •  N pular fase (teste)  •  K machucar (teste; Shift+K grave)" % [
+			k.call("salvar"), k.call("carregar"), k.call("musica"), k.call("pausa")],
+		"Teclas: Configurações > Teclas (remapear e restaurar o padrão)",
 	]
 	for line in lines:
-		v.add_child(_label(line, 12, COLOR_TEXT))
+		_hint_box.add_child(_label(line, 12, COLOR_TEXT))
 
 
 # =================================================================== janelas das estruturas
@@ -584,8 +605,48 @@ func _add_panel(id: String, script: GDScript, target: Node) -> void:
 	var panel: PanelContainer = script.new()
 	add_child(panel)
 	panel.setup(self, target, _economy)
+	_wrap_scroll(panel)
 	_panels[id] = panel
 	_panel_buttons[id] = button
+
+
+## Bloco 54: janela mais alta que a tela (escala da interface grande, ou muito conteúdo — a Oficina
+## e o Centro da Vila já passavam de 720 px): o conteúdo vai numa rolagem e a janela fica do
+## tamanho que cabe entre a barra de cima e a borda de baixo, centrada.
+func _wrap_scroll(panel: PanelContainer) -> void:
+	if panel.get_child_count() != 1 or panel.get_child(0) is ScrollContainer or not (panel.get_child(0) is Control):
+		return
+	var content: Control = panel.get_child(0)
+	var sc := ScrollContainer.new()
+	sc.name = "Rolagem"
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.remove_child(content)
+	sc.add_child(content)
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_child(sc)
+	panel.set_meta("_rolagem", sc)
+
+
+func _fit_panel(panel: Control) -> void:
+	if not is_instance_valid(panel) or not panel.visible or not panel.has_meta("_rolagem") or not panel.is_inside_tree():
+		return
+	var sc: ScrollContainer = panel.get_meta("_rolagem")
+	var content: Control = sc.get_child(0)
+	var vis := get_viewport().get_visible_rect().size
+	var sb := panel.get_theme_stylebox("panel")
+	var borda: float = sb.get_minimum_size().y if sb else 0.0
+	var max_h := maxf(vis.y - 2.0 * (TOP_BAR_H + 6.0) - borda, 120.0)
+	var want := minf(content.get_combined_minimum_size().y, max_h)
+	if not is_equal_approx(sc.custom_minimum_size.y, want):
+		sc.custom_minimum_size.y = want
+	elif absf(panel.size.y - panel.get_combined_minimum_size().y) < 1.0:
+		return  # já do tamanho certo (a janela só cresce sozinha: encolher é aqui)
+	panel.reset_size()
+	if is_equal_approx(panel.anchor_top, 0.5) and is_equal_approx(panel.anchor_left, 0.5):
+		panel.offset_left = -panel.size.x * 0.5
+		panel.offset_right = panel.size.x * 0.5
+		panel.offset_top = -panel.size.y * 0.5
+		panel.offset_bottom = panel.size.y * 0.5
 
 
 ## Bloco 46: abre/fecha o menu de construção.
@@ -614,6 +675,8 @@ func open_panel(id: String, focus: Node = null) -> void:
 		Audio.click()
 	panel.visible = true
 	panel.refresh()
+	_fit_panel(panel)
+	_fit_panel.call_deferred(panel)  # (texto quebrando muda a altura no quadro seguinte)
 
 
 ## Abre a janela da estrutura clicada no mapa (ela diz qual pelo panel_id).
@@ -1205,6 +1268,7 @@ func _refresh_panels() -> void:
 		# destaca o botão quando dá pra comprar/fabricar alguma coisa
 		button.add_theme_color_override("font_color", COLOR_TITLE if panel.has_available_action() else COLOR_TEXT)
 		panel.refresh()
+		_fit_panel(panel)  # Bloco 54
 
 
 # =================================================================== debug (Bloco 52)

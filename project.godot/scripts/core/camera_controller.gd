@@ -38,6 +38,17 @@ extends Camera2D
 @export var edge_scroll: bool = false
 @export var edge_margin: float = 10.0
 
+## Bloco 54: multiplicadores das Configurações ([camera] pan_mult / zoom_mult, 0,5–2).
+static var pan_mult := -1.0
+static var zoom_mult := -1.0
+
+
+static func load_speeds() -> void:
+	var S := preload("res://scripts/core/settings.gd")
+	pan_mult = clampf(S.get_value("camera", "pan_mult", 1.0), 0.5, 2.0)
+	zoom_mult = clampf(S.get_value("camera", "zoom_mult", 1.0), 0.5, 2.0)
+
+
 @export_group("Limites")
 ## Área onde o centro da câmera pode ficar (normalmente o mapa). Tamanho zero = sem limite.
 @export var bounds: Rect2 = Rect2()
@@ -189,7 +200,9 @@ func _process(delta: float) -> void:
 		if follow_target != null:
 			screen_offset = Vector2.ZERO  # seguindo alguém: zoom no centro
 		var anchor_world := position + screen_offset / zoom.x
-		var z := lerpf(zoom.x, _target_zoom, 1.0 - exp(-zoom_smoothing * delta))
+		if zoom_mult < 0.0:
+			load_speeds()
+		var z := lerpf(zoom.x, _target_zoom, 1.0 - exp(-zoom_smoothing * zoom_mult * delta))
 		if absf(z - _target_zoom) < 0.001:
 			z = _target_zoom
 		zoom = Vector2(z, z)
@@ -212,7 +225,9 @@ func _process(delta: float) -> void:
 		elif mouse.y > size.y - edge_margin: dir.y += 1.0
 	if dir != Vector2.ZERO:
 		follow_target = null
-		_target_pos += dir.normalized() * pan_speed * delta / zoom.x
+		if pan_mult < 0.0:
+			load_speeds()
+		_target_pos += dir.normalized() * pan_speed * pan_mult * delta / zoom.x
 
 	# --- seguir alvo
 	if follow_target != null:

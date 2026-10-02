@@ -1,0 +1,187 @@
+keys,pt_BR,en
+CONSTRUIR,CONSTRUIR,BUILD
+Construir,Construir,Build
+Minerador,Minerador,Miner
+Caçador,Caçador,Hunter
+Médico,Médico,Doctor
+Engenheiro,Engenheiro,Engineer
+Cozinheiro,Cozinheiro,Cook
+Lenhador,Lenhador,Woodcutter
+Guarda,Guarda,Guard
+Pesquisador,Pesquisador,Researcher
+Sem função,Sem função,No job
+Turno extra,Turno extra,Overtime
+Moradia,Moradia,Housing
+Alimentação,Alimentação,Food
+Saúde,Saúde,Health
+Lazer,Lazer,Leisure
+Pesquisa,Pesquisa,Research
+Defesa e equipamento,Defesa e equipamento,Defense & gear
+Coleta automática,Coleta automática,Automation
+Vila,Vila,Village
+Primavera,Primavera,Spring
+Verão,Verão,Summer
+Outono,Outono,Autumn
+Inverno,Inverno,Winter
+Vender,Vender,Sell
+auto,auto,auto
+Vende todo o minério do armazém (V),Vende todo o minério do armazém (V),Sells all ore in the warehouse (V)
+Vende sozinho o que chegar no armazém,Vende sozinho o que chegar no armazém,Automatically sells whatever reaches the warehouse
+Atalhos de teclado (H),Atalhos de teclado (H),Keyboard shortcuts (H)
+FORÇA DE TRABALHO,FORÇA DE TRABALHO,WORKFORCE
+Recolher/abrir a lista de ipezinhos,Recolher/abrir a lista de ipezinhos,Collapse/expand the worker list
+Recrutar ipezinho,Recrutar ipezinho,Recruit worker
+IPEZINHOS,IPEZINHOS,WORKERS
+CONSTRUÇÕES,CONSTRUÇÕES,BUILDINGS
+Corte da mina (F2),Corte da mina (F2),Mine cross-section (F2)
+ATALHOS  (H fecha),ATALHOS  (H fecha),SHORTCUTS  (H closes)
+fome,fome,hunger
+carga,carga,load
+ânimo,ânimo,mood
+Todos com função,Todos com função,Everyone has a job
+Créditos,Créditos,Credits
+Minério,Minério,Ore
+Madeira,Madeira,Wood
+Matéria-prima,Matéria-prima,Raw food
+Comida pronta,Comida pronta,Cooked food
+Camas,Camas,Beds
+Ânimo,Ânimo,Mood
+Estação,Estação,Season
+Fechar (Esc / espaço),Fechar (Esc / espaço),Close (Esc / space)
+Em breve,Em breve,Coming soon
+escolha o prédio → escolha o lugar → o engenheiro (tecla 4) ergue,escolha o prédio → escolha o lugar → o engenheiro (tecla 4) ergue,pick the building → pick the spot → the engineer (key 4) builds it
+CASA,CASA,HOUSE
+Ampliar,Ampliar,Upgrade
+CASAS,CASAS,HOUSES
+Nível máximo.,Nível máximo.,Max level.
+Nível máximo,Nível máximo,Max level
+ARMAZÉM,ARMAZÉM,WAREHOUSE
+COLETOR DE MADEIRA,COLETOR DE MADEIRA,WOOD COLLECTOR
+Liberar o operador (a máquina para),Liberar o operador (a máquina para),Release the operator (the machine stops)
+Ainda não construído.,Ainda não construído.,Not built yet.
+DEFESA,DEFESA,DEFENSE
+Forjar,Forjar,Forge
+Consertar,Consertar,Repair
+Próxima invasão: HOJE À NOITE!,Próxima invasão: HOJE À NOITE!,Next invasion: TONIGHT!
+Máximo,Máximo,Max
+DIÁRIO DA VILA,DIÁRIO DA VILA,VILLAGE DIARY
+MEMORIAL,MEMORIAL,MEMORIAL
+ENFERMARIA,ENFERMARIA,INFIRMARY
+PACIENTES E ESPERA,PACIENTES E ESPERA,PATIENTS AND QUEUE
+ninguém machucado,ninguém machucado,nobody injured
+ninguém morreu (ainda),ninguém morreu (ainda),nobody died (yet)
+ESCAVADEIRA,ESCAVADEIRA,EXCAVATOR
+Fechar (Esc / E),Fechar (Esc / E),Close (Esc / E)
+PEÇAS,PEÇAS,PARTS
+Desligar,Desligar,Turn off
+Fabricar,Fabricar,Craft
+INSTALADO,INSTALADO,INSTALLED
+Instalado,Instalado,Installed
+Instalar,Instalar,Install
+instalada,instalada,installed
+Instalada,Instalada,Installed
+Fabricando...,Fabricando...,Crafting...
+disponível,disponível,available
+CENTRO DA VILA,CENTRO DA VILA,VILLAGE CENTER
+Fechar (Esc / U),Fechar (Esc / U),Close (Esc / U)
+CONSTRUIR (o engenheiro ergue),CONSTRUIR (o engenheiro ergue),BUILD (the engineer builds it)
+MELHORIAS,MELHORIAS,UPGRADES
+cada uma vai até o nível da vila,cada uma vai até o nível da vila,each one goes up to the village level
+A VILA ESTÁ NO ESTÁGIO MÁXIMO,A VILA ESTÁ NO ESTÁGIO MÁXIMO,THE VILLAGE IS AT MAX STAGE
+Estágio máximo,Estágio máximo,Max stage
+Espere a obra atual terminar,Espere a obra atual terminar,Wait for the current build to finish
+Custo:,Custo:,Cost:
+LABORATÓRIO — PESQUISA,LABORATÓRIO — PESQUISA,LABORATORY — RESEARCH
+Pesquisar,Pesquisar,Research
+PESQUISADO,PESQUISADO,RESEARCHED
+BEM-ESTAR,BEM-ESTAR,WELL-BEING
+O QUE PESA NO ÂNIMO,O QUE PESA NO ÂNIMO,WHAT AFFECTS MOOD
+Festa:,Festa:,Party:
+OFICINA,OFICINA,WORKSHOP
+Fechar (Esc / O),Fechar (Esc / O),Close (Esc / O)
+FERRAMENTAS,FERRAMENTAS,TOOLS
+pronta,pronta,ready
+Pronta,Pronta,Ready
+PRONTA,PRONTA,READY
+Forjando...,Forjando...,Forging...
+ROBÔ ANTIGO,ROBÔ ANTIGO,OLD ROBOT
+Mandar buscar,Mandar buscar,Send someone
+O SOL,O SOL,THE SUN
+ESCUDO SOLAR (vitória),ESCUDO SOLAR (vitória),SOLAR SHIELD (victory)
+Marcar o lugar do gerador do escudo,Marcar o lugar do gerador do escudo,Mark the spot for the shield generator
+Carregando...,Carregando...,Loading...
+Dica:,Dica:,Tip:
+CORTE DA MINA,CORTE DA MINA,MINE CROSS-SECTION
+EXPULSO DA VILA,EXPULSO DA VILA,EXPELLED FROM THE VILLAGE
+Carregar último save,Carregar último save,Load last save
+Novo jogo,Novo jogo,New game
+Voltar ao menu inicial,Voltar ao menu inicial,Back to main menu
+PAUSADO,PAUSADO,PAUSED
+Continuar  (Esc),Continuar  (Esc),Continue  (Esc)
+Configurações,Configurações,Settings
+Salvar jogo  (F5),Salvar jogo  (F5),Save game  (F5)
+Salvar e voltar ao menu inicial,Salvar e voltar ao menu inicial,Save and return to main menu
+Salvar e sair do jogo,Salvar e sair do jogo,Save and quit
+CONFIGURAÇÕES,CONFIGURAÇÕES,SETTINGS
+Música ligada  (M),Música ligada  (M),Music on  (M)
+Tela cheia  (F11 / Alt+Enter),Tela cheia  (F11 / Alt+Enter),Fullscreen  (F11 / Alt+Enter)
+Mostrar dicas de controle  (H),Mostrar dicas de controle  (H),Show control hints  (H)
+Voltar,Voltar,Back
+Continuar,Continuar,Continue
+Nenhum save em andamento.,Nenhum save em andamento.,No game in progress.
+Sair,Sair,Quit
+BACKUPS,BACKUPS,BACKUPS
+Carregar,Carregar,Load
+A VILA ESTÁ A SALVO!,A VILA ESTÁ A SALVO!,THE VILLAGE IS SAFE!
+Continuar jogando,Continuar jogando,Keep playing
+GREVE!,GREVE!,STRIKE!
+GREVE ENCERRADA,GREVE ENCERRADA,STRIKE OVER
+FESTA NA VILA!,FESTA NA VILA!,VILLAGE PARTY!
+ÚLTIMO AVISO,ÚLTIMO AVISO,FINAL WARNING
+ROBÔ ANTIGO!,ROBÔ ANTIGO!,OLD ROBOT!
+FUNDE SUA VILA,FUNDE SUA VILA,FOUND YOUR VILLAGE
+VILA FUNDADA!,VILA FUNDADA!,VILLAGE FOUNDED!
+ROUBO NO ARMAZÉM!,ROUBO NO ARMAZÉM!,WAREHOUSE ROBBED!
+VEM AÍ UMA INVASÃO,VEM AÍ UMA INVASÃO,AN INVASION IS COMING
+ONDA SOLAR CHEGANDO,ONDA SOLAR CHEGANDO,SOLAR WAVE INCOMING
+ESCAVADEIRA CONCLUÍDA!,ESCAVADEIRA CONCLUÍDA!,EXCAVATOR COMPLETE!
+Volume geral,Volume geral,Master volume
+Música,Música,Music
+Ambiente da caverna,Ambiente da caverna,Cave ambience
+Efeitos,Efeitos,Effects
+Escala da interface,Escala da interface,Interface scale
+Velocidade da câmera,Velocidade da câmera,Camera speed
+Velocidade do zoom,Velocidade do zoom,Zoom speed
+"Reduzir efeitos (clima, tremor, partículas)","Reduzir efeitos (clima, tremor, partículas)","Reduce effects (weather, shake, particles)"
+Idioma,Idioma,Language
+Teclas,Teclas,Keys
+Restaurar padrão,Restaurar padrão,Restore defaults
+aperte uma tecla...,aperte uma tecla...,press a key...
+TECLAS,TECLAS,KEYS
+Pausar o tempo (sem menu),Pausar o tempo (sem menu),Pause time (no menu)
+Velocidade normal,Velocidade normal,Normal speed
+Velocidade 2x,Velocidade 2x,2x speed
+Velocidade 3x,Velocidade 3x,3x speed
+Casa (Moradias),Casa (Moradias),House (Housing)
+Casa inicial,Casa inicial,Starter house
+Casa nível 2 e 3,Casa nível 2 e 3,House level 2 and 3
+Escola,Escola,School
+Cozinha,Cozinha,Kitchen
+Taverna,Taverna,Tavern
+Parque,Parque,Park
+Laboratório,Laboratório,Laboratory
+Arsenal,Arsenal,Armory
+Campo de treino,Campo de treino,Training field
+Vestiário,Vestiário,Locker room
+Oficina (forja),Oficina (forja),Workshop (forge)
+Coletor de madeira,Coletor de madeira,Wood collector
+Coletor de minério,Coletor de minério,Ore collector
+Expandir a vila,Expandir a vila,Expand the village
+Trilhas batidas,Trilhas batidas,Beaten paths
+Escudo solar,Escudo solar,Solar shield
+Ampliar Enfermaria,Ampliar Enfermaria,Expand infirmary
+Nova enfermaria,Nova enfermaria,New infirmary
+Ampliar taverna,Ampliar taverna,Expand tavern
+pode ter vários,pode ter vários,can have several
+um por vila,um por vila,one per village
+Ampliar uma casa,Ampliar uma casa,Upgrade a house

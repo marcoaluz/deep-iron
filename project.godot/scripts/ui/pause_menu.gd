@@ -88,7 +88,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
 	if event is InputEventKey and event.pressed and not event.echo \
-			and event.physical_keycode in [KEY_ESCAPE, KEY_P]:
+			and event.physical_keycode in [KEY_ESCAPE, preload("res://scripts/core/teclas.gd").tecla("pausa")]:
 		get_viewport().set_input_as_handled()
 		Audio.click()
 		if _settings_page.visible:
@@ -103,6 +103,8 @@ func _show_settings() -> void:
 
 
 func _show_main() -> void:
+	if _settings_page.has_method("reset_page"):
+		_settings_page.reset_page()  # Bloco 54: saiu da página de teclas também
 	_settings_page.visible = false
 	_main_page.visible = true
 

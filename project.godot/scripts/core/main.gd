@@ -12,6 +12,7 @@ extends Node2D
 
 signal selection_changed(unit: Node2D)
 
+const Teclas := preload("res://scripts/core/teclas.gd")
 const SELECT_RADIUS := 22.0
 const MARKER_TIME := 0.6
 ## Quanto (px de tela) o mouse precisa andar com o botão apertado pra virar arrasto.
@@ -137,13 +138,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _dragging:
 			_box_drawer.queue_redraw()
 	elif event is InputEventKey and event.pressed and not event.echo:
-		match event.physical_keycode:
-			KEY_TAB:
+		# Bloco 54: as teclas são remapeáveis (Configurações > Teclas): pergunta a AÇÃO da tecla
+		match Teclas.acao(event.physical_keycode):
+			"proximo":
 				_select_next()
-			KEY_F:
+			"seguir":
 				if selected:
 					_camera.follow_target = null if _camera.follow_target == selected else selected
-			KEY_ESCAPE:
+			"voltar":
 				# Esc fecha o que estiver aberto; sem nada pra fechar/soltar, pausa
 				if _hud.close_panels():
 					pass
@@ -151,71 +153,71 @@ func _unhandled_input(event: InputEvent) -> void:
 					select(null)
 				else:
 					_pause.open()
-			KEY_P:
+			"pausa":
 				_pause.open()
-			KEY_H:
+			"dicas":
 				_hud.toggle_hints()
-			KEY_U:
+			"painel_hub":
 				_hud.toggle_panel("hub")
-			KEY_E:
+			"painel_escavadeira":
 				_hud.toggle_panel("escavadeira")
-			KEY_O:
+			"painel_oficina":
 				_hud.toggle_panel("oficina")
-			KEY_I:
+			"painel_enfermaria":
 				_hud.toggle_panel("enfermaria")
-			KEY_B:
+			"painel_moral":
 				_hud.toggle_panel("moral")
-			KEY_G:
+			"painel_defesa":
 				_hud.toggle_panel("defesa")
-			KEY_J:
+			"painel_diario":
 				_hud.toggle_panel("diario")
-			KEY_X:
+			"guarda":
 				toggle_guard()
-			KEY_Z:
+			"pesquisador":
 				toggle_research()
-			KEY_Q:
+			"painel_lab":
 				_hud.toggle_panel("lab")
-			KEY_Y:
+			"painel_sol":
 				_hud.toggle_panel("sol")
-			KEY_V:
+			"vender":
 				_economy.sell_all()
-			KEY_R:
+			"recrutar":
 				var worker: Node2D = _economy.recruit()
 				if worker:
 					_camera.focus_on(worker.global_position)
-			KEY_SPACE:
+			"construir":
 				_hud.toggle_build_menu()  # Bloco 46: menu de construção
-			KEY_M:
+			"musica":
 				Audio.toggle_music()
-			KEY_F4:
+			"caixas":
 				if _iso.enabled:
 					_iso.show_boxes = not _iso.show_boxes  # Prompt 28: mostra as caixas
-			KEY_F5:
+			"salvar":
 				SaveManager.save_game("manual")
-			KEY_F9:
+			"carregar":
 				if SaveManager.has_save():
 					SaveManager.load_game()
 				else:
 					Audio.error()
-			KEY_N:
+			"pular_fase":
 				_day_night.skip_phase()
-			KEY_T:
+			"turno_extra":
 				toggle_overtime()
-			KEY_C:
+			"cozinheiro":
 				toggle_cook()
-			KEY_L:
+			"lenhador":
 				toggle_lumber()
-			KEY_1, KEY_KP_1:
+			"minerador":
 				toggle_miner()
-			KEY_2, KEY_KP_2:
+			"cacador":
 				toggle_hunter()
-			KEY_3, KEY_KP_3:
+			"medico":
 				toggle_doctor()
-			KEY_4, KEY_KP_4:
+			"engenheiro":
 				toggle_engineer()
-			KEY_0, KEY_KP_0:
+			"sem_funcao":
 				clear_job()
-			KEY_K:
+			"machucar":
 				for unit in selection.duplicate():
 					if is_instance_valid(unit):
 						unit.hurt("mina", "grave" if event.shift_pressed else "")

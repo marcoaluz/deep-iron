@@ -248,6 +248,8 @@ func _sync_weather(cam: Vector2, hor_screen: float) -> void:
 	for k in _wx_pairs:
 		var src: CPUParticles2D = _wx_pairs[k][0]
 		var c: CPUParticles2D = _wx_pairs[k][1]
+		if c.amount != src.amount:
+			c.amount = src.amount  # Bloco 54: reduzir efeitos
 		c.modulate.a = src.modulate.a
 		if c.emitting != src.emitting:
 			c.preprocess = c.lifetime if src.emitting else 0.0
@@ -268,6 +270,8 @@ func _sync_fog(delta: float) -> void:
 	var want := 0.0
 	if _weather_node and _weather_node.has_method("level"):
 		want = clampf(_weather_node.level("rain"), 0.0, 1.0) * 0.55
+		if preload("res://scripts/core/efeitos.gd").reduzidos():
+			want = 0.0  # Bloco 54: reduzir efeitos (sem neblina)
 	if _day_night and _day_night.get("time") != null and float(_day_night.day_duration) > 0.0:
 		var f: float = float(_day_night.time) / float(_day_night.day_duration)
 		if f < 0.15:

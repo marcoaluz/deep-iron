@@ -331,7 +331,7 @@ func _sync_wave(delta: float) -> void:
 	_wave_k = move_toward(_wave_k, 1.0 if on else 0.0, delta * 0.8)
 	_wave_layer.visible = _wave_k > 0.01
 	if _wave_layer.visible:
-		_wave_mat.set_shader_parameter("k", _wave_k)
+		_wave_mat.set_shader_parameter("k", _wave_k * (0.35 if preload("res://scripts/core/efeitos.gd").reduzidos() else 1.0))  # Bloco 54
 		_wave_mat.set_shader_parameter("t", _t)
 
 

@@ -244,3 +244,8 @@ func test_b51_engenheiro_estresse() -> void:
 
 func test_b52_debug_telemetria() -> void:
 	run_bloco("b52_debug_telemetria.gd")
+
+
+func test_b54_configuracoes() -> void:
+	run_bloco("b54_configuracoes.gd")
+

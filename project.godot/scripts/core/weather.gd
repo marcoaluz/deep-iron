@@ -54,8 +54,12 @@ var _frost_level := 0.0
 var _rect := Rect2()
 
 
+const Efeitos := preload("res://scripts/core/efeitos.gd")
+
+
 func _ready() -> void:
 	add_to_group("weather")
+	add_to_group("efeitos")  # Bloco 54: reduzir efeitos
 	z_index = 20  # por cima dos prédios e das árvores (o HUD é outra camada)
 	var env := get_tree().get_first_node_in_group("environment")
 	_rect = env.clearing_rect if env else Rect2()
@@ -75,8 +79,20 @@ func _ready() -> void:
 		_ramp([Color(0.7, 0.8, 1.0, 0.75)]), 1.6, 2.2, 0.0), "level": 0.0}
 	_fx["pollen"] = {"node": _make(POLLEN, pollen_amount, 6.0, Vector2(0.3, -1.0), 180.0, 7.0, Vector2(0, -3.0),
 		_ramp([Color(1.0, 0.95, 0.62)]), 1.5, 2.0, 0.0), "level": 0.0}
+	for k in _fx:
+		_fx[k].base = _fx[k].node.amount
+	efeitos_mudaram()
 	SaveManager.loaded.connect(snap)
 	snap.call_deferred()
+
+
+## Bloco 54: "reduzir efeitos" liga/desliga: menos partículas de clima.
+func efeitos_mudaram() -> void:
+	for k in _fx:
+		var n: CPUParticles2D = _fx[k].node
+		var want := Efeitos.qtd(int(_fx[k].get("base", n.amount)))
+		if n.amount != want:
+			n.amount = want
 
 
 ## Cria um emissor cobrindo a clareira inteira; a partícula aparece e some (sem borda seca).
