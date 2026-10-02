@@ -29,7 +29,7 @@ const TECHS := {
 		"desc": "Cada ipezinho carrega 25% mais minério por viagem."},
 	"explosivos": {"name": "Explosivos controlados", "branch": "Mina", "req": "carrinhos", "excl": "escoramento", "points": 140,
 		"cost": Vector3i(300, 60, 0), "ore": "carvao",
-		"desc": "Mineração 30% mais rápida, mas acidentes na mina 25% mais comuns."},
+		"desc": "Mineração 30% mais rápida, mas acidentes na mina 25% mais comuns. Libera a DINAMITE: abre galeria lacrada antes da hora (clique no entulho)."},
 	"escoramento": {"name": "Escoramento", "branch": "Mina", "req": "carrinhos", "excl": "explosivos", "points": 140,
 		"cost": Vector3i(250, 0, 100), "ore": "",
 		"desc": "Vigas nas galerias: acidentes na mina 40% menos comuns."},
@@ -41,7 +41,7 @@ const TECHS := {
 		"desc": "Cura no leito 30% mais rápida; machucado sem leito aguenta 50% mais tempo."},
 	"radio": {"name": "Rádio da vila", "branch": "Vila", "req": "medicina", "excl": "hidroponia", "points": 120,
 		"cost": Vector3i(300, 40, 0), "ore": "cobre",
-		"desc": "Música o dia todo: +6 de ânimo pra todo mundo."},
+		"desc": "Música o dia todo: +6 de ânimo pra todo mundo. Escuta as criaturas: aviso de invasão bem mais cedo; com o satélite, chega colono todo dia."},
 	"hidroponia": {"name": "Hidroponia", "branch": "Vila", "req": "medicina", "excl": "radio", "points": 120,
 		"cost": Vector3i(250, 0, 60), "ore": "",
 		"desc": "A horta rende o dobro e a cozinha guarda +60 de comida."},
@@ -83,6 +83,24 @@ const TECHS := {
 @export var floodlight_damage: float = 1.3
 @export var satellite_every_days: int = 2
 
+@export_group("Dinamite e rádio (Bloco 60)")
+## Custo de uma dinamite (créditos e carvão) e quantas cabem no paiol.
+@export var dynamite_credits: int = 40
+@export var dynamite_coal: int = 15
+@export var dynamite_max: int = 5
+## Chance de acidente ao explodir: minerador (sabe mexer) e qualquer outro.
+@export var dynamite_risk_miner: float = 0.04
+@export var dynamite_risk_untrained: float = 0.2
+## Segundos do pavio depois de chegar no entulho; desiste (devolve a dinamite) depois deste tempo andando.
+@export var dynamite_fuse: float = 2.5
+@export var dynamite_walk_timeout: float = 60.0
+## Rádio: o aviso de invasão vem estes segundos antes do normal; com satélite, um colono a cada N dias.
+@export var radio_warning_bonus: float = 60.0
+@export var radio_satellite_every_days: int = 1
+
+var dynamite := 0
+var _blast := {}  # trabalho em andamento: {galeria, quem, t, fase ("andando"/"pavio")}
+
 var done: Array = []
 var current: String = ""
 var progress: float = 0.0
@@ -90,6 +108,7 @@ var progress: float = 0.0
 
 func _ready() -> void:
 	add_to_group("research")
+	set_process(true)
 	_connect_cycle.call_deferred()
 
 
@@ -312,8 +331,13 @@ func apply_worker(w: Node) -> void:
 	w.cargo_capacity = w.get_meta("base_cargo") * cargo_mult()
 
 
+## Bloco 60: com o rádio, o satélite acha colono mais vezes.
+func satellite_days() -> int:
+	return maxi(radio_satellite_every_days if has("radio") else satellite_every_days, 1)
+
+
 func _on_day_started(day: int) -> void:
-	if not has("satelite") or day % maxi(satellite_every_days, 1) != 0:
+	if not has("satelite") or day % satellite_days() != 0:
 		return
 	var eco := get_tree().get_first_node_in_group("economy")
 	if eco == null:
@@ -327,9 +351,118 @@ func _on_day_started(day: int) -> void:
 			hud.show_toast("O satélite achou um colono, mas não tem vaga na vila (Moradias).", Color(1.0, 0.7, 0.4))
 
 
+# ------------------------------------------------------------ dinamite (Bloco 60)
+func dynamite_cost_text() -> String:
+	return "%d cr + %d carvão" % [dynamite_credits, dynamite_coal]
+
+
+func craft_dynamite_reason() -> String:
+	if not has("explosivos"):
+		return "precisa pesquisar Explosivos controlados"
+	if dynamite >= dynamite_max:
+		return "paiol cheio (%d)" % dynamite_max
+	var eco := get_tree().get_first_node_in_group("economy")
+	return eco.missing_text(dynamite_credits, dynamite_coal, "carvao", 0, "carvão") if eco else "sem recursos"
+
+
+func craft_dynamite() -> bool:
+	if craft_dynamite_reason() != "":
+		return false
+	var eco := get_tree().get_first_node_in_group("economy")
+	if not eco.spend(dynamite_credits, dynamite_coal, "carvao"):
+		return false
+	dynamite += 1
+	return true
+
+
+func blast_reason(gallery: Node) -> String:
+	if gallery == null or not gallery.is_sealed():
+		return "não está lacrada"
+	if not has("explosivos"):
+		return "precisa pesquisar Explosivos controlados"
+	if dynamite <= 0:
+		return "sem dinamite (faça uma)"
+	if not _blast.is_empty():
+		return "já tem uma explosão em andamento"
+	if _blaster_for(gallery) == null:
+		return "ninguém disponível pra levar"
+	return ""
+
+
+## Quem leva a carga: o minerador mais perto (sabe mexer); senão o ipezinho mais perto.
+func _blaster_for(gallery: Node) -> Node:
+	var best: Node = null
+	var best_d := INF
+	for pass_miner in [true, false]:
+		for w in get_tree().get_nodes_in_group("ipezinhos"):
+			if w.injured or w.get("downed") or (pass_miner and not w.is_miner()):
+				continue
+			var d: float = w.global_position.distance_to(gallery.global_position)
+			if d < best_d:
+				best_d = d
+				best = w
+		if best:
+			return best
+	return null
+
+
+func start_blast(gallery: Node) -> bool:
+	if blast_reason(gallery) != "":
+		return false
+	var w := _blaster_for(gallery)
+	dynamite -= 1
+	_blast = {"galeria": gallery, "quem": w, "t": 0.0, "fase": "andando"}
+	w.move_to(gallery.global_position + Vector2(0, 46))
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("%s leva a dinamite até a galeria %s." % [w.display_name, gallery.gallery_name], Color(1.0, 0.8, 0.45))
+	return true
+
+
+func blast_in_progress() -> bool:
+	return not _blast.is_empty()
+
+
+func _process(delta: float) -> void:
+	if _blast.is_empty():
+		return
+	var g = _blast.galeria
+	var w = _blast.quem
+	if not is_instance_valid(g) or not g.is_sealed():
+		_blast = {}
+		return
+	_blast.t += delta
+	if _blast.fase == "andando":
+		if not is_instance_valid(w) or w.injured or w.get("downed") or _blast.t > dynamite_walk_timeout:
+			dynamite = mini(dynamite + 1, dynamite_max)  # não chegou: a dinamite volta pro paiol
+			_blast = {}
+			return
+		if w.global_position.distance_to(g.global_position) < 70.0:
+			_blast.fase = "pavio"
+			_blast.t = 0.0
+			w.move_to(g.global_position + Vector2(0, 150))  # acende e corre
+	elif _blast.t >= dynamite_fuse:
+		_explode(g, w if is_instance_valid(w) else null)
+		_blast = {}
+
+
+func _explode(g: Node, w: Node) -> void:
+	g.blast_open()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("BUM! A galeria %s abriu (%s)." % [g.gallery_name, g.ore_type], Color(0.55, 1.0, 0.5))
+	if w == null:
+		return
+	var risk := dynamite_risk_miner if w.is_miner() else dynamite_risk_untrained
+	if randf() < risk:
+		w.hurt("mina", "grave" if randf() < 0.3 else "")
+		if hud:
+			hud.show_toast("%s se machucou com a explosão!" % w.display_name, Color(1.0, 0.5, 0.4))
+
+
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
-	var d := {"done": done.duplicate(), "current": current, "progress": progress}
+	var d := {"done": done.duplicate(), "current": current, "progress": progress, "dynamite": dynamite}
 	var ls := []
 	for l in labs():
 		ls.append(SaveUtil.vec2_to_array(l.global_position))
@@ -346,6 +479,8 @@ func load_save_data(d: Dictionary) -> void:
 	if not TECHS.has(current) or has(current):
 		current = ""
 	progress = maxf(SaveUtil.num(d, "progress", 0.0), 0.0) if current != "" else 0.0
+	dynamite = clampi(SaveUtil.integer(d, "dynamite", 0), 0, dynamite_max)  # Bloco 60 (save antigo: 0)
+	_blast = {}
 	if labs().is_empty():
 		for pos in SaveUtil.positions(d, "labs", "lab"):  # Bloco 47 (save antigo: "lab", um só)
 			spawn_lab(pos)

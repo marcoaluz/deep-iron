@@ -53,6 +53,9 @@ var _unlocked: bool = true
 var _needs_descent: bool = false  # trancada porque o nível 2 ainda não abriu
 var _needs_village: bool = false  # Bloco 33: galeria lacrada até a vila crescer
 var _rubble: Sprite2D = null  # entulho com tábuas em X na frente da galeria lacrada
+## Bloco 60: o entulho foi explodido com dinamite (a galeria abriu antes da vila crescer).
+var blasted := false
+var panel_id := "galeria"
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _label: Label = $AmountLabel
@@ -131,7 +134,11 @@ func on_unlock_changed(animate: bool = true) -> void:
 		_needs_descent = _needs_descent or not (abyss != null and abyss.unlocked)
 	# Bloco 33: galeria lacrada até a vila chegar no estágio
 	var hub := get_tree().get_first_node_in_group("village_hub")
-	_needs_village = hub != null and hub.level < min_village_level
+	_needs_village = hub != null and hub.level < min_village_level and not blasted
+	if _needs_village and not is_in_group("clickable"):
+		add_to_group("clickable")  # Bloco 60: clique no entulho abre a janela da galeria
+	elif not _needs_village and is_in_group("clickable"):
+		remove_from_group("clickable")
 	_unlocked = tool_ok and not _needs_descent and not _needs_village
 	_update_rubble(was_sealed and animate)
 	if _unlocked and not was and animate:
@@ -173,6 +180,16 @@ func extract(amount: float) -> float:
 		depleted.emit()
 	_update_visual()
 	return taken
+
+
+## Bloco 60: dinamite no entulho.
+func blast_open() -> void:
+	blasted = true
+	on_unlock_changed(true)
+
+
+func contains_point(p: Vector2) -> bool:
+	return Rect2(global_position + Vector2(-40, -60), Vector2(80, 70)).has_point(p)
 
 
 func has_ore() -> bool:
@@ -251,6 +268,7 @@ func get_save_data() -> Dictionary:
 		"cooldown": _cooldown,
 		"variant": textures.find(_visual.texture),
 		"flip": _visual.flip_h,
+		"blasted": blasted,
 	}
 
 
@@ -261,4 +279,5 @@ func load_save_data(d: Dictionary) -> void:
 	if variant >= 0 and variant < textures.size():
 		_visual.texture = textures[variant]
 	_visual.flip_h = SaveUtil.boolean(d, "flip", _visual.flip_h)
+	blasted = SaveUtil.boolean(d, "blasted", false)  # Bloco 60
 	on_unlock_changed(false)

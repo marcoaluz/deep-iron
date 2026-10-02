@@ -534,6 +534,12 @@ func _build_buildings_column() -> void:
 	casa_panel.setup(self, null, _economy)
 	_wrap_scroll(casa_panel)
 	_panels["casa"] = casa_panel
+	# Bloco 60: janela da galeria lacrada (clique no entulho)
+	var galeria_panel: PanelContainer = preload("res://scripts/core/galeria_panel.gd").new()
+	add_child(galeria_panel)
+	galeria_panel.setup(self, null, _economy)
+	_wrap_scroll(galeria_panel)
+	_panels["galeria"] = galeria_panel
 	# Prompt 25: o corte da mina (vista de lado, todos os andares)
 	_corte = preload("res://scripts/ui/corte_mina.gd").new()
 	add_child(_corte)

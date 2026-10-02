@@ -682,19 +682,31 @@ func _process(delta: float) -> void:
 		start_day = dn.day  # jogo novo (dia 1) ou save de antes da defesa
 	# aviso no fim da tarde
 	if not dn.is_night() and is_invasion_night(dn.day) and _warned_day != dn.day \
-			and dn.time_left_in_phase() <= warn_before:
+			and dn.time_left_in_phase() <= warn_time():
 		_warned_day = dn.day
 		var hud := get_tree().get_first_node_in_group("hud")
 		if hud:
 			var ferr := " e os Ferrugentos se mexem no poço" if level2_open() else ""
+			var radio := "O rádio pegou o chiado deles bem antes: " if _has_radio() else ""
 			hud.show_banner("VEM AÍ UMA INVASÃO",
-				"Os Lumívoros se juntam na clareira%s. Esta noite eles atacam — guardas nos portões! (G: Defesa)" % ferr)
+				"%sOs Lumívoros se juntam na clareira%s. Esta noite eles atacam — guardas nos portões! (G: Defesa)" % [radio, ferr])
 		Audio.alarm()
 	# criaturas chegando aos poucos
 	if invasion_active:
 		_night_time += delta
 		while not _spawn_queue.is_empty() and _spawn_queue[0].at <= _night_time:
 			_spawn(_spawn_queue.pop_front().kind)
+
+
+## Bloco 60: com o rádio, o aviso vem antes.
+func _has_radio() -> bool:
+	var res := get_tree().get_first_node_in_group("research")
+	return res != null and res.has("radio")
+
+
+func warn_time() -> float:
+	var res := get_tree().get_first_node_in_group("research")
+	return warn_before + (res.radio_warning_bonus if _has_radio() else 0.0)
 
 
 func _on_phase_changed(night: bool) -> void:
