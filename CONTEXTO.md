@@ -1,8 +1,21 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-02 (**Prompts 16 a 26 feitos**, mais as pendências dos 2, 14 e 29; o Marco
-liberou ir até o fim sem checkpoint e vai verificar). Branch `isometrico`. Último commit:
-`30a60c51 Prompt 30`; os Prompts 19, 31 e 16–26 estão no working tree, **ainda sem commit**.
+Atualizado em 2026-10-02 (tarde). Branch `isometrico`. **Em andamento: `deep-iron-prompts-melhorias.md`
+(Blocos 49–71 + itens de arte)** — o Marco pediu pra aplicar TUDO do documento (inclusive os blocos de
+arte: PixelLab tier 3, ~10k créditos), um commit por bloco (`bloco-NN: ...`), sem checkpoint.
+
+**Feitos e commitados:** 49 (saúde do repo/LFS), 50 (export/build/run_tests), 51 (vigia do
+engenheiro), 52 (debug F3/telemetria/BALANCEAMENTO.md), 53 (desempenho; docs/DESEMPENHO.md), 54
+(configurações, teclas, idioma, rolagem das janelas), 55 (áudio; docs/AUDIO.md), 56 (casas nível
+2/3), 57 (coletor de minério), 58 (Oficina construível), 60 (dinamite e rádio), 61 (fauna), 62
+(tiers + chefe Matriarca, arte nova), 63 (corte da mina), 64 (trilho e vagonete).
+**59:** já feito antes (Rota A). **65/66:** só relatório (65 espera decisão do Marco sobre crianças;
+66 adiado pelo próprio documento).
+**Falta:** 67 (mapa ~3x: só dá pra crescer pro LESTE/NORTE — o nível 2/abismo usam a área lógica
+ao sul, y 700+), 68 (níveis temáticos por dados + rampa/elevador), 69 (camadas/atmosfera por nível,
+docs/arte/CAMADAS.md), 70 (S2 ácido / S3 lava com arte), 71 (S4/S5), itens de arte; no fim:
+suíte inteira, md5 do save real, build + fumaça, atualizar INVENTARIO/CONTEXTO e um relatório.
+Cada bloco tem teste em `tests/blocos/bNN_*.gd` (registrado no test_blocos.gd) e linha no TESTING.md.
 
 Isso existe porque estamos trocando entre duas contas do Claude Code
 (`marco.luz1994@gmail.com` e `marcoa.luz@hotmail.com`, essa segunda via
