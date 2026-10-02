@@ -10,11 +10,21 @@ engenheiro), 52 (debug F3/telemetria/BALANCEAMENTO.md), 53 (desempenho; docs/DES
 2/3), 57 (coletor de minério), 58 (Oficina construível), 60 (dinamite e rádio), 61 (fauna), 62
 (tiers + chefe Matriarca, arte nova), 63 (corte da mina), 64 (trilho e vagonete), 67 (mapa ~2,9x pro
 leste, trancado até desbravar), 68 (níveis por dados `data/niveis/*.tres` + gaiola com tempo/lotação),
-69 (camadas `docs/arte/CAMADAS.md` + atmosfera por nível; `0cee8431`).
+69 (camadas `docs/arte/CAMADAS.md` + atmosfera por nível; `0cee8431`), 70 (S2 ácido / S3 lava: poças,
+cristal verde/rubro, ventilador, Gosma e Magmante — `docs/NIVEIS_S2_S3.md`; `d1ff09b0`, `8cb96ab3`),
+71 (S4 cachoeira / S5 lago jogáveis por dados, plataformas em cadeia, gema azul — `docs/NIVEIS_S4_S5.md`;
+`d1a32f6d`).
 **59:** já feito antes (Rota A). **65/66:** só relatório (65 espera decisão do Marco sobre crianças;
 66 adiado pelo próprio documento).
-**Falta:** 70 (S2 ácido / S3 lava com arte), 71 (S4/S5), itens de arte; no fim: suíte inteira, md5 do
+**Falta:** "Itens de arte novos" do fim do documento (já feitos no 70/71: poças, lava, cachoeira, água,
+ventilador, pisos do S4/S5; faltam rampa em espiral, passarelas, pontes de corda, igreja, torre do
+relógio, casas enxaimel, rocha com ácido, borda de lago, reflexo do lago); no fim: suíte inteira, md5 do
 save real, build + fumaça, atualizar INVENTARIO/CONTEXTO e um relatório.
+PixelLab: tier 3, saldo ~9.400 (renova 2026-11-02). Ajudantes: `tools/pixellab/` (`pl.py`, `gen.py`,
+`chars.py`); arte do 70/71 em `prototipos/camera/arte_iso/fundo70`, `fundo71`, `relevo/fundo71.py`,
+`criaturas/fundo.py`. **Cuidado ao rodar `integra.py`:** ele regrava todos os PNGs (pixels iguais, bytes
+diferentes) e o LFS marca como alterados; depois de conferir, limpe o índice com
+`git -c filter.lfs.process= -c filter.lfs.clean=cat -c filter.lfs.smudge=cat -c filter.lfs.required=false update-index --refresh`.
 Cada bloco tem teste em `tests/blocos/bNN_*.gd` (registrado no test_blocos.gd) e linha no TESTING.md.
 Skills do projeto: 21 em `.claude/skills/` (godot-*, game-feel, create-game-assets...), carregam sozinhas.
 Medida mais recente (vila cheia, `tools/bench_cena.ps1 -Rapido`): 19,9 ms / 50 FPS.
