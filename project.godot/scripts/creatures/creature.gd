@@ -254,6 +254,8 @@ func die(killed: bool) -> void:
 	_dying = true
 	_died_at = _anim
 	_light.enabled = false
+	if killed:
+		Audio.creature_down(global_position)  # Bloco 55
 	died.emit(killed)
 	if killed and kind == "ferrugento" and randf() < 0.35:
 		var finds := get_tree().get_first_node_in_group("finds")

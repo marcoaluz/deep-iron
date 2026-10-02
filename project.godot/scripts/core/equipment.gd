@@ -239,6 +239,9 @@ func take(id: String) -> float:
 	if list.is_empty():
 		return -1.0
 	list.sort()
+	var v := vestiario()
+	if v:
+		Audio.equip((v as Node2D).global_position)  # Bloco 55
 	return list.pop_back()
 
 

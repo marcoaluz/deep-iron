@@ -168,6 +168,7 @@ func try_confirm() -> bool:
 		return false
 	if _on_confirm.is_valid() and _on_confirm.call(_pos):
 		_end(true)
+		Audio.place_sound()  # Bloco 55: estaca na terra
 		return true
 	return false
 

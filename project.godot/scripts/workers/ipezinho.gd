@@ -810,6 +810,7 @@ func _process(delta: float) -> void:
 			_obra.obra_work(delta * work_mult())  # zanga/tristeza deixam mais lento
 			if not _obra.obra_pending():
 				_popup("Obra pronta!", Color(0.55, 1.0, 0.5))
+				Audio.build_done(global_position)  # Bloco 55
 				_obra_stop()
 				_decision_timer = 0.0
 	# médico chegou na porta da enfermaria: entra e fica de plantão
@@ -2811,8 +2812,10 @@ func _update_animation(delta: float) -> void:
 		# impacto = ponto mais baixo do golpe (a curva para de subir)
 		var rising := swing > _prev_swing
 		if _swing_rising and not rising:
-			if item == _pickaxe() or item == HAMMER:  # picareta na pedra / martelo na obra
-				Audio.pick(global_position)
+			if item == HAMMER:
+				Audio.build_hit(global_position)  # Bloco 55: martelo na madeira da obra
+			elif item == _pickaxe():
+				Audio.pick(global_position)  # picareta na pedra
 			if item == HAMMER and _ai_state == "building":
 				_dust_puff()
 		_swing_rising = rising

@@ -369,7 +369,7 @@ func throw_festa() -> bool:
 	if hud:
 		hud.show_banner("FESTA NA VILA!", "+%d de ânimo pra todo mundo agora, e mais alegria pelos próximos %d minutos." % [
 			roundi(festa_boost), roundi(festa_duration / 60.0)])
-	Audio.fanfare()
+	Audio.party()  # Bloco 55
 	return true
 
 

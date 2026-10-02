@@ -672,7 +672,7 @@ func open_panel(id: String, focus: Node = null) -> void:
 	if panel.has_method("focus"):
 		panel.focus(focus)
 	if not panel.visible:
-		Audio.click()
+		Audio.ui_open()  # Bloco 55
 	panel.visible = true
 	panel.refresh()
 	_fit_panel(panel)
@@ -699,7 +699,7 @@ func close_panels() -> bool:
 		_build_menu.visible = false
 		closed = true
 	if closed:
-		Audio.click()
+		Audio.ui_close()  # Bloco 55
 	return closed
 
 

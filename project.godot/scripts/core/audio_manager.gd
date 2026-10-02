@@ -81,6 +81,27 @@ extends Node
 ## Variação aleatória de pitch (0.08 = ±8%), pra não soar repetitivo.
 @export var pitch_variation: float = 0.08
 
+@export_group("Bloco 55: sons novos, ambiência e música")
+@export var build_db: float = -12.0
+@export var build_done_db: float = -6.0
+@export var harvest_db: float = -12.0
+@export var equip_db: float = -10.0
+@export var party_db: float = -8.0
+@export var place_db: float = -8.0
+@export var creature_down_db: float = -8.0
+@export var drill_db: float = -14.0
+@export var ui_panel_db: float = -14.0
+## Quantas vozes do MESMO som ao mesmo tempo (15 mineradores batendo não viram um muro de som).
+@export var max_same_voice: int = 4
+## Segundos da troca de música (calma <-> perigo) e de ambiência (mina, superfície, fundo).
+@export var music_crossfade: float = 2.5
+@export var ambience_crossfade: float = 2.0
+## Volume de cada ambiência (dB) e da chuva por cima.
+@export var ambience_db := {"mina": 0.0, "dia": -4.0, "noite": -5.0, "fundo": -1.0}
+@export var rain_db: float = -6.0
+## Teto do limitador no Master (dB): nada passa disso, nem com tudo tocando junto.
+@export var limiter_ceiling_db: float = -0.5
+
 @export_group("Limites")
 @export var max_voices: int = 24
 ## Máximo de passos tocando por segundo somando todos os ipezinhos.
@@ -95,6 +116,24 @@ var _music_player: AudioStreamPlayer
 var _ambience_player: AudioStreamPlayer
 var _step_tokens := 0.0
 var _last_index := {}  # evita tocar a mesma variação duas vezes seguidas
+# Bloco 55
+var _ui_pool: Array[AudioStreamPlayer] = []
+var _next_ui := 0
+var _danger_player: AudioStreamPlayer
+var _danger := false
+var _amb := {}  # contexto -> AudioStreamPlayer (loop)
+var _rain_player: AudioStreamPlayer
+var ambience_now := "mina"
+var _raining := false
+var _ctx_timer := 0.0
+var _streams := {}  # nome -> AudioStream (sons novos, carregados no _ready)
+const NOVOS := {
+	"build": ["build_hit_0", "build_hit_1", "build_hit_2"], "build_done": ["build_done"],
+	"harvest": ["harvest_0", "harvest_1", "harvest_2"], "equip": ["equip"], "party": ["party"],
+	"ui_open": ["ui_open"], "ui_close": ["ui_close"], "place": ["place"], "creature_down": ["creature_down"],
+	"drill": ["drill"], "music_danger": ["music_danger"], "rain_loop": ["rain_loop"],
+	"surface_day_loop": ["surface_day_loop"], "surface_night_loop": ["surface_night_loop"], "deep_loop": ["deep_loop"],
+}
 
 
 const Settings := preload("res://scripts/core/settings.gd")
@@ -113,20 +152,125 @@ func _ready() -> void:
 		add_child(p)
 		_pool.append(p)
 
-	_ui_player = AudioStreamPlayer.new()
-	_ui_player.bus = &"SFX"
-	add_child(_ui_player)
+	# Bloco 55: 4 vozes de interface (um clique não corta mais a fanfarra)
+	for i in 4:
+		var u := AudioStreamPlayer.new()
+		u.bus = &"SFX"
+		add_child(u)
+		_ui_pool.append(u)
+	_ui_player = _ui_pool[0]
+	for k in NOVOS:
+		var arr: Array[AudioStream] = []
+		for nome in NOVOS[k]:
+			var path := "res://assets/audio/%s.wav" % nome
+			if ResourceLoader.exists(path):
+				arr.append(load(path))
+		_streams[k] = arr
+	_setup_limiter()
 
 	_music_player = _make_loop_player(music, &"Music")
+	_danger_player = _make_loop_player(_first("music_danger"), &"Music")
 	_ambience_player = _make_loop_player(ambience, &"Ambience")
+	_amb = {"mina": _ambience_player, "dia": _make_loop_player(_first("surface_day_loop"), &"Ambience"),
+		"noite": _make_loop_player(_first("surface_night_loop"), &"Ambience"), "fundo": _make_loop_player(_first("deep_loop"), &"Ambience")}
+	_rain_player = _make_loop_player(_first("rain_loop"), &"Ambience")
 	if music_enabled and _music_player.stream:
 		_fade_in(_music_player)
 	if _ambience_player.stream:
-		_fade_in(_ambience_player)
+		_fade_in(_ambience_player, ambience_db.get("mina", 0.0))
 
 
 func _process(delta: float) -> void:
 	_step_tokens = minf(_step_tokens + max_steps_per_second * delta, max_steps_per_second)
+	_ctx_timer -= delta
+	if _ctx_timer <= 0.0:
+		_ctx_timer = 0.5
+		_update_context()
+
+
+# ------------------------------------------------------------ Bloco 55: contexto (ambiência e música)
+## Onde a câmera está olhando decide a ambiência: clareira (dia/noite, + chuva por cima), mina, ou o
+## fundo (nível 2/abismo). Invasão acontecendo troca a música pra de perigo (e volta depois).
+func _update_context() -> void:
+	var tree := get_tree()
+	var env := tree.get_first_node_in_group("environment")
+	var cam := get_viewport().get_camera_2d()
+	var ctx := "mina"
+	var rain := false
+	if env and cam:
+		var ground: Vector2 = cam.ground_center() if cam.has_method("ground_center") else cam.get_screen_center_position()
+		if env.has_method("level_at") and env.level_at(ground) >= 2:
+			ctx = "fundo"
+		elif env.get("clearing_rect") != null and (env.clearing_rect as Rect2).has_point(ground):
+			var dn := tree.get_first_node_in_group("day_night")
+			ctx = "noite" if dn and dn.has_method("is_night") and dn.is_night() else "dia"
+			var w := tree.get_first_node_in_group("weather")
+			rain = w != null and w.has_method("level") and w.level("rain") > 0.3
+	set_ambience(ctx, rain)
+	var d := tree.get_first_node_in_group("defense")
+	set_danger(d != null and bool(d.get("invasion_active")))
+
+
+func set_ambience(ctx: String, rain: bool = false) -> void:
+	if not _amb.has(ctx):
+		ctx = "mina"
+	if ctx != ambience_now:
+		ambience_now = ctx
+		for k in _amb:
+			_xfade(_amb[k], k == ctx, ambience_db.get(k, 0.0), ambience_crossfade)
+	if rain != _raining:
+		_raining = rain
+		_xfade(_rain_player, rain, rain_db, ambience_crossfade)
+
+
+func set_danger(on: bool) -> void:
+	if on == _danger:
+		return
+	_danger = on
+	if not music_enabled:
+		return
+	_xfade(_danger_player, on, 0.0, music_crossfade)
+	_xfade(_music_player, not on, 0.0, music_crossfade)
+
+
+func is_danger() -> bool:
+	return _danger
+
+
+## Liga (subindo até on_db) ou desliga (descendo e parando) um loop, em `secs`.
+func _xfade(p: AudioStreamPlayer, on: bool, on_db: float, secs: float) -> void:
+	if p == null or p.stream == null:
+		return
+	if p.has_meta("_tw"):
+		var old: Tween = p.get_meta("_tw")
+		if old and old.is_valid():
+			old.kill()
+	var tw := create_tween()
+	p.set_meta("_tw", tw)
+	if on:
+		if not p.playing:
+			p.volume_db = -40.0
+			p.play()
+		tw.tween_property(p, "volume_db", on_db, secs)
+	else:
+		tw.tween_property(p, "volume_db", -40.0, secs)
+		tw.tween_callback(p.stop)
+
+
+func _first(k: String) -> AudioStream:
+	var arr: Array = _streams.get(k, [])
+	return arr[0] if not arr.is_empty() else null
+
+
+## Limitador no Master: com muita coisa tocando junto, abaixa o pico em vez de estourar.
+func _setup_limiter() -> void:
+	var idx := AudioServer.get_bus_index(&"Master")
+	for i in AudioServer.get_bus_effect_count(idx):
+		if AudioServer.get_bus_effect(idx, i) is AudioEffectHardLimiter:
+			return
+	var lim := AudioEffectHardLimiter.new()
+	lim.ceiling_db = limiter_ceiling_db
+	AudioServer.add_bus_effect(idx, lim)
 
 
 # ------------------------------------------------------------ volumes / música
@@ -146,9 +290,10 @@ func _set_bus_volume(bus_name: StringName, linear: float) -> void:
 func toggle_music() -> void:
 	music_enabled = not music_enabled
 	if music_enabled:
-		_fade_in(_music_player)
+		_fade_in(_danger_player if _danger else _music_player)
 	else:
 		_music_player.stop()
+		_danger_player.stop()
 	save_settings()
 
 
@@ -180,12 +325,12 @@ func _make_loop_player(stream: AudioStream, bus_name: StringName) -> AudioStream
 	return p
 
 
-func _fade_in(p: AudioStreamPlayer) -> void:
+func _fade_in(p: AudioStreamPlayer, to_db: float = 0.0) -> void:
 	if p.stream == null:
 		return
 	p.volume_db = -40.0
 	p.play()
-	create_tween().tween_property(p, "volume_db", 0.0, fade_in_time)
+	create_tween().tween_property(p, "volume_db", to_db, fade_in_time)
 
 
 # ------------------------------------------------------------ efeitos
@@ -298,6 +443,47 @@ func protest(pos: Vector2) -> void:
 		play_at(&"protest", [protest_sound], pos, protest_db, 0.03)
 
 
+# ------------------------------------------------------------ Bloco 55: eventos que não tinham som
+func build_hit(pos: Vector2) -> void:
+	play_at(&"build", _streams.get("build", [] as Array[AudioStream]), pos, build_db, 0.1)
+
+
+func build_done(pos: Vector2) -> void:
+	play_at(&"build_done", _streams.get("build_done", [] as Array[AudioStream]), pos, build_done_db, 0.02)
+
+
+func harvest(pos: Vector2) -> void:
+	play_at(&"harvest", _streams.get("harvest", [] as Array[AudioStream]), pos, harvest_db)
+
+
+func equip(pos: Vector2) -> void:
+	play_at(&"equip", _streams.get("equip", [] as Array[AudioStream]), pos, equip_db)
+
+
+func party() -> void:
+	play_ui(_first("party"), party_db)
+
+
+func place_sound() -> void:
+	play_ui(_first("place"), place_db)
+
+
+func creature_down(pos: Vector2) -> void:
+	play_at(&"creature_down", _streams.get("creature_down", [] as Array[AudioStream]), pos, creature_down_db)
+
+
+func drill(pos: Vector2) -> void:
+	play_at(&"drill", _streams.get("drill", [] as Array[AudioStream]), pos, drill_db, 0.06)
+
+
+func ui_open() -> void:
+	play_ui(_first("ui_open"), ui_panel_db)
+
+
+func ui_close() -> void:
+	play_ui(_first("ui_close"), ui_panel_db)
+
+
 func sell() -> void:
 	play_ui(sell_sound)
 
@@ -320,7 +506,15 @@ func play_at(key: StringName, streams: Array[AudioStream], pos: Vector2, volume_
 	var cam := get_viewport().get_camera_2d()
 	if cam and cam.get_screen_center_position().distance_to(pos) > sfx_max_distance:
 		return
+	# Bloco 55: no máximo max_same_voice do mesmo som tocando (o resto não entra)
+	var iguais := 0
+	for v in _pool:
+		if v.playing and v.get_meta("key", &"") == key:
+			iguais += 1
+	if iguais >= max_same_voice:
+		return
 	var p := _take_voice()
+	p.set_meta("key", key)
 	p.stream = streams[_pick_index(key, streams.size())]
 	p.global_position = pos
 	p.volume_db = volume_db
@@ -332,9 +526,16 @@ func play_at(key: StringName, streams: Array[AudioStream], pos: Vector2, volume_
 func play_ui(stream: AudioStream, volume_db: float = NAN) -> void:
 	if stream == null:
 		return
-	_ui_player.stream = stream
-	_ui_player.volume_db = ui_db if is_nan(volume_db) else volume_db
-	_ui_player.play()
+	var u := _ui_pool[_next_ui]
+	for i in _ui_pool.size():  # uma livre, se tiver (senão a mais antiga)
+		var c := _ui_pool[(_next_ui + i) % _ui_pool.size()]
+		if not c.playing:
+			u = c
+			break
+	_next_ui = (_ui_pool.find(u) + 1) % _ui_pool.size()
+	u.stream = stream
+	u.volume_db = ui_db if is_nan(volume_db) else volume_db
+	u.play()
 
 
 func _take_voice() -> AudioStreamPlayer2D:

@@ -249,3 +249,6 @@ func test_b52_debug_telemetria() -> void:
 func test_b54_configuracoes() -> void:
 	run_bloco("b54_configuracoes.gd")
 
+
+func test_b55_audio() -> void:
+	run_bloco("b55_audio.gd")
