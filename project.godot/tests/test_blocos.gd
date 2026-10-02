@@ -236,3 +236,7 @@ func test_p20_interface() -> void:
 
 func test_p2_pendencias() -> void:
 	run_bloco("p2_pendencias.gd")
+
+
+func test_b51_engenheiro_estresse() -> void:
+	run_bloco("b51_engenheiro_estresse.gd")

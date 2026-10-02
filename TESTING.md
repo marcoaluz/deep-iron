@@ -35,7 +35,8 @@ real antes/depois; sai com **0** se tudo passou, **1** se algum teste falhou, **
 mudou, **3** se não achou o Godot:
 
 ```
-powershell -ExecutionPolicy Bypass -File toolsun_tests.ps1 [-Filtro b35] [-Godot <caminho>]
+powershell -ExecutionPolicy Bypass -File tools
+un_tests.ps1 [-Filtro b35] [-Godot <caminho>]
 bash tools/run_tests.sh [b35]          (GODOT_BIN = caminho do Godot)
 ```
 
@@ -97,6 +98,7 @@ determinístico) só mudou o que o bloco pretendia — instruções no topo do a
 | `p17_criaturas.gd` | Prompt 17 — invasores com a arte nova: 5 animações × 4 direções, animação pelo estado (parado, andar, atacar, dano, cair e ficar no chão, desligar), forma forte (bruto/carregador) e a Defesa mandando 1 forte a cada 3 na onda 4+, carga do roubo, desenho antigo escondido |
 | `p18_efeitos.gd` | Prompt 18 — efeitos: texturas por papel nas partículas copiadas (serragem, fumaça, gás), tamanho em pixel inteiro, festa (bandeirinhas, fogos à noite), greve (barril, placas, placa na mão), satélite (antena), explosivos, onda solar, clima com textura, neblina, ar tremendo no calor, cova, cesto na mão, domo do escudo, tudo recolhido no fim |
 | `p2_pendencias.gd` | Pendências dos Prompts 2 e 29 — colher fruta, treinar e ataque com lança/besta nas 4 direções; escolha pelo estado (porrete, lança, lança de prata, besta) |
+| `b51_engenheiro_estresse.gd` | 51 — 50 ciclos de salvar/carregar com obras longas e 3 engenheiros em estados diferentes (parado, indo, construindo): todo engenheiro retoma em até 25 s de jogo; o vigia age quando força "sem avançar" e não age enquanto ele se aproxima (~10 min) |
 | `p20_interface.gd` | Prompts 20–25 — pele (tema da raiz, botão/painel/cartão/aba 9-slice, cadeado, cursores), ícones (barra de cima, funções, prédios do menu), fontes (acentos, cabeçalho), velocidade, retrato (expressão pelo estado, cartão do selecionado), faixa com ilustração, janela de evento, corte da mina (4 andares, um boneco por ipezinho, clique seleciona) |
 | `../test_iso.gd` (GUT, rápido) | Prompt 28 — núcleo: projeção, verdade 3D, ordem incremental, raio da câmera, direção de losango |
 | `../test_iso_arte.gd` (GUT, rápido) | Prompt 28 — verificador "o sprite cabe na caixa" contra a arte dos prédios; Prompt 29 — toda a arte integrada (`assets/game/iso/predios/predios.json`) |
@@ -212,6 +214,11 @@ caminho); o `test_blocos.gd` cria as pastas dos blocos dentro do `TEMP`.
 - `b45_coletor_madeira` às vezes falha em "lenhador manual trabalha em paralelo": o lenhador
   sorteou um acidente cortando árvore e está internado na hora da conferência (visto 1 vez
   em 4 rodadas no Prompt 28; sozinho passou 2 de 2). É o sorteio do jogo, não a regra.
-- `b31b_obras_restantes` às vezes falha com "engenheiro preso a caminho de uma obra"
-  depois de carregar (visto 2 em 15 rodadas; causa ainda não achada). Se falhar, rode
-  de novo; se repetir, vale investigar.
+- ~~`b31b_obras_restantes` às vezes falha com "engenheiro preso a caminho de uma obra"~~
+  (Bloco 51): a obra não vai no save (o engenheiro escolhe de novo, pelo grupo "obras", depois
+  do mundo carregado), então não é referência velha. O que sobrava era o caminho: com a malha
+  refeita no load, o ponto da obra podia ficar sem caminho de onde ele estava, o anti-travamento
+  desistia e a IA mandava andar pro MESMO ponto. Agora tem o VIGIA (`obra_watchdog_time`, 12 s
+  sem chegar 16 px mais perto): escolhe outro ponto de acesso em volta da obra que o caminho
+  alcança, ou (sem nenhum) puxa pro chão andável mais perto; loga `[vigia]`. O estresse de 50
+  ciclos não reproduziu o preso (0 de 50, com e sem o vigia agir).

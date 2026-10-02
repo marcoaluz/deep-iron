@@ -139,6 +139,11 @@ const STUCK_SNAP_TIME := 3.0
 const RAW_FOOD := preload("res://assets/game/raw_food.png")
 const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 
+@export_group("Obras (Bloco 51)")
+## Vigia do engenheiro: indo pra obra sem chegar nem 16 px mais perto por esse tempo (s de jogo),
+## procura outro ponto de acesso alcançável (ou o chão andável mais perto da obra) e segue.
+@export var obra_watchdog_time: float = 12.0
+
 @export_group("Movimento")
 @export var speed: float = 120.0
 @export var loaded_speed_penalty: float = 0.35  # 0.35 = até 35% mais lento com carga cheia
@@ -374,6 +379,12 @@ var _stuck_stage := 0
 var _ghost_left := 0.0  # segundos com o desvio desligado pra desencalhar
 var _obra: Node = null  # Bloco 31: obra que o engenheiro está tocando
 var _obra_on_site := false  # já chegou e está trabalhando nela
+## Bloco 51: vigia (distância mais curta até a obra e há quanto tempo não melhora) e o ponto de
+## acesso alternativo achado por ele (INF = o ponto normal da obra)
+var _obra_watch_best := INF
+var _obra_watch_t := 0.0
+var _obra_alt := Vector2.INF
+var _obra_alt_of: Node = null
 var _on_duty: Node = null  # Bloco 30: enfermaria onde o médico está de plantão (lá dentro)
 var _at_taverna: Node = null  # taverna onde está se divertindo (lá dentro, invisível)
 var _strike_spot: Variant = null  # onde fica parado protestando
@@ -785,11 +796,15 @@ func _process(delta: float) -> void:
 		elif not _obra_on_site:
 			# chegou: parou perto (a obra pode estar dentro de um obstáculo) ou já está
 			# colado no ponto mesmo com outro engenheiro esbarrando nele
-			var dist := global_position.distance_to(_obra.obra_position(self))
+			var dist := global_position.distance_to(_obra_goal())
 			if (not _moving and dist <= OBRA_REACH) or dist <= 24.0:
 				_moving = false
 				_obra_on_site = true
+				_obra_watch_best = INF
+				_obra_watch_t = 0.0
 				_obra.obra_join(self)
+			else:
+				_obra_watchdog_tick(delta, dist)
 		else:
 			_work_timer = 0.2  # martelada
 			_obra.obra_work(delta * work_mult())  # zanga/tristeza deixam mais lento
@@ -1017,7 +1032,7 @@ func _decide_next_action() -> void:
 			_release_station()
 			_set_state("building")
 		if not _obra_on_site:
-			var pos: Vector2 = _obra.obra_position(self)
+			var pos: Vector2 = _obra_goal()
 			if not _moving or _target.distance_to(pos) > 2.0:
 				_go_to(pos)
 		return
@@ -1730,10 +1745,70 @@ func _dust_puff() -> void:
 	p.finished.connect(p.queue_free)
 
 
+## Onde ir pra tocar a obra: o ponto dela ou o ponto de acesso que o vigia achou (Bloco 51).
+func _obra_goal() -> Vector2:
+	if _obra_alt != Vector2.INF and _obra_alt_of == _obra:
+		return _obra_alt
+	return _obra.obra_position(self)
+
+
+## Bloco 51: o engenheiro que fica "a caminho" sem se aproximar (depois de carregar o save, a malha
+## de navegação é refeita e o ponto da obra ou ele mesmo pode ficar sem caminho; o anti-travamento
+## desistia de andar e a IA mandava andar pro MESMO ponto de novo, pra sempre).
+func _obra_watchdog_tick(delta: float, dist: float) -> void:
+	if dist < _obra_watch_best - 16.0:
+		_obra_watch_best = dist
+		_obra_watch_t = 0.0
+		return
+	_obra_watch_t += delta
+	if _obra_watch_t < obra_watchdog_time:
+		return
+	_obra_watch_t = 0.0
+	_obra_watch_best = INF
+	var map := _agent.get_navigation_map()
+	var alvo: Vector2 = _obra.obra_position(self)
+	var centro: Vector2 = (_obra as Node2D).global_position if _obra is Node2D else alvo
+	# 1) um ponto de acesso em volta da obra que o caminho alcança de verdade
+	var melhor := Vector2.INF
+	var melhor_d := INF
+	for r in [40.0, 60.0, 85.0]:
+		for k in 12:
+			var p: Vector2 = centro + Vector2.RIGHT.rotated(TAU * k / 12.0) * r
+			var cp := NavigationServer2D.map_get_closest_point(map, p)
+			if cp.distance_to(p) > 10.0:
+				continue  # fora do chão andável
+			var path := NavigationServer2D.map_get_path(map, global_position, cp, true)
+			if path.is_empty() or path[path.size() - 1].distance_to(cp) > 8.0:
+				continue  # não chega lá
+			var dd := cp.distance_to(alvo)
+			if dd < melhor_d:
+				melhor_d = dd
+				melhor = cp
+		if melhor != Vector2.INF:
+			break
+	if melhor != Vector2.INF:
+		_obra_alt = melhor
+		_obra_alt_of = _obra
+		print("[vigia] %s sem avançar há %.0f s a caminho de %s: novo ponto de acesso %s (o normal era %s)" % [
+			_display(), obra_watchdog_time, _obra.obra_title(), melhor.round(), alvo.round()])
+		_go_to(melhor)
+		return
+	# 2) nenhum caminho: vai pro chão andável mais perto da obra (último recurso)
+	var perto := NavigationServer2D.map_get_closest_point(map, alvo)
+	print("[vigia] %s preso sem caminho até %s: puxado pro chão andável mais perto (%s)" % [_display(), _obra.obra_title(), perto.round()])
+	global_position = perto
+	_moving = false
+	_decision_timer = 0.0
+
+
 ## Sai da obra (pausa): o que já foi feito fica guardado nela.
 func _obra_stop() -> void:
 	if _obra != null and is_instance_valid(_obra) and _obra_on_site:
 		_obra.obra_leave(self)
+	_obra_alt = Vector2.INF
+	_obra_alt_of = null
+	_obra_watch_best = INF
+	_obra_watch_t = 0.0
 	_obra = null
 	_obra_on_site = false
 
