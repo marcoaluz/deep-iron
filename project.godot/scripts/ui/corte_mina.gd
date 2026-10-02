@@ -8,6 +8,10 @@ extends CanvasLayer
 ## perigo, a escavadeira, o robô, os invasores; entre os andares, o túnel (escada) e os poços do
 ## elevador com a gaiola onde ela está. Clicar num ipezinho seleciona e leva a câmera até ele;
 ## clicar no andar leva a câmera pra lá. Esc/F2/X fecha. Nada aqui muda o jogo.
+## Bloco 63: também as JAZIDAS/GALERIAS (aberta = cor do minério, lacrada = entulho, trancada =
+## cadeado: falta ferramenta ou descida), os REATORES da escavadeira (instalado e construídos), os
+## bichos da clareira, os coletores e uma legenda. Clique numa galeria leva a câmera até ela. O
+## desenho se refaz ~20x/s (não todo quadro) e só com a tela aberta.
 
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const Icones := preload("res://scripts/ui/icones.gd")
@@ -31,6 +35,10 @@ var _area: Control
 var _rects: Array[Rect2] = []  # retângulo do andar na tela (pra clicar)
 var _pontos: Array = []  # [Rect2 na tela, nó] dos ipezinhos (pra clicar)
 var _t := 0.0
+var _redraw_t := 0.0
+const REDRAW_EVERY := 0.05  # Bloco 63: ~20 quadros/s bastam pra os mini-bonecos andarem
+const ORE_COR := {"ferro": Color(0.72, 0.62, 0.55), "cobre": Color(0.9, 0.5, 0.25), "carvao": Color(0.3, 0.3, 0.32),
+	"prata": Color(0.85, 0.88, 0.95), "solarita": Color(1.0, 0.85, 0.3)}
 
 
 func setup(main: Node) -> void:
@@ -78,7 +86,7 @@ func setup(main: Node) -> void:
 	x.pressed.connect(fecha)
 	head.add_child(x)
 	_area = Control.new()
-	_area.custom_minimum_size = Vector2(LARGURA, ALTURA * ANDARES.size())
+	_area.custom_minimum_size = Vector2(LARGURA, ALTURA * ANDARES.size() + 22.0)  # + a legenda (Bloco 63)
 	_area.mouse_filter = Control.MOUSE_FILTER_STOP
 	_area.draw.connect(_desenha)
 	_area.gui_input.connect(_clique)
@@ -115,7 +123,10 @@ func _unhandled_input(e: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if visible:
 		_t += delta
-		_area.queue_redraw()  # (os ipezinhos andam)
+		_redraw_t -= delta
+		if _redraw_t <= 0.0:
+			_redraw_t = REDRAW_EVERY
+			_area.queue_redraw()  # (os ipezinhos andam)
 
 
 # ------------------------------------------------------------ de onde é cada coisa
@@ -171,8 +182,12 @@ func _desenha() -> void:
 			HORIZONTAL_ALIGNMENT_RIGHT, 200, 12, UiSkin.COLOR_TEXT)
 	_ligacoes()
 	_perigos()
+	_jazidas()
 	_maquinas()
+	_reatores()
+	_bichos()
 	_bonecos()
+	_legenda()
 
 
 func _gente_no_andar(i: int) -> int:
@@ -275,10 +290,95 @@ func _bonecos() -> void:
 		_pontos.append([r, w])
 
 
+# ------------------------------------------------------------ Bloco 63
+## Cada jazida: bolinha da cor do minério (aberta), entulho com X (lacrada: a vila precisa crescer
+## ou dinamite), cadeado (falta ferramenta/descida). Contagem por andar no título do andar.
+var _galerias: Array = []  # [Rect2, nó] (pra clicar)
+
+
+func _jazidas() -> void:
+	_galerias.clear()
+	var f := ThemeDB.fallback_font
+	for m in get_tree().get_nodes_in_group("minerios"):
+		var p := _no_corte((m as Node2D).global_position, 0.86)
+		var r := Rect2(p - Vector2(6, 6), Vector2(12, 12))
+		var cor: Color = ORE_COR.get(String(m.ore_type), Color.WHITE)
+		if m.is_sealed():
+			_area.draw_rect(r, Color(0.35, 0.25, 0.15))
+			_area.draw_line(r.position, r.end, Color(0.85, 0.7, 0.45), 2.0)
+			_area.draw_line(Vector2(r.position.x, r.end.y), Vector2(r.end.x, r.position.y), Color(0.85, 0.7, 0.45), 2.0)
+		elif not m.is_unlocked():
+			_area.draw_circle(p, 6.0, cor.darkened(0.6))
+			_area.draw_rect(Rect2(p + Vector2(-3, -1), Vector2(6, 5)), Color(0.9, 0.8, 0.4))
+			_area.draw_arc(p + Vector2(0, -2), 2.5, PI, TAU, 6, Color(0.9, 0.8, 0.4), 1.0)
+		else:
+			var cheio: float = clampf(m.ore_remaining / maxf(m.ore_total, 1.0), 0.0, 1.0)
+			_area.draw_circle(p, 6.0, cor.darkened(0.5) if m.is_depleted() else cor)
+			_area.draw_arc(p, 8.0, -PI * 0.5, -PI * 0.5 + TAU * cheio, 16, Color(1, 1, 1, 0.7), 1.5)
+		_galerias.append([r.grow(4), m])
+		if String(m.get("gallery_name")) != "" and m.is_sealed():
+			_area.draw_string(f, p + Vector2(-24, 18), String(m.gallery_name), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(0.85, 0.7, 0.45))
+
+
+## Reatores da escavadeira: o instalado aceso, os construídos apagados, o em obra piscando.
+func _reatores() -> void:
+	var d := get_tree().get_first_node_in_group("escavadeira")
+	if d == null or d.get("REACTOR_IDS") == null:
+		return
+	var base := _no_corte((d as Node2D).global_position, 0.3)
+	var f := ThemeDB.fallback_font
+	var x := base.x - 40.0
+	for id in d.REACTOR_IDS:
+		var cor := Color(0.25, 0.22, 0.2)
+		if id == d.reactor:
+			cor = Color(1.0, 0.75, 0.3)
+		elif id in d.built_reactors:
+			cor = Color(0.6, 0.55, 0.45)
+		elif id == d.building_reactor:
+			cor = Color(0.9, 0.6, 0.3, 0.5 + 0.5 * sin(_t * 6.0))
+		_area.draw_rect(Rect2(Vector2(x, base.y), Vector2(12, 10)), cor)
+		_area.draw_rect(Rect2(Vector2(x, base.y), Vector2(12, 10)), Color(0, 0, 0, 0.6), false, 1.0)
+		x += 16.0
+	_area.draw_string(f, Vector2(base.x - 40.0, base.y - 3), "reator: %s" % d.REACTOR_NAMES.get(d.reactor, "-"), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(1.0, 0.85, 0.5))
+
+
+## Bichos da clareira (Bloco 61) e coletores (madeira/minério).
+func _bichos() -> void:
+	for a in get_tree().get_nodes_in_group("animais"):
+		if not a.is_alive():
+			continue
+		var p := _no_corte((a as Node2D).global_position, 0.93)
+		_area.draw_circle(p, 3.0 if a.kind == "coelho" else 4.5, Color(0.75, 0.62, 0.48) if a.kind == "coelho" else Color(0.42, 0.3, 0.24))
+	for grupo in ["coletores", "coletores_minerio"]:
+		for c in get_tree().get_nodes_in_group(grupo):
+			var p := _no_corte((c as Node2D).global_position, 0.9)
+			var on: bool = c.get("_producing") == true
+			_area.draw_rect(Rect2(p - Vector2(7, 9), Vector2(14, 9)), Color(0.55, 0.85, 0.5) if on else Color(0.5, 0.45, 0.4))
+
+
+func _legenda() -> void:
+	var f := ThemeDB.fallback_font
+	var y := ANDARES.size() * ALTURA + 14.0
+	var x := 6.0
+	var itens := [["●", Color(0.72, 0.62, 0.55), "jazida aberta (anel = quanto tem)"], ["✕", Color(0.85, 0.7, 0.45), "galeria lacrada (clique: ir até ela)"],
+		["▣", Color(0.9, 0.8, 0.4), "trancada (ferramenta/descida)"], ["■", Color(1.0, 0.75, 0.3), "reator instalado"],
+		["■", Color(0.55, 0.85, 0.5), "coletor produzindo"], ["●", Color(0.42, 0.3, 0.24), "bicho da clareira"]]
+	for it in itens:
+		_area.draw_string(f, Vector2(x, y), "%s %s" % [it[0], it[2]], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, it[1])
+		x += 170.0
+
+
 func _clique(e: InputEvent) -> void:
 	if not (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT):
 		return
 	var p: Vector2 = e.position
+	for gl in _galerias:  # Bloco 63: clique numa jazida/galeria leva a câmera até ela
+		if (gl[0] as Rect2).has_point(p) and is_instance_valid(gl[1]):
+			var cam0 = _main.get_node_or_null("Camera2D") if _main else null
+			if cam0 and cam0.has_method("focus_on"):
+				cam0.focus_on((gl[1] as Node2D).global_position)
+			fecha()
+			return
 	for pt in _pontos:
 		if (pt[0] as Rect2).grow(3).has_point(p) and is_instance_valid(pt[1]):
 			if _main and _main.has_method("select"):

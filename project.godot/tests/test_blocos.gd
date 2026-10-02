@@ -273,3 +273,7 @@ func test_b61_fauna() -> void:
 func test_b62_tiers_chefe() -> void:
 	run_bloco("b62_tiers_chefe.gd")
 
+
+func test_b63_corte_mina() -> void:
+	run_bloco("b63_corte_mina.gd")
+
