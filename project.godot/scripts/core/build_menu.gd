@@ -217,7 +217,13 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return hub.coletor_cost_text(),
 					"reason": func(): return hub.coletor_block_reason(),
 					"act": func(): hub.build_coletor()})
-			out.append({"name": "Coletor de minério", "tex": "", "soon": true, "desc": "Máquina que minera sozinha com um operador."})
+			if hub:
+				out.append({"name": "Coletor de minério", "tex": "coletor_minerio", "frames": 2, "many": true, "scales": true,
+					"desc": "Broca a vapor perto de uma jazida: um minerador opera e ela manda minério do tipo da jazida pro armazém. Cada uma tem o seu operador.",
+					"count": func(): return _count("coletores_minerio"),
+					"cost": func(): return hub.coletor_minerio_cost_text(),
+					"reason": func(): return hub.coletor_minerio_block_reason(),
+					"act": func(): hub.build_coletor_minerio()})
 		"Vila":
 			if hub:
 				out.append({"name": "Expandir a vila", "tex": "centro_vila", "frames": 5,

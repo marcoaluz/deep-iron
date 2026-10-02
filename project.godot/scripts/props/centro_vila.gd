@@ -79,6 +79,9 @@ const COMEDOURO_FOOTPRINT := Rect2(-44, -40, 88, 60)
 ## Bloco 45: coletor de madeira (serraria na clareira).
 const COLETOR_SCENE := preload("res://scenes/props/coletor_madeira.tscn")
 const COLETOR_TEXTURE := preload("res://assets/game/coletor_madeira.png")
+## Bloco 57: coletor de minério (broca perto de uma jazida).
+const COLETOR_MIN_SCENE := preload("res://scenes/props/coletor_minerio.tscn")
+const COLETOR_MIN_TEXTURE := preload("res://assets/game/coletor_minerio.png")
 const COLETOR_FOOTPRINT := Rect2(-52, -78, 104, 90)
 ## Bloco 47: enfermaria extra (a principal vem com a vila).
 const ENFERMARIA_SCENE := preload("res://scenes/props/enfermaria.tscn")
@@ -145,6 +148,11 @@ const UPGRADE_NAMES := {
 @export var coletor_credits: int = 250
 @export var coletor_ore: int = 60
 @export var coletor_build_time: float = 40.0
+@export_group("Coletor de minério (Bloco 57)")
+@export var coletor_min_credits: int = 280
+@export var coletor_min_ore: int = 40
+@export var coletor_min_wood: int = 60
+@export var coletor_min_build_time: float = 45.0
 
 @export_group("Enfermaria extra (Bloco 47)")
 ## Custo da 1ª enfermaria extra (a da vila é de graça); as seguintes crescem com
@@ -691,6 +699,85 @@ func spawn_coletor(pos: Vector2) -> Node2D:
 	return c
 
 
+# ------------------------------------------------------------ coletor de minério (Bloco 57)
+func coletores_minerio() -> Array:
+	return get_tree().get_nodes_in_group("coletores_minerio")
+
+
+## Custo do PRÓXIMO (x cr, y ferro, z madeira): cresce a cada um que já existe.
+func coletor_minerio_cost() -> Vector3i:
+	var base := Vector3i(coletor_min_credits, coletor_min_ore, coletor_min_wood)
+	var eco := _economy()
+	return eco.scaled_cost(base, coletores_minerio().size()) if eco else base
+
+
+func coletor_minerio_block_reason() -> String:
+	var c := Canteiro.pending(get_tree(), "coletor_minerio")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	var cost := coletor_minerio_cost()
+	return eco.missing_text(cost.x, cost.y, "ferro", cost.z, "ferro") if eco else "sem recursos"
+
+
+func coletor_minerio_cost_text() -> String:
+	var c := coletor_minerio_cost()
+	return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+
+
+## Lugar bom: com uma jazida liberada no alcance da broca.
+func coletor_minerio_spot_reason(pos: Vector2) -> String:
+	var reach: float = 230.0
+	for j in get_tree().get_nodes_in_group("minerios"):
+		if j.is_unlocked() and not j.is_sealed() and j.global_position.distance_to(pos) <= reach * 0.85:
+			return ""
+	return "longe de uma jazida liberada (a broca precisa de uma perto)"
+
+
+func build_coletor_minerio() -> bool:
+	if coletor_minerio_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	var start := global_position
+	for j in get_tree().get_nodes_in_group("minerios"):
+		if j.is_unlocked() and not j.is_sealed():
+			start = j.global_position + Vector2(90, 40)
+			break
+	placer.begin(_confirm_coletor_minerio, COLETOR_MIN_TEXTURE, 2, "o coletor de minério (perto de uma jazida)",
+		{"footprint": COLETOR_FOOTPRINT, "check": coletor_minerio_spot_reason, "start": start})
+	return true
+
+
+func _confirm_coletor_minerio(pos: Vector2) -> bool:
+	if coletor_minerio_block_reason() != "" or coletor_minerio_spot_reason(pos) != "":
+		Audio.error()
+		return false
+	var cost := coletor_minerio_cost()
+	if not _economy().spend(cost.x, cost.y, "ferro", cost.z):
+		return false
+	Canteiro.order(get_tree(), "coletor_minerio", pos, coletor_min_build_time)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Coletor de minério encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_coletor_minerio(pos: Vector2) -> Node2D:
+	var c: Node2D = COLETOR_MIN_SCENE.instantiate()
+	var n := coletores_minerio().size()
+	c.name = "ColetorMinerio" if n == 0 else "ColetorMinerio%d" % (n + 1)
+	c.position = pos
+	get_parent().add_child(c)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
+	return c
+
+
 # ------------------------------------------------------------ enfermaria extra (Bloco 47)
 ## As enfermarias construídas pelo jogador (sem a principal, que vem com a vila).
 func extra_enfermarias() -> Array:
@@ -766,6 +853,14 @@ func finish_build(kind: String, pos: Vector2) -> void:
 		var hh := get_tree().get_first_node_in_group("hud")
 		if hh:
 			hh.show_toast("Nova enfermaria pronta! Mais leitos pra quem se machuca (o médico vai pra que precisa).", Color(0.55, 1.0, 0.5))
+		return
+	if kind == "coletor_minerio":  # Bloco 57
+		var cm := spawn_coletor_minerio(pos)
+		cm.pop_in()
+		Audio.recruit()
+		var hm := get_tree().get_first_node_in_group("hud")
+		if hm:
+			hm.show_toast("Coletor de minério pronto! Designe um minerador pra operar (clique nele).", Color(0.55, 1.0, 0.5))
 		return
 	if kind == "coletor":
 		var col := spawn_coletor(pos)
@@ -989,6 +1084,8 @@ func get_save_data() -> Dictionary:
 		"upgrade_left": upgrade_left, "upgrade_total": upgrade_total, "obra": _obra.get_save_data(),
 		"founded": founded, "starter_houses_left": starter_houses_left,
 		"coletores": coletores().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position), "total": c.total_produced}),
+		"coletores_minerio": coletores_minerio().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position),
+			"total": c.total_produced, "jazida": SaveUtil.vec2_to_array(c.chosen_pos) if c.chosen_pos != Vector2.INF else []}),  # Bloco 57
 		"enfermarias_extra": extra_enfermarias().map(func(w): return SaveUtil.vec2_to_array(w.global_position))}  # Bloco 47
 
 
@@ -1021,6 +1118,18 @@ func load_save_data(d: Dictionary) -> void:
 		if cpos != Vector2.INF:
 			var col := spawn_coletor(cpos)
 			col.total_produced = maxf(SaveUtil.num(cd, "total", 0.0), 0.0)
+	# Bloco 57: coletores de minério (save antigo: nenhum; o operador se religa sozinho)
+	for old in coletores_minerio():
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	for cd in SaveUtil.array(d, "coletores_minerio"):
+		if typeof(cd) != TYPE_DICTIONARY:
+			continue
+		var mpos := SaveUtil.vec2(cd, "position", Vector2.INF)
+		if mpos != Vector2.INF:
+			var cm := spawn_coletor_minerio(mpos)
+			cm.total_produced = maxf(SaveUtil.num(cd, "total", 0.0), 0.0)
+			cm.chosen_pos = SaveUtil.vec2(cd, "jazida", Vector2.INF)
 	# Bloco 47: enfermarias extras (save antigo: nenhuma)
 	for old in extra_enfermarias():
 		old.get_parent().remove_child(old)

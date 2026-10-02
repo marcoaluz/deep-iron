@@ -101,6 +101,7 @@ func begin(on_confirm: Callable, texture: Texture2D = CASA_TEXTURE, hframes: int
 	_radius_center = opts.get("radius_center", Vector2.ZERO)
 	_area = opts.get("area", Rect2())
 	_area_name = opts.get("area_name", "da área")
+	_extra_check = opts.get("check", Callable())  # Bloco 57: motivo extra ("" = pode)
 	active = true
 	_collect_blockers()
 	var hud := get_tree().get_first_node_in_group("hud")
@@ -180,6 +181,9 @@ func move_to(world_pos: Vector2) -> void:
 
 
 ## "" se dá pra construir aqui; senão o motivo.
+var _extra_check := Callable()
+
+
 func check_spot(pos: Vector2) -> String:
 	var fp := Rect2(pos + _footprint.position, _footprint.size)
 	var env := get_tree().get_first_node_in_group("environment")
@@ -194,6 +198,10 @@ func check_spot(pos: Vector2) -> String:
 		var why: String = env.footprint_reason(fp)  # Prompt 29: terraços (chão plano)
 		if why != "":
 			return why
+	if _extra_check.is_valid():
+		var extra: String = _extra_check.call(pos)
+		if extra != "":
+			return extra
 	if _radius > 0.0 and pos.distance_to(_radius_center) > _radius:
 		return "longe demais do Centro da Vila (a vila cresce e o raio aumenta)"
 	for b in _blockers:

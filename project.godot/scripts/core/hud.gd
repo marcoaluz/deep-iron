@@ -507,6 +507,7 @@ func _build_buildings_column() -> void:
 		_add_panel("armazem", preload("res://scripts/core/armazem_panel.gd"), arm)  # Bloco 39
 	if _hub:
 		_add_panel("coletor", preload("res://scripts/core/coletor_panel.gd"), _hub)  # Bloco 45
+		_add_panel("coletor_minerio", preload("res://scripts/core/coletor_minerio_panel.gd"), _hub)  # Bloco 57
 	if _dig:
 		_add_panel("escavadeira", preload("res://scripts/core/escavadeira_panel.gd"), _dig)
 	if _oficina:

@@ -23,7 +23,7 @@ const KIND_OF_SCENE := {
 	"casa": "casa", "armazem": "armazem", "oficina": "oficina", "arsenal": "arsenal",
 	"taverna": "taverna", "enfermaria": "enfermaria", "laboratorio": "laboratorio",
 	"comedouro": "comedouro", "parque": "parque", "campo_treino": "campo_treino",
-	"vestiario": "vestiario", "coletor_madeira": "coletor_madeira", "escudo": "escudo",
+	"vestiario": "vestiario", "coletor_madeira": "coletor_madeira", "coletor_minerio": "coletor_minerio", "escudo": "escudo",
 	"escavadeira": "escavadeira", "centro_vila": "centro", "barricada": "portao",
 	"elevador": "elevador", "elevador_abismo": "elevador_abismo",
 }
@@ -31,6 +31,7 @@ const KIND_OF_SCENE := {
 const KIND_OF_CANTEIRO := {
 	"taverna": "taverna", "laboratorio": "laboratorio", "campo": "campo_treino", "arsenal": "arsenal",
 	"comedouro": "comedouro", "parque": "parque", "vestiario": "vestiario", "coletor": "coletor_madeira",
+	"coletor_minerio": "coletor_minerio",
 	"enfermaria": "enfermaria",
 }
 const ESCAVADEIRA_PECAS := ["motor", "hidraulica", "cabine", "broca"]

@@ -34,6 +34,7 @@ const STATE_LABELS := {
 	"downed": "caído em combate",
 	"rescue": "resgatando",
 	"operating": "operando o coletor",
+	"operating_ore": "operando o coletor de minério",  # Bloco 57
 }
 ## Distância da porta/cama a partir da qual o ipezinho "chega" em casa.
 const REST_REACH := 12.0
@@ -82,6 +83,7 @@ const STATE_GROUP := {
 	"chopping": "arvores",
 	"hauling": "armazens",
 	"operating": "coletores",  # Bloco 45: lenhador designado operando o coletor de madeira
+	"operating_ore": "coletores_minerio",  # Bloco 57: minerador designado operando a broca
 	"infirmary": "enfermarias",
 	"leisure": "tavernas",
 	"training": "campos",
@@ -970,6 +972,9 @@ func _choose_state() -> String:
 	# jogador designar. (Comer, dormir, se tratar, taverna e greve vêm antes e seguem iguais.)
 	if has_no_job():
 		return "idle"
+	# Bloco 57: o minerador designado pro coletor de minério entrega o que tem e fica operando.
+	if is_miner() and _my_coletor_minerio() != null:
+		return "storing" if carrying > 0.0 else "operating_ore"
 	# Daqui pra baixo: minerador (e pesquisador sem laboratório, como antes).
 	# Prioridade 2: depositar carga cheia (e não desistir no meio do caminho).
 	if carrying >= cargo_capacity - 0.01:
@@ -1134,6 +1139,8 @@ func _station_ok_for(state: String) -> bool:
 		return _station.has_food()
 	if state == "operating":
 		return is_lumber() and _station.get("operator") == self
+	if state == "operating_ore":
+		return is_miner() and _station.get("operator") == self
 	if state == "chopping":
 		return _station.has_wood() and wood_carrying < lumber_carry - 0.01
 	if state == "hauling":
@@ -2147,6 +2154,8 @@ func set_job(new_job: String) -> void:
 		_drop_patient()  # Bloco 36: tirou do médico no meio do resgate: larga o caído ali
 	if job == ROLE_LUMBER and _my_coletor() != null:
 		_my_coletor().release()  # Bloco 45: deixou de ser lenhador: o coletor para
+	if job == ROLE_MINER and _my_coletor_minerio() != null:
+		_my_coletor_minerio().release()  # Bloco 57: deixou de ser minerador: a broca para
 	job = new_job
 	_popup(JOB_LABELS[job], Color(0.95, 0.9, 0.6) if job != ROLE_IDLE else Color(0.75, 0.75, 0.8))
 	# Bloco 35: o primeiro porrete vem de casa; depois disso, arma nova só no Arsenal
@@ -2230,6 +2239,30 @@ func _relink_coletor(at: Vector2 = Vector2.INF) -> void:
 	for k in get_tree().get_nodes_in_group("coletores"):
 		if k.get("operator") != null and k.operator != self:
 			continue  # já tem outro operador
+		if c == null or (at != Vector2.INF and k.global_position.distance_to(at) < c.global_position.distance_to(at)):
+			c = k
+	if c:
+		c.designate(self)
+
+
+# ------------------------------------------------------------ coletor de minério (Bloco 57)
+func _my_coletor_minerio() -> Node:
+	if not is_inside_tree():
+		return null
+	for c in get_tree().get_nodes_in_group("coletores_minerio"):
+		if c.get("operator") == self:
+			return c
+	return null
+
+
+## Save carregado com ele operando a broca: volta pra ela (a mais perto de onde estava).
+func _relink_coletor_minerio(at: Vector2 = Vector2.INF) -> void:
+	if not is_inside_tree() or not is_miner():
+		return
+	var c: Node2D = null
+	for k in get_tree().get_nodes_in_group("coletores_minerio"):
+		if k.get("operator") != null and k.operator != self:
+			continue
 		if c == null or (at != Vector2.INF and k.global_position.distance_to(at) < c.global_position.distance_to(at)):
 			c = k
 	if c:
@@ -2977,6 +3010,7 @@ func get_save_data() -> Dictionary:
 		"leather_carrying": leather_carrying,
 		"operates_coletor": _my_coletor() != null,
 		"coletor_pos": SaveUtil.vec2_to_array(_my_coletor().global_position) if _my_coletor() != null else [],  # Bloco 47
+		"coletor_minerio_pos": SaveUtil.vec2_to_array(_my_coletor_minerio().global_position) if _my_coletor_minerio() != null else [],  # Bloco 57
 	}
 
 
@@ -3037,6 +3071,9 @@ func load_save_data(d: Dictionary) -> void:
 	leather_carrying = maxf(SaveUtil.num(d, "leather_carrying", 0.0), 0.0)
 	if SaveUtil.boolean(d, "operates_coletor", false):
 		_relink_coletor.call_deferred(SaveUtil.vec2(d, "coletor_pos", Vector2.INF))  # Bloco 45/47
+	var cm_pos := SaveUtil.vec2(d, "coletor_minerio_pos", Vector2.INF)
+	if cm_pos != Vector2.INF:
+		_relink_coletor_minerio.call_deferred(cm_pos)  # Bloco 57
 	downed = injured and injury_severity == "grave" and SaveUtil.boolean(d, "downed", false)
 	downed_gate = SaveUtil.text(d, "downed_gate", "") if downed else ""
 	if downed:

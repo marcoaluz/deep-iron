@@ -41,6 +41,7 @@ PREDIOS = {
     "vestiario": ("vestiario", None),
     "coletor_madeira": ("coletor_madeira", {"pronto": "../%s/coletor_madeira_pronto.png" % MAQ,
                                             "quebrado": "../%s/coletor_madeira_quebrado.png" % MAQ}),
+    "coletor_minerio": ("coletor_minerio", {"pronto": "../%s/coletor_minerio_pronto.png" % MAQ}),  # Bloco 57
     "escudo": ("escudo", {"etapa_%d" % (k + 1): "../%s/escudo_%d_%s.png" % (MAQ, k + 1, n)
                           for k, n in enumerate(["fundacao", "bobinas", "nucleo", "emissor"])}),
     "escavadeira": ("escavadeira", {"estrutura": "../%s/escavadeira_1_estrutura.png" % MAQ,
@@ -168,7 +169,7 @@ def predios(so=None):
         caixas = contrato_de(pasta).get("caixas", {})
         est = dict(PADRAO)
         if estados:
-            est = dict(estados) if nome in ("casa", "coletor_madeira", "escudo", "escavadeira") or nome.startswith(("centro_", "elevador")) else {**PADRAO, **estados}
+            est = dict(estados) if nome in ("casa", "coletor_madeira", "coletor_minerio", "escudo", "escavadeira") or nome.startswith(("centro_", "elevador")) else {**PADRAO, **estados}
         os.makedirs(os.path.join(DEST, nome), exist_ok=True)
         info = {"estados": {}}
         for e, arq in est.items():

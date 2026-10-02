@@ -160,6 +160,21 @@ func _update_rubble(animate: bool) -> void:
 	t.chain().tween_callback(func(): _rubble.visible = false)
 
 
+## Bloco 57: o coletor de minério tira `amount` daqui (0 se trancada/esgotada). Esgotou: entra no
+## descanso como na mineração manual.
+func extract(amount: float) -> float:
+	if not _unlocked or _cooldown > 0.0 or ore_remaining <= 0.0:
+		return 0.0
+	var taken := minf(amount, ore_remaining)
+	ore_remaining -= taken
+	if ore_remaining <= 0.0:
+		ore_remaining = 0.0
+		_cooldown = depleted_cooldown
+		depleted.emit()
+	_update_visual()
+	return taken
+
+
 func has_ore() -> bool:
 	return ore_remaining > 0.0
 

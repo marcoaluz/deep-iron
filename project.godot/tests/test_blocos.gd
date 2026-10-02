@@ -256,3 +256,7 @@ func test_b55_audio() -> void:
 
 func test_b56_casas() -> void:
 	run_bloco("b56_casas.gd")
+
+
+func test_b57_coletor_minerio() -> void:
+	run_bloco("b57_coletor_minerio.gd")
