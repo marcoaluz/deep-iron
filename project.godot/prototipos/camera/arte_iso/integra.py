@@ -268,6 +268,10 @@ FUNCOES = {"minerador": ("minerador", "mineradora", "minerar"), "guarda": ("guar
            "lenhador": ("lenhador", "lenhadora", "cortar"), "civil": ("civil", "civil_mulher", None),
            "cozinheiro": ("cozinheiro", "cozinheira", "cozinhar")}
 COMUNS = ["caminhada", "comer", "ferido", "deitar", "mancar_esq", "com_picareta"]
+# pendências dos Prompts 2 e 29: colher fruta (caçador sem arco), treinar no campo e o ataque com a
+# arma de verdade do guarda (lança / besta; a lança de prata usa a da lança)
+EXTRA = {"cacador": ["colher"], "cacadora": ["colher"],
+         "guarda": ["treinar", "atacar_lanca", "atacar_besta"], "guarda_mulher": ["treinar", "atacar_lanca", "atacar_besta"]}
 
 
 def _pe(im):
@@ -434,7 +438,7 @@ def bonecos():
            "funcoes": {k: list(v) for k, v in FUNCOES.items()}, "pastas": {}}
     for f, (h, m, trab) in FUNCOES.items():
         for pasta in (h, m):
-            anims = COMUNS + ([trab] if trab else [])
+            anims = COMUNS + ([trab] if trab else []) + EXTRA.get(pasta, [])
             out["pastas"][pasta] = _exporta_boneco(pasta, anims)
             print("%-14s %s" % (pasta, sorted(out["pastas"][pasta]["anims"])))
             cas = "casaco_" + pasta

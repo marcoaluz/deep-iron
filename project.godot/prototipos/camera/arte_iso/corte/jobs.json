@@ -1,0 +1,44 @@
+{
+ "faixa_superficie": {
+  "job": "b92cdedc-8573-4a3f-8903-7cd4d28789ce",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/corte\\faixa_superficie.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "faixa_mina": {
+  "job": "5ff4d1f7-995f-4eee-9f73-ad24df2d1fd8",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/corte\\faixa_mina.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "faixa_nivel2": {
+  "job": "ba22dcd2-510b-474a-87d0-2900a36d503e",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/corte\\faixa_nivel2.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "faixa_abismo": {
+  "job": "769b188b-9d7b-483c-bfae-afa4ce1390f4",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/corte\\faixa_abismo.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "escavadeira_lado": {
+  "job": "dd20403c-643a-44e6-8dab-bf04a5a5732d",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/corte\\escavadeira_lado.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "gaiola_lado": {
+  "job": "13cd3f8b-569f-41e5-a249-c09ef7680f0e",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/corte\\gaiola_lado.png",
+  "ok": true,
+  "candidatos": 1
+ }
+}

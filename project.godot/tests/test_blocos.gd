@@ -228,3 +228,11 @@ func test_p17_criaturas() -> void:
 
 func test_p18_efeitos() -> void:
 	run_bloco("p18_efeitos.gd")
+
+
+func test_p20_interface() -> void:
+	run_bloco("p20_interface.gd")
+
+
+func test_p2_pendencias() -> void:
+	run_bloco("p2_pendencias.gd")

@@ -3,6 +3,8 @@ extends CanvasLayer
 ## Criado pelo morale.gd. Pausa o jogo; o save NÃO é sobrescrito (SaveManager.game_over),
 ## então "Carregar último save" volta pro último ponto salvo antes da derrota.
 
+const Icones := preload("res://scripts/ui/icones.gd")
+const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const START_MENU := "res://scenes/ui/start_menu.tscn"
 const COLOR_TITLE := Color(1.0, 0.42, 0.32)
 const COLOR_TEXT := Color(0.92, 0.88, 0.8)
@@ -25,12 +27,15 @@ func _ready() -> void:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = COLOR_PANEL
-	style.border_color = COLOR_BORDER
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	style.set_content_margin_all(22)
+	var style: StyleBox = UiSkin.painel(18)  # Prompt 20: a pele nova
+	if not UiSkin.ok():
+		var f := StyleBoxFlat.new()
+		f.bg_color = COLOR_PANEL
+		f.border_color = COLOR_BORDER
+		f.set_border_width_all(2)
+		f.set_corner_radius_all(4)
+		f.set_content_margin_all(22)
+		style = f
 	panel.add_theme_stylebox_override("panel", style)
 	center.add_child(panel)
 	_box = VBoxContainer.new()
@@ -41,6 +46,15 @@ func _ready() -> void:
 
 
 func setup(stats: Dictionary) -> void:
+	var ilu := Icones.ilustracao("expulso_derrota")
+	if ilu:  # Prompt 24/26: a cena (2x, pixel inteiro)
+		var img := TextureRect.new()
+		img.texture = ilu
+		img.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		img.custom_minimum_size = ilu.get_size() * 2.0
+		_box.add_child(img)
 	_label("EXPULSO DA VILA", 30, COLOR_TITLE)
 	var text := _label(
 		"A greve passou do limite. Numa assembleia na praça, os ipezinhos votaram, "

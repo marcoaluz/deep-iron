@@ -1,8 +1,8 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-01 (Prompt 19 feito; Prompt 31 verificado). Branch `isometrico`. Último
-commit: `30a60c51 Prompt 30`; o Prompt 19, o relatório do 31 e as atualizações de docs estão no
-working tree, **ainda sem commit**.
+Atualizado em 2026-10-02 (**Prompts 16 a 26 feitos**, mais as pendências dos 2, 14 e 29; o Marco
+liberou ir até o fim sem checkpoint e vai verificar). Branch `isometrico`. Último commit:
+`30a60c51 Prompt 30`; os Prompts 19, 31 e 16–26 estão no working tree, **ainda sem commit**.
 
 Isso existe porque estamos trocando entre duas contas do Claude Code
 (`marco.luz1994@gmail.com` e `marcoa.luz@hotmail.com`, essa segunda via
@@ -18,7 +18,7 @@ outra — este arquivo é o resumo pra colar/apontar na sessão nova.
   gerações restante, e a ordem/estimativa dos prompts que faltam.
 - `docs/arte/MAPA_VISAO.md` — visão do mapa (floresta → portão quebrado →
   vila da pedreira → boca da mina → torre de perfuração/elevadores).
-- `docs/arte/promptNN/` (01 a 15, 27, 28, 29) — uma pasta por prompt de arte
+- `docs/arte/promptNN/` (01 a 31) — uma pasta por prompt de arte
   já feito, com o relatório (`PROMPT_NN_*.md`) e as imagens geradas.
 - `docs/Prompt/deep_iron_prompts_arte_completa.md` — o texto original de cada prompt (0–31).
 - Os prompts de arte são numerados e aplicados **um de cada vez**, com pausa
@@ -43,24 +43,35 @@ outra — este arquivo é o resumo pra colar/apontar na sessão nova.
   qualquer lugar da pedreira (raio do Centro desligado); análise: cabem 31 casas a mais, o jogo
   pede no máximo 7 → **não precisa aumentar o mapa** (rever se o Prompt 31 trouxer escola).
 - PixelLab: esta conta (`claude-luz`) não tem o MCP; dá pra chamar o servidor HTTP do PixelLab com
-  a configuração da outra conta (`~/.claude.json`, `mcpServers.pixellab`). Saldo **1.359**
-  (recarga +5.000 em 2026-10-30).
+  a configuração da outra conta (`~/.claude.json`, `mcpServers.pixellab`). Ajudantes em
+  `tools/pixellab/` (`pl.py` chama, `gen.py` manda em lote/baixa, `chars.py` personagens e
+  animações). Saldo **209** depois dos Prompts 16–26 (recarga +5.000 em 2026-10-30).
 - F3 (vista de cima) saiu do jogo; "Comedouro" virou "Cozinha" nos textos.
-- **Sem arte ainda** (fica como "falta" no inventário): invasores (16–17), efeitos (18), UI/ícones/
-  fonte (20–22), retratos/ilustrações (23–24), telas (25–26).
+- **Prompts 16 a 26 (2026-10-01/02)**, cada um com relatório em `docs/arte/promptNN/`:
+  16 conceito das criaturas; 17 Lumívoro/Ferrugento + formas fortes (bruto/carregador, onda 4+);
+  18 efeitos (`scripts/iso/iso_fx.gd`: partículas com textura, fogo, festa, greve, onda solar,
+  domo do escudo, clima e neblina, marcadores); 20 pele da interface (`scripts/ui/ui_skin.gd`,
+  tema da raiz, cursores, **controle de velocidade**, janela de evento); 21 ícones
+  (`scripts/ui/icones.gd`); 22 fontes pixel (`assets/fonts/`); 23 retratos (cartão do selecionado,
+  `scripts/ui/retratos.gd`); 24 ilustrações (faixas de aviso, vitória, derrota); 25 **corte da mina
+  (F2)** (`scripts/ui/corte_mina.gd`); 26 título (key art animada, logo, carregamento com dicas).
+  Pendências feitas: colher fruta, treinar, ataque com lança/besta, cesto, placa de greve, cova,
+  explosivos, antena.
+  Testes: bateria GUT completa **49/49** (novos: `p17_criaturas`, `p18_efeitos`, `p20_interface`,
+  `p2_pendencias`), save real com o md5 igual antes e depois.
 
 ## O que falta fazer daqui pra frente
 
-1. **Prompt 19 feito** (`docs/arte/prompt19/PROMPT_19_LUZ.md`, sem geração): luz por tipo, janelas
-   acesas, pontos de luz no desenho, lava, tom por estação; 5 defeitos de luz da vista iso
-   corrigidos. Próximos da ordem sugerida: rascunhos dos checkpoints 16/20/25 (sem gastar) e
-   16→17, 18 com o saldo.
+1. **O Marco vai verificar os Prompts 16–26.** Pontos que pedem decisão dele estão nos relatórios:
+   a forma forte das criaturas muda o balanceamento (`defense.gd`: `strong_every = 0` desliga);
+   a fonte pixel ficou só em cabeçalhos/números (texto corrido na padrão); o controle de velocidade
+   é novo; a faixa de "ACIDENTE NA MINA" no machucado grave é nova.
+1. **Prompt 19 feito** (`docs/arte/prompt19/PROMPT_19_LUZ.md`, sem geração).
 1. **Prompt 31 verificado** (`docs/arte/prompt31/PROMPT_31_CONTEUDO_FUTURO.md`): nenhum item do
    backlog tem gameplay ainda (escola/crianças, casa nível 2/3, coletor de minério = "em breve") →
    **nada gerado**. Refazer o 31 quando algum desses entrar no jogo.
-   **Prompts sem fazer: 16 a 26** (+ pendências pequenas dos 2, 14 e 29). Ordem sugerida no
-   relatório do 31: 19 (luz, quase só código) e os rascunhos dos checkpoints 16/20/25 sem gastar;
-   16→17 (criaturas) e 18 com o saldo de agora; 20–26 depois da recarga de 30/10.
+   Todos os prompts de arte do pacote (0–31) estão feitos; o que sobra é o backlog do 31 (escola,
+   crianças, casa 2/3, coletor de minério, chefe das criaturas), que precisa de gameplay antes.
    **Disco C:** limpo em 2026-10-01 (Temp antiga: 361 MB → ~6,1 GB livres). Plugins sem uso
    (limboai, godotsteam, phantom_camera, dialogue_manager, state_charts, ~300 MB): o Marco pediu
    pra **não mexer** por enquanto.

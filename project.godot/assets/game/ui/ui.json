@@ -1,0 +1,467 @@
+{
+ "_obs": "Prompt 20 (ui/fatia.py): peça -> arquivo e margens do 9-slice [esq, cima, dir, baixo] (px da textura)",
+ "pecas": {
+  "painel": {
+   "img": "painel.png",
+   "tam": [
+    353,
+    259
+   ],
+   "margens": [
+    34,
+    34,
+    34,
+    34
+   ],
+   "conteudo": [
+    18,
+    16,
+    18,
+    16
+   ]
+  },
+  "titulo": {
+   "img": "titulo.png",
+   "tam": [
+    206,
+    29
+   ],
+   "margens": [
+    10,
+    6,
+    10,
+    6
+   ],
+   "conteudo": [
+    12,
+    4,
+    12,
+    4
+   ]
+  },
+  "dica": {
+   "img": "dica.png",
+   "tam": [
+    217,
+    107
+   ],
+   "margens": [
+    16,
+    16,
+    16,
+    16
+   ],
+   "conteudo": [
+    12,
+    10,
+    12,
+    10
+   ]
+  },
+  "cartao": {
+   "img": "cartao.png",
+   "tam": [
+    104,
+    139
+   ],
+   "margens": [
+    18,
+    18,
+    18,
+    18
+   ],
+   "conteudo": [
+    10,
+    10,
+    10,
+    10
+   ]
+  },
+  "cartao_bloq": {
+   "img": "cartao_bloq.png",
+   "tam": [
+    104,
+    139
+   ],
+   "margens": [
+    18,
+    18,
+    18,
+    18
+   ],
+   "conteudo": [
+    10,
+    10,
+    10,
+    10
+   ]
+  },
+  "cartao_breve": {
+   "img": "cartao_breve.png",
+   "tam": [
+    104,
+    139
+   ],
+   "margens": [
+    18,
+    18,
+    18,
+    18
+   ],
+   "conteudo": [
+    10,
+    10,
+    10,
+    10
+   ]
+  },
+  "cadeado": {
+   "img": "cadeado.png",
+   "tam": [
+    32,
+    38
+   ]
+  },
+  "barra": {
+   "img": "barra.png",
+   "tam": [
+    350,
+    58
+   ],
+   "margens": [
+    30,
+    14,
+    30,
+    14
+   ],
+   "conteudo": [
+    16,
+    10,
+    16,
+    10
+   ]
+  },
+  "barra_topo": {
+   "img": "barra_topo.png",
+   "tam": [
+    350,
+    40
+   ],
+   "margens": [
+    30,
+    12,
+    30,
+    12
+   ],
+   "conteudo": [
+    14,
+    6,
+    14,
+    6
+   ]
+  },
+  "botao_normal": {
+   "img": "botao_normal.png",
+   "tam": [
+    132,
+    44
+   ],
+   "margens": [
+    8,
+    8,
+    8,
+    8
+   ],
+   "conteudo": [
+    10,
+    5,
+    10,
+    5
+   ]
+  },
+  "botao_hover": {
+   "img": "botao_hover.png",
+   "tam": [
+    132,
+    44
+   ],
+   "margens": [
+    8,
+    8,
+    8,
+    8
+   ],
+   "conteudo": [
+    10,
+    5,
+    10,
+    5
+   ]
+  },
+  "botao_pressed": {
+   "img": "botao_pressed.png",
+   "tam": [
+    132,
+    44
+   ],
+   "margens": [
+    8,
+    8,
+    8,
+    8
+   ],
+   "conteudo": [
+    10,
+    5,
+    10,
+    5
+   ]
+  },
+  "botao_disabled": {
+   "img": "botao_disabled.png",
+   "tam": [
+    132,
+    44
+   ],
+   "margens": [
+    8,
+    8,
+    8,
+    8
+   ],
+   "conteudo": [
+    10,
+    5,
+    10,
+    5
+   ]
+  },
+  "botao_icone_normal": {
+   "img": "botao_icone_normal.png",
+   "tam": [
+    48,
+    48
+   ],
+   "margens": [
+    10,
+    10,
+    10,
+    10
+   ],
+   "conteudo": [
+    8,
+    6,
+    8,
+    6
+   ]
+  },
+  "botao_icone_hover": {
+   "img": "botao_icone_hover.png",
+   "tam": [
+    48,
+    48
+   ],
+   "margens": [
+    10,
+    10,
+    10,
+    10
+   ],
+   "conteudo": [
+    8,
+    6,
+    8,
+    6
+   ]
+  },
+  "botao_icone_pressed": {
+   "img": "botao_icone_pressed.png",
+   "tam": [
+    48,
+    48
+   ],
+   "margens": [
+    10,
+    10,
+    10,
+    10
+   ],
+   "conteudo": [
+    8,
+    6,
+    8,
+    6
+   ]
+  },
+  "botao_icone_disabled": {
+   "img": "botao_icone_disabled.png",
+   "tam": [
+    48,
+    48
+   ],
+   "margens": [
+    10,
+    10,
+    10,
+    10
+   ],
+   "conteudo": [
+    8,
+    6,
+    8,
+    6
+   ]
+  },
+  "botao_icone_on": {
+   "img": "botao_icone_on.png",
+   "tam": [
+    48,
+    48
+   ],
+   "margens": [
+    10,
+    10,
+    10,
+    10
+   ],
+   "conteudo": [
+    8,
+    6,
+    8,
+    6
+   ]
+  },
+  "aba_normal": {
+   "img": "aba_normal.png",
+   "tam": [
+    83,
+    36
+   ],
+   "margens": [
+    8,
+    8,
+    8,
+    8
+   ],
+   "conteudo": [
+    10,
+    4,
+    10,
+    4
+   ]
+  },
+  "aba_hover": {
+   "img": "aba_hover.png",
+   "tam": [
+    83,
+    36
+   ],
+   "margens": [
+    8,
+    8,
+    8,
+    8
+   ],
+   "conteudo": [
+    10,
+    4,
+    10,
+    4
+   ]
+  },
+  "aba_pressed": {
+   "img": "aba_pressed.png",
+   "tam": [
+    83,
+    36
+   ],
+   "margens": [
+    8,
+    8,
+    8,
+    8
+   ],
+   "conteudo": [
+    10,
+    4,
+    10,
+    4
+   ]
+  },
+  "progresso": {
+   "img": "progresso.png",
+   "tam": [
+    283,
+    27
+   ],
+   "margens": [
+    7,
+    7,
+    7,
+    7
+   ],
+   "conteudo": [
+    4,
+    4,
+    4,
+    4
+   ]
+  },
+  "caixa_off": {
+   "img": "caixa_off.png",
+   "tam": [
+    17,
+    17
+   ]
+  },
+  "caixa_on": {
+   "img": "caixa_on.png",
+   "tam": [
+    17,
+    17
+   ]
+  },
+  "trilho": {
+   "img": "trilho.png",
+   "tam": [
+    279,
+    25
+   ],
+   "margens": [
+    8,
+    6,
+    8,
+    6
+   ]
+  },
+  "pino": {
+   "img": "pino.png",
+   "tam": [
+    27,
+    28
+   ]
+  }
+ },
+ "cursores": {
+  "normal": [
+   2,
+   4
+  ],
+  "construir": [
+   15,
+   4
+  ],
+  "proibido": [
+   16,
+   16
+  ],
+  "atacar": [
+   2,
+   2
+  ],
+  "selecionar": [
+   28,
+   17
+  ]
+ }
+}

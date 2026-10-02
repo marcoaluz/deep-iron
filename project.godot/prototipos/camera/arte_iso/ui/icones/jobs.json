@@ -1,0 +1,387 @@
+{
+ "creditos": {
+  "job": "1ffb3ca4-642e-4347-a430-dfe2d8013074",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\creditos.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "minerio": {
+  "job": "7554d084-b727-4a02-bcab-3c8b2c066d18",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\minerio.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "ferro": {
+  "job": "a6d65d63-ed12-4e09-bcb2-87f1fe44bba7",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\ferro.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "cobre": {
+  "job": "6e7eba92-b011-48f6-a13b-274e5e3d4926",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\cobre.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "carvao": {
+  "job": "ee7b8ee0-082e-449c-9825-2588f5c776b0",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\carvao.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "prata": {
+  "job": "1e0735b5-6cb9-459d-b850-91a4d495aad5",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\prata.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "solarita": {
+  "job": "e00e3c72-1771-43c6-982c-94781051ceaf",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\solarita.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "madeira": {
+  "job": "6c88ea5e-19ec-4e49-9bbd-abbd6cf6924f",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\madeira.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "materia_prima": {
+  "job": "d2b91072-21be-4ae0-8835-03c8bcf73374",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\materia_prima.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "comida": {
+  "job": "96d67ab8-c66c-45e5-8353-4f56c0782895",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\comida.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "camas": {
+  "job": "02a2fbcd-bcaf-4822-97f8-4ef9a7a7051a",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\camas.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "animo": {
+  "job": "23d1cdba-b211-4791-b85d-fdd8e1d91f8d",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\animo.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "saude": {
+  "job": "63555187-d6c0-4756-8c73-85ccbb50a55b",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\saude.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "primavera": {
+  "job": "c86b5a81-a8fc-423d-953b-247d3853fc24",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\primavera.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "verao": {
+  "job": "962e941c-fc85-4ecc-94e3-80fffcc7e459",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\verao.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "outono": {
+  "job": "36a65816-bcc5-4689-b22e-d043533da188",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\outono.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "inverno": {
+  "job": "8495def3-85a5-4a69-abce-27c1dfb29038",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\inverno.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "fome": {
+  "job": "6058bc4a-64bc-49fa-abc9-ffd1a9c29986",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\fome.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "frio": {
+  "job": "90b2ef68-89d1-422e-a5b9-665ebd2383ad",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\frio.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "cansaco": {
+  "job": "3a72e067-ded1-4ad6-bf5b-f8aef7a86b17",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\cansaco.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "ferido_leve": {
+  "job": "f17ce483-5b40-4003-a80d-5cb6ab15d9a2",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\ferido_leve.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "ferido_grave": {
+  "job": "dd227cbe-472c-41b2-b054-a2f1ec176b9b",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\ferido_grave.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "greve": {
+  "job": "e0603358-c16c-4f54-bf4c-be7e5cb6ebc7",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\greve.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "zanga": {
+  "job": "ea50fdcc-5296-4ccd-bb31-beb38d523b4c",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\zanga.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "minerador": {
+  "job": "0070aeb4-1f11-458a-88a1-91956c02aa4e",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\minerador.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "cacador": {
+  "job": "a3c37fbb-b884-4460-958b-9045628b1716",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\cacador.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "medico": {
+  "job": "976e0f05-8001-4c12-8ef0-d647742448d2",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\medico.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "engenheiro": {
+  "job": "63ad79e4-8bde-4711-a624-0d6527956537",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\engenheiro.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "cozinheiro": {
+  "job": "f149de8d-8131-4d83-8ebc-d04f5e8df6e8",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\cozinheiro.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "lenhador": {
+  "job": "551047c0-c61b-45a2-bbac-0ff55cca8c47",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\lenhador.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "guarda": {
+  "job": "533e17f8-b7f2-451b-a700-24c0049e4f00",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\guarda.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "pesquisador": {
+  "job": "471a94c8-8cbe-4040-8888-6531abeadd43",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\pesquisador.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "sem_funcao": {
+  "job": "4cb56753-dcf6-49cc-8a5e-bb4c1dceb53c",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\sem_funcao.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "turno_extra": {
+  "job": "681b91d9-af1f-4fd8-90cd-72ca06693067",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\turno_extra.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "construir": {
+  "job": "1be55ec7-fc66-4e5a-a52f-7f5c0654b708",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\construir.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "pq_carrinhos": {
+  "job": "1f59e57c-dc32-48cd-9eb2-9785a0404c48",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\pq_carrinhos.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "pq_explosivos": {
+  "job": "54b2c961-3cb0-4b52-91fa-cf8cd25edb67",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\pq_explosivos.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "pq_escoramento": {
+  "job": "226e1038-748f-40eb-b4d0-50c9abfb27af",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\pq_escoramento.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "pq_trajes": {
+  "job": "83c69ef2-ba11-4c00-b124-387ef0bf5805",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\pq_trajes.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "pq_medicina": {
+  "job": "153eaf71-45df-4de4-b657-9c8ffa764ef9",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\pq_medicina.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "pq_radio": {
+  "job": "42fc9e99-7fbd-46ea-9d4d-5bc6f39c8feb",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\pq_radio.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "pq_hidroponia": {
+  "job": "697118cc-9ef9-447b-ba7c-bbf0588c5e30",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\pq_hidroponia.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "pq_estudo_solar": {
+  "job": "97019474-732a-47c5-86a3-cfb5b2ff6bce",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\pq_estudo_solar.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "pq_satelite": {
+  "job": "b405fada-4165-4cce-a5a9-e947186376d9",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\pq_satelite.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "pq_holofotes": {
+  "job": "58966412-c5bf-4c7c-a9cd-512ab7449aec",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\pq_holofotes.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "pq_escudo": {
+  "job": "85625ab4-116a-4abf-a49c-5e91390f20d7",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\pq_escudo.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "al_invasao": {
+  "job": "b8716349-6a1b-4d6d-b51e-4d321232a0ee",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\al_invasao.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "al_onda_solar": {
+  "job": "2b6ae599-907d-40dd-918a-b382e49d3080",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\al_onda_solar.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "al_falta_comida": {
+  "job": "60e4c7b3-b46d-494b-805f-02fcb88ddf77",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\al_falta_comida.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "al_obra_parada": {
+  "job": "d8042d97-5b66-411e-a1cb-e78b964378c0",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\al_obra_parada.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "al_reator": {
+  "job": "825ad0dd-ee4a-4480-ab22-dd32d5d14b9f",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\al_reator.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "p_ferido": {
+  "job": "8781a919-18d5-4471-8ecd-226cf17b36e6",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\p_ferido.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "p_zanga": {
+  "job": "25afc54f-cde9-4c70-9cf8-d59d8d078545",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\p_zanga.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "p_greve": {
+  "job": "f7128ff1-43bc-45d8-8cc3-fea9964d5bdf",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\p_greve.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "p_alerta": {
+  "job": "62eedc58-618e-4e7d-8b3c-4da3bab81e4e",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/icones\\p_alerta.png",
+  "ok": true,
+  "candidatos": 1
+ }
+}

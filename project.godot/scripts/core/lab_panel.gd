@@ -2,6 +2,7 @@ extends PanelContainer
 ## Janela do Laboratório (tecla Q, ou clique no laboratório): a árvore de pesquisa.
 ## Cada ramo em uma coluna; os pares do 2º nível são escolhas (pesquisar um tranca o outro).
 
+const Icones := preload("res://scripts/ui/icones.gd")
 const BRANCHES := [["Mina", ["carrinhos", "explosivos", "escoramento", "trajes"]],
 	["Vila", ["medicina", "radio", "hidroponia"]],
 	["Sol", ["estudo_solar", "satelite", "holofotes", "escudo"]]]
@@ -81,6 +82,14 @@ func _make_card(parent: VBoxContainer, id: String) -> Dictionary:
 	panel.add_child(v)
 	var top := HBoxContainer.new()
 	v.add_child(top)
+	var ic := Icones.tex("pq_" + id)
+	if ic:  # Prompt 21: o ícone da tecnologia
+		var tr := TextureRect.new()
+		tr.texture = ic
+		tr.custom_minimum_size = Vector2(32, 32)
+		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top.add_child(tr)
 	var excl: String = "  (escolha)" if t.excl != "" else ""
 	var name_label: Label = _hud._label(t.name + excl, 13, _hud.COLOR_TEXT)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL

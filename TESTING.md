@@ -73,6 +73,10 @@ determinístico) só mudou o que o bloco pretendia — instruções no topo do a
 | `p19_luz.gd` | Prompt 19 — luz e noite: texturas por tipo, ponto de luz do desenho, janelas acesas só à noite e com o prédio aceso, alcance de z das luzes, tocha/cristal/lanterna, lava, tom por estação |
 | `p29_bonecos.gd` | Prompt 29 parte 3 — bonecos com a arte nova: pasta por função × gênero, animação pelo estado, direção, pele por paleta, casaco/traje, picareta e saco nas costas, corpo antigo escondido |
 | `p29_natureza.gd` | Prompt 29 partes 4–5 — natureza/objetos pelo desenho antigo (árvores, toco, tocas, horta, jazidas pela quantidade, galeria lacrada, rochas, cristais, tocha), elevadores (gaiola no andar de baixo) e robô |
+| `p17_criaturas.gd` | Prompt 17 — invasores com a arte nova: 5 animações × 4 direções, animação pelo estado (parado, andar, atacar, dano, cair e ficar no chão, desligar), forma forte (bruto/carregador) e a Defesa mandando 1 forte a cada 3 na onda 4+, carga do roubo, desenho antigo escondido |
+| `p18_efeitos.gd` | Prompt 18 — efeitos: texturas por papel nas partículas copiadas (serragem, fumaça, gás), tamanho em pixel inteiro, festa (bandeirinhas, fogos à noite), greve (barril, placas, placa na mão), satélite (antena), explosivos, onda solar, clima com textura, neblina, ar tremendo no calor, cova, cesto na mão, domo do escudo, tudo recolhido no fim |
+| `p2_pendencias.gd` | Pendências dos Prompts 2 e 29 — colher fruta, treinar e ataque com lança/besta nas 4 direções; escolha pelo estado (porrete, lança, lança de prata, besta) |
+| `p20_interface.gd` | Prompts 20–25 — pele (tema da raiz, botão/painel/cartão/aba 9-slice, cadeado, cursores), ícones (barra de cima, funções, prédios do menu), fontes (acentos, cabeçalho), velocidade, retrato (expressão pelo estado, cartão do selecionado), faixa com ilustração, janela de evento, corte da mina (4 andares, um boneco por ipezinho, clique seleciona) |
 | `../test_iso.gd` (GUT, rápido) | Prompt 28 — núcleo: projeção, verdade 3D, ordem incremental, raio da câmera, direção de losango |
 | `../test_iso_arte.gd` (GUT, rápido) | Prompt 28 — verificador "o sprite cabe na caixa" contra a arte dos prédios; Prompt 29 — toda a arte integrada (`assets/game/iso/predios/predios.json`) |
 | `../test_iso_pele.gd` (GUT, rápido) | Prompt 28 — paletas de pele por código (igual ao `tons_de_pele.py`; dados em `tests/data/pele/`) |
@@ -150,6 +154,18 @@ obras em estágios diferentes e salva PNGs. Precisa de JANELA (renderizar) e da 
 
 (com `APPDATA` apontando pra uma pasta com `fake_appdata` no caminho; não rode ao mesmo tempo
 que a bateria usando a MESMA pasta: ele apaga o save de lá ao começar.)
+
+## Capturas dos Prompts 17 a 26
+
+Também não são testes; JANELA + pasta isolada:
+
+- `tests/capturas_fx.gd -- <pasta>`: criaturas, festa, greve, onda solar, chuva/neblina, mina
+  (gotas, calor), forja, acidente, cemitério, escudo (quadros pros GIFs);
+- `tests/capturas_ui.gd -- <pasta>`: HUD, menu de construção, janela de evento, painel de prédio;
+- `tests/capturas_interface.gd -- <pasta>`: retrato + faixa com ilustração, corte da mina, vitória,
+  derrota. Se houver `save_copia.json` na pasta de usuário isolada (uma **cópia** do save), carrega
+  ele (foi assim que o corte foi fotografado com o save real; o original não é tocado);
+- `tests/capturas_titulo.gd -- <pasta>`: menu inicial animado e tela de carregamento.
 
 ## Revisão visual e desempenho (Prompt 30)
 

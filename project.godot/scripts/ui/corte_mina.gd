@@ -1,0 +1,298 @@
+extends CanvasLayer
+## Prompt 25: tela "CORTE DA MINA" (F2, ou o botão na coluna de construções): a mina vista de lado,
+## com os andares empilhados como um formigueiro, montada com os dados do jogo naquela hora:
+##
+##   superfície (clareira) / mina e vila (pedreira) / nível 2 (gás, radiação) / abismo (calor)
+##
+## Em cada andar: quem está lá (mini-boneco da função; escuro = dentro de um prédio), as zonas de
+## perigo, a escavadeira, o robô, os invasores; entre os andares, o túnel (escada) e os poços do
+## elevador com a gaiola onde ela está. Clicar num ipezinho seleciona e leva a câmera até ele;
+## clicar no andar leva a câmera pra lá. Esc/F2/X fecha. Nada aqui muda o jogo.
+
+const UiSkin := preload("res://scripts/ui/ui_skin.gd")
+const Icones := preload("res://scripts/ui/icones.gd")
+const Retratos := preload("res://scripts/ui/retratos.gd")
+const IsoBonecos := preload("res://scripts/iso/iso_bonecos.gd")
+const DIR := "res://assets/game/ui/corte/"
+const ANDARES := [
+	{"id": "superficie", "nome": "SUPERFÍCIE — clareira", "faixa": "faixa_superficie", "perigo": ""},
+	{"id": "mina", "nome": "MINA E VILA — pedreira (poeira)", "faixa": "faixa_mina", "perigo": "poeira"},
+	{"id": "nivel2", "nome": "NÍVEL 2 — gás e radiação", "faixa": "faixa_nivel2", "perigo": "gás"},
+	{"id": "abismo", "nome": "ABISMO — calor", "faixa": "faixa_abismo", "perigo": "calor"},
+]
+const ALTURA := 128.0  # px de cada faixa (a arte tem 128)
+const LARGURA := 1024.0  # a faixa de 512 em 2x
+const FX_PERIGO := {"gas": "nuvem_gas", "calor": "brasa", "radiacao": "radiacao"}
+
+var _main: Node
+var _env: Node
+var _root: Control
+var _area: Control
+var _rects: Array[Rect2] = []  # retângulo do andar na tela (pra clicar)
+var _pontos: Array = []  # [Rect2 na tela, nó] dos ipezinhos (pra clicar)
+var _t := 0.0
+
+
+func setup(main: Node) -> void:
+	_main = main
+	layer = 15
+	visible = false
+	name = "CorteDaMina"
+	_root = Control.new()
+	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_root.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_root)
+	var fundo := ColorRect.new()
+	fundo.color = Color(0.03, 0.025, 0.02, 0.92)
+	fundo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fundo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(fundo)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(center)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", UiSkin.painel(6))
+	center.add_child(panel)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 6)
+	panel.add_child(v)
+	var head := HBoxContainer.new()
+	v.add_child(head)
+	var tit := Label.new()
+	tit.text = "CORTE DA MINA"
+	tit.add_theme_color_override("font_color", UiSkin.COLOR_TITLE)
+	tit.add_theme_font_size_override("font_size", 20)
+	UiSkin.usa_fonte(tit, "titulo", 32)
+	tit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(tit)
+	var dica := Label.new()
+	dica.text = "clique num ipezinho pra ir até ele  •  clique no andar pra levar a câmera  •  F2/Esc fecha"
+	dica.add_theme_font_size_override("font_size", 11)
+	dica.add_theme_color_override("font_color", UiSkin.COLOR_DIM)
+	head.add_child(dica)
+	var x := Button.new()
+	x.text = "X"
+	x.focus_mode = Control.FOCUS_NONE
+	UiSkin.aplica_botao(x)
+	x.pressed.connect(fecha)
+	head.add_child(x)
+	_area = Control.new()
+	_area.custom_minimum_size = Vector2(LARGURA, ALTURA * ANDARES.size())
+	_area.mouse_filter = Control.MOUSE_FILTER_STOP
+	_area.draw.connect(_desenha)
+	_area.gui_input.connect(_clique)
+	v.add_child(_area)
+
+
+func abre() -> void:
+	_env = get_tree().get_first_node_in_group("environment")
+	visible = true
+	_area.queue_redraw()
+
+
+func fecha() -> void:
+	visible = false
+
+
+func toggle() -> void:
+	if visible:
+		fecha()
+	else:
+		abre()
+
+
+func _unhandled_input(e: InputEvent) -> void:
+	if e is InputEventKey and e.pressed and not e.echo:
+		if e.keycode == KEY_F2:
+			toggle()
+			get_viewport().set_input_as_handled()
+		elif visible and e.keycode == KEY_ESCAPE:
+			fecha()
+			get_viewport().set_input_as_handled()
+
+
+func _process(delta: float) -> void:
+	if visible:
+		_t += delta
+		_area.queue_redraw()  # (os ipezinhos andam)
+
+
+# ------------------------------------------------------------ de onde é cada coisa
+## Andar (0..3) e x na faixa (0..1) de um ponto do chão.
+func _onde(p: Vector2) -> Array:
+	if _env == null:
+		return [1, 0.5]
+	var r: Rect2
+	var i := 1
+	if _env.abyss_rect.has_point(p):
+		i = 3; r = _env.abyss_rect
+	elif _env.deep_rect.has_point(p):
+		i = 2; r = _env.deep_rect
+	elif p.y < _env.map_rect.position.y:
+		i = 0; r = _env.clearing_rect
+	else:
+		r = _env.map_rect
+	return [i, clampf((p.x - r.position.x) / maxf(r.size.x, 1.0), 0.03, 0.97)]
+
+
+func _no_corte(p: Vector2, alto := 0.72) -> Vector2:
+	var o := _onde(p)
+	return Vector2(o[1] * LARGURA, o[0] * ALTURA + ALTURA * alto)
+
+
+## (guardadas: o desenho só guarda o RID; uma textura solta seria liberada antes de aparecer)
+var _cache := {}
+
+
+func _tex(nome: String) -> Texture2D:
+	if not _cache.has(nome):
+		var p := DIR + nome + ".png"
+		_cache[nome] = load(p) if ResourceLoader.exists(p) else null
+	return _cache[nome]
+
+
+# ------------------------------------------------------------ desenho
+func _desenha() -> void:
+	_rects.clear()
+	_pontos.clear()
+	var f := ThemeDB.fallback_font
+	for i in ANDARES.size():
+		var a: Dictionary = ANDARES[i]
+		var r := Rect2(0, i * ALTURA, LARGURA, ALTURA)
+		_rects.append(r)
+		var t := _tex(a.faixa)
+		if t:
+			_area.draw_texture_rect(t, r, false)  # 512x128 em 2x na horizontal (faixas de rocha)
+		_area.draw_rect(Rect2(r.position, Vector2(LARGURA, 18)), Color(0, 0, 0, 0.55))
+		_area.draw_string(f, r.position + Vector2(8, 13), a.nome, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiSkin.COLOR_TITLE)
+		var n := _gente_no_andar(i)
+		_area.draw_string(f, r.position + Vector2(LARGURA - 8, 13), "%d ipezinho%s" % [n, "s" if n != 1 else ""],
+			HORIZONTAL_ALIGNMENT_RIGHT, 200, 12, UiSkin.COLOR_TEXT)
+	_ligacoes()
+	_perigos()
+	_maquinas()
+	_bonecos()
+
+
+func _gente_no_andar(i: int) -> int:
+	var n := 0
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		if _onde((w as Node2D).global_position)[0] == i:
+			n += 1
+	return n
+
+
+## Túnel (escada da clareira pra pedreira) e os poços do elevador com a gaiola.
+func _ligacoes() -> void:
+	if _env == null:
+		return
+	var tx: float = clampf((_env.tunnel_x - _env.map_rect.position.x) / _env.map_rect.size.x, 0.0, 1.0) * LARGURA
+	_escada(Vector2(tx, ALTURA * 0.75), Vector2(tx, ALTURA * 1.7))
+	var gaiola := _tex("gaiola_lado")
+	for g in ["elevador", "elevador_abismo"]:
+		for e in get_tree().get_nodes_in_group(g):
+			var topo: Vector2 = (e as Node2D).global_position
+			var fundo = e.get("bottom_position")
+			if fundo == null:
+				continue
+			var a := _no_corte(topo, 0.6)
+			var b := _no_corte(fundo, 0.75)
+			b.x = a.x
+			_area.draw_line(a + Vector2(-9, 0), b + Vector2(-9, 0), Color(0.18, 0.13, 0.1), 2.0)
+			_area.draw_line(a + Vector2(9, 0), b + Vector2(9, 0), Color(0.18, 0.13, 0.1), 2.0)
+			_area.draw_line(a, b, Color(0.55, 0.5, 0.45, 0.8), 1.0)  # o cabo
+			if gaiola:
+				var k := 0.5 + 0.5 * sin(_t * 0.6 + a.x)  # (a lógica não guarda onde a gaiola está: vai e volta)
+				var p := a.lerp(b, k) - gaiola.get_size() * 0.5
+				_area.draw_texture(gaiola, p.round())
+
+
+func _escada(a: Vector2, b: Vector2) -> void:
+	_area.draw_line(a + Vector2(-6, 0), b + Vector2(-6, 0), Color(0.42, 0.3, 0.18), 2.0)
+	_area.draw_line(a + Vector2(6, 0), b + Vector2(6, 0), Color(0.42, 0.3, 0.18), 2.0)
+	var y := a.y
+	while y < b.y:
+		_area.draw_line(Vector2(a.x - 6, y), Vector2(a.x + 6, y), Color(0.5, 0.36, 0.22), 2.0)
+		y += 8.0
+
+
+func _perigos() -> void:
+	const IsoFx := preload("res://scripts/iso/iso_fx.gd")
+	for z in get_tree().get_nodes_in_group("zonas_perigo"):
+		var p := _no_corte((z as Node2D).global_position, 0.62)
+		var t := IsoFx.tex(FX_PERIGO.get(String(z.get("kind")), "poeira"))
+		if t:
+			for k in 3:
+				var s := 1.0 + 0.15 * sin(_t * 2.0 + k)
+				_area.draw_set_transform(p + Vector2(-14 + k * 14, -4 * k), 0.0, Vector2(s, s))
+				_area.draw_texture(t, -t.get_size() * 0.5)
+			_area.draw_set_transform(Vector2.ZERO)
+		_area.draw_string(ThemeDB.fallback_font, p + Vector2(-20, 24), String(z.get("kind")).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1.0, 0.6, 0.4))
+
+
+func _maquinas() -> void:
+	var esc := _tex("escavadeira_lado")
+	var d := get_tree().get_first_node_in_group("escavadeira") as Node2D
+	if esc and d:
+		var p := _no_corte(d.global_position, 0.95)
+		_area.draw_texture(esc, (p - Vector2(esc.get_width() * 0.5, esc.get_height())).round())
+	for r in get_tree().get_nodes_in_group("robos"):
+		var t := _tex("mini_robo")
+		if t:
+			var p := _no_corte((r as Node2D).global_position, 0.95)
+			_area.draw_texture(t, (p - Vector2(t.get_width() * 0.5, t.get_height())).round())
+	for c in get_tree().get_nodes_in_group("criaturas"):
+		if not c.has_method("is_alive") or not c.is_alive():
+			continue
+		var forte: bool = c.get("variant") == "forte"
+		var nome: String = {"lumivoro": "criatura_lumivoro", "ferrugento": "criatura_ferrugento"}.get(String(c.get("kind")), "")
+		var t := _tex("mini_" + nome + ("_bruto" if forte and nome == "criatura_lumivoro" else ("_carregador" if forte else "")))
+		if t:
+			var p := _no_corte((c as Node2D).global_position, 0.95)
+			_area.draw_texture(t, (p - Vector2(t.get_width() * 0.5, t.get_height())).round(), Color(1.0, 0.8, 0.8))
+
+
+func _bonecos() -> void:
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		var pasta := Retratos.pasta(w)
+		var tom := IsoBonecos._tone(w)
+		var t := _tex("mini_%s__%s" % [pasta, tom]) if tom != "" else null
+		if t == null:
+			t = _tex("mini_" + pasta)
+		if t == null:
+			continue
+		var p := _no_corte((w as Node2D).global_position, 0.95)
+		var r := Rect2((p - Vector2(t.get_width() * 0.5, t.get_height())).round(), t.get_size())
+		var dentro: bool = w.get("_inside") == true
+		_area.draw_texture(t, r.position, Color(0.45, 0.45, 0.5, 0.8) if dentro else Color.WHITE)
+		if w.get("selected"):
+			_area.draw_rect(r.grow(2), UiSkin.COLOR_TITLE, false, 1.0)
+		if w.get("injured"):
+			var ic := Icones.tex("p_ferido")
+			if ic:
+				_area.draw_texture(ic, r.position + Vector2(r.size.x * 0.5 - 8, -18))
+		_pontos.append([r, w])
+
+
+func _clique(e: InputEvent) -> void:
+	if not (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT):
+		return
+	var p: Vector2 = e.position
+	for pt in _pontos:
+		if (pt[0] as Rect2).grow(3).has_point(p) and is_instance_valid(pt[1]):
+			if _main and _main.has_method("select"):
+				_main.select(pt[1])
+			var cam = _main.get_node_or_null("Camera2D") if _main else null
+			if cam and cam.has_method("focus_on"):
+				cam.focus_on((pt[1] as Node2D).global_position)
+			fecha()
+			return
+	for i in _rects.size():
+		if _rects[i].has_point(p) and _env:
+			var alvo: Vector2 = [_env.clearing_rect, _env.map_rect, _env.deep_rect, _env.abyss_rect][i].get_center()
+			var cam = _main.get_node_or_null("Camera2D") if _main else null
+			if cam and cam.has_method("focus_on"):
+				cam.focus_on(alvo)
+			fecha()
+			return

@@ -9,6 +9,8 @@ extends PanelContainer
 ## continua único (Vestiário, Oficina, Centro da Vila, Escudo) mostra "um por vila";
 ## melhorias mostram "melhoria". Itens do futuro aparecem como "em breve".
 
+const UiSkin := preload("res://scripts/ui/ui_skin.gd")
+const Icones := preload("res://scripts/ui/icones.gd")
 const TAB_NAMES := ["Moradia", "Alimentação", "Saúde", "Lazer", "Pesquisa", "Defesa e equipamento", "Coleta automática", "Vila"]
 
 var _hud: CanvasLayer
@@ -58,6 +60,8 @@ func _build() -> void:
 		var b: Button = _hud._button(TAB_NAMES[i])
 		b.toggle_mode = true
 		b.add_theme_font_size_override("font_size", 12)
+		if UiSkin.ok():
+			UiSkin.aplica_aba(b)  # Prompt 20: aba de couro (a escolhida clara)
 		b.pressed.connect(func():
 			Audio.click()
 			_show_tab(i))
@@ -75,6 +79,7 @@ func _build() -> void:
 func toggle() -> void:
 	visible = not visible
 	if visible:
+		move_to_front()  # por cima dos painéis do lado (força de trabalho)
 		_show_tab(_tab)
 
 
@@ -88,6 +93,17 @@ func _show_tab(i: int) -> void:
 	for d in _defs(TAB_NAMES[i]):
 		_cards.append(_make_card(d))
 	refresh()
+	_encolhe.call_deferred()
+
+
+## Prompt 20: o painel só cresce sozinho (texto quebrando no 1º quadro o deixava enorme): volta pro
+## tamanho do conteúdo, preso em cima da barra de funções.
+func _encolhe() -> void:
+	reset_size()
+	offset_left = -size.x * 0.5
+	offset_right = size.x * 0.5
+	offset_top = -126.0 - size.y
+	offset_bottom = -126.0
 
 
 # ------------------------------------------------------------ o que tem em cada aba
@@ -264,6 +280,9 @@ func _upgrade_cost_text(hub: Node, id: String) -> String:
 
 # ------------------------------------------------------------ cartões
 func _icon(name: String, frames: int) -> Texture2D:
+	var novo := Icones.predio(name) if name != "" else null
+	if novo != null:
+		return novo  # Prompt 21: render reduzido do prédio pronto (arte nova)
 	if name == "" or not ResourceLoader.exists("res://assets/game/%s.png" % name):
 		return null
 	var tex: Texture2D = load("res://assets/game/%s.png" % name)
@@ -276,7 +295,7 @@ func _icon(name: String, frames: int) -> Texture2D:
 
 func _make_card(d: Dictionary) -> Dictionary:
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _hud._row_style(false))
+	panel.add_theme_stylebox_override("panel", UiSkin.cartao("breve" if d.get("soon", false) else "") if UiSkin.ok() else _hud._row_style(false))
 	panel.custom_minimum_size = Vector2(190, 186)
 	_cards_box.add_child(panel)
 	var v := VBoxContainer.new()
@@ -291,6 +310,16 @@ func _make_card(d: Dictionary) -> Dictionary:
 	if d.get("soon", false):
 		icon.modulate = Color(1, 1, 1, 0.35)
 	v.add_child(icon)
+	var lock := TextureRect.new()  # Prompt 20: cadeado no canto do cartão trancado
+	lock.texture = UiSkin.tex("cadeado")
+	lock.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lock.anchor_left = 1.0
+	lock.anchor_right = 1.0
+	lock.offset_left = -30.0
+	lock.offset_bottom = 38.0
+	lock.visible = false
+	icon.add_child(lock)  # (filho do desenho: o cartão é um container e esticaria o cadeado)
 	var name_l: Label = _hud._label(d.name, 14, _hud.COLOR_TEXT)
 	v.add_child(name_l)
 	var tag: Label = _hud._label(_tag_text(d), 11, _hud.COLOR_DIM)
@@ -324,7 +353,7 @@ func _make_card(d: Dictionary) -> Dictionary:
 			d.act.call()
 			if visible:
 				refresh())
-	return {"def": d, "status": status, "button": btn, "cost": cost, "tag": tag}
+	return {"def": d, "status": status, "button": btn, "cost": cost, "tag": tag, "panel": panel, "lock": lock, "locked": null}
 
 
 func refresh() -> void:
@@ -342,5 +371,9 @@ func refresh() -> void:
 		var ok := reason == ""
 		c.status.text = "" if ok else reason
 		c.button.disabled = not ok
+		if UiSkin.ok() and c.locked != (not ok):  # Prompt 20: trancado = cartão escuro + cadeado
+			c.locked = not ok
+			c.panel.add_theme_stylebox_override("panel", UiSkin.cartao("bloq" if not ok else ""))
+			c.lock.visible = not ok
 		if d.has("label_fn"):
 			c.button.text = d.label_fn.call()

@@ -1,0 +1,149 @@
+{
+ "_obs": "Prompt 23 (retratos/retratos.py): pasta -> expressão -> arquivo por tom de pele (tons_de_pele.RAMPAS); criaturas sem tom",
+ "tons": [
+  "clara",
+  "parda",
+  "negra"
+ ],
+ "expressoes": [
+  "neutro",
+  "contente",
+  "cansado",
+  "bravo",
+  "ferido"
+ ],
+ "retratos": {
+  "cacador": {
+   "neutro": "cacador/neutro",
+   "contente": "cacador/contente",
+   "cansado": "cacador/cansado",
+   "bravo": "cacador/bravo",
+   "ferido": "cacador/ferido"
+  },
+  "cacadora": {
+   "neutro": "cacadora/neutro",
+   "contente": "cacadora/contente",
+   "cansado": "cacadora/cansado",
+   "bravo": "cacadora/bravo",
+   "ferido": "cacadora/ferido"
+  },
+  "civil": {
+   "neutro": "civil/neutro",
+   "contente": "civil/contente",
+   "cansado": "civil/cansado",
+   "bravo": "civil/bravo",
+   "ferido": "civil/ferido"
+  },
+  "civil_mulher": {
+   "neutro": "civil_mulher/neutro",
+   "contente": "civil_mulher/contente",
+   "cansado": "civil_mulher/cansado",
+   "bravo": "civil_mulher/bravo",
+   "ferido": "civil_mulher/ferido"
+  },
+  "cozinheira": {
+   "neutro": "cozinheira/neutro",
+   "contente": "cozinheira/contente",
+   "cansado": "cozinheira/cansado",
+   "bravo": "cozinheira/bravo",
+   "ferido": "cozinheira/ferido"
+  },
+  "cozinheiro": {
+   "neutro": "cozinheiro/neutro",
+   "contente": "cozinheiro/contente",
+   "cansado": "cozinheiro/cansado",
+   "bravo": "cozinheiro/bravo",
+   "ferido": "cozinheiro/ferido"
+  },
+  "engenheira": {
+   "neutro": "engenheira/neutro",
+   "contente": "engenheira/contente",
+   "cansado": "engenheira/cansado",
+   "bravo": "engenheira/bravo",
+   "ferido": "engenheira/ferido"
+  },
+  "engenheiro": {
+   "neutro": "engenheiro/neutro",
+   "contente": "engenheiro/contente",
+   "cansado": "engenheiro/cansado",
+   "bravo": "engenheiro/bravo",
+   "ferido": "engenheiro/ferido"
+  },
+  "ferrugento": {
+   "neutro": "ferrugento/neutro.png"
+  },
+  "guarda": {
+   "neutro": "guarda/neutro",
+   "contente": "guarda/contente",
+   "cansado": "guarda/cansado",
+   "bravo": "guarda/bravo",
+   "ferido": "guarda/ferido"
+  },
+  "guarda_mulher": {
+   "neutro": "guarda_mulher/neutro",
+   "contente": "guarda_mulher/contente",
+   "cansado": "guarda_mulher/cansado",
+   "bravo": "guarda_mulher/bravo",
+   "ferido": "guarda_mulher/ferido"
+  },
+  "lenhador": {
+   "neutro": "lenhador/neutro",
+   "contente": "lenhador/contente",
+   "cansado": "lenhador/cansado",
+   "bravo": "lenhador/bravo",
+   "ferido": "lenhador/ferido"
+  },
+  "lenhadora": {
+   "neutro": "lenhadora/neutro",
+   "contente": "lenhadora/contente",
+   "cansado": "lenhadora/cansado",
+   "bravo": "lenhadora/bravo",
+   "ferido": "lenhadora/ferido"
+  },
+  "lumivoro": {
+   "neutro": "lumivoro/neutro.png"
+  },
+  "medica": {
+   "neutro": "medica/neutro",
+   "contente": "medica/contente",
+   "cansado": "medica/cansado",
+   "bravo": "medica/bravo",
+   "ferido": "medica/ferido"
+  },
+  "medico": {
+   "neutro": "medico/neutro",
+   "contente": "medico/contente",
+   "cansado": "medico/cansado",
+   "bravo": "medico/bravo",
+   "ferido": "medico/ferido"
+  },
+  "minerador": {
+   "neutro": "minerador/neutro",
+   "contente": "minerador/contente",
+   "cansado": "minerador/cansado",
+   "bravo": "minerador/bravo",
+   "ferido": "minerador/ferido"
+  },
+  "mineradora": {
+   "neutro": "mineradora/neutro",
+   "contente": "mineradora/contente",
+   "cansado": "mineradora/cansado",
+   "bravo": "mineradora/bravo",
+   "ferido": "mineradora/ferido"
+  },
+  "pesquisador": {
+   "neutro": "pesquisador/neutro",
+   "contente": "pesquisador/contente",
+   "cansado": "pesquisador/cansado",
+   "bravo": "pesquisador/bravo",
+   "ferido": "pesquisador/ferido"
+  },
+  "pesquisadora": {
+   "neutro": "pesquisadora/neutro",
+   "contente": "pesquisadora/contente",
+   "cansado": "pesquisadora/cansado",
+   "bravo": "pesquisadora/bravo",
+   "ferido": "pesquisadora/ferido"
+  }
+ }
+}

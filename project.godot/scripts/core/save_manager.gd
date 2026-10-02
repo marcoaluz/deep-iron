@@ -143,6 +143,7 @@ signal saved(path: String)
 signal loaded
 signal save_failed(message: String)
 
+const Carregando := preload("res://scripts/ui/carregando.gd")
 const SAVE_PATH := "user://savegame.json"
 const TEMP_PATH := "user://savegame.tmp"
 ## Backups rotativos: "partida nova" com save existente (Novo Jogo no menu, ou main.tscn
@@ -269,6 +270,7 @@ func start_new_game() -> void:
 	_backup_checked = true
 	pending_load = false
 	_pending_data = {}
+	Carregando.mostra(get_tree())  # Prompt 26: a tela de carregamento com dica
 	get_tree().change_scene_to_file(MAIN_SCENE)
 
 
@@ -305,6 +307,7 @@ func _start_loaded(data: Dictionary) -> void:
 	pending_load = true
 	_backup_checked = true
 	get_tree().paused = false
+	Carregando.mostra(get_tree())  # Prompt 26: a tela de carregamento com dica
 	get_tree().change_scene_to_file(MAIN_SCENE)
 
 

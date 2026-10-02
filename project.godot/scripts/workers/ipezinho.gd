@@ -2442,6 +2442,10 @@ func hurt(cause: String = "mina", severity: String = "") -> void:
 	_decision_timer = 0.0  # larga a picareta e vai pra enfermaria já
 	if cause == "mina" and is_inside_tree():
 		_rockfall()
+		if injury_severity == "grave":  # Prompt 24: acidente feio ganha a faixa com a cena
+			var hud := get_tree().get_first_node_in_group("hud")
+			if hud and hud.has_method("show_banner"):
+				hud.show_banner("ACIDENTE NA MINA", "%s se machucou feio no desabamento. Precisa de leito na enfermaria." % _display())
 	var grave := injury_severity == "grave"
 	var text := "Ai! Um galho!" if cause == "galho" else "Ai!"
 	_popup(text + (" (grave)" if grave else ""), Color(1.0, 0.25, 0.2) if grave else Color(1.0, 0.4, 0.35))

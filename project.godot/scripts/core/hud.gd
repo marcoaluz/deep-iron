@@ -35,6 +35,9 @@ const COLOR_DOCTOR := Color(0.6, 0.9, 0.85)
 const COLOR_ENGINEER := Color(1.0, 0.6, 0.25)
 const Ores := preload("res://scripts/core/ores.gd")
 const Settings := preload("res://scripts/core/settings.gd")
+const UiSkin := preload("res://scripts/ui/ui_skin.gd")
+const Icones := preload("res://scripts/ui/icones.gd")
+const Retratos := preload("res://scripts/ui/retratos.gd")
 const STATE_COLORS := {
 	"idle": Color(0.65, 0.6, 0.55),
 	"eating": Color(0.5, 0.85, 0.4),
@@ -152,6 +155,8 @@ var _style_row_selected := _row_style(true)
 
 func _ready() -> void:
 	add_to_group("hud")
+	if UiSkin.ok():
+		get_tree().root.theme = UiSkin.theme()  # Prompt 20: a pele nova vale pra tudo (dicas, menus)
 	_main = get_parent()
 	_economy = get_tree().get_first_node_in_group("economy")
 	_day_night = get_tree().get_first_node_in_group("day_night")
@@ -186,6 +191,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_update_cursor(delta)
 	_refresh_timer -= delta
 	if _refresh_timer <= 0.0:
 		_refresh_timer = 1.0 / refresh_rate
@@ -209,14 +215,19 @@ func _build() -> void:
 # ------------------------------------------------------------ topo: recursos
 func _build_top_bar() -> void:
 	var bar := PanelContainer.new()
-	var style := _panel_style()
-	style.set_corner_radius_all(0)
-	style.border_width_top = 0
-	style.border_width_left = 0
-	style.border_width_right = 0
-	style.set_content_margin_all(6)
-	style.content_margin_left = 12
-	style.content_margin_right = 12
+	var style: StyleBox
+	if UiSkin.ok():
+		style = UiSkin.barra_topo()  # Prompt 20: a viga de madeira com cintas de ferro
+	else:
+		var f := _panel_style() as StyleBoxFlat
+		f.set_corner_radius_all(0)
+		f.border_width_top = 0
+		f.border_width_left = 0
+		f.border_width_right = 0
+		f.set_content_margin_all(6)
+		f.content_margin_left = 12
+		f.content_margin_right = 12
+		style = f
 	bar.add_theme_stylebox_override("panel", style)
 	bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	bar.offset_bottom = TOP_BAR_H
@@ -233,6 +244,7 @@ func _build_top_bar() -> void:
 	phase_top.add_theme_constant_override("separation", 6)
 	phase.add_child(phase_top)
 	_phase_label = _label("DIA 1", 14, COLOR_DAY)
+	UiSkin.usa_fonte(_phase_label, "texto", 16)
 	phase_top.add_child(_phase_label)
 	_phase_time_label = _label("", 11, COLOR_DIM)
 	phase_top.add_child(_phase_time_label)
@@ -241,8 +253,8 @@ func _build_top_bar() -> void:
 	phase.add_child(_phase_bar)
 	row.add_child(VSeparator.new())
 
-	_chip(row, "credits", coin_icon, "Créditos")
-	_chip(row, "ore", ore_icon, "Minério")
+	_chip(row, "credits", _ic("creditos", coin_icon), "Créditos")
+	_chip(row, "ore", _ic("minerio", ore_icon), "Minério")
 	if _economy:
 		_sell_button = _button("Vender")
 		_sell_button.add_theme_font_size_override("font_size", 12)
@@ -258,18 +270,19 @@ func _build_top_bar() -> void:
 		_auto_sell_check.toggled.connect(_on_auto_sell_toggled)
 		row.add_child(_auto_sell_check)
 	row.add_child(VSeparator.new())
-	_chip(row, "wood", load("res://assets/game/wood_log.png"), "Madeira")
-	_chip(row, "raw", load("res://assets/game/raw_food.png"), "Matéria-prima")
-	_chip(row, "food", load("res://assets/game/food_basket.png"), "Comida pronta")
+	_chip(row, "wood", _ic("madeira", load("res://assets/game/wood_log.png")), "Madeira")
+	_chip(row, "raw", _ic("materia_prima", load("res://assets/game/raw_food.png")), "Matéria-prima")
+	_chip(row, "food", _ic("comida", load("res://assets/game/food_basket.png")), "Comida pronta")
 	row.add_child(VSeparator.new())
-	_chip(row, "beds", null, "Camas")
-	_chip(row, "joy", null, "Ânimo")
-	_chip(row, "health", load("res://assets/game/bandage.png"), "Saúde")
+	_chip(row, "beds", _ic("camas", null), "Camas")
+	_chip(row, "joy", _ic("animo", null), "Ânimo")
+	_chip(row, "health", _ic("saude", load("res://assets/game/bandage.png")), "Saúde")
 
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
-	_chip(row, "sun", null, "Estação", false)
+	_chip(row, "sun", _ic("primavera", null), "Estação", false)
+	_build_speed(row)
 	var help := _button("?")
 	help.tooltip_text = "Atalhos de teclado (H)"
 	help.custom_minimum_size = Vector2(26, 0)
@@ -287,12 +300,16 @@ func _chip(row: HBoxContainer, id: String, icon_tex: Texture2D, title: String, s
 	box.tooltip_text = title
 	row.add_child(box)
 	if icon_tex:
-		box.add_child(_icon(icon_tex))
+		var ic := _icon(icon_tex)
+		if icon_tex.get_width() == 24:
+			ic.custom_minimum_size = Vector2(24, 24)  # Prompt 21: ícone novo em pixel inteiro
+		box.add_child(ic)
 	elif show_title:
 		box.add_child(_label(title, 11, COLOR_DIM))
 	var value := _label("0", 15, COLOR_TEXT)
+	UiSkin.usa_fonte(value, "texto", 16)  # Prompt 22: números do HUD (largura fixa)
 	box.add_child(value)
-	_chips[id] = {"box": box, "value": value, "title": title}
+	_chips[id] = {"box": box, "value": value, "title": title, "icon": box.get_child(0) if icon_tex else null}
 
 
 func _set_chip(id: String, text: String, color: Color, tip: String, show: bool = true) -> void:
@@ -319,8 +336,9 @@ func _icon(tex: Texture2D) -> TextureRect:
 # ------------------------------------------------------------ embaixo: barra de ordens
 func _build_order_bar() -> void:
 	var bar := PanelContainer.new()
-	var style := _panel_style()
-	style.set_content_margin_all(8)
+	var style: StyleBox = UiSkin.barra() if UiSkin.ok() else _panel_style()
+	if style is StyleBoxFlat:
+		style.set_content_margin_all(8)
 	bar.add_theme_stylebox_override("panel", style)
 	bar.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	bar.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -339,23 +357,23 @@ func _build_order_bar() -> void:
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_child(row)
 	# Bloco 46: CONSTRUIR abre o menu de construção por abas (também na barra de espaço)
-	var build := _order_button(row, "Construir", "Espaço", load("res://assets/game/hammer.png"), COLOR_TITLE,
+	var build := _order_button(row, "Construir", "Espaço", _ic("construir", load("res://assets/game/hammer.png"), false), COLOR_TITLE,
 		"Menu de construção: casas, cozinha, lazer, pesquisa, defesa, coleta automática…")
 	build.button.pressed.connect(toggle_build_menu)
 	_build_button = build.button
 	row.add_child(VSeparator.new())
 	for entry in ORDER_JOBS:
 		var job: String = entry[0]
-		var info := _order_button(row, entry[1], entry[2], load(entry[3]), entry[5], entry[6])
+		var info := _order_button(row, entry[1], entry[2], _ic(Icones.FUNCAO.get(job, ""), load(entry[3]), false), entry[5], entry[6])
 		info.button.pressed.connect(Callable(_main, entry[4]))
 		_job_buttons[job] = info
 	row.add_child(VSeparator.new())
-	var none := _order_button(row, "Sem função", "0", null, COLOR_NO_JOB,
+	var none := _order_button(row, "Sem função", "0", _ic("sem_funcao", null, false), COLOR_NO_JOB,
 		"Tira a função: entregam o que estiverem carregando e esperam no Centro da Vila.")
 	none.button.pressed.connect(_main.clear_job)
 	none.button.toggle_mode = false
 	_no_job_button = none.button
-	var extra := _order_button(row, "Turno extra", "T", null, COLOR_OVERTIME,
+	var extra := _order_button(row, "Turno extra", "T", _ic("turno_extra", null, false), COLOR_OVERTIME,
 		"Continuam trabalhando à noite (e vão ficando zangados).")
 	extra.button.pressed.connect(_main.toggle_overtime)
 	_overtime_button = extra.button
@@ -367,14 +385,17 @@ func _order_button(row: HBoxContainer, title: String, key: String, icon_tex: Tex
 	var b := _button("")
 	b.toggle_mode = true
 	b.custom_minimum_size = Vector2(90, 62)
+	if UiSkin.ok():
+		UiSkin.aplica_botao(b, true)  # Prompt 20: placa de ferro com rebites; aceso = borda âmbar
 	b.tooltip_text = "%s  (tecla %s)\n%s\nCom ipezinhos selecionados: aplica. Se todos já forem, tira." % [title, key, tip]
-	var on := StyleBoxFlat.new()
-	on.bg_color = Color(0.42, 0.3, 0.12)
-	on.border_color = COLOR_TITLE
-	on.set_border_width_all(2)
-	on.set_corner_radius_all(3)
-	b.add_theme_stylebox_override("pressed", on)
-	b.add_theme_stylebox_override("hover_pressed", on)
+	if not UiSkin.ok():
+		var on := StyleBoxFlat.new()
+		on.bg_color = Color(0.42, 0.3, 0.12)
+		on.border_color = COLOR_TITLE
+		on.set_border_width_all(2)
+		on.set_corner_radius_all(3)
+		b.add_theme_stylebox_override("pressed", on)
+		b.add_theme_stylebox_override("hover_pressed", on)
 	row.add_child(b)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 0)
@@ -389,9 +410,10 @@ func _order_button(row: HBoxContainer, title: String, key: String, icon_tex: Tex
 	v.add_child(top)
 	if icon_tex:
 		var icon := _icon(icon_tex)
-		icon.custom_minimum_size = Vector2(22, 22)
+		icon.custom_minimum_size = Vector2(32, 32) if icon_tex.get_width() == 32 else Vector2(22, 22)
 		top.add_child(icon)
 	var count := _label("", 14, COLOR_TEXT)
+	UiSkin.usa_fonte(count, "texto", 16)
 	top.add_child(count)
 	var name_label := _label(title, 12, color)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -503,6 +525,18 @@ func _build_buildings_column() -> void:
 		_add_panel("sol", preload("res://scripts/core/sun_panel.gd"), _sun)
 	if _diary:
 		_add_panel("diario", preload("res://scripts/core/diary_panel.gd"), _diary)
+	# Prompt 25: o corte da mina (vista de lado, todos os andares)
+	_corte = preload("res://scripts/ui/corte_mina.gd").new()
+	add_child(_corte)
+	_corte.setup(_main)
+	var corte_b := _button("Corte da mina (F2)")
+	corte_b.add_theme_font_size_override("font_size", 12)
+	corte_b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	corte_b.custom_minimum_size.x = 170
+	corte_b.pressed.connect(func():
+		Audio.click()
+		_corte.toggle())
+	_buildings_box.add_child(corte_b)
 
 
 # ------------------------------------------------------------ atalhos (H)
@@ -664,28 +698,50 @@ func show_toast(text: String, color: Color = COLOR_TITLE) -> void:
 
 
 ## Faixa de conquista no topo da tela (some sozinha).
-func show_banner(title: String, subtitle: String) -> void:
+func show_banner(title: String, subtitle: String, ilustracao: String = "") -> void:
 	var panel := PanelContainer.new()
-	var style := _panel_style()
-	style.border_color = COLOR_TITLE
-	style.set_content_margin_all(16)
+	var style: StyleBox = UiSkin.faixa() if UiSkin.ok() else _panel_style()
+	if style is StyleBoxFlat:
+		(style as StyleBoxFlat).border_color = COLOR_TITLE
+		style.set_content_margin_all(16)
 	panel.add_theme_stylebox_override("panel", style)
 	panel.anchor_left = 0.5
 	panel.anchor_right = 0.5
 	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	# empilha abaixo das faixas que ainda estão na tela (ex.: duas mortes seguidas)
-	var stacked := get_children().filter(func(c): return c.has_meta("banner")).size()
+	var y := 70.0
+	for c in get_children():
+		if c.has_meta("banner") and c is Control:
+			y += (c as Control).size.y + 8.0
 	panel.set_meta("banner", true)
-	panel.offset_top = 70.0 + 96.0 * stacked
+	panel.offset_top = y
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var v := VBoxContainer.new()
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(v)
+	var ilu := Icones.ilustracao(ilustracao if ilustracao != "" else _banner_ilustracao(title))
+	if ilu:  # Prompt 24: a cena do evento em cima do título
+		var img := TextureRect.new()
+		img.texture = ilu
+		img.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		img.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		img.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(img)
 	var t := _label(title, 26, COLOR_TITLE)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	t.add_theme_color_override("font_outline_color", Color(0.25, 0.12, 0.03))
 	t.add_theme_constant_override("outline_size", 5)
-	v.add_child(t)
+	var linha := HBoxContainer.new()  # Prompt 21: o ícone do alerta do lado do título
+	linha.alignment = BoxContainer.ALIGNMENT_CENTER
+	linha.add_theme_constant_override("separation", 10)
+	linha.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_child(linha)
+	var ic := Icones.tex(_banner_icon(title))
+	if ic:
+		var tr := _icon(ic)
+		tr.custom_minimum_size = Vector2(32, 32)
+		linha.add_child(tr)
+	linha.add_child(t)
 	var st := _label(subtitle, 14, COLOR_TEXT)
 	st.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(st)
@@ -868,6 +924,7 @@ func _refresh_top_bar(workers: Array) -> void:
 		food_color = COLOR_HUNGER_LOW
 	_set_chip("food", "ACABOU" if stock <= 0.0 else "%d/%d" % [int(stock), int(capacity)], food_color,
 		"Na cozinha." + ("\nNinguém cozinhando!" if cooks == 0 else ""))
+	_chip_icon("food", "al_falta_comida" if stock <= 0.0 else "comida")  # Prompt 21
 
 	# camas
 	var beds := 0
@@ -921,6 +978,7 @@ func _refresh_top_bar(workers: Array) -> void:
 		var alert: bool = _sun.wave_active() or (_sun.warned and _sun.time_to_wave() >= 0.0)
 		_set_chip("sun", ("ONDA SOLAR!" if _sun.wave_active() else _sun.season_name() + (" — onda chegando!" if alert else "")),
 			COLOR_HUNGER_BAD if alert else COLOR_DIM, _sun.forecast_text())
+		_chip_icon("sun", "al_onda_solar" if alert else Icones.ESTACAO[clampi(_sun.season_index(), 0, 3)])
 		if _sun_overlay == null:
 			_sun_overlay = ColorRect.new()
 			_sun_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1023,6 +1081,7 @@ func _refresh_order_bar(workers: Array) -> void:
 		_selection_caption.text = "%d selecionado%s: %s%s  —  escolha a função" % [
 			sel.size(), "s" if sel.size() > 1 else "", ", ".join(names), more]
 		_selection_caption.add_theme_color_override("font_color", COLOR_TITLE)
+	_update_portrait(sel)
 
 
 func _refresh_worker_rows(workers: Array) -> void:
@@ -1121,6 +1180,182 @@ func _refresh_panels() -> void:
 		panel.refresh()
 
 
+# =================================================================== retrato (Prompt 23)
+var _corte: CanvasLayer
+var _portrait_card: PanelContainer
+var _portrait_img: TextureRect
+var _portrait_name: Label
+var _portrait_info: Label
+
+
+## Cartão com o retrato de quem está selecionado (um só), no canto de baixo à esquerda.
+func _update_portrait(sel: Array) -> void:
+	var w = sel[0] if sel.size() == 1 and sel[0].is_in_group("ipezinhos") else null
+	var tex: Texture2D = Retratos.de(w) if w != null else null
+	if tex == null:
+		if _portrait_card:
+			_portrait_card.visible = false
+		return
+	if _portrait_card == null:
+		_portrait_card = PanelContainer.new()
+		_portrait_card.add_theme_stylebox_override("panel", UiSkin.dica() if UiSkin.ok() else _panel_style())
+		_portrait_card.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+		_portrait_card.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		_portrait_card.offset_left = SIDE_MARGIN
+		_portrait_card.offset_bottom = -SIDE_MARGIN - 4.0
+		_portrait_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_portrait_card)
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 8)
+		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_portrait_card.add_child(h)
+		_portrait_img = TextureRect.new()
+		_portrait_img.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_portrait_img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_portrait_img.custom_minimum_size = Vector2(96, 96)  # 48 px x2 (pixel inteiro)
+		_portrait_img.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.add_child(_portrait_img)
+		var v := VBoxContainer.new()
+		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.add_child(v)
+		_portrait_name = _label("", 14, COLOR_TITLE)
+		v.add_child(_portrait_name)
+		_portrait_info = _label("", 11, COLOR_DIM)
+		v.add_child(_portrait_info)
+	_portrait_card.visible = true
+	_portrait_img.texture = tex
+	_portrait_name.text = _worker_name(w)
+	var job_name: String = w.job if String(w.job) != "" else "sem função"
+	_portrait_info.text = "%s
+%s" % [job_name.capitalize() if job_name != "sem função" else job_name, {"ferido": "machucado", "bravo": "zangado",
+		"cansado": "cansado", "contente": "contente", "neutro": "tranquilo"}.get(Retratos.expressao(w), "")]
+
+
+# =================================================================== ícones (Prompt 21)
+## Ícone de cada faixa de aviso, pelo título.
+const BANNER_ICONS := [["INVASÃO", "al_invasao"], ["ROUBO", "al_invasao"], ["ONDA SOLAR", "al_onda_solar"],
+	["GREVE ENCERRADA", "animo"], ["GREVE", "greve"], ["ÚLTIMO AVISO", "greve"], ["REATOR", "al_reator"],
+	["ROBÔ", "it_robo"], ["FERRUGENTO", "it_robo"], ["ACHADO", "solarita"], ["MORREU", "ferido_grave"], ["CAÍDO", "ferido_grave"],
+	["FESTA", "animo"], ["PESQUISA", "pesquisador"], ["ESCAVADEIRA", "minerador"], ["ABISMO", "al_reator"],
+	["FOME", "al_falta_comida"], ["COMIDA", "al_falta_comida"], ["PARADA", "al_obra_parada"], ["VILA", "construir"]]
+
+
+## Ilustração de cada faixa de aviso, pelo título (Prompt 24).
+const BANNER_ILUSTRA := [["ROBÔ ANTIGO", "robo_achado"], ["ACHADO", "reator_achado"], ["INVASÃO", "invasao"],
+	["ROUBO", "invasao"], ["GREVE!", "greve"], ["FESTA", "festa"], ["ONDA SOLAR", "onda_solar"], ["ABISMO", "abismo"],
+	["ACIDENTE", "acidente_mina"]]
+
+
+func _banner_ilustracao(title: String) -> String:
+	for b in BANNER_ILUSTRA:
+		if title.to_upper().contains(b[0]):
+			return b[1]
+	return ""
+
+
+func _banner_icon(title: String) -> String:
+	for b in BANNER_ICONS:
+		if title.to_upper().contains(b[0]):
+			return b[1]
+	return ""
+
+
+## O ícone novo (24 px na barra de cima; 32 px na de baixo) ou, sem ele, o de antes.
+func _ic(nome: String, antes: Texture2D, pequeno := true) -> Texture2D:
+	var t := Icones.tex(nome, pequeno) if nome != "" else null
+	return t if t != null else antes
+
+
+func _chip_icon(id: String, nome: String) -> void:
+	var c: Dictionary = _chips.get(id, {})
+	var t := Icones.tex(nome, true)
+	if c.get("icon") != null and t != null and c.icon.texture != t:
+		c.icon.texture = t
+
+
+# =================================================================== velocidade (Prompt 20/21)
+const SPEEDS := [0.0, 1.0, 2.0, 3.0]
+var _speed_buttons: Array[Button] = []
+
+
+## Pausa, 1x, 2x, 3x (Engine.time_scale): botões pequenos no canto da barra de cima.
+func _build_speed(row: HBoxContainer) -> void:
+	if Icones.tex("vel_1") == null:
+		return
+	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	row.add_child(box)
+	for i in SPEEDS.size():
+		var b := Button.new()
+		b.toggle_mode = true
+		b.focus_mode = Control.FOCUS_NONE
+		b.icon = Icones.tex(["vel_pausa", "vel_1", "vel_2", "vel_3"][i])
+		b.custom_minimum_size = Vector2(30, 28)
+		b.tooltip_text = ["Pausar o tempo (sem menu)", "Velocidade normal", "Velocidade 2x", "Velocidade 3x"][i]
+		if UiSkin.ok():
+			UiSkin.aplica_botao(b, true)
+		b.pressed.connect(func():
+			Audio.click()
+			set_speed(SPEEDS[i]))
+		box.add_child(b)
+		_speed_buttons.append(b)
+	_mark_speed()
+
+
+## O controle de velocidade mudou o tempo? (só então volta pro normal ao sair da partida: quem
+## mais mexe no Engine.time_scale, como o teste de save, decide sozinho)
+static var _speed_mexeu := false
+
+
+func _exit_tree() -> void:
+	if _speed_mexeu:
+		_speed_mexeu = false
+		Engine.time_scale = 1.0  # (saindo da partida: o menu e a próxima partida voltam no normal)
+
+
+func set_speed(v: float) -> void:
+	Engine.time_scale = v
+	_speed_mexeu = not is_equal_approx(v, 1.0)
+	_mark_speed()
+
+
+func _mark_speed() -> void:
+	for i in _speed_buttons.size():
+		_speed_buttons[i].set_pressed_no_signal(is_equal_approx(Engine.time_scale, SPEEDS[i]))
+
+
+# =================================================================== cursor (Prompt 20)
+var _cursor_now := ""
+var _cursor_cd := 0.0
+
+
+## Cursor pelo que está embaixo do mouse: construir/proibido com o posicionador, atacar em cima de
+## criatura, selecionar em cima de ipezinho/robô; senão a seta.
+func _update_cursor(delta: float) -> void:
+	if not UiSkin.ok():
+		return
+	_cursor_cd -= delta
+	if _cursor_cd > 0.0:
+		return
+	_cursor_cd = 0.1
+	var want := "normal"
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer and placer.get("active"):
+		want = "construir" if String(placer.get("_reason")) == "" else "proibido"
+	elif get_viewport().gui_get_hovered_control() == null:
+		var iso := get_tree().get_first_node_in_group("iso_view") as Node2D
+		if iso and iso.get("enabled"):
+			var n = iso.pick(iso.get_global_mouse_position()).get("node")
+			if n != null and is_instance_valid(n):
+				if n.is_in_group("criaturas"):
+					want = "atacar"
+				elif n.is_in_group("ipezinhos") or n.is_in_group("robos"):
+					want = "selecionar"
+	if want != _cursor_now:
+		_cursor_now = want
+		UiSkin.cursor(want)
+
+
 # =================================================================== helpers de estilo
 # (usados também pelas janelas dos prédios: _label, _button, _bar, _panel_style, _row_style)
 func _button(text: String) -> Button:
@@ -1130,6 +1365,9 @@ func _button(text: String) -> Button:
 	b.add_theme_font_size_override("font_size", 13)
 	b.add_theme_color_override("font_color", COLOR_TEXT)
 	b.add_theme_color_override("font_disabled_color", Color(0.5, 0.46, 0.42))
+	if UiSkin.ok():
+		UiSkin.aplica_botao(b)  # Prompt 20: tábua com borda de ferro (4 estados)
+		return b
 	var states := {
 		"normal": Color(0.3, 0.2, 0.1),
 		"hover": Color(0.42, 0.28, 0.12),
@@ -1156,6 +1394,8 @@ func _label(text: String, size: int, color: Color) -> Label:
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", color)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if size >= 18 and color == COLOR_TITLE:
+		UiSkin.usa_fonte(l, "titulo", 64 if size >= 26 else 32)  # Prompt 22: cabeçalhos e faixas na fonte de título
 	return l
 
 
@@ -1171,12 +1411,27 @@ func _bar(fill_color: Color) -> ProgressBar:
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = fill_color
 	fill.set_corner_radius_all(2)
+	if UiSkin.ok():  # Prompt 20: aro de ferro fino e o recheio com a faixa de luz em cima
+		bg.set_corner_radius_all(0)
+		bg.border_color = Color(0.36, 0.3, 0.26)
+		bg.set_border_width_all(1)
+		bg.border_width_top = 2
+		bg.border_color = Color(0.3, 0.25, 0.22)
+		fill.set_corner_radius_all(0)
+		fill.expand_margin_left = -1
+		fill.expand_margin_right = -1
+		fill.expand_margin_top = -2
+		fill.expand_margin_bottom = -1
+		fill.border_width_top = 1
+		fill.border_color = fill_color.lightened(0.35)
 	bar.add_theme_stylebox_override("background", bg)
 	bar.add_theme_stylebox_override("fill", fill)
 	return bar
 
 
-func _panel_style() -> StyleBoxFlat:
+func _panel_style() -> StyleBox:
+	if UiSkin.ok():
+		return UiSkin.painel()  # Prompt 20: tábuas escuras com moldura de ferro e rebites nos cantos
 	var s := StyleBoxFlat.new()
 	s.bg_color = COLOR_PANEL
 	s.border_color = COLOR_BORDER

@@ -1,0 +1,34 @@
+{
+ "cacador/colher": {
+  "group": "96937edb-13c6-42b0-af36-c48cec4da40a",
+  "quadros": 6
+ },
+ "cacadora/colher": {
+  "group": "2080f38b-8dcd-4a13-ada4-1f823819b9ce",
+  "quadros": 6
+ },
+ "guarda/treinar": {
+  "group": "eba33872-4850-4b0d-8753-0ca68361fa16",
+  "quadros": 6
+ },
+ "guarda/atacar_lanca": {
+  "group": "7f09c5ec-a0f8-44f3-872e-e36e2046384e",
+  "quadros": 6
+ },
+ "guarda/atacar_besta": {
+  "group": "e8d0d735-2de3-492e-9375-d0505b07f5dc",
+  "quadros": 6
+ },
+ "guarda_mulher/treinar": {
+  "group": "2d981d32-5f5a-4732-9a95-6df72bb276d6",
+  "quadros": 6
+ },
+ "guarda_mulher/atacar_besta": {
+  "group": "74cf8f4c-cb12-4793-9e39-175522069ec0",
+  "quadros": 6
+ },
+ "guarda_mulher/atacar_lanca": {
+  "group": "22b3928b-6979-4e71-88ee-e7c57a7f52fb",
+  "quadros": 6
+ }
+}

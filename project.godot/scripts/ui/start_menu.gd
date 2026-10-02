@@ -12,6 +12,7 @@ extends Control
 ## - Backups (N): lista os backups (data/hora + resumo) e carrega qualquer um.
 ## Visual propositalmente simples (funcional primeiro).
 
+const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const BG := Color(0.05, 0.045, 0.06)
 const COLOR_TITLE := Color(1.0, 0.8, 0.35)
 const COLOR_TEXT := Color(0.92, 0.88, 0.8)
@@ -23,6 +24,8 @@ var _chosen_backup: String = ""
 
 
 func _ready() -> void:
+	if UiSkin.ok():
+		get_tree().root.theme = UiSkin.theme()  # Prompt 20: a pele nova (botões, painéis, dicas)
 	var status: String = SaveManager.save_status()
 	if status == "none" and SaveManager.list_backups().is_empty():
 		SaveManager.start_new_game.call_deferred()
@@ -36,19 +39,39 @@ func _build(status: String) -> void:
 	bg.color = BG
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	add_child(preload("res://scripts/ui/menu_fundo.gd").new())  # Prompt 26: a key art animada
 
+	var logo_tex: Texture2D = load("res://assets/game/ui/titulo/logo.png") if ResourceLoader.exists("res://assets/game/ui/titulo/logo.png") else null
+	if logo_tex:  # Prompt 26: o logo em cima, no meio (1,5x: na tela de 1080p vira 2,25... fica 3x/2)
+		var logo := TextureRect.new()
+		logo.texture = logo_tex
+		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		logo.set_anchors_preset(Control.PRESET_CENTER_TOP)
+		logo.offset_left = -logo_tex.get_width() * 0.75
+		logo.offset_right = logo_tex.get_width() * 0.75
+		logo.offset_top = 28.0
+		logo.offset_bottom = 28.0 + logo_tex.get_height() * 1.5
+		logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(logo)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.offset_top = 150.0 if logo_tex else 0.0
 	add_child(center)
+	var moldura := PanelContainer.new()
+	moldura.add_theme_stylebox_override("panel", UiSkin.painel(10))
+	center.add_child(moldura)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 14)
 	box.custom_minimum_size = Vector2(360, 0)
-	center.add_child(box)
+	moldura.add_child(box)
 
-	var title := _label("DEEP IRON", 40, COLOR_TITLE)
-	title.add_theme_color_override("font_outline_color", Color(0.25, 0.12, 0.03))
-	title.add_theme_constant_override("outline_size", 6)
-	box.add_child(title)
+	if logo_tex == null:
+		var title := _label("DEEP IRON", 40, COLOR_TITLE)
+		UiSkin.usa_fonte(title, "titulo", 64)  # Prompt 22
+		title.add_theme_color_override("font_outline_color", Color(0.25, 0.12, 0.03))
+		title.add_theme_constant_override("outline_size", 6)
+		box.add_child(title)
 
 	if status == "ok":
 		var s: Dictionary = SaveManager.save_summary()
@@ -91,7 +114,7 @@ func _build(status: String) -> void:
 		box.add_child(backups_button)
 		var backups_panel := _build_backups(backups, status)
 		backups_panel.visible = false
-		center.add_child(backups_panel)
+		moldura.add_child(backups_panel)  # (dentro da mesma moldura)
 		backups_button.pressed.connect(func():
 			Audio.click()
 			box.visible = false
@@ -104,7 +127,7 @@ func _build(status: String) -> void:
 	box.add_child(settings_button)
 	var settings: VBoxContainer = preload("res://scripts/ui/settings_panel.gd").new()
 	settings.visible = false
-	center.add_child(settings)
+	moldura.add_child(settings)
 	settings_button.pressed.connect(func():
 		Audio.click()
 		box.visible = false

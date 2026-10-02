@@ -3,6 +3,7 @@ extends CanvasLayer
 ## Pausa o jogo; Continuar, Configurações, Salvar, Menu inicial e Sair.
 ## "Menu inicial" e "Sair" salvam antes (mesmo save do F5).
 
+const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const SettingsPanel := preload("res://scripts/ui/settings_panel.gd")
 const START_MENU := "res://scenes/ui/start_menu.tscn"
 const COLOR_TITLE := Color(1.0, 0.8, 0.35)
@@ -27,12 +28,15 @@ func _ready() -> void:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	_panel = PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = COLOR_PANEL
-	style.border_color = COLOR_BORDER
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	style.set_content_margin_all(18)
+	var style: StyleBox = UiSkin.painel(18)  # Prompt 20: a pele nova
+	if not UiSkin.ok():
+		var f := StyleBoxFlat.new()
+		f.bg_color = COLOR_PANEL
+		f.border_color = COLOR_BORDER
+		f.set_border_width_all(2)
+		f.set_corner_radius_all(4)
+		f.set_content_margin_all(18)
+		style = f
 	_panel.add_theme_stylebox_override("panel", style)
 	center.add_child(_panel)
 

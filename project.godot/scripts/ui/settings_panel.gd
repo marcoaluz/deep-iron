@@ -4,6 +4,7 @@ extends VBoxContainer
 
 signal back_pressed
 
+const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const Settings := preload("res://scripts/core/settings.gd")
 const COLOR_TITLE := Color(1.0, 0.8, 0.35)
 const COLOR_TEXT := Color(0.92, 0.88, 0.8)
@@ -15,6 +16,7 @@ func _ready() -> void:
 	add_theme_constant_override("separation", 10)
 	custom_minimum_size = Vector2(360, 0)
 	var title := _label("CONFIGURAÇÕES", 22, COLOR_TITLE)
+	UiSkin.usa_fonte(title, "titulo", 32)  # Prompt 22
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(title)
 	_slider("Volume geral", "master_volume")

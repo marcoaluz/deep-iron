@@ -2,6 +2,8 @@ extends CanvasLayer
 ## Vitória: o escudo solar ficou pronto (criado pelo sun.gd). Pausa o jogo;
 ## "Continuar jogando" volta pra partida (sem ondas solares daqui pra frente).
 
+const Icones := preload("res://scripts/ui/icones.gd")
+const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const START_MENU := "res://scenes/ui/start_menu.tscn"
 const COLOR_TITLE := Color(0.6, 0.9, 1.0)
 const COLOR_TEXT := Color(0.92, 0.88, 0.8)
@@ -22,12 +24,15 @@ func _ready() -> void:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.07, 0.1, 0.96)
-	style.border_color = Color(0.4, 0.7, 0.9)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	style.set_content_margin_all(22)
+	var style: StyleBox = UiSkin.painel(18)  # Prompt 20: a pele nova
+	if not UiSkin.ok():
+		var f := StyleBoxFlat.new()
+		f.bg_color = Color(0.05, 0.07, 0.1, 0.96)
+		f.border_color = Color(0.4, 0.7, 0.9)
+		f.set_border_width_all(2)
+		f.set_corner_radius_all(4)
+		f.set_content_margin_all(22)
+		style = f
 	panel.add_theme_stylebox_override("panel", style)
 	center.add_child(panel)
 	_box = VBoxContainer.new()
@@ -38,6 +43,15 @@ func _ready() -> void:
 
 
 func setup(stats: Dictionary) -> void:
+	var ilu := Icones.ilustracao("escudo_vitoria")
+	if ilu:  # Prompt 24/26: a cena (2x, pixel inteiro)
+		var img := TextureRect.new()
+		img.texture = ilu
+		img.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		img.custom_minimum_size = ilu.get_size() * 2.0
+		_box.add_child(img)
 	_label("A VILA ESTÁ A SALVO!", 30, COLOR_TITLE)
 	var text := _label(
 		"O escudo solar acendeu sobre a mina. Pela primeira vez desde a explosão, o sol "

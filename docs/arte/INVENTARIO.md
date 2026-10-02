@@ -25,12 +25,12 @@ prompts 0–31).
 | Elenco: mineradora, guarda (h/m), médico (h/m), engenheiro (h/m), caçador (h/m), pesquisador (h/m), lenhador (h/m), sem função (h/m), cozinheiro (h/m) = 17 | 1 | **integrado** (Prompt 29 parte 3) | 3 tons por paleta; corpo forte/magro/gordinho/cheinho; mulheres 3–4 px mais baixas (corte de linhas) | 8 paradas, 4 andando | caminhada + 1 de trabalho por função (sem função: nenhuma) | 515 + 91 (feito) |
 | Caçadora "com arco" (referência pro visual com arco) | 1 | gerado (guardada em `cacadora/com_arco_ref/`) | — | 8 | caminhada | incluído |
 | Animações de trabalho (1 por função, h/m): minerar, construir/martelar, atacar com porrete, atender ajoelhado, cozinhar (tigela no braço), caçar com arco (só com a Oficina), cortar lenha, pesquisar na bancada | 1 | **integrado** | 16 | SE+NE +espelho (4) | 8 quadros cada | ~97 (feito) |
-| Colher fruta (caçador sem arco), treinar no campo | 2 | falta | h/m | SE+NE +espelho | — | ~30 |
+| Colher fruta (caçador sem arco), treinar no campo | 2 | **integrado** (pendência feita junto do Prompt 26) | h/m | SE+NE +espelho | colher, treinar | ~20 (feito) |
 | Animações comuns (18): comer, ferido (tala), deitar (morte sóbria / dormir na rua), mancar (sad-walk) | 2 | **integrado** | 18 | SE+NE +espelho | 4 × 18 | ~345 (feito) |
 | Carregar (caminhada + saco em sobreposição, `itens/saco_costas.png`) | 2 | **integrado** | 18 + 6 trajes | 4 | caminhada | 0 |
 | Festa (pulinho), respiração, curativo | 2 | código | — | — | — | 0 |
 | Dormindo / na taverna / na enfermaria (dentro do prédio) | 2 | não precisa | — | — | some dentro | 0 |
-| Greve: placa na mão | 2 | falta | — | 2 + espelho | parado + placa | incluído |
+| Greve: placa na mão | 2 | **integrado** (Prompt 18: a placa erguida na mão, por cima do boneco) | — | 4 | qualquer | 1 (feito) |
 | Crianças (reservado: "Escola — pra quando a vila tiver crianças") | 31 | falta | menino/menina, 3 tons | 8/4 | caminhada | ~100 |
 
 ## 2. Trajes e acessórios
@@ -41,7 +41,7 @@ prompts 0–31).
 | Trajes de perigo: gás (amarelo), calor (prata), radiação (oliva), h/m | 3 | **integrado** (andar e minerar) | 6 | 8 paradas, 4 andando | andar, minerar, carregar (saco) | ~220 (feito) |
 | Desgaste das peças (novo/gasto/rasgado) | 3 | só ícone na UI (sem arte) | — | — | — | 0 |
 | Ícones de vestiário (3 trajes + casaco), recortados da arte | 3 | **gerado** | 4 | — | — | 0 |
-| Chapéu de cozinheiro solto (`cook_hat.png`, ícone) | 21 | falta | — | — | — | incluído |
+| Chapéu de cozinheiro solto (`cook_hat.png`, ícone) | 21 | não precisa (o ícone do cozinheiro é a panela) | — | — | — | 0 |
 | Acessórios antigos (bota, lenço, detalhe: `acc_*.png`) | 3 | **substituído** | a variedade agora vem das roupas por função + tons + corpos | — | — | 0 |
 
 ## 3. Ferramentas e armas (Prompt 4, feito)
@@ -50,16 +50,16 @@ prompts 0–31).
 |---|---|---|---|---|
 | Picareta, picareta de aço, machado, martelo, broca manual, lampião, arco (+aljava) | 4 | **integrado** (nas costas; broca e lampião ainda não) | base, gasta, quebrada, no chão, ícone; nas costas (regra da picareta) | 40 |
 | Porrete, lança de ferro, besta de cobre, lança de prata, arma quebrada | 4 | **integrado** (nas costas; arma quebrada ainda não) | idem | 20 |
-| Arma trocada na mão no ataque (lança/besta no lugar do porrete) | 29 | falta | posição da mão por quadro (integração) ou animação por arma (~8 cada) | 0–48 |
-| Cesto de coleta, placa de greve (sobreposição) | 14 | falta | — | ~20 |
+| Arma trocada na mão no ataque (lança/besta no lugar do porrete) | 29 | **integrado** (animação de ataque com lança e com besta, h/m; a lança de prata usa a da lança) | 4 | ~24 (feito) |
+| Cesto de coleta, placa de greve (sobreposição) | 14 | **integrado** (Prompt 18: na mão do caçador sem arco / do grevista) | — | 2 (feito) |
 
 ## 4. Criaturas, robô e animais
 
 | Item | Prompt | Status | Variações | Direções | Animações | Gerações |
 |---|---|---|---|---|---|---|
-| Lumívoro (invasor) | 16–17 | falta | — | 4 | andar, atacar, morrer (sóbrio) | ~35 |
-| Ferrugento (invasor) | 16–17 | falta | — | 4 | andar, atacar, morrer | ~35 |
-| **Criaturas mais fortes + criatura mestre (chefe)** (pedido do Marco) | 16–17 | falta (conceito com checkpoint) | — | 4 | andar, atacar, morrer | ~120 |
+| Lumívoro (invasor) | 16–17 | **integrado** (linha A, mutado da radiação) | forma forte: **bruto** | 4 (SE/NE + espelho) | parado, andar, atacar, dano, cair (poeira) | ~70 (feito) |
+| Ferrugento (invasor) | 16–17 | **integrado** (linha B, máquina de antes) | forma forte: **carregador**; caçamba cheia ao roubar | 4 | parado, andar, atacar, dano, cair/desligar | ~70 (feito) |
+| **Criaturas mais fortes + criatura mestre (chefe)** (pedido do Marco) | 16–17 | fortes **integradas** (onda 4+, 1 a cada 3); chefe (matriarca/colosso) **só conceito** (o jogo não tem chefe) | — | — | — | 18 conceito (feito) |
 | Robô antigo GIGANTE (218 px, ~80% da casa): achado + arrastado + 3 estágios de conserto (deitado, mesma âncora) + ativo; fluxo em prompt05/FLUXO_ROBO.md | 5 | **integrado** (estados + andar/atacar/desligar; dano ainda não) | 4 estados parados + retrato + ícone | 8 paradas, 4 andando | andar, atacar, dano, desligar/derrubado | ~425 (feito) |
 | Coelho + toca (coelho fora / só orelhas / toca vazia) | 15 | toca **integrada**; o coelho andando não existe no jogo | 8 dir. + andar, fugir, abatido; 3 estados da toca | ~40 (feito) |
 | **Javali** + toca | 15 | **gerado** | 8 dir. + andar, fugir, abatido | ~25 (feito) |
@@ -137,13 +137,13 @@ prompts 0–31).
 | Tochas (parede, chão, apagada), lampiões, fogueira, braseiro, poste | 14 | tocha de chão (acesa animada/apagada) **integrada** | chama animada por script | ~20 (feito) |
 | Escora de madeira (`support_beam`, pesquisa "Escoramento") | 7 | **integrado** | 0 |
 | Placas com pictograma (caveira, raio, gás, perigo), postes, andaime, escada, varal, poço, banco, mesa, bigorna | 14 | placa de perigo **integrada** | — | ~25 (feito) |
-| Cova (`grave`), entulho | 14/8 | entulho **gerado** (Prompt 8); cova **falta** | — | ~20 |
+| Cova (`grave`), entulho | 14/8 | entulho **gerado** (Prompt 8); cova **integrada** (Prompt 18, no cemitério da enfermaria) | — | 1 (feito) |
 | Trilhos + vagonete (vazio/cheio), caixotes, barris, sacos, sucata, pneus, corrente, corda | 14 | **integrado** em parte (Prompt 30: vagonete, caixotes, barris, sacos, pedra, tijolo, poço, banco, placa, caixote, como na montagem aprovada) | — | ~40 (feito) |
 | **Trilho com vagonete da boca da mina até o Armazém da pedreira** (aceito, `MAPA_VISAO.md`) | 14 / 27 | **integrado** (trilho no terreno; vagonete cheio em cima, Prompt 30) | incluído |
 | **Guindaste de madeira da pedreira** (aceito) | 14 | **integrado** (Prompt 30, terraço do meio) | — | 20 (feito) |
 | **Cerca de estacas** (aceito) | 12/11 | paliçada **integrada** (Prompt 29 parte 2); cerca da horta **gerada** | — | 0 |
 | **Vila em 2–3 terraços de pedreira** com escadas entre eles (aceito) | 27 | **integrado** (Prompt 29 p1) | 0 |
-| Explosivos (pesquisa), antena do rádio (pesquisa "Rádio da vila") | 14 | falta | ~40 |
+| Explosivos (pesquisa), antena do satélite (pesquisa "Satélite") | 14 | **integrados** (Prompt 18: caixote perto do poço; antena ao lado do laboratório, com pulsos) | 2 (feito) |
 | Pilhas de recurso P/M/G (pedra, tijolo, comida, couro, carvão, aço) + destroços pré-colapso e ossos | 14 | **gerado** | — | ~40 (feito) |
 | Sombra | 19 | **código** (gerada da pegada, regra 7) | 0 |
 
@@ -151,39 +151,61 @@ prompts 0–31).
 
 | Item | Prompt | Status | Gerações |
 |---|---|---|---|
-| Clima: folha, pólen, chuva, neve (partícula por estação) | 18 | falta | ~0–10 (desenho no workbench, grátis) |
-| Poeira de obra, faíscas (escavadeira/forja), fumaça de chaminé, explosão, brilho da onda solar | 18 | falta | ~30 |
+| Clima: folha, pólen, chuva, neve (partícula por estação) + neblina | 18 | **integrado** (textura de pixel, pixel inteiro em qualquer zoom; neblina de manhã e na chuva) | ~4 (feito) |
+| Poeira, lascas, serragem, faíscas, fumaça, gás, calor, radiação, gotas, pedras (acidente), fogo animado, onda solar, domo do escudo, festa (bandeirinhas, fogos, confete), greve (barril, placas), marcadores (seleção, destino, obra) | 18 | **integrado** (`iso_fx.gd`; relatório `prompt18/`) | ~37 (feito) |
 | Luzes (janelas, forja, tochas, cabine, giroflex) | 19 | **integrado** (Prompt 19: ponto de luz por desenho, texturas por tipo, janelas acesas, lava, tom por estação) | 0 |
 
 ## 11. Interface
 
 | Item | Prompt | Status | Gerações |
 |---|---|---|---|
-| Ícones de recurso: créditos, minério, madeira, comida, 5 minérios, pontos de pesquisa | 21 | falta | ~25 |
-| Ícones de necessidade/status: fome, sono, ânimo, raiva, curativo, frio (sem casaco), greve, cozinheiro, bilhete, cadeado | 21 | falta | ~25 |
-| Ícones de pesquisa (11: carrinhos, explosivos, escoramento, trajes, medicina, rádio, hidroponia, estudo solar, satélite, holofotes, escudo) | 21 | falta | ~25 |
-| Ícones de itens/armas/ferramentas (~12) | 21 | falta | ~25 |
-| Cursor(es) | 20 | falta | incluído |
-| Painel (moldura 9-slice), botões, chips do HUD, abas; hoje tudo desenhado por código | 20 | falta | ~50 |
-| Cartões do menu de construção (miniatura = a própria arte do prédio, reduzida) | 20 | falta | 0 (sai dos prédios) |
-| Fonte pixel (hoje: a padrão do Godot) | 22 | falta | ~30 |
-| Menus: início, pausa, opções (hoje só texto) | 20 | falta | incluído |
+| Ícones de recurso: créditos, minério, madeira, comida, 5 minérios, camas, ânimo, saúde, estações | 21 | **integrado** (barra de cima) | ~20 (feito) |
+| Ícones de necessidade/status: fome, frio, cansaço, ferido leve/grave, greve, zanga (+ 16 px sobre a cabeça), alertas (invasão, onda solar, falta de comida, obra parada, reator) | 21 | **integrado** | ~20 (feito) |
+| Ícones de pesquisa (11: carrinhos, explosivos, escoramento, trajes, medicina, rádio, hidroponia, estudo solar, satélite, holofotes, escudo) | 21 | **integrado** (laboratório) | ~14 (feito) |
+| Ícones de itens/armas/ferramentas e funções (9 + construir, sem função, turno extra) | 21 | **integrado** (ferramentas/armas/trajes reaproveitados dos Prompts 3–5; funções geradas) | ~12 (feito) |
+| Cursores: normal, construir, proibido, atacar, selecionar | 20 | **integrado** (troca pelo que está embaixo do mouse) | 5 (feito) |
+| Painel (moldura 9-slice), botões (4 estados), botão de ícone, abas, barras, dica, slider, caixa de marcar, controle de velocidade | 20 | **integrado** (kit do UI Template Pro; `ui_skin.gd` + tema da raiz) | 40 (feito) |
+| Cartões do menu de construção (normal, trancado com cadeado, em breve; miniatura = render reduzido do prédio) | 20/21 | **integrado** | 0 |
+| Fonte pixel: texto (com todos os acentos, números de largura fixa) e título (estêncil de ferro) | 22 | **integrado** em cabeçalhos, faixas e números do HUD (o texto corrido segue na padrão: ver `prompt22/`) | 50 (feito) |
+| Menus: início (key art animada + logo), pausa, opções, fim de jogo, vitória | 20/26 | **integrado** (pele nova) | incluído |
 
 ## 12. Enfeite (depois que o jogo roda com a arte nova)
 
 | Item | Prompt | Status | Gerações |
 |---|---|---|---|
-| Retratos do elenco (18) + criaturas | 23 | falta | ~200 |
-| Imagens de evento (achado, onda solar, invasão, greve, morte, marco da vila...) | 24 | falta | ~200 |
-| Telas: título, carregando, vitória ("VITÓRIA"), derrota ("EXPULSO DA VILA") | 26 | falta | ~160 |
+| Retratos do elenco (18) + criaturas, 5 expressões, 3 tons de pele | 23 | **integrado** (cartão do ipezinho selecionado) | ~498 (feito) |
+| Imagens de evento (robô, reator, acidente, invasão, greve, festa, onda solar, abismo, vitória, derrota) | 24 | **integrado** (faixas de aviso, vitória, fim de jogo, janela de evento) | 200 (feito) |
+| Telas: título (key art + logo, fundo animado), carregando (5 cenas × 10 dicas), vitória, derrota | 26 | **integrado** | 80 (feito) |
+| Tela "Corte da mina" (vista lateral, F2) | 25 | **integrado** | 6 (feito) |
 
 ---
 
 ## Pendências
 
 - Nenhuma do Prompt 3: o casaco por função ficou completo (os 18, 2026-09-30).
+- Prompts 16–26 e as pendências dos Prompts 2, 14 e 29: feitos em 2026-10-01/02 (ver o registro abaixo).
 
 ## Plano de crédito
+
+**Atualização 2026-10-02 (Prompts 16 a 26 + pendências dos Prompts 2, 14 e 29), sem checkpoint
+(o Marco liberou ir até o fim):** saldo 1.359 → **209** (1.150 gastas).
+
+| Prompt | O quê | Gerações |
+|---|---|---|
+| 16 | conceito das criaturas (3 linhas × 3 tipos × 2): escolhidas A (mutados) e B (máquinas) | 18 |
+| 17 | Lumívoro, Ferrugento e as formas fortes (bruto, carregador): 5 animações × 4 direções; carga do roubo | ~142 |
+| 18 | partículas (por script + pixen), fogo animado, festa, greve, onda solar, domo, clima, neblina, marcadores; cova, explosivos, antena, cesto, placa de greve | ~37 |
+| 19 | (já feito) luz e noite | 0 |
+| 20 | kit de interface (9-slice), cursores, controle de velocidade, janela de evento | 45 |
+| 21 | 76 ícones (55 gerados + 11 refeitos + reaproveitados) e 15 prédios reduzidos | 66 |
+| 22 | 2 fontes pixel com acentos (montadas em .ttf por script) | 50 |
+| 23 | 18 retratos + 2 criaturas, 5 expressões, 3 tons | ~498 |
+| 24 | 10 ilustrações de evento | 200 |
+| 25 | corte da mina (4 faixas, escavadeira, gaiola) | 6 |
+| 26 + 2/29 | 2 key arts, logo por script, fundo animado, carregamento; colher fruta, treinar, ataque com lança e besta (h/m) | 82 (juntos) |
+
+Relatórios: `docs/arte/prompt16/` a `prompt26/`.
+
 
 **Atualização 2026-10-01 (Prompt 19, luz e noite):** feito sem geração. Texturas de luz por tipo
 (`assets/game/iso/luz/`), janelas acesas em 10 desenhos, pontos de luz em 19, lava no abismo, tom

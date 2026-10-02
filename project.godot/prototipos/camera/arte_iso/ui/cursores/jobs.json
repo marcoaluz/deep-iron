@@ -1,0 +1,37 @@
+{
+ "normal": {
+  "job": "13cb45b9-699d-4bf7-9308-03c75b4aef80",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/cursores\\normal.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "construir": {
+  "job": "cdc4366e-6468-4767-9cd3-135a726a20ac",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/cursores\\construir.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "proibido": {
+  "job": "32483bd7-93c2-4599-80ff-50a92a24e688",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/cursores\\proibido.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "atacar": {
+  "job": "465f0925-d673-4258-9123-f8aed345dd72",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/cursores\\atacar.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "selecionar": {
+  "job": "3291d87e-a5de-40fb-ac55-e7a22bae3326",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ui/cursores\\selecionar.png",
+  "ok": true,
+  "candidatos": 1
+ }
+}

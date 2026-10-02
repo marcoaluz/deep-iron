@@ -20,6 +20,7 @@ const IsoArt := preload("res://scripts/iso/iso_art.gd")
 const IsoBonecos := preload("res://scripts/iso/iso_bonecos.gd")
 const IsoLuz := preload("res://scripts/iso/iso_luz.gd")
 const IsoFx := preload("res://scripts/iso/iso_fx.gd")
+const Icones := preload("res://scripts/ui/icones.gd")
 const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 
 ## Tipos que não são desenho (física, navegação, som...): não espelha.
@@ -235,6 +236,8 @@ func _sync_props() -> void:
 		var list: Array = SYNC_BY_CLASS.get(s.get_class(), [])
 		if not list.is_empty():
 			_copy(s, d, list)
+		if _char != null and d is Sprite2D and d.texture != null:
+			_icone_novo(d)  # Prompt 21: ícone por cima da cabeça com o desenho novo
 	for pr in _pairs:
 		if pr[0] == src:
 			pr[1].position = Vector2.ZERO  # o pé já é a posição do espelho
@@ -772,6 +775,26 @@ func _draw() -> void:
 				draw_arc(Vector2.ZERO, r, TAU * i / n, TAU * (i + 1) / n, 3, Color(0.6, 1.0, 0.55, 0.13), 1.5)
 
 
+## Prompt 21: ícones antigos por cima da cabeça -> os novos (16 px), em px de arte (1:1).
+const ICONE_NOVO := {"bandage.png": "p_ferido", "anger.png": "p_zanga"}
+
+
+func _icone_novo(d: Sprite2D) -> void:
+	var nome: String = ICONE_NOVO.get(d.texture.resource_path.get_file(), "")
+	if nome == "":
+		return
+	var t := Icones.tex(nome)
+	if t == null:
+		return
+	d.texture = t
+	d.hframes = 1
+	d.vframes = 1
+	d.frame = 0
+	d.region_enabled = false
+	var gs: Vector2 = d.get_parent().global_transform.get_scale() if d.get_parent() is Node2D else scale
+	d.scale = Vector2(1.0 / maxf(absf(gs.x), 0.01), 1.0 / maxf(absf(gs.y), 0.01))
+
+
 ## Por cima da arte: barra de vida das criaturas e barrinha de progresso da obra (canteiro).
 func _draw_top() -> void:
 	if not is_instance_valid(src):
@@ -783,11 +806,24 @@ func _draw_top() -> void:
 		var eng: bool = src._obra.has_engineer() if src.get("_obra") else false
 		_top.draw_rect(Rect2(-26, y, 52, 5), Color(0.05, 0.04, 0.03, 0.85))
 		_top.draw_rect(Rect2(-25, y + 1, 50 * src.obra_progress(), 3), Color(1.0, 0.6, 0.25) if eng else Color(0.7, 0.5, 0.3))
+		var parada := Icones.tex("al_obra_parada", true)
+		if not eng and parada:  # Prompt 21: obra parada (sem engenheiro)
+			_top.draw_set_transform(Vector2(30, y - 4), 0.0, Vector2(1.0 / absf(scale.x), 1.0 / absf(scale.y)))
+			_top.draw_texture(parada, Vector2(0, -12))
+			_top.draw_set_transform(Vector2.ZERO)
 		return
 	if not src.is_in_group("criaturas"):
 		return
 	var hp = src.get("hp")
 	var max_hp = src.get("max_hp")
+	var alvo = src.get("_target")
+	var alerta := Icones.tex("p_alerta")
+	if alerta and _char != null and not src.get("_dying") and alvo != null and is_instance_valid(alvo) and alvo.is_in_group("ipezinhos"):
+		# Prompt 17/21: "!" em cima de quem está caçando alguém
+		var ya: float = -(_char_h / _view.S + 14.0)
+		_top.draw_set_transform(Vector2(0, ya), 0.0, Vector2(1.0 / absf(scale.x), 1.0 / absf(scale.y)))
+		_top.draw_texture(alerta, Vector2(-8, -16))
+		_top.draw_set_transform(Vector2.ZERO)
 	if hp == null or max_hp == null or src.get("_dying") or hp >= max_hp:
 		return
 	var w := 22.0

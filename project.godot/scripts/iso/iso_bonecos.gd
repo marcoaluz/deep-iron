@@ -162,6 +162,17 @@ static func pose(w: Node, iso_dir: int, clock: float) -> Dictionary:
 	elif float(w.get("_work_timer")) > 0.0 and work_anim(w) != "":
 		anim = work_anim(w)
 		with_item = false  # a ferramenta faz parte da animação de trabalho
+		# pendências dos Prompts 2 e 29: colher fruta, treinar no campo, o ataque com a arma dele
+		var st = w.get("_ai_state")
+		if st == "foraging" and not _find(fs, "colher", d).is_empty():
+			anim = "colher"
+		elif st == "training" and not _find(fs, "treinar", d).is_empty():
+			anim = "treinar"
+		elif anim == "atacar":
+			var arma := String(w.get("weapon")) if w.get("weapon") != null else ""
+			var a2: String = {"lanca": "atacar_lanca", "lanca_prata": "atacar_lanca", "besta": "atacar_besta"}.get(arma, "")
+			if a2 != "" and not _find(fs, a2, d).is_empty():
+				anim = a2
 	elif w.get("_ai_state") == "eating":
 		anim = "comer"
 		with_item = false
