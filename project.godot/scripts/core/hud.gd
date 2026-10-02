@@ -158,6 +158,7 @@ func _ready() -> void:
 	if UiSkin.ok():
 		get_tree().root.theme = UiSkin.theme()  # Prompt 20: a pele nova vale pra tudo (dicas, menus)
 	_main = get_parent()
+	_ferramentas_debug.call_deferred()
 	_economy = get_tree().get_first_node_in_group("economy")
 	_day_night = get_tree().get_first_node_in_group("day_night")
 	_hub = get_tree().get_first_node_in_group("village_hub")
@@ -1178,6 +1179,20 @@ func _refresh_panels() -> void:
 		# destaca o botão quando dá pra comprar/fabricar alguma coisa
 		button.add_theme_color_override("font_color", COLOR_TITLE if panel.has_available_action() else COLOR_TEXT)
 		panel.refresh()
+
+
+# =================================================================== debug (Bloco 52)
+## Painel de debug (F3) e telemetria: só em build de editor/debug (no executável de release não
+## existem). A telemetria também liga com [debug] telemetria=true no settings.cfg.
+func _ferramentas_debug() -> void:
+	if not is_inside_tree() or _main == null:
+		return
+	if OS.is_debug_build():
+		var dbg: CanvasLayer = preload("res://scripts/core/debug_panel.gd").new()
+		_main.add_child(dbg)
+		dbg.setup(_main)
+	if OS.is_debug_build() or Settings.get_value("debug", "telemetria", false):
+		_main.add_child(preload("res://scripts/core/telemetria.gd").new())
 
 
 # =================================================================== retrato (Prompt 23)

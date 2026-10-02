@@ -36,6 +36,12 @@ func _process(delta: float) -> void:
 				_passo = 2
 				_t = 0.0
 				print("SMOKE: partida aberta (%d ipezinhos), salvando" % get_tree().get_nodes_in_group("ipezinhos").size())
+				# Bloco 52: o painel de debug (F3) só existe em build de debug
+				var dbg := get_tree().current_scene.get_node_or_null("DebugPanel") if get_tree().current_scene else null
+				print("SMOKE: painel de debug %s (build de %s)" % ["presente" if dbg else "ausente", "debug" if OS.is_debug_build() else "release"])
+				if dbg != null and not OS.is_debug_build():
+					_falha("painel de debug no build de release")
+					return
 				if not sm.save_game("smoke"):
 					_falha("não salvou")
 		2:

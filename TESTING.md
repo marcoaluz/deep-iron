@@ -50,6 +50,15 @@ Precisa dos templates de exportação do 4.7.2 (`%APPDATA%\Godot\export_template
 O pacote não leva `tests/`, `prototipos/` nem `addons/gut/`. O workflow `.github/workflows/tests.yml`
 roda a suíte no GitHub (manual ou em push na `main`; opcional, leva ~1 h).
 
+## Balanceamento (Bloco 52)
+
+- **F3** no jogo (editor ou build de debug): painel com tempo x1/x4/x16, +créditos/minério/madeira/comida,
+  pular fase/dia/estação, invasão agora, curar todos, liberar pesquisas. No executável de release
+  não existe (o teste de fumaça do build confere).
+- **Telemetria:** a cada dia novo, uma linha em `user://telemetria/partida_<data>.csv` (build de debug,
+  ou `[debug] telemetria=true` no `settings.cfg`). Resumo: `python tools/resumo_telemetria.py <pasta>`.
+- **Onde mexer em cada valor:** `docs/BALANCEAMENTO.md` (gerado por `python tools/lista_balanceamento.py`).
+
 ## Pela linha de comando
 
 Da pasta `project.godot/` (troque o caminho do Godot pelo seu):
@@ -99,6 +108,7 @@ determinístico) só mudou o que o bloco pretendia — instruções no topo do a
 | `p18_efeitos.gd` | Prompt 18 — efeitos: texturas por papel nas partículas copiadas (serragem, fumaça, gás), tamanho em pixel inteiro, festa (bandeirinhas, fogos à noite), greve (barril, placas, placa na mão), satélite (antena), explosivos, onda solar, clima com textura, neblina, ar tremendo no calor, cova, cesto na mão, domo do escudo, tudo recolhido no fim |
 | `p2_pendencias.gd` | Pendências dos Prompts 2 e 29 — colher fruta, treinar e ataque com lança/besta nas 4 direções; escolha pelo estado (porrete, lança, lança de prata, besta) |
 | `b51_engenheiro_estresse.gd` | 51 — 50 ciclos de salvar/carregar com obras longas e 3 engenheiros em estados diferentes (parado, indo, construindo): todo engenheiro retoma em até 25 s de jogo; o vigia age quando força "sem avançar" e não age enquanto ele se aproxima (~10 min) |
+| `b52_debug_telemetria.gd` | 52 — painel de debug (F3, só em build de debug): tempo, recursos, pular dia, curar, pesquisas, invasão; telemetria: 10 dias = 10 linhas no CSV com as 21 colunas |
 | `p20_interface.gd` | Prompts 20–25 — pele (tema da raiz, botão/painel/cartão/aba 9-slice, cadeado, cursores), ícones (barra de cima, funções, prédios do menu), fontes (acentos, cabeçalho), velocidade, retrato (expressão pelo estado, cartão do selecionado), faixa com ilustração, janela de evento, corte da mina (4 andares, um boneco por ipezinho, clique seleciona) |
 | `../test_iso.gd` (GUT, rápido) | Prompt 28 — núcleo: projeção, verdade 3D, ordem incremental, raio da câmera, direção de losango |
 | `../test_iso_arte.gd` (GUT, rápido) | Prompt 28 — verificador "o sprite cabe na caixa" contra a arte dos prédios; Prompt 29 — toda a arte integrada (`assets/game/iso/predios/predios.json`) |

@@ -240,3 +240,7 @@ func test_p2_pendencias() -> void:
 
 func test_b51_engenheiro_estresse() -> void:
 	run_bloco("b51_engenheiro_estresse.gd")
+
+
+func test_b52_debug_telemetria() -> void:
+	run_bloco("b52_debug_telemetria.gd")
