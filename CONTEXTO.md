@@ -16,11 +16,11 @@ cristal verde/rubro, ventilador, Gosma e Magmante — `docs/NIVEIS_S2_S3.md`; `d
 `d1a32f6d`).
 **59:** já feito antes (Rota A). **65/66:** só relatório (65 espera decisão do Marco sobre crianças;
 66 adiado pelo próprio documento).
-**Falta:** "Itens de arte novos" do fim do documento (já feitos no 70/71: poças, lava, cachoeira, água,
-ventilador, pisos do S4/S5; faltam rampa em espiral, passarelas, pontes de corda, igreja, torre do
-relógio, casas enxaimel, rocha com ácido, borda de lago, reflexo do lago); no fim: suíte inteira, md5 do
-save real, build + fumaça, atualizar INVENTARIO/CONTEXTO e um relatório.
-PixelLab: tier 3, saldo ~9.400 (renova 2026-11-02). Ajudantes: `tools/pixellab/` (`pl.py`, `gen.py`,
+**Itens de arte novos:** feitos (`e4d775c8`). **Fechamento:** suíte 65 testes (64 + o `p20` corrigido),
+save real intacto (md5 `76C7403D…`), build + fumaça OK, vila cheia 21,75 ms / 46 FPS. Relatório final:
+`docs/RELATORIO_MELHORIAS_49_71.md` (tem o que espera decisão do Marco: Bloco 65 crianças, revisão da
+arte nova, balanceamento). **O documento de melhorias está concluído.**
+PixelLab: tier 3, saldo 9.320 (renova 2026-11-02). Ajudantes: `tools/pixellab/` (`pl.py`, `gen.py`,
 `chars.py`); arte do 70/71 em `prototipos/camera/arte_iso/fundo70`, `fundo71`, `relevo/fundo71.py`,
 `criaturas/fundo.py`. **Cuidado ao rodar `integra.py`:** ele regrava todos os PNGs (pixels iguais, bytes
 diferentes) e o LFS marca como alterados; depois de conferir, limpe o índice com

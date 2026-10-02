@@ -88,3 +88,11 @@ passam iguais.
 (+13 nós, +6 draws). O pulso das luzes guarda a intensidade em memória (antes lia o `settings.cfg` do disco
 a cada 3 quadros). Desde a medida da manhã (C = 17,97 ms / 56 FPS) a cena cresceu de 6.351 pra 7.879 nós
 com os blocos 64–68 (trilho/vagonete, leste, níveis): é daí a maior parte da diferença, não da atmosfera.
+
+## Depois dos blocos 70–71 — 2026-10-02 (noite)
+
+`bench_cena -Rapido`, vila cheia (C): **21,75 ms / 46 FPS** (8.451 nós, 368 draws; p99 33 ms). O conteúdo do
+S2–S5 (poças com luz e partículas, jazidas, decoração, plataformas) somou ~560 nós e ~1,9 ms. Medido com
+o editor do Godot e o Chrome abertos e pouca memória livre (`docs/bench/bench_2026-10-02_final_71.txt`).
+Se precisar: parar o conteúdo dos níveis fechados (como o leste trancado).
+

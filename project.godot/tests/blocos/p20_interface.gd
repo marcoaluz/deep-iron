@@ -172,7 +172,7 @@ func _corte() -> void:
 		return
 	c.abre()
 	c._desenha()
-	check(c.visible and c._rects.size() == 4, "4 andares empilhados")
+	check(c.visible and c._rects.size() == c.ANDARES.size() and c.ANDARES.size() == 6, "%d andares empilhados (S0-S5, Bloco 71)" % c._rects.size())
 	var n := main.get_tree().get_nodes_in_group("ipezinhos").size()
 	check(c._pontos.size() == n, "um mini-boneco por ipezinho (%d de %d)" % [c._pontos.size(), n])
 	var w = main.get_tree().get_nodes_in_group("ipezinhos")[0]
