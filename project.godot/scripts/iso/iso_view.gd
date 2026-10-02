@@ -463,12 +463,15 @@ func _is_mixed(n: Node) -> bool:
 
 
 func _is_dynamic(n: Node) -> bool:
-	return n is CharacterBody2D or n.is_in_group("ipezinhos") or n.is_in_group("criaturas") or n.is_in_group("robos") or n.is_in_group("animais")
+	return n is CharacterBody2D or n.is_in_group("ipezinhos") or n.is_in_group("criaturas") or n.is_in_group("robos") or n.is_in_group("animais") \
+		or n.is_in_group("vagonetes")
 
 
 func _wants(n: Node) -> bool:
 	if not (n is Node2D) or n == _env or n is NavigationRegion2D:
 		return false
+	if n.is_in_group("trilhos"):
+		return false  # Bloco 64: desenhado à parte (_sync_trilhos), por baixo de tudo
 	return not _is_ground(n)  # (os mistos também entram: só com a parte em pé)
 
 
@@ -589,7 +592,67 @@ func _process(_delta: float) -> void:
 		for b in zs:
 			dyn_bbs[b].z_index = zs[b]
 	_sync_ghost()
+	_sync_trilhos()
 	_overlay.queue_redraw()
+
+
+# ------------------------------------------------------------ trilhos (Bloco 64)
+## Cada trilho ganha um desenho no chão da vista (z logo acima do fundo da pedreira, abaixo das
+## caixas): dois trilhos de ferro e dormentes de madeira, projetados no losango. Quebrado: vermelho.
+var _rail_drawers := {}
+
+
+func _sync_trilhos() -> void:
+	if _frame % 10 != 0:
+		return
+	for r in get_tree().get_nodes_in_group("trilhos"):
+		var d: Node2D = _rail_drawers.get(r)
+		if d == null or not is_instance_valid(d):
+			d = Node2D.new()
+			d.name = "TrilhoIso"
+			d.z_as_relative = false
+			d.z_index = Order.BASE - 45
+			_things.add_child(d)
+			var rr: Node = r
+			d.draw.connect(func(): _draw_rail(d, rr))
+			d.set_meta("v", -1)
+			_rail_drawers[r] = d
+		if int(d.get_meta("v")) != int(r.version):
+			d.set_meta("v", int(r.version))
+			d.queue_redraw()
+	for r in _rail_drawers.keys():
+		if not is_instance_valid(r):
+			if is_instance_valid(_rail_drawers[r]):
+				_rail_drawers[r].queue_free()
+			_rail_drawers.erase(r)
+
+
+func _draw_rail(d: Node2D, r: Node) -> void:
+	if not is_instance_valid(r) or r.points.size() < 2:
+		return
+	var pts: Array = []
+	for p in r.points:
+		pts.append(to_screen(p))
+	var ferro := Color(0.62, 0.3, 0.25) if r.broken else Color(0.5, 0.48, 0.46)
+	var madeira := Color(0.36, 0.25, 0.16)
+	var acc := 0.0
+	for i in range(1, pts.size()):
+		var a: Vector2 = pts[i - 1]
+		var b: Vector2 = pts[i]
+		var seg := b - a
+		var L := seg.length()
+		if L < 0.5:
+			continue
+		var dirv := seg / L
+		var n := Vector2(-dirv.y, dirv.x) * 4.0
+		var k := fposmod(-acc, 7.0)
+		while k < L:  # dormentes a cada 7 px
+			var c := a + dirv * k
+			d.draw_line((c - n * 1.6).round(), (c + n * 1.6).round(), madeira, 2.0)
+			k += 7.0
+		acc += L
+		d.draw_line((a + n).round(), (b + n).round(), ferro, 1.0)
+		d.draw_line((a - n).round(), (b - n).round(), ferro, 1.0)
 
 
 # ------------------------------------------------------------ fantasma do posicionador

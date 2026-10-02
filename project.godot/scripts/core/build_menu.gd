@@ -226,6 +226,12 @@ func _defs(tab: String) -> Array:
 					"reason": func(): return hub.coletor_block_reason(),
 					"act": func(): hub.build_coletor()})
 			if hub:
+				out.append({"name": "Trilho e vagonete", "tex": "", "many": true, "scales": true,
+					"desc": "Ponto de carga perto das jazidas e um trilho até o armazém: os mineradores entregam ali e o vagonete leva sozinho. O trilho gasta; quebrado, o engenheiro conserta.",
+					"count": func(): return _count("pontos_carga"),
+					"cost": func(): return hub.vagonete_cost_text(),
+					"reason": func(): return hub.vagonete_block_reason(),
+					"act": func(): hub.build_vagonete()})
 				out.append({"name": "Coletor de minério", "tex": "coletor_minerio", "frames": 2, "many": true, "scales": true,
 					"desc": "Broca a vapor perto de uma jazida: um minerador opera e ela manda minério do tipo da jazida pro armazém. Cada uma tem o seu operador.",
 					"count": func(): return _count("coletores_minerio"),

@@ -82,6 +82,8 @@ const COLETOR_TEXTURE := preload("res://assets/game/coletor_madeira.png")
 ## Bloco 57: coletor de minério (broca perto de uma jazida).
 const COLETOR_MIN_SCENE := preload("res://scenes/props/coletor_minerio.tscn")
 const COLETOR_MIN_TEXTURE := preload("res://assets/game/coletor_minerio.png")
+## Bloco 64: ponto de carga do vagonete (trilho até o armazém).
+const VAGONETE_SCENE := preload("res://scenes/props/estacao_vagonete.tscn")
 const COLETOR_FOOTPRINT := Rect2(-52, -78, 104, 90)
 ## Bloco 47: enfermaria extra (a principal vem com a vila).
 const ENFERMARIA_SCENE := preload("res://scenes/props/enfermaria.tscn")
@@ -153,6 +155,11 @@ const UPGRADE_NAMES := {
 @export var oficina_ore: int = 40
 @export var oficina_wood: int = 60
 @export var oficina_build_time: float = 40.0
+@export_group("Trilho e vagonete (Bloco 64)")
+@export var vagonete_credits: int = 260
+@export var vagonete_ore: int = 80
+@export var vagonete_wood: int = 80
+@export var vagonete_build_time: float = 50.0
 @export_group("Coletor de minério (Bloco 57)")
 @export var coletor_min_credits: int = 280
 @export var coletor_min_ore: int = 40
@@ -751,6 +758,92 @@ func _confirm_oficina(pos: Vector2) -> bool:
 	return true
 
 
+# ------------------------------------------------------------ trilho e vagonete (Bloco 64)
+func vagonetes() -> Array:
+	return get_tree().get_nodes_in_group("pontos_carga")
+
+
+func vagonete_cost() -> Vector3i:
+	var base := Vector3i(vagonete_credits, vagonete_ore, vagonete_wood)
+	var eco := _economy()
+	return eco.scaled_cost(base, vagonetes().size()) if eco else base
+
+
+func vagonete_block_reason() -> String:
+	var c := Canteiro.pending(get_tree(), "vagonete")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	if get_tree().get_first_node_in_group("armazens") == null:
+		return "precisa de um armazém (o trilho vai até ele)"
+	var eco := _economy()
+	var cost := vagonete_cost()
+	return eco.missing_text(cost.x, cost.y, "ferro", cost.z, "ferro") if eco else "sem recursos"
+
+
+func vagonete_cost_text() -> String:
+	var c := vagonete_cost()
+	return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+
+
+## Lugar bom: perto de uma jazida liberada e longe o bastante do armazém (senão não vale o trilho).
+func vagonete_spot_reason(pos: Vector2) -> String:
+	var r := coletor_minerio_spot_reason(pos)
+	if r != "":
+		return "longe de uma jazida liberada (o ponto de carga fica perto delas)"
+	for a in get_tree().get_nodes_in_group("armazens"):
+		if a.global_position.distance_to(pos) < 180.0:
+			return "perto demais do armazém (aí nem precisa de trilho)"
+	return ""
+
+
+func build_vagonete() -> bool:
+	if vagonete_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	var start := global_position
+	var arm := get_tree().get_first_node_in_group("armazens") as Node2D
+	var best := INF
+	for j in get_tree().get_nodes_in_group("minerios"):
+		if j.is_unlocked() and not j.is_sealed() and arm and j.global_position.distance_to(arm.global_position) > 240.0:
+			var d: float = j.global_position.distance_to(arm.global_position)
+			if d < best:
+				best = d
+				start = j.global_position + Vector2(70, 50)
+	placer.begin(_confirm_vagonete, preload("res://assets/game/iso/props/vagonete_cheio_SE.png"), 1, "o ponto de carga do vagonete (perto das jazidas)",
+		{"footprint": Rect2(-30, -20, 60, 30), "check": vagonete_spot_reason, "start": start})
+	return true
+
+
+func _confirm_vagonete(pos: Vector2) -> bool:
+	if vagonete_block_reason() != "" or vagonete_spot_reason(pos) != "":
+		Audio.error()
+		return false
+	var cost := vagonete_cost()
+	if not _economy().spend(cost.x, cost.y, "ferro", cost.z):
+		return false
+	Canteiro.order(get_tree(), "vagonete", pos, vagonete_build_time)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Trilho e vagonete encomendados — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_vagonete(pos: Vector2) -> Node2D:
+	var c: Node2D = VAGONETE_SCENE.instantiate()
+	var n := vagonetes().size()
+	c.name = "EstacaoVagonete" if n == 0 else "EstacaoVagonete%d" % (n + 1)
+	c.position = pos
+	get_parent().add_child(c)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
+	return c
+
+
 # ------------------------------------------------------------ coletor de minério (Bloco 57)
 func coletores_minerio() -> Array:
 	return get_tree().get_nodes_in_group("coletores_minerio")
@@ -905,6 +998,13 @@ func finish_build(kind: String, pos: Vector2) -> void:
 		var hh := get_tree().get_first_node_in_group("hud")
 		if hh:
 			hh.show_toast("Nova enfermaria pronta! Mais leitos pra quem se machuca (o médico vai pra que precisa).", Color(0.55, 1.0, 0.5))
+		return
+	if kind == "vagonete":  # Bloco 64
+		spawn_vagonete(pos)
+		Audio.recruit()
+		var hv := get_tree().get_first_node_in_group("hud")
+		if hv:
+			hv.show_toast("Trilho pronto! Os mineradores perto dele entregam no ponto de carga; o vagonete leva pro armazém.", Color(0.55, 1.0, 0.5))
 		return
 	if kind == "oficina":  # Bloco 58
 		var o := oficina()
@@ -1149,6 +1249,7 @@ func get_save_data() -> Dictionary:
 		"coletores": coletores().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position), "total": c.total_produced}),
 		"coletores_minerio": coletores_minerio().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position),
 			"total": c.total_produced, "jazida": SaveUtil.vec2_to_array(c.chosen_pos) if c.chosen_pos != Vector2.INF else []}),  # Bloco 57
+		"vagonetes": vagonetes().map(func(v): return v.get_save_data()),  # Bloco 64
 		"enfermarias_extra": extra_enfermarias().map(func(w): return SaveUtil.vec2_to_array(w.global_position))}  # Bloco 47
 
 
@@ -1193,6 +1294,19 @@ func load_save_data(d: Dictionary) -> void:
 			var cm := spawn_coletor_minerio(mpos)
 			cm.total_produced = maxf(SaveUtil.num(cd, "total", 0.0), 0.0)
 			cm.chosen_pos = SaveUtil.vec2(cd, "jazida", Vector2.INF)
+	# Bloco 64: pontos de carga com o trilho e o vagonete (save antigo: nenhum)
+	for old in vagonetes():
+		if is_instance_valid(old.rail):
+			old.rail.queue_free()
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	for vd in SaveUtil.array(d, "vagonetes"):
+		if typeof(vd) != TYPE_DICTIONARY:
+			continue
+		var vpos := SaveUtil.vec2(vd, "position", Vector2.INF)
+		if vpos != Vector2.INF:
+			var v := spawn_vagonete(vpos)
+			v.load_save_data(vd)
 	# Bloco 47: enfermarias extras (save antigo: nenhuma)
 	for old in extra_enfermarias():
 		old.get_parent().remove_child(old)

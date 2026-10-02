@@ -1086,6 +1086,10 @@ func _decide_next_action() -> void:
 
 	var group: String = STATE_GROUP[desired]
 	var station := _find_best_station(group)
+	if desired == "storing" and carrying > 0.0:  # Bloco 64: ponto de carga do vagonete mais perto?
+		var pc := _find_best_station("pontos_carga")
+		if pc and (station == null or global_position.distance_to(pc.global_position) < global_position.distance_to(station.global_position)):
+			station = pc
 	if station:
 		_station = station
 		_slot = station.reserve_slot(self)
