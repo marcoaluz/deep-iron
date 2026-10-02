@@ -4,10 +4,11 @@
   python fundo.py cria          -> cria os 2 personagens (pro, estilo = o Lumívoro); ids em fundo.json
   python fundo.py anima         -> pede as 4 animações de cada (SE e NE; SO/NO são espelho no integra.py)
   python fundo.py baixa         -> rotações + animações em criaturas/gosma/ e criaturas/magmante/
+  python fundo.py derrete       -> a morte da Gosma por script (achata até virar poça)
 
 Depois: python integra.py criaturas (CRIATURAS tem "gosma" e "magmante").
 """
-import sys, os, json, time, re
+import sys, os, json, time, re, glob
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "..", "tools", "pixellab"))
 import pl, gen, chars
 
@@ -91,5 +92,29 @@ def baixa():
             print(k, nome, chars.baixa_anim(d[k], pasta, nome))
 
 
+def derrete():
+    """A morte da Gosma por script: o v3 com texto não derreteu (2 tentativas: volta inteira, ganha
+    olho). A pose parada achata e espalha quadro a quadro até virar poça (base fixa, vizinho mais perto)."""
+    from PIL import Image
+    MAPA = {"SE": "south-east", "NE": "north-east"}
+    ESCALAS = [(1.0, 1.0), (1.08, 0.84), (1.16, 0.68), (1.26, 0.5), (1.36, 0.34), (1.46, 0.22)]
+    for d, rot in MAPA.items():
+        base = Image.open(os.path.join(AQUI, "gosma", "rotacoes", rot + ".png")).convert("RGBA")
+        bb = base.getbbox()
+        corpo = base.crop(bb)
+        pasta = os.path.join(AQUI, "gosma", "morrer", d)
+        os.makedirs(pasta, exist_ok=True)
+        for f in glob.glob(os.path.join(pasta, "*.png")):
+            os.remove(f)
+        for k, (sx, sy) in enumerate(ESCALAS):
+            w, h = max(1, round(corpo.width * sx)), max(1, round(corpo.height * sy))
+            q = corpo.resize((w, h), Image.NEAREST)
+            out = Image.new("RGBA", base.size)
+            cx = (bb[0] + bb[2]) // 2
+            out.alpha_composite(q, (max(0, min(base.width - w, cx - w // 2)), bb[3] - h))
+            out.save(os.path.join(pasta, "%d.png" % k))
+    print("gosma/morrer: 6 quadros SE e NE")
+
+
 if __name__ == "__main__":
-    {"cria": cria, "anima": anima, "baixa": baixa}[sys.argv[1]]()
+    {"cria": cria, "anima": anima, "baixa": baixa, "derrete": derrete}[sys.argv[1]]()

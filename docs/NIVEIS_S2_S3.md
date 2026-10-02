@@ -55,6 +55,9 @@ caixas. A luz pulsando e as bolhas/brasas ficam na camada 4 (`docs/arte/CAMADAS.
 2. **"Escavadeira e reatores operando no S3"** virou: a broca (que já existe na superfície) acha
    cristal e rende mais com o fundo aberto. Não tem prédio novo lá embaixo.
 3. As criaturas do fundo **não roubam** (o minério some): a Gosma dissolve metal, o Magmante come carvão.
+5. **Morte da Gosma por script** (`criaturas/fundo.py derrete`): o v3 com texto não derreteu em duas
+   tentativas (voltava inteira; na segunda ganhou olho roxo). A pose parada achata e espalha em 6
+   quadros até virar poça. As outras 7 animações das duas criaturas são do PixelLab.
 4. Poça não desvia o caminho dos ipezinhos (a malha de navegação não tem custo por área); o jogador
    sente pela lentidão/queimadura e resolve com traje ou ventilador.
 
