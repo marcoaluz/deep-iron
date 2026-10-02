@@ -347,6 +347,8 @@ static func robo_pose(r: Node, iso_dir: int, clock: float, moving: bool) -> Dict
 ## Pasta da criatura (kind + variante) no bonecos.json.
 const CRIATURA_PASTA := {"lumivoro": ["criatura_lumivoro", "criatura_lumivoro_bruto"],
 	"ferrugento": ["criatura_ferrugento", "criatura_ferrugento_carregador"]}
+## Bloco 62: a arte do chefe de cada tipo.
+const CRIATURA_CHEFE := {"lumivoro": "criatura_lumivoro_matriarca"}
 ## Quanto tempo (s) cada reação fica na tela.
 const CRIATURA_DANO := 0.35
 const CRIATURA_ATAQUE := 0.6
@@ -362,6 +364,8 @@ static func criatura_pose(c: Node, iso_dir: int, moving: bool) -> Dictionary:
 	if pastas.is_empty():
 		return {}
 	var pasta: String = pastas[1] if c.get("variant") == "forte" else pastas[0]
+	if c.get("variant") == "chefe" and data().get("pastas", {}).has(CRIATURA_CHEFE.get(String(c.get("kind")), "")):
+		pasta = CRIATURA_CHEFE[String(c.get("kind"))]  # Bloco 62: a Matriarca
 	if not data().get("pastas", {}).has(pasta):
 		return {}
 	var d: String = DIR_NAMES[clampi(iso_dir, 0, 3)]

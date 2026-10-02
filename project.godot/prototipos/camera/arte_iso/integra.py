@@ -491,7 +491,8 @@ def bonecos():
 # pasta em criaturas/ -> rótulo do PixelLab de cada direção desenhada (a base não era de frente,
 # então as rotações saíram giradas; criaturas/base/chars.json tem os ids)
 CRIATURAS = {"lumivoro": {"SE": "east", "NE": "north-east"}, "lumivoro_bruto": {"SE": "south-east", "NE": "north-east"},
-             "ferrugento": {"SE": "east", "NE": "north-east"}, "ferrugento_carregador": {"SE": "south-east", "NE": "east"}}
+             "ferrugento": {"SE": "east", "NE": "north-east"}, "ferrugento_carregador": {"SE": "south-east", "NE": "east"},
+             "lumivoro_matriarca": {"SE": "south-east", "NE": "north-east"}}  # Bloco 62: o chefe
 ANIMS_CRIATURA = ["caminhada", "atacar", "dano", "morrer"]
 
 

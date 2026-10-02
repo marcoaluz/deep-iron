@@ -54,6 +54,10 @@ var _died_at := -100.0
 var _left_at := -100.0
 ## Ferrugento que já roubou minério: a caçamba vai cheia.
 var looted := false
+## Bloco 62: elite (forte do tier alto) e chefe; o golpe do chefe num guarda armado gasta a arma.
+var elite := false
+var weapon_corrode := 0.0
+var _shout_at := -100.0
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _agent: NavigationAgent2D = $Agent
@@ -82,6 +86,41 @@ func make_strong(hp_mult: float, damage_mult: float) -> void:
 	damage *= damage_mult
 	speed *= 0.9
 	_visual.scale *= 1.25
+
+
+## Bloco 62: elite — o forte das ondas de tier alto (Lumívoro ancião / Ferrugento blindado).
+func make_elite(hp_mult: float, damage_mult: float) -> void:
+	elite = true
+	max_hp *= hp_mult
+	hp = max_hp
+	damage *= damage_mult
+	_visual.modulate = Color(0.85, 0.7, 1.15)
+	modulate = Color(0.92, 0.82, 1.1)
+
+
+## Bloco 62: a Matriarca (chefe): muita vida, dano dobrado, lenta, maior, enxerga de longe.
+func make_boss(hp_mult: float, damage_mult: float) -> void:
+	variant = "chefe"
+	max_hp *= hp_mult
+	hp = max_hp
+	damage *= damage_mult
+	speed *= 0.7
+	notice_range *= 1.5
+	attack_range += 8.0
+	grave_chance = 0.4
+	_visual.scale *= 1.8
+	_light.energy *= 1.6
+	_light.texture_scale *= 1.8
+	add_to_group("chefes")
+
+
+## O grito do chefe (anima "atacar" e faz a luz pulsar).
+func shout() -> void:
+	_shout_at = _anim
+	_attack_at = _anim
+	var t := create_tween()
+	t.tween_property(_light, "energy", _light.energy * 2.0, 0.15)
+	t.tween_property(_light, "energy", _light.energy, 0.5)
 
 
 func is_alive() -> bool:
@@ -210,6 +249,9 @@ func _attack(t: Node2D) -> void:
 		if def and def.breached(gate_id):
 			def.raid(self, t)  # Bloco 36: saque pela brecha
 	if t.has_method("take_hit"):
+		if weapon_corrode > 0.0 and t.get("weapon") != null and String(t.weapon) != "" and t.has_method("_wear_weapon"):
+			t.weapon_durability -= weapon_corrode - 1.0  # Bloco 62: o golpe da Matriarca corrói a arma
+			t._wear_weapon()
 		t.take_hit(damage, self)
 		if kind == "lumivoro":
 			Audio.screech(global_position)

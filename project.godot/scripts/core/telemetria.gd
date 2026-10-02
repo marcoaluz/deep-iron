@@ -6,7 +6,7 @@ extends Node
 
 const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre", "carvao", "prata", "solarita",
 	"madeira", "comida", "populacao", "feridos", "animo_medio", "mortes", "onda", "criaturas_derrubadas",
-	"invasao_ativa", "pesquisas", "greve", "estagio_vila"]
+	"invasao_ativa", "pesquisas", "greve", "estagio_vila", "tier", "ultima_onda_total", "ultima_onda_derrubadas", "chefe"]
 
 var arquivo := ""
 var _t0 := 0
@@ -59,7 +59,11 @@ func registra() -> void:
 		snappedf(mor.average(), 0.1) if mor and mor.has_method("average") else -1,
 		mortes, defe.wave if defe else 0, defe.killed_tonight if defe else 0,
 		1 if defe and defe.invasion_active else 0, (res.done as Array).size() if res else 0,
-		1 if mor and mor.get("on_strike") else 0, hub.level if hub and hub.get("level") != null else 0]
+		1 if mor and mor.get("on_strike") else 0, hub.level if hub and hub.get("level") != null else 0,
+		defe.tier() if defe and defe.has_method("tier") else 0,
+		int((defe.last_result as Dictionary).get("total", 0)) if defe and defe.get("last_result") != null else 0,
+		int((defe.last_result as Dictionary).get("derrubadas", 0)) if defe and defe.get("last_result") != null else 0,
+		String((defe.last_result as Dictionary).get("chefe", "")) if defe and defe.get("last_result") != null else ""]
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return

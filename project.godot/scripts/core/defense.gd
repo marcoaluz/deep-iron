@@ -126,6 +126,32 @@ const WEAPON_DESCRIPTIONS := {
 @export var strong_hp_mult: float = 1.6
 @export var strong_damage_mult: float = 1.3
 
+@export_group("Tiers e chefe (Bloco 62)")
+## Tier da onda = 1 + onda / tier_every_waves + pesquisas feitas / tier_research_step.
+@export var tier_every_waves: int = 3
+@export var tier_research_step: int = 4
+## Por tier acima do 1: vida extra e o forte vem mais vezes (strong_every - 1 por tier, mínimo 2).
+@export var tier_hp_bonus: float = 0.12
+## A partir deste tier, os fortes viram ELITE (ancião/blindado): mais vida e dano.
+@export var elite_from_tier: int = 3
+@export var elite_hp_mult: float = 1.35
+@export var elite_damage_mult: float = 1.2
+## O CHEFE (Matriarca dos Lumívoros): uma vez por estação, a partir desta estação da partida
+## (0 = 1ª primavera, 1 = 1º verão...), na 1ª invasão dela.
+@export var boss_from_season: int = 1
+@export var boss_hp_mult: float = 10.0
+@export var boss_damage_mult: float = 2.0
+## Grito: a cada tantos segundos chama mais Lumívoros perto dela (até boss_call_max no total).
+@export var boss_call_every: float = 9.0
+@export var boss_call_count: int = 2
+@export var boss_call_max: int = 8
+## Golpe dela num guarda armado gasta a arma (pontos de durabilidade a mais).
+@export var boss_weapon_corrode: float = 4.0
+## Recompensa: solarita, peças raras e pontos na pesquisa em andamento.
+@export var boss_reward_solarita: int = 40
+@export var boss_reward_parts: int = 2
+@export var boss_reward_research: float = 80.0
+
 ## Armas que a vila já sabe fazer (forjou pelo menos uma vez; o porrete já vem).
 var weapons: Array = ["porrete"]
 ## Bloco 35: armas prontas no cavalete do Arsenal e quebradas esperando conserto (id -> qtd).
@@ -147,6 +173,13 @@ var _spawn_queue: Array = []  # [{kind, at}]
 var _raided_gates: Array = []
 var _night_time: float = 0.0
 var _sound_timer := 0.0
+## Bloco 62: chefe por estação da partida: {"<n>": "veio" | "derrotado" | "fugiu"}.
+var bosses := {}
+var _boss: Node = null
+var _boss_called := 0
+var _boss_call_t := 0.0
+## O que aconteceu com a última onda (telemetria): {onda, tier, total, derrubadas, chefe}.
+var last_result := {}
 
 
 func _ready() -> void:
@@ -695,7 +728,12 @@ func _process(delta: float) -> void:
 	if invasion_active:
 		_night_time += delta
 		while not _spawn_queue.is_empty() and _spawn_queue[0].at <= _night_time:
-			_spawn(_spawn_queue.pop_front().kind)
+			var k: String = _spawn_queue.pop_front().kind
+			if k == "chefe":
+				_spawn_boss()
+			else:
+				_spawn(k)
+		_boss_tick(delta)
 
 
 ## Bloco 60: com o rádio, o aviso vem antes.
@@ -717,6 +755,88 @@ func _on_phase_changed(night: bool) -> void:
 		end_invasion()
 
 
+# ------------------------------------------------------------ tiers e chefe (Bloco 62)
+func tier() -> int:
+	var res := get_tree().get_first_node_in_group("research")
+	var pesq: int = (res.done as Array).size() if res else 0
+	return 1 + int(wave / maxi(tier_every_waves, 1)) + int(pesq / maxi(tier_research_step, 1))
+
+
+func _season_number() -> int:
+	var dn := _dn()
+	var sun := get_tree().get_first_node_in_group("sun")
+	var per: int = sun.days_per_season if sun else 4
+	return int((maxi(dn.day if dn else 1, 1) - 1) / maxi(per, 1))
+
+
+## Esta invasão traz o chefe? (uma vez por estação, a partir de boss_from_season)
+func boss_due() -> bool:
+	var n := _season_number()
+	return n >= boss_from_season and not bosses.has(str(n))
+
+
+func boss_alive() -> bool:
+	return _boss != null and is_instance_valid(_boss) and _boss.is_alive()
+
+
+func _spawn_boss() -> void:
+	var c := _spawn("lumivoro")
+	if c == null:
+		return
+	c.make_boss(boss_hp_mult, boss_damage_mult)
+	c.weapon_corrode = boss_weapon_corrode
+	_boss = c
+	_boss_called = 0
+	_boss_call_t = boss_call_every
+	bosses[str(_season_number())] = "veio"
+	c.died.connect(_on_boss_died)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_banner("A MATRIARCA DOS LUMÍVOROS!", "A rainha deles veio junto. Ela grita chamando mais Lumívoros e o golpe dela corrói as armas. Derrube-a antes do amanhecer.")
+	Audio.screech(c.global_position)
+	var diary := get_tree().get_first_node_in_group("diary")
+	if diary and diary.has_method("unlock"):
+		diary.unlock("matriarca")
+
+
+func _on_boss_died(killed: bool) -> void:
+	var key := str(_season_number())
+	if not killed:
+		return
+	bosses[key] = "derrotado"
+	var arm := get_tree().get_first_node_in_group("armazens")
+	if arm:
+		arm.add_ore(float(boss_reward_solarita), "solarita")
+	var finds := get_tree().get_first_node_in_group("finds")
+	if finds:
+		finds.rare_parts += boss_reward_parts
+	var res := get_tree().get_first_node_in_group("research")
+	if res and res.current != "":
+		res.progress += boss_reward_research
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_banner("A MATRIARCA CAIU!", "Dos cristais dela: +%d solarita, +%d peças raras%s." % [
+			boss_reward_solarita, boss_reward_parts, (" e a pesquisa avançou") if res and res.current != "" else ""])
+	Audio.fanfare()
+
+
+func _boss_tick(delta: float) -> void:
+	if not boss_alive() or not _boss.inside:
+		return
+	_boss_call_t -= delta
+	if _boss_call_t > 0.0 or _boss_called >= boss_call_max:
+		return
+	_boss_call_t = boss_call_every
+	for i in mini(boss_call_count, boss_call_max - _boss_called):
+		var c := _spawn("lumivoro")
+		if c:
+			c.global_position = _boss.global_position + Vector2(randf_range(-30, 30), randf_range(-20, 20))
+			c.inside = true
+			_boss_called += 1
+	Audio.screech(_boss.global_position)
+	_boss.shout()
+
+
 func start_invasion() -> void:
 	wave += 1
 	invasion_active = true
@@ -731,16 +851,20 @@ func start_invasion() -> void:
 		_spawn_queue.append({"kind": "lumivoro", "at": randf_range(0.0, spawn_spread)})
 	for i in ferr:
 		_spawn_queue.append({"kind": "ferrugento", "at": randf_range(2.0, spawn_spread)})
+	var chefe := boss_due()
+	if chefe:
+		_spawn_queue.append({"kind": "chefe", "at": spawn_spread * 0.6})
 	_spawn_queue.sort_custom(func(a, b): return a.at < b.at)
+	last_result = {"onda": wave, "tier": tier(), "total": lumi + ferr + (1 if chefe else 0), "derrubadas": 0, "chefe": "veio" if chefe else ""}
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
-		hud.show_banner("INVASÃO! (onda %d)" % wave, "%d Lumívoros%s. Aguentem até o amanhecer." % [
+		hud.show_banner("INVASÃO! (onda %d, tier %d)" % [wave, tier()], "%d Lumívoros%s. Aguentem até o amanhecer." % [
 			lumi, (" e %d Ferrugentos" % ferr) if ferr > 0 else ""])
 	Audio.alarm()
 	invasion_started.emit(wave)
 
 
-func _spawn(kind: String) -> void:
+func _spawn(kind: String) -> Node2D:
 	var env := get_tree().get_first_node_in_group("environment")
 	var world := get_tree().get_first_node_in_group("village_hub").get_parent()
 	var c: Node2D = (LUMIVORO if kind == "lumivoro" else FERRUGENTO).instantiate()
@@ -759,10 +883,14 @@ func _spawn(kind: String) -> void:
 	c.position = pos
 	c.gate_id = "tunel" if kind == "lumivoro" else "poco"  # Bloco 36: de que portão ele vem
 	world.add_child(c)
-	c.setup(g, 1.0 + hp_growth * (wave - 1))
+	var tr := tier()
+	c.setup(g, (1.0 + hp_growth * (wave - 1)) * (1.0 + tier_hp_bonus * (tr - 1)))
 	_spawned += 1
-	if strong_every > 0 and wave >= strong_from_wave and _spawned % strong_every == 0:
+	var every := maxi(strong_every - (tr - 1), 2) if strong_every > 0 else 0
+	if every > 0 and wave >= strong_from_wave and _spawned % every == 0:
 		c.make_strong(strong_hp_mult, strong_damage_mult)
+		if tr >= elite_from_tier:
+			c.make_elite(elite_hp_mult, elite_damage_mult)  # Bloco 62: ancião / blindado
 	var res := get_tree().get_first_node_in_group("research")
 	if res and kind == "lumivoro":
 		c.speed *= res.lumivoro_speed_mult()  # holofotes
@@ -772,12 +900,20 @@ func _spawn(kind: String) -> void:
 	var diary := get_tree().get_first_node_in_group("diary")
 	if diary:
 		diary.unlock("lumivoros" if kind == "lumivoro" else "ferrugentos")
+	return c
 
 
 func end_invasion() -> void:
 	invasion_active = false
 	_spawn_queue = []
 	var left := creatures()
+	if boss_alive():
+		bosses[str(_season_number())] = "fugiu"  # amanheceu com ela de pé: só volta na próxima estação
+	if not last_result.is_empty():
+		last_result.derrubadas = killed_tonight
+		if last_result.chefe != "":
+			last_result.chefe = bosses.get(str(_season_number()), last_result.chefe)
+	_boss = null
 	for c in left:
 		c.leave_at_dawn()
 	var hud := get_tree().get_first_node_in_group("hud")
@@ -799,6 +935,8 @@ func get_save_data() -> Dictionary:
 		"wave": wave,
 		"warned_day": _warned_day,
 		"start_day": start_day,
+		"bosses": bosses.duplicate(),  # Bloco 62
+		"last_result": last_result.duplicate(),
 	}
 	# Bloco 47: listas (antes: "campo" e "arsenal" com um só)
 	d["campos"] = campos().map(func(c): return SaveUtil.vec2_to_array(c.global_position))
@@ -831,6 +969,13 @@ func load_save_data(d: Dictionary) -> void:
 	wave = maxi(SaveUtil.integer(d, "wave", 0), 0)
 	_warned_day = SaveUtil.integer(d, "warned_day", -1)
 	start_day = SaveUtil.integer(d, "start_day", -1)
+	bosses = {}
+	var b := SaveUtil.dict(d, "bosses")  # Bloco 62 (save antigo: nenhum chefe ainda)
+	for k in b:
+		if String(b[k]) in ["veio", "derrotado", "fugiu"]:
+			bosses[str(k)] = String(b[k]) if String(b[k]) != "veio" else "fugiu"  # carregou no meio da noite: conta como fugiu
+	last_result = SaveUtil.dict(d, "last_result")
+	_boss = null
 	invasion_active = false
 	if campos().is_empty():
 		for pos in SaveUtil.positions(d, "campos", "campo"):  # Bloco 47 (save antigo: um só)

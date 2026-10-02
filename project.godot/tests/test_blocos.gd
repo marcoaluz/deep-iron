@@ -268,3 +268,8 @@ func test_b60_dinamite_radio() -> void:
 
 func test_b61_fauna() -> void:
 	run_bloco("b61_fauna.gd")
+
+
+func test_b62_tiers_chefe() -> void:
+	run_bloco("b62_tiers_chefe.gd")
+

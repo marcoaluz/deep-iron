@@ -19,6 +19,12 @@ const ENTRIES := {
 			+ "sobem pelo poço desde que abrimos o nível 2. Comem metal: vão direto no armazém. "
 			+ "Ao amanhecer, desligam.",
 	},
+	"matriarca": {
+		"title": "A Matriarca",
+		"text": "Os Lumívoros têm uma rainha. É duas vezes maior, coberta de cristais roxos, e "
+			+ "aparece uma vez por estação. Ela grita e chama os outros, e o golpe dela come o "
+			+ "metal das armas. Quando cai, os cristais dela são solarita pura.",
+	},
 	"robo": {
 		"title": "O robô antigo",
 		"text": "Achamos no fundo da mina um Ferrugento desligado, parado há décadas. Consertado "
