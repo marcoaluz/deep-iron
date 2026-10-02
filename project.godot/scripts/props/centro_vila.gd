@@ -155,6 +155,12 @@ const UPGRADE_NAMES := {
 @export var oficina_ore: int = 40
 @export var oficina_wood: int = 60
 @export var oficina_build_time: float = 40.0
+@export_group("Desbravar o leste (Bloco 67)")
+@export var leste_credits: int = 900
+@export var leste_ore: int = 120
+@export var leste_wood: int = 160
+@export var leste_build_time: float = 80.0
+@export var leste_min_stage: int = 2
 @export_group("Trilho e vagonete (Bloco 64)")
 @export var vagonete_credits: int = 260
 @export var vagonete_ore: int = 80
@@ -758,6 +764,42 @@ func _confirm_oficina(pos: Vector2) -> bool:
 	return true
 
 
+# ------------------------------------------------------------ desbravar o leste (Bloco 67)
+func leste_block_reason() -> String:
+	var env := get_tree().get_first_node_in_group("environment")
+	if env == null or not env.has_method("has_leste") or not env.has_leste():
+		return "o mapa não tem leste"
+	if env.leste_aberto:
+		return "já desbravado"
+	var c := Canteiro.pending(get_tree(), "desbravar")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	if level < leste_min_stage:
+		return "precisa da vila no estágio %d" % leste_min_stage
+	var eco := _economy()
+	return eco.missing_text(leste_credits, leste_ore, "ferro", leste_wood, "ferro") if eco else "sem recursos"
+
+
+func leste_cost_text() -> String:
+	return "%d cr + %d ferro + %d madeira" % [leste_credits, leste_ore, leste_wood]
+
+
+## Encomenda: o engenheiro vai abrindo caminho na fronteira (na pedreira, logo antes da área nova).
+func desbravar_leste() -> bool:
+	if leste_block_reason() != "":
+		Audio.error()
+		return false
+	if not _economy().spend(leste_credits, leste_ore, "ferro", leste_wood):
+		return false
+	var env := get_tree().get_first_node_in_group("environment")
+	var p: Vector2 = env.nearest_ok(Vector2(env.leste_x() - 40.0, 160.0), 16.0)
+	Canteiro.order(get_tree(), "desbravar", p, leste_build_time)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Desbravar o leste: o engenheiro (tecla 4) abre caminho na fronteira.", Color(1.0, 0.8, 0.45))
+	return true
+
+
 # ------------------------------------------------------------ trilho e vagonete (Bloco 64)
 func vagonetes() -> Array:
 	return get_tree().get_nodes_in_group("pontos_carga")
@@ -998,6 +1040,18 @@ func finish_build(kind: String, pos: Vector2) -> void:
 		var hh := get_tree().get_first_node_in_group("hud")
 		if hh:
 			hh.show_toast("Nova enfermaria pronta! Mais leitos pra quem se machuca (o médico vai pra que precisa).", Color(0.55, 1.0, 0.5))
+		return
+	if kind == "desbravar":  # Bloco 67
+		var env0 := get_tree().get_first_node_in_group("environment")
+		if env0:
+			env0.set_leste_aberto(true)
+		Audio.fanfare()
+		var hd := get_tree().get_first_node_in_group("hud")
+		if hd:
+			hd.show_banner("O LESTE ESTÁ ABERTO!", "Floresta nova, a encosta rochosa e outra pedreira com mais jazidas. Dá pra construir lá.")
+		var cam := get_viewport().get_camera_2d()
+		if cam and cam.has_method("focus_on") and env0:
+			cam.bounds = env0.world_rect()
 		return
 	if kind == "vagonete":  # Bloco 64
 		spawn_vagonete(pos)
@@ -1250,6 +1304,7 @@ func get_save_data() -> Dictionary:
 		"coletores_minerio": coletores_minerio().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position),
 			"total": c.total_produced, "jazida": SaveUtil.vec2_to_array(c.chosen_pos) if c.chosen_pos != Vector2.INF else []}),  # Bloco 57
 		"vagonetes": vagonetes().map(func(v): return v.get_save_data()),  # Bloco 64
+		"leste_aberto": get_tree().get_first_node_in_group("environment").leste_aberto if get_tree().get_first_node_in_group("environment") else false,  # Bloco 67
 		"enfermarias_extra": extra_enfermarias().map(func(w): return SaveUtil.vec2_to_array(w.global_position))}  # Bloco 47
 
 
@@ -1294,6 +1349,10 @@ func load_save_data(d: Dictionary) -> void:
 			var cm := spawn_coletor_minerio(mpos)
 			cm.total_produced = maxf(SaveUtil.num(cd, "total", 0.0), 0.0)
 			cm.chosen_pos = SaveUtil.vec2(cd, "jazida", Vector2.INF)
+	# Bloco 67: o leste (save antigo: trancado)
+	var envl := get_tree().get_first_node_in_group("environment")
+	if envl and envl.has_method("set_leste_aberto"):
+		envl.set_leste_aberto(SaveUtil.boolean(d, "leste_aberto", false), false)
 	# Bloco 64: pontos de carga com o trilho e o vagonete (save antigo: nenhum)
 	for old in vagonetes():
 		if is_instance_valid(old.rail):

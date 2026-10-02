@@ -160,8 +160,123 @@ func _ready() -> void:
 	_build_abyss()  # sorteio próprio também
 	if has_iso_map():
 		_build_map_decor()  # Prompt 30: a decoração da montagem aprovada
+		_build_leste()  # Bloco 67: o conteúdo da área nova (trancada até desbravar)
 	clear_decor_under_extras()
 	_build_navigation()
+
+
+# ------------------------------------------------------------ o leste (Bloco 67)
+## O mapa cresceu pro leste (monta.py: LESTE_EXTRA). A área nova começa TRANCADA (névoa na vista,
+## parede na navegação): "Desbravar o leste" no Centro da Vila (obra do engenheiro) abre. Lá:
+## floresta (árvores, toca), encosta rochosa e a pedreira nova com mais jazidas. Os nós de lá
+## existem desde o começo (nomes fixos: o save acha cada um pelo nome), só não dá pra chegar.
+signal leste_mudou(aberto: bool)
+var leste_aberto := false
+const LESTE_JAZIDAS := [["ferro", Vector2(1000, 160)], ["cobre", Vector2(1400, 300)], ["carvao", Vector2(1820, 120)],
+	["prata", Vector2(2260, 320)], ["ferro", Vector2(2700, 180)], ["cobre", Vector2(3100, 330)], ["carvao", Vector2(3420, 200)]]
+const LESTE_ARVORES := 14
+const LESTE_DECOR := 70
+
+
+## Onde começa a área nova (x da lógica); INF = mapa sem leste.
+func leste_x() -> float:
+	return float(iso_map.get("leste_x", INF)) if has_iso_map() else INF
+
+
+func has_leste() -> bool:
+	return leste_x() < iso_ground_rect().end.x - 16.0
+
+
+## A área nova inteira (floresta + encosta + pedreira) na lógica.
+func leste_rect() -> Rect2:
+	if not has_leste():
+		return Rect2()
+	var g := iso_ground_rect()
+	return Rect2(leste_x(), g.position.y, g.end.x - leste_x(), g.size.y)
+
+
+## Esse ponto fica na área do leste ainda trancada?
+func trancado(pos: Vector2) -> bool:
+	return not leste_aberto and has_leste() and pos.x > leste_x()
+
+
+func set_leste_aberto(on: bool, animate := true) -> void:
+	if on == leste_aberto or not has_leste():
+		leste_aberto = on and has_leste()
+		return
+	leste_aberto = on
+	var lr := leste_rect()
+	if on:
+		map_rect = Rect2(map_rect.position, Vector2(lr.end.x - map_rect.position.x, map_rect.size.y))
+		clearing_rect = Rect2(clearing_rect.position, Vector2(lr.end.x - clearing_rect.position.x, clearing_rect.size.y))
+	rebuild_navigation()
+	_mostra_leste()
+	leste_mudou.emit(on)
+
+
+func _build_leste() -> void:
+	if not has_leste():
+		return
+	var world := get_parent()
+	var lr := leste_rect()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = map_seed + 67
+	var ms := preload("res://scenes/props/mineral_node.tscn")
+	for k in LESTE_JAZIDAS.size():
+		var nome := "JazidaLeste%d" % (k + 1)
+		if world.has_node(nome):
+			continue
+		var m: Node2D = ms.instantiate()
+		m.name = nome
+		m.ore_type = LESTE_JAZIDAS[k][0]
+		m.position = nearest_ok(LESTE_JAZIDAS[k][1], 20.0)
+		m.add_to_group("leste_conteudo")
+		world.add_child(m)
+	var arv := preload("res://scenes/props/arvore.tscn")
+	var postas := 0
+	for tries in 600:
+		if postas >= LESTE_ARVORES:
+			break
+		var p := Vector2(rng.randf_range(lr.position.x + 60.0, lr.end.x - 60.0), rng.randf_range(lr.position.y + 40.0, palisade_y - 60.0))
+		if not spot_ok(p, 14.0) or not _is_free(p, 50.0, 40.0):
+			continue
+		var t: Node2D = arv.instantiate()
+		t.name = "ArvoreLeste%d" % (postas + 1)
+		t.position = p
+		t.add_to_group("leste_conteudo")
+		world.add_child(t)
+		postas += 1
+	if not world.has_node("TocaLeste"):
+		var toca: Node2D = preload("res://scenes/props/toca.tscn").instantiate()
+		toca.name = "TocaLeste"
+		toca.position = nearest_ok(Vector2(lr.position.x + lr.size.x * 0.45, lr.position.y + 260.0), 20.0)
+		toca.add_to_group("leste_conteudo")
+		world.add_child(toca)
+	# enfeite: mata na floresta nova e pedras na encosta rochosa
+	var colocados := 0
+	for tries in 3000:
+		if colocados >= LESTE_DECOR:
+			break
+		var p := Vector2(rng.randf_range(lr.position.x + 20.0, lr.end.x - 20.0), rng.randf_range(lr.position.y + 20.0, lr.end.y - 20.0))
+		if not spot_ok(p, 8.0) or not _is_free(p, 18.0, 30.0):
+			continue
+		var prop: String = FOREST_DECOR[rng.randi() % FOREST_DECOR.size()] if p.y < palisade_y else \
+			("rocha_musgo_%d" % (rng.randi() % 6) if p.y < -180.0 else "rocha_mina_%d" % (rng.randi() % 3))
+		_decor_node(prop, p, p.y >= palisade_y and rng.randf() < 0.3)
+		get_child(get_child_count() - 1).add_to_group("leste_conteudo")
+		colocados += 1
+	_mostra_leste()
+
+
+## Bloco 53/67: trancado, o leste fica invisível embaixo da névoa (não custa desenho); abre e aparece.
+func _mostra_leste() -> void:
+	for n in get_tree().get_nodes_in_group("leste_conteudo"):
+		(n as CanvasItem).visible = leste_aberto
+		n.set_process(leste_aberto)  # trancado: nem processa (jazida/árvore/toca paradas embaixo da névoa)
+	for a in get_tree().get_nodes_in_group("animais"):
+		if a.get("toca") != null and is_instance_valid(a.toca) and a.toca.is_in_group("leste_conteudo"):
+			a.visible = leste_aberto
+			a.set_process(leste_aberto)
 
 
 func _process(delta: float) -> void:
@@ -268,6 +383,8 @@ func world_rect() -> Rect2:
 		r = r.merge(deep_rect)
 	if abyss_rect.has_area():
 		r = r.merge(abyss_rect)
+	if has_leste():
+		r = r.merge(leste_rect())  # Bloco 67: a câmera vê a área nova (com névoa enquanto trancada)
 	return r
 
 
@@ -429,6 +546,10 @@ func _iso_blockers() -> Array[PackedVector2Array]:
 				var y := (oy + (j + 1) * t) / f
 				out.append(_rect_outline(Rect2((ox + start * t) / f, y - half, (i - start) * t / f, half * 2.0)))
 				start = -1
+	# Bloco 67: a área nova do leste fechada até desbravar
+	if has_leste() and not leste_aberto:
+		var lr := leste_rect()
+		out.append(_rect_outline(Rect2(lr.position.x - 6.0, lr.position.y, 12.0, lr.size.y)))
 	# paliçada: da borda até o portão, dos dois lados
 	var g := iso_ground_rect()
 	out.append(_rect_outline(Rect2(g.position.x, palisade_y - 4.0, -gate_half_width - g.position.x, 8.0)))

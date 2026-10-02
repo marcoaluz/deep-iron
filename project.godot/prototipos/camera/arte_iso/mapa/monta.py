@@ -21,7 +21,13 @@ import tiles
 FATOR = 1.5          # posições do esboço × 1,5 (prédios ficam no tamanho real; mapa mais denso)
 T = 32
 OX, OY = -760 * FATOR, -1040 * FATOR            # canto do mapa (mundo novo)
-NI = int(1520 * FATOR / T)                        # 99
+NI_VELHO = int(1520 * FATOR / T)                  # 71: o mapa até o Bloco 66
+## Bloco 67: o mapa cresce pro LESTE (x da lógica > 760; norte = moldura, sul = andares de baixo).
+## As coordenadas antigas não mudam. A área nova vira regiões separadas em pedaços de LESTE_PEDACO
+## tiles (nenhuma imagem enorme); as regiões antigas ficam com o nome e o tamanho de antes.
+LESTE_EXTRA = int(os.environ.get("DEEP_IRON_LESTE", "2880"))   # px da lógica antiga a mais pro leste
+LESTE_PEDACO = 48
+NI = int((1520 + LESTE_EXTRA) * FATOR / T)
 NJ = int(1480 * FATOR / T)                        # 97
 REL = "../relevo/final"
 BOCAS_X = (200, 290, 380, 540)   # bocas de mina no paredão do terraço de cima (uma por galeria do jogo)
@@ -58,8 +64,22 @@ def zona(xo, yo):
     return "fundo", 0
 
 
+def nome_regiao(base, i):
+    """Bloco 67: região do tile i — a área nova (leste) em pedaços com sufixo _l0, _l1..."""
+    if i < NI_VELHO:
+        return base
+    return "%s_l%d" % (base, (i - NI_VELHO) // LESTE_PEDACO)
+
+
 def tipo_chao(xo, yo, z):
     rnd = (math.sin(xo * 0.013) + math.cos(yo * 0.017) + math.sin((xo + yo) * 0.007))
+    if xo > 760:  # Bloco 67: o leste (encosta rochosa com cascalho, floresta mais fechada, pedreira nova)
+        if z == "floresta":
+            return "grama_alta" if rnd > 0.4 else "clareira"
+        if z == "terraco_alto":
+            return "cascalho" if rnd > -0.2 else ("laje" if rnd < -1.4 else "colonia")
+        if z == "fundo":
+            return "cascalho" if rnd > -0.8 else "colonia"
     if z == "floresta":
         return "grama_alta" if rnd > 1.2 or abs(xo) > 680 else "clareira"
     if z == "terraco_alto":
@@ -99,7 +119,7 @@ def monta(exporta_em=None):
             xo, yo = antigo(i, j)
             z, h = zona(xo, yo)
             alt[(i, j)] = h
-            mat[(i, j)] = "clareira" if z == "floresta" else "colonia"
+            mat[(i, j)] = "clareira" if z == "floresta" else "colonia"  # (rocha azulada lia como água: o leste também é terra)
     for i in range(NI + 1):
         for j in range(NJ + 1):
             xo, yo = ((OX + i * T) / FATOR, (OY + j * T) / FATOR)
@@ -186,13 +206,13 @@ def monta(exporta_em=None):
 
     def reg_tile(i, j):
         if (i, j) in longe:
-            return "moldura"
+            return nome_regiao("moldura", i)
         if (i, j) in sub_de:
             return "escada_%d" % sub_de[(i, j)]
         if i < 0 or j < 0 or i >= NI or j >= NJ:
             return "moldura"
         z, _ = zona(*antigo(i, j))
-        return {"paredao": "paredao", "floresta": "alto", "terraco_alto": "alto", "terraco_meio": "meio"}.get(z, "fundo")
+        return nome_regiao({"paredao": "paredao", "floresta": "alto", "terraco_alto": "alto", "terraco_meio": "meio"}.get(z, "fundo"), i)
 
     def add(item, r):
         regiao[len(itens)] = r
@@ -354,7 +374,7 @@ def monta(exporta_em=None):
             im = recorte(f)
             u, v = i + rm.uniform(0.15, 0.85), j + rm.uniform(0.15, 0.85)
             x, y = P(u, v, alt[(i, j)])
-            add((u + v + 1, alt[(i, j)] + 0.5, 1, im, (int(x - im.width / 2), int(y - im.height + 3)), nv), "moldura")
+            add((u + v + 1, alt[(i, j)] + 0.5, 1, im, (int(x - im.width / 2), int(y - im.height + 3)), nv), nome_regiao("moldura", i))
     if exporta_em:
         exporta(exporta_em, itens, regiao, alt, esc_tiles, sub_de, subidas, bocas, longe)
         return
@@ -394,13 +414,13 @@ def exporta(pasta, itens, regiao, alt, esc_tiles, sub_de, subidas, bocas, longe)
     for idx, r in regiao.items():
         por.setdefault(r, []).append(itens[idx])
     for (i, j) in alt:
-        r = "moldura" if (i, j) in longe else None
+        r = nome_regiao("moldura", i) if (i, j) in longe else None
         if r is None:
             if (i, j) in sub_de:
                 r = "escada_%d" % sub_de[(i, j)]
             else:
                 z, _ = zona((OX + (i + 0.5) * T) / FATOR, (OY + (j + 0.5) * T) / FATOR)
-                r = {"paredao": "paredao", "floresta": "alto", "terraco_alto": "alto", "terraco_meio": "meio"}.get(z, "fundo")
+                r = nome_regiao({"paredao": "paredao", "floresta": "alto", "terraco_alto": "alto", "terraco_meio": "meio"}.get(z, "fundo"), i)
         tiles_de.setdefault(r, []).append((i, j))
     for i, j in bocas:          # a boca faz parte do paredão do terraço de cima
         for d in (0, 1):
@@ -408,13 +428,14 @@ def exporta(pasta, itens, regiao, alt, esc_tiles, sub_de, subidas, bocas, longe)
                 tiles_de["fundo"].remove((i + d, j))
             tiles_de.setdefault("alto", []).append((i + d, j))
     meta = {"fator": FATOR, "tile_arte": T, "nivel_arte": 32, "origem_arte": [OX, OY], "ni": NI, "nj": NJ,
+            "ni_velho": NI_VELHO, "leste_x": (OX + NI_VELHO * T) / FATOR,  # Bloco 67: onde começa a área nova
             "regioes": {}, "escadas": [], "bocas": []}
     for r, its in por.items():
         its.sort(key=lambda t: (t[0], t[1], t[2]))
         x0 = min(t[4][0] for t in its); y0 = min(t[4][1] for t in its)
         x1 = max(t[4][0] + t[3].width for t in its); y1 = max(t[4][1] + t[3].height for t in its)
         c = Image.new("RGBA", (x1 - x0, y1 - y0))
-        nev = Image.new("L", c.size, 0) if r == "moldura" else None
+        nev = Image.new("L", c.size, 0) if r.startswith("moldura") else None
         for t in its:
             c.alpha_composite(t[3], (t[4][0] - x0, t[4][1] - y0))
             if nev is not None:
@@ -429,7 +450,7 @@ def exporta(pasta, itens, regiao, alt, esc_tiles, sub_de, subidas, bocas, longe)
         ts = tiles_de.get(r, [])
         info = {"img": "terreno_%s.png" % r, "tela": [x0 + bb[0] + oxy[0], y0 + bb[1] + oxy[1]],
                 "z": [(min(ks) - 1) * 32 if ks else 0, max(ks) * 32 if ks else 0]}
-        if ts and r not in ("moldura", "fundo"):
+        if ts and not r.startswith("moldura") and not r.startswith("fundo"):
             imin = min(i for i, _ in ts); imax = max(i for i, _ in ts)
             jmin = min(j for _, j in ts); jmax = max(j for _, j in ts)
             info["chao"] = [(OX + imin * T) / FATOR, (OY + jmin * T) / FATOR,

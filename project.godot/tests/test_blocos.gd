@@ -280,3 +280,7 @@ func test_b63_corte_mina() -> void:
 
 func test_b64_vagonete() -> void:
 	run_bloco("b64_vagonete.gd")
+
+
+func test_b67_mapa_leste() -> void:
+	run_bloco("b67_mapa_leste.gd")

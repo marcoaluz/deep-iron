@@ -113,6 +113,8 @@ func spawn_animal(meat: float = -1.0, at: Vector2 = Vector2.INF) -> Node2D:
 	var ang := randf() * TAU
 	a.position = at if at != Vector2.INF else global_position + Vector2(cos(ang), sin(ang) * 0.6) * randf_range(25.0, 70.0)
 	get_parent().add_child(a)
+	a.visible = visible  # Bloco 67: toca do leste trancado: os bichos também ficam escondidos (e parados)
+	a.set_process(visible)
 	_animals.append(a)
 	return a
 

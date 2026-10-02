@@ -245,6 +245,11 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return ("%d cr" % hub.next_level_cost()) if hub.level < hub.max_level() else "",
 					"reason": func(): return _expand_reason(hub),
 					"act": func(): hub.level_up(), "label": "Expandir", "tag": "Centro da Vila: um só"})
+				out.append({"name": "Desbravar o leste", "tex": "", "tag": "uma vez",
+					"desc": "Abre a área nova do mapa: floresta, encosta rochosa e outra pedreira com mais jazidas. O engenheiro abre caminho na fronteira.",
+					"cost": func(): return hub.leste_cost_text() if hub.leste_block_reason() != "já desbravado" else "",
+					"reason": func(): return hub.leste_block_reason(),
+					"act": func(): hub.desbravar_leste(), "label": "Desbravar"})
 				out.append({"name": "Trilhas batidas", "tex": "", "desc": "Todo mundo anda mais rápido.",
 					"cost": func(): return _upgrade_cost_text(hub, "trilhas"),
 					"reason": func(): return hub.upgrade_block_reason("trilhas"),

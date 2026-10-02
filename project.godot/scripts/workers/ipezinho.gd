@@ -1181,9 +1181,12 @@ func depth_danger() -> float:
 ## _find_best_station, não aceita a estação atual só por ser a atual: árvore que
 ## virou toco ou horta colhida não contam — aí o lenhador/cozinheiro vai descarregar.)
 func _has_usable_station(group_name: String) -> bool:
+	var env := get_tree().get_first_node_in_group("environment")
 	for node in get_tree().get_nodes_in_group(group_name):
 		if node.has_method("is_usable") and not node.is_usable():
 			continue
+		if env and env.has_method("trancado") and env.trancado((node as Node2D).global_position):
+			continue  # Bloco 67
 		if node.has_method("has_free_slot_for") and not node.has_free_slot_for(self):
 			continue
 		return true
@@ -1194,9 +1197,12 @@ func _has_usable_station(group_name: String) -> bool:
 func _find_best_station(group_name: String) -> Node2D:
 	var best: Node2D = null
 	var best_score := INF
+	var env := get_tree().get_first_node_in_group("environment")
 	for node in get_tree().get_nodes_in_group(group_name):
 		if node.has_method("is_usable") and not node.is_usable() and node != _station:
 			continue
+		if env and env.has_method("trancado") and env.trancado((node as Node2D).global_position):
+			continue  # Bloco 67: o leste ainda não foi desbravado
 		if node.has_method("has_free_slot_for") and not node.has_free_slot_for(self):
 			continue
 		if node.has_method("accepts_worker") and not node.accepts_worker(self) and node != _station:

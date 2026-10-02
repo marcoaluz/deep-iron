@@ -259,7 +259,7 @@ func _sync_weather(cam: Vector2, hor_screen: float) -> void:
 	var frost: float = _weather_node.level("frost") if _weather_node.has_method("level") else 0.0
 	var cold := Color(1, 1, 1).lerp(Color(0.86, 0.92, 1.04), clampf(frost, 0.0, 1.0) * 0.7)
 	for n in get_parent().get_children():
-		if n is Sprite2D and String(n.name).begins_with("Terreno_") and n != _moldura:
+		if n is Sprite2D and String(n.name).begins_with("Terreno_") and n != _moldura and not String(n.name).begins_with("Terreno_moldura"):
 			(n as Sprite2D).modulate = cold
 
 
@@ -334,6 +334,9 @@ func _process(delta: float) -> void:
 	_ridge.self_modulate = Color(0.85, 0.9, 0.85).lerp(c[1], 0.2)
 	if _moldura:
 		_moldura.self_modulate = Color(1, 1, 1).lerp(c[1], 0.18)
+		for n in get_parent().get_children():  # Bloco 67: os pedaços da moldura do leste
+			if n is Sprite2D and n != _moldura and String(n.name).begins_with("Terreno_moldura"):
+				(n as Sprite2D).self_modulate = _moldura.self_modulate
 	_sync_weather(cam, hor_screen)
 	# nuvens: andam devagar e dão a volta; tingidas pela hora; mais escuras na chuva
 	var cloud_col := Color(1, 1, 1).lerp(c[1], 0.35).lerp(Color(0.45, 0.47, 0.52), c[2] * 0.7)

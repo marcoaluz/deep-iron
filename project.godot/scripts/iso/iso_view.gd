@@ -189,6 +189,10 @@ func _hide_main_children(on: bool) -> void:
 # ------------------------------------------------------------ chão (textura achatada)
 func _build_ground() -> void:
 	var wr: Rect2 = _env.world_rect().grow(GROUND_MARGIN)
+	if _env.has_method("has_iso_map") and _env.has_iso_map() and _env.deep_rect.has_area():
+		# Bloco 67: no mapa novo a textura do chão só serve pros andares de baixo (as decalques);
+		# renderizar o mundo inteiro (agora com o leste) a cada poucos quadros era o custo maior
+		wr = _env.deep_rect.merge(_env.abyss_rect if _env.abyss_rect.has_area() else _env.deep_rect).grow(GROUND_MARGIN * 0.5)
 	var size := Vector2i(mini(ceili(wr.size.x), GROUND_MAX), mini(ceili(wr.size.y), GROUND_MAX))
 	_ground_rect = Rect2(wr.position, Vector2(size))
 	if _ground_sv == null:
@@ -270,8 +274,9 @@ func _build_terrain() -> void:
 		sp.light_mask = 2
 		_terrain_node.add_child(sp)
 		_em_blocos(sp)
-		if BACK_Z.has(r):
-			sp.z_index = BACK_Z[r]
+		var back: String = r if BACK_Z.has(r) else ("moldura" if r.begins_with("moldura") else ("fundo" if r.begins_with("fundo") else ""))
+		if back != "":  # Bloco 67: os pedaços do leste (moldura_l0, fundo_l1...) ficam no fundo como os de sempre
+			sp.z_index = BACK_Z[back]
 			if r == "moldura":
 				_sky = Ceu.new()
 				_terrain_node.add_child(_sky)
@@ -310,6 +315,61 @@ func _build_terrain() -> void:
 			"sprite": sp2, "rect": lr, "tint": LEVEL_TINT.get(nome, Color.WHITE)})
 	_build_palisade()
 	_build_lava()
+	_build_nevoa_leste()
+
+
+# ------------------------------------------------------------ névoa do leste (Bloco 67)
+var _nevoa_leste: Polygon2D
+
+
+func _build_nevoa_leste() -> void:
+	if not _env.has_method("has_leste") or not _env.has_leste():
+		return
+	var lr: Rect2 = _env.leste_rect()
+	var pts := PackedVector2Array()
+	for c in [lr.position, Vector2(lr.end.x, lr.position.y), lr.end, Vector2(lr.position.x, lr.end.y)]:
+		pts.append(to_screen(c, 96.0))
+	pts.append(to_screen(Vector2(lr.position.x, lr.end.y), -160.0))  # cobre o corte da frente também
+	pts.append(to_screen(lr.end, -160.0))
+	_nevoa_leste = Polygon2D.new()
+	_nevoa_leste.name = "NevoaLeste"
+	# (o polígono: topo do losango + a faixa do corte; Geometry pra juntar os dois)
+	var topo := PackedVector2Array([pts[0], pts[1], pts[2], pts[3]])
+	var corte := PackedVector2Array([pts[3], pts[2], pts[5], pts[4]])
+	var uniao := Geometry2D.merge_polygons(topo, corte)
+	_nevoa_leste.polygon = uniao[0] if not uniao.is_empty() else topo
+	_nevoa_leste.color = Color(0.05, 0.05, 0.07, 0.86)
+	_nevoa_leste.z_as_relative = false
+	_nevoa_leste.z_index = 3800
+	_things.add_child(_nevoa_leste)
+	_nevoa_leste.visible = not _env.leste_aberto
+	_terreno_leste_visivel(_env.leste_aberto)
+	if _env.has_signal("leste_mudou") and not _env.leste_mudou.is_connected(_on_leste_mudou):
+		_env.leste_mudou.connect(_on_leste_mudou)
+
+
+## O terreno do leste (pedaços _lN; a moldura de trás fica) só aparece desbravado.
+func _terreno_leste_visivel(on: bool) -> void:
+	if _terrain_node == null:
+		return
+	for sp in _terrain_node.get_children():
+		var nm := String(sp.name)
+		if nm.begins_with("Terreno_") and nm.contains("_l") and not nm.begins_with("Terreno_moldura"):
+			sp.visible = on
+
+
+func _on_leste_mudou(aberto: bool) -> void:
+	_terreno_leste_visivel(aberto)
+	if _nevoa_leste == null:
+		return
+	if aberto:
+		_nevoa_leste.visible = true
+		var t := create_tween()
+		t.tween_property(_nevoa_leste, "modulate:a", 0.0, 2.0)
+		t.tween_callback(func(): _nevoa_leste.visible = false)
+	else:
+		_nevoa_leste.modulate.a = 1.0
+		_nevoa_leste.visible = true
 
 
 ## A paliçada entre a floresta e a vila (Prompt 29 parte 2): um trecho do muro do Prompt 12 por

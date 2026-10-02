@@ -42,6 +42,8 @@ func g(grupo: String) -> Node:
 
 func _tocas() -> void:
 	for tc in main.get_tree().get_nodes_in_group("caca"):
+		if tc.name == "TocaLeste":
+			continue  # (a do leste, Bloco 67)
 		if tc.animal == "javali":
 			javalis = tc
 		else:
@@ -173,7 +175,8 @@ func _carregado() -> void:
 	print("== depois de carregar")
 	_tocas()
 	check(coelhos.alive().size() >= 1 and javalis.alive().size() >= 1, "bichos voltaram (%d coelhos, %d javalis)" % [coelhos.alive().size(), javalis.alive().size()])
-	check(main.get_tree().get_nodes_in_group("animais").size() <= coelhos.max_animals() + javalis.max_animals(), "sem bicho duplicado")
+	var destas: int = main.get_tree().get_nodes_in_group("animais").filter(func(a): return a.toca == coelhos or a.toca == javalis).size()
+	check(destas <= coelhos.max_animals() + javalis.max_animals(), "sem bicho duplicado (%d)" % destas)
 	var d: Dictionary = coelhos.get_save_data()
 	d.erase("animais")
 	d["game_remaining"] = coelhos.meat_per_animal() * 2.0

@@ -1233,7 +1233,7 @@ func _refresh_worker_rows(workers: Array) -> void:
 		_set_text(row.tag, "  ".join(tags))
 		_set_font_color(row.tag, tag_color)
 		var st: StyleBox = _style_row_selected if _main.is_selected(w) else _style_row
-		if row.panel.get_meta("_sb", null) != st:
+		if not row.panel.has_meta("_sb") or row.panel.get_meta("_sb") != st:
 			row.panel.set_meta("_sb", st)
 			row.panel.add_theme_stylebox_override("panel", st)
 

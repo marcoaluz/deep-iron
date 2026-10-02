@@ -77,6 +77,8 @@ Fotos da clareira com os bichos (Bloco 61): `tests/capturas_fauna.gd` (com janel
 
 Fotos da Matriarca e do trilho com o vagonete (Blocos 62/64): `tests/capturas_chefe_trilho.gd`.
 
+Fotos do mapa ampliado (Bloco 67): `tests/capturas_leste.gd`.
+
 ## Pela linha de comando
 
 Da pasta `project.godot/` (troque o caminho do Godot pelo seu):
@@ -137,6 +139,7 @@ determinístico) só mudou o que o bloco pretendia — instruções no topo do a
 | `b62_tiers_chefe.gd` | 62 — tier sobe com a onda e com as pesquisas, elite, a Matriarca (uma por estação a partir da configurada): grito chama Lumívoros, golpe corrói a arma, derrubada dá recompensa, foge ao amanhecer, sem softlock com os guardas caídos, telemetria (tier/chefe) e save |
 | `b63_corte_mina.gd` | 63 — corte da mina: todas as jazidas (abertas/lacradas/trancadas), ipezinhos por andar, redesenho ~20x/s, estado novo no próximo desenho, clique na galeria leva a câmera |
 | `b64_vagonete.gd` | 64 — trilho e vagonete: lugar perto das jazidas e longe do armazém, canteiro, trilho até o armazém, minerador perto entrega no ponto de carga, vagonete leva sozinho, trilho quebra (ponto cheio não aceita: mineradores vão pro armazém), engenheiro conserta, save/load |
+| `b67_mapa_leste.gd` | 67 — mapa ampliado pro leste (~2,9x a área): trancado (sem caminho, ninguém escolhe estação de lá, não constrói), conteúdo com nome fixo, câmera cobre o leste, desbravar (estágio, custo, obra do engenheiro), depois caminho e construção lá, save/load (aberto + jazida nova pelo nome) e save antigo trancado |
 | `p20_interface.gd` | Prompts 20–25 — pele (tema da raiz, botão/painel/cartão/aba 9-slice, cadeado, cursores), ícones (barra de cima, funções, prédios do menu), fontes (acentos, cabeçalho), velocidade, retrato (expressão pelo estado, cartão do selecionado), faixa com ilustração, janela de evento, corte da mina (4 andares, um boneco por ipezinho, clique seleciona) |
 | `../test_iso.gd` (GUT, rápido) | Prompt 28 — núcleo: projeção, verdade 3D, ordem incremental, raio da câmera, direção de losango |
 | `../test_iso_arte.gd` (GUT, rápido) | Prompt 28 — verificador "o sprite cabe na caixa" contra a arte dos prédios; Prompt 29 — toda a arte integrada (`assets/game/iso/predios/predios.json`) |
