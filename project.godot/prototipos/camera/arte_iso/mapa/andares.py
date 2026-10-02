@@ -32,8 +32,23 @@ ANDARES = {
     "s4": {"rect": (-440, 2120, 880, 520), "k_chao": -147, "paredes": 5, "laje": 3, "pasta": "umido"},
     "s5": {"rect": (-400, 2760, 800, 480), "k_chao": -194, "paredes": 4, "laje": 3, "pasta": "lago"},
 }
-# Bloco 71: o lago do S5 (o mesmo retângulo de `obstaculos` no .tres): chão de água rasa
-AGUA = [(-180, 2900, 360, 220)]
+
+
+def _dos_dados(arquivo, campo):
+    """Lista JSON de um campo do .tres do nível (data/niveis): a posição das poças e do lago vem de lá."""
+    import re
+    t = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "data", "niveis", arquivo),
+             encoding="utf-8").read()
+    m = re.search(r"^%s = (\[.*\])$" % campo, t, re.M)
+    return json.loads(m.group(1)) if m else []
+
+
+# Bloco 71: o lago do S5 (`obstaculos` no .tres, a elipse dentro do retângulo): chão de água rasa, com a
+# borda de seixos num anel em volta (itens de arte do documento)
+AGUA = [tuple(o) for o in _dos_dados("S5_lago.tres", "obstaculos")]
+BORDA = 1.25   # o anel da borda: até 1,25x a elipse
+# itens de arte: a rocha com ácido em volta das poças de ácido do S2 (`perigos` no .tres)
+ACIDO = [((p[1], p[2]), p[3] * 1.3) for p in _dos_dados("S2_acido.tres", "perigos") if p[0] == "acido"]
 K_CORTE = -4          # o corte da superfície desce até aqui (monta.py CORTE)
 # zonas de perigo da cena (main.tscn): centro na lógica, raio, tipo
 ZONAS = [((455, 1240), 85, "gas"), ((-470, 770), 80, "radiacao"), ((390, 1895), 80, "calor")]
@@ -65,6 +80,12 @@ def zona_em(p):
         dx, dy = (p[0] - (x + w / 2)) / (w / 2), (p[1] - (y + h / 2)) / (h / 2)
         if dx * dx + dy * dy <= 1.0:
             return "agua"
+        if dx * dx + dy * dy <= BORDA * BORDA:
+            return "borda"
+    for (cx, cy), r in ACIDO:
+        dx, dy = p[0] - cx, p[1] - cy
+        if (dx * dx) / (r * r) + (dy * dy) / (r * r * 0.36) <= 1.0:
+            return "acido"
     for (cx, cy), r, kind in ZONAS:
         dx, dy = p[0] - cx, p[1] - cy
         if (dx * dx) / (r * r) + (dy * dy) / (r * r * 0.36) <= 1.0:
@@ -94,7 +115,7 @@ def main(pasta):
         salas[nome] = (i0, j0)
         chao = ld(REL + "/%s/chao_*.png" % a["pasta"])
         bloco = ld(REL + "/%s/bloco.png" % a["pasta"])
-        zchao = {k: ld(REL + "/mina/zona_%s/chao_*.png" % k) for k in ("gas", "calor", "radiacao", "agua")}
+        zchao = {k: ld(REL + "/mina/zona_%s/chao_*.png" % k) for k in ("gas", "calor", "radiacao", "agua", "acido", "borda")}
         kc = a["k_chao"]
         itens = []
         for i in range(i0 - 1, NI):

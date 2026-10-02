@@ -1,6 +1,7 @@
 extends SceneTree
 ## Bloco 70 (não é teste): fotos do conteúdo do S2/S3 — poças de ácido e de lava, jazidas de cristal,
-## ventilador, Gosma e Magmante; Bloco 71: S4 (cachoeira, água, lava) e S5 (lago, gemas, casinhas). Roda COM JANELA e APPDATA isolado:
+## ventilador, Gosma e Magmante; Bloco 71: S4 (cachoeira, água, lava) e S5 (lago, gemas, casinhas); itens
+## de arte: a vila antiga do leste, a rocha com ácido, o píer. Roda COM JANELA e APPDATA isolado:
 ##   <Godot>.exe --path . -s res://tests/capturas_fundo.gd -- <pasta de saída>
 const PATH := "user://savegame.json"
 var main: Node
@@ -59,6 +60,7 @@ func _prepara() -> void:
 		e._apply(false)
 	for m in main.get_tree().get_nodes_in_group("minerios"):
 		m.on_unlock_changed(false)
+	g("environment").set_leste_aberto(true, false)  # (itens de arte: a vila antiga do leste)
 	var world: Node = g("village_hub").get_parent()
 	var p2: Vector2 = world.get_node("PocaS2_2").global_position
 	g("fundo").spawn_ventilador(p2 + Vector2(-40, -80))
@@ -84,6 +86,9 @@ func _prepara() -> void:
 		["s4_lava", Vector2(-150, 2480), 2],
 		["s5_lago", Vector2(0, 2990), 1],
 		["s5_casas", Vector2(-250, 3080), 2],
+		["s5_pier", Vector2(-150, 3000), 2],
+		["s2_acido", world.get_node("PocaS2_1").global_position, 1],
+		["leste_vila", g("environment").get_node("VilaAntiga1").global_position if g("environment").has_node("VilaAntiga1") else Vector2(2440, -40), 1],
 	]
 
 

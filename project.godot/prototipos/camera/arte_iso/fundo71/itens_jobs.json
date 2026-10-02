@@ -1,0 +1,44 @@
+{
+ "igreja": {
+  "job": "27bc7386-0bce-4f76-9de8-954787077418",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo71\\itens\\igreja.png",
+  "ok": true,
+  "candidatos": 4
+ },
+ "torre": {
+  "job": "682fdee3-a1ed-4599-95f5-6fd6eaf4afee",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo71\\itens\\torre.png",
+  "ok": true,
+  "candidatos": 4
+ },
+ "enxaimel": {
+  "job": "67f9a4a2-5c60-4a52-964c-efb0151b822e",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo71\\itens\\enxaimel.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "passarela": {
+  "job": "d781fb7c-da1b-408f-b15e-e95466b5549b",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo71\\itens\\passarela.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "ponte": {
+  "job": "1a712458-9a70-43e1-92df-c1e1c4a913f6",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo71\\itens\\ponte.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "rampa": {
+  "job": "d333646c-97d3-4a3f-b085-26c2a9230f51",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo71\\itens\\rampa.png",
+  "ok": true,
+  "candidatos": 16
+ }
+}

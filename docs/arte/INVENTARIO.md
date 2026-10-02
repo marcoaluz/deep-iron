@@ -113,6 +113,7 @@ prompts 0–31).
 | Boca de mina no paredão (vigas de madeira, 3 degraus, 2×1 tiles) | 6 | **integrado** (4 bocas, uma por galeria) | — | 75 (feito) |
 | **Pisos do S4 (rocha molhada), S5 (rocha azulada) e água rasa do lago** + lajes `andar_s4/s5` — Bloco 71 | — | **integrado** | 4 + 4 + 4 ladrilhos | 60 (feito) |
 | **Cachoeira** (efeito animado, 6 quadros por script) — Bloco 71 | — | **integrado** | 1 | 25 (feito) |
+| **Rocha com ácido** (em volta das poças do S2) e **borda do lago** (seixos, S5) | — | **integrado** | 4 + 4 ladrilhos | 40 (feito) |
 
 ## 7. Jazidas, minérios e pedras
 
@@ -155,6 +156,8 @@ prompts 0–31).
 | Sombra | 19 | **código** (gerada da pegada, regra 7) | 0 |
 | **Ventilador do nível 2** (prop + ícone do menu) — Bloco 70 | — | **integrado** | 25 (feito) |
 | **Casinhas de pedra** da vila antiga do lago — Bloco 71 | — | **integrado** | 25 (feito) |
+| **Vila antiga do leste: igreja, torre do relógio, 3 casas enxaimel** (itens de arte do documento de melhorias) | — | **integrado** (decoração ao desbravar) | 75 (feito) |
+| **Passarelas de madeira (2), ponte de corda, peças da rampa em espiral (3)** | — | **integrado** (decoração do S3–S5) | 75 (feito) |
 
 ## 10. Efeitos e luzes
 

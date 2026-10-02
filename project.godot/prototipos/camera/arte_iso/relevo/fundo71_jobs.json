@@ -1,22 +1,30 @@
 {
  "umido": {
-  "job": "47874a90-5771-4563-b419-8524d0329319",
-  "custo": 20,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\relevo\\umido\\candidatos.png",
   "ok": true,
-  "candidatos": 16
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\relevo\\umido\\candidatos.png"
  },
  "lago": {
-  "job": "be6b2a13-f970-4d50-9d6f-520651948216",
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\relevo\\lago\\candidatos.png"
+ },
+ "zona_agua": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\relevo\\zona_agua\\candidatos.png"
+ },
+ "zona_acido": {
+  "job": "d13a6db5-bbb6-4da6-a397-bb57cbe83b26",
   "custo": 20,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\relevo\\lago\\candidatos.png",
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\relevo\\zona_acido\\candidatos.png",
   "ok": true,
   "candidatos": 16
  },
- "zona_agua": {
-  "job": "26e0a8f9-e5a5-4bc9-9713-5a530bea57f3",
+ "zona_borda": {
+  "job": "7215c267-c2e9-456e-a1ef-d3c8ca9ca135",
   "custo": 20,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\relevo\\zona_agua\\candidatos.png",
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\relevo\\zona_borda\\candidatos.png",
   "ok": true,
   "candidatos": 16
  }

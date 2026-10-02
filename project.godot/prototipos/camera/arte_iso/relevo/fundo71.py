@@ -19,6 +19,11 @@ PEDIDOS = {
               "reflecting a cold blue light, a little dark green slime in the cracks", "cold blue water glints"),
     "lago": ("blue-grey cave stone near an underground lake: smooth worn rock with small pale blue crystal "
              "specks and a fine layer of damp blue mineral dust", "pale blue crystal specks"),
+    # itens de arte do documento: a rocha com ácido (S2) e a borda do lago (S5)
+    "zona_acido": ("dark slate rock with corroded pale-green ACID STAINS, etched pits and a few tiny shallow "
+                   "puddles of glowing toxic green liquid in the cracks", "toxic lime-green stains"),
+    "zona_borda": ("a wet lake SHORE: dark blue-grey pebbles and coarse wet sand, a thin film of water at the "
+                   "edges, a few smooth stones", "wet blue-grey pebbles"),
     "zona_agua": ("SHALLOW CLEAR WATER covering the top face: calm dark blue-green water over submerged rocks, "
                   "small soft ripples and faint light reflections; the side faces are the same wet dark rock",
                   "deep calm blue water"),
@@ -48,7 +53,7 @@ def gera():
 def monta(args):
     for a in args:
         nome, idx = a.split("=")
-        dest = os.path.join(AQUI, "final", nome if nome != "zona_agua" else os.path.join("mina", "zona_agua"))
+        dest = os.path.join(AQUI, "final", os.path.join("mina", nome) if nome.startswith("zona_") else nome)
         os.makedirs(dest, exist_ok=True)
         for k, i in enumerate(int(x) for x in idx.split(",")):
             src = Image.open(os.path.join(AQUI, nome, "candidatos", "c%02d.png" % i)).convert("RGBA")

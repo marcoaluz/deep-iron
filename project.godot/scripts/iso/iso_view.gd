@@ -427,6 +427,30 @@ func _build_atmosfera() -> void:
 			ll.add_to_group("cullable_lights")
 			_terrain_node.add_child(ll)
 			_luzes_zona.append([ll, ll.energy, randf() * TAU])
+			var brilho: Texture2D = IsoFx.tex("brilho_achado")  # o reflexo piscando na água (itens de arte)
+			if brilho:
+				var bb := Rect2(to_screen(lr.position), Vector2.ZERO)
+				for c in [Vector2(lr.end.x, lr.position.y), lr.end, Vector2(lr.position.x, lr.end.y)]:
+					bb = bb.expand(to_screen(c))
+				var sp := CPUParticles2D.new()
+				sp.name = "LagoBrilho_" + n.id
+				sp.texture = brilho
+				sp.amount = 14
+				sp.lifetime = 1.8
+				sp.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+				sp.emission_rect_extents = bb.size * 0.3
+				sp.position = bb.get_center()
+				sp.gravity = Vector2.ZERO
+				sp.initial_velocity_min = 0.0
+				sp.initial_velocity_max = 2.0
+				sp.scale_amount_min = 0.5
+				sp.scale_amount_max = 0.9
+				sp.color = Color(0.7, 0.85, 1.0, 0.7)
+				sp.light_mask = 0
+				sp.z_as_relative = false
+				sp.z_index = 3650
+				_things.add_child(sp)
+				_poca_fx.append(sp)  # (reduzir efeitos para, como as bolhas das poças)
 	# luz pulsando nas zonas de perigo (a da lava já existe: ganha o pulso; gás e radiação ganham a sua)
 	for c in _terrain_node.get_children():
 		if c is PointLight2D and String(c.name).begins_with("Lava_"):

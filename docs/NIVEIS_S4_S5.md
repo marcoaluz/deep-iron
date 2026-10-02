@@ -59,3 +59,24 @@ Com o abismo aberto, pesquise **Bombas d'água** e clique na plataforma arruinad
 o conserto abre o S4. Lá, mande alguém passar pela água e depois pela lava (a lava demora mais pra
 queimar). Conserte a plataforma do S4 (cristal rubro) pra descer ao S5: o lago, as gemas e as casinhas.
 F2 mostra os 6 andares.
+
+## Itens de arte novos (fim do documento de melhorias)
+
+O documento diz que esses itens são "arte/decoração, não gameplay". Entraram como cenário, por dados:
+
+| Item | Onde | Gerações |
+|---|---|---|
+| **Igreja, torre do relógio, 3 casas enxaimel** | a **vila antiga** no leste (`environment.LESTE_VILA`: aparece ao desbravar, com pegada na navegação) | 75 |
+| **Passarelas de madeira** (2) e **ponte de corda** | S4 (sobre a água, entre as poças) e S5 (o píer no lago) — `decoracao` com posição fixa (`[prop, x, y, true]`) | 50 |
+| **Rampa em espiral** (reta, curva, patamar com escada) | junto das chegadas das plataformas no S3, S4 e S5 | 25 |
+| **Rocha com ácido** | o chão em volta das poças de ácido do S2 (`andares.py` lê as poças do .tres) | 20 |
+| **Borda do lago** (seixos e areia molhada) | anel em volta do lago do S5 | 20 |
+| **Reflexo do lago** | brilho piscando sobre a água + a luz azul pulsando (código; sem geração) | 0 |
+
+Já existiam ou saíram nos blocos 70/71: rocha comum (nível 2), rocha com lava (abismo), rocha úmida (S4),
+poças de ácido, poços de lava, cachoeira, água do lago, cristais vermelho/azul/verde/roxo (Prompt 8),
+escadas de mão e placas (Prompt 14), trilhos (Prompt 7/Bloco 64), ventilador (Bloco 70).
+
+A rocha com ácido saiu berrante na primeira montagem (quadrados verde-limão): trocada pelas variações
+discretas e escurecida 15%.
+

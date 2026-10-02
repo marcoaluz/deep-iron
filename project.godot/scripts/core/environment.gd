@@ -178,6 +178,11 @@ var leste_aberto := false
 const LESTE_JAZIDAS := [["ferro", Vector2(1000, 160)], ["cobre", Vector2(1400, 300)], ["carvao", Vector2(1820, 120)],
 	["prata", Vector2(2260, 320)], ["ferro", Vector2(2700, 180)], ["cobre", Vector2(3100, 330)], ["carvao", Vector2(3420, 200)]]
 const LESTE_ARVORES := 14
+## Itens de arte do documento: a VILA ANTIGA do leste (decoração, de antes da explosão) — igreja, torre
+## do relógio e casas enxaimel; cada uma no chão plano mais perto do ponto, longe das jazidas.
+const LESTE_VILA := [["igreja_0", Vector2(2440, -40), Vector2(50, 30)], ["torre_0", Vector2(2620, -120), Vector2(22, 14)],
+	["enxaimel_0", Vector2(2250, 60), Vector2(30, 18)], ["enxaimel_1", Vector2(2600, 60), Vector2(30, 18)],
+	["enxaimel_2", Vector2(2800, -40), Vector2(30, 18)]]
 const LESTE_DECOR := 70
 
 
@@ -281,7 +286,8 @@ func _build_decoracao_niveis() -> void:
 				add_child(fx)
 				fx.add_to_group("nivel_deco")
 				continue
-			var livre := _deep_spot_free(p, 40.0, placed, avoid) if not level_of(p).is_empty() else _is_free(p, 18.0, 24.0)
+			var fixo: bool = d.size() >= 4 and d[3] == true  # [prop, x, y, true]: lugar escolhido (ponte, píer)
+			var livre := fixo or (_deep_spot_free(p, 40.0, placed, avoid) if not level_of(p).is_empty() else _is_free(p, 18.0, 24.0))
 			if not livre:
 				continue
 			placed.append(p)
@@ -326,6 +332,19 @@ func _build_leste() -> void:
 		m.position = nearest_ok(LESTE_JAZIDAS[k][1], 20.0)
 		m.add_to_group("leste_conteudo")
 		world.add_child(m)
+	for k in LESTE_VILA.size():  # (antes das árvores: as casas ficam com o lugar)
+		var nome := "VilaAntiga%d" % (k + 1)
+		if has_node(nome):
+			continue
+		var pv := nearest_ok(LESTE_VILA[k][1], 46.0)
+		var perto_jazida := get_tree().get_nodes_in_group("minerios").any(func(m): return (m as Node2D).global_position.distance_to(pv) < 110.0)
+		if perto_jazida:
+			continue
+		_decor_node(String(LESTE_VILA[k][0]), pv, false)
+		_add_obstacle(pv + Vector2(0, -8), LESTE_VILA[k][2])  # a pegada do prédio não anda
+		var casa := get_child(get_child_count() - 1)
+		casa.name = nome
+		casa.add_to_group("leste_conteudo")
 	var arv := preload("res://scenes/props/arvore.tscn")
 	var postas := 0
 	for tries in 600:

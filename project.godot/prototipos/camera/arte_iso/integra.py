@@ -645,6 +645,11 @@ for st in ("cheia", "meia", "quase"):
     PROPS["jazida_gema_azul_%s" % st] = "fundo70/jazida_gema_azul_%s.png" % st
 for k in range(2):
     PROPS["casa_pedra_%d" % k] = "fundo71/casa_pedra_%d.png" % k
+# Itens de arte do documento de melhorias (decoração): a vila antiga do leste, passarelas, ponte de
+# corda e as peças da rampa em espiral (fundo71/itens.py)
+for nome, n in (("igreja", 1), ("torre", 1), ("enxaimel", 3), ("passarela", 2), ("ponte", 1), ("rampa", 3)):
+    for k in range(n):
+        PROPS["%s_%d" % (nome, k)] = "fundo71/%s_%d.png" % (nome, k)
 
 # Prompts 14 e 18: cova (cemitério), explosivos (pesquisa), antena do satélite, cesto e placa de greve
 for nome in ("cova", "explosivos", "antena", "cesto", "placa_greve"):
