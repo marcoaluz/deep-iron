@@ -192,7 +192,7 @@ func _monta_media() -> void:
 		if p != Vector2.INF:
 			f.call(p)
 	_termina_obras()
-	_ipezinhos(15, ["minerador", "minerador", "lenhador", "cozinheiro", "cacador", "engenheiro", "pesquisador", "guarda"])
+	_ipezinhos(15, ["minerador", "minerador", "lenhador", "cozinheiro", "caçador", "engenheiro", "pesquisador", "guarda"])
 	_mira()
 
 
@@ -204,7 +204,7 @@ func _monta_cheia() -> void:
 		if p != Vector2.INF:
 			hub._confirm_house(p)
 	_termina_obras()
-	_ipezinhos(40, ["minerador", "minerador", "lenhador", "cozinheiro", "cacador", "guarda", "guarda", "engenheiro", "pesquisador"])
+	_ipezinhos(40, ["minerador", "minerador", "lenhador", "cozinheiro", "caçador", "guarda", "guarda", "engenheiro", "pesquisador"])
 	var dn := g("day_night")
 	dn.time = dn.day_duration + 5.0  # noite
 	var w := g("weather")

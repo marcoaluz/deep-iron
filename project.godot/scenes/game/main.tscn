@@ -202,6 +202,7 @@ position = Vector2(-120, -840)
 
 [node name="Toca2" parent="World" instance=ExtResource("90_toca")]
 position = Vector2(230, -760)
+animal = "javali"
 
 [node name="Elevador" parent="World" instance=ExtResource("42_elevador")]
 position = Vector2(580, 320)

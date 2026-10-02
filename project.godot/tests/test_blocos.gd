@@ -264,3 +264,7 @@ func test_b57_coletor_minerio() -> void:
 
 func test_b60_dinamite_radio() -> void:
 	run_bloco("b60_dinamite_radio.gd")
+
+
+func test_b61_fauna() -> void:
+	run_bloco("b61_fauna.gd")

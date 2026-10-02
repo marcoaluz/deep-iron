@@ -527,7 +527,7 @@ func sync_dynamic(view_rect: Rect2 = Rect2()) -> void:
 		_vel = _vel.lerp(scr - _last_screen, 0.35)
 	_last_screen = scr
 	var moving: bool = src is CharacterBody2D and (src as CharacterBody2D).velocity.length() > 5.0
-	if src.is_in_group("robos") or src.is_in_group("criaturas"):
+	if src.is_in_group("robos") or src.is_in_group("criaturas") or src.is_in_group("animais"):
 		moving = _vel.length() > 0.2  # robô e criaturas andam mexendo a posição (não são CharacterBody)
 	_moving_now = moving
 	if moving:

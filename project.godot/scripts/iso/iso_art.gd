@@ -400,7 +400,10 @@ static func prop_layers(node: Node) -> Array:
 			else:
 				out.append(prop("arvore_%s_%d" % [esp, (h / 7) % TREE_VARIANTS[esp]]))
 		"toca":
-			out.append(prop(["toca_coelho_fora", "toca_coelho_orelhas", "toca_coelho_vazia"][clampi(sp.frame, 0, 2)]))
+			if node.get("animal") == "javali":
+				out.append(prop("toca_javali"))  # Bloco 61
+			else:
+				out.append(prop(["toca_coelho_fora", "toca_coelho_orelhas", "toca_coelho_vazia"][clampi(sp.frame, 0, 2)]))
 		"horta":
 			out.append(prop(["horta_pronto", "horta_crescendo", "horta_colhido"][clampi(sp.frame, 0, 2)]))
 		"torch", "torch_unlit":

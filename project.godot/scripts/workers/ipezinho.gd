@@ -325,6 +325,8 @@ var _prev_swing: float = 0.0
 var _swing_rising: bool = false
 var _last_hunger_int: int = -1
 var _home: Node2D = null  # casa com a cama fixa deste ipezinho (null = sem teto)
+## Bloco 61: bichos que ele já abateu (caçador novato x experiente pro javali).
+var hunt_kills := 0
 var _home_slot: int = -1
 var _resting: bool = false  # chegou e está dormindo
 var _inside: bool = false  # dormindo DENTRO de casa (fica invisível)
@@ -2558,7 +2560,7 @@ func hurt(cause: String = "mina", severity: String = "") -> void:
 			if hud and hud.has_method("show_banner"):
 				hud.show_banner("ACIDENTE NA MINA", "%s se machucou feio no desabamento. Precisa de leito na enfermaria." % _display())
 	var grave := injury_severity == "grave"
-	var text := "Ai! Um galho!" if cause == "galho" else "Ai!"
+	var text := "Ai! Um galho!" if cause == "galho" else ("Ai! O javali!" if cause == "javali" else "Ai!")
 	_popup(text + (" (grave)" if grave else ""), Color(1.0, 0.25, 0.2) if grave else Color(1.0, 0.4, 0.35))
 	if grave and not downed:  # (caído em combate tem o aviso próprio)
 		_toast("%s se machucou feio! Precisa de leito na enfermaria." % _display())
@@ -3011,6 +3013,7 @@ func get_save_data() -> Dictionary:
 		"operates_coletor": _my_coletor() != null,
 		"coletor_pos": SaveUtil.vec2_to_array(_my_coletor().global_position) if _my_coletor() != null else [],  # Bloco 47
 		"coletor_minerio_pos": SaveUtil.vec2_to_array(_my_coletor_minerio().global_position) if _my_coletor_minerio() != null else [],  # Bloco 57
+		"hunt_kills": hunt_kills,  # Bloco 61
 	}
 
 
@@ -3071,6 +3074,7 @@ func load_save_data(d: Dictionary) -> void:
 	leather_carrying = maxf(SaveUtil.num(d, "leather_carrying", 0.0), 0.0)
 	if SaveUtil.boolean(d, "operates_coletor", false):
 		_relink_coletor.call_deferred(SaveUtil.vec2(d, "coletor_pos", Vector2.INF))  # Bloco 45/47
+	hunt_kills = maxi(SaveUtil.integer(d, "hunt_kills", 0), 0)  # Bloco 61
 	var cm_pos := SaveUtil.vec2(d, "coletor_minerio_pos", Vector2.INF)
 	if cm_pos != Vector2.INF:
 		_relink_coletor_minerio.call_deferred(cm_pos)  # Bloco 57

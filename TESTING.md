@@ -73,6 +73,8 @@ a página de teclas em 80%, 100% e na maior escala que cabe, confere que nada sa
 (`<pasta>/escala.txt` + PNGs). Rodar com APPDATA isolado:
 `<Godot>.exe --path project.godot -s res://tests/capturas_escala.gd -- <pasta>`.
 
+Fotos da clareira com os bichos (Bloco 61): `tests/capturas_fauna.gd` (com janela, APPDATA isolado).
+
 ## Pela linha de comando
 
 Da pasta `project.godot/` (troque o caminho do Godot pelo seu):
@@ -129,6 +131,7 @@ determinístico) só mudou o que o bloco pretendia — instruções no topo do a
 | `b57_coletor_minerio.gd` | 57 — coletor de minério: só perto de jazida, canteiro do engenheiro, designar minerador (lenhador não), produz o minério da jazida pro armazém, para sem operador, jazida esgotada para sem erro, o segundo custa mais, cartão do menu, save/load (posição, total, jazida escolhida, operador volta) |
 | `b58_oficina_construivel.gd` | 58 — Oficina construível: jogo novo = não construída (invisível, sem clique/obra, não bloqueia caminho, ferramentas seguem trancando minérios, equipamento pede Oficina), janela e cartão de construir, canteiro do engenheiro, pronta no lugar escolhido e forjando, save com ela por construir, save antigo = construída no lugar da cena |
 | `b60_dinamite_radio.gd` | 60 — dinamite (pesquisa Explosivos): bloqueio com motivo, fazer gasta cr + carvão, clique no entulho abre a janela, minerador leva e explode, galeria abre e a dinamite é gasta, acidente pelo risco; rádio adianta o aviso de invasão e acelera o satélite; save/load |
+| `b61_fauna.gd` | 61 — tocas de coelho e de javali com bichos (nascem cheias, vagam perto da toca, aparecem na vista iso), caçador abate um bicho e leva a carne, javali fere caçador novato (experiente não), limite de população e inverno menor, save/load dos bichos e save antigo |
 | `p20_interface.gd` | Prompts 20–25 — pele (tema da raiz, botão/painel/cartão/aba 9-slice, cadeado, cursores), ícones (barra de cima, funções, prédios do menu), fontes (acentos, cabeçalho), velocidade, retrato (expressão pelo estado, cartão do selecionado), faixa com ilustração, janela de evento, corte da mina (4 andares, um boneco por ipezinho, clique seleciona) |
 | `../test_iso.gd` (GUT, rápido) | Prompt 28 — núcleo: projeção, verdade 3D, ordem incremental, raio da câmera, direção de losango |
 | `../test_iso_arte.gd` (GUT, rápido) | Prompt 28 — verificador "o sprite cabe na caixa" contra a arte dos prédios; Prompt 29 — toda a arte integrada (`assets/game/iso/predios/predios.json`) |

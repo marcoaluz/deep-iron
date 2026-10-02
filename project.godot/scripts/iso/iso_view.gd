@@ -463,7 +463,7 @@ func _is_mixed(n: Node) -> bool:
 
 
 func _is_dynamic(n: Node) -> bool:
-	return n is CharacterBody2D or n.is_in_group("ipezinhos") or n.is_in_group("criaturas") or n.is_in_group("robos")
+	return n is CharacterBody2D or n.is_in_group("ipezinhos") or n.is_in_group("criaturas") or n.is_in_group("robos") or n.is_in_group("animais")
 
 
 func _wants(n: Node) -> bool:
