@@ -1,0 +1,28 @@
+# Bloco 50 (opcional): roda a suíte GUT num runner Linux com o Godot 4.7.2 headless.
+# Os testes de bloco abrem a partida inteira (1 a 4 min cada): a suíte leva ~1 h. Se o runner não
+# conseguir baixar o Godot, rode localmente com tools/run_tests.ps1 / tools/run_tests.sh.
+name: testes
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  gut:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Baixar o Godot 4.7.2 (headless)
+        run: |
+          curl -sL -o godot.zip https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          unzip -q godot.zip
+          mv Godot_v4.7.2-stable_linux.x86_64 godot
+          chmod +x godot
+      - name: Importar o projeto
+        run: ./godot --headless --path project.godot --import || true
+      - name: Rodar a suíte
+        env:
+          GODOT_BIN: ${{ github.workspace }}/godot
+        run: bash tools/run_tests.sh

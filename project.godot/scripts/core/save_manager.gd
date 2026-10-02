@@ -191,6 +191,9 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().set_auto_accept_quit(false)  # quem fecha é o _notification abaixo
 	_adopt_legacy_backup()
+	print("DEEP IRON: SAVE_VERSION=%d" % SAVE_VERSION)  # Bloco 50: aparece no log do build
+	if "--smoke" in OS.get_cmdline_user_args():  # Bloco 50: teste de fumaça do executável
+		add_child(preload("res://scripts/core/smoke.gd").new())
 
 
 func _process(delta: float) -> void:

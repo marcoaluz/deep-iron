@@ -28,6 +28,27 @@ inteira leva uns **15 minutos**. Pra conferir só um bloco, rode só o teste del
    (ex.: `test_b35_arsenal_desgaste`).
 4. Se algum falhar, o painel mostra as linhas `FALHOU` e o fim da saída do bloco.
 
+## Script único (Bloco 50)
+
+Da raiz do repositório, roda a suíte inteira com a pasta de usuário isolada e confere o md5 do save
+real antes/depois; sai com **0** se tudo passou, **1** se algum teste falhou, **2** se o save real
+mudou, **3** se não achou o Godot:
+
+```
+powershell -ExecutionPolicy Bypass -File toolsun_tests.ps1 [-Filtro b35] [-Godot <caminho>]
+bash tools/run_tests.sh [b35]          (GODOT_BIN = caminho do Godot)
+```
+
+Build do Windows + teste de fumaça (abre, começa partida, salva, carrega, fecha; pasta isolada):
+
+```
+powershell -ExecutionPolicy Bypass -File toolsuild_windows.ps1     -> build/windows/DeepIron.exe
+```
+
+Precisa dos templates de exportação do 4.7.2 (`%APPDATA%\Godot\export_templates.7.2.stable\`).
+O pacote não leva `tests/`, `prototipos/` nem `addons/gut/`. O workflow `.github/workflows/tests.yml`
+roda a suíte no GitHub (manual ou em push na `main`; opcional, leva ~1 h).
+
 ## Pela linha de comando
 
 Da pasta `project.godot/` (troque o caminho do Godot pelo seu):

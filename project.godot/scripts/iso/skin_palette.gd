@@ -13,7 +13,10 @@ extends RefCounted
 ##
 ## As rampas são as de paletas_pele.json (fonte única, lida também pelo tons_de_pele.py).
 
-const RAMPS_FILE := "res://prototipos/camera/arte_iso/paletas_pele.json"
+## Bloco 50: a cópia em assets/ vai no executável (o protótipo fica fora do build); o integra.py
+## (bonecos) mantém as duas iguais. Sem a cópia, lê a do protótipo.
+const RAMPS_FILE := "res://assets/game/iso/paletas_pele.json"
+const RAMPS_FILE_PROTO := "res://prototipos/camera/arte_iso/paletas_pele.json"
 const ALPHA_MIN := 40
 
 static var _data := {}
@@ -23,7 +26,8 @@ static var _cache := {}
 static func _load() -> void:
 	if not _data.is_empty():
 		return
-	var d = JSON.parse_string(FileAccess.get_file_as_string(RAMPS_FILE))
+	var f := RAMPS_FILE if FileAccess.file_exists(RAMPS_FILE) else RAMPS_FILE_PROTO
+	var d = JSON.parse_string(FileAccess.get_file_as_string(f))
 	if typeof(d) != TYPE_DICTIONARY:
 		push_error("skin_palette: não li %s" % RAMPS_FILE)
 		return

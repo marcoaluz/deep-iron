@@ -1,0 +1,75 @@
+{
+ "_obs": "rampas de pele (escuro -> claro) pra troca de paleta no código; as cores de pele de cada sprite saem do rosto (tons_de_pele.py). Mesma rampa pra todo humano.",
+ "luminosidade_da_pele": [
+  0.22,
+  0.62
+ ],
+ "rampas": {
+  "clara": [
+   [
+    92,
+    58,
+    48
+   ],
+   [
+    150,
+    100,
+    80
+   ],
+   [
+    196,
+    146,
+    118
+   ],
+   [
+    226,
+    184,
+    152
+   ]
+  ],
+  "parda": [
+   [
+    70,
+    42,
+    32
+   ],
+   [
+    118,
+    76,
+    54
+   ],
+   [
+    160,
+    110,
+    78
+   ],
+   [
+    192,
+    146,
+    104
+   ]
+  ],
+  "negra": [
+   [
+    40,
+    24,
+    20
+   ],
+   [
+    70,
+    44,
+    34
+   ],
+   [
+    102,
+    66,
+    48
+   ],
+   [
+    132,
+    92,
+    66
+   ]
+  ]
+ }
+}

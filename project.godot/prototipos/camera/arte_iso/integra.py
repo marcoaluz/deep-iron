@@ -459,6 +459,8 @@ def bonecos():
         for _ in pool.imap_unordered(_tons_job, jobs, chunksize=8):
             pass
     out["tons"] = list(_tp.RAMPAS.keys())
+    # Bloco 50: a paleta vai junto pro jogo (o executável não leva a pasta do protótipo)
+    shutil.copyfile(os.path.join(AQUI, "paletas_pele.json"), os.path.join(BON, "..", "paletas_pele.json"))
     print("tons de pele:", len(jobs), "tiras x", len(_tp.RAMPAS))
     # robô (Prompt 5): animações de 4 direções + os estados parados no chão (mesmo quadro e âncora)
     out["pastas"]["robo"] = _exporta_boneco("robo", ["caminhada", "atacar", "dano", "desligar"])
