@@ -147,6 +147,25 @@ obras em estágios diferentes e salva PNGs. Precisa de JANELA (renderizar) e da 
 (com `APPDATA` apontando pra uma pasta com `fake_appdata` no caminho; não rode ao mesmo tempo
 que a bateria usando a MESMA pasta: ele apaga o save de lá ao começar.)
 
+## Revisão visual e desempenho (Prompt 30)
+
+Não são testes (não dão OK/FALHOU); precisam de JANELA e da pasta isolada, como as capturas:
+
+- `tests/qa_prompt30.gd -- <pasta>`: vila cheia, as 4 estações, noite, onda solar, invasão,
+  obras, nível 2, abismo e o mapa de longe; uma foto de cada e, em `ordem.txt`, quantos pares
+  saíram na ordem errada (tem que ser 0);
+- `tests/desempenho_iso.gd -- <pasta>`: fps em 1920×1080 em 5 situações (até o mapa cheio).
+
+Da raiz do repositório (Python):
+
+- `python tools/qa_arte.py <saida.json>`: brilho, saturação e contorno de cada desenho, por
+  categoria, e o que destoa;
+- `python tools/contorno.py`: contorno de 1 px nos desenhos da lista (rodar de novo não muda nada).
+
+**Disco:** em 2026-10-01 o C: encheu (0 GB). Dá pra pôr a pasta isolada e os temporários no D:
+(`APPDATA`, `XDG_DATA_HOME`, `TEMP` e `TMP` apontando pra uma pasta no D: com `fake_appdata` no
+caminho); o `test_blocos.gd` cria as pastas dos blocos dentro do `TEMP`.
+
 ## Conhecido
 
 - `b45_coletor_madeira` às vezes falha em "lenhador manual trabalha em paralelo": o lenhador

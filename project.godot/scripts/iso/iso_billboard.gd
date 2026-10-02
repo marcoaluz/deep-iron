@@ -215,6 +215,8 @@ func _sync_props() -> void:
 				d.visible = false  # ícone escondido (zanga, greve...): o resto não precisa copiar
 			continue
 		_copy(s, d, SYNC_ITEM)
+		if s is Control and not _view.labels_on:
+			d.visible = false  # zoom "longe": sem rótulo (Prompt 30)
 		if s is Node2D:
 			_copy(s, d, SYNC_NODE2D)
 		elif s is Control:

@@ -158,6 +158,8 @@ func _ready() -> void:
 	_build_clearing()  # depois de toda a decoração da mina: tem sorteio próprio
 	_build_deep()
 	_build_abyss()  # sorteio próprio também
+	if has_iso_map():
+		_build_map_decor()  # Prompt 30: a decoração da montagem aprovada
 	clear_decor_under_extras()
 	_build_navigation()
 
@@ -729,14 +731,27 @@ func _build_abyss() -> void:
 ## NAV_EXTRA_GROUPS. Não mexe no sorteio: as posições das outras pedras não mudam.
 ## (Chamado de novo quando uma estrutura dessas é construída durante o jogo.)
 func clear_decor_under_extras() -> void:
-	for group in NAV_EXTRA_GROUPS + ["elevador_abismo", "barricadas", "village_hub", "armazens", "comedouros"]:
+	var groups: Array = NAV_EXTRA_GROUPS + ["elevador_abismo", "barricadas", "village_hub", "armazens", "comedouros"]
+	if has_iso_map():  # Prompt 30: os prédios novos são maiores; toda estrutura limpa a pegada dela
+		groups = groups + ["casas", "escavadeira", "oficina", "elevador"]
+	for group in groups:
 		for node in get_tree().get_nodes_in_group(group):
 			var area: Rect2 = node.decor_clear_rect() if node.has_method("decor_clear_rect") \
 				else Rect2(node.global_position + Vector2(-44, -64), Vector2(88, 84))
+			if has_iso_map() and node.has_method("get_obstacle_outline"):
+				var o: PackedVector2Array = node.get_obstacle_outline()
+				if o.size() >= 3:
+					var bb := Rect2(o[0], Vector2.ZERO)
+					for q in o:
+						bb = bb.expand(q)
+					# a pegada do desenho novo + folga pra porta e o caminho em volta
+					area = area.merge(bb.grow(40.0 if node.is_in_group("village_hub") else 18.0))
 			for c in get_children():
 				var s := c as Sprite2D
 				if s and not s.region_enabled and area.has_point(s.global_position):
 					s.visible = false
+				elif c is Node2D and c.has_meta("iso_prop") and area.has_point((c as Node2D).global_position):
+					(c as Node2D).visible = false  # decoração do mapa novo (Prompt 30)
 			for i in range(_obstacles.size() - 1, -1, -1):
 				var o: PackedVector2Array = _obstacles[i]
 				var center := Vector2.ZERO
@@ -845,6 +860,54 @@ func _build_sun() -> void:
 		_sun.position = clearing_rect.get_center()
 		add_child(_sun)
 	_day_night = get_tree().get_first_node_in_group("day_night")
+
+
+# ------------------------------------------------------------ decoração do mapa novo (Prompt 30)
+## O que a montagem aprovada (prototipos/camera/arte_iso/mapa/monta.py) tem e o jogo não tinha:
+## [peça, ponto do chão, bloqueia a passagem]. Só desenho (a vista iso desenha pelo nome da peça,
+## meta "iso_prop"); os grandes bloqueiam como as pedras.
+const MAP_DECOR := [
+	["guindaste_pedreira", Vector2(-280, 100), true], ["vagonete_cheio_SE", Vector2(200, -60), false],
+	["caixotes_2", Vector2(170, -20), false], ["barris_2", Vector2(60, -20), false], ["sacos", Vector2(180, -20), false],
+	["pedra_g", Vector2(-320, 120), false], ["tijolo_m", Vector2(-230, 110), false], ["poco", Vector2(-220, -400), true],
+	["banco", Vector2(500, -280), false], ["placa_caveira", Vector2(-150, 360), false], ["caixote", Vector2(-600, 160), false],
+	["horta_espantalho", Vector2(-140, -660), false],
+	["arbusto_0", Vector2(-480, -640), false], ["arbusto_1", Vector2(200, -600), false], ["arbusto_2", Vector2(480, -900), false],
+	["arbusto_0", Vector2(-200, -820), false], ["arbusto_1", Vector2(620, -620), false], ["arbusto_2", Vector2(-330, -560), false],
+]
+## Vegetação rasteira espalhada na floresta (como na montagem: capim, flores, samambaia...)
+const FOREST_DECOR := ["capim_0", "capim_1", "capim_2", "capim_3", "flores_0", "flores_1", "flores_2", "flores_3",
+	"samambaia_0", "samambaia_1", "cogumelos_0", "cogumelos_1", "cogumelos_2", "tronco_musgo_0", "tronco_musgo_1",
+	"tronco_musgo_2", "moita_0", "moita_1", "moita_2"]
+const FOREST_DECOR_COUNT := 90
+
+
+func _build_map_decor() -> void:
+	for d in MAP_DECOR:
+		if spot_ok(d[1], 6.0) and _is_free(d[1], 14.0, 34.0):
+			_decor_node(d[0], d[1], d[2])
+	var rng := RandomNumberGenerator.new()
+	rng.seed = map_seed + 41  # sorteio próprio: não mexe nas pedras/cristais dos saves
+	var placed := 0
+	for tries in 2500:
+		if placed >= FOREST_DECOR_COUNT:
+			break
+		var p := Vector2(rng.randf_range(-690.0, 740.0), rng.randf_range(-1020.0, -495.0))
+		if not spot_ok(p, 8.0) or not _is_free(p, 18.0, 30.0):
+			continue
+		_decor_node(FOREST_DECOR[rng.randi() % FOREST_DECOR.size()], p, false)
+		placed += 1
+
+
+func _decor_node(prop: String, p: Vector2, blocks: bool) -> void:
+	var n := Node2D.new()
+	n.name = "Deco_%s_%d" % [prop, get_child_count()]
+	n.position = p
+	n.set_meta("iso_prop", prop)
+	add_child(n)
+	_placed.append(p)
+	if blocks:
+		_add_obstacle(p + Vector2(0, -4), Vector2(24, 12))
 
 
 ## Contornos dos obstáculos da decoração (pedras, cristais, tochas) — pra validar construção.

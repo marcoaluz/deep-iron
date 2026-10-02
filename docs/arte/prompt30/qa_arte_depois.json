@@ -1,0 +1,2337 @@
+{
+ "geral": {
+  "brilho": 0.207,
+  "dp": 0.061
+ },
+ "categorias": {
+  "predios": {
+   "n": 89,
+   "brilho": 0.189,
+   "brilho_dp": 0.039,
+   "contorno": 0.035,
+   "sat": 0.153
+  },
+  "bonecos": {
+   "n": 86,
+   "brilho": 0.213,
+   "brilho_dp": 0.072,
+   "contorno": 0.023,
+   "sat": 0.274
+  },
+  "objetos": {
+   "n": 100,
+   "brilho": 0.217,
+   "brilho_dp": 0.065,
+   "contorno": 0.081,
+   "sat": 0.221
+  },
+  "terreno": {
+   "n": 12,
+   "brilho": 0.203,
+   "brilho_dp": 0.034,
+   "contorno": 0.155,
+   "sat": 0.169
+  }
+ },
+ "alertas": [
+  {
+   "cat": "predios",
+   "arte": "predios/campo_treino/obra_1.png",
+   "o_que": "contorno",
+   "valor": 0.102,
+   "media_cat": 0.035,
+   "z": 2.35
+  },
+  {
+   "cat": "predios",
+   "arte": "predios/enfermaria/nivel_2.png",
+   "o_que": "brilho",
+   "valor": 0.299,
+   "media_cat": 0.189,
+   "z": 2.82
+  },
+  {
+   "cat": "predios",
+   "arte": "predios/enfermaria/obra_3.png",
+   "o_que": "brilho",
+   "valor": 0.29,
+   "media_cat": 0.189,
+   "z": 2.6
+  },
+  {
+   "cat": "predios",
+   "arte": "predios/enfermaria/pronto.png",
+   "o_que": "brilho",
+   "valor": 0.309,
+   "media_cat": 0.189,
+   "z": 3.08
+  },
+  {
+   "cat": "predios",
+   "arte": "predios/escavadeira/peca_cabine.png",
+   "o_que": "contorno",
+   "valor": 0.114,
+   "media_cat": 0.035,
+   "z": 2.76
+  },
+  {
+   "cat": "predios",
+   "arte": "predios/escavadeira/peca_hidraulica.png",
+   "o_que": "contorno",
+   "valor": 0.104,
+   "media_cat": 0.035,
+   "z": 2.39
+  },
+  {
+   "cat": "predios",
+   "arte": "predios/escudo/etapa_1.png",
+   "o_que": "brilho",
+   "valor": 0.344,
+   "media_cat": 0.189,
+   "z": 4.0
+  },
+  {
+   "cat": "predios",
+   "arte": "predios/escudo/etapa_2.png",
+   "o_que": "brilho",
+   "valor": 0.321,
+   "media_cat": 0.189,
+   "z": 3.39
+  },
+  {
+   "cat": "predios",
+   "arte": "predios/portao/quebrado.png",
+   "o_que": "contorno",
+   "valor": 0.096,
+   "media_cat": 0.035,
+   "z": 2.11
+  },
+  {
+   "cat": "bonecos",
+   "arte": "bonecos/casaco_civil/caminhada_NE.png",
+   "o_que": "contorno",
+   "valor": 0.07,
+   "media_cat": 0.023,
+   "z": 2.9
+  },
+  {
+   "cat": "bonecos",
+   "arte": "bonecos/casaco_civil/caminhada_NE__clara.png",
+   "o_que": "contorno",
+   "valor": 0.07,
+   "media_cat": 0.023,
+   "z": 2.91
+  },
+  {
+   "cat": "bonecos",
+   "arte": "bonecos/casaco_engenheiro/caminhada_NE__clara.png",
+   "o_que": "contorno",
+   "valor": 0.057,
+   "media_cat": 0.023,
+   "z": 2.1
+  },
+  {
+   "cat": "bonecos",
+   "arte": "bonecos/casaco_lenhadora/caminhada_NE.png",
+   "o_que": "contorno",
+   "valor": 0.057,
+   "media_cat": 0.023,
+   "z": 2.12
+  },
+  {
+   "cat": "bonecos",
+   "arte": "bonecos/casaco_lenhadora/caminhada_NE__clara.png",
+   "o_que": "contorno",
+   "valor": 0.058,
+   "media_cat": 0.023,
+   "z": 2.16
+  },
+  {
+   "cat": "bonecos",
+   "arte": "bonecos/pesquisador/parado_NE.png",
+   "o_que": "brilho",
+   "valor": 0.363,
+   "media_cat": 0.213,
+   "z": 2.09
+  },
+  {
+   "cat": "bonecos",
+   "arte": "bonecos/pesquisador/parado_NE__clara.png",
+   "o_que": "brilho",
+   "valor": 0.365,
+   "media_cat": 0.213,
+   "z": 2.12
+  },
+  {
+   "cat": "bonecos",
+   "arte": "bonecos/traje_calor_f/parado_NE.png",
+   "o_que": "brilho",
+   "valor": 0.436,
+   "media_cat": 0.213,
+   "z": 3.11
+  },
+  {
+   "cat": "bonecos",
+   "arte": "bonecos/traje_calor_f/parado_NE__clara.png",
+   "o_que": "brilho",
+   "valor": 0.436,
+   "media_cat": 0.213,
+   "z": 3.11
+  },
+  {
+   "cat": "bonecos",
+   "arte": "bonecos/traje_calor_m/parado_NE.png",
+   "o_que": "brilho",
+   "valor": 0.448,
+   "media_cat": 0.213,
+   "z": 3.28
+  },
+  {
+   "cat": "bonecos",
+   "arte": "bonecos/traje_calor_m/parado_NE__clara.png",
+   "o_que": "brilho",
+   "valor": 0.448,
+   "media_cat": 0.213,
+   "z": 3.29
+  },
+  {
+   "cat": "objetos",
+   "arte": "props/capim_0.png",
+   "o_que": "brilho",
+   "valor": 0.388,
+   "media_cat": 0.217,
+   "z": 2.63
+  },
+  {
+   "cat": "objetos",
+   "arte": "props/capim_0.png",
+   "o_que": "contorno",
+   "valor": 0.415,
+   "media_cat": 0.081,
+   "z": 3.44
+  },
+  {
+   "cat": "objetos",
+   "arte": "props/capim_1.png",
+   "o_que": "brilho",
+   "valor": 0.375,
+   "media_cat": 0.217,
+   "z": 2.43
+  },
+  {
+   "cat": "objetos",
+   "arte": "props/capim_1.png",
+   "o_que": "contorno",
+   "valor": 0.406,
+   "media_cat": 0.081,
+   "z": 3.34
+  },
+  {
+   "cat": "objetos",
+   "arte": "props/capim_2.png",
+   "o_que": "brilho",
+   "valor": 0.396,
+   "media_cat": 0.217,
+   "z": 2.74
+  },
+  {
+   "cat": "objetos",
+   "arte": "props/capim_2.png",
+   "o_que": "contorno",
+   "valor": 0.422,
+   "media_cat": 0.081,
+   "z": 3.51
+  },
+  {
+   "cat": "objetos",
+   "arte": "props/flores_0.png",
+   "o_que": "contorno",
+   "valor": 0.339,
+   "media_cat": 0.081,
+   "z": 2.66
+  },
+  {
+   "cat": "objetos",
+   "arte": "props/flores_1.png",
+   "o_que": "brilho",
+   "valor": 0.353,
+   "media_cat": 0.217,
+   "z": 2.08
+  },
+  {
+   "cat": "objetos",
+   "arte": "props/flores_1.png",
+   "o_que": "contorno",
+   "valor": 0.372,
+   "media_cat": 0.081,
+   "z": 2.99
+  },
+  {
+   "cat": "objetos",
+   "arte": "props/flores_2.png",
+   "o_que": "contorno",
+   "valor": 0.331,
+   "media_cat": 0.081,
+   "z": 2.57
+  },
+  {
+   "cat": "objetos",
+   "arte": "props/flores_3.png",
+   "o_que": "contorno",
+   "valor": 0.328,
+   "media_cat": 0.081,
+   "z": 2.54
+  },
+  {
+   "cat": "objetos",
+   "arte": "props/moita_1.png",
+   "o_que": "brilho",
+   "valor": 0.083,
+   "media_cat": 0.217,
+   "z": -2.07
+  },
+  {
+   "cat": "objetos",
+   "arte": "props/toco_betula.png",
+   "o_que": "brilho",
+   "valor": 0.37,
+   "media_cat": 0.217,
+   "z": 2.35
+  },
+  {
+   "cat": "terreno",
+   "arte": "mapa/andar_abismo.png",
+   "o_que": "brilho",
+   "valor": 0.108,
+   "media_cat": 0.203,
+   "z": -2.79
+  },
+  {
+   "cat": "terreno",
+   "arte": "mapa/andar_abismo.png",
+   "o_que": "contorno",
+   "valor": 0.069,
+   "media_cat": 0.155,
+   "z": -2.6
+  }
+ ],
+ "medidas": {
+  "predios": {
+   "predios/armazem/obra_1.png": {
+    "brilho": 0.178662372894202,
+    "sat": 0.1471308809091348,
+    "contorno": 0.028458888131213438,
+    "cores": 30,
+    "px": 23801
+   },
+   "predios/armazem/obra_2.png": {
+    "brilho": 0.1418140045261235,
+    "sat": 0.17768178763903467,
+    "contorno": 0.01496056400088125,
+    "cores": 28,
+    "px": 42689
+   },
+   "predios/armazem/obra_3.png": {
+    "brilho": 0.16183802979447576,
+    "sat": 0.1565831602164272,
+    "contorno": 0.02292520823443097,
+    "cores": 34,
+    "px": 47827
+   },
+   "predios/armazem/pronto.png": {
+    "brilho": 0.20450377874337272,
+    "sat": 0.1274703078867373,
+    "contorno": 0.01424046807378932,
+    "cores": 39,
+    "px": 46732
+   },
+   "predios/arsenal/obra_1.png": {
+    "brilho": 0.20565291032532634,
+    "sat": 0.13463822543448645,
+    "contorno": 0.047215356730927666,
+    "cores": 35,
+    "px": 9597
+   },
+   "predios/arsenal/obra_2.png": {
+    "brilho": 0.18148021856297325,
+    "sat": 0.16819140568540472,
+    "contorno": 0.015347996754043292,
+    "cores": 35,
+    "px": 37952
+   },
+   "predios/arsenal/obra_3.png": {
+    "brilho": 0.18693950125893014,
+    "sat": 0.14308473422844323,
+    "contorno": 0.015910867435126774,
+    "cores": 44,
+    "px": 38883
+   },
+   "predios/arsenal/pronto.png": {
+    "brilho": 0.19625260674798448,
+    "sat": 0.11833922118161987,
+    "contorno": 0.01047835241479142,
+    "cores": 41,
+    "px": 39998
+   },
+   "predios/campo_treino/obra_1.png": {
+    "brilho": 0.16824642115849614,
+    "sat": 0.1887340892660658,
+    "contorno": 0.10240202605676092,
+    "cores": 21,
+    "px": 13745
+   },
+   "predios/campo_treino/obra_2.png": {
+    "brilho": 0.19575018702042105,
+    "sat": 0.1948854352490114,
+    "contorno": 0.06820333767309741,
+    "cores": 41,
+    "px": 27102
+   },
+   "predios/campo_treino/obra_3.png": {
+    "brilho": 0.19486233478948273,
+    "sat": 0.19482050735631612,
+    "contorno": 0.03278798048537957,
+    "cores": 44,
+    "px": 35172
+   },
+   "predios/campo_treino/pronto.png": {
+    "brilho": 0.1935561815712291,
+    "sat": 0.19460902912507766,
+    "contorno": 0.02639392089015537,
+    "cores": 44,
+    "px": 37231
+   },
+   "predios/casa/nivel_2.png": {
+    "brilho": 0.18327429979042992,
+    "sat": 0.15939215516633923,
+    "contorno": 0.008368973334268153,
+    "cores": 41,
+    "px": 48643
+   },
+   "predios/casa/nivel_3.png": {
+    "brilho": 0.18011365074543753,
+    "sat": 0.2328496936651598,
+    "contorno": 0.007936507936507936,
+    "cores": 40,
+    "px": 52676
+   },
+   "predios/casa/obra_1.png": {
+    "brilho": 0.17030837364743276,
+    "sat": 0.08787116238756783,
+    "contorno": 0.025584624784758096,
+    "cores": 32,
+    "px": 20136
+   },
+   "predios/casa/obra_2.png": {
+    "brilho": 0.1656515218490301,
+    "sat": 0.19965568094224256,
+    "contorno": 0.013020753041014235,
+    "cores": 26,
+    "px": 39523
+   },
+   "predios/casa/obra_3.png": {
+    "brilho": 0.1625388217279498,
+    "sat": 0.17176758142036422,
+    "contorno": 0.01498779769418497,
+    "cores": 30,
+    "px": 43973
+   },
+   "predios/casa/pronto_0.png": {
+    "brilho": 0.19658845758156954,
+    "sat": 0.22268503359216055,
+    "contorno": 0.0060200413065096,
+    "cores": 41,
+    "px": 41282
+   },
+   "predios/casa/pronto_1.png": {
+    "brilho": 0.19057823910219077,
+    "sat": 0.15317876275030864,
+    "contorno": 0.009036001639379624,
+    "cores": 42,
+    "px": 42016
+   },
+   "predios/casa/pronto_2.png": {
+    "brilho": 0.1791120832441771,
+    "sat": 0.15612539684356536,
+    "contorno": 0.012908701749206584,
+    "cores": 39,
+    "px": 42061
+   },
+   "predios/casa/pronto_3.png": {
+    "brilho": 0.1845903469010197,
+    "sat": 0.17270387965670134,
+    "contorno": 0.007942124218108295,
+    "cores": 39,
+    "px": 43253
+   },
+   "predios/centro_1/pronto.png": {
+    "brilho": 0.2182594892038405,
+    "sat": 0.12239089175818532,
+    "contorno": 0.02228385150586289,
+    "cores": 31,
+    "px": 23753
+   },
+   "predios/centro_2/obra.png": {
+    "brilho": 0.14866986595633278,
+    "sat": 0.19005552037828852,
+    "contorno": 0.012652980655349389,
+    "cores": 26,
+    "px": 39396
+   },
+   "predios/centro_2/pronto.png": {
+    "brilho": 0.18060074899169795,
+    "sat": 0.25056453992753175,
+    "contorno": 0.016970556020874945,
+    "cores": 36,
+    "px": 42855
+   },
+   "predios/centro_3/obra.png": {
+    "brilho": 0.14591400056643533,
+    "sat": 0.11664503911535651,
+    "contorno": 0.0036153040194351377,
+    "cores": 28,
+    "px": 45278
+   },
+   "predios/centro_3/pronto.png": {
+    "brilho": 0.17892966204124866,
+    "sat": 0.11453929946872382,
+    "contorno": 0.005324058440827536,
+    "cores": 40,
+    "px": 45910
+   },
+   "predios/centro_4/obra.png": {
+    "brilho": 0.17764637229227961,
+    "sat": 0.1418010867898116,
+    "contorno": 0.012769862774233021,
+    "cores": 26,
+    "px": 69117
+   },
+   "predios/centro_4/pronto.png": {
+    "brilho": 0.19111300685359622,
+    "sat": 0.0802451596590844,
+    "contorno": 0.04586130748595735,
+    "cores": 27,
+    "px": 64403
+   },
+   "predios/centro_5/obra.png": {
+    "brilho": 0.19333622739636006,
+    "sat": 0.11758537917654552,
+    "contorno": 0.01397310111841686,
+    "cores": 22,
+    "px": 86587
+   },
+   "predios/centro_5/pronto.png": {
+    "brilho": 0.2018679591610243,
+    "sat": 0.0910941278289707,
+    "contorno": 0.04892034113591,
+    "cores": 23,
+    "px": 76678
+   },
+   "predios/coletor_madeira/pronto.png": {
+    "brilho": 0.19400362825631765,
+    "sat": 0.2885764744028681,
+    "contorno": 0.006978924625983449,
+    "cores": 52,
+    "px": 32382
+   },
+   "predios/coletor_madeira/quebrado.png": {
+    "brilho": 0.17467120976999959,
+    "sat": 0.20047158147065108,
+    "contorno": 0.011015717575513671,
+    "cores": 48,
+    "px": 33699
+   },
+   "predios/comedouro/com_comida.png": {
+    "brilho": 0.18331755826696788,
+    "sat": 0.1448205936164413,
+    "contorno": 0.016568069352978384,
+    "cores": 57,
+    "px": 36481
+   },
+   "predios/comedouro/obra_1.png": {
+    "brilho": 0.20500934610986637,
+    "sat": 0.20169804715425005,
+    "contorno": 0.09064120957951662,
+    "cores": 29,
+    "px": 9294
+   },
+   "predios/comedouro/obra_2.png": {
+    "brilho": 0.18382593786317314,
+    "sat": 0.20625706161057814,
+    "contorno": 0.01570200009828493,
+    "cores": 31,
+    "px": 32158
+   },
+   "predios/comedouro/obra_3.png": {
+    "brilho": 0.1727351643276372,
+    "sat": 0.16178686851976376,
+    "contorno": 0.02084509549604537,
+    "cores": 41,
+    "px": 34898
+   },
+   "predios/comedouro/pronto.png": {
+    "brilho": 0.18448466649442574,
+    "sat": 0.14110437682397411,
+    "contorno": 0.014961104518656647,
+    "cores": 39,
+    "px": 36201
+   },
+   "predios/elevador/pronto.png": {
+    "brilho": 0.1581504963176433,
+    "sat": 0.2421230698362373,
+    "contorno": 0.030459731915365017,
+    "cores": 40,
+    "px": 26025
+   },
+   "predios/elevador/ruina.png": {
+    "brilho": 0.16180272360025053,
+    "sat": 0.2571803742610275,
+    "contorno": 0.044657481505926355,
+    "cores": 45,
+    "px": 28676
+   },
+   "predios/elevador_abismo/pronto.png": {
+    "brilho": 0.11326484714923434,
+    "sat": 0.24003023212959676,
+    "contorno": 0.021190871828957573,
+    "cores": 40,
+    "px": 26025
+   },
+   "predios/elevador_abismo/ruina.png": {
+    "brilho": 0.11601133967326643,
+    "sat": 0.2554264141570413,
+    "contorno": 0.0314011495201166,
+    "cores": 45,
+    "px": 28676
+   },
+   "predios/enfermaria/nivel_2.png": {
+    "brilho": 0.29851980596280153,
+    "sat": 0.14796615988823128,
+    "contorno": 0.012582448194676587,
+    "cores": 48,
+    "px": 52256
+   },
+   "predios/enfermaria/obra_1.png": {
+    "brilho": 0.2023046379303287,
+    "sat": 0.15818952142392267,
+    "contorno": 0.042331481949002776,
+    "cores": 31,
+    "px": 7185
+   },
+   "predios/enfermaria/obra_2.png": {
+    "brilho": 0.17323852548207005,
+    "sat": 0.17899447699193216,
+    "contorno": 0.01481890792183654,
+    "cores": 33,
+    "px": 30886
+   },
+   "predios/enfermaria/obra_3.png": {
+    "brilho": 0.29002168705952586,
+    "sat": 0.1511647249464256,
+    "contorno": 0.025401018208089224,
+    "cores": 52,
+    "px": 34619
+   },
+   "predios/enfermaria/pronto.png": {
+    "brilho": 0.30895985850295016,
+    "sat": 0.12893920255982133,
+    "contorno": 0.022227237015863464,
+    "cores": 47,
+    "px": 35475
+   },
+   "predios/escavadeira/estrutura.png": {
+    "brilho": 0.16195330775299344,
+    "sat": 0.18024346778843625,
+    "contorno": 0.008362375893029315,
+    "cores": 33,
+    "px": 62732
+   },
+   "predios/escavadeira/peca_broca.png": {
+    "brilho": 0.18115211301912068,
+    "sat": 0.10735068145243423,
+    "contorno": 0.08674717165248681,
+    "cores": 28,
+    "px": 6440
+   },
+   "predios/escavadeira/peca_cabine.png": {
+    "brilho": 0.22787998492112793,
+    "sat": 0.09199361059472094,
+    "contorno": 0.1140819964349376,
+    "cores": 27,
+    "px": 3693
+   },
+   "predios/escavadeira/peca_hidraulica.png": {
+    "brilho": 0.15345748485216523,
+    "sat": 0.08017429468934782,
+    "contorno": 0.10366639806607575,
+    "cores": 27,
+    "px": 7265
+   },
+   "predios/escavadeira/peca_motor.png": {
+    "brilho": 0.15769840263691684,
+    "sat": 0.0812465322101524,
+    "contorno": 0.08926470588235294,
+    "cores": 41,
+    "px": 3712
+   },
+   "predios/escavadeira/pronto.png": {
+    "brilho": 0.15373915269759633,
+    "sat": 0.09676191388699225,
+    "contorno": 0.007324377804680017,
+    "cores": 29,
+    "px": 65558
+   },
+   "predios/escavadeira/reator_cristal.png": {
+    "brilho": 0.2190759175465058,
+    "sat": 0.13621357317776245,
+    "contorno": 0.07960301163586585,
+    "cores": 55,
+    "px": 1950
+   },
+   "predios/escavadeira/reator_diesel.png": {
+    "brilho": 0.18614291753749784,
+    "sat": 0.08307465183828054,
+    "contorno": 0.06636029411764706,
+    "cores": 34,
+    "px": 3293
+   },
+   "predios/escavadeira/reator_fusao.png": {
+    "brilho": 0.2136613723658258,
+    "sat": 0.15506651168498495,
+    "contorno": 0.07612563543936093,
+    "cores": 57,
+    "px": 3211
+   },
+   "predios/escavadeira/reator_solar.png": {
+    "brilho": 0.24540156898772372,
+    "sat": 0.08495951917108101,
+    "contorno": 0.08067226890756303,
+    "cores": 44,
+    "px": 2177
+   },
+   "predios/escavadeira/reator_vapor.png": {
+    "brilho": 0.21635622862573717,
+    "sat": 0.08421016546313502,
+    "contorno": 0.08878205128205129,
+    "cores": 50,
+    "px": 2517
+   },
+   "predios/escudo/etapa_1.png": {
+    "brilho": 0.34447699868185766,
+    "sat": 0.0742107798737383,
+    "contorno": 0.05008231056346063,
+    "cores": 38,
+    "px": 51558
+   },
+   "predios/escudo/etapa_2.png": {
+    "brilho": 0.32085038680310146,
+    "sat": 0.09306520689347633,
+    "contorno": 0.07082473065805774,
+    "cores": 39,
+    "px": 55779
+   },
+   "predios/escudo/etapa_3.png": {
+    "brilho": 0.2626145662273499,
+    "sat": 0.1011593876573272,
+    "contorno": 0.05058432891695693,
+    "cores": 38,
+    "px": 64262
+   },
+   "predios/escudo/etapa_4.png": {
+    "brilho": 0.24160589176398023,
+    "sat": 0.09821667696729981,
+    "contorno": 0.004221033868092691,
+    "cores": 28,
+    "px": 69172
+   },
+   "predios/gaiola/gaiola.png": {
+    "brilho": 0.16125205888737087,
+    "sat": 0.26439466156585345,
+    "contorno": 0.0922235758208609,
+    "cores": 36,
+    "px": 4607
+   },
+   "predios/laboratorio/obra_1.png": {
+    "brilho": 0.1888837044664693,
+    "sat": 0.12208202783109628,
+    "contorno": 0.06434472165718792,
+    "cores": 29,
+    "px": 10968
+   },
+   "predios/laboratorio/obra_2.png": {
+    "brilho": 0.1755022411686034,
+    "sat": 0.1463681043460934,
+    "contorno": 0.016050708368312475,
+    "cores": 29,
+    "px": 40127
+   },
+   "predios/laboratorio/obra_3.png": {
+    "brilho": 0.17181524206488982,
+    "sat": 0.13493569337536887,
+    "contorno": 0.02683497127664625,
+    "cores": 43,
+    "px": 40080
+   },
+   "predios/laboratorio/pronto.png": {
+    "brilho": 0.18145105461396185,
+    "sat": 0.12088108319147568,
+    "contorno": 0.020484055691242013,
+    "cores": 41,
+    "px": 42797
+   },
+   "predios/oficina/obra_1.png": {
+    "brilho": 0.17271071633584098,
+    "sat": 0.12258356571060049,
+    "contorno": 0.02012556160552233,
+    "cores": 33,
+    "px": 32450
+   },
+   "predios/oficina/obra_2.png": {
+    "brilho": 0.15754008231790817,
+    "sat": 0.12255177041152113,
+    "contorno": 0.024235393903108318,
+    "cores": 29,
+    "px": 20261
+   },
+   "predios/oficina/obra_3.png": {
+    "brilho": 0.15016888479924592,
+    "sat": 0.132507554650242,
+    "contorno": 0.015201560318064836,
+    "cores": 35,
+    "px": 41936
+   },
+   "predios/oficina/pronto.png": {
+    "brilho": 0.15520499645049074,
+    "sat": 0.11666259257681655,
+    "contorno": 0.016143559897457218,
+    "cores": 36,
+    "px": 39884
+   },
+   "predios/palicada/danificada.png": {
+    "brilho": 0.15618160496302644,
+    "sat": 0.13248104478672193,
+    "contorno": 0.03969234102480771,
+    "cores": 31,
+    "px": 3227
+   },
+   "predios/palicada/reta.png": {
+    "brilho": 0.18670713313467976,
+    "sat": 0.1285779110477015,
+    "contorno": 0.06926470588235294,
+    "cores": 31,
+    "px": 2665
+   },
+   "predios/parque/obra_1.png": {
+    "brilho": 0.1952508337855291,
+    "sat": 0.1415637819357072,
+    "contorno": 0.05126006515458848,
+    "cores": 35,
+    "px": 6179
+   },
+   "predios/parque/obra_2.png": {
+    "brilho": 0.16076618901421463,
+    "sat": 0.16353884204449817,
+    "contorno": 0.017257403452057958,
+    "cores": 35,
+    "px": 17742
+   },
+   "predios/parque/obra_3.png": {
+    "brilho": 0.18169369482514117,
+    "sat": 0.13755974476139385,
+    "contorno": 0.03294143429890036,
+    "cores": 51,
+    "px": 18735
+   },
+   "predios/parque/pronto.png": {
+    "brilho": 0.1862666050713479,
+    "sat": 0.12520586728845678,
+    "contorno": 0.023955338535724607,
+    "cores": 46,
+    "px": 19100
+   },
+   "predios/portao/nivel_1.png": {
+    "brilho": 0.15187740785463746,
+    "sat": 0.15518730885306875,
+    "contorno": 0.01918615382431032,
+    "cores": 30,
+    "px": 8184
+   },
+   "predios/portao/nivel_2.png": {
+    "brilho": 0.1525708714097524,
+    "sat": 0.16240158183557826,
+    "contorno": 0.037960524176503106,
+    "cores": 32,
+    "px": 11342
+   },
+   "predios/portao/nivel_3.png": {
+    "brilho": 0.1870708314041685,
+    "sat": 0.07512761954862864,
+    "contorno": 0.0026826651058433322,
+    "cores": 35,
+    "px": 10418
+   },
+   "predios/portao/quebrado.png": {
+    "brilho": 0.17177683714192757,
+    "sat": 0.12730053001311897,
+    "contorno": 0.09556182525572647,
+    "cores": 28,
+    "px": 11993
+   },
+   "predios/taverna/nivel_2.png": {
+    "brilho": 0.18705129326327244,
+    "sat": 0.1767456591844058,
+    "contorno": 0.05974107591754651,
+    "cores": 42,
+    "px": 71971
+   },
+   "predios/taverna/obra_1.png": {
+    "brilho": 0.20509342472992234,
+    "sat": 0.17783277478473145,
+    "contorno": 0.07864220957200084,
+    "cores": 32,
+    "px": 10538
+   },
+   "predios/taverna/obra_2.png": {
+    "brilho": 0.1783584517773684,
+    "sat": 0.18675524375088584,
+    "contorno": 0.027190233857048676,
+    "cores": 32,
+    "px": 42243
+   },
+   "predios/taverna/obra_3.png": {
+    "brilho": 0.1869609084990393,
+    "sat": 0.24804504513807438,
+    "contorno": 0.04988462005586818,
+    "cores": 49,
+    "px": 48157
+   },
+   "predios/taverna/pronto.png": {
+    "brilho": 0.19916710435958132,
+    "sat": 0.24973752724339024,
+    "contorno": 0.04623116615067079,
+    "cores": 44,
+    "px": 49054
+   },
+   "predios/vestiario/obra_1.png": {
+    "brilho": 0.21012096380840894,
+    "sat": 0.11827690366587042,
+    "contorno": 0.05934951230067579,
+    "cores": 33,
+    "px": 9648
+   },
+   "predios/vestiario/obra_2.png": {
+    "brilho": 0.18413014608233733,
+    "sat": 0.1630011350829647,
+    "contorno": 0.012384520330306181,
+    "cores": 34,
+    "px": 33132
+   },
+   "predios/vestiario/obra_3.png": {
+    "brilho": 0.1907068018960602,
+    "sat": 0.1517497033720637,
+    "contorno": 0.016331580941555367,
+    "cores": 52,
+    "px": 37444
+   },
+   "predios/vestiario/pronto.png": {
+    "brilho": 0.2004994999483397,
+    "sat": 0.12936783094701554,
+    "contorno": 0.014010053173811897,
+    "cores": 47,
+    "px": 39094
+   }
+  },
+  "bonecos": {
+   "bonecos/cacador/parado_NE.png": {
+    "brilho": 0.17287294194315067,
+    "sat": 0.2192812881233246,
+    "contorno": 0.015399965295852854,
+    "cores": 31,
+    "px": 2046
+   },
+   "bonecos/cacador/parado_NE__clara.png": {
+    "brilho": 0.17627220976367086,
+    "sat": 0.22346999492967734,
+    "contorno": 0.015399965295852854,
+    "cores": 39,
+    "px": 2046
+   },
+   "bonecos/cacadora/parado_NE.png": {
+    "brilho": 0.1299051563258941,
+    "sat": 0.3621736278242303,
+    "contorno": 0.012282974863954393,
+    "cores": 39,
+    "px": 1534
+   },
+   "bonecos/cacadora/parado_NE__clara.png": {
+    "brilho": 0.13419740777667,
+    "sat": 0.36762969882041496,
+    "contorno": 0.012827157294635917,
+    "cores": 43,
+    "px": 1534
+   },
+   "bonecos/casaco_cacador/cacar_NE.png": {
+    "brilho": 0.18383503421751907,
+    "sat": 0.19161878464223867,
+    "contorno": 0.03721201904592908,
+    "cores": 23,
+    "px": 17171
+   },
+   "bonecos/casaco_cacador/cacar_NE__clara.png": {
+    "brilho": 0.1911187467241279,
+    "sat": 0.20054058944935488,
+    "contorno": 0.0373465826753024,
+    "cores": 28,
+    "px": 17171
+   },
+   "bonecos/casaco_cacadora/cacar_NE.png": {
+    "brilho": 0.14907129070024996,
+    "sat": 0.1985555343012235,
+    "contorno": 0.009749571470379196,
+    "cores": 33,
+    "px": 13013
+   },
+   "bonecos/casaco_cacadora/cacar_NE__clara.png": {
+    "brilho": 0.15950806358046177,
+    "sat": 0.20927679487911152,
+    "contorno": 0.009854090890087378,
+    "cores": 44,
+    "px": 13013
+   },
+   "bonecos/casaco_civil/caminhada_NE.png": {
+    "brilho": 0.22035517273741617,
+    "sat": 0.22993632120073496,
+    "contorno": 0.07004304160688665,
+    "cores": 25,
+    "px": 5641
+   },
+   "bonecos/casaco_civil/caminhada_NE__clara.png": {
+    "brilho": 0.22855285705844117,
+    "sat": 0.2377872380986594,
+    "contorno": 0.07011477761836442,
+    "cores": 32,
+    "px": 5641
+   },
+   "bonecos/casaco_civil_mulher/caminhada_NE.png": {
+    "brilho": 0.18567267431276172,
+    "sat": 0.24057016551766056,
+    "contorno": 0.022819818464470187,
+    "cores": 23,
+    "px": 7324
+   },
+   "bonecos/casaco_civil_mulher/caminhada_NE__clara.png": {
+    "brilho": 0.20298079909189234,
+    "sat": 0.2545976858993259,
+    "contorno": 0.0229176069404744,
+    "cores": 29,
+    "px": 7324
+   },
+   "bonecos/casaco_cozinheira/caminhada_NE.png": {
+    "brilho": 0.2390819257369791,
+    "sat": 0.26752343243236426,
+    "contorno": 0.03420651528068408,
+    "cores": 22,
+    "px": 5673
+   },
+   "bonecos/casaco_cozinheira/caminhada_NE__clara.png": {
+    "brilho": 0.24697829069932223,
+    "sat": 0.29899891544143364,
+    "contorno": 0.03438735177865613,
+    "cores": 33,
+    "px": 5673
+   },
+   "bonecos/casaco_cozinheiro/caminhada_NE.png": {
+    "brilho": 0.2571568316905476,
+    "sat": 0.29603615493710606,
+    "contorno": 0.0376931651213457,
+    "cores": 19,
+    "px": 6314
+   },
+   "bonecos/casaco_cozinheiro/caminhada_NE__clara.png": {
+    "brilho": 0.2631323482829939,
+    "sat": 0.32597426629398835,
+    "contorno": 0.03813649490804073,
+    "cores": 27,
+    "px": 6314
+   },
+   "bonecos/casaco_engenheira/caminhada_NE.png": {
+    "brilho": 0.19510123036556395,
+    "sat": 0.31121634636505024,
+    "contorno": 0.04030319966466397,
+    "cores": 37,
+    "px": 5530
+   },
+   "bonecos/casaco_engenheira/caminhada_NE__clara.png": {
+    "brilho": 0.21262879835478496,
+    "sat": 0.2936885857732194,
+    "contorno": 0.04115085464114387,
+    "cores": 45,
+    "px": 5530
+   },
+   "bonecos/casaco_engenheiro/caminhada_NE.png": {
+    "brilho": 0.1983271162123386,
+    "sat": 0.3330036160814281,
+    "contorno": 0.054837597407075375,
+    "cores": 20,
+    "px": 6150
+   },
+   "bonecos/casaco_engenheiro/caminhada_NE__clara.png": {
+    "brilho": 0.206805356288857,
+    "sat": 0.3292141641412121,
+    "contorno": 0.057067328689975404,
+    "cores": 27,
+    "px": 6150
+   },
+   "bonecos/casaco_guarda/parado_NE.png": {
+    "brilho": 0.18564160695248505,
+    "sat": 0.24621113137221295,
+    "contorno": 0.04591671720234485,
+    "cores": 17,
+    "px": 1453
+   },
+   "bonecos/casaco_guarda/parado_NE__clara.png": {
+    "brilho": 0.19249827942188574,
+    "sat": 0.25127406075686387,
+    "contorno": 0.04591671720234485,
+    "cores": 23,
+    "px": 1453
+   },
+   "bonecos/casaco_guarda_mulher/atacar_NE.png": {
+    "brilho": 0.1794386277567387,
+    "sat": 0.23685235569866397,
+    "contorno": 0.01978507766743061,
+    "cores": 44,
+    "px": 13467
+   },
+   "bonecos/casaco_guarda_mulher/atacar_NE__clara.png": {
+    "brilho": 0.18861094003206094,
+    "sat": 0.24595724752469658,
+    "contorno": 0.020168067226890758,
+    "cores": 56,
+    "px": 13467
+   },
+   "bonecos/casaco_lenhador/parado_NE.png": {
+    "brilho": 0.17661205227212115,
+    "sat": 0.2356734959450291,
+    "contorno": 0.010551755585955312,
+    "cores": 21,
+    "px": 1691
+   },
+   "bonecos/casaco_lenhador/parado_NE__clara.png": {
+    "brilho": 0.1852970165002725,
+    "sat": 0.24015616452307878,
+    "contorno": 0.01094391244870041,
+    "cores": 28,
+    "px": 1691
+   },
+   "bonecos/casaco_lenhadora/caminhada_NE.png": {
+    "brilho": 0.20389446101021053,
+    "sat": 0.28855873614712996,
+    "contorno": 0.05737732904106917,
+    "cores": 25,
+    "px": 5859
+   },
+   "bonecos/casaco_lenhadora/caminhada_NE__clara.png": {
+    "brilho": 0.21004621681408525,
+    "sat": 0.29582464855748236,
+    "contorno": 0.05806018924982929,
+    "cores": 32,
+    "px": 5859
+   },
+   "bonecos/casaco_medica/atender_NE.png": {
+    "brilho": 0.21952829782258163,
+    "sat": 0.1768420194642168,
+    "contorno": 0.03313362381989833,
+    "cores": 25,
+    "px": 12744
+   },
+   "bonecos/casaco_medica/atender_NE__clara.png": {
+    "brilho": 0.22610286424676587,
+    "sat": 0.1936491527022567,
+    "contorno": 0.033825546679577184,
+    "cores": 30,
+    "px": 12744
+   },
+   "bonecos/casaco_medico/atender_NE.png": {
+    "brilho": 0.19120591856507047,
+    "sat": 0.2895889936887146,
+    "contorno": 0.011008446924648554,
+    "cores": 32,
+    "px": 14349
+   },
+   "bonecos/casaco_medico/atender_NE__clara.png": {
+    "brilho": 0.19797608359672533,
+    "sat": 0.2950492563645278,
+    "contorno": 0.01108874861504996,
+    "cores": 40,
+    "px": 14349
+   },
+   "bonecos/casaco_minerador/parado_NE.png": {
+    "brilho": 0.19368629995801045,
+    "sat": 0.27864272435601767,
+    "contorno": 0.004528478057889822,
+    "cores": 25,
+    "px": 1541
+   },
+   "bonecos/casaco_minerador/parado_NE__clara.png": {
+    "brilho": 0.21015637922917382,
+    "sat": 0.2853993669465193,
+    "contorno": 0.004528478057889822,
+    "cores": 30,
+    "px": 1541
+   },
+   "bonecos/casaco_mineradora/parado_NE.png": {
+    "brilho": 0.18007116061414705,
+    "sat": 0.30873234475566885,
+    "contorno": 0.023479897009308776,
+    "cores": 30,
+    "px": 1521
+   },
+   "bonecos/casaco_mineradora/parado_NE__clara.png": {
+    "brilho": 0.18463472173879414,
+    "sat": 0.31403502222376073,
+    "contorno": 0.023479897009308776,
+    "cores": 31,
+    "px": 1521
+   },
+   "bonecos/casaco_pesquisador/caminhada_NE.png": {
+    "brilho": 0.2106665833177054,
+    "sat": 0.3029580087913855,
+    "contorno": 0.0446617390411662,
+    "cores": 21,
+    "px": 5646
+   },
+   "bonecos/casaco_pesquisador/caminhada_NE__clara.png": {
+    "brilho": 0.22105151660380765,
+    "sat": 0.3129716080891936,
+    "contorno": 0.045216096909968174,
+    "cores": 31,
+    "px": 5646
+   },
+   "bonecos/casaco_pesquisadora/caminhada_NE.png": {
+    "brilho": 0.20605261490702906,
+    "sat": 0.24508566672034518,
+    "contorno": 0.03563087284775406,
+    "cores": 32,
+    "px": 4952
+   },
+   "bonecos/casaco_pesquisadora/caminhada_NE__clara.png": {
+    "brilho": 0.22145894706832653,
+    "sat": 0.2602502732832878,
+    "contorno": 0.035758513931888544,
+    "cores": 45,
+    "px": 4952
+   },
+   "bonecos/civil/parado_NE.png": {
+    "brilho": 0.19141597123278378,
+    "sat": 0.24840607506810414,
+    "contorno": 0.04130865829477859,
+    "cores": 47,
+    "px": 1445
+   },
+   "bonecos/civil/parado_NE__clara.png": {
+    "brilho": 0.19494538299748965,
+    "sat": 0.2507783200049575,
+    "contorno": 0.04176397150620548,
+    "cores": 53,
+    "px": 1445
+   },
+   "bonecos/civil_mulher/parado_NE.png": {
+    "brilho": 0.17345497852069244,
+    "sat": 0.3376762977622526,
+    "contorno": 0.011688558918713116,
+    "cores": 41,
+    "px": 1844
+   },
+   "bonecos/civil_mulher/parado_NE__clara.png": {
+    "brilho": 0.18148845221385734,
+    "sat": 0.34017556958316353,
+    "contorno": 0.011688558918713116,
+    "cores": 45,
+    "px": 1844
+   },
+   "bonecos/cozinheira/parado_NE.png": {
+    "brilho": 0.1796674045962471,
+    "sat": 0.3058742983266521,
+    "contorno": 0.01170998632010944,
+    "cores": 45,
+    "px": 1488
+   },
+   "bonecos/cozinheira/parado_NE__clara.png": {
+    "brilho": 0.1805450137044065,
+    "sat": 0.3068638173851512,
+    "contorno": 0.01170998632010944,
+    "cores": 48,
+    "px": 1488
+   },
+   "bonecos/cozinheiro/parado_NE.png": {
+    "brilho": 0.19532021441670194,
+    "sat": 0.2592668738198305,
+    "contorno": 0.010788710102875231,
+    "cores": 41,
+    "px": 1668
+   },
+   "bonecos/cozinheiro/parado_NE__clara.png": {
+    "brilho": 0.199559176188461,
+    "sat": 0.26184859710623337,
+    "contorno": 0.010788710102875231,
+    "cores": 46,
+    "px": 1668
+   },
+   "bonecos/engenheira/parado_NE.png": {
+    "brilho": 0.1881096177343341,
+    "sat": 0.46635520846929995,
+    "contorno": 0.02145081208449045,
+    "cores": 55,
+    "px": 1685
+   },
+   "bonecos/engenheira/parado_NE__clara.png": {
+    "brilho": 0.19254552859719556,
+    "sat": 0.4599184604386788,
+    "contorno": 0.02222502734999579,
+    "cores": 66,
+    "px": 1685
+   },
+   "bonecos/engenheiro/parado_NE.png": {
+    "brilho": 0.1784348409174991,
+    "sat": 0.3897972809236308,
+    "contorno": 0.009199966906593861,
+    "cores": 43,
+    "px": 1696
+   },
+   "bonecos/engenheiro/parado_NE__clara.png": {
+    "brilho": 0.18275642804291528,
+    "sat": 0.38555257679486715,
+    "contorno": 0.009199966906593861,
+    "cores": 48,
+    "px": 1696
+   },
+   "bonecos/guarda/parado_NE.png": {
+    "brilho": 0.125599578674445,
+    "sat": 0.15687475900147319,
+    "contorno": 0.01364463311097635,
+    "cores": 30,
+    "px": 1452
+   },
+   "bonecos/guarda/parado_NE__clara.png": {
+    "brilho": 0.12669745584184086,
+    "sat": 0.15810826552856172,
+    "contorno": 0.01364463311097635,
+    "cores": 31,
+    "px": 1452
+   },
+   "bonecos/guarda_mulher/parado_NE.png": {
+    "brilho": 0.1212617220801364,
+    "sat": 0.25297214725357553,
+    "contorno": 0.01230190706419554,
+    "cores": 35,
+    "px": 1610
+   },
+   "bonecos/guarda_mulher/parado_NE__clara.png": {
+    "brilho": 0.1232834003166484,
+    "sat": 0.2549459537606444,
+    "contorno": 0.01230190706419554,
+    "cores": 37,
+    "px": 1610
+   },
+   "bonecos/lenhador/parado_NE.png": {
+    "brilho": 0.15094381035996488,
+    "sat": 0.2512541202527841,
+    "contorno": 0.015187165775401069,
+    "cores": 44,
+    "px": 1608
+   },
+   "bonecos/lenhador/parado_NE__clara.png": {
+    "brilho": 0.15384840503365527,
+    "sat": 0.24957270318697578,
+    "contorno": 0.015187165775401069,
+    "cores": 54,
+    "px": 1608
+   },
+   "bonecos/lenhadora/parado_NE.png": {
+    "brilho": 0.15371380779800073,
+    "sat": 0.41638832274583154,
+    "contorno": 0.013040167523320007,
+    "cores": 40,
+    "px": 1477
+   },
+   "bonecos/lenhadora/parado_NE__clara.png": {
+    "brilho": 0.1551289710196875,
+    "sat": 0.41709789855955537,
+    "contorno": 0.013040167523320007,
+    "cores": 46,
+    "px": 1477
+   },
+   "bonecos/medica/parado_NE.png": {
+    "brilho": 0.2022388158504455,
+    "sat": 0.19270681971430614,
+    "contorno": 0.030652437966336977,
+    "cores": 44,
+    "px": 1481
+   },
+   "bonecos/medica/parado_NE__clara.png": {
+    "brilho": 0.2029683176444109,
+    "sat": 0.19295946781616605,
+    "contorno": 0.03112094395280236,
+    "cores": 47,
+    "px": 1481
+   },
+   "bonecos/medico/parado_NE.png": {
+    "brilho": 0.1707112827699354,
+    "sat": 0.20353674656690796,
+    "contorno": 0.010725152129817445,
+    "cores": 42,
+    "px": 1721
+   },
+   "bonecos/medico/parado_NE__clara.png": {
+    "brilho": 0.1726151006596712,
+    "sat": 0.20463209070294397,
+    "contorno": 0.010725152129817445,
+    "cores": 44,
+    "px": 1721
+   },
+   "bonecos/minerador/parado_NE.png": {
+    "brilho": 0.16962469801674251,
+    "sat": 0.31178122824297144,
+    "contorno": 0.00975894945134017,
+    "cores": 33,
+    "px": 1396
+   },
+   "bonecos/minerador/parado_NE__clara.png": {
+    "brilho": 0.17410247766728468,
+    "sat": 0.3133696237694309,
+    "contorno": 0.00975894945134017,
+    "cores": 39,
+    "px": 1396
+   },
+   "bonecos/mineradora/parado_NE.png": {
+    "brilho": 0.1466173135921035,
+    "sat": 0.40349074147035535,
+    "contorno": 0.011111111111111112,
+    "cores": 37,
+    "px": 1470
+   },
+   "bonecos/mineradora/parado_NE__clara.png": {
+    "brilho": 0.14923169267707084,
+    "sat": 0.4066644548826016,
+    "contorno": 0.011111111111111112,
+    "cores": 39,
+    "px": 1470
+   },
+   "bonecos/pesquisador/parado_NE.png": {
+    "brilho": 0.36291542608835603,
+    "sat": 0.3049897704401225,
+    "contorno": 0.015083692013390722,
+    "cores": 39,
+    "px": 1462
+   },
+   "bonecos/pesquisador/parado_NE__clara.png": {
+    "brilho": 0.3649928918215713,
+    "sat": 0.30734518653800447,
+    "contorno": 0.015083692013390722,
+    "cores": 41,
+    "px": 1462
+   },
+   "bonecos/pesquisadora/parado_NE.png": {
+    "brilho": 0.34107161581210027,
+    "sat": 0.2637110329013312,
+    "contorno": 0.011546840958605665,
+    "cores": 40,
+    "px": 1496
+   },
+   "bonecos/pesquisadora/parado_NE__clara.png": {
+    "brilho": 0.34387648107371294,
+    "sat": 0.263953693465051,
+    "contorno": 0.011546840958605665,
+    "cores": 44,
+    "px": 1496
+   },
+   "bonecos/robo/parado_NE.png": {
+    "brilho": 0.14089981585626835,
+    "sat": 0.16804030120622226,
+    "contorno": 0.040154869376880765,
+    "cores": 32,
+    "px": 20093
+   },
+   "bonecos/robo/parado_NO.png": {
+    "brilho": 0.14128212024203024,
+    "sat": 0.16304868452003618,
+    "contorno": 0.04647945610404966,
+    "cores": 36,
+    "px": 20341
+   },
+   "bonecos/traje_calor_f/parado_NE.png": {
+    "brilho": 0.4357698406705429,
+    "sat": 0.10183329263062114,
+    "contorno": 0.009641369501168343,
+    "cores": 36,
+    "px": 1558
+   },
+   "bonecos/traje_calor_f/parado_NE__clara.png": {
+    "brilho": 0.4357698406705429,
+    "sat": 0.10183329263062114,
+    "contorno": 0.009641369501168343,
+    "cores": 36,
+    "px": 1558
+   },
+   "bonecos/traje_calor_m/parado_NE.png": {
+    "brilho": 0.44828415790982634,
+    "sat": 0.10692331932720889,
+    "contorno": 0.004617019221481696,
+    "cores": 26,
+    "px": 1573
+   },
+   "bonecos/traje_calor_m/parado_NE__clara.png": {
+    "brilho": 0.44838886603592487,
+    "sat": 0.10704779751907424,
+    "contorno": 0.004617019221481696,
+    "cores": 27,
+    "px": 1573
+   },
+   "bonecos/traje_gas_f/parado_NE.png": {
+    "brilho": 0.29050696594427244,
+    "sat": 0.44502951457627893,
+    "contorno": 0.015223825379208286,
+    "cores": 35,
+    "px": 1520
+   },
+   "bonecos/traje_gas_f/parado_NE__clara.png": {
+    "brilho": 0.29387254901960785,
+    "sat": 0.4451745879541533,
+    "contorno": 0.015223825379208286,
+    "cores": 40,
+    "px": 1520
+   },
+   "bonecos/traje_gas_m/parado_NE.png": {
+    "brilho": 0.29029920801766423,
+    "sat": 0.5004086304911441,
+    "contorno": 0.007253086419753086,
+    "cores": 29,
+    "px": 1483
+   },
+   "bonecos/traje_gas_m/parado_NE__clara.png": {
+    "brilho": 0.2919188713921172,
+    "sat": 0.49952329748262003,
+    "contorno": 0.007253086419753086,
+    "cores": 32,
+    "px": 1483
+   },
+   "bonecos/traje_radiacao_f/parado_NE.png": {
+    "brilho": 0.2439791735903401,
+    "sat": 0.1713218636994106,
+    "contorno": 0.00849673202614379,
+    "cores": 22,
+    "px": 1593
+   },
+   "bonecos/traje_radiacao_f/parado_NE__clara.png": {
+    "brilho": 0.2439791735903401,
+    "sat": 0.1713218636994106,
+    "contorno": 0.00849673202614379,
+    "cores": 22,
+    "px": 1593
+   },
+   "bonecos/traje_radiacao_m/parado_NE.png": {
+    "brilho": 0.2595288565876801,
+    "sat": 0.18824645192509093,
+    "contorno": 0.03260266370699223,
+    "cores": 23,
+    "px": 1554
+   },
+   "bonecos/traje_radiacao_m/parado_NE__clara.png": {
+    "brilho": 0.2595288565876801,
+    "sat": 0.18824645192509093,
+    "contorno": 0.03260266370699223,
+    "cores": 23,
+    "px": 1554
+   }
+  },
+  "objetos": {
+   "props/achado_bobina.png": {
+    "brilho": 0.14451525442678853,
+    "sat": 0.21816010385457432,
+    "contorno": 0.016483660130718954,
+    "cores": 25,
+    "px": 1403
+   },
+   "props/achado_cristal.png": {
+    "brilho": 0.15654258800762685,
+    "sat": 0.16766929755911517,
+    "contorno": 0.0009271925824593403,
+    "cores": 26,
+    "px": 1378
+   },
+   "props/achado_painel_solar.png": {
+    "brilho": 0.18934768678713315,
+    "sat": 0.13694517994665084,
+    "contorno": 0.003272888102609465,
+    "cores": 32,
+    "px": 1530
+   },
+   "props/achado_peca.png": {
+    "brilho": 0.14967582749297845,
+    "sat": 0.18140174468333314,
+    "contorno": 0.013391430646332607,
+    "cores": 27,
+    "px": 1494
+   },
+   "props/arbusto_0.png": {
+    "brilho": 0.1341425459072518,
+    "sat": 0.19829025932785943,
+    "contorno": 0.013806766229807985,
+    "cores": 24,
+    "px": 567
+   },
+   "props/arbusto_1.png": {
+    "brilho": 0.13662302130154388,
+    "sat": 0.19697732567857446,
+    "contorno": 0.01120242214532872,
+    "cores": 25,
+    "px": 602
+   },
+   "props/arbusto_2.png": {
+    "brilho": 0.13793216450925774,
+    "sat": 0.18226117801995811,
+    "contorno": 0.009615686274509804,
+    "cores": 24,
+    "px": 718
+   },
+   "props/arvore_betula_0.png": {
+    "brilho": 0.22909222948438634,
+    "sat": 0.3126801792929088,
+    "contorno": 0.09529951139031664,
+    "cores": 89,
+    "px": 2295
+   },
+   "props/arvore_betula_1.png": {
+    "brilho": 0.18953519573059838,
+    "sat": 0.30319774037252256,
+    "contorno": 0.07274683324657297,
+    "cores": 84,
+    "px": 1973
+   },
+   "props/arvore_carvalho_0.png": {
+    "brilho": 0.1524686563299774,
+    "sat": 0.21691560941079258,
+    "contorno": 0.07005116096025187,
+    "cores": 33,
+    "px": 7876
+   },
+   "props/arvore_carvalho_1.png": {
+    "brilho": 0.16258351251727846,
+    "sat": 0.21601334706451106,
+    "contorno": 0.06517002936440276,
+    "cores": 34,
+    "px": 6128
+   },
+   "props/arvore_carvalho_2.png": {
+    "brilho": 0.16803861986068044,
+    "sat": 0.2217507362872156,
+    "contorno": 0.07349608398600234,
+    "cores": 34,
+    "px": 7569
+   },
+   "props/arvore_pinheiro_0.png": {
+    "brilho": 0.14471452345900276,
+    "sat": 0.24082058877892726,
+    "contorno": 0.01707373007682605,
+    "cores": 35,
+    "px": 3676
+   },
+   "props/arvore_pinheiro_1.png": {
+    "brilho": 0.12997256515775035,
+    "sat": 0.22494835905979302,
+    "contorno": 0.009253826218766808,
+    "cores": 34,
+    "px": 3888
+   },
+   "props/arvore_seca.png": {
+    "brilho": 0.23360695109189783,
+    "sat": 0.25952924419549206,
+    "contorno": 0.15960143093381932,
+    "cores": 47,
+    "px": 2286
+   },
+   "props/banco.png": {
+    "brilho": 0.20023543467566238,
+    "sat": 0.18584030297030213,
+    "contorno": 0.037515375153751536,
+    "cores": 24,
+    "px": 1674
+   },
+   "props/barris_2.png": {
+    "brilho": 0.21938347067897415,
+    "sat": 0.21231465195525867,
+    "contorno": 0.06571691176470588,
+    "cores": 38,
+    "px": 2377
+   },
+   "props/caixote.png": {
+    "brilho": 0.20201299157655894,
+    "sat": 0.23407109169211893,
+    "contorno": 0.1468888888888889,
+    "cores": 34,
+    "px": 1953
+   },
+   "props/caixotes_2.png": {
+    "brilho": 0.187942878888021,
+    "sat": 0.25060110384382056,
+    "contorno": 0.010809451985922574,
+    "cores": 30,
+    "px": 1958
+   },
+   "props/capim_0.png": {
+    "brilho": 0.3883978190206564,
+    "sat": 0.19030950178173825,
+    "contorno": 0.4153411764705882,
+    "cores": 28,
+    "px": 374
+   },
+   "props/capim_1.png": {
+    "brilho": 0.37542130365659776,
+    "sat": 0.1896691090632842,
+    "contorno": 0.40555555555555556,
+    "cores": 25,
+    "px": 370
+   },
+   "props/capim_2.png": {
+    "brilho": 0.39568960728767427,
+    "sat": 0.18654722191792686,
+    "contorno": 0.4222842421640189,
+    "cores": 22,
+    "px": 353
+   },
+   "props/capim_3.png": {
+    "brilho": 0.23925490196078433,
+    "sat": 0.15145797977183276,
+    "contorno": 0.2533815665303555,
+    "cores": 31,
+    "px": 550
+   },
+   "props/cogumelos_0.png": {
+    "brilho": 0.2573768531802965,
+    "sat": 0.1654607922177676,
+    "contorno": 0.18625700280112045,
+    "cores": 29,
+    "px": 328
+   },
+   "props/cogumelos_1.png": {
+    "brilho": 0.2619304455306478,
+    "sat": 0.16423950376846372,
+    "contorno": 0.17289606107929897,
+    "cores": 25,
+    "px": 349
+   },
+   "props/cogumelos_2.png": {
+    "brilho": 0.2490613266583229,
+    "sat": 0.16169494743100035,
+    "contorno": 0.1643307757885763,
+    "cores": 23,
+    "px": 376
+   },
+   "props/cristal_brasa_0.png": {
+    "brilho": 0.2765704931450788,
+    "sat": 0.5322555316332479,
+    "contorno": 0.036041083099906626,
+    "cores": 26,
+    "px": 1629
+   },
+   "props/cristal_brasa_1.png": {
+    "brilho": 0.25935777860085074,
+    "sat": 0.4416493674704323,
+    "contorno": 0.05043449197860963,
+    "cores": 26,
+    "px": 1747
+   },
+   "props/cristal_ciano_0.png": {
+    "brilho": 0.30443221703216955,
+    "sat": 0.45696364529148414,
+    "contorno": 0.03544810594394826,
+    "cores": 29,
+    "px": 1486
+   },
+   "props/cristal_ciano_1.png": {
+    "brilho": 0.34694897566869887,
+    "sat": 0.5064293668747025,
+    "contorno": 0.07821960784313725,
+    "cores": 28,
+    "px": 1785
+   },
+   "props/cristal_lima_0.png": {
+    "brilho": 0.33024493445876685,
+    "sat": 0.458069416611687,
+    "contorno": 0.03413747521480502,
+    "cores": 29,
+    "px": 1798
+   },
+   "props/cristal_lima_1.png": {
+    "brilho": 0.30626030786146236,
+    "sat": 0.4266815839872245,
+    "contorno": 0.04579831932773109,
+    "cores": 27,
+    "px": 1712
+   },
+   "props/cristal_violeta_0.png": {
+    "brilho": 0.26460144799990615,
+    "sat": 0.4552063905770671,
+    "contorno": 0.05865115276879983,
+    "cores": 24,
+    "px": 1671
+   },
+   "props/cristal_violeta_1.png": {
+    "brilho": 0.2519488137135196,
+    "sat": 0.4389299375737401,
+    "contorno": 0.035951426024955435,
+    "cores": 27,
+    "px": 1638
+   },
+   "props/entulho_medio.png": {
+    "brilho": 0.18007162831771575,
+    "sat": 0.15744114802822604,
+    "contorno": 0.03961988304093567,
+    "cores": 25,
+    "px": 1199
+   },
+   "props/escora.png": {
+    "brilho": 0.1565504530794041,
+    "sat": 0.1860197892943223,
+    "contorno": 0.04543569693738523,
+    "cores": 18,
+    "px": 2298
+   },
+   "props/flores_0.png": {
+    "brilho": 0.3367758186397985,
+    "sat": 0.17669522714784316,
+    "contorno": 0.33947610294117647,
+    "cores": 22,
+    "px": 397
+   },
+   "props/flores_1.png": {
+    "brilho": 0.35285631336817186,
+    "sat": 0.1743550621446239,
+    "contorno": 0.37181216435618836,
+    "cores": 22,
+    "px": 439
+   },
+   "props/flores_2.png": {
+    "brilho": 0.33505220269926156,
+    "sat": 0.17492434426898043,
+    "contorno": 0.33075886843286934,
+    "cores": 24,
+    "px": 462
+   },
+   "props/flores_3.png": {
+    "brilho": 0.3328794047451916,
+    "sat": 0.17067255488631491,
+    "contorno": 0.3284528409904108,
+    "cores": 19,
+    "px": 419
+   },
+   "props/guindaste_pedreira.png": {
+    "brilho": 0.17058118470107644,
+    "sat": 0.28698452640482397,
+    "contorno": 0.030313684369238782,
+    "cores": 36,
+    "px": 13627
+   },
+   "props/horta_colhido.png": {
+    "brilho": 0.18956574593097858,
+    "sat": 0.08800120376243344,
+    "contorno": 0.14809923969587835,
+    "cores": 27,
+    "px": 1742
+   },
+   "props/horta_crescendo.png": {
+    "brilho": 0.21307039463316899,
+    "sat": 0.09065908278631404,
+    "contorno": 0.12250296091591,
+    "cores": 25,
+    "px": 1742
+   },
+   "props/horta_espantalho.png": {
+    "brilho": 0.16816112628516866,
+    "sat": 0.1375867574764113,
+    "contorno": 0.11125777140124342,
+    "cores": 33,
+    "px": 883
+   },
+   "props/horta_pronto.png": {
+    "brilho": 0.3388162672476398,
+    "sat": 0.1365863828602981,
+    "contorno": 0.09117059997651755,
+    "cores": 42,
+    "px": 1890
+   },
+   "props/jazida_carvao_cheia.png": {
+    "brilho": 0.1458795782463929,
+    "sat": 0.1942909645186719,
+    "contorno": 0.0077762923351158645,
+    "cores": 21,
+    "px": 2544
+   },
+   "props/jazida_carvao_meia.png": {
+    "brilho": 0.16502256132578555,
+    "sat": 0.18199326245167385,
+    "contorno": 0.007556193208990913,
+    "cores": 19,
+    "px": 2390
+   },
+   "props/jazida_carvao_quase.png": {
+    "brilho": 0.1546958035550669,
+    "sat": 0.18667743449153512,
+    "contorno": 0.008929686524291245,
+    "cores": 24,
+    "px": 2140
+   },
+   "props/jazida_cobre_cheia.png": {
+    "brilho": 0.19583795782463928,
+    "sat": 0.2843530600268784,
+    "contorno": 0.0077762923351158645,
+    "cores": 21,
+    "px": 2544
+   },
+   "props/jazida_cobre_meia.png": {
+    "brilho": 0.18820904093855115,
+    "sat": 0.2280292325082881,
+    "contorno": 0.007556193208990913,
+    "cores": 19,
+    "px": 2390
+   },
+   "props/jazida_cobre_quase.png": {
+    "brilho": 0.1760317024005864,
+    "sat": 0.22232920390217678,
+    "contorno": 0.008929686524291245,
+    "cores": 24,
+    "px": 2140
+   },
+   "props/jazida_esgotada.png": {
+    "brilho": 0.1570404000526385,
+    "sat": 0.1878564174792435,
+    "contorno": 0.007314386428728795,
+    "cores": 20,
+    "px": 2384
+   },
+   "props/jazida_ferro_cheia.png": {
+    "brilho": 0.17654303859908743,
+    "sat": 0.257656082959356,
+    "contorno": 0.0077762923351158645,
+    "cores": 21,
+    "px": 2544
+   },
+   "props/jazida_ferro_meia.png": {
+    "brilho": 0.1794142259414226,
+    "sat": 0.21080652875595968,
+    "contorno": 0.007556193208990913,
+    "cores": 19,
+    "px": 2390
+   },
+   "props/jazida_ferro_quase.png": {
+    "brilho": 0.1678238959135056,
+    "sat": 0.21309220794508588,
+    "contorno": 0.008929686524291245,
+    "cores": 24,
+    "px": 2140
+   },
+   "props/jazida_prata_cheia.png": {
+    "brilho": 0.250633555308916,
+    "sat": 0.20947392141148016,
+    "contorno": 0.0077762923351158645,
+    "cores": 21,
+    "px": 2544
+   },
+   "props/jazida_prata_meia.png": {
+    "brilho": 0.2147969480679301,
+    "sat": 0.19422259922691137,
+    "contorno": 0.007556193208990913,
+    "cores": 19,
+    "px": 2390
+   },
+   "props/jazida_prata_quase.png": {
+    "brilho": 0.19922026754627084,
+    "sat": 0.19197251015601433,
+    "contorno": 0.008929686524291245,
+    "cores": 24,
+    "px": 2140
+   },
+   "props/jazida_solarita_cheia.png": {
+    "brilho": 0.23232519422863485,
+    "sat": 0.39223843394946795,
+    "contorno": 0.0077762923351158645,
+    "cores": 21,
+    "px": 2544
+   },
+   "props/jazida_solarita_meia.png": {
+    "brilho": 0.205880712117483,
+    "sat": 0.27583689131332567,
+    "contorno": 0.007556193208990913,
+    "cores": 19,
+    "px": 2390
+   },
+   "props/jazida_solarita_quase.png": {
+    "brilho": 0.19067619571192965,
+    "sat": 0.2668655880884098,
+    "contorno": 0.008929686524291245,
+    "cores": 24,
+    "px": 2140
+   },
+   "props/moita_0.png": {
+    "brilho": 0.10383715601861901,
+    "sat": 0.1840162939291423,
+    "contorno": 0.009864564382454012,
+    "cores": 21,
+    "px": 813
+   },
+   "props/moita_1.png": {
+    "brilho": 0.08283167812579577,
+    "sat": 0.21475308252757805,
+    "contorno": 0.008305794227803481,
+    "cores": 16,
+    "px": 770
+   },
+   "props/moita_2.png": {
+    "brilho": 0.1502738837838442,
+    "sat": 0.20121229039207486,
+    "contorno": 0.007804690503652441,
+    "cores": 27,
+    "px": 877
+   },
+   "props/muda_betula.png": {
+    "brilho": 0.25084000187187044,
+    "sat": 0.1581227467897418,
+    "contorno": 0.1324583596879612,
+    "cores": 39,
+    "px": 419
+   },
+   "props/muda_carvalho.png": {
+    "brilho": 0.18509083423395606,
+    "sat": 0.19259878004774428,
+    "contorno": 0.10337117303061576,
+    "cores": 35,
+    "px": 381
+   },
+   "props/muda_pinheiro.png": {
+    "brilho": 0.18671331435800126,
+    "sat": 0.16442345579819168,
+    "contorno": 0.0641582759229818,
+    "cores": 31,
+    "px": 496
+   },
+   "props/pedra_g.png": {
+    "brilho": 0.25776502470907064,
+    "sat": 0.10245615222728036,
+    "contorno": 0.03882837085451464,
+    "cores": 27,
+    "px": 1845
+   },
+   "props/placa_caveira.png": {
+    "brilho": 0.1887997861534349,
+    "sat": 0.23117448296645945,
+    "contorno": 0.007778138879861337,
+    "cores": 24,
+    "px": 1247
+   },
+   "props/placa_perigo.png": {
+    "brilho": 0.2356435875785721,
+    "sat": 0.2516462259391981,
+    "contorno": 0.016918049270990446,
+    "cores": 25,
+    "px": 836
+   },
+   "props/poco.png": {
+    "brilho": 0.1888124604680582,
+    "sat": 0.12409038777565237,
+    "contorno": 0.03696842373312961,
+    "cores": 35,
+    "px": 2728
+   },
+   "props/rocha_mina_0.png": {
+    "brilho": 0.23629105185381238,
+    "sat": 0.15933616943168297,
+    "contorno": 0.11372549019607843,
+    "cores": 4,
+    "px": 1778
+   },
+   "props/rocha_mina_1.png": {
+    "brilho": 0.2623801253492411,
+    "sat": 0.1522726409083867,
+    "contorno": 0.11372549019607843,
+    "cores": 4,
+    "px": 1558
+   },
+   "props/rocha_mina_2.png": {
+    "brilho": 0.2507597412366481,
+    "sat": 0.15350342117771051,
+    "contorno": 0.11372549019607843,
+    "cores": 4,
+    "px": 1564
+   },
+   "props/rocha_musgo_0.png": {
+    "brilho": 0.2393969663337033,
+    "sat": 0.20512962212445798,
+    "contorno": 0.045426866398733404,
+    "cores": 29,
+    "px": 2120
+   },
+   "props/rocha_musgo_1.png": {
+    "brilho": 0.20768714596949892,
+    "sat": 0.2047270167636052,
+    "contorno": 0.0036113179448994787,
+    "cores": 27,
+    "px": 2250
+   },
+   "props/rocha_musgo_2.png": {
+    "brilho": 0.204304065686664,
+    "sat": 0.21188748760954637,
+    "contorno": 0.0027876210725253955,
+    "cores": 30,
+    "px": 2517
+   },
+   "props/rocha_musgo_3.png": {
+    "brilho": 0.21108709450534371,
+    "sat": 0.20432330197040002,
+    "contorno": 0.002874193155523079,
+    "cores": 29,
+    "px": 2286
+   },
+   "props/rocha_musgo_4.png": {
+    "brilho": 0.2231417281741594,
+    "sat": 0.20390349756149873,
+    "contorno": 0.06766313082610093,
+    "cores": 29,
+    "px": 1578
+   },
+   "props/rocha_musgo_5.png": {
+    "brilho": 0.2087261333774372,
+    "sat": 0.23903268664092323,
+    "contorno": 0.007697893972403776,
+    "cores": 29,
+    "px": 2134
+   },
+   "props/sacos.png": {
+    "brilho": 0.2734461329933262,
+    "sat": 0.26768578056483183,
+    "contorno": 0.20852872617578502,
+    "cores": 27,
+    "px": 1707
+   },
+   "props/samambaia_0.png": {
+    "brilho": 0.14375365322280673,
+    "sat": 0.21727626424793361,
+    "contorno": 0.012051112579863407,
+    "cores": 28,
+    "px": 738
+   },
+   "props/samambaia_1.png": {
+    "brilho": 0.13492250521163782,
+    "sat": 0.2348673905588353,
+    "contorno": 0.018196577994255028,
+    "cores": 28,
+    "px": 649
+   },
+   "props/tijolo_m.png": {
+    "brilho": 0.25548545390816685,
+    "sat": 0.11484700942662021,
+    "contorno": 0.015429723291185632,
+    "cores": 25,
+    "px": 951
+   },
+   "props/toca_coelho_fora.png": {
+    "brilho": 0.18590727260803988,
+    "sat": 0.1614801067152934,
+    "contorno": 0.13173202614379084,
+    "cores": 28,
+    "px": 897
+   },
+   "props/toca_coelho_orelhas.png": {
+    "brilho": 0.18241047030058968,
+    "sat": 0.17560498752143894,
+    "contorno": 0.11106314085267135,
+    "cores": 26,
+    "px": 818
+   },
+   "props/toca_coelho_vazia.png": {
+    "brilho": 0.1729132666335533,
+    "sat": 0.1450872149341335,
+    "contorno": 0.10782578518132917,
+    "cores": 26,
+    "px": 829
+   },
+   "props/toca_javali.png": {
+    "brilho": 0.1834934226855299,
+    "sat": 0.1445651823969425,
+    "contorno": 0.14205394865128373,
+    "cores": 26,
+    "px": 1580
+   },
+   "props/tocha_apagada.png": {
+    "brilho": 0.15243371061161592,
+    "sat": 0.2293622930202031,
+    "contorno": 0.06260092272203,
+    "cores": 29,
+    "px": 738
+   },
+   "props/tocha_chao_f0.png": {
+    "brilho": 0.25853674803254634,
+    "sat": 0.3470957047094102,
+    "contorno": 0.11095732410611303,
+    "cores": 75,
+    "px": 294
+   },
+   "props/tocha_chao_f1.png": {
+    "brilho": 0.26322043969102793,
+    "sat": 0.3542069599665252,
+    "contorno": 0.12565826330532212,
+    "cores": 79,
+    "px": 297
+   },
+   "props/tocha_chao_f2.png": {
+    "brilho": 0.258553076402975,
+    "sat": 0.3564013715755724,
+    "contorno": 0.10431372549019607,
+    "cores": 72,
+    "px": 290
+   },
+   "props/tocha_chao_f3.png": {
+    "brilho": 0.26314121608239255,
+    "sat": 0.35545662528447713,
+    "contorno": 0.11653469079939668,
+    "cores": 79,
+    "px": 297
+   },
+   "props/toco_betula.png": {
+    "brilho": 0.3701693823069134,
+    "sat": 0.10670290166453998,
+    "contorno": 0.06350411132194814,
+    "cores": 54,
+    "px": 852
+   },
+   "props/toco_carvalho.png": {
+    "brilho": 0.22446265079177963,
+    "sat": 0.16230564642281972,
+    "contorno": 0.09222277146152578,
+    "cores": 29,
+    "px": 998
+   },
+   "props/toco_pinheiro.png": {
+    "brilho": 0.21346734240646886,
+    "sat": 0.15106265828025614,
+    "contorno": 0.034807972775887215,
+    "cores": 32,
+    "px": 1033
+   },
+   "props/tronco_musgo_0.png": {
+    "brilho": 0.20635383924562192,
+    "sat": 0.13895161836897046,
+    "contorno": 0.11179084967320262,
+    "cores": 30,
+    "px": 262
+   },
+   "props/tronco_musgo_1.png": {
+    "brilho": 0.1929862409511482,
+    "sat": 0.14330725024936405,
+    "contorno": 0.10664799253034547,
+    "cores": 28,
+    "px": 409
+   },
+   "props/tronco_musgo_2.png": {
+    "brilho": 0.21162153750389046,
+    "sat": 0.14155717516055863,
+    "contorno": 0.11003310415075121,
+    "cores": 33,
+    "px": 315
+   },
+   "props/vagonete_cheio_SE.png": {
+    "brilho": 0.17305124995988577,
+    "sat": 0.050475930817296746,
+    "contorno": 0.0739170086639307,
+    "cores": 27,
+    "px": 1222
+   }
+  },
+  "terreno": {
+   "mapa/andar_abismo.png": {
+    "brilho": 0.10848152366566781,
+    "sat": 0.0625568977682254,
+    "contorno": 0.06881595881595881,
+    "cores": 64,
+    "px": 462336
+   },
+   "mapa/andar_nivel2.png": {
+    "brilho": 0.23356954670365282,
+    "sat": 0.2118363158870888,
+    "contorno": 0.13223097532690847,
+    "cores": 122,
+    "px": 580864
+   },
+   "mapa/terreno_alto.png": {
+    "brilho": 0.23580434359371785,
+    "sat": 0.21492017911007624,
+    "contorno": 0.16327838540850545,
+    "cores": 175,
+    "px": 804803
+   },
+   "mapa/terreno_escada_0.png": {
+    "brilho": 0.22653654343681917,
+    "sat": 0.15073834211822792,
+    "contorno": 0.18336656696576936,
+    "cores": 28,
+    "px": 4608
+   },
+   "mapa/terreno_escada_1.png": {
+    "brilho": 0.22653654343681917,
+    "sat": 0.15073834211822792,
+    "contorno": 0.18336656696576936,
+    "cores": 28,
+    "px": 4608
+   },
+   "mapa/terreno_escada_2.png": {
+    "brilho": 0.2067196162146073,
+    "sat": 0.1538568468534089,
+    "contorno": 0.1721781756180733,
+    "cores": 37,
+    "px": 16864
+   },
+   "mapa/terreno_escada_3.png": {
+    "brilho": 0.22162635398447328,
+    "sat": 0.14851495277588536,
+    "contorno": 0.20383705206220418,
+    "cores": 31,
+    "px": 10224
+   },
+   "mapa/terreno_escada_4.png": {
+    "brilho": 0.21505051551136886,
+    "sat": 0.1532649520816622,
+    "contorno": 0.1755296371422132,
+    "cores": 37,
+    "px": 10224
+   },
+   "mapa/terreno_fundo.png": {
+    "brilho": 0.20190232393186636,
+    "sat": 0.18051837013230487,
+    "contorno": 0.13381693484568716,
+    "cores": 111,
+    "px": 442968
+   },
+   "mapa/terreno_meio.png": {
+    "brilho": 0.20681510447591658,
+    "sat": 0.17891712830287482,
+    "contorno": 0.15046846846846848,
+    "cores": 61,
+    "px": 182288
+   },
+   "mapa/terreno_moldura.png": {
+    "brilho": 0.17643562354533138,
+    "sat": 0.23525979344279663,
+    "contorno": 0.148511787451489,
+    "cores": 245,
+    "px": 1422836
+   },
+   "mapa/terreno_paredao.png": {
+    "brilho": 0.17999344938251544,
+    "sat": 0.18616104074953052,
+    "contorno": 0.1479173373806129,
+    "cores": 123,
+    "px": 92672
+   }
+  }
+ }
+}

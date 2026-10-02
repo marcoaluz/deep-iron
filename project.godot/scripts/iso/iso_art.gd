@@ -366,6 +366,8 @@ static func prop_layers(node: Node) -> Array:
 	if env == null or props().is_empty():
 		return []
 	var h := _hash(node)
+	if node.has_meta("iso_prop"):  # Prompt 30: decoração do mapa novo, desenhada pelo nome
+		return [prop(String(node.get_meta("iso_prop")))].filter(func(l): return not l.is_empty())
 	if node.is_in_group("minerios") and node.get("ore_type") != null:
 		return _ore_layers(node, env)
 	var sp := _main_sprite(node)

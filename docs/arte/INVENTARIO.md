@@ -98,18 +98,18 @@ prompts 0–31).
 
 | Item | Prompt | Status | Peças | Gerações |
 |---|---|---|---|---|
-| Relevo da colônia (terra batida): chão ×4, bloco ×2 (+ sem borda), escada N/O | 6 | **aprovado** (checkpoint relevo 1) | platô, 2 degraus, escada | 40 (feito) |
-| Clareira (grama), nível 2 (ardósia), abismo (basalto), rocha da caverna (parede) | 6–7 | **gerado** | chão, bloco, sem borda; rocha com 4 blocos | 80 (feito) |
-| Buraco/galeria, transição entre chãos, parede da caverna | 6–7 | **gerado** (montagem por código) | — | 0 |
-| Galeria na parede de rocha: lacrada → abrindo → aberta (também serve de túnel entre áreas) | 7 | **gerado** (`relevo/final/mina/`) | 3 estágios, mesma âncora | 75 (feito) |
+| Relevo da colônia (terra batida): chão ×4, bloco ×2 (+ sem borda), escada N/O | 6 | **integrado** (terreno do mapa novo, Prompt 29 p1) | platô, 2 degraus, escada | 40 (feito) |
+| Clareira (grama), nível 2 (ardósia), abismo (basalto), rocha da caverna (parede) | 6–7 | **integrado** (floresta no mapa novo; chão e blocos das lajes do nível 2 e do abismo, Prompt 29 p1) | chão, bloco, sem borda; rocha com 4 blocos | 80 (feito) |
+| Buraco/galeria, transição entre chãos, parede da caverna | 6–7 | **integrado** (transição entre chãos no terreno assado; parede da caverna não se usa: a vila é a céu aberto) | — | 0 |
+| Galeria na parede de rocha: lacrada → abrindo → aberta (também serve de túnel entre áreas) | 7 | **integrado** em parte: lacrada (com entulho, Prompt 29 p4); abrindo/aberta ainda não aparecem | 3 estágios, mesma âncora | 75 (feito) |
 | Pisos das zonas de perigo: gás, calor, radiação (5 variações cada) | 7 | **integrado** (lajes dos andares, parte 1) | — | 60 (feito) |
-| Trilhos: reto, curva, cruzamento, fim de linha (script, encaixe exato) | 7 | **gerado** (`relevo/trilhos.py`) | 11 peças | 60 (feito; a IA só deu a cor) |
+| Trilhos: reto, curva, cruzamento, fim de linha (script, encaixe exato) | 7 | **integrado** (trilho da boca da mina ao armazém, no fundo da pedreira) | 11 peças | 60 (feito; a IA só deu a cor) |
 | Escora de madeira (pesquisa "Escoramento") | 7 | **integrado** | — | 20 (feito) |
 | Poço do elevador / da escavadeira | 7 | **código** (buraco fundo do relevo) | — | 0 |
 | Variante por estação do chão/árvore | 6 | **não precisa hoje** (o jogo só usa estação no clima) | — | 0 |
-| Pisos da superfície: grama alta (5), trilha (5), cascalho (4), lama (1+espelho), laje (4), canteiro (2+espelho) | 6 | **gerado** (`relevo/final/superficie/`) | — | 120 (feito) |
-| Escada de pedra, rampa (+ espelho) | 6 | **gerado** | — | 40 (feito) |
-| Boca de mina no paredão (vigas de madeira, 3 degraus, 2×1 tiles) | 6 | **gerado** | — | 75 (feito) |
+| Pisos da superfície: grama alta (5), trilha (5), cascalho (4), lama (1+espelho), laje (4), canteiro (2+espelho) | 6 | **integrado** (terreno do mapa novo) | — | 120 (feito) |
+| Escada de pedra, rampa (+ espelho) | 6 | **integrado** (5 subidas entre os terraços) | — | 40 (feito) |
+| Boca de mina no paredão (vigas de madeira, 3 degraus, 2×1 tiles) | 6 | **integrado** (4 bocas, uma por galeria) | — | 75 (feito) |
 
 ## 7. Jazidas, minérios e pedras
 
@@ -126,7 +126,7 @@ prompts 0–31).
 | Item | Prompt | Status | Variações | Gerações |
 |---|---|---|---|---|
 | Árvores: pinheiro, carvalho, bétula, seca; toco, tora caída, muda rebrotando | 9 | **integrado** (árvores e toco) | 8 árvores + ciclo por espécie | ~145 (feito) |
-| Vegetação rasteira: arbusto, samambaia, moita, espinheiro, flores, capim alto, galho, tronco com musgo, cogumelos, raízes | 9 | **gerado** | 3+ de cada | ~45 (feito) |
+| Vegetação rasteira: arbusto, samambaia, moita, espinheiro, flores, capim alto, galho, tronco com musgo, cogumelos, raízes | 9 | **integrado** (Prompt 30: 90 peças espalhadas na floresta + arbustos da montagem; espinheiro, galho e raízes ainda não aparecem) | 3+ de cada | ~45 (feito) |
 | Horta de cogumelos: vazio, preparado, plantado, crescendo, pronto, colhido | 9 | **integrado** (pronto, crescendo, colhido) | 6 estágios | 20 (feito) |
 | Madeira: tora, toras P/M/G, lenha P/G, tábuas P/M/G + lascas do machado | 9 | **gerado** | 9 + efeito | 20 (feito) |
 
@@ -138,11 +138,11 @@ prompts 0–31).
 | Escora de madeira (`support_beam`, pesquisa "Escoramento") | 7 | **integrado** | 0 |
 | Placas com pictograma (caveira, raio, gás, perigo), postes, andaime, escada, varal, poço, banco, mesa, bigorna | 14 | placa de perigo **integrada** | — | ~25 (feito) |
 | Cova (`grave`), entulho | 14/8 | entulho **gerado** (Prompt 8); cova **falta** | — | ~20 |
-| Trilhos + vagonete (vazio/cheio), caixotes, barris, sacos, sucata, pneus, corrente, corda | 14 | **gerado** | — | ~40 (feito) |
-| **Trilho com vagonete da boca da mina até o Armazém da pedreira** (aceito, `MAPA_VISAO.md`) | 14 / 27 | falta (trilho pronto; falta o vagonete) | incluído |
-| **Guindaste de madeira da pedreira** (aceito) | 14 | **gerado** | — | 20 (feito) |
+| Trilhos + vagonete (vazio/cheio), caixotes, barris, sacos, sucata, pneus, corrente, corda | 14 | **integrado** em parte (Prompt 30: vagonete, caixotes, barris, sacos, pedra, tijolo, poço, banco, placa, caixote, como na montagem aprovada) | — | ~40 (feito) |
+| **Trilho com vagonete da boca da mina até o Armazém da pedreira** (aceito, `MAPA_VISAO.md`) | 14 / 27 | **integrado** (trilho no terreno; vagonete cheio em cima, Prompt 30) | incluído |
+| **Guindaste de madeira da pedreira** (aceito) | 14 | **integrado** (Prompt 30, terraço do meio) | — | 20 (feito) |
 | **Cerca de estacas** (aceito) | 12/11 | paliçada **integrada** (Prompt 29 parte 2); cerca da horta **gerada** | — | 0 |
-| **Vila em 2–3 terraços de pedreira** com escadas entre eles (aceito) | 27 | montagem (relevo pronto) | 0 |
+| **Vila em 2–3 terraços de pedreira** com escadas entre eles (aceito) | 27 | **integrado** (Prompt 29 p1) | 0 |
 | Explosivos (pesquisa), antena do rádio (pesquisa "Rádio da vila") | 14 | falta | ~40 |
 | Pilhas de recurso P/M/G (pedra, tijolo, comida, couro, carvão, aço) + destroços pré-colapso e ossos | 14 | **gerado** | — | ~40 (feito) |
 | Sombra | 19 | **código** (gerada da pegada, regra 7) | 0 |
@@ -184,6 +184,12 @@ prompts 0–31).
 - Nenhuma do Prompt 3: o casaco por função ficou completo (os 18, 2026-09-30).
 
 ## Plano de crédito
+
+**Atualização 2026-10-01 (Prompt 30, revisão final):** decoração da montagem aprovada no jogo
+(guindaste, vagonete, caixotes, vegetação rasteira); contorno de 1 px nos desenhos que vieram
+sem ele; clima visível na vista iso; tiras dos bonecos carregando em segundo plano. Sem geração
+(saldo **1.359**). O que ainda está "falta" é a arte dos Prompts 16–26 e o conteúdo futuro (31).
+Relatório: `docs/arte/prompt30/PROMPT_30_REVISAO.md`.
 
 **Atualização 2026-10-01 (Prompt 29, partes 3 a 6):** bonecos (elenco, animações, casacos, trajes,
 ferramentas e saco nas costas, pele por paleta), natureza e objetos (árvores, jazidas, tocas, horta,

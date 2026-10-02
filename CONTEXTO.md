@@ -1,8 +1,8 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-01 (Prompt 29 concluído: partes 1 a 6). Branch `isometrico`. Último
-commit: `e92362ec adad`; as partes 2–6 estão no working tree, **ainda sem commit** (o Marco valida
-antes).
+Atualizado em 2026-10-01 (**Prompt 30 concluído**: revisão final). Branch `isometrico`. Último
+commit: `ecde7b4a A parte 2 do Prompt 29`; as partes 3–6 do Prompt 29 e todo o Prompt 30 estão no
+working tree, **ainda sem commit** (o Marco valida antes).
 
 Isso existe porque estamos trocando entre duas contas do Claude Code
 (`marco.luz1994@gmail.com` e `marcoa.luz@hotmail.com`, essa segunda via
@@ -46,9 +46,13 @@ outra — este arquivo é o resumo pra colar/apontar na sessão nova.
 
 ## O que falta fazer daqui pra frente
 
-1. **Próximos: Prompt 30** (revisão final: QA visual, consistência de brilho/paleta, desempenho
-   com o mapa cheio, limpeza de arte provisória e protótipos não usados, lista do futuro) e
-   **Prompt 31** (conteúdo futuro: crianças/escola — precisa de gameplay novo e de gerar arte).
+1. **Prompt 30 feito** (`docs/arte/prompt30/PROMPT_30_REVISAO.md`): QA visual com fotos, contorno de
+   1 px (`tools/contorno.py`, chamado pelo `integra.py`), clima visível na vista iso, decoração da
+   montagem aprovada no mapa, tiras dos bonecos carregando em segundo plano (mapa cheio 39 → 47
+   fps). Lista do futuro no fim do relatório. **Próximo: Prompt 31** (crianças/escola: precisa de
+   gameplay novo) ou a arte dos Prompts 16–26 depois da recarga de 30/10.
+   **Disco C quase cheio** (~350 MB): rodar testes com `APPDATA`/`XDG_DATA_HOME`/`TEMP`/`TMP` no D:
+   (ver TESTING.md).
 2. Seguir a ordem dos prompts restantes listada em `docs/arte/INVENTARIO.md`
    (ferramentas/armas, robô, terreno, mina, jazidas, vegetação, prédios,
    máquinas, objetos, animais, criaturas, efeitos, luz, UI, ícones, fonte,

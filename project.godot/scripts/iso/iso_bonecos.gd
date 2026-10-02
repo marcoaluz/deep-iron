@@ -45,8 +45,33 @@ static func data() -> Dictionary:
 
 static func texture(img: String) -> Texture2D:
 	if not _tex.has(img):
-		_tex[img] = load(DIR + img)
+		var path := DIR + img
+		warm_folder(img.get_base_dir())
+		# Prompt 30: já pedida em segundo plano? pega de lá (espera só se ainda estiver carregando)
+		if ResourceLoader.load_threaded_get_status(path) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			_tex[img] = ResourceLoader.load_threaded_get(path)
+		else:
+			_tex[img] = load(path)
 	return _tex[img]
+
+
+## Prompt 30: cada tira levava ~6 ms (até 60) pra carregar na 1ª vez que aparecia, e com a vila
+## cheia várias caíam no mesmo quadro (picos de 100+ ms). Na 1ª vez que uma pasta (função ×
+## gênero, casaco, traje) aparece, todas as tiras dela são pedidas em segundo plano.
+static var _warm := {}
+
+
+static func warm_folder(folder: String) -> void:
+	if folder == "" or _warm.has(folder):
+		return
+	_warm[folder] = true
+	for f in DirAccess.get_files_at(DIR + folder):
+		var name := f.trim_suffix(".remap").trim_suffix(".import")  # (no jogo exportado só há .import)
+		if not name.ends_with(".png"):
+			continue
+		var p := DIR + folder + "/" + name
+		if not _tex.has(folder + "/" + name) and ResourceLoader.load_threaded_get_status(p) == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			ResourceLoader.load_threaded_request(p, "Texture2D")
 
 
 ## Só com o mapa novo (a vista iso nova); sem ele, o boneco de sempre.
@@ -75,6 +100,8 @@ static func folders(w: Node) -> Array:
 	if wearing.has("casaco"):
 		out.append("casaco_" + base)
 	out.append(base)
+	for fo in out:
+		warm_folder(fo)  # Prompt 30: as tiras dessa roupa já vão carregando em segundo plano
 	return out
 
 

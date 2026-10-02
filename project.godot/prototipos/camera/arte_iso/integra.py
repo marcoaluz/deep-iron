@@ -512,6 +512,14 @@ PROPS["tocha_apagada"] = "objetos/final/tocha_apagada.png"
 for k in range(4):
     PROPS["tocha_chao_f%d" % k] = "objetos/final/tocha_chao_f%d.png" % k
 PROPS["escora"] = "relevo/final/mina/escora.png"
+# Prompt 30: a decoração da montagem aprovada (mapa/monta.py) que faltava no jogo
+for base, n in (("capim", 4), ("flores", 4), ("arbusto", 3), ("samambaia", 2), ("cogumelos", 3), ("tronco_musgo", 3), ("moita", 3)):
+    for k in range(n):
+        PROPS["%s_%d" % (base, k)] = "vegetacao/final/%s_%d.png" % (base, k)
+PROPS["horta_espantalho"] = "vegetacao/final/horta_espantalho.png"
+for nome in ("guindaste_pedreira", "vagonete_cheio_SE", "caixotes_2", "barris_2", "sacos", "pedra_g", "tijolo_m",
+             "poco", "banco", "placa_caveira", "caixote"):
+    PROPS[nome] = "objetos/final/%s.png" % nome
 
 
 def props():
@@ -547,12 +555,22 @@ def props():
     print("->", len(out["props"]), "peças")
 
 
+def contorno():
+    """Prompt 30: o contorno de 1 px nos desenhos que vieram sem ele (tools/contorno.py)."""
+    sys.path.insert(0, os.path.normpath(os.path.join(AQUI, "../../../../tools")))
+    import contorno as _c
+    print("contorno: %d px" % _c.aplica())
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["predios"]:
         predios(sys.argv[2:] or None)
+        contorno()
     elif sys.argv[1:2] == ["bonecos"]:
         bonecos()
+        contorno()
     elif sys.argv[1:2] == ["props"]:
         props()
+        contorno()
     else:
         print(__doc__)

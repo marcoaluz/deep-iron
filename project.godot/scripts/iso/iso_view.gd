@@ -51,6 +51,9 @@ const DIR_HYSTERESIS := 15.0
 enum { DIR_SE, DIR_SW, DIR_NW, DIR_NE }
 
 var enabled := false
+## Prompt 30: no zoom "longe" (menos de 1 px de tela por px de arte) os rótulos somem: o texto
+## fica pequeno demais e um cobre o outro.
+var labels_on := true
 ## F4: mostra as caixas (contorno) por cima de tudo.
 var show_boxes := false
 
@@ -431,6 +434,8 @@ func _apply_static_z() -> void:
 # ------------------------------------------------------------ a cada quadro
 func _process(_delta: float) -> void:
 	_frame += 1
+	var stops: Array = _camera.zoom_stops() if _camera.has_method("zoom_stops") else []
+	labels_on = stops.size() < 2 or _camera.zoom.x > float(stops[0]) + 0.001
 	if not _levels.is_empty() and _ground_sv and _frame % GROUND_REFRESH_EVERY == 0:
 		_ground_sv.render_target_update_mode = SubViewport.UPDATE_ONCE
 	var view := _screen_view().grow(256.0)

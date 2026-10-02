@@ -44,6 +44,13 @@ var _ridge: Sprite2D
 var _anchor := Vector2.ZERO
 var _cam_ref := Vector2.ZERO
 var _moldura: CanvasItem
+## Prompt 30: o CLIMA na vista iso. As partículas do Weather caem no chão cartesiano (a vista
+## iso não mostra); aqui ficam cópias delas presas na TELA (por cima do mundo, embaixo do HUD),
+## com a intensidade de cada efeito; somem lá embaixo (andares). Geada = tom frio no terreno.
+var _wx: Node2D
+var _wx_pairs := {}  # efeito -> [emissor do Weather, cópia]
+var _weather_node: Node
+const WX_EXTENTS := Vector2(760, 460)  # px de tela: cobre 1280×720 com folga
 
 
 func setup(view: Node2D, moldura_top_left: Vector2, map_center_screen: Vector2, moldura: CanvasItem) -> void:
@@ -103,6 +110,28 @@ void fragment() {
 	_far = _band(TEX_FAR, FAR_SCALE, Order.BASE - 90)
 	_ridge = _band(TEX_RIDGE, RIDGE_SCALE, Order.BASE - 80)
 	_place_bands(map_center_screen)
+	_setup_weather.call_deferred()
+
+
+func _setup_weather() -> void:
+	_weather_node = get_tree().get_first_node_in_group("weather")
+	if _weather_node == null or _weather_node.get("_fx") == null or _weather_node._fx.is_empty():
+		return
+	_wx = Node2D.new()
+	_wx.name = "ClimaNaTela"
+	_wx.z_as_relative = false
+	_wx.z_index = 4080  # por cima de tudo do mundo (o marcador/fantasma ficam em 4090)
+	add_child(_wx)
+	for k in _weather_node._fx:
+		var src: CPUParticles2D = _weather_node._fx[k].node
+		var c := src.duplicate() as CPUParticles2D
+		c.local_coords = true  # andam junto com a tela
+		c.position = Vector2(0, -WX_EXTENTS.y * 0.3)
+		c.emission_rect_extents = WX_EXTENTS
+		c.light_mask = 0
+		c.emitting = false
+		_wx.add_child(c)
+		_wx_pairs[k] = [src, c]
 
 
 ## Uma faixa que repete na horizontal (normal e espelhada, pra a emenda casar).
@@ -173,6 +202,30 @@ func _place_bands(cam: Vector2) -> void:
 	_far.position = Vector2(x0 - 700.0 + d.x * (1.0 - FAR_FOLLOW), _anchor.y + 600.0 - far_h)
 
 
+## O clima da tela segue o Weather (liga, desliga, intensidade); a geada esfria o terreno.
+func _sync_weather(cam: Vector2, hor_screen: float) -> void:
+	if _wx == null:
+		return
+	var z: float = get_viewport().get_canvas_transform().get_scale().x
+	_wx.position = cam
+	_wx.scale = Vector2.ONE / maxf(z, 0.01)
+	_wx.visible = hor_screen > -1.2  # lá embaixo (nível 2, abismo) não chove nem neva
+	for k in _wx_pairs:
+		var src: CPUParticles2D = _wx_pairs[k][0]
+		var c: CPUParticles2D = _wx_pairs[k][1]
+		c.modulate.a = src.modulate.a
+		if c.emitting != src.emitting:
+			c.preprocess = c.lifetime if src.emitting else 0.0
+			c.emitting = src.emitting
+			if src.emitting:
+				c.restart()
+	var frost: float = _weather_node.level("frost") if _weather_node.has_method("level") else 0.0
+	var cold := Color(1, 1, 1).lerp(Color(0.86, 0.92, 1.04), clampf(frost, 0.0, 1.0) * 0.7)
+	for n in get_parent().get_children():
+		if n is Sprite2D and String(n.name).begins_with("Terreno_") and n != _moldura:
+			(n as Sprite2D).modulate = cold
+
+
 ## Liga/desliga junto com a vista iso (a camada do céu não segue a visibilidade do pai).
 func set_active(on: bool) -> void:
 	_sky_layer.visible = on
@@ -222,6 +275,7 @@ func _process(delta: float) -> void:
 	_ridge.self_modulate = Color(0.85, 0.9, 0.85).lerp(c[1], 0.2)
 	if _moldura:
 		_moldura.self_modulate = Color(1, 1, 1).lerp(c[1], 0.18)
+	_sync_weather(cam, hor_screen)
 	# nuvens: andam devagar e dão a volta; tingidas pela hora; mais escuras na chuva
 	var cloud_col := Color(1, 1, 1).lerp(c[1], 0.35).lerp(Color(0.45, 0.47, 0.52), c[2] * 0.7)
 	for cl in _clouds:
