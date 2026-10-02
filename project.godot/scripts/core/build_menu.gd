@@ -204,11 +204,19 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return "%d cr + %d ferro + %d madeira" % [eq.vestiario_credits, eq.vestiario_ore, eq.vestiario_wood],
 					"reason": func(): return eq.vestiario_block_reason(),
 					"act": func(): eq.build_vestiario()})
-			out.append({"name": "Oficina (forja)", "tex": "oficina", "frames": 2, "open": "oficina", "tag": "vem com a vila (uma só)",
-				"desc": "Ferramentas e equipamento. Já vem com a vila.",
-				"cost": func(): return "",
-				"reason": func(): return "",
-				"act": func(): _hud.open_panel("oficina"), "label": "Abrir"})
+			var ofi := _g("oficina")
+			if ofi and ofi.has_method("is_built") and not ofi.is_built() and hub:
+				out.append({"name": "Oficina (forja)", "tex": "oficina", "frames": 2, "tag": "uma só",
+					"desc": "Ferramentas (liberam minérios novos) e equipamento. O engenheiro ergue.",
+					"cost": func(): return hub.oficina_cost_text(),
+					"reason": func(): return hub.oficina_block_reason(),
+					"act": func(): hub.build_oficina()})
+			else:
+				out.append({"name": "Oficina (forja)", "tex": "oficina", "frames": 2, "open": "oficina", "tag": "construída (uma só)",
+					"desc": "Ferramentas e equipamento.",
+					"cost": func(): return "",
+					"reason": func(): return "",
+					"act": func(): _hud.open_panel("oficina"), "label": "Abrir"})
 		"Coleta automática":
 			if hub:
 				out.append({"name": "Coletor de madeira", "tex": "coletor_madeira", "frames": 2, "many": true, "scales": true,

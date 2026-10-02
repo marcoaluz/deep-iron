@@ -99,6 +99,10 @@ func refresh() -> void:
 			else:
 				_desc.text = "Mande um ipezinho carregar o robô até a Oficina (vem até pelo elevador)."
 				_button.text = "Mandar buscar"
+				var ofi := get_tree().get_first_node_in_group("oficina")
+				if ofi and ofi.has_method("is_built") and not ofi.is_built():
+					_button.text = "Precisa da Oficina construída (menu de construção)"  # Bloco 58
+					_button.disabled = true
 		"carried":
 			_status.text = "Sendo carregado por %s" % (_hud._worker_name(r.carrier) if r.carrier and is_instance_valid(r.carrier) else "alguém")
 			_desc.text = "Destino: ao lado da Oficina."

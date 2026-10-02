@@ -31,7 +31,7 @@ const KIND_OF_SCENE := {
 const KIND_OF_CANTEIRO := {
 	"taverna": "taverna", "laboratorio": "laboratorio", "campo": "campo_treino", "arsenal": "arsenal",
 	"comedouro": "comedouro", "parque": "parque", "vestiario": "vestiario", "coletor": "coletor_madeira",
-	"coletor_minerio": "coletor_minerio",
+	"coletor_minerio": "coletor_minerio", "oficina": "oficina",  # Bloco 58
 	"enfermaria": "enfermaria",
 }
 const ESCAVADEIRA_PECAS := ["motor", "hidraulica", "cabine", "broca"]

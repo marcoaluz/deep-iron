@@ -66,6 +66,10 @@ const TOOL_UNLOCKS := {
 
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 var panel_id := "oficina"
+## Bloco 58: a Oficina é construída pelo engenheiro (jogo novo com fundação). Não construída: fica
+## no mapa invisível, sem clique, sem obra, sem bloquear caminho — mas no grupo "oficina" (as
+## ferramentas que ela ainda não fez continuam trancando os minérios). Save antigo: já construída.
+var built := true
 var crafted: Dictionary = {}
 var crafting: String = ""
 var craft_left: float = 0.0
@@ -83,8 +87,9 @@ var _obra := ObraSite.new()
 func _ready() -> void:
 	super()
 	add_to_group("oficina")
-	add_to_group("obras")
-	add_to_group("clickable")
+	if built:
+		add_to_group("obras")
+		add_to_group("clickable")
 	_forge_light.add_to_group("cullable_lights")
 	for id in TOOL_IDS:
 		crafted[id] = false
@@ -115,6 +120,8 @@ func _process(delta: float) -> void:
 
 # ------------------------------------------------------------ obra (Bloco 31)
 func obra_pending() -> bool:
+	if not built:
+		return false
 	var eq := _equip()
 	return crafting != "" or (eq != null and eq.pending())
 
@@ -173,6 +180,41 @@ func contains_point(p: Vector2) -> bool:
 
 
 # ------------------------------------------------------------ consulta
+# ------------------------------------------------------------ construída (Bloco 58)
+func is_built() -> bool:
+	return built
+
+
+## Liga/desliga a Oficina no mapa (sem efeito nas ferramentas já feitas).
+func set_built(on: bool) -> void:
+	built = on
+	visible = on
+	set_process(on)
+	for grp in ["obras", "clickable"]:
+		if on and not is_in_group(grp):
+			add_to_group(grp)
+		elif not on and is_in_group(grp):
+			remove_from_group(grp)
+	if is_instance_valid(_forge_light):
+		_forge_light.enabled = on
+
+
+## Ficou pronta no lugar escolhido (canteiro do engenheiro).
+func build_at(pos: Vector2) -> void:
+	global_position = pos
+	set_built(true)
+	_update_visual()
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
+
+
+## Não construída: não bloqueia o caminho.
+func get_obstacle_outline() -> PackedVector2Array:
+	return super() if built else PackedVector2Array()
+
+
 func has_tool(id: String) -> bool:
 	return crafted.get(id, false)
 
@@ -321,7 +363,7 @@ func _popup(text: String, color: Color) -> void:
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	return {"crafted": crafted.duplicate(), "crafting": crafting, "craft_left": craft_left,
-		"obra": _obra.get_save_data()}
+		"obra": _obra.get_save_data(), "built": built, "position": SaveUtil.vec2_to_array(global_position)}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -333,6 +375,11 @@ func load_save_data(d: Dictionary) -> void:
 		crafting = ""
 	craft_left = maxf(SaveUtil.num(d, "craft_left", 0.0), 0.0) if crafting != "" else 0.0
 	_obra.load_save_data(SaveUtil.dict(d, "obra"))  # save antigo: ordered_at 0 (vai primeiro na fila)
+	# Bloco 58: save antigo (Oficina fixa) = já construída, no lugar da cena
+	var pos := SaveUtil.vec2(d, "position", Vector2.INF)
+	if pos != Vector2.INF:
+		global_position = pos
+	set_built(SaveUtil.boolean(d, "built", true))
 	_update_visual()
 	for node in get_tree().get_nodes_in_group("minerios"):
 		if node.has_method("on_unlock_changed"):

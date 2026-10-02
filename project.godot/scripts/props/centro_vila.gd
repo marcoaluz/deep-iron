@@ -148,6 +148,11 @@ const UPGRADE_NAMES := {
 @export var coletor_credits: int = 250
 @export var coletor_ore: int = 60
 @export var coletor_build_time: float = 40.0
+@export_group("Oficina (Bloco 58)")
+@export var oficina_credits: int = 200
+@export var oficina_ore: int = 40
+@export var oficina_wood: int = 60
+@export var oficina_build_time: float = 40.0
 @export_group("Coletor de minério (Bloco 57)")
 @export var coletor_min_credits: int = 280
 @export var coletor_min_ore: int = 40
@@ -699,6 +704,53 @@ func spawn_coletor(pos: Vector2) -> Node2D:
 	return c
 
 
+# ------------------------------------------------------------ oficina (Bloco 58)
+func oficina() -> Node:
+	return get_tree().get_first_node_in_group("oficina")
+
+
+func oficina_block_reason() -> String:
+	var o := oficina()
+	if o == null:
+		return "sem Oficina no mapa"
+	if o.is_built():
+		return "já construída (é uma só)"
+	var c := Canteiro.pending(get_tree(), "oficina")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	return eco.missing_text(oficina_credits, oficina_ore, "ferro", oficina_wood, "ferro") if eco else "sem recursos"
+
+
+func oficina_cost_text() -> String:
+	return "%d cr + %d ferro + %d madeira" % [oficina_credits, oficina_ore, oficina_wood]
+
+
+func build_oficina() -> bool:
+	if oficina_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_oficina, preload("res://assets/game/oficina.png"), 2, "a Oficina",
+		{"footprint": COLETOR_FOOTPRINT, "start": global_position + Vector2(-140, 60)})
+	return true
+
+
+func _confirm_oficina(pos: Vector2) -> bool:
+	if oficina_block_reason() != "":
+		Audio.error()
+		return false
+	if not _economy().spend(oficina_credits, oficina_ore, "ferro", oficina_wood):
+		return false
+	Canteiro.order(get_tree(), "oficina", pos, oficina_build_time)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Oficina encomendada — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
 # ------------------------------------------------------------ coletor de minério (Bloco 57)
 func coletores_minerio() -> Array:
 	return get_tree().get_nodes_in_group("coletores_minerio")
@@ -853,6 +905,17 @@ func finish_build(kind: String, pos: Vector2) -> void:
 		var hh := get_tree().get_first_node_in_group("hud")
 		if hh:
 			hh.show_toast("Nova enfermaria pronta! Mais leitos pra quem se machuca (o médico vai pra que precisa).", Color(0.55, 1.0, 0.5))
+		return
+	if kind == "oficina":  # Bloco 58
+		var o := oficina()
+		if o:
+			o.build_at(pos)
+			if o.has_method("pop_in"):
+				o.pop_in()
+		Audio.recruit()
+		var ho := get_tree().get_first_node_in_group("hud")
+		if ho:
+			ho.show_toast("Oficina pronta! Ferramentas novas liberam minérios (tecla O).", Color(0.55, 1.0, 0.5))
 		return
 	if kind == "coletor_minerio":  # Bloco 57
 		var cm := spawn_coletor_minerio(pos)

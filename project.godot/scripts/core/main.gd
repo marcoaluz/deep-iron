@@ -102,6 +102,9 @@ func _ready() -> void:
 		if hub and not hub.founded:
 			_founding.start(false)  # salvo no meio da fundação: volta a escolher
 	elif founding_on_new_game:
+		var ofi := get_tree().get_first_node_in_group("oficina")
+		if ofi and ofi.has_method("set_built"):
+			ofi.set_built(false)  # Bloco 58: jogo novo — a Oficina é construída pelo engenheiro
 		await _environment.navigation_ready
 		_founding.start(true)
 

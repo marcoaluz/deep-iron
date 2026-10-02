@@ -158,8 +158,53 @@ func _make_tool_row(parent: VBoxContainer, id: String) -> Dictionary:
 	return {"status": status, "button": button}
 
 
+## Bloco 58: Oficina ainda não construída: a janela mostra só o construir.
+var _build_box: VBoxContainer
+var _build_info: Label
+var _build_button: Button
+
+
+func _ensure_build_box() -> void:
+	if _build_box != null:
+		return
+	var vbox: Node = get_child(0)
+	if vbox is ScrollContainer:
+		vbox = vbox.get_child(0)
+	_build_box = VBoxContainer.new()
+	_build_box.add_theme_constant_override("separation", 6)
+	vbox.add_child(_build_box)
+	vbox.move_child(_build_box, 1)
+	_build_info = _hud._label("", 13, _hud.COLOR_TEXT)
+	_build_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_build_box.add_child(_build_info)
+	_build_button = _hud._button("")
+	_build_button.pressed.connect(func():
+		Audio.click()
+		var hub := get_tree().get_first_node_in_group("village_hub")
+		if hub and hub.build_oficina():
+			visible = false
+		else:
+			Audio.error())
+	_build_box.add_child(_build_button)
+
+
 func refresh() -> void:
 	if not visible or _oficina == null:
+		return
+	_ensure_build_box()
+	var built: bool = not _oficina.has_method("is_built") or _oficina.is_built()
+	var vbox: Node = _build_box.get_parent()
+	for i in vbox.get_child_count():
+		var ch: Node = vbox.get_child(i)
+		if i == 0:
+			continue  # cabeçalho
+		ch.visible = (ch == _build_box) != built
+	if not built:
+		var hub := get_tree().get_first_node_in_group("village_hub")
+		var r: String = hub.oficina_block_reason() if hub else "sem Centro da Vila"
+		_build_info.text = "A vila ainda não tem Oficina. Construa uma (o engenheiro ergue) pra forjar ferramentas e equipamento."
+		_build_button.text = ("Construir a Oficina — escolher o lugar  (%s)" % hub.oficina_cost_text()) if r == "" else "Construir a Oficina: %s" % r
+		_build_button.disabled = r != ""
 		return
 	var busy: String = _oficina.crafting
 	_craft_label.visible = busy != ""
@@ -235,6 +280,8 @@ func _refresh_equipment() -> void:
 
 
 func button_text() -> String:
+	if _oficina.has_method("is_built") and not _oficina.is_built():
+		return "Oficina: construir (O)"
 	if _oficina.crafting != "":
 		return "Oficina %d%%%s (O)" % [roundi(_oficina.craft_progress() * 100.0), "" if not _oficina.obra_workers().is_empty() else " sem eng."]
 	var done := 0
@@ -245,6 +292,8 @@ func button_text() -> String:
 
 
 func has_available_action() -> bool:
+	if _oficina.has_method("is_built") and not _oficina.is_built():
+		return false
 	for id in _oficina.TOOL_IDS:
 		if _oficina.tool_block_reason(id) == "":
 			return true

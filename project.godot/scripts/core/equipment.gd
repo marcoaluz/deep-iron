@@ -327,8 +327,9 @@ func order_block_reason(id: String) -> String:
 		return "precisa do Vestiário (onde guardar)"
 	if not recipe_unlocked(id):
 		return "precisa pesquisar: Trajes de proteção"
-	if get_tree().get_first_node_in_group("oficina") == null:
-		return "sem Oficina"
+	var ofi := get_tree().get_first_node_in_group("oficina")
+	if ofi == null or (ofi.has_method("is_built") and not ofi.is_built()):
+		return "sem Oficina (construa no menu)"
 	if queue.size() >= queue_max:
 		return "fila da Oficina cheia"
 	return _missing(cost(id), id)
