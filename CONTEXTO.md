@@ -38,7 +38,16 @@ caverna no `andares.json`); `environment.gd` (`view_ground`, `logic_from_view`, 
 `dentro_da_caverna`, navegação pelo contorno); `iso_view.gd` (`_build_terra` lê terra/poço/espiral do
 json; névoa no formato da caverna). Teste `tests/blocos/b72_coluna.gd`. Comparação com a referência:
 `docs/arte/bloco72/coluna/comparativo.jpg`. Os saves valem (a lógica dos andares não mudou).
-**Esperando o Marco conferir.** O que ainda falta (lista em `docs/BLOCO72_MAPA_REFERENCIA.md`, fim):
+**O Marco conferiu e disse que ainda está muito diferente** (2026-10-03, tarde) e pediu: como resolver
+(pode usar Blender e PixelLab), o layout do jogo mais perto da referência, e MAIS ESPAÇO NA VILA pra
+construir. Diagnóstico: a referência é um corte de frente (andares = faixas largas e rasas, parede alta
+cheia de coisa atrás, empilhadas sem vão); o jogo mostra chão visto de cima (losango), com vão escuro
+grande entre andares e paredes lisas. Maquete da proposta no Blender (`prototipos/camera/arte_iso/
+blender/coluna_maquete.py`, Blender em `D:\Blenderlender.exe`, roda com `-b -P ... -- <saida.png>`):
+`docs/arte/bloco72/maquete/coluna_blender.png` e `comparativo_maquete.jpg`. Plano proposto: andares
+viram faixas (chão andável = polígono da faixa na lógica, conteúdo remapeado), arte de cada andar
+renderizada no Blender na câmera do jogo + detalhe/pixelização no PixelLab; vila: juntar terraços e
+recuar a paliçada. **Esperando o ok do Marco no plano.** O que ainda falta (lista em `docs/BLOCO72_MAPA_REFERENCIA.md`, fim):
 andares mais juntos (~24 degraus em vez de 36), faixa de galerias de madeira abaixo da superfície,
 detalhe nas paredes (lampiões, lava escorrendo, cachoeira descendo, cristais), coluna mais larga
 (escala 0,85?).
