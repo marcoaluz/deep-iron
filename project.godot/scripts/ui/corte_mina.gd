@@ -231,6 +231,7 @@ func _gente_no_andar(i: int) -> int:
 func _ligacoes() -> void:
 	if _env == null:
 		return
+	_espiral()
 	var tx: float = clampf((_env.tunnel_x - _env.map_rect.position.x) / _env.map_rect.size.x, 0.0, 1.0) * LARGURA
 	_escada(Vector2(tx, ALTURA * 0.75), Vector2(tx, ALTURA * 1.7))
 	var gaiola := _tex("gaiola_lado")
@@ -250,6 +251,38 @@ func _ligacoes() -> void:
 				var k := 0.5 + 0.5 * sin(_t * 0.6 + a.x)  # (a lógica não guarda onde a gaiola está: vai e volta)
 				var p := a.lerp(b, k) - gaiola.get_size() * 0.5
 				_area.draw_texture(gaiola, p.round())
+
+
+## Bloco 72: a escada em espiral da referência, do lado direito, ligando todos os andares (um poço com
+## poste e degraus em hélice, e um patamar no chão de cada faixa).
+func _espiral() -> void:
+	var x := LARGURA - 34.0
+	var y0 := ALTURA * 0.7
+	var y1 := ANDARES.size() * ALTURA - 8.0
+	_area.draw_rect(Rect2(x - 22, y0, 44, y1 - y0), Color(0.06, 0.05, 0.05, 0.85))
+	_area.draw_line(Vector2(x - 22, y0), Vector2(x - 22, y1), Color(0.3, 0.26, 0.22), 2.0)
+	_area.draw_line(Vector2(x + 22, y0), Vector2(x + 22, y1), Color(0.3, 0.26, 0.22), 2.0)
+	var t := 0.0
+	var y := y0 + 4.0
+	while y < y1 - 4.0:  # degraus de trás (escuros), o poste, os da frente (claros)
+		var c := cos(t)
+		if sin(t) < 0.0:
+			_area.draw_line(Vector2(x, y), Vector2(x + c * 18.0, y + 1.0), Color(0.24, 0.17, 0.11), 3.0)
+		t += 0.5
+		y += 5.0
+	_area.draw_line(Vector2(x, y0), Vector2(x, y1), Color(0.36, 0.26, 0.17), 3.0)
+	t = 0.0
+	y = y0 + 4.0
+	while y < y1 - 4.0:
+		var c2 := cos(t)
+		if sin(t) >= 0.0:
+			_area.draw_line(Vector2(x, y), Vector2(x + c2 * 18.0, y + 1.0), Color(0.55, 0.4, 0.25), 3.0)
+		t += 0.5
+		y += 5.0
+	for i in range(1, ANDARES.size()):  # patamar no chão de cada andar
+		var yp := (i + 1) * ALTURA - 14.0
+		_area.draw_rect(Rect2(x - 40, yp, 40, 4), Color(0.5, 0.36, 0.22))
+		_area.draw_rect(Rect2(x - 40, yp + 4, 40, 1), Color(0.15, 0.1, 0.07))
 
 
 func _escada(a: Vector2, b: Vector2) -> void:

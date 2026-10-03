@@ -79,6 +79,15 @@ func _tela_de(r: Rect2) -> Rect2:
 	return out
 
 
+## O meio da escada em espiral na tela (entre o S3 e o S4).
+func _espiral_meio() -> Vector2:
+	for c in iso()._terrain_node.get_children():
+		if c.name == "Espiral":
+			var sp: Sprite2D = c
+			return sp.position + Vector2(sp.texture.get_width() * 0.5 - 120.0, sp.texture.get_height() * 0.55)
+	return Vector2.ZERO
+
+
 func _laje(nome: String) -> Rect2:
 	for lv in iso()._levels:
 		if lv.nome == nome:
@@ -115,6 +124,7 @@ func _prepara() -> void:
 		["08_s4_cachoeira", func(): _enquadra(_laje("s4"))],
 		["09_s5_lago", func(): _enquadra(_laje("s5"))],
 		["10_rampa_s4", func(): _tela(iso().to_screen(Vector2(320, 2180)), 3.0)],
+		["10b_espiral", func(): _tela(_espiral_meio(), 1.0)],
 		["11_corte_f2", func():
 			if hud:
 				hud.visible = true

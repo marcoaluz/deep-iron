@@ -328,6 +328,7 @@ func _build_terrain() -> void:
 		var lr := Rect2(a.rect[0], a.rect[1], a.rect[2], a.rect[3])
 		_levels.append({"nome": nome, "art_rect": Rect2(art(lr.position), lr.size * S), "z": float(a.z_chao),
 			"sprite": sp2, "rect": lr, "tint": LEVEL_TINT.get(nome, Color.WHITE)})
+	_build_terra()
 	_build_palisade()
 	_build_lava()
 	_build_pocas()
@@ -520,6 +521,72 @@ func _pulsa_luzes() -> void:
 		var l = e[0]
 		if is_instance_valid(l):
 			l.energy = e[1] * (1.0 + k * (0.12 * sin(t * 2.3 + e[2]) + 0.06 * sin(t * 7.1 + e[2] * 2.0)))
+
+
+# ------------------------------------------------------------ o maciço de terra (Bloco 72)
+## Os andares de baixo ficam DENTRO da terra, não soltos no vazio: o mapa inteiro é um bloco de terra —
+## as duas faces da frente (sudoeste e sudeste) descem da borda de baixo da superfície até abaixo do
+## último andar, e o poço dos andares fica escavado no canto da frente, como a coluna da referência
+## (docs/arte/referencia_mapa_mundo.jpg). A textura segue a inclinação de cada face (estratos "deitados").
+const TERRA_TEX := "res://assets/game/iso/chao/rocha_terra.png"
+const TERRA_Z_CORTE := -128.0  # a base do corte da superfície (andares.py SUP_KB x 32)
+const TERRA_FOLGA := 260.0
+
+
+func _build_terra() -> void:
+	if _levels.is_empty() or not ResourceLoader.exists(TERRA_TEX):
+		return
+	var fundo_y := -INF
+	for lv in _levels:
+		fundo_y = maxf(fundo_y, lv.sprite.position.y + lv.sprite.texture.get_height())
+	var g: Rect2 = _env.iso_ground_rect()
+	var canto := Iso.iso(art(g.end), TERRA_Z_CORTE)
+	var esq := Iso.iso(art(Vector2(g.position.x, g.end.y)), TERRA_Z_CORTE)
+	var dir := Iso.iso(art(Vector2(g.end.x, g.position.y)), TERRA_Z_CORTE)
+	var d := Vector2(0, fundo_y + TERRA_FOLGA - canto.y)  # a profundidade do bloco
+	var tex: Texture2D = load(TERRA_TEX)
+	# face sudoeste (a da esquerda, mais clara) e sudeste (a da direita, mais escura): luz de cima-esquerda
+	for face in [["TerraSO", esq, canto, Color(0.85, 0.8, 0.76), Color(0.32, 0.31, 0.36)],
+			["TerraSE", canto, dir, Color(0.62, 0.58, 0.56), Color(0.24, 0.23, 0.28)]]:
+		var p0: Vector2 = face[1]
+		var p1: Vector2 = face[2]
+		var comp := p0.distance_to(p1)
+		var pol := Polygon2D.new()
+		pol.name = face[0]
+		pol.polygon = PackedVector2Array([p0, p1, p1 + d, p0 + d])
+		pol.uv = PackedVector2Array([Vector2.ZERO, Vector2(comp, 0), Vector2(comp, d.y), Vector2(0, d.y)])
+		pol.texture = tex
+		pol.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+		pol.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		pol.vertex_colors = PackedColorArray([face[3], face[3], face[4], face[4]])
+		pol.light_mask = 2
+		pol.z_as_relative = false
+		pol.z_index = Order.BASE - 55  # camada 0 (fundo): atrás das lajes e do chão da pedreira
+		_terrain_node.add_child(pol)
+	# a escada em espiral da referência: um poço próprio na face de terra, da superfície até o fundo,
+	# com um patamar em cada andar (andares.py + espiral.py)
+	var esp: Dictionary = _env.andares.get("espiral", {})
+	if not esp.is_empty():
+		var dir_img: String = _env.iso_map_file.get_base_dir()
+		var et: Texture2D = load(dir_img.path_join(esp.img))
+		if et:
+			var es := Sprite2D.new()
+			es.name = "Espiral"
+			es.texture = et
+			es.centered = false
+			es.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			es.position = Vector2(esp.tela[0], esp.tela[1])
+			es.light_mask = 2
+			es.z_as_relative = false
+			es.z_index = Order.BASE - 54  # na frente da terra, atrás dos andares
+			_terrain_node.add_child(es)
+
+
+## y da reta (a, b) na coluna x (fora do trecho, prolonga a reta).
+static func _na_reta(a: Vector2, b: Vector2, x: float) -> float:
+	if absf(b.x - a.x) < 0.001:
+		return a.y
+	return a.y + (b.y - a.y) * (x - a.x) / (b.x - a.x)
 
 
 # ------------------------------------------------------------ poças do fundo (Bloco 70)

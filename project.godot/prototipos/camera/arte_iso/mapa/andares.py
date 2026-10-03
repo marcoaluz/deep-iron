@@ -54,6 +54,27 @@ K_CORTE = -4          # o corte da superfície desce até aqui (monta.py CORTE)
 ZONAS = [((455, 1240), 85, "gas"), ((-470, 770), 80, "radiacao"), ((390, 1895), 80, "calor")]
 
 
+# Bloco 72: as paredes de trás de cada andar SOBEM até o andar de cima (ou a superfície) — o vão entre as
+# lajes vira rocha contínua, como um poço escavado, em vez de lajes soltas no vazio. O de cima é
+# desenhado na frente (esconde o resto da parede); a superfície não (o chão da pedreira fica no fundo da
+# ordem de desenho), então ali a parede para na borda de baixo do corte e a sobra é recortada.
+SUP_KB = -4       # a base do corte da superfície (monta.py CORTE)
+SOBE_MAX = 90     # no máximo isso de degraus acima da parede de sempre
+
+
+def borda_de_baixo(x, ia, ja, kb):
+    """y (tela do python) da borda de baixo de uma laje que encosta no canto da frente (NI-1, NJ-1),
+    com chão i >= ia, j >= ja e base no degrau kb, na coluna de tela x (reta pelos vértices de baixo)."""
+    ys = []
+    i = (x - T) / T + (NJ - 1)            # borda da frente esquerda (j = NJ-1)
+    if ia - 0.5 <= i <= NI - 0.5:
+        ys.append((i + NJ - 1) * (T // 2) - kb * 32 + 64)
+    j = (NI - 1) - (x - T) / T            # borda da frente direita (i = NI-1)
+    if ja - 0.5 <= j <= NJ - 0.5:
+        ys.append((NI - 1 + j) * (T // 2) - kb * 32 + 64)
+    return max(ys) if ys else None
+
+
 def ld(p):
     return [Image.open(f).convert("RGBA") for f in sorted(glob.glob(p))]
 
@@ -110,9 +131,12 @@ def main(pasta):
     rocha = ld(REL + "/rocha/bloco.png") + ld(REL + "/rocha/bloco_[0-9].png")
     meta = {"fator": FATOR, "canto_frente_arte": [OX + NI * T, OY + NJ * T], "nivel_arte": 32, "andares": {}}
     salas = {}
+    acima = None  # (ia, ja, kb) do andar de cima; None = a superfície
     for nome, a in ANDARES.items():
         i0, j0 = sala(a)
         salas[nome] = (i0, j0)
+        oclusor = acima if acima else (0, 0, SUP_KB)
+        sup = acima is None
         chao = ld(REL + "/%s/chao_*.png" % a["pasta"])
         bloco = ld(REL + "/%s/bloco.png" % a["pasta"])
         zchao = {k: ld(REL + "/mina/zona_%s/chao_*.png" % k) for k in ("gas", "calor", "radiacao", "agua", "acido", "borda")}
@@ -126,6 +150,18 @@ def main(pasta):
                     for k in range(kc - (a["laje"] if frente else 0) + 1, kc + a["paredes"] + 1):
                         b = tiles.escolhe(bloco, i, j, k, False)
                         itens.append((i + j, k, tiles.escurece(b, 0.78 if k > kc else 0.6), tiles.tela(i, j, k)))
+                    # Bloco 72: a parede continua subindo até o de cima (rocha escurecendo com a altura)
+                    xc = tiles.tela(i, j, kc)[0] + T
+                    yo = borda_de_baixo(xc, *oclusor)
+                    k = kc + a["paredes"]
+                    while yo is not None and k < kc + a["paredes"] + SOBE_MAX and tiles.tela(i, j, k)[1] + 16 > yo:
+                        k += 1
+                        perto = k - (kc + a["paredes"]) <= 4
+                        b = tiles.escolhe(bloco if perto else rocha, i, j, k, False)
+                        # tom variando bloco a bloco (rocha, não tijolo) e escurecendo com a altura
+                        h = ((i * 73856093) ^ (j * 19349663) ^ (k * 83492791)) & 0xFF
+                        f = (0.7 if perto else 0.58) * (0.86 + 0.22 * h / 255.0) * (1.0 - 0.004 * (k - kc - a["paredes"]))
+                        itens.append((i + j, k, tiles.escurece(b, f), tiles.tela(i, j, k)))
                     continue
                 if frente:              # a laje embaixo do chão, vista pelo corte
                     for k in range(kc - a["laje"] + 1, kc):
@@ -138,6 +174,18 @@ def main(pasta):
                 b.paste(top, (0, 0), top)
                 itens.append((i + j, kc, b, tiles.tela(i, j, kc)))
         img, (tx, ty) = compoe(itens)
+        if sup:  # a parede não passa da borda de baixo da superfície (ela é desenhada atrás)
+            px = img.load()
+            for x in range(img.width):
+                yo = borda_de_baixo(tx + x + 0.5, *oclusor)
+                if yo is None:
+                    continue
+                for y in range(0, max(0, min(img.height, int(yo) - ty))):
+                    px[x, y] = (0, 0, 0, 0)
+            bb = img.getbbox()
+            img = img.crop(bb)
+            tx, ty = tx + bb[0], ty + bb[1]
+        acima = (i0 - 1, j0 - 1, kc - a["laje"])
         img.save(os.path.join(pasta, "andar_%s.png" % nome))
         x, y, w, h = a["rect"]
         meta["andares"][nome] = {
@@ -147,6 +195,19 @@ def main(pasta):
             "caixa": [OX + i0 * T, OY + j0 * T, (NI - i0) * T, (NJ - j0) * T],
             "z": [(kc - a["laje"]) * 32, kc * 32]}
         print("%-7s sala tiles %d..%d x %d..%d  chão k=%d  imagem %dx%d" % (nome, i0, NI - 1, j0, NJ - 1, kc, img.width, img.height))
+    # Bloco 72: a escada em espiral, num poço próprio à direita da coluna (espiral.py)
+    import espiral
+    quinas = []
+    for nome, a in ANDARES.items():
+        i0, j0 = salas[nome]
+        x, y = tiles.tela(NI - 1, j0, a["k_chao"])
+        quinas.append((y + 16, x + 64))          # a quina da direita do chão do andar
+    xc = max(q[1] for q in quinas) + 150
+    topo = borda_de_baixo(xc, 0, 0, SUP_KB) - 8
+    img, (ex, ey) = espiral.desenha(topo, quinas[-1][0] + 40, xc, quinas)
+    img.save(os.path.join(pasta, "espiral.png"))
+    meta["espiral"] = {"img": "espiral.png", "tela": [ex + oxy[0], ey + oxy[1]]}
+    print("espiral  imagem %dx%d" % img.size)
     json.dump(meta, open(os.path.join(pasta, "andares.json"), "w"), indent=1)
     print("andares.json")
 
