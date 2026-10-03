@@ -537,12 +537,12 @@ func _bake_navigation() -> NavigationPolygon:
 		source.add_traversable_outline(_rect_outline(_tunnel_nav_rect()))
 	if deep_rect.has_area():
 		# ilha separada: só liga com a mina pelo elevador (NavigationLink2D)
-		source.add_traversable_outline(_rect_outline(deep_rect.grow(-nav_edge_inset)))
+		source.add_traversable_outline(_ilha(deep_rect))  # (Bloco 72: o contorno da caverna)
 	if abyss_rect.has_area():
 		# outra ilha: só liga com o nível 2 pela plataforma do abismo
-		source.add_traversable_outline(_rect_outline(abyss_rect.grow(-nav_edge_inset)))
+		source.add_traversable_outline(_ilha(abyss_rect))
 	for n in niveis_extra():  # Bloco 71: os níveis novos (S4, S5): uma ilha cada, ligadas pelas plataformas
-		source.add_traversable_outline(_rect_outline((n.rect as Rect2).grow(-nav_edge_inset)))
+		source.add_traversable_outline(_ilha(n.rect))
 		for o in n.obstaculos:  # o lago não anda (a elipse dentro do retângulo, como o desenho da laje)
 			if o is Array and o.size() >= 4:
 				source.add_obstruction_outline(_elipse_outline(Rect2(float(o[0]), float(o[1]), float(o[2]), float(o[3]))))
@@ -646,6 +646,36 @@ func level_of(pos: Vector2) -> Dictionary:
 	return {}
 
 
+## Bloco 72: o contorno da caverna do andar desse retângulo (lógica; vazio = o retângulo inteiro anda).
+var _contornos := {}
+
+
+func contorno_do_andar(r: Rect2) -> PackedVector2Array:
+	if _contornos.is_empty():
+		for nome in andares.get("andares", {}):
+			var a: Dictionary = andares.andares[nome]
+			var pol := PackedVector2Array()
+			for q in a.get("contorno", []):
+				pol.append(Vector2(float(q[0]), float(q[1])))
+			_contornos[Rect2(a.rect[0], a.rect[1], a.rect[2], a.rect[3])] = pol
+	return _contornos.get(r, PackedVector2Array())
+
+
+## Bloco 72: esse ponto fica no chão da caverna do andar dele? (na superfície: sempre)
+func dentro_da_caverna(p: Vector2) -> bool:
+	var lv := level_of(p)
+	if lv.is_empty():
+		return true
+	var pol := contorno_do_andar(lv.rect)
+	return pol.size() < 3 or Geometry2D.is_point_in_polygon(p, pol)
+
+
+## A ilha de navegação de um andar: o contorno da caverna (mapa novo) ou o retângulo encolhido.
+func _ilha(r: Rect2) -> PackedVector2Array:
+	var pol := contorno_do_andar(r)
+	return pol if pol.size() >= 3 else _rect_outline(r.grow(-nav_edge_inset))
+
+
 ## Ponto da lógica -> chão da VISTA (px de arte): na superfície é só a escala; num andar de
 ## baixo, o canto da frente dele vai pro canto da frente do mapa.
 func view_ground(pos: Vector2) -> Vector2:
@@ -653,6 +683,9 @@ func view_ground(pos: Vector2) -> Vector2:
 	var lv := level_of(pos)
 	if lv.is_empty():
 		return pos * f
+	var a: Dictionary = lv.info
+	if a.has("centro_arte"):  # Bloco 72: a coluna debaixo da vila (andar mais compacto, escala k)
+		return (pos - (lv.rect as Rect2).get_center()) * f * float(a.k) + Vector2(a.centro_arte[0], a.centro_arte[1])
 	var c: Array = andares.canto_frente_arte
 	return (pos - lv.rect.end) * f + Vector2(c[0], c[1])
 
@@ -663,6 +696,9 @@ func logic_from_view(art: Vector2, z: float) -> Vector2:
 	for nome in andares.get("andares", {}):
 		var a: Dictionary = andares.andares[nome]
 		if z <= float(a.z[1]) + 200.0 and z >= float(a.z[0]) - 64.0:
+			if a.has("centro_arte"):  # Bloco 72
+				var centro := Vector2(a.rect[0] + a.rect[2] * 0.5, a.rect[1] + a.rect[3] * 0.5)
+				return (art - Vector2(a.centro_arte[0], a.centro_arte[1])) / (f * float(a.k)) + centro
 			var c: Array = andares.canto_frente_arte
 			return (art - Vector2(c[0], c[1])) / f + Vector2(a.rect[0] + a.rect[2], a.rect[1] + a.rect[3])
 	return art / f
@@ -1008,8 +1044,8 @@ func _build_deep() -> void:
 		edge.append(Vector2(r.end.x, y))
 		y += edge_boulder_spacing
 	for p in edge:
-		if boulder_textures.is_empty():
-			break
+		if boulder_textures.is_empty() or contorno_do_andar(r).size() >= 3:
+			break  # (Bloco 72: no mapa novo a borda é a parede da caverna, não pedras no retângulo)
 		var s := _deco_sprite(boulder_textures[drng.randi() % boulder_textures.size()],
 			p + Vector2(drng.randf_range(-10, 10), drng.randf_range(-8, 8)))
 		s.scale = Vector2.ONE * pixel_scale * drng.randf_range(1.2, 1.9)
@@ -1063,8 +1099,8 @@ func _build_abyss() -> void:
 		edge.append(Vector2(r.end.x, y))
 		y += edge_boulder_spacing
 	for p in edge:
-		if boulder_textures.is_empty():
-			break
+		if boulder_textures.is_empty() or contorno_do_andar(r).size() >= 3:
+			break  # (Bloco 72: no mapa novo a borda é a parede da caverna, não pedras no retângulo)
 		var s := _deco_sprite(boulder_textures[arng.randi() % boulder_textures.size()],
 			p + Vector2(arng.randf_range(-10, 10), arng.randf_range(-8, 8)))
 		s.scale = Vector2.ONE * pixel_scale * arng.randf_range(1.2, 1.9)
@@ -1130,6 +1166,8 @@ func clear_decor_under_extras() -> void:
 
 
 func _deep_spot_free(p: Vector2, spacing: float, placed: Array[Vector2], avoid: Array[Vector2]) -> bool:
+	if not dentro_da_caverna(p):
+		return false  # Bloco 72: fora do chão da caverna (rocha ou o corte)
 	for group in STATION_GROUPS:
 		for node in get_tree().get_nodes_in_group(group):
 			if p.distance_to(node.global_position) < keep_clear_radius:

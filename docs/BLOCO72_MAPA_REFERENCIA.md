@@ -168,3 +168,36 @@ referência) e um trecho de trilho com vagonete descendo a encosta pra boca da m
 - Na vista bem afastada aparecem manchas ovais (a neblina do clima) fora do mapa: só no zoom de vista
   geral, que o jogador não usa.
 
+---
+
+# Revisão (2026-10-03): a coluna debaixo da vila, no jogo
+
+O Marco rejeitou a etapa 4 (lajes retas num bloco de terra, coluna na ponta leste) e pediu a estrutura
+da referência no próprio mapa do jogo. Decisões dele: modelo = imagem B do PixelLab; a imagem vira o
+mapa do mundo (F2, `515b5bfa`) E os andares são reconstruídos no jogo; andares mais compactos.
+
+**Feito** (comparação: `docs/arte/bloco72/coluna/comparativo.jpg`; fotos e medidas na mesma pasta):
+- `mapa/andares.py` reescrito: cada andar na escala 0,75, com a beira da frente na face sul do mapa,
+  DEBAIXO DA VILA (entre a escavadeira e a torre do elevador); um embaixo do outro (degraus -32, -68,
+  -104, -140); chão em forma de caverna (superelipse com ruído, que cresce em bolsões onde há conteúdo,
+  mais a plataforma da gaiola); a rocha de trás sobe até o andar de cima (o nível 2, até a superfície),
+  em degraus e estratos; a frente aberta (o corte). Gera também o poço do elevador (`poco.png`), a espiral
+  e os polígonos da terra (faixa das faces + corpo da coluna afinando no fundo).
+- Elevadores alinhados num poço único: as 4 gaiolas na vertical da torre da vila (cena e .tres);
+  as peças soltas de rampa saíram (a espiral do poço as substitui).
+- Conteúdo dos andares puxado pro centro (x0,82) pra a caverna não ser forçada até os cantos.
+- `environment.gd`: vista <-> lógica pelo centro e escala do andar; navegação e decoração pelo
+  contorno da caverna (rocha não anda). `iso_view.gd`: escala dos andares, névoa no formato da caverna,
+  terra/poço/espiral do json.
+- Os saves continuam valendo (a lógica dos andares não mudou de lugar).
+- Teste `b72_coluna.gd`; b68–b71, b63, b67, p19, p20, p28_iso, p28_save, p29_mapa, b61, b62 passam.
+- Vila cheia ~21 ms (46–51 FPS conforme a rodada), andares 95–118 FPS.
+
+**Ainda diferente da referência** (próxima rodada, se o Marco aprovar o rumo):
+1. Andares afastados demais (muita rocha escura entre eles): apertar de 36 pra ~24 degraus.
+2. A faixa de galerias de madeira logo abaixo da superfície (o "nível 1" da imagem).
+3. Paredes da coluna escuras e sem detalhe: lampiões nas paredes, lava escorrendo no S3/S4, a cachoeira
+   descendo pela parede do S4, cristais nas paredes, raízes perto da superfície.
+4. A coluna é estreita perto da superfície enorme (a superfície é a faixa longa do leste): dá pra alargar
+   os andares de volta (escala 0,85) ou deixar a superfície mais escura longe da vila.
+
