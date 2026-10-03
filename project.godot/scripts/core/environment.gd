@@ -183,7 +183,11 @@ const LESTE_ARVORES := 14
 const LESTE_VILA := [["igreja_0", Vector2(2440, -40), Vector2(50, 30)], ["torre_0", Vector2(2620, -120), Vector2(22, 14)],
 	["enxaimel_0", Vector2(2250, 60), Vector2(30, 18)], ["enxaimel_1", Vector2(2600, 60), Vector2(30, 18)],
 	["enxaimel_2", Vector2(2800, -40), Vector2(30, 18)]]
-const LESTE_DECOR := 70
+const LESTE_DECOR := 130  # (Bloco 72: era 70 — a pedreira nova era um chão vazio)
+## Bloco 72: sucata de mineração misturada às pedras da pedreira do leste, e os enfeites da vila antiga.
+const LESTE_SUCATA := ["sucata", "pneus", "tambor_oleo", "barril", "carcaca_maquina", "trilho_quebrado", "vagonete_velho",
+	"tabuas", "palete", "bloco_concreto", "chapa_enterrada", "poste_caido", "caixas_metal", "roda_carroca"]
+const VILA_ENFEITES := ["varal", "banco", "tabuas", "poco", "palete", "saco", "barril", "mesa", "roda_carroca", "caixote_palha"]
 
 
 ## Onde começa a área nova (x da lógica); INF = mapa sem leste.
@@ -293,6 +297,49 @@ func _build_decoracao_niveis() -> void:
 			placed.append(p)
 			_decor_node(String(d[0]), p, false)
 			get_child(get_child_count() - 1).add_to_group("nivel_deco")
+	_build_decoracao_sorteada(placed, avoid)  # Bloco 72: depois da fixa (ela fica com o lugar)
+
+
+## Bloco 72: espalha a decoração sorteada de cada nível (NivelMina.decoracao_sorteada) no chão dele.
+func _build_decoracao_sorteada(placed: Array[Vector2], avoid: Array[Vector2]) -> void:
+	for n in preload("res://scripts/core/niveis.gd").todos():
+		if n.em_breve or n.decoracao_sorteada.is_empty():
+			continue
+		var r := rect_do_nivel(n).grow(-48.0)
+		if not r.has_area():
+			continue
+		var rng := RandomNumberGenerator.new()
+		rng.seed = map_seed + hash(String(n.id)) % 100000
+		var embaixo := not level_of(r.get_center()).is_empty()
+		for e in n.decoracao_sorteada:
+			if not (e is Array) or e.size() < 2 or not (e[1] is Array) or (e[1] as Array).is_empty():
+				continue
+			var postas := 0
+			for tries in int(e[0]) * 30:
+				if postas >= int(e[0]):
+					break
+				var p := Vector2(rng.randf_range(r.position.x, r.end.x), rng.randf_range(r.position.y, r.end.y))
+				var livre := _deep_spot_free(p, 34.0, placed, avoid) if embaixo else (spot_ok(p, 10.0) and _is_free(p, 22.0, 30.0))
+				if not livre:
+					continue
+				placed.append(p)
+				_decor_node(String(e[1][rng.randi() % (e[1] as Array).size()]), p, false)
+				get_child(get_child_count() - 1).add_to_group("nivel_deco_sorteada")
+				postas += 1
+
+
+## Bloco 72: o retângulo na lógica de um nível (os antigos pelas áreas do ambiente; os novos pelo .tres).
+func rect_do_nivel(n: Resource) -> Rect2:
+	match String(n.area):
+		"deep":
+			return deep_rect
+		"abyss":
+			return abyss_rect
+		"clareira":
+			return clearing_rect
+		"mapa":
+			return map_rect
+	return n.rect
 
 
 ## Esse ponto fica na área do leste ainda trancada?
@@ -365,6 +412,28 @@ func _build_leste() -> void:
 		toca.position = nearest_ok(Vector2(lr.position.x + lr.size.x * 0.45, lr.position.y + 260.0), 20.0)
 		toca.add_to_group("leste_conteudo")
 		world.add_child(toca)
+	# Bloco 72: em volta de cada prédio da vila antiga, 3 enfeites (varal, banco, poço...) — um poço só
+	var tem_poco := false
+	for k in LESTE_VILA.size():
+		var casa_nome := "VilaAntiga%d" % (k + 1)
+		if not has_node(casa_nome):
+			continue
+		var cp: Vector2 = (get_node(casa_nome) as Node2D).position
+		var enf := 0
+		for tries in 40:
+			if enf >= 3:
+				break
+			var q := cp + Vector2(rng.randf_range(-110.0, 110.0), rng.randf_range(20.0, 80.0) * (1.0 if rng.randf() < 0.6 else -1.0))
+			if not spot_ok(q, 8.0) or not _is_free(q, 26.0, 30.0):
+				continue
+			var enfeite: String = VILA_ENFEITES[rng.randi() % VILA_ENFEITES.size()]
+			if enfeite == "poco":
+				if tem_poco:
+					enfeite = "banco"
+				tem_poco = true
+			_decor_node(enfeite, q, false)
+			get_child(get_child_count() - 1).add_to_group("leste_conteudo")
+			enf += 1
 	# enfeite: mata na floresta nova e pedras na encosta rochosa
 	var colocados := 0
 	for tries in 3000:
@@ -375,6 +444,8 @@ func _build_leste() -> void:
 			continue
 		var prop: String = FOREST_DECOR[rng.randi() % FOREST_DECOR.size()] if p.y < palisade_y else \
 			("rocha_musgo_%d" % (rng.randi() % 6) if p.y < -180.0 else "rocha_mina_%d" % (rng.randi() % 3))
+		if p.y >= palisade_y and rng.randf() < 0.35:  # Bloco 72: sucata de mineração na pedreira
+			prop = LESTE_SUCATA[rng.randi() % LESTE_SUCATA.size()]
 		_decor_node(prop, p, p.y >= palisade_y and rng.randf() < 0.3)
 		get_child(get_child_count() - 1).add_to_group("leste_conteudo")
 		colocados += 1

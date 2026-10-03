@@ -645,6 +645,16 @@ for st in ("cheia", "meia", "quase"):
     PROPS["jazida_gema_azul_%s" % st] = "fundo70/jazida_gema_azul_%s.png" % st
 for k in range(2):
     PROPS["casa_pedra_%d" % k] = "fundo71/casa_pedra_%d.png" % k
+# Bloco 72: o resto dos objetos do Prompt 14 (prontos desde então, nunca registrados) — densidade de
+# decoração nos andares e na superfície. Tochas, fogueiras e lampiões ficam de fora (acesos sem luz).
+for nome in ("aco_m", "aco_p", "andaime", "barril", "barril_vazando", "bigorna", "bloco_concreto", "braco_robo",
+             "caixa_ferramentas", "caixas_metal", "caixote_palha", "cano", "carcaca_maquina", "carvao_m", "carvao_p",
+             "chapa_enterrada", "corda", "corrente", "corrente_enferrujada", "costelas", "escada_mao", "ferramentas_caixote",
+             "ferramentas_encostadas", "furadeira_velha", "mesa", "ossos_cranio", "painel_listrado", "palete", "pedra_m",
+             "pedra_p", "placa_direcao", "placa_gas", "placa_raio", "pneus", "porta_carro", "poste", "poste_caido",
+             "poste_cruzado", "roda_carroca", "saco", "sucata", "tabuas", "tambor_oleo", "tijolo_g", "tijolo_p",
+             "trilho_quebrado", "vagonete_cheio_SO", "vagonete_vazio_SE", "vagonete_vazio_SO", "vagonete_velho", "varal"):
+    PROPS[nome] = "objetos/final/%s.png" % nome
 # Itens de arte do documento de melhorias (decoração): a vila antiga do leste, passarelas, ponte de
 # corda e as peças da rampa em espiral (fundo71/itens.py)
 for nome, n in (("igreja", 1), ("torre", 1), ("enxaimel", 3), ("passarela", 2), ("ponte", 1), ("rampa", 3)):

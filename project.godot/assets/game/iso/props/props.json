@@ -1681,6 +1681,771 @@
    "h": 74.0,
    "fora": 3
   },
+  "aco_m": {
+   "img": "aco_m.png",
+   "ancora": [
+    21.0,
+    29.0
+   ],
+   "peg": [
+    -7.35,
+    -5.88,
+    15.0,
+    13.0
+   ],
+   "h": 26.0,
+   "fora": 2
+  },
+  "aco_p": {
+   "img": "aco_p.png",
+   "ancora": [
+    15.5,
+    21.0
+   ],
+   "peg": [
+    -5.425,
+    -4.34,
+    10.0,
+    10.0
+   ],
+   "h": 18.0,
+   "fora": 4
+  },
+  "andaime": {
+   "img": "andaime.png",
+   "ancora": [
+    29.0,
+    67.0
+   ],
+   "peg": [
+    -10.149999999999999,
+    -8.12,
+    21.0,
+    18.0
+   ],
+   "h": 64.0,
+   "fora": 3
+  },
+  "barril": {
+   "img": "barril.png",
+   "ancora": [
+    18.0,
+    50.0
+   ],
+   "peg": [
+    -6.3,
+    -5.04,
+    13.0,
+    12.0
+   ],
+   "h": 48.0,
+   "fora": 0
+  },
+  "barril_vazando": {
+   "img": "barril_vazando.png",
+   "ancora": [
+    24.0,
+    41.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    16.0,
+    16.0
+   ],
+   "h": 40.0,
+   "fora": 2
+  },
+  "bigorna": {
+   "img": "bigorna.png",
+   "ancora": [
+    21.5,
+    48.0
+   ],
+   "peg": [
+    -7.5249999999999995,
+    -6.02,
+    14.0,
+    13.0
+   ],
+   "h": 48.0,
+   "fora": 4
+  },
+  "bloco_concreto": {
+   "img": "bloco_concreto.png",
+   "ancora": [
+    22.5,
+    41.0
+   ],
+   "peg": [
+    -7.874999999999999,
+    -6.3,
+    16.0,
+    15.0
+   ],
+   "h": 36.0,
+   "fora": 0
+  },
+  "braco_robo": {
+   "img": "braco_robo.png",
+   "ancora": [
+    27.0,
+    41.0
+   ],
+   "peg": [
+    -9.45,
+    -7.56,
+    16.0,
+    18.0
+   ],
+   "h": 36.0,
+   "fora": 3
+  },
+  "caixa_ferramentas": {
+   "img": "caixa_ferramentas.png",
+   "ancora": [
+    25.0,
+    40.0
+   ],
+   "peg": [
+    -8.75,
+    -7.0,
+    18.0,
+    16.0
+   ],
+   "h": 38.0,
+   "fora": 0
+  },
+  "caixas_metal": {
+   "img": "caixas_metal.png",
+   "ancora": [
+    26.0,
+    45.0
+   ],
+   "peg": [
+    -9.1,
+    -7.28,
+    19.0,
+    17.0
+   ],
+   "h": 40.0,
+   "fora": 0
+  },
+  "caixote_palha": {
+   "img": "caixote_palha.png",
+   "ancora": [
+    26.0,
+    46.0
+   ],
+   "peg": [
+    -9.1,
+    -7.28,
+    19.0,
+    17.0
+   ],
+   "h": 40.0,
+   "fora": 0
+  },
+  "cano": {
+   "img": "cano.png",
+   "ancora": [
+    25.0,
+    43.0
+   ],
+   "peg": [
+    -8.75,
+    -7.0,
+    18.0,
+    16.0
+   ],
+   "h": 36.0,
+   "fora": 0
+  },
+  "carcaca_maquina": {
+   "img": "carcaca_maquina.png",
+   "ancora": [
+    26.5,
+    38.0
+   ],
+   "peg": [
+    -9.274999999999999,
+    -7.419999999999999,
+    18.0,
+    17.0
+   ],
+   "h": 36.0,
+   "fora": 4
+  },
+  "carvao_m": {
+   "img": "carvao_m.png",
+   "ancora": [
+    21.5,
+    26.0
+   ],
+   "peg": [
+    -7.5249999999999995,
+    -6.02,
+    15.0,
+    13.0
+   ],
+   "h": 20.0,
+   "fora": 3
+  },
+  "carvao_p": {
+   "img": "carvao_p.png",
+   "ancora": [
+    14.5,
+    19.0
+   ],
+   "peg": [
+    -5.074999999999999,
+    -4.06,
+    10.0,
+    8.0
+   ],
+   "h": 16.0,
+   "fora": 4
+  },
+  "chapa_enterrada": {
+   "img": "chapa_enterrada.png",
+   "ancora": [
+    29.0,
+    38.0
+   ],
+   "peg": [
+    -10.149999999999999,
+    -8.12,
+    19.0,
+    17.0
+   ],
+   "h": 34.0,
+   "fora": 3
+  },
+  "corda": {
+   "img": "corda.png",
+   "ancora": [
+    21.5,
+    32.0
+   ],
+   "peg": [
+    -7.5249999999999995,
+    -6.02,
+    15.0,
+    14.0
+   ],
+   "h": 30.0,
+   "fora": 0
+  },
+  "corrente": {
+   "img": "corrente.png",
+   "ancora": [
+    25.5,
+    35.0
+   ],
+   "peg": [
+    -8.924999999999999,
+    -7.14,
+    17.0,
+    17.0
+   ],
+   "h": 32.0,
+   "fora": 4
+  },
+  "corrente_enferrujada": {
+   "img": "corrente_enferrujada.png",
+   "ancora": [
+    27.5,
+    33.0
+   ],
+   "peg": [
+    -9.625,
+    -7.7,
+    20.0,
+    18.0
+   ],
+   "h": 30.0,
+   "fora": 2
+  },
+  "costelas": {
+   "img": "costelas.png",
+   "ancora": [
+    29.0,
+    31.0
+   ],
+   "peg": [
+    -10.149999999999999,
+    -8.12,
+    21.0,
+    17.0
+   ],
+   "h": 24.0,
+   "fora": 4
+  },
+  "escada_mao": {
+   "img": "escada_mao.png",
+   "ancora": [
+    20.0,
+    74.0
+   ],
+   "peg": [
+    -7.0,
+    -5.6000000000000005,
+    14.0,
+    12.0
+   ],
+   "h": 70.0,
+   "fora": 2
+  },
+  "ferramentas_caixote": {
+   "img": "ferramentas_caixote.png",
+   "ancora": [
+    28.5,
+    64.0
+   ],
+   "peg": [
+    -9.975,
+    -7.98,
+    20.0,
+    18.0
+   ],
+   "h": 58.0,
+   "fora": 4
+  },
+  "ferramentas_encostadas": {
+   "img": "ferramentas_encostadas.png",
+   "ancora": [
+    20.5,
+    46.0
+   ],
+   "peg": [
+    -7.175,
+    -5.74,
+    15.0,
+    13.0
+   ],
+   "h": 40.0,
+   "fora": 1
+  },
+  "furadeira_velha": {
+   "img": "furadeira_velha.png",
+   "ancora": [
+    23.5,
+    42.0
+   ],
+   "peg": [
+    -8.225,
+    -6.58,
+    17.0,
+    15.0
+   ],
+   "h": 42.0,
+   "fora": 3
+  },
+  "mesa": {
+   "img": "mesa.png",
+   "ancora": [
+    30.0,
+    49.0
+   ],
+   "peg": [
+    -10.5,
+    -8.4,
+    22.0,
+    18.0
+   ],
+   "h": 44.0,
+   "fora": 4
+  },
+  "ossos_cranio": {
+   "img": "ossos_cranio.png",
+   "ancora": [
+    27.0,
+    34.0
+   ],
+   "peg": [
+    -9.45,
+    -7.56,
+    19.0,
+    18.0
+   ],
+   "h": 28.0,
+   "fora": 3
+  },
+  "painel_listrado": {
+   "img": "painel_listrado.png",
+   "ancora": [
+    24.5,
+    42.0
+   ],
+   "peg": [
+    -8.575,
+    -6.859999999999999,
+    18.0,
+    16.0
+   ],
+   "h": 38.0,
+   "fora": 3
+  },
+  "palete": {
+   "img": "palete.png",
+   "ancora": [
+    30.0,
+    34.0
+   ],
+   "peg": [
+    -10.5,
+    -8.4,
+    22.0,
+    19.0
+   ],
+   "h": 28.0,
+   "fora": 0
+  },
+  "pedra_m": {
+   "img": "pedra_m.png",
+   "ancora": [
+    21.0,
+    28.0
+   ],
+   "peg": [
+    -7.35,
+    -5.88,
+    14.0,
+    14.0
+   ],
+   "h": 24.0,
+   "fora": 4
+  },
+  "pedra_p": {
+   "img": "pedra_p.png",
+   "ancora": [
+    13.0,
+    16.0
+   ],
+   "peg": [
+    -4.55,
+    -3.64,
+    8.0,
+    8.0
+   ],
+   "h": 12.0,
+   "fora": 2
+  },
+  "placa_direcao": {
+   "img": "placa_direcao.png",
+   "ancora": [
+    20.5,
+    66.0
+   ],
+   "peg": [
+    -7.175,
+    -5.74,
+    14.0,
+    12.0
+   ],
+   "h": 66.0,
+   "fora": 3
+  },
+  "placa_gas": {
+   "img": "placa_gas.png",
+   "ancora": [
+    17.0,
+    62.0
+   ],
+   "peg": [
+    -5.949999999999999,
+    -4.76,
+    12.0,
+    11.0
+   ],
+   "h": 64.0,
+   "fora": 0
+  },
+  "placa_raio": {
+   "img": "placa_raio.png",
+   "ancora": [
+    17.0,
+    62.0
+   ],
+   "peg": [
+    -5.949999999999999,
+    -4.76,
+    12.0,
+    11.0
+   ],
+   "h": 64.0,
+   "fora": 0
+  },
+  "pneus": {
+   "img": "pneus.png",
+   "ancora": [
+    19.0,
+    51.0
+   ],
+   "peg": [
+    -6.6499999999999995,
+    -5.32,
+    14.0,
+    12.0
+   ],
+   "h": 48.0,
+   "fora": 3
+  },
+  "porta_carro": {
+   "img": "porta_carro.png",
+   "ancora": [
+    26.0,
+    44.0
+   ],
+   "peg": [
+    -9.1,
+    -7.28,
+    18.0,
+    17.0
+   ],
+   "h": 40.0,
+   "fora": 4
+  },
+  "poste": {
+   "img": "poste.png",
+   "ancora": [
+    6.0,
+    60.0
+   ],
+   "peg": [
+    -4.0,
+    -3.2,
+    3.0,
+    3.0
+   ],
+   "h": 58.0,
+   "fora": 0
+  },
+  "poste_caido": {
+   "img": "poste_caido.png",
+   "ancora": [
+    26.5,
+    43.0
+   ],
+   "peg": [
+    -9.274999999999999,
+    -7.419999999999999,
+    19.0,
+    16.0
+   ],
+   "h": 46.0,
+   "fora": 3
+  },
+  "poste_cruzado": {
+   "img": "poste_cruzado.png",
+   "ancora": [
+    14.0,
+    65.0
+   ],
+   "peg": [
+    -4.8999999999999995,
+    -3.92,
+    9.0,
+    9.0
+   ],
+   "h": 62.0,
+   "fora": 3
+  },
+  "roda_carroca": {
+   "img": "roda_carroca.png",
+   "ancora": [
+    22.0,
+    48.0
+   ],
+   "peg": [
+    -7.699999999999999,
+    -6.16,
+    16.0,
+    14.0
+   ],
+   "h": 46.0,
+   "fora": 0
+  },
+  "saco": {
+   "img": "saco.png",
+   "ancora": [
+    18.0,
+    41.0
+   ],
+   "peg": [
+    -6.3,
+    -5.04,
+    12.0,
+    11.0
+   ],
+   "h": 38.0,
+   "fora": 3
+  },
+  "sucata": {
+   "img": "sucata.png",
+   "ancora": [
+    28.0,
+    40.0
+   ],
+   "peg": [
+    -9.799999999999999,
+    -7.84,
+    20.0,
+    18.0
+   ],
+   "h": 36.0,
+   "fora": 3
+  },
+  "tabuas": {
+   "img": "tabuas.png",
+   "ancora": [
+    27.5,
+    37.0
+   ],
+   "peg": [
+    -9.625,
+    -7.7,
+    20.0,
+    17.0
+   ],
+   "h": 36.0,
+   "fora": 3
+  },
+  "tambor_oleo": {
+   "img": "tambor_oleo.png",
+   "ancora": [
+    16.5,
+    52.0
+   ],
+   "peg": [
+    -5.7749999999999995,
+    -4.62,
+    12.0,
+    11.0
+   ],
+   "h": 50.0,
+   "fora": 4
+  },
+  "tijolo_g": {
+   "img": "tijolo_g.png",
+   "ancora": [
+    30.0,
+    43.0
+   ],
+   "peg": [
+    -10.5,
+    -8.4,
+    22.0,
+    19.0
+   ],
+   "h": 34.0,
+   "fora": 0
+  },
+  "tijolo_p": {
+   "img": "tijolo_p.png",
+   "ancora": [
+    13.5,
+    17.0
+   ],
+   "peg": [
+    -4.725,
+    -3.78,
+    9.0,
+    9.0
+   ],
+   "h": 14.0,
+   "fora": 2
+  },
+  "trilho_quebrado": {
+   "img": "trilho_quebrado.png",
+   "ancora": [
+    30.5,
+    35.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    19.0
+   ],
+   "h": 32.0,
+   "fora": 3
+  },
+  "vagonete_cheio_SO": {
+   "img": "vagonete_cheio_SO.png",
+   "ancora": [
+    20.0,
+    38.0
+   ],
+   "peg": [
+    -7.0,
+    -5.6000000000000005,
+    13.0,
+    13.0
+   ],
+   "h": 36.0,
+   "fora": 3
+  },
+  "vagonete_vazio_SE": {
+   "img": "vagonete_vazio_SE.png",
+   "ancora": [
+    20.0,
+    39.0
+   ],
+   "peg": [
+    -7.0,
+    -5.6000000000000005,
+    13.0,
+    13.0
+   ],
+   "h": 34.0,
+   "fora": 3
+  },
+  "vagonete_vazio_SO": {
+   "img": "vagonete_vazio_SO.png",
+   "ancora": [
+    20.0,
+    39.0
+   ],
+   "peg": [
+    -7.0,
+    -5.6000000000000005,
+    14.0,
+    12.0
+   ],
+   "h": 36.0,
+   "fora": 3
+  },
+  "vagonete_velho": {
+   "img": "vagonete_velho.png",
+   "ancora": [
+    24.5,
+    44.0
+   ],
+   "peg": [
+    -8.575,
+    -6.859999999999999,
+    18.0,
+    15.0
+   ],
+   "h": 40.0,
+   "fora": 3
+  },
+  "varal": {
+   "img": "varal.png",
+   "ancora": [
+    29.0,
+    65.0
+   ],
+   "peg": [
+    -10.149999999999999,
+    -8.12,
+    21.0,
+    19.0
+   ],
+   "h": 70.0,
+   "fora": 0
+  },
   "igreja_0": {
    "img": "igreja_0.png",
    "ancora": [

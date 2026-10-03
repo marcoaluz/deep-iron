@@ -24,3 +24,4 @@ descricao = "Poços de lava e fendas de calor (traje térmico). Com o abismo abe
 decoracao = [["rampa_1", -290, 1468, true], ["cristal_brasa_0", -250, 1600], ["cristal_brasa_1", 150, 1720], ["cristal_brasa_0", 200, 1500], ["cristal_brasa_1", -380, 1820], ["cristal_brasa_0", 60, 1880]]
 perigos = [["lava", -60, 1560, 44], ["lava", -200, 1760, 48], ["lava", 130, 1640, 42], ["lava", 300, 1680, 40]]
 jazidas = [["cristal_rubro", 20, 1500, 80.0, 1.4, 0.15], ["cristal_rubro", -300, 1700, 80.0, 1.4, 0.15], ["cristal_rubro", 60, 1760, 80.0, 1.4, 0.15]]
+decoracao_sorteada = [[16, ["escora", "carcaca_maquina", "furadeira_velha", "barril_vazando", "sucata", "placa_perigo", "vagonete_velho", "ossos_cranio", "costelas", "corrente_enferrujada", "bloco_concreto", "braco_robo"]], [12, ["cristal_brasa_0", "cristal_brasa_1", "rocha_mina_0", "rocha_mina_1", "rocha_mina_2"]]]
