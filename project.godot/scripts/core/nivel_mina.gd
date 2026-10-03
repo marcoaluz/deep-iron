@@ -29,6 +29,9 @@ extends Resource
 @export var cor_ambiente: Color = Color(1, 1, 1)
 @export var cor_nevoa: Color = Color(0, 0, 0, 0)
 @export var particulas: String = ""
+## Bloco 72: onde o nível fica no MAPA DO MUNDO (assets/game/ui/corte/mapa_mundo.png, px da imagem): é
+## ali que aparecem os ipezinhos, as jazidas e o clique do nível.
+@export var mapa_regiao: Rect2 = Rect2()
 ## Faixa do corte da mina (assets/game/ui/corte/<faixa>.png; "" = cor lisa) e a cor da faixa sem arte.
 @export var faixa: String = ""
 @export var cor_faixa: Color = Color(0.2, 0.18, 0.16)

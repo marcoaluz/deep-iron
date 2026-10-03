@@ -36,3 +36,4 @@ animo = 10.0
 animo_motivo = "a calma do lago azul"
 titulo_abertura = "O LAGO AZUL"
 decoracao_sorteada = [[10, ["casa_pedra_0", "casa_pedra_1", "varal", "banco", "mesa", "palete", "saco", "tabuas", "roda_carroca", "poste"]], [14, ["cristal_ciano_0", "cristal_ciano_1", "cristal_violeta_0", "cristal_violeta_1"]]]
+mapa_regiao = Rect2(40, 400, 180, 58)

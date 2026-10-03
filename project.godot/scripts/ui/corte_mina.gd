@@ -8,6 +8,9 @@ extends CanvasLayer
 ## perigo, a escavadeira, o robô, os invasores; entre os andares, o túnel (escada) e os poços do
 ## elevador com a gaiola onde ela está. Clicar num ipezinho seleciona e leva a câmera até ele;
 ## clicar no andar leva a câmera pra lá. Esc/F2/X fecha. Nada aqui muda o jogo.
+## Bloco 72: o fundo é o MAPA DO MUNDO (mapa_mundo.png, do PixelLab: a coluna inteira da floresta ao lago,
+## como a referência). Cada nível tem a sua região na imagem (NivelMina.mapa_regiao): ali aparecem os
+## ipezinhos, jazidas e perigos dele; ao lado, a lista dos andares (aberto/fechado, quem está, jazidas).
 ## Bloco 63: também as JAZIDAS/GALERIAS (aberta = cor do minério, lacrada = entulho, trancada =
 ## cadeado: falta ferramenta ou descida), os REATORES da escavadeira (instalado e construídos), os
 ## bichos da clareira, os coletores e uma legenda. Clique numa galeria leva a câmera até ela. O
@@ -23,9 +26,11 @@ const DIR := "res://assets/game/ui/corte/"
 const Niveis := preload("res://scripts/core/niveis.gd")
 var ANDARES: Array = []
 var EM_BREVE: Array = []
-const FAIXA_BREVE := 26.0
-const ALTURA := 128.0  # px de cada faixa (a arte tem 128)
-const LARGURA := 1024.0  # a faixa de 512 em 2x
+## Bloco 72: o mapa do mundo em 4/3 (no 1080p vira 2x exato: pixel nítido) e a lista ao lado.
+const MAPA := "mapa_mundo"
+const MAPA_ESC := 4.0 / 3.0
+const MAPA_POS := Vector2(6, 2)
+const PAINEL_W := 500.0
 const FX_PERIGO := {"gas": "nuvem_gas", "calor": "brasa", "radiacao": "radiacao"}
 
 var _main: Node
@@ -95,7 +100,7 @@ func setup(main: Node) -> void:
 	x.pressed.connect(fecha)
 	head.add_child(x)
 	_area = Control.new()
-	_area.custom_minimum_size = Vector2(LARGURA, ALTURA * maxi(ANDARES.size(), 4) + FAIXA_BREVE + 22.0)  # + em breve (68) + legenda (63)
+	_area.custom_minimum_size = Vector2(_painel_x() + PAINEL_W, _mapa_tam().y + 6.0)
 	_area.mouse_filter = Control.MOUSE_FILTER_STOP
 	_area.draw.connect(_desenha)
 	_area.gui_input.connect(_clique)
@@ -171,7 +176,27 @@ func _rect_do(n: Resource) -> Rect2:
 
 func _no_corte(p: Vector2, alto := 0.72) -> Vector2:
 	var o := _onde(p)
-	return Vector2(o[1] * LARGURA, o[0] * ALTURA + ALTURA * alto)
+	var r := _regiao(o[0])
+	return r.position + Vector2(o[1] * r.size.x, r.size.y * alto)
+
+
+## Bloco 72: o tamanho do mapa na tela, e onde começa a lista ao lado.
+func _mapa_tam() -> Vector2:
+	var t := _tex(MAPA)
+	return (t.get_size() if t else Vector2(300, 492)) * MAPA_ESC
+
+
+func _painel_x() -> float:
+	return MAPA_POS.x + _mapa_tam().x + 22.0
+
+
+## A região do andar i no mapa (px da tela).
+func _regiao(i: int) -> Rect2:
+	var n: Resource = ANDARES[clampi(i, 0, ANDARES.size() - 1)].nivel
+	var r: Rect2 = n.mapa_regiao
+	if not r.has_area():
+		r = Rect2(10, 10 + i * 60, 160, 50)
+	return Rect2(MAPA_POS + r.position * MAPA_ESC, r.size * MAPA_ESC)
 
 
 ## (guardadas: o desenho só guarda o RID; uma textura solta seria liberada antes de aparecer)
@@ -186,37 +211,69 @@ func _tex(nome: String) -> Texture2D:
 
 
 # ------------------------------------------------------------ desenho
+var _linhas: Array = []  # [Rect2, índice do andar] (a lista ao lado: clique leva a câmera)
+
+
 func _desenha() -> void:
 	_rects.clear()
 	_pontos.clear()
+	_linhas.clear()
 	var f := ThemeDB.fallback_font
+	var mapa := _tex(MAPA)
+	if mapa:
+		_area.draw_texture_rect(mapa, Rect2(MAPA_POS, _mapa_tam()), false)
 	for i in ANDARES.size():
-		var a: Dictionary = ANDARES[i]
-		var r := Rect2(0, i * ALTURA, LARGURA, ALTURA)
+		var r := _regiao(i)
 		_rects.append(r)
-		var t := _tex(a.faixa) if a.faixa != "" else null
-		if t:
-			_area.draw_texture_rect(t, r, false)  # 512x128 em 2x na horizontal (faixas de rocha)
-		else:
-			_area.draw_rect(r, a.cor)
-		var motivo: String = Niveis.motivo(get_tree(), a.nivel)
-		if motivo != "":  # Bloco 68: nível fechado (ou em breve): escurece e diz por quê
-			_area.draw_rect(r, Color(0, 0, 0, 0.55))
-			_area.draw_string(ThemeDB.fallback_font, r.position + Vector2(LARGURA * 0.5 - 160, ALTURA * 0.55), "FECHADO — " + motivo,
-				HORIZONTAL_ALIGNMENT_LEFT, 360, 13, Color(1.0, 0.7, 0.5))
-		_area.draw_rect(Rect2(r.position, Vector2(LARGURA, 18)), Color(0, 0, 0, 0.55))
-		_area.draw_string(f, r.position + Vector2(8, 13), a.nome, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UiSkin.COLOR_TITLE)
-		var n := _gente_no_andar(i)
-		_area.draw_string(f, r.position + Vector2(LARGURA - 8, 13), "%d ipezinho%s" % [n, "s" if n != 1 else ""],
-			HORIZONTAL_ALIGNMENT_RIGHT, 200, 12, UiSkin.COLOR_TEXT)
-	_ligacoes()
+		if Niveis.motivo(get_tree(), ANDARES[i].nivel) != "":  # Bloco 68: nível fechado escurece (o motivo vai na lista)
+			_area.draw_rect(r, Color(0, 0, 0, 0.6))
+			_area.draw_string(f, r.get_center() + Vector2(-28, 4), "FECHADO", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1.0, 0.7, 0.5))
 	_perigos()
 	_jazidas()
 	_maquinas()
-	_reatores()
 	_bichos()
 	_bonecos()
+	_lista()
 	_legenda()
+
+
+## Bloco 72: a lista dos andares ao lado do mapa: nome, quem está, jazidas e se está aberto.
+func _lista() -> void:
+	var f := ThemeDB.fallback_font
+	var x := _painel_x()
+	var y := 6.0
+	_area.draw_string(f, Vector2(x, y + 12), "ANDARES (clique pra ir até lá)", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, UiSkin.COLOR_TITLE)
+	y += 24.0
+	var d := get_tree().get_first_node_in_group("escavadeira")
+	for i in ANDARES.size():
+		var a: Dictionary = ANDARES[i]
+		var linha := Rect2(x - 4, y - 2, PAINEL_W - 8, 62)
+		_linhas.append([linha, i])
+		_area.draw_rect(linha, Color(0, 0, 0, 0.35))
+		_area.draw_rect(Rect2(linha.position, Vector2(6, linha.size.y)), (a.cor as Color).lightened(0.35))
+		_area.draw_string(f, Vector2(x + 10, y + 14), a.nome, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W - 130, 13, UiSkin.COLOR_TITLE)
+		var n := _gente_no_andar(i)
+		_area.draw_string(f, Vector2(x + PAINEL_W - 16, y + 14), "%d ipezinho%s" % [n, "s" if n != 1 else ""],
+			HORIZONTAL_ALIGNMENT_RIGHT, 110, 12, UiSkin.COLOR_TEXT)
+		var motivo: String = Niveis.motivo(get_tree(), a.nivel)
+		var abertas := 0
+		var trancadas := 0
+		for m in get_tree().get_nodes_in_group("minerios"):
+			if _onde((m as Node2D).global_position)[0] == i:
+				if m.is_unlocked():
+					abertas += 1
+				else:
+					trancadas += 1
+		var info := "aberto" if motivo == "" else "FECHADO — " + motivo
+		_area.draw_string(f, Vector2(x + 10, y + 32), info, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W - 24, 11,
+			Color(0.7, 0.95, 0.6) if motivo == "" else Color(1.0, 0.7, 0.5))
+		var extra := "jazidas: %d abertas%s" % [abertas, (", %d trancadas" % trancadas) if trancadas > 0 else ""]
+		if String(a.perigo) != "":
+			extra += "  •  perigo: %s" % String(a.perigo)
+		if d != null and d.get("REACTOR_IDS") != null and _onde((d as Node2D).global_position)[0] == i:
+			extra += "  •  escavadeira: %s" % d.REACTOR_NAMES.get(d.reactor, "-")
+		_area.draw_string(f, Vector2(x + 10, y + 50), extra, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W - 24, 10, UiSkin.COLOR_DIM)
+		y += 68.0
 
 
 func _gente_no_andar(i: int) -> int:
@@ -225,73 +282,6 @@ func _gente_no_andar(i: int) -> int:
 		if _onde((w as Node2D).global_position)[0] == i:
 			n += 1
 	return n
-
-
-## Túnel (escada da clareira pra pedreira) e os poços do elevador com a gaiola.
-func _ligacoes() -> void:
-	if _env == null:
-		return
-	_espiral()
-	var tx: float = clampf((_env.tunnel_x - _env.map_rect.position.x) / _env.map_rect.size.x, 0.0, 1.0) * LARGURA
-	_escada(Vector2(tx, ALTURA * 0.75), Vector2(tx, ALTURA * 1.7))
-	var gaiola := _tex("gaiola_lado")
-	for g in ["elevador", "elevadores"]:  # (Bloco 71: "elevadores" = a do abismo e as dos níveis novos)
-		for e in get_tree().get_nodes_in_group(g):
-			var topo: Vector2 = (e as Node2D).global_position
-			var fundo = e.get("bottom_position")
-			if fundo == null:
-				continue
-			var a := _no_corte(topo, 0.6)
-			var b := _no_corte(fundo, 0.75)
-			b.x = a.x
-			_area.draw_line(a + Vector2(-9, 0), b + Vector2(-9, 0), Color(0.18, 0.13, 0.1), 2.0)
-			_area.draw_line(a + Vector2(9, 0), b + Vector2(9, 0), Color(0.18, 0.13, 0.1), 2.0)
-			_area.draw_line(a, b, Color(0.55, 0.5, 0.45, 0.8), 1.0)  # o cabo
-			if gaiola:
-				var k := 0.5 + 0.5 * sin(_t * 0.6 + a.x)  # (a lógica não guarda onde a gaiola está: vai e volta)
-				var p := a.lerp(b, k) - gaiola.get_size() * 0.5
-				_area.draw_texture(gaiola, p.round())
-
-
-## Bloco 72: a escada em espiral da referência, do lado direito, ligando todos os andares (um poço com
-## poste e degraus em hélice, e um patamar no chão de cada faixa).
-func _espiral() -> void:
-	var x := LARGURA - 34.0
-	var y0 := ALTURA * 0.7
-	var y1 := ANDARES.size() * ALTURA - 8.0
-	_area.draw_rect(Rect2(x - 22, y0, 44, y1 - y0), Color(0.06, 0.05, 0.05, 0.85))
-	_area.draw_line(Vector2(x - 22, y0), Vector2(x - 22, y1), Color(0.3, 0.26, 0.22), 2.0)
-	_area.draw_line(Vector2(x + 22, y0), Vector2(x + 22, y1), Color(0.3, 0.26, 0.22), 2.0)
-	var t := 0.0
-	var y := y0 + 4.0
-	while y < y1 - 4.0:  # degraus de trás (escuros), o poste, os da frente (claros)
-		var c := cos(t)
-		if sin(t) < 0.0:
-			_area.draw_line(Vector2(x, y), Vector2(x + c * 18.0, y + 1.0), Color(0.24, 0.17, 0.11), 3.0)
-		t += 0.5
-		y += 5.0
-	_area.draw_line(Vector2(x, y0), Vector2(x, y1), Color(0.36, 0.26, 0.17), 3.0)
-	t = 0.0
-	y = y0 + 4.0
-	while y < y1 - 4.0:
-		var c2 := cos(t)
-		if sin(t) >= 0.0:
-			_area.draw_line(Vector2(x, y), Vector2(x + c2 * 18.0, y + 1.0), Color(0.55, 0.4, 0.25), 3.0)
-		t += 0.5
-		y += 5.0
-	for i in range(1, ANDARES.size()):  # patamar no chão de cada andar
-		var yp := (i + 1) * ALTURA - 14.0
-		_area.draw_rect(Rect2(x - 40, yp, 40, 4), Color(0.5, 0.36, 0.22))
-		_area.draw_rect(Rect2(x - 40, yp + 4, 40, 1), Color(0.15, 0.1, 0.07))
-
-
-func _escada(a: Vector2, b: Vector2) -> void:
-	_area.draw_line(a + Vector2(-6, 0), b + Vector2(-6, 0), Color(0.42, 0.3, 0.18), 2.0)
-	_area.draw_line(a + Vector2(6, 0), b + Vector2(6, 0), Color(0.42, 0.3, 0.18), 2.0)
-	var y := a.y
-	while y < b.y:
-		_area.draw_line(Vector2(a.x - 6, y), Vector2(a.x + 6, y), Color(0.5, 0.36, 0.22), 2.0)
-		y += 8.0
 
 
 func _perigos() -> void:
@@ -305,20 +295,15 @@ func _perigos() -> void:
 				_area.draw_set_transform(p + Vector2(-14 + k * 14, -4 * k), 0.0, Vector2(s, s))
 				_area.draw_texture(t, -t.get_size() * 0.5)
 			_area.draw_set_transform(Vector2.ZERO)
-		_area.draw_string(ThemeDB.fallback_font, p + Vector2(-20, 24), String(z.get("kind")).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1.0, 0.6, 0.4))
 
 
 func _maquinas() -> void:
-	var esc := _tex("escavadeira_lado")
-	var d := get_tree().get_first_node_in_group("escavadeira") as Node2D
-	if esc and d:
-		var p := _no_corte(d.global_position, 0.95)
-		_area.draw_texture(esc, (p - Vector2(esc.get_width() * 0.5, esc.get_height())).round())
 	for r in get_tree().get_nodes_in_group("robos"):
 		var t := _tex("mini_robo")
 		if t:
 			var p := _no_corte((r as Node2D).global_position, 0.95)
-			_area.draw_texture(t, (p - Vector2(t.get_width() * 0.5, t.get_height())).round())
+			var tam := t.get_size() * 0.4  # (no mapa do mundo o robô fica do tamanho de um ipezinho grande)
+			_area.draw_texture_rect(t, Rect2((p - Vector2(tam.x * 0.5, tam.y)).round(), tam), false)
 	for c in get_tree().get_nodes_in_group("criaturas"):
 		if not c.has_method("is_alive") or not c.is_alive():
 			continue
@@ -360,7 +345,6 @@ var _galerias: Array = []  # [Rect2, nó] (pra clicar)
 
 func _jazidas() -> void:
 	_galerias.clear()
-	var f := ThemeDB.fallback_font
 	for m in get_tree().get_nodes_in_group("minerios"):
 		var p := _no_corte((m as Node2D).global_position, 0.86)
 		var r := Rect2(p - Vector2(6, 6), Vector2(12, 12))
@@ -378,30 +362,6 @@ func _jazidas() -> void:
 			_area.draw_circle(p, 6.0, cor.darkened(0.5) if m.is_depleted() else cor)
 			_area.draw_arc(p, 8.0, -PI * 0.5, -PI * 0.5 + TAU * cheio, 16, Color(1, 1, 1, 0.7), 1.5)
 		_galerias.append([r.grow(4), m])
-		if String(m.get("gallery_name")) != "" and m.is_sealed():
-			_area.draw_string(f, p + Vector2(-24, 18), String(m.gallery_name), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(0.85, 0.7, 0.45))
-
-
-## Reatores da escavadeira: o instalado aceso, os construídos apagados, o em obra piscando.
-func _reatores() -> void:
-	var d := get_tree().get_first_node_in_group("escavadeira")
-	if d == null or d.get("REACTOR_IDS") == null:
-		return
-	var base := _no_corte((d as Node2D).global_position, 0.3)
-	var f := ThemeDB.fallback_font
-	var x := base.x - 40.0
-	for id in d.REACTOR_IDS:
-		var cor := Color(0.25, 0.22, 0.2)
-		if id == d.reactor:
-			cor = Color(1.0, 0.75, 0.3)
-		elif id in d.built_reactors:
-			cor = Color(0.6, 0.55, 0.45)
-		elif id == d.building_reactor:
-			cor = Color(0.9, 0.6, 0.3, 0.5 + 0.5 * sin(_t * 6.0))
-		_area.draw_rect(Rect2(Vector2(x, base.y), Vector2(12, 10)), cor)
-		_area.draw_rect(Rect2(Vector2(x, base.y), Vector2(12, 10)), Color(0, 0, 0, 0.6), false, 1.0)
-		x += 16.0
-	_area.draw_string(f, Vector2(base.x - 40.0, base.y - 3), "reator: %s" % d.REACTOR_NAMES.get(d.reactor, "-"), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(1.0, 0.85, 0.5))
 
 
 ## Bichos da clareira (Bloco 61) e coletores (madeira/minério).
@@ -420,23 +380,21 @@ func _bichos() -> void:
 
 func _legenda() -> void:
 	var f := ThemeDB.fallback_font
-	# Bloco 68: os níveis declarados que ainda não existem
-	if not EM_BREVE.is_empty():
-		var yb := ANDARES.size() * ALTURA
-		var xb := 0.0
-		var w := LARGURA / EM_BREVE.size()
-		for n in EM_BREVE:
-			_area.draw_rect(Rect2(xb, yb, w - 2.0, FAIXA_BREVE - 2.0), n.cor_faixa.darkened(0.3))
-			_area.draw_string(f, Vector2(xb + 8.0, yb + 17.0), "%s — em breve" % n.nome, HORIZONTAL_ALIGNMENT_LEFT, w - 16.0, 11, Color(0.75, 0.8, 0.95))
-			xb += w
-	var y := ANDARES.size() * ALTURA + FAIXA_BREVE + 14.0
-	var x := 6.0
-	var itens := [["●", Color(0.72, 0.62, 0.55), "jazida aberta (anel = quanto tem)"], ["✕", Color(0.85, 0.7, 0.45), "galeria lacrada (clique: ir até ela)"],
-		["▣", Color(0.9, 0.8, 0.4), "trancada (ferramenta/descida)"], ["■", Color(1.0, 0.75, 0.3), "reator instalado"],
-		["■", Color(0.55, 0.85, 0.5), "coletor produzindo"], ["●", Color(0.42, 0.3, 0.24), "bicho da clareira"]]
+	var x := _painel_x()
+	var y := 30.0 + ANDARES.size() * 68.0 + 10.0
+	for n in EM_BREVE:  # Bloco 68: os níveis declarados que ainda não existem
+		_area.draw_string(f, Vector2(x, y), "%s — em breve" % n.nome, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W, 11, Color(0.75, 0.8, 0.95))
+		y += 16.0
+	var itens := [["●", Color(0.72, 0.62, 0.55), "jazida aberta (anel = quanto tem)"], ["✕", Color(0.85, 0.7, 0.45), "galeria lacrada"],
+		["▣", Color(0.9, 0.8, 0.4), "trancada (ferramenta/descida)"], ["■", Color(0.55, 0.85, 0.5), "coletor produzindo"],
+		["●", Color(0.42, 0.3, 0.24), "bicho da clareira"]]
+	var col := 0
 	for it in itens:
-		_area.draw_string(f, Vector2(x, y), "%s %s" % [it[0], it[2]], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, it[1])
-		x += 170.0
+		_area.draw_string(f, Vector2(x + col * 250.0, y), "%s %s" % [it[0], it[2]], HORIZONTAL_ALIGNMENT_LEFT, 245, 10, it[1])
+		col += 1
+		if col == 2:
+			col = 0
+			y += 14.0
 
 
 func _clique(e: InputEvent) -> void:
@@ -457,6 +415,13 @@ func _clique(e: InputEvent) -> void:
 			var cam = _main.get_node_or_null("Camera2D") if _main else null
 			if cam and cam.has_method("focus_on"):
 				cam.focus_on((pt[1] as Node2D).global_position)
+			fecha()
+			return
+	for li in _linhas:  # Bloco 72: a lista ao lado também leva até o andar
+		if (li[0] as Rect2).has_point(p) and _env:
+			var cam1 = _main.get_node_or_null("Camera2D") if _main else null
+			if cam1 and cam1.has_method("focus_on"):
+				cam1.focus_on(_rect_do(ANDARES[li[1]].nivel).get_center())
 			fecha()
 			return
 	for i in _rects.size():

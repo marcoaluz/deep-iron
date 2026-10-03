@@ -26,3 +26,4 @@ perigos = [["lava", -60, 1560, 44], ["lava", -200, 1760, 48], ["lava", 130, 1640
 jazidas = [["cristal_rubro", 20, 1500, 80.0, 1.4, 0.15], ["cristal_rubro", -300, 1700, 80.0, 1.4, 0.15], ["cristal_rubro", 60, 1760, 80.0, 1.4, 0.15]]
 decoracao_sorteada = [[16, ["escora", "carcaca_maquina", "furadeira_velha", "barril_vazando", "sucata", "placa_perigo", "vagonete_velho", "ossos_cranio", "costelas", "corrente_enferrujada", "bloco_concreto", "braco_robo"]], [12, ["cristal_brasa_0", "cristal_brasa_1", "rocha_mina_0", "rocha_mina_1", "rocha_mina_2"]]]
 decalques = [["rio_lava_0", -120, 1690], ["rio_lava_0", 240, 1560]]
+mapa_regiao = Rect2(13, 256, 150, 54)

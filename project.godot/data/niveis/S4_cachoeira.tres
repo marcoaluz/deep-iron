@@ -36,3 +36,4 @@ animo_motivo = "o barulho e o vapor da cachoeira"
 titulo_abertura = "A CACHOEIRA DO FUNDO!"
 decoracao_sorteada = [[14, ["escora", "andaime", "escada_mao", "tabuas", "caixote_palha", "barril", "placa_perigo", "cano", "corda", "palete"]], [12, ["cristal_violeta_0", "cristal_ciano_0", "cristal_lima_1", "cristal_brasa_0", "cristal_violeta_1", "rocha_mina_2"]]]
 decalques = [["rio_lava_0", -280, 2470]]
+mapa_regiao = Rect2(13, 318, 150, 72)
