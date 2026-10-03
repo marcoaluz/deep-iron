@@ -43,7 +43,7 @@ json; névoa no formato da caverna). Teste `tests/blocos/b72_coluna.gd`. Compara
 construir. Diagnóstico: a referência é um corte de frente (andares = faixas largas e rasas, parede alta
 cheia de coisa atrás, empilhadas sem vão); o jogo mostra chão visto de cima (losango), com vão escuro
 grande entre andares e paredes lisas. Maquete da proposta no Blender (`prototipos/camera/arte_iso/
-blender/coluna_maquete.py`, Blender em `D:\Blenderlender.exe`, roda com `-b -P ... -- <saida.png>`):
+blender/coluna_maquete.py`, Blender em `D:/Blender/blender.exe`, roda com `-b -P ... -- <saida.png>`):
 `docs/arte/bloco72/maquete/coluna_blender.png` e `comparativo_maquete.jpg`. Plano proposto: andares
 viram faixas (chão andável = polígono da faixa na lógica, conteúdo remapeado), arte de cada andar
 renderizada no Blender na câmera do jogo + detalhe/pixelização no PixelLab; vila: juntar terraços e
