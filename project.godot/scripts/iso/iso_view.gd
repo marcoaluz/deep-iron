@@ -329,6 +329,7 @@ func _build_terrain() -> void:
 		_levels.append({"nome": nome, "art_rect": Rect2(art(lr.position), lr.size * S), "z": float(a.z_chao),
 			"sprite": sp2, "rect": lr, "tint": LEVEL_TINT.get(nome, Color.WHITE)})
 	_build_terra()
+	_build_decalques()
 	_build_palisade()
 	_build_lava()
 	_build_pocas()
@@ -580,6 +581,46 @@ func _build_terra() -> void:
 			es.z_as_relative = false
 			es.z_index = Order.BASE - 54  # na frente da terra, atrás dos andares
 			_terrain_node.add_child(es)
+
+
+## Bloco 72: os decalques de cada nível (NivelMina.decalques) deitados na laje do andar (como a poça).
+func _build_decalques() -> void:
+	for n in Niveis.jogaveis():
+		for d in n.decalques:
+			if not (d is Array) or d.size() < 3:
+				continue
+			var path := "res://assets/game/iso/chao/%s.png" % String(d[0])
+			if not ResourceLoader.exists(path):
+				continue
+			var p := Vector2(float(d[1]), float(d[2]))
+			var laje: Sprite2D = null
+			for lv in _levels:
+				if (lv.rect as Rect2).grow(48.0).has_point(p):
+					laje = lv.sprite
+			if laje == null:
+				continue
+			var tela := to_screen(p)
+			var dec := Sprite2D.new()
+			dec.name = "Decalque_" + String(d[0])
+			dec.texture = load(path)
+			dec.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			dec.light_mask = 2
+			dec.position = (tela - laje.position).round()
+			laje.add_child(dec)
+			if String(d[0]).begins_with("rio_lava"):  # o rio brilha como lava (e pulsa com as outras)
+				var l := PointLight2D.new()
+				l.name = "DecalqueLuz_" + String(d[0])
+				IsoLuz.aplica(l, "lava")
+				l.energy = IsoLuz.TIPOS.lava.forca
+				l.texture_scale *= 1.6
+				l.range_item_cull_mask = LIGHT_ISO
+				l.range_z_min = RenderingServer.CANVAS_ITEM_Z_MIN
+				l.range_z_max = RenderingServer.CANVAS_ITEM_Z_MAX
+				l.position = tela
+				l.set_meta("tela_iso", true)
+				l.add_to_group("cullable_lights")
+				_terrain_node.add_child(l)
+				_luzes_zona.append([l, l.energy, randf() * TAU])
 
 
 ## y da reta (a, b) na coluna x (fora do trecho, prolonga a reta).

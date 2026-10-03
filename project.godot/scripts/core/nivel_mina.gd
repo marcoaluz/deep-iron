@@ -38,6 +38,9 @@ extends Resource
 ## Bloco 72: decoração SORTEADA por dados: [quantas, [props...]] — o ambiente espalha em lugar livre do
 ## nível (longe de jazida, poça, gaiola e uma da outra), com sorteio fixo por nível (a mesma em todo jogo).
 @export var decoracao_sorteada: Array = []
+## Bloco 72: decalques deitados no chão da laje (só visual): [imagem em assets/game/iso/chao, x, y]. Os de
+## nome "rio_lava*" brilham como lava.
+@export var decalques: Array = []
 ## Bloco 70: poças de perigo do chão (props/poca_perigo.gd): [tipo ("acido"/"lava"), x, y, raio].
 @export var perigos: Array = []
 ## Bloco 70: jazidas do nível: [minério, x, y] ou [minério, x, y, total, ritmo, regeneração].

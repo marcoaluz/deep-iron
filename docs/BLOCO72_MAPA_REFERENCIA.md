@@ -113,3 +113,58 @@ de qualquer lote.
    criaturas).
 
 Fora de escopo, como o prompt pede: gameplay, balanceamento, criaturas, Bloco 65 e a Rota A.
+
+---
+
+# Etapas 1 a 5 (feitas em 2026-10-03)
+
+Prancha antes × depois: `docs/arte/bloco72/comparativo_depois.jpg`. Fotos de depois:
+`docs/arte/bloco72/depois/` (as mesmas 12 vistas + a da espiral, com `medidas.txt`).
+
+| Etapa | O quê | Commit |
+|---|---|---|
+| 1. Densidade | 51 objetos prontos do Prompt 14 registrados; `decoracao_sorteada` por nível (S2–S5 com 24–28 peças a mais cada: escoras, barris, placas, sucata, vagonetes, máquinas velhas, casinhas e varais no S5); sucata em volta da boca da mina e da escavadeira; a pedreira do leste com 130 enfeites (era 70); enfeites em volta da vila antiga | `e89b6e67` |
+| 2. Atmosfera | S2 mais verde, S3 laranja (laje e névoa), S5 com névoa mais densa; poço de lava ilumina o chão em volta; lago mais brilhante; vapor onde há água e lava (S4) | `ac8178be` |
+| 3. Desempenho | fixas em 6 grupos (uma por quadro) em vez de varrer ~800 entidades todo quadro; as fixas de cada andar e do leste somem quando fora da tela; ordem de quem anda a cada 3 quadros com 30+; rajada de fixas refaz a ordem uma vez só (acabaram os 4 trancos do carregamento); bichos procuram ipezinho 5x/s | `172079ab` |
+| 4. **Mina contínua** (o pedido do Marco: "natural, não no vazio, tudo conectado") | o mapa inteiro é um **bloco de terra** (faces da frente com rocha em estratos); as **paredes de cada andar sobem até o de cima** — o vão entre as lajes virou um poço escavado; **escada em espiral** num poço próprio na terra, da superfície até o lago, com patamar, corrimão e lampião em cada andar; a mesma espiral no corte F2 | `f3a19d64` |
+| 5. Piloto de arte | faixas do S4 e do S5 pro corte F2 e uma peça de rio de lava (decalque no chão do S3 e do S4, por dados: `NivelMina.decalques`) — **esperando aprovação** | este commit |
+
+## Medidas depois (mesmas vistas do Passo 0)
+
+| Vista | antes | depois |
+|---|---|---|
+| vila cheia (40, noite, chuva, invasão) | 20,9 ms / 48 FPS, 8.416 nós | **20,2 ms / 50 FPS**, 9.519 nós |
+| S2 / S3 / S4 / S5 | 97 / 104 / 126 / 131 FPS | 89 / 81 / 95 / 114 FPS |
+| pilha inteira (zoom 0,1) | 52 FPS | 44 FPS |
+| superfície inteira | 69 FPS | 61 FPS |
+
+A vila cheia ficou melhor que antes do bloco, mesmo com ~1.100 nós a mais. Os andares custam um pouco
+mais (as paredes do poço são imagens maiores e há mais decoração), mas seguem acima de 80 FPS. Benchmark
+completo: `docs/bench/bench_2026-10-03_bloco72_{antes,depois}.txt` (a vila cheia ainda não chega a 60: o
+grosso é a vista iso sincronizando 40 bonecos e a HUD; o próximo passe seria o `IsoBonecos.pose`).
+
+## Piloto de arte (pra aprovar) — 29 gerações
+
+`docs/arte/bloco72/piloto/prancha_piloto.jpg` e as fotos no jogo (`no_jogo_corte_f2.jpg`, `no_jogo_s3_rio.jpg`).
+
+- **Faixa do S4** (cachoeira à esquerda, lava escorrendo e vapor à direita, cristais) e **faixa do S5**
+  (lago azul, gemas nas paredes, 2 casinhas): `create_image_pixen` 512×128, como as faixas do Prompt 25
+  (1 geração cada, 2 candidatas por faixa). Já estão no corte F2. A outra do S5 foi descartada (saiu um
+  "texto" no lago).
+- **Rio de lava**: `create_image_pro` com o poço de lava aprovado de referência; veio como placa de basalto
+  com o rio, então só o leito laranja foi recortado. No chão do S3 ele ficou **pequeno** (parece um
+  filete): no lote, a proposta é gerar peças maiores (~320 px) que liguem os poços, e lava escorrendo das
+  paredes.
+
+**Se aprovar**, o lote proposto (~150–200 gerações): rios de lava maiores (3–4 peças) pro S3 e S4, lava
+escorrendo de parede, 2–3 bocas de túnel com moldura de madeira pras paredes dos andares (como na
+referência) e um trecho de trilho com vagonete descendo a encosta pra boca da mina na superfície.
+
+## O que ainda difere da referência (e por quê)
+
+- A referência mostra **galerias com teto** em cada andar (a vista é um corte). No jogo, a câmera vê os
+  andares de cima, então o "teto" de cada um é o chão do de cima — é o mesmo empilhamento, visto de
+  outro ângulo.
+- Na vista bem afastada aparecem manchas ovais (a neblina do clima) fora do mapa: só no zoom de vista
+  geral, que o jogador não usa.
+

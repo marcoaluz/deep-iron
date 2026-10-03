@@ -1,0 +1,15 @@
+Deep Iron — capturas do Bloco 72 (2026-10-03T00:27:44), janela 1920x1080, vsync desligado
+vista                   ms méd    FPS    nós  draws  luzes partíc
+01_superficie_inteira    16.27     61   7669    632     49     32
+02_pilha_inteira         22.61     44   7663   1121     72     33
+03_vila_s1               10.19     98   7645     96     22     30
+04_encosta_boca_mina      9.02    111   7645     72     24     30
+05_leste_vila_antiga      8.40    119   7645     56     27     32
+06_s2_acido              11.28     89   7645    239     43     33
+07_s3_lava               12.38     81   7645    304     53     34
+08_s4_cachoeira          10.54     95   7645    202     39     31
+09_s5_lago                8.79    114   7645    109     30     30
+10_rampa_s4               7.66    131   7645     29     22     31
+10b_espiral               8.58    117   7645     41     27     32
+11_corte_f2              10.20     98   7645    411     27     32
+12_vila_cheia            20.19     50   9519    194     54     36
