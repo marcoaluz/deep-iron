@@ -47,7 +47,19 @@ blender/coluna_maquete.py`, Blender em `D:/Blender/blender.exe`, roda com `-b -P
 `docs/arte/bloco72/maquete/coluna_blender.png` e `comparativo_maquete.jpg`. Plano proposto: andares
 viram faixas (chão andável = polígono da faixa na lógica, conteúdo remapeado), arte de cada andar
 renderizada no Blender na câmera do jogo + detalhe/pixelização no PixelLab; vila: juntar terraços e
-recuar a paliçada. **Esperando o ok do Marco no plano.** O que ainda falta (lista em `docs/BLOCO72_MAPA_REFERENCIA.md`, fim):
+recuar a paliçada.
+
+**O Marco APROVOU a direção da maquete** ("aí sim o mapa tá ficando exatamente como a gente tá querendo")
+e pediu a superfície em 3 áreas: floresta | vila (só construção, mais espaço, sem jazida dentro) | uma
+área de MINA pequena: montanha com a boca da mina, os minérios iniciais nela; o mineiro muda de função e
+põe o minério num vagonete que corre no trilho, sozinho, da boca da mina até o armazém (que fica logo na
+frente). Os andares de baixo continuam como na maquete. **Maquete v2 feita** (`coluna_maquete.py`):
+`docs/arte/bloco72/maquete/coluna_v2.png`, `superficie_v2_legenda.jpg` (com nomes), `comparativo_v2.jpg`.
+Na v2 o poço do elevador foi pra X=34 e as salas acabam em X=31 (abre lugar pra mina à direita).
+Minérios na montanha: carvão, cobre e ferro (hoje as jazidas iniciais do jogo são cobre e carvão; o
+ferro está no leste) — confirmar com ele. **Esperando o ok do Marco na v2** pra começar a passar pro
+jogo (ordem proposta: vila/mina na superfície + vagonete; piloto do S3 jogável; os outros andares).
+O que ainda falta (lista em `docs/BLOCO72_MAPA_REFERENCIA.md`, fim):
 andares mais juntos (~24 degraus em vez de 36), faixa de galerias de madeira abaixo da superfície,
 detalhe nas paredes (lampiões, lava escorrendo, cachoeira descendo, cristais), coluna mais larga
 (escala 0,85?).

@@ -14,17 +14,17 @@ argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 SAIDA = argv[0] if argv else "//coluna_maquete.png"
 LARG_PX = int(argv[1]) if len(argv) > 1 else 1400
 
-POCO_X = 38.0                 # o poço do elevador
-ESP_X, ESP_R = 51.0, 7.0      # a espiral (centro e raio)
+POCO_X = 34.0                 # o poço do elevador
+ESP_X, ESP_R = 52.0, 7.0      # a espiral (centro e raio)
 FUNDO_Y = 44.0                # o fundo da rocha
-XE, XD = -52.0, 62.0          # a largura da rocha
+XE, XD = -52.0, 68.0          # a largura da rocha
 # nome, x0, x1 da sala, altura, profundidade do chão, recuo, cor da rocha, tipo
 ANDARES = [
-    ("galerias", -44, 34, 8.0, 12.0, 0.0, (0.30, 0.26, 0.22), None),
-    ("S2", -46, 35, 17.0, 26.0, 13.0, (0.20, 0.25, 0.15), "acido"),
-    ("S3", -40, 35, 18.0, 26.0, 13.0, (0.28, 0.13, 0.09), "lava"),
-    ("S4", -47, 35, 17.0, 26.0, 13.0, (0.18, 0.17, 0.20), "cachoeira"),
-    ("S5", -38, 35, 18.0, 26.0, 13.0, (0.14, 0.17, 0.22), "lago"),
+    ("galerias", -44, 30, 8.0, 12.0, 0.0, (0.30, 0.26, 0.22), None),
+    ("S2", -46, 31, 17.0, 26.0, 13.0, (0.20, 0.25, 0.15), "acido"),
+    ("S3", -40, 31, 18.0, 26.0, 13.0, (0.28, 0.13, 0.09), "lava"),
+    ("S4", -47, 31, 17.0, 26.0, 13.0, (0.18, 0.17, 0.20), "cachoeira"),
+    ("S5", -38, 31, 18.0, 26.0, 13.0, (0.14, 0.17, 0.22), "lago"),
 ]
 LAJE = 3.5
 rnd = random.Random(72)
@@ -238,7 +238,46 @@ fundo = prisma("fundo", perfil[::-1], frente - 0.5, FUNDO_Y, M_ROCHA)
 irregular(fundo, 2.0, 4.0, 99, sub=0.9)
 Z_FUNDO = Z_BASE - 19
 
-# ---------------------------------------------------------------- a superfície (floresta | vila e pedreira)
+# ---------------------------------------------------------------- a superfície: floresta | vila | mina
+# Marco (2026-10-03): três áreas — a floresta, a vila (onde constrói, sem jazida no meio) e a MINA: uma
+# montanha com a boca da mina, os minérios iniciais nela, um trilho com vagonete saindo da boca até o
+# armazém, que fica logo na frente. O resto (os andares) continua igual.
+VILA_X0 = -15.0               # a paliçada (floresta à esquerda)
+BOCA_X = 52.0                 # a boca da mina (na montanha, atrás à direita)
+M_ESTRADA = mat("estrada", (0.44, 0.35, 0.23), ruido=0.3, escala=1.2)
+M_CARVAO = mat("carvao", (0.04, 0.04, 0.05), rugoso=0.3, ruido=0.4, escala=3.0)
+M_COBRE = mat("cobre", (0.80, 0.40, 0.14), rugoso=0.35, ruido=0.25, escala=3.0)
+M_FERRO = mat("ferro", (0.55, 0.28, 0.22), rugoso=0.5, ruido=0.35, escala=3.0)
+M_TRILHO = mat("trilho", (0.40, 0.40, 0.44), rugoso=0.35)
+M_ESCURO = mat("escuro", (0.0, 0.0, 0.0))
+M_HORTA = mat("horta", (0.28, 0.46, 0.12), ruido=0.5, escala=2.5)
+M_MONTANHA = mat("montanha", (0.36, 0.30, 0.24), ruido=0.5, escala=0.6)
+M_PLACA = mat("placa", (0.80, 0.70, 0.45))
+M_BANDEIRA = mat("bandeira", (0.70, 0.15, 0.10))
+
+
+def vagonete(x, y, carga):
+    caixa("vagonete", x - 1.1, y - 0.8, 1.9, x + 1.1, y + 0.8, 3.1, M_MADEIRA)
+    for dx in (-0.7, 0.7):
+        for dy in (-0.8, 0.8):
+            bpy.ops.mesh.primitive_cylinder_add(vertices=10, radius=0.35, depth=0.2, location=(x + dx, y + dy, 1.85), rotation=(math.pi / 2, 0, 0))
+            bpy.context.object.data.materials.append(M_TRILHO)
+    for _ in range(9):
+        esfera(x + rnd.uniform(-0.8, 0.8), y + rnd.uniform(-0.5, 0.5), 3.1 + rnd.uniform(0, 0.4), rnd.uniform(0.3, 0.5), carga, 1)
+
+
+def telhado(x0, y0, x1, y1, z, h, m):
+    """Telhado de duas águas (cumeeira ao longo de x)."""
+    ym = (y0 + y1) / 2
+    prisma("telhado", [(y0 - 0.5, z), (y1 + 0.5, z), (ym, z + h)], x0 - 0.5, x1 + 0.5, m, eixo="x")
+
+
+def casa(x, y, w, d, h, m_parede=None):
+    caixa("casa", x, y, 1.4, x + w, y + d, 1.4 + h, m_parede or M_PAREDE)
+    telhado(x, y, x + w, y + d, 1.4 + h, 2.4, M_TELHA)
+    caixa("porta", x + w / 2 - 0.5, y - 0.05, 1.4, x + w / 2 + 0.5, y + 0.1, 3.2, M_MADEIRA)
+
+
 sup = []
 for i in range(41):
     x = XE + (XD - XE) * i / 40
@@ -246,25 +285,51 @@ for i in range(41):
 sup += [(XD, FUNDO_Y), (XE, FUNDO_Y)]
 terra = prisma("sup", sup, -0.2, 1.4, M_TERRA, eixo="z")
 irregular(terra, 0.8, 3.0, 50, sub=0.7)
-grama = prisma("grama", [(XE, 0.5), (-4, 0.6), (-1, FUNDO_Y), (XE, FUNDO_Y)], 1.2, 1.7, M_GRAMA, eixo="z")
+grama = prisma("grama", [(XE, 0.5), (VILA_X0 - 1.0, 0.6), (VILA_X0 - 1.0, FUNDO_Y), (XE, FUNDO_Y)], 1.2, 1.7, M_GRAMA, eixo="z")
 irregular(grama, 0.5, 2.0, 51, sub=0.6)
-for _ in range(90):  # a floresta à esquerda
-    x, y = rnd.uniform(XE + 1, -5), rnd.uniform(2, FUNDO_Y - 1)
-    if rnd.random() < 0.6:
-        h = rnd.uniform(5, 9)
-        cone(x, y, 1.6, rnd.uniform(1.4, 2.0), h, M_FOLHA)
+for _ in range(110):  # a floresta
+    x, y = rnd.uniform(XE + 1, VILA_X0 - 2.5), rnd.uniform(2, FUNDO_Y - 1)
+    if rnd.random() < 0.55:
+        cone(x, y, 1.6, rnd.uniform(1.3, 2.0), rnd.uniform(5, 9), M_FOLHA)
     else:
         caixa("tronco", x - 0.25, y - 0.25, 1.6, x + 0.25, y + 0.25, 4.5, M_MADEIRA)
         esfera(x, y, 5.5, rnd.uniform(1.8, 2.6), M_FOLHA2)
-for x, y, w, d, h in [(2, 9, 6, 5, 4), (11, 4, 5, 5, 3.5), (21, 12, 6, 5, 4.5), (6, 20, 5, 6, 4), (16, 24, 6, 5, 3.5), (27, 5, 5, 4, 3)]:
-    caixa("casa", x, y, 1.4, x + w, y + d, 1.4 + h, M_PAREDE)
-    t = cone(x + w / 2, y + d / 2, 1.4 + h, max(w, d) * 0.75, 3.0, M_TELHA, lados=4)
-    t.rotation_euler.z = math.pi / 4
-# a pedreira: um buraco em degraus atrás da vila
-for k in range(5):
-    pts = [(30 + 1.6 * k + 2.5 * math.cos(a) * (1 - k * 0.1) * 4.5, 30 + 1.0 * k + 2.0 * math.sin(a) * (1 - k * 0.12) * 4.5)
-           for a in [i * math.tau / 24 for i in range(24)]]
-    prisma("degrau", pts, 1.4 - k * 1.6 - 0.2, 1.45 - k * 1.6, M_TERRA if k % 2 else M_ROCHA, eixo="z")
+# a paliçada, com o portão
+y = 1.0
+while y < FUNDO_Y - 1:
+    if not 14.0 < y < 19.0:
+        bpy.ops.mesh.primitive_cylinder_add(vertices=8, radius=0.35, depth=3.0, location=(VILA_X0, y, 2.9))
+        bpy.context.object.data.materials.append(M_MADEIRA)
+        cone(VILA_X0, y, 4.4, 0.35, 0.8, M_MADEIRA, 8)
+    y += 0.75
+# a estrada: do portão, cruzando a vila, até o armazém
+prisma("estrada", [(VILA_X0, 14.5), (BOCA_X - 1, 14.5), (BOCA_X - 1, 18.5), (VILA_X0, 18.5)], 1.38, 1.47, M_ESTRADA, eixo="z")
+prisma("estrada2", [(1.0, 0.8), (4.0, 0.8), (4.0, 14.5), (1.0, 14.5)], 1.38, 1.47, M_ESTRADA, eixo="z")
+# a vila: Centro da Vila, igreja, casas, poço, horta — e lotes LIVRES marcados (espaço pra construir)
+caixa("centro", -3, 20, 1.4, 7, 27, 6.6, M_PAREDE)
+telhado(-3, 20, 7, 27, 6.6, 3.0, M_TELHA)
+caixa("porta", 1.3, 19.9, 1.4, 2.7, 20.1, 4.0, M_MADEIRA)
+bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=0.12, depth=6, location=(8, 21, 4.4))
+bpy.context.object.data.materials.append(M_MADEIRA)
+caixa("bandeira", 8, 20.9, 6.0, 10, 21.0, 7.2, M_BANDEIRA)
+caixa("igreja", 21, 30, 1.4, 27, 39, 6.4, M_PAREDE)
+telhado(21, 30, 27, 39, 6.4, 3.0, M_TELHA)
+caixa("torre", 22.5, 27.5, 1.4, 25.5, 30.5, 11.0, M_PAREDE)
+cone(24, 29, 11.0, 2.3, 4.0, M_TELHA, 4).rotation_euler.z = math.pi / 4
+for x, y, w, d in [(-12, 3, 4.5, 4), (-12, 33, 4.5, 4), (-6, 37, 4.5, 4), (12, 3, 4.5, 4), (20, 3, 4.5, 4), (-12, 24, 4.5, 4)]:
+    casa(x, y, w, d, 3.6)
+bpy.ops.mesh.primitive_cylinder_add(vertices=12, radius=0.9, depth=1.0, location=(9, 11, 1.9))  # o poço
+bpy.context.object.data.materials.append(M_ROCHA)
+for i in range(5):  # a horta
+    caixa("horta", -12, 9 + i * 0.9, 1.4, -4, 9.5 + i * 0.9, 1.75, M_HORTA)
+for x0, y0, w, d in [(10, 21, 7, 5), (11, 31, 7, 5), (-6, 29, 5, 5), (13, 8, 6, 4)]:  # lotes livres (estacas e corda)
+    for (px, py) in [(x0, y0), (x0 + w, y0), (x0, y0 + d), (x0 + w, y0 + d)]:
+        caixa("estaca", px - 0.12, py - 0.12, 1.4, px + 0.12, py + 0.12, 2.4, M_MADEIRA)
+    for a, b in [((x0, y0), (x0 + w, y0)), ((x0, y0 + d), (x0 + w, y0 + d))]:
+        caixa("corda", a[0], a[1] - 0.04, 2.2, b[0], a[1] + 0.04, 2.28, M_PLACA)
+    for a in [(x0, y0), (x0 + w, y0)]:
+        caixa("corda", a[0] - 0.04, a[1], 2.2, a[0] + 0.04, a[1] + d, 2.28, M_PLACA)
+
 # o castelete (torre do elevador) em cima do poço
 for dx in (-2.5, 2.5):
     for dy in (1.5, 6.5):
@@ -273,6 +338,82 @@ for z in (5, 9, 13):
     caixa("x", POCO_X - 2.8, 1.2, z, POCO_X + 2.8, 1.8, z + 0.4, M_MADEIRA)
 bpy.ops.mesh.primitive_cylinder_add(vertices=20, radius=2.2, depth=0.6, location=(POCO_X, 4, 16.5), rotation=(0, math.pi / 2, 0))
 bpy.context.object.data.materials.append(M_MADEIRA)
+
+# ---- a MINA: a montanha com a boca, os minérios, o trilho e o armazém na frente
+bm = bmesh.new()
+bmesh.ops.create_icosphere(bm, subdivisions=5, radius=1.0)
+for v in bm.verts:
+    v.co = Vector((BOCA_X + 1 + v.co.x * 14.0, 35 + v.co.y * 10.0, -1.0 + max(v.co.z, -0.2) * 21.0))
+mont = objeto("montanha", bm, M_MONTANHA)
+irregular(mont, 3.0, 3.5, 60)
+bpy.context.view_layer.update()
+
+
+def bate(origem, direcao):
+    ok, p, nrm, _ = mont.ray_cast(Vector(origem), Vector(direcao))
+    return (p, nrm) if ok else (None, None)
+
+
+yf = bate((BOCA_X, -10, 3.5), (0, 1, 0))[0].y  # a frente da montanha na altura da boca
+arco = [(BOCA_X - 2.6, 1.3), (BOCA_X + 2.6, 1.3)]
+for i in range(13):
+    a = i * math.pi / 12
+    arco.append((BOCA_X + 2.6 * math.cos(a), 4.6 + 2.2 * math.sin(a)))
+tunel = prisma("tunel", arco, yf - 4, yf + 16, M_MONTANHA)
+menos(mont, tunel)
+caixa("fundo_tunel", BOCA_X - 3, yf + 9, 1.3, BOCA_X + 3, yf + 9.5, 7.5, M_ESCURO)
+caixa("chao_tunel", BOCA_X - 2.6, yf - 1, 1.3, BOCA_X + 2.6, yf + 9, 1.45, M_TERRA)
+for dx in (-2.9, 2.9):  # a moldura de madeira da boca
+    caixa("moldura", BOCA_X + dx - 0.35, yf - 0.6, 1.4, BOCA_X + dx + 0.35, yf + 0.2, 7.2, M_MADEIRA)
+caixa("viga_boca", BOCA_X - 3.6, yf - 0.7, 7.0, BOCA_X + 3.6, yf + 0.3, 7.8, M_MADEIRA)
+caixa("placa", BOCA_X - 1.6, yf - 0.8, 7.9, BOCA_X + 1.6, yf - 0.6, 9.0, M_PLACA)
+luz(BOCA_X - 3.3, yf - 1.5, 6.0, 300, (1.0, 0.65, 0.3), 0.4)
+esfera(BOCA_X - 3.3, yf - 0.9, 6.2, 0.3, M_LUZ, 1)
+esfera(BOCA_X + 3.3, yf - 0.9, 6.2, 0.3, M_LUZ, 1)
+# os minérios iniciais na montanha (veios saindo da rocha): carvão à esquerda, cobre à direita, ferro em cima
+for m, (xa, xb), (za, zb), n in [(M_CARVAO, (BOCA_X - 11, BOCA_X - 4), (2.5, 8), 7), (M_COBRE, (BOCA_X + 4, BOCA_X + 10), (2.5, 8), 6),
+                                  (M_FERRO, (BOCA_X - 6, BOCA_X + 5), (10, 14), 5)]:
+    for _ in range(n):
+        p, nrm = bate((rnd.uniform(xa, xb), -10, rnd.uniform(za, zb)), (0, 1, 0))
+        if p is None:
+            continue
+        for _ in range(4):
+            q = p + Vector((rnd.uniform(-0.7, 0.7), rnd.uniform(-0.3, 0.2), rnd.uniform(-0.6, 0.6)))
+            o = cone(q.x, q.y, q.z - 0.4, rnd.uniform(0.35, 0.6), rnd.uniform(0.9, 1.6), m, 5)
+            o.rotation_euler = (rnd.uniform(-1.2, -0.4), rnd.uniform(-0.4, 0.4), 0)
+for _ in range(5):  # pinheiros no ombro da montanha
+    x = rnd.choice([rnd.uniform(BOCA_X - 12, BOCA_X - 7), rnd.uniform(BOCA_X + 6, BOCA_X + 10)])
+    p, _ = bate((x, rnd.uniform(28, 40), 60), (0, 0, -1))
+    if p is not None:
+        cone(p.x, p.y, p.z - 0.3, 1.2, rnd.uniform(4, 6), M_FOLHA)
+for _ in range(10):  # pedras soltas no pé da montanha
+    esfera(rnd.uniform(BOCA_X - 13, BOCA_X + 9), rnd.uniform(yf - 5, yf - 1), 1.6, rnd.uniform(0.5, 1.1), M_MONTANHA, 1)
+# o trilho: de dentro da mina até a plataforma do armazém
+Y_DOCA = 4.0
+y = Y_DOCA
+while y < yf + 8:
+    caixa("dormente", BOCA_X - 1.3, y - 0.2, 1.4, BOCA_X + 1.3, y + 0.2, 1.52, M_MADEIRA)
+    y += 0.9
+for dx in (-0.7, 0.7):
+    caixa("trilho", BOCA_X + dx - 0.1, Y_DOCA, 1.52, BOCA_X + dx + 0.1, yf + 8, 1.75, M_TRILHO)
+vagonete(BOCA_X, yf - 3.0, M_CARVAO)   # saindo da mina, cheio de carvão
+vagonete(BOCA_X, Y_DOCA + 1.5, M_COBRE)  # na plataforma do armazém
+# o armazém, logo na frente da boca, com a plataforma do lado do trilho
+AX0, AX1 = BOCA_X - 12.5, BOCA_X - 2.2
+caixa("armazem", AX0, 2.0, 1.4, AX1, 11.0, 5.6, M_MADEIRA)
+telhado(AX0, 2.0, AX1, 11.0, 5.6, 2.6, M_TELHA)
+caixa("portao", AX0 + 3, 1.9, 1.4, AX0 + 7, 2.05, 4.6, M_ESCURO)
+caixa("doca", AX1, 2.4, 1.4, AX1 + 1.2, 10.0, 2.2, M_MADEIRA)
+for m, x in [(M_CARVAO, AX0 + 1.0), (M_COBRE, AX0 + 8.2), (M_FERRO, AX0 + 10.0)]:  # montes de minério na frente
+    for _ in range(10):
+        esfera(x + rnd.uniform(-0.9, 0.9), 0.9 + rnd.uniform(-0.5, 0.5), 1.6 + rnd.uniform(0, 0.5), rnd.uniform(0.3, 0.55), m, 1)
+for x in (AX0 + 0.5, AX1 - 0.5):  # caixotes
+    caixa("caixote", x - 0.5, 0.2, 1.4, x + 0.5, 1.2, 2.4, M_MADEIRA)
+# a boca da escada em espiral (que desce pelos andares), do lado da mina
+caixa("escada_boca", ESP_X + ESP_R - 1.5, 1.0, 1.4, ESP_X + ESP_R + 2.5, 5.0, 1.5, M_ESCURO)
+for (px, py) in [(ESP_X + ESP_R - 1.5, 1.0), (ESP_X + ESP_R + 2.5, 1.0), (ESP_X + ESP_R - 1.5, 5.0), (ESP_X + ESP_R + 2.5, 5.0)]:
+    caixa("poste_escada", px - 0.2, py - 0.2, 1.4, px + 0.2, py + 0.2, 4.6, M_MADEIRA)
+telhado(ESP_X + ESP_R - 1.9, 0.6, ESP_X + ESP_R + 2.9, 5.4, 4.6, 1.4, M_MADEIRA)
 
 # ---------------------------------------------------------------- o poço do elevador (torre de madeira até o fundo)
 for nome, x0, x1, chao, fr, prof, alt, tipo in salas:
@@ -330,7 +471,7 @@ for k in range(0, N, 35):  # o corrimão
 bpy.ops.mesh.primitive_cylinder_add(vertices=16, radius=ESP_R - 3.0, depth=1, location=(0, 0, 0))
 miolo = bpy.context.object
 bm = bmesh.new()
-cima = [bm.verts.new((ESP_X + 1.0 * math.cos(a), cy0 + 1.0 * math.sin(a), z0 + 2)) for a in [k * math.tau / 16 for k in range(16)]]
+cima = [bm.verts.new((ESP_X + 1.0 * math.cos(a), cy0 + 1.0 * math.sin(a), z0 - 0.5)) for a in [k * math.tau / 16 for k in range(16)]]
 baixo = [bm.verts.new((ESP_X + 1.0 * math.cos(a), cy1 + 1.0 * math.sin(a), z1 - 2)) for a in [k * math.tau / 16 for k in range(16)]]
 bm.faces.new(cima)
 bm.faces.new(baixo[::-1])
@@ -432,7 +573,7 @@ cena.camera = cam
 cam.rotation_euler = (math.radians(60), 0, 0)   # 30° de cima, olhando pra +Y (a frente das faixas é horizontal)
 xs = (XE - 3, XD + 3)
 up_lo = 0.866 * (Z_FUNDO - 2) + 0.5 * salas[-1][4]
-up_hi = 0.866 * 18 + 0.5 * FUNDO_Y
+up_hi = 0.866 * 25 + 0.5 * FUNDO_Y
 larg = xs[1] - xs[0]
 alt_tela = up_hi - up_lo
 fw = Vector((0, math.sin(math.radians(60)), -math.cos(math.radians(60))))
@@ -447,7 +588,7 @@ if len(argv) > 4:  # um recorte do tamanho da tela do jogo: <x do centro> <altur
     cx, cu, esc = float(argv[2]), float(argv[3]), float(argv[4])
     cam.location = Vector((cx, 0, 0)) + upv * cu - fw * 300
     cam_d.ortho_scale = esc
-    cena.render.resolution_x, cena.render.resolution_y = 1280, 720
+    cena.render.resolution_x, cena.render.resolution_y = LARG_PX, LARG_PX * 9 // 16
 cena.render.engine = "BLENDER_EEVEE"
 cena.eevee.use_shadows = True
 cena.view_settings.view_transform = "AgX"
