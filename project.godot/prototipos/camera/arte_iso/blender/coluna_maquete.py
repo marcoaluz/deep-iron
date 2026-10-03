@@ -247,7 +247,6 @@ BOCA_X = 52.0                 # a boca da mina (na montanha, atrás à direita)
 M_ESTRADA = mat("estrada", (0.44, 0.35, 0.23), ruido=0.3, escala=1.2)
 M_CARVAO = mat("carvao", (0.04, 0.04, 0.05), rugoso=0.3, ruido=0.4, escala=3.0)
 M_COBRE = mat("cobre", (0.80, 0.40, 0.14), rugoso=0.35, ruido=0.25, escala=3.0)
-M_FERRO = mat("ferro", (0.55, 0.28, 0.22), rugoso=0.5, ruido=0.35, escala=3.0)
 M_TRILHO = mat("trilho", (0.40, 0.40, 0.44), rugoso=0.35)
 M_ESCURO = mat("escuro", (0.0, 0.0, 0.0))
 M_HORTA = mat("horta", (0.28, 0.46, 0.12), ruido=0.5, escala=2.5)
@@ -339,40 +338,120 @@ for z in (5, 9, 13):
 bpy.ops.mesh.primitive_cylinder_add(vertices=20, radius=2.2, depth=0.6, location=(POCO_X, 4, 16.5), rotation=(0, math.pi / 2, 0))
 bpy.context.object.data.materials.append(M_MADEIRA)
 
-# ---- a MINA: a montanha com a boca, os minérios, o trilho e o armazém na frente
-bm = bmesh.new()
-bmesh.ops.create_icosphere(bm, subdivisions=5, radius=1.0)
-for v in bm.verts:
-    v.co = Vector((BOCA_X + 1 + v.co.x * 14.0, 35 + v.co.y * 10.0, -1.0 + max(v.co.z, -0.2) * 21.0))
-mont = objeto("montanha", bm, M_MONTANHA)
-irregular(mont, 3.0, 3.5, 60)
+# ---- a MINA: um paredão de pedra em degraus (como a referência), com a boca principal embaixo, mais duas
+# aberturas nos degraus de cima, escadas de madeira, andaime, guindaste, casinha de pedra; os minérios
+# iniciais (carvão e cobre) nos veios do paredão; o trilho com vagonete até o armazém na frente.
+def degrau_rocha(nome, x0, x1, y_frente, topo, semente):
+    pts = []
+    for i in range(33):  # a frente (ondulada), da esquerda pra direita
+        x = x0 + (x1 - x0) * i / 32
+        pts.append((x, y_frente + ondula(x, semente, 2.2, 0.35)))
+    pts += [(x1 + 1.0, FUNDO_Y), (x0 - 1.0, FUNDO_Y)]
+    ob = prisma(nome, pts, -1.0, topo, M_MONTANHA, eixo="z")
+    irregular(ob, 1.6, 2.2, semente, sub=0.6)
+    return ob
+
+
+DEGRAUS = [degrau_rocha("degrau1", 39.0, 68.0, 22.0, 8.0, 61), degrau_rocha("degrau2", 42.0, 67.5, 29.0, 14.0, 62),
+           degrau_rocha("degrau3", 46.0, 66.0, 36.0, 20.0, 63)]
 bpy.context.view_layer.update()
 
 
 def bate(origem, direcao):
-    ok, p, nrm, _ = mont.ray_cast(Vector(origem), Vector(direcao))
-    return (p, nrm) if ok else (None, None)
+    melhor = (None, None)
+    dist = 1e9
+    for ob in DEGRAUS:
+        ok, p, nrm, _ = ob.ray_cast(Vector(origem), Vector(direcao))
+        if ok and (p - Vector(origem)).length < dist:
+            dist = (p - Vector(origem)).length
+            melhor = (p, nrm)
+    return melhor
 
 
-yf = bate((BOCA_X, -10, 3.5), (0, 1, 0))[0].y  # a frente da montanha na altura da boca
-arco = [(BOCA_X - 2.6, 1.3), (BOCA_X + 2.6, 1.3)]
-for i in range(13):
-    a = i * math.pi / 12
-    arco.append((BOCA_X + 2.6 * math.cos(a), 4.6 + 2.2 * math.sin(a)))
-tunel = prisma("tunel", arco, yf - 4, yf + 16, M_MONTANHA)
-menos(mont, tunel)
-caixa("fundo_tunel", BOCA_X - 3, yf + 9, 1.3, BOCA_X + 3, yf + 9.5, 7.5, M_ESCURO)
-caixa("chao_tunel", BOCA_X - 2.6, yf - 1, 1.3, BOCA_X + 2.6, yf + 9, 1.45, M_TERRA)
-for dx in (-2.9, 2.9):  # a moldura de madeira da boca
-    caixa("moldura", BOCA_X + dx - 0.35, yf - 0.6, 1.4, BOCA_X + dx + 0.35, yf + 0.2, 7.2, M_MADEIRA)
-caixa("viga_boca", BOCA_X - 3.6, yf - 0.7, 7.0, BOCA_X + 3.6, yf + 0.3, 7.8, M_MADEIRA)
-caixa("placa", BOCA_X - 1.6, yf - 0.8, 7.9, BOCA_X + 1.6, yf - 0.6, 9.0, M_PLACA)
-luz(BOCA_X - 3.3, yf - 1.5, 6.0, 300, (1.0, 0.65, 0.3), 0.4)
-esfera(BOCA_X - 3.3, yf - 0.9, 6.2, 0.3, M_LUZ, 1)
-esfera(BOCA_X + 3.3, yf - 0.9, 6.2, 0.3, M_LUZ, 1)
-# os minérios iniciais na montanha (veios saindo da rocha): carvão à esquerda, cobre à direita, ferro em cima
-for m, (xa, xb), (za, zb), n in [(M_CARVAO, (BOCA_X - 11, BOCA_X - 4), (2.5, 8), 7), (M_COBRE, (BOCA_X + 4, BOCA_X + 10), (2.5, 8), 6),
-                                  (M_FERRO, (BOCA_X - 6, BOCA_X + 5), (10, 14), 5)]:
+def abertura(x, z0, larg, alt, y_face, fundo=12.0):
+    """Corta uma boca em arco em todos os degraus e põe a moldura de madeira e os lampiões."""
+    arco = [(x - larg / 2, z0 - 0.1), (x + larg / 2, z0 - 0.1)]
+    for i in range(13):
+        a = i * math.pi / 12
+        arco.append((x + larg / 2 * math.cos(a), z0 + alt - larg / 2 * 0.85 + larg / 2 * 0.85 * math.sin(a)))
+    for ob in DEGRAUS:
+        menos(ob, prisma("corte", arco, y_face - 4, y_face + fundo, M_MONTANHA))
+    caixa("fundo_boca", x - larg / 2 - 0.3, y_face + fundo - 3, z0 - 0.1, x + larg / 2 + 0.3, y_face + fundo - 2.5, z0 + alt + 0.5, M_ESCURO)
+    for dx in (-larg / 2 - 0.3, larg / 2 + 0.3):
+        caixa("moldura", x + dx - 0.3, y_face - 0.6, z0, x + dx + 0.3, y_face + 0.2, z0 + alt, M_MADEIRA)
+    caixa("viga", x - larg / 2 - 0.9, y_face - 0.7, z0 + alt - 0.2, x + larg / 2 + 0.9, y_face + 0.3, z0 + alt + 0.6, M_MADEIRA)
+    for dx in (-larg / 2 - 0.8, larg / 2 + 0.8):
+        esfera(x + dx, y_face - 0.9, z0 + alt - 1.0, 0.28, M_LUZ, 1)
+    luz(x, y_face - 2.0, z0 + alt - 1.0, 250, (1.0, 0.65, 0.3), 0.4)
+
+
+def escada(xa, ya, za, xb, yb, zb, larg=1.4):
+    """Escada de madeira reta de (a) até (b), com degraus e corrimão."""
+    n = max(4, int(abs(zb - za) / 0.55))
+    for i in range(n):
+        t = i / n
+        x, y, z = xa + (xb - xa) * t, ya + (yb - ya) * t, za + (zb - za) * t
+        caixa("degrau_esc", x - larg / 2, y - 0.35, z - 0.12, x + larg / 2, y + 0.35, z + 0.12, M_MADEIRA)
+        if i % 3 == 0:
+            caixa("corrimao", x + larg / 2 - 0.1, y - 0.1, z, x + larg / 2 + 0.1, y + 0.1, z + 1.3, M_MADEIRA)
+    for i in range(0, n, 2):  # os pés da escada
+        t = i / n
+        x, y, z = xa + (xb - xa) * t, ya + (yb - ya) * t, za + (zb - za) * t
+        caixa("pe", x - 0.12, y - 0.12, min(za, zb), x + 0.12, y + 0.12, z, M_MADEIRA)
+
+
+# a boca principal, no pé do paredão
+yf = bate((BOCA_X, -10, 3.5), (0, 1, 0))[0].y
+abertura(BOCA_X, 1.4, 5.2, 6.0, yf, 16.0)
+caixa("chao_tunel", BOCA_X - 2.6, yf - 1, 1.3, BOCA_X + 2.6, yf + 12, 1.45, M_TERRA)
+caixa("placa", BOCA_X - 1.6, yf - 0.8, 7.7, BOCA_X + 1.6, yf - 0.6, 8.8, M_PLACA)
+# a segunda abertura, no degrau do meio (à direita), com plataforma, trilho curto e um vagonete
+x2 = 61.5
+y2 = bate((x2, -10, 11.5), (0, 1, 0))[0].y
+z2 = bate((x2, y2 - 1.8, 40), (0, 0, -1))[0].z
+abertura(x2, z2, 3.4, 4.2, y2)
+caixa("plataforma2", x2 - 3.2, y2 - 3.2, z2 - 0.4, x2 + 3.2, y2 - 0.2, z2, M_MADEIRA)
+for dx in (-3.0, 3.0):
+    caixa("pe_plat", x2 + dx - 0.2, y2 - 3.1, 1.4, x2 + dx + 0.2, y2 - 2.7, z2, M_MADEIRA)
+vagonete(x2 - 1.0, y2 - 1.7, M_COBRE)
+# a terceira, pequena, lá em cima (à esquerda)
+x3 = 50.0
+y3 = bate((x3, -10, 17.0), (0, 1, 0))[0].y
+z3 = bate((x3, y3 - 1.5, 60), (0, 0, -1))[0].z
+abertura(x3, z3, 2.6, 3.4, y3)
+# escadas de madeira subindo o paredão
+p1 = bate((44.0, -10, 4.0), (0, 1, 0))[0]
+t1 = bate((47.5, p1.y + 2.5, 40), (0, 0, -1))[0]
+escada(42.5, p1.y - 1.2, 1.4, 47.5, p1.y - 1.2, t1.z)
+p2 = bate((64.0, -10, 11.0), (0, 1, 0))[0]
+t2 = bate((66.0, p2.y + 2.5, 40), (0, 0, -1))[0]
+escada(60.0, p2.y - 1.6, z2, 65.5, p2.y - 1.6, t2.z)
+# andaime encostado no degrau do meio (à esquerda)
+pa = bate((45.5, -10, 11.0), (0, 1, 0))[0]
+for x in (43.5, 45.5, 47.5):
+    caixa("andaime_poste", x - 0.12, pa.y - 1.6, 7.5, x + 0.12, pa.y - 1.4, 14.5, M_MADEIRA)
+for z in (9.5, 12.0, 14.3):
+    caixa("andaime_tabua", 43.2, pa.y - 1.9, z, 47.8, pa.y - 0.9, z + 0.18, M_MADEIRA)
+    caixa("andaime_trave", 43.2, pa.y - 1.6, z + 1.0, 47.8, pa.y - 1.5, z + 1.12, M_MADEIRA)
+# o guindaste no degrau do meio
+gx, gy = 55.5, 31.5
+gz = bate((gx, gy, 60), (0, 0, -1))[0].z
+caixa("mastro", gx - 0.25, gy - 0.25, gz, gx + 0.25, gy + 0.25, gz + 8.0, M_MADEIRA)
+bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=0.18, depth=8.5, location=(gx - 3.0, gy - 1.2, gz + 6.2), rotation=(0.15, -1.05, 0))
+bpy.context.object.data.materials.append(M_MADEIRA)
+caixa("corda", gx - 6.6, gy - 1.6, gz - 1.5, gx - 6.5, gy - 1.5, gz + 4.2, M_PLACA)
+caixa("balde", gx - 7.2, gy - 2.2, gz - 2.4, gx - 5.9, gy - 0.9, gz - 1.4, M_MADEIRA)
+for dx, dy in [(-1.0, -1.0), (1.0, -1.0), (0, 1.2)]:
+    caixa("escora_g", gx + dx - 0.15, gy + dy - 0.15, gz, gx + dx + 0.15, gy + dy + 0.15, gz + 1.6, M_MADEIRA)
+# casinha de pedra no degrau de baixo (à direita)
+hx, hy = 65.0, yf + 1.5
+hz = bate((hx, hy + 2.0, 60), (0, 0, -1))[0].z
+caixa("casinha", hx - 2.0, hy, hz, hx + 2.0, hy + 3.2, hz + 3.0, M_PAREDE)
+telhado(hx - 2.0, hy, hx + 2.0, hy + 3.2, hz + 3.0, 1.6, M_TELHA)
+caixa("porta_c", hx - 0.5, hy - 0.05, hz, hx + 0.5, hy + 0.1, hz + 1.8, M_MADEIRA)
+# os minérios iniciais: carvão à esquerda da boca, cobre à direita e em volta da segunda abertura
+for m, (xa, xb), (za, zb), n in [(M_CARVAO, (BOCA_X - 11, BOCA_X - 4), (2.5, 7), 8), (M_COBRE, (BOCA_X + 4, BOCA_X + 10), (2.5, 7), 6),
+                                  (M_COBRE, (x2 - 5, x2 + 4), (z2 + 1, z2 + 4), 4)]:
     for _ in range(n):
         p, nrm = bate((rnd.uniform(xa, xb), -10, rnd.uniform(za, zb)), (0, 1, 0))
         if p is None:
@@ -381,13 +460,15 @@ for m, (xa, xb), (za, zb), n in [(M_CARVAO, (BOCA_X - 11, BOCA_X - 4), (2.5, 8),
             q = p + Vector((rnd.uniform(-0.7, 0.7), rnd.uniform(-0.3, 0.2), rnd.uniform(-0.6, 0.6)))
             o = cone(q.x, q.y, q.z - 0.4, rnd.uniform(0.35, 0.6), rnd.uniform(0.9, 1.6), m, 5)
             o.rotation_euler = (rnd.uniform(-1.2, -0.4), rnd.uniform(-0.4, 0.4), 0)
-for _ in range(5):  # pinheiros no ombro da montanha
-    x = rnd.choice([rnd.uniform(BOCA_X - 12, BOCA_X - 7), rnd.uniform(BOCA_X + 6, BOCA_X + 10)])
-    p, _ = bate((x, rnd.uniform(28, 40), 60), (0, 0, -1))
+for _ in range(9):  # pinheiros nos degraus de cima
+    x = rnd.uniform(47, 66)
+    p, _ = bate((x, rnd.uniform(37, 43), 60), (0, 0, -1))
     if p is not None:
-        cone(p.x, p.y, p.z - 0.3, 1.2, rnd.uniform(4, 6), M_FOLHA)
-for _ in range(10):  # pedras soltas no pé da montanha
-    esfera(rnd.uniform(BOCA_X - 13, BOCA_X + 9), rnd.uniform(yf - 5, yf - 1), 1.6, rnd.uniform(0.5, 1.1), M_MONTANHA, 1)
+        cone(p.x, p.y, p.z - 0.3, 1.1, rnd.uniform(3.5, 5.5), M_FOLHA)
+for _ in range(14):  # pedras soltas e entulho no pé do paredão
+    esfera(rnd.uniform(BOCA_X - 13, BOCA_X + 14), rnd.uniform(yf - 5, yf - 0.5), 1.5, rnd.uniform(0.4, 1.0), M_MONTANHA, 1)
+for k in range(4):  # madeira empilhada
+    caixa("tora", 41.0, yf - 4.0 + k * 0.05, 1.4 + k * 0.45, 45.0, yf - 3.0, 1.85 + k * 0.45, M_MADEIRA)
 # o trilho: de dentro da mina até a plataforma do armazém
 Y_DOCA = 4.0
 y = Y_DOCA
@@ -404,7 +485,7 @@ caixa("armazem", AX0, 2.0, 1.4, AX1, 11.0, 5.6, M_MADEIRA)
 telhado(AX0, 2.0, AX1, 11.0, 5.6, 2.6, M_TELHA)
 caixa("portao", AX0 + 3, 1.9, 1.4, AX0 + 7, 2.05, 4.6, M_ESCURO)
 caixa("doca", AX1, 2.4, 1.4, AX1 + 1.2, 10.0, 2.2, M_MADEIRA)
-for m, x in [(M_CARVAO, AX0 + 1.0), (M_COBRE, AX0 + 8.2), (M_FERRO, AX0 + 10.0)]:  # montes de minério na frente
+for m, x in [(M_CARVAO, AX0 + 1.0), (M_COBRE, AX0 + 9.0)]:  # montes de minério na frente (Marco: só carvão e cobre)
     for _ in range(10):
         esfera(x + rnd.uniform(-0.9, 0.9), 0.9 + rnd.uniform(-0.5, 0.5), 1.6 + rnd.uniform(0, 0.5), rnd.uniform(0.3, 0.55), m, 1)
 for x in (AX0 + 0.5, AX1 - 0.5):  # caixotes
