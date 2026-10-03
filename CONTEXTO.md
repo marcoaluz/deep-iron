@@ -1,121 +1,111 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-02 (noite). Branch `isometrico`. **Em andamento: `deep-iron-prompts-melhorias.md`
-(Blocos 49–71 + itens de arte)** — o Marco pediu pra aplicar TUDO do documento (inclusive os blocos de
-arte: PixelLab tier 3, ~10k créditos), um commit por bloco (`bloco-NN: ...`), sem checkpoint.
+Atualizado em 2026-10-03 (madrugada). Branch `isometrico`. O remoto está em `875ae827`: os commits do
+Bloco 72 abaixo ainda NÃO foram enviados (push só com ok do Marco).
 
-**Feitos e commitados:** 49 (saúde do repo/LFS), 50 (export/build/run_tests), 51 (vigia do
-engenheiro), 52 (debug F3/telemetria/BALANCEAMENTO.md), 53 (desempenho; docs/DESEMPENHO.md), 54
-(configurações, teclas, idioma, rolagem das janelas), 55 (áudio; docs/AUDIO.md), 56 (casas nível
-2/3), 57 (coletor de minério), 58 (Oficina construível), 60 (dinamite e rádio), 61 (fauna), 62
-(tiers + chefe Matriarca, arte nova), 63 (corte da mina), 64 (trilho e vagonete), 67 (mapa ~2,9x pro
-leste, trancado até desbravar), 68 (níveis por dados `data/niveis/*.tres` + gaiola com tempo/lotação),
-69 (camadas `docs/arte/CAMADAS.md` + atmosfera por nível; `0cee8431`), 70 (S2 ácido / S3 lava: poças,
-cristal verde/rubro, ventilador, Gosma e Magmante — `docs/NIVEIS_S2_S3.md`; `d1ff09b0`, `8cb96ab3`),
-71 (S4 cachoeira / S5 lago jogáveis por dados, plataformas em cadeia, gema azul — `docs/NIVEIS_S4_S5.md`;
-`d1a32f6d`).
-**59:** já feito antes (Rota A). **65/66:** só relatório (65 espera decisão do Marco sobre crianças;
-66 adiado pelo próprio documento).
-**Itens de arte novos:** feitos (`e4d775c8`). **Fechamento:** suíte 65 testes (64 + o `p20` corrigido),
-save real intacto (md5 `76C7403D…`), build + fumaça OK, vila cheia 21,75 ms / 46 FPS. Relatório final:
-`docs/RELATORIO_MELHORIAS_49_71.md` (tem o que espera decisão do Marco: Bloco 65 crianças, revisão da
-arte nova, balanceamento). **O documento de melhorias está concluído.**
-PixelLab: tier 3, saldo 9.320 (renova 2026-11-02). Ajudantes: `tools/pixellab/` (`pl.py`, `gen.py`,
-`chars.py`); arte do 70/71 em `prototipos/camera/arte_iso/fundo70`, `fundo71`, `relevo/fundo71.py`,
-`criaturas/fundo.py`. **Cuidado ao rodar `integra.py`:** ele regrava todos os PNGs (pixels iguais, bytes
-diferentes) e o LFS marca como alterados; depois de conferir, limpe o índice com
-`git -c filter.lfs.process= -c filter.lfs.clean=cat -c filter.lfs.smudge=cat -c filter.lfs.required=false update-index --refresh`.
-Cada bloco tem teste em `tests/blocos/bNN_*.gd` (registrado no test_blocos.gd) e linha no TESTING.md.
-Skills do projeto: 21 em `.claude/skills/` (godot-*, game-feel, create-game-assets...), carregam sozinhas.
-Medida mais recente (vila cheia, `tools/bench_cena.ps1 -Rapido`): 19,9 ms / 50 FPS.
+## AGORA: Bloco 72 — o mapa do jogo igual à referência (em andamento)
 
-Isso existe porque estamos trocando entre duas contas do Claude Code
-(`marco.luz1994@gmail.com` e `marcoa.luz@hotmail.com`, essa segunda via
-`claude-luz` com `CLAUDE_CONFIG_DIR` próprio) quando uma bate o limite de uso.
-O código fica na pasta, mas a conversa de cada sessão não passa de uma pra
-outra — este arquivo é o resumo pra colar/apontar na sessão nova.
+Prompt: `Claude outputs/prompt_bloco72_mapa_vs_referencia.md`. Referência:
+`docs/arte/referencia_mapa_mundo.jpg`. Relatório: `docs/BLOCO72_MAPA_REFERENCIA.md`.
 
-## Onde estão os arquivos do pacote de prompts (arte)
+**O que o Marco quer (palavras dele, 2026-10-03):** o mapa do JOGO (não só uma imagem) com a mesma
+estrutura da referência, em escala maior pra jogar: em cima a floresta e a pedreira/vila; a mina descendo
+de verdade; cada nível UM EMBAIXO DO OUTRO, DEBAIXO DA VILA (não lá no canto do mapa); forma orgânica de
+caverna (nada de quadrado/reto); escada em espiral + elevador + andaimes ligando os níveis. Ele rejeitou a
+etapa 4 (lajes retangulares dentro de um bloco de terra reto, com a coluna na ponta leste do mapa).
+**Decisões dele (perguntadas):** modelo = imagem B do PixelLab (`docs/arte/bloco72/mapa_pixellab/quadrado.png`);
+fazer AS DUAS coisas (a imagem como mapa do mundo F2 + reconstruir os andares no jogo nesse formato);
+andares mais compactos (~25% menores por lado), mantendo todas as jazidas. Memória:
+`project_bloco72_coluna.md`.
 
-- `docs/arte/CONTRATO_ARTE.md` — regras fixas de estilo/arte (ler antes de
-  aplicar qualquer prompt de arte).
-- `docs/arte/INVENTARIO.md` — o que já foi gerado no PixelLab, saldo de
-  gerações restante, e a ordem/estimativa dos prompts que faltam.
-- `docs/arte/MAPA_VISAO.md` — visão do mapa (floresta → portão quebrado →
-  vila da pedreira → boca da mina → torre de perfuração/elevadores).
-- `docs/arte/promptNN/` (01 a 31) — uma pasta por prompt de arte
-  já feito, com o relatório (`PROMPT_NN_*.md`) e as imagens geradas.
-- `docs/Prompt/deep_iron_prompts_arte_completa.md` — o texto original de cada prompt (0–31).
-- Os prompts de arte são numerados e aplicados **um de cada vez**, com pausa
-  pra revisão do Marco antes do próximo (preferência registrada em memória).
+**Commits do Bloco 72:**
+- `1a90cd90` passo 0: auditoria, fotos em `docs/arte/bloco72/antes/`. `tests/capturas_bloco72.gd` tira
+  fotos + medidas de 13 vistas (rodar COM janela e APPDATA isolado: `-- <pasta de saída>`).
+- `e89b6e67` (1) densidade: 51 objetos do Prompt 14 registrados; `NivelMina.decoracao_sorteada`.
+- `ac8178be` (2) atmosfera por andar. `172079ab` (3) desempenho (vila cheia ~50 FPS).
+- `f3a19d64` (4) terra + paredes subindo + espiral. **Rejeitado na forma** pelo Marco: a ideia das paredes
+  subindo e da espiral continua; mudam o lugar (debaixo da vila) e o formato (caverna orgânica).
+- `e394ccdd` (5) piloto: faixas S4/S5 do corte + rio de lava (`NivelMina.decalques`). Ficou sem aprovação
+  formal (o Marco passou direto pra estrutura).
+- `9cb3b514` teste do PixelLab: 2 versões do mapa da referência no estilo do jogo (80 gerações).
+- `515b5bfa` **mapa do mundo (F2) = a imagem B** (`assets/game/ui/corte/mapa_mundo.png`;
+  `NivelMina.mapa_regiao` = região de cada nível na imagem; lista dos andares ao lado; b63/p20 passam).
 
-## Onde estamos
+**PRÓXIMO — etapa 2 da revisão: reconstruir os andares NA VISTA DO JOGO (nada começado no código).**
+Plano já calculado. Só a vista muda: a lógica dos andares continua em retângulos (deep_rect, abyss_rect,
+`rect` do .tres), então os saves continuam valendo.
+1. `prototipos/camera/arte_iso/mapa/andares.py` (gera `assets/game/iso/mapa/andar_*.png` + `andares.json`):
+   trocar o ancoramento no "canto da frente do mapa" por:
+   - escala `K = 0.75` em cada andar (px de arte por px da lógica = 1,5 x K);
+   - a beira da frente do andar (v=+1) na face sul do mapa: `FACE_AY = OY + NJ*T = 648` (arte), então
+     `centro_ay = 648 - hh` (hw, hh = meia largura/altura do andar em arte);
+   - a gaiola de cada andar (posição normalizada u=0.86, v=-0.80) na MESMA vertical da torre do elevador
+     da superfície (elevador em (580,320) da lógica → `ax - ay = 390` em arte), então
+     `centro_ax = centro_ay + 390 - (u*hw - v*hh)`. Assim a coluna fica entre a escavadeira e o elevador,
+     debaixo da vila, e não sobrepõe a superfície na tela (conferido nas contas);
+   - profundidade (degraus k): nível2 -32, abismo -68, s4 -104, s5 -140 (36 degraus entre andares);
+   - chão ORGÂNICO: superelipse p=4 com ruído no raio (R ~0,86..0,94), unida a um círculo em volta da
+     gaiola. Ladrilho dentro = chão (zonas, água, ácido como hoje, pela lógica nova). Fora e "atrás"
+     (u+v<0.2, numa faixa de ~0,25 além da borda; nada no canto da gaiola u>0.75,v<-0.55) = coluna de
+     rocha subindo até a laje do andar de cima (`kc_acima - laje`); o nível2 sobe até a borda de baixo da
+     superfície (o recorte de hoje, `borda_de_baixo(x, 0, 0, SUP_KB)`). Fora e na frente = vazio. Chão
+     com vizinho da frente vazio ganha a laje embaixo;
+   - escrever no json por andar: `centro_arte`, `k`, `contorno` (polígono da caverna na LÓGICA, ~48
+     pontos), além de img/tela/rect/z_chao/caixa/z.
+2. `scripts/core/environment.gd`: `view_ground` = `(pos - rect.center)*f*k + centro_arte`;
+   `logic_from_view` = o inverso; navegação dos andares pelo `contorno` (não mais o retângulo);
+   `_deep_spot_free` e a decoração só dentro do contorno; sem as pedras da borda do retângulo
+   (`_build_deep`, `_build_abyss`) no mapa novo.
+3. `scripts/iso/iso_view.gd`: `art_rect` dos andares e o decalque `ChaoDoJogo` com escala `S*k`. Refazer
+   `_build_terra` (hoje 2 placas retas, TerraSO/TerraSE): faixa fina de terra nas faces + um corpo de terra
+   orgânico em volta da coluna, afinando no fundo (como a imagem B).
+4. Posições na lógica pra alinhar o poço (cena `scenes/game/main.tscn` e os `.tres`):
+   Elevador.bottom (482,762); ElevadorAbismo pos (381,917) bottom (413,1476); S4 `ligacao_topo` (298,1644)
+   `ligacao_fundo` (378,2172); S5 topo (299,2302) fundo (344,2808). Mover a decoração que conflitar
+   (S4 `rampa_2`, S5 `casa_pedra_1`). Conferir que toda jazida/poça/zona/decoração fica dentro do `contorno`.
+5. `mapa/espiral.py`: a espiral logo à direita da linha das gaiolas (gaiola + ~200 px), com trilhos do
+   elevador do topo ao S5 e um patamar em cada gaiola.
+6. Faixa de "galerias" (o nível 1 da imagem) na rocha entre a superfície e o nível 2 (peças `galeria_*`
+   do Prompt 7), e a pedreira "descendo" até a boca do poço.
+7. Fotos (`tests/capturas_bloco72.gd`) pro Marco conferir; teste novo `b72_*.gd`. Testes que tocam os
+   andares: p28_iso, p29_mapa, b63, b67, b68, b69, b70, b71, p20. Rodar em partes: a suíte inteira
+   estourou a memória uma vez.
 
-- **Prompt 29 concluído** (tudo o que já tem arte aprovada está no jogo). Relatórios:
-  `docs/arte/prompt29/PROMPT_29_PARTE1_MAPA.md`, `PROMPT_29_PARTE2_PREDIOS.md`,
-  `PROMPT_29_PARTES3A6.md`.
-- **Prompt 30 concluído** (`docs/arte/prompt30/PROMPT_30_REVISAO.md`): QA visual com fotos, contorno
-  de 1 px (`tools/contorno.py`, chamado pelo `integra.py`), clima visível na vista iso, decoração
-  da montagem aprovada no mapa, tiras dos bonecos carregando em segundo plano, limpeza do
-  protótipo (`docs/arte/limpeza_prompt30.json`). Testes: rodar com `APPDATA`/`XDG_DATA_HOME`/
-  `TEMP`/`TMP` no D: se o C: apertar (ver TESTING.md).
-- Como a arte nova entra: `prototipos/camera/arte_iso/integra.py` (`predios`, `bonecos`, `props`)
-  copia os desenhos pra `assets/game/iso/{predios,bonecos,props}/` com os `.json` (âncora, caixa);
-  `scripts/iso/iso_art.gd` (prédios, natureza/objetos, elevadores) e `scripts/iso/iso_bonecos.gd`
-  (bonecos, robô) escolhem o desenho pelo estado do jogo; `iso_billboard.gd` troca o desenho
-  antigo pelo novo. Prédios têm pegada de navegação do desenho (÷ 1,5).
-- Decisões do Marco nesta rodada: portão refeito no eixo i (PixelLab, 80 gerações); casa em
-  qualquer lugar da pedreira (raio do Centro desligado); análise: cabem 31 casas a mais, o jogo
-  pede no máximo 7 → **não precisa aumentar o mapa** (rever se o Prompt 31 trouxer escola).
-- PixelLab: esta conta (`claude-luz`) não tem o MCP; dá pra chamar o servidor HTTP do PixelLab com
-  a configuração da outra conta (`~/.claude.json`, `mcpServers.pixellab`). Ajudantes em
-  `tools/pixellab/` (`pl.py` chama, `gen.py` manda em lote/baixa, `chars.py` personagens e
-  animações). Saldo **209** depois dos Prompts 16–26 (recarga +5.000 em 2026-10-30).
-- F3 (vista de cima) saiu do jogo; "Comedouro" virou "Cozinha" nos textos.
-- **Prompts 16 a 26 (2026-10-01/02)**, cada um com relatório em `docs/arte/promptNN/`:
-  16 conceito das criaturas; 17 Lumívoro/Ferrugento + formas fortes (bruto/carregador, onda 4+);
-  18 efeitos (`scripts/iso/iso_fx.gd`: partículas com textura, fogo, festa, greve, onda solar,
-  domo do escudo, clima e neblina, marcadores); 20 pele da interface (`scripts/ui/ui_skin.gd`,
-  tema da raiz, cursores, **controle de velocidade**, janela de evento); 21 ícones
-  (`scripts/ui/icones.gd`); 22 fontes pixel (`assets/fonts/`); 23 retratos (cartão do selecionado,
-  `scripts/ui/retratos.gd`); 24 ilustrações (faixas de aviso, vitória, derrota); 25 **corte da mina
-  (F2)** (`scripts/ui/corte_mina.gd`); 26 título (key art animada, logo, carregamento com dicas).
-  Pendências feitas: colher fruta, treinar, ataque com lança/besta, cesto, placa de greve, cova,
-  explosivos, antena.
-  Testes: bateria GUT completa **49/49** (novos: `p17_criaturas`, `p18_efeitos`, `p20_interface`,
-  `p2_pendencias`), save real com o md5 igual antes e depois.
+## Antes do Bloco 72: o documento de melhorias (Blocos 49–71) está CONCLUÍDO
+Feitos: 49–58, 60–64, 67–71 + itens de arte (59 já era feito; 65 crianças espera decisão do Marco, que
+sugeriu deixar pra depois; 66 tutorial vem depois do balanceamento). Relatório final:
+`docs/RELATORIO_MELHORIAS_49_71.md`. Fila sugerida pelo Marco depois do 72: balanceamento numa partida
+longa simulada (F3 + telemetria), depois o tutorial (66).
 
-## O que falta fazer daqui pra frente
+## Ferramentas e cuidados
+- PixelLab: tier 3, saldo ~9.200 (renova 2026-11-02). Esta conta chama o MCP HTTP pela config de
+  `~/.claude.json` (`tools/pixellab/pl.py`, `gen.py` em lote, `chars.py` personagens). Arte nova em
+  `prototipos/camera/arte_iso/` (fundo70, fundo71, fundo72, mapa_mundo, relevo/fundo71.py, criaturas/fundo.py).
+- **`integra.py` regrava todos os PNGs** (pixels iguais, bytes diferentes). Depois de conferir, limpar com
+  `git -c filter.lfs.process= -c filter.lfs.clean=cat -c filter.lfs.smudge=cat -c filter.lfs.required=false update-index --refresh`;
+  os que já estão no LFS e continuam marcados: comparar os pixels e `git checkout --` neles.
+- PNG/GIF/WAV/JPG vão pro Git LFS (`.gitattributes`). Imagem nova precisa de `--import` no Godot antes
+  dos testes.
+- Heredoc grande com aspas às vezes quebra no Bash desta máquina: gravar o script com a ferramenta de
+  escrever arquivo e rodar com `python <arquivo>`.
+- Testes: `tests/blocos/*.gd` (um por bloco, registrado em `tests/test_blocos.gd`, linha no TESTING.md);
+  rodar sempre com APPDATA/XDG_DATA_HOME/LOCALAPPDATA em `%TEMP%\deep_iron_testes\fake_appdata`. O save
+  real do Marco nunca pode mudar (md5 `76C7403D5697DD29F90480757BEED3F0`). Godot:
+  `D:\DEV\Godot\Godot_v4.7.2-stable_win64.exe`. A tela lógica do jogo é 1280x720 (stretch canvas_items).
+- Medidas: `tools/bench_cena.ps1 [-Rapido]` (vila cheia ~20 ms / 50 FPS em 2026-10-03).
+- Skills do projeto: 21 em `.claude/skills/` (godot-*, game-feel, create-game-assets...).
 
-1. **O Marco vai verificar os Prompts 16–26.** Pontos que pedem decisão dele estão nos relatórios:
-   a forma forte das criaturas muda o balanceamento (`defense.gd`: `strong_every = 0` desliga);
-   a fonte pixel ficou só em cabeçalhos/números (texto corrido na padrão); o controle de velocidade
-   é novo; a faixa de "ACIDENTE NA MINA" no machucado grave é nova.
-1. **Prompt 19 feito** (`docs/arte/prompt19/PROMPT_19_LUZ.md`, sem geração).
-1. **Prompt 31 verificado** (`docs/arte/prompt31/PROMPT_31_CONTEUDO_FUTURO.md`): nenhum item do
-   backlog tem gameplay ainda (escola/crianças, casa nível 2/3, coletor de minério = "em breve") →
-   **nada gerado**. Refazer o 31 quando algum desses entrar no jogo.
-   Todos os prompts de arte do pacote (0–31) estão feitos; o que sobra é o backlog do 31 (escola,
-   crianças, casa 2/3, coletor de minério, chefe das criaturas), que precisa de gameplay antes.
-   **Disco C:** limpo em 2026-10-01 (Temp antiga: 361 MB → ~6,1 GB livres). Plugins sem uso
-   (limboai, godotsteam, phantom_camera, dialogue_manager, state_charts, ~300 MB): o Marco pediu
-   pra **não mexer** por enquanto.
-2. Seguir a ordem dos prompts restantes listada em `docs/arte/INVENTARIO.md`
-   (ferramentas/armas, robô, terreno, mina, jazidas, vegetação, prédios,
-   máquinas, objetos, animais, criaturas, efeitos, luz, UI, ícones, fonte,
-   retratos, eventos, telas, mapa), respeitando o saldo de geração restante.
-3. Conteúdo futuro (Prompt 31, mais andares além de nível 2/abismo) fica pra
-   depois — precisa de gameplay novo, não só arte.
-4. Cada prompt de arte: ler `CONTRATO_ARTE.md` + `INVENTARIO.md`, aplicar
-   **um prompt por vez**, parar pra revisão do Marco antes do próximo.
-5. Toda rodada headless de teste (`main.tscn`/GUT) precisa isolar o
-   `APPDATA`/pasta de usuário (fake + checagem de hash) pra não tocar no save
-   real do jogador — já é prática seguida nos testes atuais
-   (`tests/blocos/`, `test_blocos.gd`).
+Isso existe porque o Marco troca entre duas contas do Claude Code (`marco.luz1994@gmail.com` e
+`marcoa.luz@hotmail.com`, essa via `claude-luz` com `CLAUDE_CONFIG_DIR` próprio) quando uma bate o limite.
+A conversa não passa de uma pra outra: este arquivo é o resumo.
 
-## Onde ver o estado dos testes
-
-- `TESTING.md` na raiz: lista todos os blocos de teste, o que cada um cobre,
-  problemas conhecidos (`b45_coletor_madeira` e `b31b_obras_restantes` têm
-  falhas intermitentes já identificadas e documentadas) e como rodar tudo
-  com a vista iso ligada (`DEEP_IRON_ISO=1`).
+## Arte (pacote de prompts 0–31) — referência
+- `docs/arte/CONTRATO_ARTE.md` (regras fixas de estilo), `docs/arte/INVENTARIO.md` (o que foi gerado e
+  gasto), `docs/arte/MAPA_VISAO.md`, `docs/arte/promptNN/` (relatórios),
+  `docs/Prompt/deep_iron_prompts_arte_completa.md`.
+- Todos os prompts de arte 0–31 feitos. Como a arte entra no jogo: `prototipos/camera/arte_iso/integra.py`
+  (`predios`, `bonecos`, `props`, `criaturas`, `fx`) → `assets/game/iso/...` com `.json`;
+  `scripts/iso/iso_art.gd`, `iso_bonecos.gd` e `iso_billboard.gd` escolhem o desenho pelo estado do jogo.
+- Andares de baixo na vista iso: `prototipos/camera/arte_iso/mapa/andares.py` (+ `espiral.py`) →
+  `assets/game/iso/mapa/andar_*.png`, `espiral.png`, `andares.json`; lidos por `environment.gd`
+  (`level_of`, `view_ground`, `logic_from_view`) e `iso_view.gd` (`_build_terrain`, `_build_terra`).
