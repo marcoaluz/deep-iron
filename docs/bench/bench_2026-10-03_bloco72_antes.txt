@@ -1,0 +1,83 @@
+Deep Iron — bench_cena (2026-10-02T23:41:13)
+máquina: Intel(R) Core(TM) i3-8100 CPU @ 3.60GHz, 4 núcleos | GPU: Radeon RX 580 Series | 12_0 | janela (1920, 1061), vsync desligado
+
+cenário                                        ms méd   ms p99    FPS    nós  draws
+A  início (3 ipezinhos, dia)                    10.48    11.67     95   7511    216
+B  vila média (15 ipezinhos, prédios)           13.25    15.28     75   8153    297
+C  vila cheia (40) + invasão + chuva + noite    22.64    28.41     44   9424    369
+
+Detalhe no cenário C (cada parte chamada 30x, média):
+  hud._refresh (inteiro; roda 10 x/s)                3.790 ms por chamada
+    hud._refresh_phase                               0.058 ms por chamada
+    hud._refresh_top_bar                             0.610 ms por chamada
+    hud._refresh_panels                              1.052 ms por chamada
+      painel hub.refresh                             0.001 ms por chamada
+      painel armazem.refresh                         0.001 ms por chamada
+      painel coletor.refresh                         0.001 ms por chamada
+      painel coletor_minerio.refresh                 0.001 ms por chamada
+      painel escavadeira.refresh                     0.001 ms por chamada
+      painel oficina.refresh                         0.001 ms por chamada
+      painel enfermaria.refresh                      0.001 ms por chamada
+      painel moral.refresh                           0.001 ms por chamada
+      painel robo.refresh                            0.001 ms por chamada
+      painel abismo.refresh                          0.001 ms por chamada
+      painel defesa.refresh                          0.001 ms por chamada
+      painel lab.refresh                             0.001 ms por chamada
+      painel sol.refresh                             0.001 ms por chamada
+      painel diario.refresh                          0.001 ms por chamada
+      painel casa.refresh                            0.001 ms por chamada
+      painel galeria.refresh                         0.001 ms por chamada
+      build_menu.refresh                             0.001 ms por chamada
+    hud._refresh_workforce                           0.158 ms por chamada
+    hud._refresh_order_bar                           0.099 ms por chamada
+    hud._refresh_worker_rows                         1.289 ms por chamada
+  hud._update_cursor (a cada 0,1 s)                  0.279 ms por chamada
+  food_source._process x1 (direto)                   0.008 ms por chamada
+  creature._process x2 (direto)                      0.038 ms por chamada
+  day_night._process x1 (direto)                     0.005 ms por chamada
+  sun._process x1 (direto)                           0.002 ms por chamada
+  ipezinho._process x40 (direto)                     1.696 ms por chamada
+  ipezinho._physics_process x40 (direto)             0.812 ms por chamada
+  iso_view._process (inteiro, todo quadro)           8.284 ms por chamada
+    iso._sync_blocos                                 0.017 ms por chamada
+    camera.zoom_stops                                0.005 ms por chamada
+    sync_dynamic de 52 que andam                     4.417 ms por chamada
+      _update_box (que andam)                        0.910 ms por chamada
+      _sync_props (que andam; 1 quadro sim 1 não)    1.678 ms por chamada
+      _tool_rule (que andam)                         0.087 ms por chamada
+      _sync_char (que andam)                         2.099 ms por chamada
+        IsoBonecos.pose (40 ipezinhos)               1.230 ms por chamada
+          folders                                    0.156 ms por chamada
+          _tone                                      0.070 ms por chamada
+          _item_name                                 0.117 ms por chamada
+          work_anim                                  0.092 ms por chamada
+          enabled_for                                0.032 ms por chamada
+      src.set_meta + diamond_dir (que andam)         0.065 ms por chamada
+    sync_static de 703 fixas (1/6 por quadro)        9.718 ms por chamada
+      _sync_props das fixas (inclui _sync_art)      40.483 ms por chamada
+      _sync_art das fixas                           23.957 ms por chamada
+      _update_box das fixas                         10.200 ms por chamada
+    _apply_static_z                                  1.103 ms por chamada
+    _order.dynamic_z de 52                           2.153 ms por chamada
+    _sync_ghost                                      0.001 ms por chamada
+
+Custo no cenário C (quadro médio sem aquilo; base medida antes de cada um):
+  script iso_view.gd                                 8.97 ms  (1 nós)
+  script iso_fx.gd                                   3.09 ms  (1 nós)
+  script animal.gd                                   1.86 ms  (6 nós)
+  script hud.gd                                      1.85 ms  (1 nós)
+  script main.gd                                     0.82 ms  (1 nós)
+  script economy.gd                                  0.60 ms  (1 nós)
+  script food_source.gd                              0.51 ms  (1 nós)
+  script environment.gd                              0.46 ms  (1 nós)
+  script camera_controller.gd                        0.46 ms  (1 nós)
+  script mineral_node.gd                             0.39 ms  (41 nós)
+  script campo_treino.gd                             0.39 ms  (1 nós)
+  script comedouro.gd                                0.28 ms  (1 nós)
+  script enfermaria.gd                               0.27 ms  (1 nós)
+  script creature.gd                                 0.12 ms  (2 nós)
+  partículas (CPU/GPU)                               0.10 ms  (198 nós)
+  script defense.gd                                  0.08 ms  (1 nós)
+  script oficina.gd                                  0.07 ms  (1 nós)
+  script corte_mina.gd                               0.07 ms  (1 nós)
+  script armazem.gd                                  0.06 ms  (1 nós)

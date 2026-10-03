@@ -88,8 +88,13 @@ func _process(delta: float) -> void:
 				queue_free()
 		_update_sprite()
 		return
-	# foge de ipezinho perto (caçador chegando, alguém passando)
-	var perigo := _nearest_worker(70.0)
+	# foge de ipezinho perto (caçador chegando, alguém passando) — Bloco 72: procura 5x por segundo
+	# (antes: todo quadro, cada bicho varrendo os 40 ipezinhos)
+	_procura -= delta
+	if _procura <= 0.0:
+		_procura = 0.2
+		_perigo = _nearest_worker(70.0)
+	var perigo: Node2D = _perigo if _perigo != null and is_instance_valid(_perigo) else null
 	if perigo:
 		state = "fugir"
 		var away := (global_position - perigo.global_position).normalized()
@@ -110,6 +115,10 @@ func _process(delta: float) -> void:
 			_set_dir(step)
 			global_position += step if step.length() < to.length() else to
 	_update_sprite()
+
+
+var _procura := randf() * 0.2
+var _perigo: Node2D = null
 
 
 func _nearest_worker(r: float) -> Node2D:

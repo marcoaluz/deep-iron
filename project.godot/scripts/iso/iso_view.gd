@@ -72,6 +72,20 @@ var _overlay: Node2D
 var _order := Order.new()
 ## src (Node2D do World) -> Billboard
 var _ents := {}
+## Bloco 72: quem anda (todo quadro) e as fixas em STATIC_SYNC_EVERY grupos (um grupo por quadro), em vez
+## de varrer todas as entidades a cada quadro só pra decidir quem sincroniza; as fixas novas sincronizam
+## no quadro seguinte (_novas).
+var _dinamicos: Array = []
+var _baldes: Array = []
+var _novas: Array = []
+## Bloco 72: as fixas de cada andar de baixo e do leste ficam num container por região; fora da tela, o
+## container some (centenas de peças a menos pro desenho processar quando a câmera está longe).
+var _grupos := {}  # região -> Node2D (meta "tela": Rect2 da região na tela, calculado na 1ª vez)
+## Bloco 72: fixas que entraram depois da ordem montada esperam o quadro seguinte; se chegam muitas de
+## uma vez (a decoração do ambiente, um save carregando), a ordem é refeita uma vez só — encaixar uma a
+## uma numa rajada de centenas caía em reordenações completas (trancos).
+const RAJADA := 20
+var _rajada := {}  # Billboard -> true
 var _frame := 0
 var _saved_layers := {}  # filhos do Main que mudam de camada no modo iso -> camada antiga
 ## Posicionador (fantasma do prédio): a pegada e o raio caem achatados no chão (textura do
@@ -855,11 +869,85 @@ func _add(n: Node) -> void:
 	var bb := Billboard.new()
 	bb.only_standing = mixed
 	bb.setup(n, _is_dynamic(n), self)
-	_things.add_child(bb)
+	var regiao := "" if bb.dynamic else _regiao_de(n as Node2D)
+	if regiao == "":
+		_things.add_child(bb)
+	else:
+		_grupo(regiao).add_child(bb)
 	_ents[n] = bb
+	if bb.dynamic:
+		_dinamicos.append(bb)
+	else:
+		_balde(bb).append(bb)
+		_novas.append(bb)
 	if not bb.dynamic and not _order.order.is_empty():
-		for b in bb.boxes:
-			_order.add_static(b)  # construiu agora: encaixa só ela
+		_rajada[bb] = true  # construiu agora: encaixa no próximo quadro (sozinha, ou a rajada toda de uma vez)
+
+
+func _balde(bb: Billboard) -> Array:
+	if _baldes.size() != STATIC_SYNC_EVERY:
+		_baldes = []
+		for i in STATIC_SYNC_EVERY:
+			_baldes.append([])
+	return _baldes[bb.get_instance_id() % STATIC_SYNC_EVERY]
+
+
+## Bloco 72: em que região fica uma fixa: o andar de baixo (nome da laje), "leste" ou "" (o resto).
+func _regiao_de(n: Node2D) -> String:
+	if _env == null:
+		return ""
+	if _env.has_method("level_of"):
+		var lv: Dictionary = _env.level_of(n.global_position)
+		if not lv.is_empty():
+			return String(lv.nome)
+	if _env.has_method("has_leste") and _env.has_leste() and n.global_position.x > _env.leste_x():
+		return "leste"
+	return ""
+
+
+func _grupo(regiao: String) -> Node2D:
+	var g: Node2D = _grupos.get(regiao)
+	if g == null:
+		g = Node2D.new()
+		g.name = "Regiao_" + regiao
+		_things.add_child(g)
+		_grupos[regiao] = g
+	return g
+
+
+## O retângulo de uma região na tela (a laje do andar; o leste pelo chão dele).
+func _tela_da_regiao(regiao: String) -> Rect2:
+	if regiao == "leste":
+		var lr: Rect2 = _env.leste_rect()
+		var r := Rect2(to_screen(lr.position), Vector2.ZERO)
+		for c in [Vector2(lr.end.x, lr.position.y), lr.end, Vector2(lr.position.x, lr.end.y)]:
+			r = r.expand(to_screen(c))
+		return r.grow(400.0)
+	for lv in _levels:
+		if lv.nome == regiao:
+			return Rect2(lv.sprite.position, lv.sprite.texture.get_size()).grow(400.0)
+	return Rect2()
+
+
+func _sync_regioes(view: Rect2) -> void:
+	if _frame % 5 != 0:
+		return
+	for regiao in _grupos:
+		var g: Node2D = _grupos[regiao]
+		if not g.has_meta("tela"):
+			var r := _tela_da_regiao(regiao)
+			if not r.has_area():
+				continue
+			g.set_meta("tela", r)
+		var ve: bool = view.intersects(g.get_meta("tela"))
+		if g.visible != ve:
+			g.visible = ve
+
+
+func _balde_da_vez() -> Array:
+	if _baldes.size() != STATIC_SYNC_EVERY:
+		return []
+	return _baldes[_frame % STATIC_SYNC_EVERY]
 
 
 func _drop(src: Node) -> void:
@@ -867,6 +955,12 @@ func _drop(src: Node) -> void:
 	_ents.erase(src)
 	if bb == null:
 		return
+	if bb.dynamic:
+		_dinamicos.erase(bb)
+	else:
+		_balde(bb).erase(bb)
+		_novas.erase(bb)
+		_rajada.erase(bb)
 	if not bb.dynamic:
 		for b in bb.boxes:
 			_order.remove_static(b)
@@ -913,27 +1007,52 @@ func _process(_delta: float) -> void:
 	var moved_static := false
 	var dyn_boxes := []
 	var dyn_bbs := {}
-	for src in _ents.keys():
-		var bb: Billboard = _ents[src]
-		if not is_instance_valid(src):
-			_drop(src)
+	var sumiram: Array = []
+	for bb in _dinamicos:
+		if not is_instance_valid(bb.src):
+			sumiram.append(bb)
 			continue
-		if bb.dynamic:
-			bb.sync_dynamic(view)
-			dyn_boxes.append(bb.box)
-			dyn_bbs[bb.box] = bb
-		elif (_frame + bb.get_instance_id()) % STATIC_SYNC_EVERY == 0 or bb.never_synced:
-			if bb.sync_static(view):
-				for b in bb.boxes:
-					_order.add_static(b)  # mudou de lugar/tamanho: re-encaixa só ela
-				moved_static = true
+		bb.sync_dynamic(view)
+		dyn_boxes.append(bb.box)
+		dyn_bbs[bb.box] = bb
+	# Bloco 72: as fixas do grupo da vez + as novas (antes: varria todas as entidades todo quadro)
+	var fixas: Array = _balde_da_vez()
+	if not _novas.is_empty():
+		fixas = fixas + _novas
+		_novas = []
+	for bb in fixas:
+		if not is_instance_valid(bb) or not is_instance_valid(bb.src):
+			if is_instance_valid(bb):
+				sumiram.append(bb)
+			continue
+		if bb.sync_static(view) and not _rajada.has(bb):
+			for b in bb.boxes:
+				_order.add_static(b)  # mudou de lugar/tamanho: re-encaixa só ela
+			moved_static = true
+	if not _rajada.is_empty():
+		if _rajada.size() > RAJADA:
+			_rebuild_order()
+		else:
+			for bb in _rajada:
+				if is_instance_valid(bb):
+					for b in bb.boxes:
+						_order.add_static(b)
+			moved_static = true
+		_rajada = {}
+	for bb in sumiram:
+		for k in _ents.keys():
+			if _ents[k] == bb:
+				_drop(k)
+				break
+	_sync_regioes(view)  # Bloco 72
 	if moved_static:
 		_apply_static_z()
 	else:
 		_refresh_static_z_if_needed()
 	# Prompt 30: com muita gente andando, a ordem de quem anda é refeita a cada 2 quadros (1 quadro de
 	# atraso no "quem fica na frente" não se vê; com poucos, todo quadro)
-	if dyn_boxes.size() <= DYN_ORDER_EVERY_FRAME or _frame % 2 == 0:
+	# (Bloco 72: com mais de 30 andando, a cada 3 quadros)
+	if dyn_boxes.size() <= DYN_ORDER_EVERY_FRAME or _frame % (3 if dyn_boxes.size() > 30 else 2) == 0:
 		var zs := _order.dynamic_z(dyn_boxes)
 		if _order.dirty:  # conserto local na ordem das fixas: os z delas mudaram
 			_order.dirty = false
