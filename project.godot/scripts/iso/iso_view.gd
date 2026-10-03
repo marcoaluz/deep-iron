@@ -417,7 +417,7 @@ func _build_atmosfera() -> void:
 			ll.name = "Lago_" + n.id
 			IsoLuz.aplica(ll, "cristal")
 			ll.color = Color(0.35, 0.6, 1.0)
-			ll.energy = 0.9
+			ll.energy = 1.2  # (Bloco 72: o lago é a luz do S5)
 			ll.texture_scale *= maxf(lr.size.x, lr.size.y) / 120.0
 			ll.range_item_cull_mask = LIGHT_ISO
 			ll.range_z_min = RenderingServer.CANVAS_ITEM_Z_MIN
@@ -547,7 +547,9 @@ func _poca_add(p: Node) -> void:
 	l.name = "PocaLuz_" + String(p.name)
 	IsoLuz.aplica(l, "lava" if k == "lava" else "cristal")
 	l.color = POCA_LUZ.get(k, Color.WHITE)
-	l.energy = (IsoLuz.TIPOS.lava.forca if k == "lava" else 0.8)
+	l.energy = (IsoLuz.TIPOS.lava.forca * 1.25 if k == "lava" else 0.8)
+	if k == "lava":
+		l.texture_scale *= 1.4  # Bloco 72: o poço de lava ilumina o chão em volta (a referência é laranja viva)
 	l.range_item_cull_mask = LIGHT_ISO
 	l.range_z_min = RenderingServer.CANVAS_ITEM_Z_MIN
 	l.range_z_max = RenderingServer.CANVAS_ITEM_Z_MAX
@@ -581,6 +583,25 @@ func _poca_add(p: Node) -> void:
 	_things.add_child(part)
 	_poca_fx.append(part)
 	part.emitting = not Efeitos.reduzidos()
+	# Bloco 72: no nível que tem água e lava (S4), a lava solta vapor — a mistura da referência
+	if k == "lava" and _tem_agua_perto(p):
+		var vap := part.duplicate() as CPUParticles2D
+		vap.name = "PocaVapor_" + String(p.name)
+		vap.texture = IsoFx.tex("vapor")
+		vap.amount = 6
+		vap.lifetime = 2.6
+		vap.initial_velocity_min = 8.0
+		vap.initial_velocity_max = 18.0
+		vap.color = Color(0.85, 0.88, 0.95, 0.45)
+		_things.add_child(vap)
+		_poca_fx.append(vap)
+		vap.emitting = not Efeitos.reduzidos()
+
+
+## Bloco 72: o nível dessa poça tem água (poça "agua")?
+func _tem_agua_perto(p: Node) -> bool:
+	var n := Niveis.do_ponto(_env, (p as Node2D).global_position)
+	return n != null and n.perigos.any(func(e): return e is Array and String(e[0]) == "agua")
 
 
 # ------------------------------------------------------------ névoa do leste (Bloco 67)
