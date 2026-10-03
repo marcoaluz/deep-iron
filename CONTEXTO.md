@@ -1,6 +1,6 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-03 (madrugada). Branch `isometrico`. O remoto está em `875ae827`: os commits do
+Atualizado em 2026-10-03 (manhã). Branch `isometrico`. O remoto está em `875ae827`: os commits do
 Bloco 72 abaixo ainda NÃO foram enviados (push só com ok do Marco).
 
 ## AGORA: Bloco 72 — o mapa do jogo igual à referência (em andamento)
@@ -31,45 +31,17 @@ andares mais compactos (~25% menores por lado), mantendo todas as jazidas. Memó
 - `515b5bfa` **mapa do mundo (F2) = a imagem B** (`assets/game/ui/corte/mapa_mundo.png`;
   `NivelMina.mapa_regiao` = região de cada nível na imagem; lista dos andares ao lado; b63/p20 passam).
 
-**PRÓXIMO — etapa 2 da revisão: reconstruir os andares NA VISTA DO JOGO (nada começado no código).**
-Plano já calculado. Só a vista muda: a lógica dos andares continua em retângulos (deep_rect, abyss_rect,
-`rect` do .tres), então os saves continuam valendo.
-1. `prototipos/camera/arte_iso/mapa/andares.py` (gera `assets/game/iso/mapa/andar_*.png` + `andares.json`):
-   trocar o ancoramento no "canto da frente do mapa" por:
-   - escala `K = 0.75` em cada andar (px de arte por px da lógica = 1,5 x K);
-   - a beira da frente do andar (v=+1) na face sul do mapa: `FACE_AY = OY + NJ*T = 648` (arte), então
-     `centro_ay = 648 - hh` (hw, hh = meia largura/altura do andar em arte);
-   - a gaiola de cada andar (posição normalizada u=0.86, v=-0.80) na MESMA vertical da torre do elevador
-     da superfície (elevador em (580,320) da lógica → `ax - ay = 390` em arte), então
-     `centro_ax = centro_ay + 390 - (u*hw - v*hh)`. Assim a coluna fica entre a escavadeira e o elevador,
-     debaixo da vila, e não sobrepõe a superfície na tela (conferido nas contas);
-   - profundidade (degraus k): nível2 -32, abismo -68, s4 -104, s5 -140 (36 degraus entre andares);
-   - chão ORGÂNICO: superelipse p=4 com ruído no raio (R ~0,86..0,94), unida a um círculo em volta da
-     gaiola. Ladrilho dentro = chão (zonas, água, ácido como hoje, pela lógica nova). Fora e "atrás"
-     (u+v<0.2, numa faixa de ~0,25 além da borda; nada no canto da gaiola u>0.75,v<-0.55) = coluna de
-     rocha subindo até a laje do andar de cima (`kc_acima - laje`); o nível2 sobe até a borda de baixo da
-     superfície (o recorte de hoje, `borda_de_baixo(x, 0, 0, SUP_KB)`). Fora e na frente = vazio. Chão
-     com vizinho da frente vazio ganha a laje embaixo;
-   - escrever no json por andar: `centro_arte`, `k`, `contorno` (polígono da caverna na LÓGICA, ~48
-     pontos), além de img/tela/rect/z_chao/caixa/z.
-2. `scripts/core/environment.gd`: `view_ground` = `(pos - rect.center)*f*k + centro_arte`;
-   `logic_from_view` = o inverso; navegação dos andares pelo `contorno` (não mais o retângulo);
-   `_deep_spot_free` e a decoração só dentro do contorno; sem as pedras da borda do retângulo
-   (`_build_deep`, `_build_abyss`) no mapa novo.
-3. `scripts/iso/iso_view.gd`: `art_rect` dos andares e o decalque `ChaoDoJogo` com escala `S*k`. Refazer
-   `_build_terra` (hoje 2 placas retas, TerraSO/TerraSE): faixa fina de terra nas faces + um corpo de terra
-   orgânico em volta da coluna, afinando no fundo (como a imagem B).
-4. Posições na lógica pra alinhar o poço (cena `scenes/game/main.tscn` e os `.tres`):
-   Elevador.bottom (482,762); ElevadorAbismo pos (381,917) bottom (413,1476); S4 `ligacao_topo` (298,1644)
-   `ligacao_fundo` (378,2172); S5 topo (299,2302) fundo (344,2808). Mover a decoração que conflitar
-   (S4 `rampa_2`, S5 `casa_pedra_1`). Conferir que toda jazida/poça/zona/decoração fica dentro do `contorno`.
-5. `mapa/espiral.py`: a espiral logo à direita da linha das gaiolas (gaiola + ~200 px), com trilhos do
-   elevador do topo ao S5 e um patamar em cada gaiola.
-6. Faixa de "galerias" (o nível 1 da imagem) na rocha entre a superfície e o nível 2 (peças `galeria_*`
-   do Prompt 7), e a pedreira "descendo" até a boca do poço.
-7. Fotos (`tests/capturas_bloco72.gd`) pro Marco conferir; teste novo `b72_*.gd`. Testes que tocam os
-   andares: p28_iso, p29_mapa, b63, b67, b68, b69, b70, b71, p20. Rodar em partes: a suíte inteira
-   estourou a memória uma vez.
+**Etapa 2 da revisão FEITA (`f8d6c4d1`):** os andares no jogo são cavernas uma embaixo da outra,
+debaixo da vila, com o poço do elevador reto (4 gaiolas na vertical da torre) e a espiral ao lado; terra
+em volta da coluna. Gerador: `prototipos/camera/arte_iso/mapa/andares.py` (escala K=0,75, contorno da
+caverna no `andares.json`); `environment.gd` (`view_ground`, `logic_from_view`, `contorno_do_andar`,
+`dentro_da_caverna`, navegação pelo contorno); `iso_view.gd` (`_build_terra` lê terra/poço/espiral do
+json; névoa no formato da caverna). Teste `tests/blocos/b72_coluna.gd`. Comparação com a referência:
+`docs/arte/bloco72/coluna/comparativo.jpg`. Os saves valem (a lógica dos andares não mudou).
+**Esperando o Marco conferir.** O que ainda falta (lista em `docs/BLOCO72_MAPA_REFERENCIA.md`, fim):
+andares mais juntos (~24 degraus em vez de 36), faixa de galerias de madeira abaixo da superfície,
+detalhe nas paredes (lampiões, lava escorrendo, cachoeira descendo, cristais), coluna mais larga
+(escala 0,85?).
 
 ## Antes do Bloco 72: o documento de melhorias (Blocos 49–71) está CONCLUÍDO
 Feitos: 49–58, 60–64, 67–71 + itens de arte (59 já era feito; 65 crianças espera decisão do Marco, que
