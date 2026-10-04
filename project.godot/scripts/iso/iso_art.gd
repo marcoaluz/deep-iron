@@ -172,10 +172,24 @@ static func layers(node: Node) -> Array:
 		"portao":
 			var lvp := int(node.get("level"))
 			var standing: bool = node.is_standing() if node.has_method("is_standing") else lvp > 0
-			out.append(state("portao", "nivel_%d" % clampi(lvp, 1, 3) if standing and lvp > 0 else "quebrado"))
+			var pt := state("portao", "nivel_%d" % clampi(lvp, 1, 3) if standing and lvp > 0 else "quebrado")
+			if node.get("vertical") == true and not pt.is_empty():
+				pt = _de_lado(pt)  # Bloco 74: portão na paliçada de norte a sul
+			out.append(pt)
 		_:
 			out.append(state(kind, "pronto"))
 	return out.filter(func(l): return not l.is_empty())
+
+
+## Bloco 74: a peça virada de lado (espelhada): o que corria de leste a oeste passa a correr de norte a
+## sul (o espelho da arte 2:1 troca os eixos do chão). A pegada troca x por y.
+static func _de_lado(l: Dictionary) -> Dictionary:
+	var o := l.duplicate()
+	o["flip"] = true
+	var p = l.get("peg")
+	if p is Array and p.size() == 4:
+		o["peg"] = [p[1], p[0], p[3], p[2]]
+	return o
 
 
 ## Escavadeira (Bloco 32): estrutura + cada peça instalada (recorte do pronto), a peça em

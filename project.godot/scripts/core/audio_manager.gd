@@ -201,7 +201,8 @@ func _update_context() -> void:
 		var ground: Vector2 = cam.ground_center() if cam.has_method("ground_center") else cam.get_screen_center_position()
 		if env.has_method("level_at") and env.level_at(ground) >= 2:
 			ctx = "fundo"
-		elif env.get("clearing_rect") != null and (env.clearing_rect as Rect2).has_point(ground):
+		elif env.has_method("open_sky_rect") and env.open_sky_rect().has_point(ground) and env.surface_area(ground) != "mina":
+			# Bloco 74: céu aberto na floresta e na vila; na área da mina (montanha, armazém) o som da mina
 			var dn := tree.get_first_node_in_group("day_night")
 			ctx = "noite" if dn and dn.has_method("is_night") and dn.is_night() else "dia"
 			var w := tree.get_first_node_in_group("weather")

@@ -623,7 +623,7 @@ func _collect_layout(tree: SceneTree) -> Dictionary:
 		if not casa.placed_by_player:
 			scene_casas.append(String(casa.name))
 	return {"hub": SaveUtil.vec2_to_array(hub.global_position) if hub else [], "armazens": arms,
-		"comedouros": coms, "scene_casas": scene_casas}
+		"comedouros": coms, "scene_casas": scene_casas, "mapa": 74}  # Bloco 74: o mapa da maquete v3
 
 
 ## Save sem "layout" (antigo): não mexe em nada — fica o layout da cena.
@@ -645,7 +645,14 @@ func _apply_layout(layout: Dictionary) -> void:
 		c.queue_free()
 	hub.global_position = SaveUtil.vec2(layout, "hub", hub.global_position)
 	var arms := SaveUtil.dict(layout, "armazens")
+	# Bloco 74: no mapa da maquete v3 o armazém da cena é o da mina (na frente da boca, o vagonete
+	# descarrega nele); save de antes desse mapa: ele fica no lugar novo (os construídos depois, não)
+	var env74 := get_tree().get_first_node_in_group("environment")
+	var mapa_novo: bool = env74 != null and env74.has_method("vertical_palisade") and env74.vertical_palisade()
+	var save_antigo := SaveUtil.integer(layout, "mapa", 0) < 74
 	for a in get_tree().get_nodes_in_group("armazens"):
+		if mapa_novo and save_antigo and a.owner != null:
+			continue
 		a.global_position = SaveUtil.vec2(arms, String(a.name), a.global_position)
 	for cd in SaveUtil.array(layout, "comedouros"):
 		if typeof(cd) != TYPE_DICTIONARY:

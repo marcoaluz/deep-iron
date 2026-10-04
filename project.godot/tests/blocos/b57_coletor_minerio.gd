@@ -193,6 +193,7 @@ func _esgota() -> void:
 	check(not col._producing and "sem operador" in col.status_text(), "sem operador para (%s)" % col.status_text())
 	col.designate(op)
 	var j = col.jazida()
+	col.chosen_pos = j.global_position  # (Bloco 74: na mina as jazidas ficam juntas — sem escolher, ela pula pra outra)
 	j.ore_remaining = 0.5
 	var got: float = j.extract(5.0)
 	check(is_equal_approx(got, 0.5) and j.is_depleted(), "jazida esgotada pela broca entra no descanso")

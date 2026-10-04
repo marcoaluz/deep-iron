@@ -14,7 +14,7 @@ Desenho: terreno coluna a coluna (tiles.py) + objetos ordenados pela frente da p
       = caixa de rampa; mapa.json com o mapa de altura, escadas e bocas (lido pelo environment.gd)
 """
 import sys, os, json, glob, math, random
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageDraw
 sys.path.insert(0, "../relevo")
 import tiles
 
@@ -30,9 +30,62 @@ LESTE_PEDACO = 48
 NI = int((1520 + LESTE_EXTRA) * FATOR / T)
 NJ = int(1480 * FATOR / T)                        # 97
 REL = "../relevo/final"
-BOCAS_X = (200, 290, 380, 540)   # bocas de mina no paredão do terraço de cima (uma por galeria do jogo)
 TOPO_MOLDURA = 18    # a moldura é aparada no alto (i + j > -18): o topo fica na horizontal, na altura da serra pintada
 MARGEM = 26          # moldura fora da área jogável (só decoração): morros com mata que sobem até a serra do cenário
+
+# Bloco 74 (maquete v3 aprovada pelo Marco, docs/arte/bloco72/maquete/superficie_v3_legenda.jpg): a
+# superfície em 3 áreas, de oeste pra leste — FLORESTA | VILA | MINA — tudo no mesmo chão (degrau 0), menos
+# a MONTANHA da mina, em 3 degraus de 3 (a boca principal no pé, a 2ª e a 3ª aberturas nos de cima). A
+# paliçada corre de norte a sul entre a floresta e a vila, com o ÚNICO portão. Depois da mina, o leste
+# trancado (Bloco 67) como era. Coordenadas = jogo antigo (lógica).
+PALICADA_X = -300    # a paliçada (a floresta fica a oeste)
+PORTAO_Y = -40       # o portão (o meio da abertura)
+MINA_X0 = 560        # a divisa vila | mina (o elevador fica nela)
+MINA_X1 = 1240       # o fim da mina: daqui pro leste é a área trancada do Bloco 67
+## Degraus da montanha: (x0, x1, y da frente, altura). A frente é em blocos de PEDACO tiles (cada pedaço
+## com a frente reta, um tile pra frente ou pra trás do vizinho: a caixa de cada pedaço fica justa).
+DEGRAUS = [(600, MINA_X1, -200, 6), (680, MINA_X1, -350, 12), (780, 1200, -500, 18)]
+SOBE = 6             # degraus de altura por degrau da montanha (a boca cobre os 3 de baixo)
+PEDACO = 3
+## Bocas carvadas na frente dos degraus: (x, altura do degrau). A 1ª é a principal (o trilho do vagonete);
+## as outras são as das galerias (Oeste e Sudeste no pé, Norte na 2ª abertura, Nordeste na 3ª).
+BOCAS = [(880, 6), (680, 6), (1060, 6), (1120, 12), (860, 18)]
+## Escadas da montanha: (x, altura do degrau de cima) — do chão pro 1º degrau e do 1º pro 2º.
+ESCADAS_MONTE = [(1180, 6), (736, 12)]
+
+
+def _onda(c, s):
+    """deslocamento (em tiles: -1, 0 ou 1) da frente do pedaço c do degrau s."""
+    v = math.sin(c * 2.3 + s * 1.7) + 0.6 * math.sin(c * 5.1 + s * 0.9)
+    return -1 if v < -0.55 else (1 if v > 0.55 else 0)
+
+
+def degrau_em(xo, yo):
+    """altura da montanha no ponto (0 = fora dela)."""
+    i, j = tile(xo, yo)
+    i, j = int(math.floor(i)), int(math.floor(j))
+    for s in range(len(DEGRAUS) - 1, -1, -1):
+        x0, x1, yf, h = DEGRAUS[s]
+        i0, _ = tile(x0, 0)
+        i1, _ = tile(x1, 0)
+        if not (int(i0) <= i < int(math.ceil(i1))):
+            continue
+        _, jf = tile(0, yf)
+        if j <= int(jf) + _onda((i - int(i0)) // PEDACO, s):
+            return h, s
+    return 0, -1
+
+
+def _frente(xo, h):
+    """a última fileira (j) do degrau de altura h na coluna de xo — onde fica a boca / o topo da escada.
+    A boca e a escada ocupam 2 colunas: as duas têm de cair no mesmo pedaço (mesma frente)."""
+    s = [d[3] for d in DEGRAUS].index(h)
+    x0, _, yf, _ = DEGRAUS[s]
+    i = int(tile(xo, 0)[0])
+    i0 = int(tile(x0, 0)[0])
+    if (i - i0) % PEDACO == PEDACO - 1:
+        raise ValueError("x=%s cai na divisa de dois pedaços do degrau %d: mude 1 tile" % (xo, s + 1))
+    return int(tile(0, yf)[1]) + _onda((i - i0) // PEDACO, s)
 
 
 def ruido(i, j, s):
@@ -53,57 +106,88 @@ def ld(p):
 # ---------------------------------------------------------------- relevo e tipo de chão
 def zona(xo, yo):
     """zona e altura num ponto do jogo antigo."""
-    if xo < -700:
-        return "paredao", 4
-    if yo < -470:
-        return "floresta", 3
-    if yo < -180:
-        return "terraco_alto", 3
-    if xo < 120 and yo < 160:
-        return "terraco_meio", 2
-    return "fundo", 0
+    if xo >= (OX + ni_leste() * T) / FATOR:  # Bloco 67: o leste, como era (floresta e encosta no alto, pedreira embaixo)
+        if yo < -470:
+            return "floresta_leste", 3
+        if yo < -180:
+            return "terraco_alto", 3
+        return "fundo", 0
+    if xo < PALICADA_X:
+        return "floresta", 0
+    if xo < MINA_X0:
+        return "vila", 0
+    h, s = degrau_em(xo, yo)
+    if h:
+        return "montanha%d" % (s + 1), h
+    return "mina", 0
+
+
+def regiao_de(z, i):
+    """região do terreno (uma imagem + caixa) de uma zona no tile i. O chão (degrau 0) fica no fundo;
+    cada degrau da montanha em pedaços de PEDACO tiles (a caixa de cada um justa na frente dele)."""
+    if z.startswith("montanha"):
+        i0, _ = tile(DEGRAUS[int(z[-1]) - 1][0], 0)
+        return "monte%s_%d" % (z[-1], (i - int(i0)) // PEDACO)
+    if z in ("floresta_leste", "terraco_alto"):
+        return nome_regiao("alto", i)
+    return nome_regiao("fundo", i)
+
+
+def ni_leste():
+    """Bloco 74: o 1º tile (coluna) da área trancada do leste — depois da mina (antes: o fim do mapa velho)."""
+    return int(math.ceil((MINA_X1 * FATOR - OX) / T))
 
 
 def nome_regiao(base, i):
-    """Bloco 67: região do tile i — a área nova (leste) em pedaços com sufixo _l0, _l1..."""
-    if i < NI_VELHO:
+    """Bloco 67: região do tile i — a área nova (leste) em pedaços com sufixo _l0, _l1... (o jogo esconde
+    os pedaços _lN enquanto o leste está trancado: eles começam onde ele começa)."""
+    if i < ni_leste():
         return base
-    return "%s_l%d" % (base, (i - NI_VELHO) // LESTE_PEDACO)
+    return "%s_l%d" % (base, (i - ni_leste()) // LESTE_PEDACO)
+
+
+## Bloco 74: a praça do Centro da Vila (laje) e os caminhos de terra batida da vila (trilha).
+PRACA = (40, -200, 120)                # centro (x, y) e raio
+ESTRADA_Y = PORTAO_Y                   # do portão, atravessando a vila, até o armazém da mina
+RUA_X = 40                             # a rua norte-sul que passa pela praça
 
 
 def tipo_chao(xo, yo, z):
     rnd = (math.sin(xo * 0.013) + math.cos(yo * 0.017) + math.sin((xo + yo) * 0.007))
-    if xo > 760:  # Bloco 67: o leste (encosta rochosa com cascalho, floresta mais fechada, pedreira nova)
-        if z == "floresta":
-            return "grama_alta" if rnd > 0.4 else "clareira"
-        if z == "terraco_alto":
-            return "cascalho" if rnd > -0.2 else ("laje" if rnd < -1.4 else "colonia")
-        if z == "fundo":
-            return "cascalho" if rnd > -0.8 else "colonia"
-    if z == "floresta":
-        return "grama_alta" if rnd > 1.2 or abs(xo) > 680 else "clareira"
+    if z == "floresta_leste":  # Bloco 67: o leste (encosta rochosa com cascalho, floresta mais fechada, pedreira nova)
+        return "grama_alta" if rnd > 0.4 else "clareira"
     if z == "terraco_alto":
-        if (xo + 300) ** 2 + (yo + 300) ** 2 < 120 ** 2:
-            return "laje"
-        if abs(xo) < 40 or (abs(yo + 230) < 22 and -500 < xo < 600):
-            return "trilha"
-        return "colonia"
-    if z == "terraco_meio":
-        if abs(yo - 10) < 22 or abs(xo + 80) < 20:
-            return "trilha"
-        return "cascalho" if rnd > 0.9 else "colonia"
+        return "cascalho" if rnd > -0.2 else ("laje" if rnd < -1.4 else "colonia")
     if z == "fundo":
-        return "cascalho" if rnd > -0.4 else "colonia"
+        return "cascalho" if rnd > -0.8 else "colonia"
+    if z == "floresta":
+        return "grama_alta" if rnd > -0.3 or xo < -700 else "clareira"
+    if z == "vila":
+        if (xo - PRACA[0]) ** 2 + (yo - PRACA[1]) ** 2 < PRACA[2] ** 2:
+            return "laje"
+        if abs(yo - ESTRADA_Y) < 24 or (abs(xo - RUA_X) < 20 and -760 < yo < 380):
+            return "trilha"
+        if xo < PALICADA_X + 70 or rnd > 1.5:
+            return "clareira"  # a beira da floresta e umas manchas de grama
+        return "colonia"
+    if z == "mina":
+        if abs(yo - ESTRADA_Y) < 24 and xo < BOCAS[0][0]:
+            return "trilha"
+        return "cascalho" if rnd > -0.6 else "colonia"
+    if z.startswith("montanha"):  # o alto dos degraus: pedra solta, laje e grama no fundo
+        if yo < -820 or (z == "montanha3" and rnd > -0.4):
+            return "grama_alta"
+        return "laje" if rnd < -1.1 else "cascalho"
     return "grama_alta" if rnd > 0.6 else "colonia"
 
 
 def monta(exporta_em=None):
-    TEX = {"colonia": ld(REL + "/colonia"), "clareira": ld(REL + "/clareira"), "rocha": ld(REL + "/rocha")}
+    TEX = {"colonia": ld(REL + "/colonia"), "clareira": ld(REL + "/clareira"), "rocha": ld(REL + "/rocha"), "montanha": ld(REL + "/montanha")}
     for p in ("grama_alta", "trilha", "cascalho", "laje"):
         TEX[p] = ld(REL + "/superficie/" + p)
     ordem = ["rocha", "colonia", "cascalho", "trilha", "laje", "clareira", "grama_alta"]
     BL = {}
-    for m in ("colonia", "rocha", "clareira"):
+    for m in ("colonia", "rocha", "clareira", "montanha"):
         b = [Image.open(f).convert("RGBA") for f in sorted(glob.glob(REL + "/%s/bloco.png" % m) + glob.glob(REL + "/%s/bloco_[0-9].png" % m))]
         s = [Image.open(f).convert("RGBA") for f in sorted(glob.glob(REL + "/%s/bloco_sem_beira*.png" % m))]
         BL[m] = (b, s)
@@ -119,7 +203,8 @@ def monta(exporta_em=None):
             xo, yo = antigo(i, j)
             z, h = zona(xo, yo)
             alt[(i, j)] = h
-            mat[(i, j)] = "clareira" if z == "floresta" else "colonia"  # (rocha azulada lia como água: o leste também é terra)
+            # (rocha azulada lia como água: o leste também é terra; Bloco 74: a montanha é pedra cinza)
+            mat[(i, j)] = "clareira" if z.startswith("floresta") else ("montanha" if z.startswith("montanha") else "colonia")
     for i in range(NI + 1):
         for j in range(NJ + 1):
             xo, yo = ((OX + i * T) / FATOR, (OY + j * T) / FATOR)
@@ -159,11 +244,12 @@ def monta(exporta_em=None):
     # (x antigo, y antigo da borda do terraço de cima, imagem). A escada acha sozinha a 1ª fileira
     # abaixo da borda (onde a altura cai) e desce um lance por degrau de diferença (Prompt 29: antes
     # o y era fixo e algumas escadas ficavam uma fileira fora, sem ligar os terraços)
-    bordas = [(-80, -180, esc_pedra), (-300, -180, esc_pedra), (640, -180, esc_pedra), (0, 160, rampa), (-420, 160, esc_pedra)]
+    # Bloco 74: a vila é plana; as escadas são as da montanha (do chão pro 1º degrau, do 1º pro 2º)
+    bordas = [(xo, _frente(xo, h) - 2, esc_pedra) for xo, h in ESCADAS_MONTE]
     subidas = []
     esc_tiles = {}
-    for xo, yb, im in bordas:
-        i, j = map(int, tile(xo, yb - 40))
+    for xo, jb, im in bordas:
+        i, j = int(tile(xo, 0)[0]), jb
         while alt[(i, j + 1)] >= alt[(i, j)]:     # desce até a beira do terraço de cima
             j += 1
         h0, h1 = alt[(i, j)], alt[(i, j + 1)]
@@ -176,14 +262,13 @@ def monta(exporta_em=None):
 
     # bocas de mina: cavadas no paredão (as 2 colunas da borda do terraço de cima viram a boca)
     bocas = []
-    for xo in BOCAS_X:
-        i, j = map(int, tile(xo, -181))
-        while alt.get((i, j + 1), 0) >= 3:      # desce até a última fileira do terraço
-            j += 1
-        bocas.append((i, j))
-    tiles_boca = {(i + d, j) for i, j in bocas for d in (0, 1)}
-    for t in tiles_boca:    # a boca é rocha do paredão (altura do terraço de cima): ninguém anda por dentro
-        alt[t] = 3
+    for xo, h in BOCAS:     # Bloco 74: na frente do degrau de altura h da montanha
+        i, j = int(tile(xo, 0)[0]), _frente(xo, h)
+        bocas.append((i, j, h))
+    tiles_boca = {(i + d, j) for i, j, h in bocas for d in (0, 1)}
+    for i, j, h in bocas:   # a boca é rocha do degrau: ninguém anda por dentro
+        for d in (0, 1):
+            alt[(i + d, j)] = h
 
     def topo_fn(i, j):
         if mat[(i, j)] == "rocha":
@@ -212,14 +297,27 @@ def monta(exporta_em=None):
         if i < 0 or j < 0 or i >= NI or j >= NJ:
             return "moldura"
         z, _ = zona(*antigo(i, j))
-        return nome_regiao({"paredao": "paredao", "floresta": "alto", "terraco_alto": "alto", "terraco_meio": "meio"}.get(z, "fundo"), i)
+        return regiao_de(z, i)
 
     def add(item, r):
         regiao[len(itens)] = r
         itens.append(item)
 
+    boca_base = {(i + d, j): h - SOBE for i, j, h in bocas for d in (0, 1)}
+    # Bloco 74: na montanha de pedra a boca é a parede de pedra normal com só a PORTA da arte da boca por
+    # cima (a moldura de madeira, a abertura e o trilho); a terra marrom em volta dela não combinava
+    boca_pedra = {t for t in tiles_boca if mat[t] == "montanha"}
     for (i, j), h in alt.items():
-        if (i, j) in tiles_boca:
+        if (i, j) in tiles_boca and (i, j) not in boca_pedra:
+            # Bloco 74: o degrau tem SOBE de altura e a boca cobre 3: por cima dela, os blocos normais
+            b0 = boca_base[(i, j)]
+            com, sem = BL[mat[(i, j)]]
+            tp = topo_fn(i, j)
+            for k in range(b0 + 4, h + 1):
+                b = tiles.escolhe(com if k == h else sem, i, j, k, False).copy()
+                if k == h:
+                    b.paste(tp, (0, 0), tp)
+                add((i + j, k, 0, b, tiles.tela(i, j, k)), reg_tile(i, j))
             continue
         rt = reg_tile(i, j)
         com, sem = BL[mat[(i, j)]]
@@ -289,18 +387,17 @@ def monta(exporta_em=None):
             solto("../muro/final/muro_1_reta_i.png" if (xo // 15) % 7 else "../muro/final/muro_1_danificada.png", xo, -462)
     # bocas de mina no paredão do fundo
     boca = Image.open("../relevo/final/superficie/boca_mina.png").convert("RGBA")
-    for i, j in bocas:          # quadro da boca: canto N do topo em (34, 2) -> tela(i, j, 3) - (2, 2)
-        x, y = tiles.tela(i, j, 3)
-        add((i + j + 1, 3.5, 0, boca, (x - 2, y - 2)), "alto")
-        for d in (0, 1):        # o topo da boca = o chão do terraço
-            add((i + j + 2, 3.6, 0, topo_fn(i + d, j), tiles.tela(i + d, j, 3)), "alto")
-    # trilho mina -> armazém (por cima do chão: peças retas ao longo do eixo j)
-    tr = Image.open("../relevo/final/mina/trilhos/reto_j.png").convert("RGBA")
-    for yo in range(-140, 60, int(T / FATOR)):
-        u, v = tile(200, yo)
-        h = alt.get((int(u), int(v)), 0)
-        x, y = P(int(u) + 0.5, int(v) + 0.5, h)
-        add((int(u) + int(v) + 0.1, h + 0.05, 0, tr, (int(x - 32), int(y - 16))), reg_tile(int(u), int(v)))
+    mascara = Image.new("L", boca.size, 0)  # a porta na face esquerda da boca (px da arte da boca)
+    ImageDraw.Draw(mascara).polygon([(9, 45), (57, 69), (58, 124), (8, 101)], fill=255)
+    porta = Image.new("RGBA", boca.size, (0, 0, 0, 0))
+    porta.paste(boca, (0, 0), mascara)
+    for i, j, h in bocas:       # quadro da boca: canto N do topo em (34, 2) -> tela(i, j, hb) - (2, 2)
+        hb = h - SOBE + 3       # a boca no pé do degrau (3 degraus de altura); o resto é bloco normal
+        x, y = tiles.tela(i, j, hb)
+        add((i + j + 1, hb + 0.5, 0, porta if (i, j) in boca_pedra else boca, (x - 2, y - 2)), reg_tile(i, j))
+        if hb == h and (i, j) not in boca_pedra:
+            for d in (0, 1):    # o topo da boca = o chão do degrau
+                add((i + j + 2, h + 0.6, 0, topo_fn(i + d, j), tiles.tela(i + d, j, h)), reg_tile(i + d, j))
     solto("../objetos/final/vagonete_cheio_SE.png", 200, -60)
     # jazidas no fundo
     for k, (xo, yo) in enumerate([(-300, 300), (-120, 360), (60, 300), (300, 330), (420, 120), (640, 200)]):
@@ -420,15 +517,13 @@ def exporta(pasta, itens, regiao, alt, esc_tiles, sub_de, subidas, bocas, longe)
                 r = "escada_%d" % sub_de[(i, j)]
             else:
                 z, _ = zona((OX + (i + 0.5) * T) / FATOR, (OY + (j + 0.5) * T) / FATOR)
-                r = nome_regiao({"paredao": "paredao", "floresta": "alto", "terraco_alto": "alto", "terraco_meio": "meio"}.get(z, "fundo"), i)
+                r = regiao_de(z, i)
         tiles_de.setdefault(r, []).append((i, j))
-    for i, j in bocas:          # a boca faz parte do paredão do terraço de cima
-        for d in (0, 1):
-            if (i + d, j) in tiles_de.get("fundo", []):
-                tiles_de["fundo"].remove((i + d, j))
-            tiles_de.setdefault("alto", []).append((i + d, j))
     meta = {"fator": FATOR, "tile_arte": T, "nivel_arte": 32, "origem_arte": [OX, OY], "ni": NI, "nj": NJ,
-            "ni_velho": NI_VELHO, "leste_x": (OX + NI_VELHO * T) / FATOR,  # Bloco 67: onde começa a área nova
+            "ni_velho": NI_VELHO, "leste_x": (OX + ni_leste() * T) / FATOR,  # Bloco 67: onde começa a área nova (Bloco 74: depois da mina)
+            # Bloco 74: a paliçada de norte a sul entre a floresta e a vila, com o portão; as áreas da superfície
+            "palicada": {"x": float(PALICADA_X), "portao_y": float(PORTAO_Y)},
+            "areas": {"floresta": [-760.0, float(PALICADA_X)], "vila": [float(PALICADA_X), float(MINA_X0)], "mina": [float(MINA_X0), (OX + ni_leste() * T) / FATOR]},
             "regioes": {}, "escadas": [], "bocas": []}
     for r, its in por.items():
         its.sort(key=lambda t: (t[0], t[1], t[2]))
@@ -462,10 +557,11 @@ def exporta(pasta, itens, regiao, alt, esc_tiles, sub_de, subidas, bocas, longe)
         meta["regioes"][r] = info
         print("%-10s %5d x %4d  z %s" % (r, c.width, c.height, info["z"]))
     # mapa de altura (só a área jogável): linhas de dígitos, j = linha, i = coluna
-    meta["altura"] = ["".join(str(max(0, alt[(i, j)])) for i in range(NI)) for j in range(NJ)]
+    # (Bloco 74: um caractere por tile, chr(48 + degraus): 0-9 e daí ':', ';', '<'... pra montanha de 12)
+    meta["altura"] = ["".join(chr(48 + max(0, alt[(i, j)])) for i in range(NI)) for j in range(NJ)]
     for k, (xo, yo, im, n) in enumerate(subidas):
         meta["escadas"].append({"tiles": [[i, j] for (i, j), s in sub_de.items() if s == k], "lances": n})
-    meta["bocas"] = [[i, j] for i, j in bocas]
+    meta["bocas"] = [[i, j, h] for i, j, h in bocas]
     json.dump(meta, open(os.path.join(pasta, "mapa.json"), "w"), indent=1)
     print("mapa.json:", NI, "x", NJ, "tiles;", len(meta["escadas"]), "subidas;", len(bocas), "bocas")
 

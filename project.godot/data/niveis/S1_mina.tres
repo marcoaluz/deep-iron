@@ -21,5 +21,5 @@ particulas = "poeira"
 faixa = "faixa_mina"
 cor_faixa = Color(0.3, 0.24, 0.18, 1)
 descricao = "A pedreira com a vila e as primeiras galerias. Poeira e desabamento."
-decoracao = [["vagonete_velho", 640, 270], ["trilho_quebrado", 690, 300], ["andaime", 520, 280], ["escada_mao", 545, 255], ["caixas_metal", 670, 370], ["barril", 500, 360], ["tambor_oleo", 520, 380], ["placa_perigo", 610, 250], ["sucata", -662, 332], ["carcaca_maquina", -500, 380], ["pneus", -440, 300], ["palete", -640, 360]]
+decoracao = [["vagonete_velho", 640, 270], ["trilho_quebrado", 690, 300], ["andaime", 520, 280], ["escada_mao", 545, 255], ["caixas_metal", 670, 370], ["barril", 500, 360], ["tambor_oleo", 520, 380], ["placa_perigo", 610, 250], ["sucata", -270, 385], ["carcaca_maquina", 40, 390], ["pneus", 300, 385], ["palete", 60, 280]]
 mapa_regiao = Rect2(126, 34, 168, 78)

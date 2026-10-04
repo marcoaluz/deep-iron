@@ -275,7 +275,7 @@ func iso_parts() -> Array:
 	var n := Node2D.new()
 	n.set_script(sc)
 	n.name = "PredioL"
-	n.position = Vector2(-100, 250)
+	n.position = Vector2(200, -700)  # (Bloco 74: o norte da vila, vazio)
 	var spr := Sprite2D.new()
 	spr.texture = load("res://icon.svg")
 	spr.offset = Vector2(0, -50)

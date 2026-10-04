@@ -9,6 +9,9 @@ extends Node
 ##
 ## As 3 casas e o comedouro que a cena traz (layout antigo) somem ao começar: numa
 ## partida nova é o jogador quem constrói os dele. Save antigo não passa por aqui.
+##
+## Bloco 74 (maquete v3): o armazém é da MINA (fica na frente da boca, onde o vagonete descarrega):
+## no mapa novo a fundação escolhe só o Centro da Vila, dentro da vila.
 
 signal done
 
@@ -64,7 +67,17 @@ func _remove(n: Node) -> void:
 
 func _map_center() -> Vector2:
 	var env := get_tree().get_first_node_in_group("environment")
+	if env and _armazem_fixo():  # Bloco 74: o meio da vila (a praça)
+		var v: Array = env.areas.get("vila", [])
+		if v.size() == 2:
+			return Vector2((float(v[0]) + float(v[1])) * 0.5 - 90.0, -140.0)
 	return env.walkable_rect().get_center() + Vector2(0, 60) if env else Vector2.ZERO
+
+
+## Bloco 74: mapa da maquete v3 — o armazém já está no lugar dele (na frente da mina).
+func _armazem_fixo() -> bool:
+	var env := get_tree().get_first_node_in_group("environment")
+	return env != null and env.has_method("vertical_palisade") and env.vertical_palisade()
 
 
 func _place_hub() -> void:
@@ -75,7 +88,7 @@ func _place_hub() -> void:
 	var cam := get_tree().get_first_node_in_group("game_main").get_node_or_null("Camera2D")
 	if cam and cam.has_method("focus_on"):
 		cam.focus_on(start)
-	_placer().begin(_confirm_hub, HUB_TEXTURE, 5, "o CENTRO DA VILA (fundação 1/2)", {
+	_placer().begin(_confirm_hub, HUB_TEXTURE, 5, "o CENTRO DA VILA (fundação)" if _armazem_fixo() else "o CENTRO DA VILA (fundação 1/2)", {
 		"footprint": HUB_FOOTPRINT, "ignore": [hub, _armazem()], "cancelable": false, "start": start})
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
@@ -92,7 +105,10 @@ func _confirm_hub(pos: Vector2) -> bool:
 		hub.create_tween().tween_property(v, "scale", Vector2(2, 2), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	Audio.forge(pos)
 	_refresh_world()
-	_place_armazem.call_deferred()  # o posicionador termina esta rodada antes de abrir a próxima
+	if _armazem_fixo():
+		_finish.call_deferred()  # Bloco 74: o armazém é o da mina
+	else:
+		_place_armazem.call_deferred()  # o posicionador termina esta rodada antes de abrir a próxima
 	return true
 
 

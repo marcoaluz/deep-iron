@@ -113,6 +113,8 @@ const NAV_EXTRA_GROUPS := ["enfermarias", "tavernas", "campos", "laboratorios", 
 ## navegação, escada passa; construir só em chão plano.
 @export_file("*.json") var iso_map_file: String = ""
 ## Paliçada entre a floresta e a vila: y da linha e meia largura da abertura do portão.
+## (Bloco 74: com o mapa da maquete v3 a paliçada corre de norte a sul — ver palisade_x; o y fica
+## sendo a beira da floresta do leste.)
 @export var palisade_y: float = -462.0
 @export var gate_half_width: float = 40.0
 ## Espessura (px do mundo) da "parede" que a navegação vê na beira de um penhasco.
@@ -127,6 +129,12 @@ var _stair_tiles := {}  # Vector2i -> true
 var andares: Dictionary = {}
 ## Coisas que estavam em lugar inválido no mapa novo e foram mudadas de lugar: [{nome, de, para}]
 var migrated: Array = []
+## Bloco 74 (maquete v3): a paliçada de NORTE A SUL entre a floresta (oeste) e a vila, com o portão no
+## meio (mapa.json "palicada"). NAN = a paliçada de leste a oeste de antes (palisade_y).
+var palisade_x := NAN
+var gate_y := 0.0
+## Bloco 74: as áreas da superfície (x da lógica): floresta | vila | mina (mapa.json "areas").
+var areas: Dictionary = {}
 
 var _rng := RandomNumberGenerator.new()
 var _placed: Array[Vector2] = []
@@ -155,7 +163,8 @@ func _ready() -> void:
 	_build_conteudo_niveis()  # Bloco 70: poças e jazidas dos dados (antes da decoração: ela desvia)
 	_scatter(pebble_count, pebble_textures, 10.0, 0.4, _add_pebble)
 	_scatter(boulder_count, boulder_textures, 40.0, 1.0, _add_boulder)
-	_scatter(crystal_count, crystal_textures, 50.0, 1.0, _add_crystal)
+	if not vertical_palisade():  # (Bloco 74: cristal solto é coisa da caverna, não da vila a céu aberto)
+		_scatter(crystal_count, crystal_textures, 50.0, 1.0, _add_crystal)
 	_scatter(torch_count, [torch_texture], 60.0, 0.6, _add_torch)
 	_build_clearing()  # depois de toda a decoração da mina: tem sorteio próprio
 	_build_deep()
@@ -164,6 +173,7 @@ func _ready() -> void:
 		_build_map_decor()  # Prompt 30: a decoração da montagem aprovada
 		_build_leste()  # Bloco 67: o conteúdo da área nova (trancada até desbravar)
 		_build_decoracao_niveis()  # Bloco 69: a decoração declarada em cada nível (data/niveis)
+	_build_estacao_mina()  # Bloco 74: o vagonete da boca da mina até o armazém
 	clear_decor_under_extras()
 	_build_navigation()
 
@@ -175,7 +185,7 @@ func _ready() -> void:
 ## existem desde o começo (nomes fixos: o save acha cada um pelo nome), só não dá pra chegar.
 signal leste_mudou(aberto: bool)
 var leste_aberto := false
-const LESTE_JAZIDAS := [["ferro", Vector2(1000, 160)], ["cobre", Vector2(1400, 300)], ["carvao", Vector2(1820, 120)],
+const LESTE_JAZIDAS := [["ferro", Vector2(1620, 230)], ["cobre", Vector2(1400, 300)], ["carvao", Vector2(1820, 120)],
 	["prata", Vector2(2260, 320)], ["ferro", Vector2(2700, 180)], ["cobre", Vector2(3100, 330)], ["carvao", Vector2(3420, 200)]]
 const LESTE_ARVORES := 14
 ## Itens de arte do documento: a VILA ANTIGA do leste (decoração, de antes da explosão) — igreja, torre
@@ -355,7 +365,8 @@ func set_leste_aberto(on: bool, animate := true) -> void:
 	var lr := leste_rect()
 	if on:
 		map_rect = Rect2(map_rect.position, Vector2(lr.end.x - map_rect.position.x, map_rect.size.y))
-		clearing_rect = Rect2(clearing_rect.position, Vector2(lr.end.x - clearing_rect.position.x, clearing_rect.size.y))
+		if not vertical_palisade():  # (Bloco 74: a floresta das criaturas é só a do oeste)
+			clearing_rect = Rect2(clearing_rect.position, Vector2(lr.end.x - clearing_rect.position.x, clearing_rect.size.y))
 	rebuild_navigation()
 	_mostra_leste()
 	leste_mudou.emit(on)
@@ -450,6 +461,42 @@ func _build_leste() -> void:
 		get_child(get_child_count() - 1).add_to_group("leste_conteudo")
 		colocados += 1
 	_mostra_leste()
+
+
+## Bloco 74: as bocas carvadas na montanha da mina (mapa.json "bocas": [i, j, degraus]), na lógica: o
+## meio da boca, na beira de baixo da face (onde se pisa na frente dela). A 1ª é a principal (o trilho).
+func bocas_da_mina() -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	if not has_iso_map():
+		return out
+	var f := iso_scale()
+	var t := float(iso_map.tile_arte)
+	for b in iso_map.get("bocas", []):
+		if b is Array and b.size() >= 2:
+			out.append(Vector2((float(iso_map.origem_arte[0]) + (float(b[0]) + 1.0) * t) / f,
+				(float(iso_map.origem_arte[1]) + (float(b[1]) + 1.0) * t) / f))
+	return out
+
+
+## Bloco 74 (maquete v3): o vagonete da mina — um ponto de carga FIXO na frente da boca principal, com o
+## trilho reto até a porta do armazém. O minerador entrega aqui quando é mais perto; o vagonete leva.
+## (Não é dos que o jogador constrói: fica de fora da lista/custo deles e o save é à parte.)
+func _build_estacao_mina() -> void:
+	var bocas := bocas_da_mina()
+	if not vertical_palisade() or bocas.is_empty() or get_parent().has_node("EstacaoMina"):
+		return
+	var e: Node2D = preload("res://scenes/props/estacao_vagonete.tscn").instantiate()
+	e.name = "EstacaoMina"
+	e.position = bocas[0] + Vector2(0, 34)
+	e.set("rota_fixa", true)
+	e.add_to_group("ponto_carga_fixo")
+	get_parent().add_child(e)
+	var v := e.get_node_or_null("Visual") as CanvasItem
+	if v:
+		v.visible = false  # o desenho é a boca da mina e o vagonete no trilho (o guindaste fica no 2º degrau)
+	if torch_texture:  # os dois lampiões do batente da boca principal (maquete v3)
+		for dx in [-34.0, 34.0]:
+			_add_torch(torch_texture, bocas[0] + Vector2(dx, 10.0))
 
 
 ## Bloco 53/67: trancado, o leste fica invisível embaixo da névoa (não custa desenho); abre e aparece.
@@ -628,10 +675,62 @@ func _load_iso_map() -> void:
 	for e in d.get("escadas", []):
 		for t in e.tiles:
 			_stair_tiles[Vector2i(int(t[0]), int(t[1]))] = true
+	# Bloco 74: a superfície da maquete v3 — floresta a oeste da paliçada, vila e mina a leste
+	var pal = d.get("palicada")
+	if pal is Dictionary:
+		palisade_x = float(pal.get("x", NAN))
+		gate_y = float(pal.get("portao_y", 0.0))
+	areas = d.get("areas", {}) if d.get("areas") is Dictionary else {}
+	if vertical_palisade():
+		var g := iso_ground_rect()
+		clearing_rect = Rect2(g.position.x, g.position.y, palisade_x - g.position.x, g.size.y)
+		var fim: float = minf(float(d.get("leste_x", g.end.x)), g.end.x)
+		map_rect = Rect2(palisade_x, g.position.y, fim - palisade_x, g.size.y)
 
 
 func has_iso_map() -> bool:
 	return not iso_map.is_empty()
+
+
+## Bloco 74: a paliçada corre de norte a sul (mapa da maquete v3)?
+func vertical_palisade() -> bool:
+	return not is_nan(palisade_x)
+
+
+## Bloco 74: o ponto está em cima da paliçada (fora da abertura do portão), com folga `margin`.
+func on_palisade(pos: Vector2, margin: float = 0.0) -> bool:
+	if vertical_palisade():
+		return absf(pos.x - palisade_x) < margin + 4.0 and absf(pos.y - gate_y) >= gate_half_width
+	return absf(pos.y - palisade_y) < margin + 4.0 and absf(pos.x) >= gate_half_width
+
+
+## Bloco 74: a superfície a céu aberto (floresta + vila + mina; o leste quando aberto) — o clima e o
+## som de fora. Mapa antigo: a clareira.
+func open_sky_rect() -> Rect2:
+	if not vertical_palisade():
+		return clearing_rect
+	var g := iso_ground_rect()
+	var fim: float = g.end.x if leste_aberto or not has_leste() else leste_x()
+	return Rect2(g.position.x, g.position.y, fim - g.position.x, g.size.y)
+
+
+## Bloco 74: a área da superfície em que o ponto fica ("floresta", "vila", "mina", "leste"; "" = fora).
+func surface_area(pos: Vector2) -> String:
+	if areas.is_empty() or not level_of(pos).is_empty():
+		return ""
+	if has_leste() and pos.x >= leste_x():
+		return "leste"
+	for k in areas:
+		var a: Array = areas[k]
+		if pos.x >= float(a[0]) and pos.x < float(a[1]):
+			return k
+	return ""
+
+
+## Degraus que viram paredão (não anda nem constrói): o mapa antigo tinha o paredão de 4 a oeste.
+## Bloco 74: no mapa da maquete v3 a montanha da mina tem degraus de 4, 8 e 12 e anda (as escadas).
+func _is_wall_level(l: int) -> bool:
+	return l >= 4 and not vertical_palisade()
 
 
 ## Prompt 29: o andar de baixo onde fica esse ponto da lógica ({} = superfície). Os andares
@@ -790,6 +889,12 @@ func _iso_blockers() -> Array[PackedVector2Array]:
 		out.append(_rect_outline(Rect2(lr.position.x - 6.0, lr.position.y, 12.0, lr.size.y)))
 	# paliçada: da borda até o portão, dos dois lados
 	var g := iso_ground_rect()
+	if vertical_palisade():  # Bloco 74: de norte a sul, o portão no meio
+		var y0 := gate_y - gate_half_width
+		var y1 := gate_y + gate_half_width
+		out.append(_rect_outline(Rect2(palisade_x - 4.0, g.position.y, 8.0, y0 - g.position.y)))
+		out.append(_rect_outline(Rect2(palisade_x - 4.0, y1, 8.0, g.end.y - y1)))
+		return out
 	out.append(_rect_outline(Rect2(g.position.x, palisade_y - 4.0, -gate_half_width - g.position.x, 8.0)))
 	out.append(_rect_outline(Rect2(gate_half_width, palisade_y - 4.0, g.end.x - gate_half_width, 8.0)))
 	return out
@@ -801,13 +906,13 @@ func spot_ok(pos: Vector2, margin: float = 16.0, walker: bool = false) -> bool:
 	if not has_iso_map():
 		return true
 	var t := tile_at(pos)
-	if t.x < 0 or tile_level(t) >= 4:
+	if t.x < 0 or _is_wall_level(tile_level(t)):
 		return false
 	if walker:  # boneco: anda em escada e na beira; impossível só paredão, paliçada e fora do mapa
-		return not (absf(pos.y - palisade_y) < 4.0 and absf(pos.x) >= gate_half_width)
+		return not on_palisade(pos)
 	if _stair_tiles.has(t):
 		return false
-	if absf(pos.y - palisade_y) < margin + 4.0 and absf(pos.x) >= gate_half_width:
+	if on_palisade(pos, margin):
 		return false
 	for d in [Vector2(margin, 0), Vector2(-margin, 0), Vector2(0, margin), Vector2(0, -margin)]:
 		var u := tile_at(pos + d)
@@ -818,7 +923,11 @@ func spot_ok(pos: Vector2, margin: float = 16.0, walker: bool = false) -> bool:
 
 ## Mapa novo: a pegada fica na floresta (além da paliçada)? Prédio da vila vai na pedreira.
 func in_forest(fp: Rect2) -> bool:
-	return has_iso_map() and fp.end.y <= palisade_y + 6.0
+	if not has_iso_map():
+		return false
+	if vertical_palisade():  # Bloco 74: a floresta a oeste; no leste, a mata do norte continua sendo mata
+		return fp.end.x <= palisade_x + 6.0 or (has_leste() and fp.position.x >= leste_x() and fp.end.y <= palisade_y + 6.0)
+	return fp.end.y <= palisade_y + 6.0
 
 
 ## Pegada de construção no mapa novo: "" se dá pra construir; senão o motivo. O chão
@@ -829,7 +938,10 @@ func footprint_reason(fp: Rect2) -> String:
 	var andar := level_of(fp.get_center())  # Bloco 70: a laje de um andar de baixo é plana
 	if not andar.is_empty():
 		return "" if (andar.rect as Rect2).encloses(fp) else "fora do andar"
-	if fp.position.y < palisade_y + 6.0 and fp.end.y > palisade_y - 6.0:
+	if vertical_palisade():
+		if fp.position.x < palisade_x + 6.0 and fp.end.x > palisade_x - 6.0:
+			return "em cima da paliçada"
+	elif fp.position.y < palisade_y + 6.0 and fp.end.y > palisade_y - 6.0:
 		return "em cima da paliçada"
 	var lv := -1
 	var sx := maxf(minf(10.0, fp.size.x), 1.0)
@@ -844,8 +956,10 @@ func footprint_reason(fp: Rect2) -> String:
 			if _stair_tiles.has(t):
 				return "em cima da escada"
 			var l := tile_level(t)
-			if l >= 4:
+			if _is_wall_level(l):
 				return "no paredão"
+			if l > 0 and surface_area(Vector2(x, y)) == "mina":
+				return "na montanha da mina"  # Bloco 74: os degraus da montanha são da mina
 			if lv >= 0 and l != lv:
 				return "na beira do penhasco (o chão tem que ser plano)"
 			lv = l
@@ -884,6 +998,14 @@ func migrate_positions() -> int:
 			seen[node] = true
 			if node.is_in_group("barricadas"):
 				continue  # portões: ficam na abertura da paliçada / junto do poço (posição da cena)
+			if _vila_na_floresta(node):  # Bloco 74: save do mapa antigo — a vila ficava onde hoje é mata
+				var p0: Vector2 = node.global_position
+				var q0 := _fora_da_floresta(node)
+				node.global_position = q0
+				migrated.append({"nome": String(node.name), "de": p0, "para": q0})
+				print("environment: %s mudou de %s pra %s (caiu na floresta do mapa novo)" % [node.name, p0.round(), q0.round()])
+				n += 1
+				continue
 			# folga pequena: só muda o que está DE FATO em lugar impossível (em cima da beira, da
 			# escada, do paredão, da paliçada). Mais branda que a regra de construir, senão um
 			# prédio construído certinho perto da beira "andaria" ao carregar o save.
@@ -896,6 +1018,31 @@ func migrate_positions() -> int:
 				print("environment: %s mudou de %s pra %s (lugar inválido no mapa novo)" % [node.name, p.round(), q.round()])
 				n += 1
 	return n + _migrate_overlaps()
+
+
+## Bloco 74: o que é da vila (casas, Centro, prédios) e ficou a oeste da paliçada ou EM CIMA dela (save do
+## mapa antigo, em que a vila ocupava o oeste). A mata, a caça, a coleta e os coletores de madeira ficam.
+const VILA_SO := ["casas", "village_hub", "comedouros", "armazens", "escavadeira", "oficina", "enfermarias", "tavernas",
+	"campos", "laboratorios", "escudos", "arsenais", "parques", "vestiarios", "canteiros"]
+
+
+func _vila_na_floresta(node: Node) -> bool:
+	if not vertical_palisade() or not VILA_SO.any(func(g): return node.is_in_group(g)):
+		return false
+	if node.is_in_group("canteiros") and String(node.get("kind")) == "coletor":
+		return false  # a obra do coletor de madeira é na floresta mesmo
+	var r := IsoArt.base_rect(node)
+	var x0: float = r.position.x if r.has_area() else (node as Node2D).global_position.x - 20.0
+	return x0 < palisade_x + 8.0 and (node as Node2D).global_position.x > iso_ground_rect().position.x - 40.0
+
+
+## O lugar livre mais perto do lado da vila (a pegada inteira a leste da paliçada), na mesma altura do mapa.
+func _fora_da_floresta(node: Node) -> Vector2:
+	var p: Vector2 = (node as Node2D).global_position
+	var r := IsoArt.base_rect(node)
+	var ate_a_beira: float = (p.x - r.position.x) if r.has_area() else 30.0  # do pé até a beira oeste da pegada
+	var alvo := Vector2(palisade_x + 24.0 + ate_a_beira, clampf(p.y, map_rect.position.y + 60.0, map_rect.end.y - 60.0))
+	return nearest_ok(alvo, 16.0)
 
 
 ## Prompt 29 parte 2: com a arte nova o prédio tem fundo de verdade (a pegada cresceu). Prédio
@@ -1011,6 +1158,8 @@ func area_at(pos: Vector2) -> String:
 		return n.area
 	if is_deep(pos):
 		return "deep"
+	if vertical_palisade():  # Bloco 74: a floresta (S0) é a do oeste da paliçada
+		return "clareira" if pos.x < palisade_x else "mapa"
 	return "clareira" if pos.y < map_rect.position.y else "mapa"
 
 
@@ -1284,6 +1433,33 @@ const MAP_DECOR := [
 	["arbusto_0", Vector2(-480, -640), false], ["arbusto_1", Vector2(200, -600), false], ["arbusto_2", Vector2(480, -900), false],
 	["arbusto_0", Vector2(-200, -820), false], ["arbusto_1", Vector2(620, -620), false], ["arbusto_2", Vector2(-330, -560), false],
 ]
+## Bloco 74 (maquete v3): a decoração da superfície nova — a vila (igreja, poço, horta, bancos), a mina
+## (andaime e escada de mão no paredão, guindaste no 2º degrau, casinha de pedra no 1º, vagonete na 2ª
+## abertura, entulho no pé, carvão e caixotes na frente do armazém) e os pinheiros da montanha.
+const MAP_DECOR_V3 := [
+	["igreja_0", Vector2(330, -640), true], ["poco", Vector2(190, -130), true], ["banco", Vector2(-30, -70), false],
+	["banco", Vector2(140, -320), false], ["varal", Vector2(-220, -270), false], ["horta_espantalho", Vector2(-250, -540), false],
+	["horta_pronto", Vector2(-215, -500), false], ["horta_crescendo", Vector2(-170, -520), false],
+	["placa_direcao", Vector2(-255, -2), false], ["caixotes_2", Vector2(250, 70), false], ["barris_2", Vector2(-110, 210), false],
+	["arbusto_0", Vector2(-250, 330), false], ["arbusto_1", Vector2(420, -820), false], ["arbusto_2", Vector2(-200, -900), false],
+	["andaime", Vector2(700, -300), true], ["escada_mao", Vector2(1000, -158), false], ["escada_mao", Vector2(625, -150), false],
+	["guindaste_pedreira", Vector2(990, -420), true], ["casa_pedra_0", Vector2(1150, -270), true],
+	["vagonete_vazio_SE", Vector2(1098, -322), false], ["tabuas", Vector2(650, -60), false], ["tabuas", Vector2(1150, -120), false],
+	["rocha_mina_0", Vector2(940, -150), false], ["pedra_m", Vector2(1030, -160), false], ["pedra_p", Vector2(800, -150), false],
+	["rocha_mina_2", Vector2(835, -148), false], ["placa_perigo", Vector2(930, -148), false],
+	["carvao_m", Vector2(760, 40), false], ["caixote", Vector2(870, 50), false], ["barril", Vector2(735, -30), false],
+	["sacos", Vector2(840, 60), false], ["explosivos", Vector2(1180, 60), false],
+	["arvore_pinheiro_0", Vector2(900, -560), true], ["arvore_pinheiro_1", Vector2(985, -610), true],
+	["arvore_pinheiro_0", Vector2(1065, -540), true], ["arvore_pinheiro_1", Vector2(1150, -630), true],
+	["arvore_pinheiro_1", Vector2(845, -720), true], ["arvore_pinheiro_0", Vector2(1010, -770), true],
+	["arvore_pinheiro_0", Vector2(1120, -840), true], ["arvore_pinheiro_1", Vector2(925, -900), true],
+	["arvore_pinheiro_0", Vector2(640, -520), true], ["arvore_pinheiro_1", Vector2(650, -820), true],
+	["arvore_pinheiro_0", Vector2(720, -620), true],
+]
+## Bloco 74: as árvores de enfeite da floresta do oeste (as que dão madeira são as Arvore da cena).
+const FOREST_TREES := ["arvore_pinheiro_0", "arvore_pinheiro_1", "arvore_pinheiro_0", "arvore_carvalho_0", "arvore_carvalho_1",
+	"arvore_carvalho_2", "arvore_betula_0", "arvore_betula_1"]
+const FOREST_TREE_COUNT := 50
 ## Vegetação rasteira espalhada na floresta (como na montagem: capim, flores, samambaia...)
 const FOREST_DECOR := ["capim_0", "capim_1", "capim_2", "capim_3", "flores_0", "flores_1", "flores_2", "flores_3",
 	"samambaia_0", "samambaia_1", "cogumelos_0", "cogumelos_1", "cogumelos_2", "tronco_musgo_0", "tronco_musgo_1",
@@ -1292,20 +1468,55 @@ const FOREST_DECOR_COUNT := 90
 
 
 func _build_map_decor() -> void:
-	for d in MAP_DECOR:
-		if spot_ok(d[1], 6.0) and _is_free(d[1], 14.0, 34.0):
+	var v3 := vertical_palisade()
+	for d in (MAP_DECOR_V3 if v3 else MAP_DECOR):
+		# (Bloco 74: os da maquete v3 são postos a dedo, encostados no paredão e nas jazidas)
+		var livre: bool = (spot_ok(d[1], 3.0) and _is_free_perto(d[1], 18.0)) if v3 else (spot_ok(d[1], 6.0) and _is_free(d[1], 14.0, 34.0))
+		if livre:
 			_decor_node(d[0], d[1], d[2])
 	var rng := RandomNumberGenerator.new()
 	rng.seed = map_seed + 41  # sorteio próprio: não mexe nas pedras/cristais dos saves
+	# a área da mata: a faixa do norte (mapa antigo) ou a floresta do oeste (Bloco 74)
+	var mata := Rect2(-690.0, -1020.0, 1430.0, 525.0)
+	if v3:
+		mata = clearing_rect.grow_individual(-20.0, -20.0, -26.0, -20.0)
+		_build_forest_trees(rng, mata)
 	var placed := 0
 	for tries in 2500:
 		if placed >= FOREST_DECOR_COUNT:
 			break
-		var p := Vector2(rng.randf_range(-690.0, 740.0), rng.randf_range(-1020.0, -495.0))
+		var p := Vector2(rng.randf_range(mata.position.x, mata.end.x), rng.randf_range(mata.position.y, mata.end.y))
 		if not spot_ok(p, 8.0) or not _is_free(p, 18.0, 30.0):
 			continue
 		_decor_node(FOREST_DECOR[rng.randi() % FOREST_DECOR.size()], p, false)
 		placed += 1
+
+
+## Bloco 74: livre pra um enfeite posto a dedo — nenhuma estação a menos de `r` px (o resto, quem pôs, viu).
+func _is_free_perto(p: Vector2, r: float) -> bool:
+	for group in STATION_GROUPS:
+		for node in get_tree().get_nodes_in_group(group):
+			if p.distance_to(node.global_position) < r:
+				return false
+	return true
+
+
+## Bloco 74: a mata fechada da floresta do oeste (enfeite que bloqueia o caminho): a clareira junto da
+## paliçada fica livre (é onde vão os coletores de madeira) e um corredor livre leva até o portão (por onde
+## as criaturas vêm e o lenhador passa).
+func _build_forest_trees(rng: RandomNumberGenerator, mata: Rect2) -> void:
+	var postas := 0
+	for tries in 3000:
+		if postas >= FOREST_TREE_COUNT:
+			break
+		var p := Vector2(rng.randf_range(mata.position.x, mata.end.x), rng.randf_range(mata.position.y, mata.end.y))
+		if p.x > palisade_x - 170.0 or (p.x > palisade_x - 260.0 and absf(p.y - gate_y) < 90.0):
+			continue
+		if not spot_ok(p, 10.0) or not _is_free(p, 40.0, 50.0):
+			continue
+		_decor_node(FOREST_TREES[rng.randi() % FOREST_TREES.size()], p, true)
+		get_child(get_child_count() - 1).add_to_group("mata")
+		postas += 1
 
 
 func _decor_node(prop: String, p: Vector2, blocks: bool) -> void:

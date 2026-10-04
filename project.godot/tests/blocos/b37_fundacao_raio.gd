@@ -1,5 +1,6 @@
 extends SceneTree
 ## Bloco 37: fundação + raio das casas. RODAR SÓ COM APPDATA ISOLADO.
+## (Bloco 74: no mapa da maquete v3 o armazém é o da mina — a fundação escolhe só o Centro da Vila.)
 var main: Node
 var t := 0.0
 var step := 0
@@ -86,11 +87,10 @@ func _process(delta: float) -> bool:
 	elif step == 1 and t - t_mark > 0.3:
 		check(hub.global_position == get_meta("hub") and hub.visible, "Centro da Vila no lugar escolhido (%s)" % hub.global_position)
 		var arm = g("armazens")
-		check(placer().active and g("founding").step == "armazem", "já pede o Armazém")
-		var pos := spot_near(hub.global_position + Vector2(0, 40), 120.0, 300.0)
-		placer().move_to(pos)
-		check(placer().try_confirm(), "Armazém posicionado em %s" % pos)
-		set_meta("arm", pos)
+		var env = g("environment")
+		check(g("founding").step == "done" and not placer().active, "Bloco 74: não pede o Armazém (ele é o da mina)")
+		check(env.surface_area(arm.global_position) == "mina", "o armazém continua na frente da mina (%s)" % arm.global_position)
+		set_meta("arm", arm.global_position)
 		step = 2
 		t_mark = t
 	elif step == 2 and t - t_mark > 0.3:
@@ -109,10 +109,10 @@ func _process(delta: float) -> bool:
 		print("== casas em qualquer lugar da pedreira")
 		check(hub.build_starter_house(), "escolher lugar da casa")
 		check(hub.house_radius() == 0.0 and placer()._radius == 0.0, "sem raio do Centro")
-		var forest := Vector2(0, -700)
+		var forest := Vector2(-560, -500)  # (Bloco 74: a floresta é a faixa do oeste)
 		placer().move_to(forest)
 		print("  na floresta: '%s'" % placer()._reason)
-		check("pedreira" in placer()._reason, "na floresta (além da paliçada): inválido")
+		check("floresta" in placer()._reason, "na floresta (além da paliçada): inválido")
 		check(not placer().try_confirm() and get_nodes_in_group("casas").is_empty(), "clique na floresta não constrói")
 		var far_q := spot_near(Vector2(420, 300), 0.0, 300.0)  # fundo da pedreira, longe do Centro
 		placer().move_to(far_q)
@@ -191,7 +191,7 @@ func _process(delta: float) -> bool:
 		check(names.has("CasaNova9"), "save antigo: casa posicionada longe (fora do raio) continua")
 		var far = main.get_node("World/CasaNova9")
 		check(far.built and far.beds_total() == 4 and far.global_position.distance_to(hub.global_position) > 400.0, "ela funciona (4 camas) mesmo a %d px do Centro" % far.global_position.distance_to(hub.global_position))
-		check(hub.global_position == Vector2(-300, -300) and get_nodes_in_group("comedouros").size() == 1, "save antigo: Centro e comedouro no layout da cena")  # Prompt 29: o Centro foi pro terraço de cima
+		check(hub.global_position == Vector2(40, -190) and get_nodes_in_group("comedouros").size() == 1, "save antigo: Centro e comedouro no layout da cena")  # Bloco 74: o Centro na praça da vila
 		check(hub.founded and not placer().active, "save antigo: não pede fundação")
 		root.get_node("SaveManager").save_game("teste")
 		root.get_node("SaveManager").load_game()

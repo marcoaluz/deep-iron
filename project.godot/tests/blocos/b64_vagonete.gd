@@ -53,7 +53,7 @@ func _process(delta: float) -> bool:
 				_constroi()
 				step = 1
 		1:
-			var ps: Array = main.get_tree().get_nodes_in_group("pontos_carga")
+			var ps: Array = _construidos()
 			if not ps.is_empty() and ps[0].rail != null:
 				est = ps[0]
 				Engine.time_scale = 1.0
@@ -182,13 +182,19 @@ func _quebrou() -> void:
 	Engine.time_scale = 3.0
 
 
+## Os pontos de carga que o jogador construiu (Bloco 74: fora o fixo da boca da mina).
+func _construidos() -> Array:
+	return main.get_tree().get_nodes_in_group("pontos_carga").filter(func(p): return not p.is_in_group("ponto_carga_fixo"))
+
+
 func _carregado() -> void:
 	print("== depois de carregar")
-	var ps: Array = main.get_tree().get_nodes_in_group("pontos_carga")
+	var ps: Array = _construidos()
 	check(ps.size() == 1, "ponto de carga voltou")
 	if ps.is_empty():
 		return
 	var e = ps[0]
 	check(e.total_moved >= e.cart_capacity - 0.1, "total levado voltou (%.0f)" % e.total_moved)
 	check(e.rail != null and e.rail.points.size() >= 2, "trilho refeito")
-	check(main.get_tree().get_nodes_in_group("trilhos").size() == 1 and main.get_tree().get_nodes_in_group("vagonetes").size() == 1, "um trilho e um vagonete (sem duplicar)")
+	var fixos: int = main.get_tree().get_nodes_in_group("ponto_carga_fixo").size()  # (Bloco 74: o da mina tem o dele)
+	check(main.get_tree().get_nodes_in_group("trilhos").size() == 1 + fixos and main.get_tree().get_nodes_in_group("vagonetes").size() == 1 + fixos, "um trilho e um vagonete (sem duplicar)")

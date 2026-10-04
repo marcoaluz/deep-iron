@@ -13,6 +13,8 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 const LEVEL_NAMES := ["sem muro", "Paliçada de madeira", "Muro de pedra", "Portão de ferro"]
 
 @export_enum("tunel", "poco") var gate_id: String = "tunel"
+## Bloco 74: o portão numa paliçada de norte a sul (a vila fica a leste): a arte vira de lado.
+@export var vertical := false
 @export var display_name: String = "Portão do túnel"
 ## Vida por nível (índice = nível).
 @export var hp_per_level: Array[float] = [0.0, 120.0, 260.0, 450.0]
@@ -39,11 +41,20 @@ func _ready() -> void:
 
 
 func contains_point(p: Vector2) -> bool:
+	if vertical:  # (a mesma caixa, de lado: a abertura corre de norte a sul)
+		return Rect2(global_position + Vector2(-36, -38), Vector2(42, 76)).has_point(p)
 	return Rect2(global_position + Vector2(-38, -36), Vector2(76, 42)).has_point(p)
+
+
+## Bloco 74: pra que lado fica a vila (os guardas ficam desse lado do portão).
+func inside_dir() -> Vector2:
+	return Vector2.RIGHT if vertical else Vector2.DOWN
 
 
 ## Área onde a decoração do mapa é escondida (environment.gd).
 func decor_clear_rect() -> Rect2:
+	if vertical:
+		return Rect2(global_position + Vector2(-30, -40), Vector2(36, 80))
 	return Rect2(global_position + Vector2(-40, -30), Vector2(80, 36))
 
 

@@ -155,11 +155,11 @@ func _ambiencia() -> void:
 	var cam = main.get_node("Camera2D")
 	var dn = g("day_night")
 	var w = g("weather")
-	cam.focus_on(g("village_hub").global_position)
+	cam.focus_on(g("armazens").global_position)  # (Bloco 74: a vila é céu aberto; o som da mina é o da área da mina)
 	cam.position = cam._target_pos
 	cam.force_update_scroll()
 	audio._update_context()
-	check(audio.ambience_now == "mina", "câmera na vila (mina): %s" % audio.ambience_now)
+	check(audio.ambience_now == "mina", "câmera na mina (armazém): %s" % audio.ambience_now)
 	var clareira: Vector2 = (env.clearing_rect as Rect2).get_center()
 	cam.focus_on(clareira)
 	cam.position = cam._target_pos

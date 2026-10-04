@@ -301,6 +301,9 @@ func _sync_art() -> void:
 			sp.texture = l.tex
 			sp.centered = false
 			sp.offset = -l.ancora
+			if l.get("flip", false):  # Bloco 74: virada de lado (espelho em volta da âncora)
+				sp.flip_h = true
+				sp.offset.x = l.ancora.x - l.tex.get_width()
 			sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			sp.light_mask = 2
 			_art.add_child(sp)

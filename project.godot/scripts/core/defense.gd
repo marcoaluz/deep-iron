@@ -397,10 +397,14 @@ func guard_post(worker: Node) -> Vector2:
 	if gates.is_empty():
 		var hub := get_tree().get_first_node_in_group("village_hub")
 		base = hub.global_position + Vector2(0, 60) if hub else Vector2.ZERO
-	else:
-		base = gates[i % gates.size()].global_position + Vector2(0, 30)
+	var dentro := Vector2.DOWN  # Bloco 74: o lado da vila (portão de norte a sul: leste)
+	if not gates.is_empty():
+		var gt: Node2D = gates[i % gates.size()]
+		dentro = gt.inside_dir() if gt.has_method("inside_dir") else Vector2.DOWN
+		base = gt.global_position + dentro * 30.0
 	var slot := i / maxi(gates.size(), 1)
-	return base + Vector2(-24.0 + 16.0 * (slot % 4), 10.0 * floorf(slot / 4.0))
+	var lado := Vector2(dentro.y, -dentro.x)  # ao longo do portão
+	return base + lado * (-24.0 + 16.0 * (slot % 4)) + dentro * (10.0 * floorf(slot / 4.0))
 
 
 # ------------------------------------------------------------ armas / Arsenal (Bloco 35)
@@ -909,6 +913,9 @@ func _spawn(kind: String) -> Node2D:
 	if kind == "lumivoro":
 		var r: Rect2 = env.clearing_rect.grow(-60.0) if env else Rect2(-200, -850, 400, 300)
 		pos = Vector2(randf_range(r.position.x, r.end.x), randf_range(r.position.y, r.end.y - 60.0))
+		if env and env.has_method("vertical_palisade") and env.vertical_palisade():
+			# Bloco 74: saem do fundo da floresta do oeste (longe da paliçada)
+			pos = Vector2(randf_range(r.position.x, r.position.x + r.size.x * 0.55), randf_range(r.position.y, r.end.y))
 		g = gate("tunel")
 	else:
 		var shaft := get_tree().get_first_node_in_group("elevador")

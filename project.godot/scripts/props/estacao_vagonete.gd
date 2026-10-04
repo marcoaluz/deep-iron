@@ -19,6 +19,9 @@ const Iso := preload("res://scripts/iso/iso_core.gd")
 ## Viagens até o trilho quebrar e segundos de engenheiro pra consertar.
 @export var rail_trips: int = 25
 @export var repair_seconds: float = 20.0
+## Bloco 74: o da mina (fixo): o trilho sai do batente da boca, desce reto e vira pra porta do armazém
+## (em vez do caminho da navegação).
+@export var rota_fixa := false
 
 var stock := {}  # minério esperando o vagonete
 var rail: Node2D = null  # o trilho (Node2D "trilhos" com os pontos)
@@ -96,7 +99,11 @@ func _build_rail() -> void:
 		return
 	var map := get_world_2d().navigation_map
 	var pts := PackedVector2Array([global_position + Vector2(0, 18), a.global_position + Vector2(0, 30)])
-	if map.is_valid() and NavigationServer2D.map_get_iteration_id(map) > 0:
+	if rota_fixa:
+		var porta := a.global_position + Vector2(0, 30)
+		# (a boca é rocha: o trilho começa no batente, no chão da frente — o vagonete espera ali)
+		pts = PackedVector2Array([global_position + Vector2(0, -30), Vector2(global_position.x, porta.y), porta])
+	elif map.is_valid() and NavigationServer2D.map_get_iteration_id(map) > 0:
 		var path := NavigationServer2D.map_get_path(map, pts[0], pts[1], true)
 		if path.size() >= 2:
 			pts = path

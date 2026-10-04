@@ -903,16 +903,27 @@ func _build_palisade() -> void:
 	var gap: float = _env.gate_half_width + step * 0.5
 	var n := 0
 	var x := g.position.x + step * 0.5
-	while x < g.end.x:
-		if absf(x) > gap:
+	# Bloco 74: a paliçada de norte a sul (a peça virada de lado), do alto do mapa até o corte da frente
+	var de_lado: bool = _env.has_method("vertical_palisade") and _env.vertical_palisade()
+	var fim := g.end.y if de_lado else g.end.x
+	if de_lado:
+		x = g.position.y + step * 0.5
+	while x < fim:
+		var fora_do_portao: bool = absf(x - _env.gate_y) > gap if de_lado else absf(x) > gap
+		if fora_do_portao:
 			var l := IsoArt.state("palicada", "danificada" if n % 7 == 3 else "reta")
-			var ground := Vector2(x, y)
+			if de_lado:
+				l = IsoArt._de_lado(l)
+			var ground := Vector2(_env.palisade_x, x) if de_lado else Vector2(x, y)
 			var z := height_at(ground)
 			var sp := Sprite2D.new()
 			sp.name = "Palicada%d" % n
 			sp.texture = l.tex
 			sp.centered = false
 			sp.offset = -l.ancora
+			if l.get("flip", false):
+				sp.flip_h = true
+				sp.offset.x = l.ancora.x - l.tex.get_width()
 			sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			sp.light_mask = 2
 			sp.position = Iso.iso(art(ground), z).round()
@@ -1211,29 +1222,37 @@ func _sync_trilhos() -> void:
 func _draw_rail(d: Node2D, r: Node) -> void:
 	if not is_instance_valid(r) or r.points.size() < 2:
 		return
-	var pts: Array = []
-	for p in r.points:
-		pts.append(to_screen(p))
-	var ferro := Color(0.62, 0.3, 0.25) if r.broken else Color(0.5, 0.48, 0.46)
-	var madeira := Color(0.36, 0.25, 0.16)
+	# Bloco 74: a bitola e os dormentes no CHÃO (projetados), não na tela — o trilho lê como trilho em
+	# qualquer direção do losango; ferro de 2 px com brilho em cima, dormente de madeira grosso
+	var ferro := Color(0.62, 0.3, 0.25) if r.broken else Color(0.46, 0.45, 0.44)
+	var brilho := Color(0.8, 0.45, 0.38) if r.broken else Color(0.72, 0.7, 0.66)
+	var madeira := Color(0.32, 0.21, 0.12)
+	var madeira_luz := Color(0.45, 0.31, 0.18)
+	const BITOLA := 5.0  # meia bitola (px da lógica)
+	const PASSO := 7.0  # entre dormentes (px da lógica)
 	var acc := 0.0
-	for i in range(1, pts.size()):
-		var a: Vector2 = pts[i - 1]
-		var b: Vector2 = pts[i]
-		var seg := b - a
-		var L := seg.length()
+	for i in range(1, r.points.size()):
+		var a: Vector2 = r.points[i - 1]
+		var b: Vector2 = r.points[i]
+		var L := a.distance_to(b)
 		if L < 0.5:
 			continue
-		var dirv := seg / L
-		var n := Vector2(-dirv.y, dirv.x) * 4.0
-		var k := fposmod(-acc, 7.0)
-		while k < L:  # dormentes a cada 7 px
+		var dirv := (b - a) / L
+		var n := dirv.orthogonal() * BITOLA
+		var k := fposmod(-acc, PASSO)
+		while k < L:
 			var c := a + dirv * k
-			d.draw_line((c - n * 1.6).round(), (c + n * 1.6).round(), madeira, 2.0)
-			k += 7.0
+			var s0 := to_screen(c - n * 1.55)
+			var s1 := to_screen(c + n * 1.55)
+			d.draw_line(s0.round(), s1.round(), madeira, 3.0)
+			d.draw_line((s0 + Vector2(0, -1)).round(), (s1 + Vector2(0, -1)).round(), madeira_luz, 1.0)
+			k += PASSO
 		acc += L
-		d.draw_line((a + n).round(), (b + n).round(), ferro, 1.0)
-		d.draw_line((a - n).round(), (b - n).round(), ferro, 1.0)
+		for lado in [-1.0, 1.0]:
+			var ra := to_screen(a + n * lado)
+			var rb := to_screen(b + n * lado)
+			d.draw_line(ra.round(), rb.round(), ferro, 2.0)
+			d.draw_line((ra + Vector2(0, -1)).round(), (rb + Vector2(0, -1)).round(), brilho, 1.0)
 
 
 # ------------------------------------------------------------ fantasma do posicionador

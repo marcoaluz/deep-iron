@@ -2,6 +2,7 @@ extends SceneTree
 ## Prompt 29, parte 1: o mapa novo (terraços, escadas, paliçada, céu). Alturas, navegação
 ## (penhasco bloqueia, escada e portão passam), construir só em chão plano, migração do que cai
 ## em lugar inválido (save antigo), ordem com as caixas do terreno, céu por hora.
+## (Bloco 74: a geografia é a da maquete v3 — floresta e vila planas, a montanha da mina em degraus de 6.)
 ## RODAR SÓ COM APPDATA ISOLADO.
 const Iso := preload("res://scripts/iso/iso_core.gd")
 const PATH := "user://savegame.json"
@@ -76,14 +77,15 @@ func _process(delta: float) -> bool:
 		check(e.has_iso_map(), "mapa.json do terreno novo carregado")
 		check(iso.enabled and is_equal_approx(iso.S, 1.5), "vista iso ligada por padrão, escala 1,5")
 		print("== alturas (px de arte, 32 por degrau)")
-		check(e.height_at(Vector2(-300, -300)) == 96.0, "terraço de cima (Centro): 96")
-		check(e.height_at(Vector2(-300, 0)) == 64.0, "terraço do meio: 64")
-		check(e.height_at(Vector2(300, 300)) == 0.0, "fundo da pedreira: 0")
-		check(e.height_at(Vector2(0, -800)) == 96.0, "floresta: 96 (mesmo nível do terraço de cima)")
-		# a escada de 3 lances (alto -> fundo, x 640): desce do norte pro sul
+		check(e.height_at(Vector2(40, -190)) == 0.0, "a vila (Centro): 0, plana")
+		check(e.height_at(Vector2(-560, -500)) == 0.0, "a floresta: 0 (o mesmo chão da vila)")
+		check(e.height_at(Vector2(1000, 100)) == 0.0, "a frente da mina: 0")
+		check(e.height_at(Vector2(640, -400)) == 192.0, "1º degrau da montanha: 192")
+		check(e.height_at(Vector2(980, -800)) == 576.0, "o alto da montanha: 576 (3 degraus de 6)")
+		# a escada de 6 lances (chão -> 1º degrau, x 1170): desce do norte pro sul
 		var st: Array = []
-		for y in range(-190, -110, 4):
-			var p := Vector2(646, y)
+		for y in range(-200, -20, 4):
+			var p := Vector2(1170, y)
 			if e.is_stair_tile(e.tile_at(p)):
 				st.append(e.height_at(p))
 		var desce := st.size() > 4
@@ -91,29 +93,30 @@ func _process(delta: float) -> bool:
 			desce = desce and st[i] <= st[i - 1]
 		check(desce and st.front() > st.back(), "escada: a altura desce em rampa (%d amostras, %.0f -> %.0f)" % [st.size(), st.front() if st.size() else 0.0, st.back() if st.size() else 0.0])
 		print("== navegação")
-		var down := Vector2(300, 250)
-		var up := Vector2(300, -260)
+		var down := Vector2(1000, 100)
+		var up := Vector2(1000, -260)
 		var pa := path(down, up)
-		check(pa.size() > 1 and pa[-1].distance_to(up) < 12.0, "do fundo dá pra chegar no terraço de cima")
+		check(pa.size() > 1 and pa[-1].distance_to(up) < 12.0, "do chão da mina dá pra chegar no 1º degrau")
 		check(uses_stairs(pa), "o caminho passa por uma escada")
 		check(length(pa) > down.distance_to(up) * 1.3, "não atravessa o penhasco (caminho %.0f, reta %.0f)" % [length(pa), down.distance_to(up)])
-		var forest := Vector2(400, -800)
-		var village := Vector2(400, -300)
+		var forest := Vector2(-560, -500)
+		var village := Vector2(-100, -500)
 		var pf := path(forest, village)
 		var through_gate := false
-		for i in range(1, pf.size()):
+		for i in range(1, pf.size()):  # (Bloco 74: a paliçada corre de norte a sul, em x = palisade_x)
 			var a2 := pf[i - 1]
 			var b2 := pf[i]
-			if (a2.y - e.palisade_y) * (b2.y - e.palisade_y) <= 0.0:
-				var x := lerpf(a2.x, b2.x, (e.palisade_y - a2.y) / (b2.y - a2.y) if b2.y != a2.y else 0.0)
-				through_gate = absf(x) < e.gate_half_width
+			if (a2.x - e.palisade_x) * (b2.x - e.palisade_x) <= 0.0:
+				var y := lerpf(a2.y, b2.y, (e.palisade_x - a2.x) / (b2.x - a2.x) if b2.x != a2.x else 0.0)
+				through_gate = absf(y - e.gate_y) < e.gate_half_width
 		check(pf.size() > 1 and pf[-1].distance_to(village) < 12.0 and through_gate, "da floresta pra vila: só pelo portão")
 		print("== construir só em chão plano")
 		var hb := Rect2(Vector2(-30, -30), Vector2(60, 60))
-		check(e.footprint_reason(Rect2(Vector2(-330, -330), hb.size)) == "", "terraço de cima: pode")
-		check("penhasco" in e.footprint_reason(Rect2(Vector2(-330, -200), Vector2(60, 60))), "na beira do penhasco: não")
-		check("escada" in e.footprint_reason(Rect2(Vector2(630, -175), Vector2(30, 30))), "em cima da escada: não")
-		check("paliçada" in e.footprint_reason(Rect2(Vector2(200, -480), Vector2(60, 40))), "em cima da paliçada: não")
+		check(e.footprint_reason(Rect2(Vector2(100, -600), hb.size)) == "", "na vila: pode")
+		check("penhasco" in e.footprint_reason(Rect2(Vector2(1400, -210), Vector2(60, 60))), "na beira do penhasco (o terraço do leste): não")
+		check("escada" in e.footprint_reason(Rect2(Vector2(1162, -120), Vector2(30, 30))), "em cima da escada: não")
+		check("paliçada" in e.footprint_reason(Rect2(Vector2(e.palisade_x - 30.0, -480), Vector2(60, 40))), "em cima da paliçada: não")
+		check("montanha" in e.footprint_reason(Rect2(Vector2(950, -780), Vector2(60, 40))), "em cima da montanha da mina: não")
 		print("== ordem com as caixas do terreno")
 		iso._process(0.0)  # caixas e z do mesmo instante (quem anda muda entre quadros)
 		var bad := 0
@@ -165,9 +168,9 @@ func _process(delta: float) -> bool:
 		sm.save_game("teste")
 		var data = JSON.parse_string(FileAccess.get_file_as_string(PATH))
 		var ws: Array = data.workers
-		ws[0].position = [-735, 0]     # dentro do paredão (degrau 4, ninguém chega)
-		ws[1].position = [300, -462]   # em cima da paliçada (fora do portão)
-		ws[2].position = [646, -170]   # na escada: boneco ANDA em escada, não muda de lugar
+		ws[0].position = [-900, 0]     # fora do mapa (Bloco 74: o paredão do oeste virou floresta)
+		ws[1].position = [-300, -462]  # em cima da paliçada (fora do portão)
+		ws[2].position = [1170, -100]  # na escada: boneco ANDA em escada, não muda de lugar
 		var f := FileAccess.open(PATH, FileAccess.WRITE)
 		f.store_string(JSON.stringify(data))
 		f.close()

@@ -62,7 +62,8 @@ func _ready() -> void:
 	add_to_group("efeitos")  # Bloco 54: reduzir efeitos
 	z_index = 20  # por cima dos prédios e das árvores (o HUD é outra camada)
 	var env := get_tree().get_first_node_in_group("environment")
-	_rect = env.clearing_rect if env else Rect2()
+	# Bloco 74: o céu aberto é a superfície toda (floresta, vila e mina), não só a clareira
+	_rect = (env.open_sky_rect() if env.has_method("open_sky_rect") else env.clearing_rect) if env else Rect2()
 	if not _rect.has_area():
 		return
 	_frost = Polygon2D.new()

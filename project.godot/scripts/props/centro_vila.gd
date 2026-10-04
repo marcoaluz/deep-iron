@@ -802,7 +802,13 @@ func desbravar_leste() -> bool:
 
 # ------------------------------------------------------------ trilho e vagonete (Bloco 64)
 func vagonetes() -> Array:
-	return get_tree().get_nodes_in_group("pontos_carga")
+	# (Bloco 74: o da mina é fixo — não conta no custo nem vai na lista do save)
+	return get_tree().get_nodes_in_group("pontos_carga").filter(func(v): return not v.is_in_group("ponto_carga_fixo"))
+
+
+## Bloco 74: o ponto de carga fixo da boca da mina (null = mapa sem ele).
+func estacao_mina() -> Node2D:
+	return get_tree().get_first_node_in_group("ponto_carga_fixo")
 
 
 func vagonete_cost() -> Vector3i:
@@ -1304,6 +1310,7 @@ func get_save_data() -> Dictionary:
 		"coletores_minerio": coletores_minerio().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position),
 			"total": c.total_produced, "jazida": SaveUtil.vec2_to_array(c.chosen_pos) if c.chosen_pos != Vector2.INF else []}),  # Bloco 57
 		"vagonetes": vagonetes().map(func(v): return v.get_save_data()),  # Bloco 64
+		"estacao_mina": estacao_mina().get_save_data() if estacao_mina() else {},  # Bloco 74
 		"leste_aberto": get_tree().get_first_node_in_group("environment").leste_aberto if get_tree().get_first_node_in_group("environment") else false,  # Bloco 67
 		"enfermarias_extra": extra_enfermarias().map(func(w): return SaveUtil.vec2_to_array(w.global_position))}  # Bloco 47
 
@@ -1366,6 +1373,9 @@ func load_save_data(d: Dictionary) -> void:
 		if vpos != Vector2.INF:
 			var v := spawn_vagonete(vpos)
 			v.load_save_data(vd)
+	var em := estacao_mina()  # Bloco 74 (save de antes: o da mina começa vazio)
+	if em and not SaveUtil.dict(d, "estacao_mina").is_empty():
+		em.load_save_data(SaveUtil.dict(d, "estacao_mina"))
 	# Bloco 47: enfermarias extras (save antigo: nenhuma)
 	for old in extra_enfermarias():
 		old.get_parent().remove_child(old)

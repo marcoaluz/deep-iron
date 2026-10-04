@@ -41,9 +41,14 @@ func ws() -> Array:
 	return get_nodes_in_group("ipezinhos")
 
 
+## Bloco 74: o norte da vila (vazio) — longe do Centro, que cresce quando sobe de nível.
+const LIVRE := Vector2(100, -600)
+
+
 func free_spot(near: Vector2) -> Vector2:
 	var placer = g("house_placer")
 	placer._collect_blockers()
+	placer._footprint = Rect2(-64, -104, 128, 124)  # (Bloco 74: a pegada de um prédio grande — um não encosta no outro)
 	for r in range(1, 20):
 		for a in range(16):
 			var p: Vector2 = (near + Vector2.RIGHT.rotated(a * TAU / 16.0) * (60.0 + r * 28.0)).round()
@@ -56,7 +61,7 @@ func spot_in(rect: Rect2) -> Vector2:
 	var p = g("house_placer")
 	p._collect_blockers()
 	var c := rect.get_center()
-	for r in range(0, 260, 12):
+	for r in range(0, 700, 12):  # (Bloco 74: a floresta é uma faixa comprida de norte a sul)
 		for a in range(24):
 			var q: Vector2 = (c + Vector2.RIGHT.rotated(a * TAU / 24.0) * r).round()
 			if rect.has_point(q) and p.check_spot(q) == "":
@@ -129,7 +134,7 @@ func _process(delta: float) -> bool:
 		var c1: Vector3i = res.lab_cost()
 		check(c1 == Vector3i(res.lab_credits, res.lab_iron, res.lab_wood), "1º laboratório: custo base %s" % c1)
 		var cr0: float = eco.credits
-		check(res._confirm_lab(free_spot(hub.global_position)), "1º laboratório encomendado")
+		check(res._confirm_lab(free_spot(LIVRE)), "1º laboratório encomendado")
 		check(absf(cr0 - eco.credits - c1.x) < 0.5, "cobrou o custo do 1º")
 		check(n("laboratorios") == 0 and res.lab_block_reason().begins_with("em obra"), "ainda é canteiro: precisa de engenheiro (%s)" % res.lab_block_reason())
 		check(finish_canteiro("laboratorio") and n("laboratorios") == 1, "obra pronta: 1 laboratório")
@@ -137,7 +142,7 @@ func _process(delta: float) -> bool:
 		var c2: Vector3i = res.lab_cost()
 		check(c2 == Vector3i(roundi(c1.x * gr), roundi(c1.y * gr), roundi(c1.z * gr)), "2º custa x%.2f: %s" % [gr, c2])
 		cr0 = eco.credits
-		check(res._confirm_lab(free_spot(hub.global_position)) and finish_canteiro("laboratorio"), "2º laboratório erguido")
+		check(res._confirm_lab(free_spot(LIVRE)) and finish_canteiro("laboratorio"), "2º laboratório erguido")
 		check(absf(cr0 - eco.credits - c2.x) < 0.5, "cobrou o custo maior do 2º")
 		var labs: Array = res.labs()
 		check(labs.size() == 2 and labs[0].name != labs[1].name, "2 laboratórios com nomes diferentes (%s, %s)" % [labs[0].name, labs[1].name])
@@ -153,9 +158,9 @@ func _process(delta: float) -> bool:
 		check(not lc.button.disabled, "botão liberado")
 
 		print("== Arsenal x2: forja só no principal (uma obra), cavalete compartilhado")
-		check(def._confirm_arsenal(free_spot(hub.global_position)) and finish_canteiro("arsenal"), "1º Arsenal")
+		check(def._confirm_arsenal(free_spot(LIVRE)) and finish_canteiro("arsenal"), "1º Arsenal")
 		check(def.arsenal_block_reason() == "", "2º Arsenal liberado")
-		check(def._confirm_arsenal(free_spot(hub.global_position)) and finish_canteiro("arsenal"), "2º Arsenal")
+		check(def._confirm_arsenal(free_spot(LIVRE)) and finish_canteiro("arsenal"), "2º Arsenal")
 		var ars: Array = def.arsenais()
 		check(ars.size() == 2 and ars[0].is_forge() and not ars[1].is_forge(), "o 1º forja, o 2º é posto de armas")
 		def.queue.append({"what": "forjar", "id": "lanca", "total": 20.0, "left": 20.0, "ordered_at": 1.0})
@@ -165,14 +170,14 @@ func _process(delta: float) -> bool:
 		check("tem 2" in ac.tag.text and ac.cost.text == def.arsenal_cost_text(), "cartão do Arsenal: tem 2, custo do próximo (%s)" % ac.cost.text)
 
 		print("== Campo de treino x2")
-		check(def._confirm_campo(free_spot(hub.global_position)) and finish_canteiro("campo"), "1º campo")
-		check(def._confirm_campo(free_spot(hub.global_position)) and finish_canteiro("campo"), "2º campo")
+		check(def._confirm_campo(free_spot(LIVRE)) and finish_canteiro("campo"), "1º campo")
+		check(def._confirm_campo(free_spot(LIVRE)) and finish_canteiro("campo"), "2º campo")
 		check(def.campos().size() == 2, "2 campos")
 
 		print("== Taverna x2: construir outra ≠ ampliar; ânimo não soma")
-		check(mor._confirm_taverna(free_spot(hub.global_position)) and finish_canteiro("taverna"), "1ª taverna")
+		check(mor._confirm_taverna(free_spot(LIVRE)) and finish_canteiro("taverna"), "1ª taverna")
 		check(mor.taverna_build_reason() == "" and mor.taverna_upgrade_reason() == "", "dá pra construir outra E ampliar")
-		check(mor._confirm_taverna(free_spot(hub.global_position)) and finish_canteiro("taverna"), "2ª taverna")
+		check(mor._confirm_taverna(free_spot(LIVRE)) and finish_canteiro("taverna"), "2ª taverna")
 		var tavs: Array = mor.tavernas()
 		check(tavs.size() == 2, "2 tavernas")
 		check(mor.upgrade_taverna() and finish_canteiro("taverna_up"), "ampliação encomendada e pronta")
@@ -215,7 +220,7 @@ func _process(delta: float) -> bool:
 		print("== Enfermaria extra")
 		var main_inf = g("enfermarias")
 		check(hub.enfermaria_block_reason() == "", "nova enfermaria liberada ('%s')" % hub.enfermaria_block_reason())
-		var es := free_spot(hub.global_position)
+		var es := free_spot(LIVRE)
 		check(es.is_finite() and hub._confirm_enfermaria(es) and n("enfermarias") == 1, "encomendada: ainda canteiro (em %s)" % es)
 		check(finish_canteiro("enfermaria") and n("enfermarias") == 2, "pronta: 2 enfermarias")
 		var extra = hub.extra_enfermarias()[0]
@@ -228,7 +233,7 @@ func _process(delta: float) -> bool:
 
 		print("== continuam únicos")
 		check(eq.vestiario_block_reason() != "construído", "(antes) vestiário não existe")
-		eq.finish_build("vestiario", free_spot(hub.global_position))
+		eq.finish_build("vestiario", free_spot(LIVRE))
 		check(eq.vestiario() != null and eq.vestiario_block_reason() == "construído", "Vestiário: um por vila")
 		var vc := menu_card(menu, "Defesa e equipamento", "Vestiário")
 		check(vc.tag.text == "um por vila" and vc.button.disabled, "cartão do Vestiário: 'um por vila'")

@@ -1,9 +1,36 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-03 (manhã). Branch `isometrico`. O remoto está em `875ae827`: os commits do
-Bloco 72 abaixo ainda NÃO foram enviados (push só com ok do Marco).
+Atualizado em 2026-10-04 (noite). Branch `isometrico`. O remoto está em `875ae827`: os commits dos
+Blocos 72–74 abaixo ainda NÃO foram enviados (push só com ok do Marco).
 
-## AGORA: Bloco 72 — o mapa do jogo igual à referência (em andamento)
+## AGORA (2026-10-04): Blocos 73 e 74 — feitos, esperando o Marco conferir
+
+O Marco aprovou a `docs/arte/bloco72/maquete/superficie_v3_legenda.jpg` pra aplicar no jogo e pediu pra
+melhorar o andar dos NPCs ("parece que eles flutuam um pouco").
+
+- **Bloco 73 (`fa894421`) — bonecos andando:** os quadros da caminhada vinham cada um numa altura (pé até
+  9 px acima do chão; robô 13). Ajuste por quadro `aj` no `bonecos.json` (`integra.py pes`, sem mexer nos
+  PNGs); o quadro da caminhada vem da distância andada (`IsoBillboard.PASSO_CICLO`); sem sair do lugar
+  fica parado; a posição desenhada fica entre dois passos da física. Relatório
+  `docs/BLOCO73_BONECOS_ANDANDO.md`, GIF `docs/arte/bloco73/andar_antes_depois.gif`, teste `b73_andar`.
+  Proposta em aberto: caminhadas de 8 quadros no PixelLab (Blender só como guia de pose, se precisar).
+- **Bloco 74 — a superfície da maquete v3:** FLORESTA (oeste) | paliçada de norte a sul com o único
+  portão | VILA plana (sem terraços, sem jazida) | MINA com a montanha de pedra em 3 degraus (6/12/18),
+  5 bocas (a principal com o vagonete fixo até o armazém na frente; as 4 galerias nas outras), escadas,
+  guindaste, casinha, pinheiros; o leste trancado (Bloco 67) começa depois da mina (x≈1245). Gerador:
+  `prototipos/camera/arte_iso/mapa/monta.py` (constantes no topo) + `relevo/montanha.py`; jogo:
+  `environment.gd` (palisade_x/gate_y, areas, open_sky_rect, surface_area, bocas_da_mina,
+  _build_estacao_mina, MAP_DECOR_V3, migração de save antigo), `iso_view.gd` (paliçada de lado, trilho),
+  `barricada.gd` (vertical), `founding.gd` (só o Centro: o armazém é o da mina), `main.tscn` (posições).
+  Relatório `docs/BLOCO74_SUPERFICIE_V3.md`; teste `b74_superficie`; capturas `tests/capturas_bloco74.gd`.
+  **Decisão pra confirmar com o Marco:** manter FERRO na montanha (é o minério de base; a informação de
+  antes de que o começo era só cobre/carvão estava errada). Ponto de balanceamento: o lenhador anda ~1,7x
+  (floresta no oeste, armazém único na mina). O save dele (cópia) carrega: a vila antiga vai pro lado de
+  dentro da paliçada.
+- Próximo (do plano do 72): as galerias de madeira logo abaixo da superfície e os andares como faixas
+  (a coluna da maquete); lotes livres marcados e a boca da escada em espiral na superfície.
+
+## Bloco 72 — o mapa do jogo igual à referência (histórico)
 
 Prompt: `Claude outputs/prompt_bloco72_mapa_vs_referencia.md`. Referência:
 `docs/arte/referencia_mapa_mundo.jpg`. Relatório: `docs/BLOCO72_MAPA_REFERENCIA.md`.
@@ -83,7 +110,10 @@ longa simulada (F3 + telemetria), depois o tutorial (66).
   escrever arquivo e rodar com `python <arquivo>`.
 - Testes: `tests/blocos/*.gd` (um por bloco, registrado em `tests/test_blocos.gd`, linha no TESTING.md);
   rodar sempre com APPDATA/XDG_DATA_HOME/LOCALAPPDATA em `%TEMP%\deep_iron_testes\fake_appdata`. O save
-  real do Marco nunca pode mudar (md5 `76C7403D5697DD29F90480757BEED3F0`). Godot:
+  real do Marco nunca pode mudar (md5 em 2026-10-04: `97CF252DBF6CEBFC458931B10596D19C`, gravado por ele em
+  02/10 22:59; o valor anotado antes era `76C7403D...`, mais antigo). Pra testar com ele: copiar pra uma
+  pasta com `fake_appdata` no caminho e copiar pra `user://savegame.json` DEPOIS que a cena abre (abrir partida
+  nova manda o save existente pros backups). Godot:
   `D:\DEV\Godot\Godot_v4.7.2-stable_win64.exe`. A tela lógica do jogo é 1280x720 (stretch canvas_items).
 - Medidas: `tools/bench_cena.ps1 [-Rapido]` (vila cheia ~20 ms / 50 FPS em 2026-10-03).
 - Skills do projeto: 21 em `.claude/skills/` (godot-*, game-feel, create-game-assets...).
