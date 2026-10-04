@@ -14,7 +14,7 @@ melhorar o andar dos NPCs ("parece que eles flutuam um pouco").
   fica parado; a posição desenhada fica entre dois passos da física. Relatório
   `docs/BLOCO73_BONECOS_ANDANDO.md`, GIF `docs/arte/bloco73/andar_antes_depois.gif`, teste `b73_andar`.
   Proposta em aberto: caminhadas de 8 quadros no PixelLab (Blender só como guia de pose, se precisar).
-- **Bloco 74 — a superfície da maquete v3:** FLORESTA (oeste) | paliçada de norte a sul com o único
+- **Bloco 74 (`df06d159`) — a superfície da maquete v3:** FLORESTA (oeste) | paliçada de norte a sul com o único
   portão | VILA plana (sem terraços, sem jazida) | MINA com a montanha de pedra em 3 degraus (6/12/18),
   5 bocas (a principal com o vagonete fixo até o armazém na frente; as 4 galerias nas outras), escadas,
   guindaste, casinha, pinheiros; o leste trancado (Bloco 67) começa depois da mina (x≈1245). Gerador:
