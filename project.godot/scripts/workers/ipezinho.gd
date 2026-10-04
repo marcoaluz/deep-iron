@@ -301,7 +301,9 @@ const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 @export var idle_wander_radius: float = 50.0
 
 @export_group("Visual")
-@export var walk_anim_fps: float = 9.0
+## Bloco 73: 13 quadros/s na velocidade normal = o passo da vista iso (IsoBillboard.PASSO_CICLO:
+## 4 quadros a cada 56 px de arte = ~37 px daqui); o som do passo cai junto com o pé.
+@export var walk_anim_fps: float = 13.0
 @export var head_lamp_enabled: bool = true
 
 var hunger: float = 100.0
@@ -2883,7 +2885,7 @@ func deposit(amount: float) -> float:
 func _update_animation(delta: float) -> void:
 	var spd := velocity.length()
 	if spd > 5.0:
-		_anim_time += delta * walk_anim_fps * clampf(spd / speed, 0.5, 1.3)
+		_anim_time += delta * walk_anim_fps * clampf(spd / speed, 0.0, 1.6)  # devagar = passo devagar
 		var new_frame := int(_anim_time) % _body.hframes
 		if new_frame != _body.frame and new_frame % 2 == 0:
 			Audio.step(global_position)  # pé tocando o chão (quadros 0 e 2)

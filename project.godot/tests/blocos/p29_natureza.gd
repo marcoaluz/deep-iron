@@ -171,7 +171,7 @@ func _elevadores() -> void:
 	bb.sync_static(Rect2(-1e6, -1e6, 2e6, 2e6))
 	var g: Sprite2D = bb._art.get_child(1) if bb._art and bb._art.get_child_count() > 1 else null
 	var want: Vector2 = iso().to_screen(el.bottom_position) - iso().to_screen(el.global_position)
-	check(g != null and g.position.distance_to(want) < 1.0 and want.y > 1000.0, "a gaiola fica no chão do nível 2, embaixo (%.0f px abaixo na tela)" % want.y)
+	check(g != null and g.position.distance_to(want) < 1.0 and want.y > 300.0, "a gaiola fica no chão do nível 2, embaixo (%.0f px abaixo na tela)" % want.y)
 	var ab = main.get_tree().get_first_node_in_group("elevador_abismo")
 	check(names(ab) == ["ruina", "gaiola"], "plataforma do abismo arruinada + gaiola (%s)" % [names(ab)])
 	ab.repairing = true

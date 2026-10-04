@@ -96,6 +96,20 @@ var _c_front: Sprite2D
 var _props_synced := false
 var _caiu := false  # criatura: a poeira da queda já subiu
 var _chamas := {}  # Prompt 18: nome da luz -> chama animada no ponto de fogueira/forja
+## Bloco 73: quem anda pela física (ipezinho) só muda de lugar nos passos da física (60/s); a tela
+## desenha em outro ritmo (mais quadros, ou dois passos num quadro) e o boneco ia aos trancos.
+## O espelho desenha entre o passo anterior e o atual, pela fração do passo (~16 ms de atraso).
+var _f_ant := Vector2.INF
+var _f_cur := Vector2.INF
+var _f_quadro := -1
+## Bloco 73: a caminhada pela DISTÂNCIA andada no chão da vista (antes era pelo relógio, 9 quadros/s:
+## andando a 180 px/s o chão escorregava embaixo do pé, e empurrando alguém ele marchava no lugar).
+## Um ciclo (2 passos) a cada PASSO_CICLO px de arte; parado de fato abaixo de MEXENDO px/s.
+const PASSO_CICLO := 56.0
+const MEXENDO := 20.0
+var _passo := 0.0
+var _chao_ant := Vector2.INF
+var _desloc := 0.0  # px de arte por segundo (suavizado)
 
 
 func setup(n: Node2D, is_dynamic: bool, view: Node) -> void:
@@ -517,7 +531,9 @@ func sync_static(view_rect: Rect2) -> bool:
 ## (sem animação, rótulos, ícones): voltando pra tela, sincroniza tudo de novo.
 func sync_dynamic(view_rect: Rect2 = Rect2()) -> void:
 	_update_box()
-	var scr := Iso.iso(_view.art(src.global_position), box.zb)
+	var g: Vector2 = _view.art(_pos_suave())
+	var scr := Iso.iso(g, box.zb)
+	_conta_passo(g, get_process_delta_time())
 	if view_rect.has_area() and not view_rect.has_point(scr) and _char != null:
 		position = scr.round()
 		_last_screen = scr
@@ -526,7 +542,7 @@ func sync_dynamic(view_rect: Rect2 = Rect2()) -> void:
 	if _last_screen != Vector2.INF:
 		_vel = _vel.lerp(scr - _last_screen, 0.35)
 	_last_screen = scr
-	var moving: bool = src is CharacterBody2D and (src as CharacterBody2D).velocity.length() > 5.0
+	var moving: bool = src is CharacterBody2D and (src as CharacterBody2D).velocity.length() > 5.0 and _desloc > MEXENDO
 	if src.is_in_group("robos") or src.is_in_group("criaturas") or src.is_in_group("animais"):
 		moving = _vel.length() > 0.2  # robô e criaturas andam mexendo a posição (não são CharacterBody)
 	_moving_now = moving
@@ -554,6 +570,36 @@ func sync_dynamic(view_rect: Rect2 = Rect2()) -> void:
 		_tool_rule(moving)
 		_sync_char()
 		_redraw_if_changed()
+
+
+## Bloco 73: a posição de quem anda pela física, entre o passo anterior e o atual (ver _f_ant).
+func _pos_suave() -> Vector2:
+	var p: Vector2 = src.global_position
+	if not (src is CharacterBody2D):
+		return p
+	var f := Engine.get_physics_frames()
+	if f != _f_quadro:
+		_f_ant = _f_cur if _f_cur != Vector2.INF else p
+		_f_cur = p
+		_f_quadro = f
+	elif p != _f_cur:  # mudou fora da física (gaiola do elevador, porta, save): vai direto
+		_f_ant = p
+		_f_cur = p
+	if _f_ant.distance_squared_to(_f_cur) > 400.0:  # pulo de lugar: sem meio-termo
+		return p
+	return _f_ant.lerp(_f_cur, Engine.get_physics_interpolation_fraction())
+
+
+## Bloco 73: a fase da caminhada (ciclos) e a velocidade de verdade, pelo chão da vista (px de arte).
+func _conta_passo(g: Vector2, dt: float) -> void:
+	if _chao_ant != Vector2.INF:
+		var d := g.distance_to(_chao_ant)
+		if d > 24.0:  # pulo de lugar (elevador, porta, save): não conta como passo
+			d = 0.0
+		_passo = fmod(_passo + d / PASSO_CICLO, 64.0)
+		if dt > 0.0:
+			_desloc = lerpf(_desloc, d / dt, minf(1.0, dt * 12.0))
+	_chao_ant = g
 
 
 ## Bloco 53: sombra/anel/barra de vida só se redesenham quando muda o que eles mostram (antes era
@@ -668,7 +714,7 @@ func _sync_char() -> void:
 	elif src.is_in_group("criaturas"):
 		p = IsoBonecos.criatura_pose(src, iso_dir, _moving_now)  # Prompt 17
 	else:
-		p = IsoBonecos.pose(src, iso_dir, _clock)
+		p = IsoBonecos.pose(src, iso_dir, _clock, _passo, _desloc > MEXENDO)
 	if p.is_empty():
 		if _char:
 			_char.queue_free()

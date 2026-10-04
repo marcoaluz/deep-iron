@@ -483,6 +483,7 @@ def bonecos():
             im.save(os.path.join(BON, "item_%s.png" % it))
             out["ferramentas"][it] = "item_%s.png" % it
     criaturas(out)
+    pes_no_chao(out)
     json.dump(out, open(os.path.join(BON, "bonecos.json"), "w", encoding="utf-8"), indent=1, ensure_ascii=False)
     print("->", os.path.join(BON, "bonecos.json"), len(out["pastas"]), "pastas")
 
@@ -589,7 +590,59 @@ def so_criaturas():
     f = os.path.join(BON, "bonecos.json")
     out = json.load(open(f, encoding="utf-8"))
     criaturas(out)
+    pes_no_chao(out)
     json.dump(out, open(f, "w", encoding="utf-8"), indent=1, ensure_ascii=False)
+
+
+# ------------------------------------------------------------ pé no chão (Bloco 73)
+## Animações de andar: os quadros vieram do PixelLab cada um numa altura (na caminhada o pé ficava
+## em média 6 px, até 13 no robô, acima da linha da âncora) e o boneco subia e descia como se
+## flutuasse. A gosma pula de propósito: fica de fora.
+ANDAR = ("caminhada", "com_picareta", "mancar_esq")
+CABECA_FIXA = ("caminhada", "com_picareta")
+
+
+def pes_no_chao(out):
+    """Ajuste por quadro `aj` = [dx, dy] (px de arte, somado ao desenho) nas animações de andar: o pé
+    mais baixo de cada quadro encosta na linha da âncora e, na caminhada de gente, a cabeça fica na
+    mesma vertical em todos os quadros (sem o tranco pra frente e pra trás). O jogo
+    (iso_bonecos.gd) desloca o quadro; os PNGs não mudam."""
+    n_aj = 0
+    for pasta, info in out["pastas"].items():
+        if pasta.startswith("criatura_gosma"):
+            continue
+        gente = not pasta.startswith("criatura") and pasta != "robo"
+        for anim, dd in info["anims"].items():
+            if anim not in ANDAR:
+                continue
+            for d, i in dd.items():
+                i.pop("aj", None)
+                if i["n"] < 2:
+                    continue
+                a = np.array(Image.open(os.path.join(BON, i["img"])).convert("RGBA"))[..., 3] > 40
+                w = int(i["quadro"][0])
+                ay = float(i["ancora"][1])
+                baixo, cabeca = [], []
+                for k in range(i["n"]):
+                    q = a[:, k * w:(k + 1) * w]
+                    ys, xs = np.nonzero(q)
+                    linhas = np.nonzero(q.sum(1) >= 2)[0]
+                    if len(ys) == 0 or len(linhas) == 0:
+                        baixo.append(ay)
+                        cabeca.append(None)
+                        continue
+                    baixo.append(float(linhas.max() + 1))  # a beira de baixo do pé mais baixo
+                    cabeca.append(float(xs[ys <= ys.min() + 10].mean()))
+                xs_ok = [c for c in cabeca if c is not None]
+                meio = float(np.median(xs_ok)) if xs_ok else 0.0
+                aj = []
+                for b, c in zip(baixo, cabeca):
+                    dx = int(round(meio - c)) if gente and anim in CABECA_FIXA and c is not None else 0
+                    aj.append([dx, int(round(ay - b))])
+                if any(v != [0, 0] for v in aj):
+                    i["aj"] = aj
+                    n_aj += 1
+    print("pé no chão:", n_aj, "tiras ajustadas")
 
 
 # ------------------------------------------------------------ natureza e objetos (Prompt 29, parte 4)
@@ -860,5 +913,10 @@ if __name__ == "__main__":
         so_criaturas()
     elif sys.argv[1:2] == ["luz"]:  # Prompt 19: texturas de luz + janelas acesas + pontos de luz
         luz()
+    elif sys.argv[1:2] == ["pes"]:  # Bloco 73: só o pé no chão das animações de andar (bonecos.json)
+        f = os.path.join(BON, "bonecos.json")
+        out = json.load(open(f, encoding="utf-8"))
+        pes_no_chao(out)
+        json.dump(out, open(f, "w", encoding="utf-8"), indent=1, ensure_ascii=False)
     else:
         print(__doc__)

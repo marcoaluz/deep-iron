@@ -304,3 +304,7 @@ func test_b71_s4_s5() -> void:
 
 func test_b72_coluna() -> void:
 	run_bloco("b72_coluna.gd")
+
+
+func test_b73_andar() -> void:
+	run_bloco("b73_andar.gd")

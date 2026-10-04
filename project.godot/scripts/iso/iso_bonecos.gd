@@ -124,10 +124,22 @@ static func _find(fs: Array, anim: String, d: String) -> Array:
 	return []
 
 
+## Bloco 73: o ajuste do quadro (pé no chão, cabeça na mesma vertical: integra.py pes) em px de arte.
+static func _aj(info: Dictionary, frame: int) -> Vector2:
+	var aj = info.get("aj")
+	if aj == null or aj.is_empty():
+		return Vector2.ZERO
+	var a: Array = aj[mini(frame, aj.size() - 1)]
+	return Vector2(a[0], a[1])
+
+
 ## O que desenhar agora. {} = sem arte nova (o boneco de sempre).
 ##   hidden (dentro de casa), tex/n/frame/ancora/quadro (corpo), top (topo da cabeça no quadro,
 ##   relativo ao pé), altura, anim, pasta, e as camadas saco/item: {tex, pos, flip, front}.
-static func pose(w: Node, iso_dir: int, clock: float) -> Dictionary:
+## Bloco 73: passo = fase da caminhada em ciclos (o espelho conta pela distância andada no chão, então
+## a perna acompanha o deslocamento de verdade); mexendo = false quando ele "anda" sem sair do lugar
+## (empurrando alguém, travado): fica parado em vez de marchar no lugar. Sem passo, o relógio antigo.
+static func pose(w: Node, iso_dir: int, clock: float, passo: float = -1.0, mexendo: bool = true) -> Dictionary:
 	if not enabled_for(w):
 		return {}
 	if w.get("_inside"):
@@ -135,7 +147,7 @@ static func pose(w: Node, iso_dir: int, clock: float) -> Dictionary:
 	var d: String = DIR_NAMES[clampi(iso_dir, 0, 3)]
 	var fs := folders(w)
 	var vel: Vector2 = w.velocity if w is CharacterBody2D else Vector2.ZERO
-	var moving := vel.length() > 5.0
+	var moving := vel.length() > 5.0 and mexendo
 	var injured: bool = w.get("injured") == true
 	var downed: bool = w.get("downed") == true
 	var lying: bool = (w.get("_resting") == true and not w.get("_inside")) or downed
@@ -192,7 +204,7 @@ static func pose(w: Node, iso_dir: int, clock: float) -> Dictionary:
 	if hold_last:
 		frame = n - 1
 	elif walk_clock:
-		frame = int(float(w.get("_anim_time"))) % n
+		frame = int(passo * n) % n if passo >= 0.0 else int(float(w.get("_anim_time"))) % n
 	else:
 		frame = int(clock * ANIM_FPS) % n
 	# pele: a tira já pintada no tom (integra.py, mesma regra do skin_palette.gd); sem ela, pinta aqui
@@ -205,8 +217,9 @@ static func pose(w: Node, iso_dir: int, clock: float) -> Dictionary:
 		if tone != "":
 			tex = SkinPalette.texture_for(tex, tone, n)
 	var top: Array = info.topo[mini(frame, info.topo.size() - 1)]
-	var out := {"hidden": false, "tex": tex, "n": n, "frame": frame, "ancora": Vector2(info.ancora[0], info.ancora[1]),
-		"quadro": Vector2(info.quadro[0], info.quadro[1]), "top": Vector2(top[0], top[1]), "altura": -float(top[1]),
+	var aj := _aj(info, frame)
+	var out := {"hidden": false, "tex": tex, "n": n, "frame": frame, "ancora": Vector2(info.ancora[0], info.ancora[1]) - aj,
+		"quadro": Vector2(info.quadro[0], info.quadro[1]), "top": Vector2(top[0], top[1]) + aj, "altura": -(float(top[1]) + aj.y),
 		"anim": anim, "pasta": hit[0], "dir": d}
 	if cargo and moving and not lying:
 		out["saco"] = _saco(d, out.top)
@@ -338,8 +351,9 @@ static func robo_pose(r: Node, iso_dir: int, clock: float, moving: bool) -> Dict
 	var n: int = maxi(int(info.n), 1)
 	var frame := n - 1 if hold_last else (int(clock * ANIM_FPS) % n if anim != "parado" else 0)
 	var top: Array = info.topo[mini(frame, info.topo.size() - 1)]
-	return {"hidden": false, "tex": texture(info.img), "n": n, "frame": frame, "ancora": Vector2(info.ancora[0], info.ancora[1]),
-		"quadro": Vector2(info.quadro[0], info.quadro[1]), "top": Vector2(top[0], top[1]), "altura": -float(top[1]),
+	var aj := _aj(info, frame)
+	return {"hidden": false, "tex": texture(info.img), "n": n, "frame": frame, "ancora": Vector2(info.ancora[0], info.ancora[1]) - aj,
+		"quadro": Vector2(info.quadro[0], info.quadro[1]), "top": Vector2(top[0], top[1]) + aj, "altura": -(float(top[1]) + aj.y),
 		"anim": anim, "pasta": "robo", "dir": d}
 
 
@@ -394,8 +408,9 @@ static func criatura_pose(c: Node, iso_dir: int, moving: bool) -> Dictionary:
 	var frame: int = int(since * ANIM_FPS)
 	frame = mini(frame, n - 1) if once else frame % n
 	var top: Array = info.topo[mini(frame, info.topo.size() - 1)]
-	var out := {"hidden": false, "tex": texture(info.img), "n": n, "frame": frame, "ancora": Vector2(info.ancora[0], info.ancora[1]),
-		"quadro": Vector2(info.quadro[0], info.quadro[1]), "top": Vector2(top[0], top[1]), "altura": -float(top[1]),
+	var aj := _aj(info, frame)
+	var out := {"hidden": false, "tex": texture(info.img), "n": n, "frame": frame, "ancora": Vector2(info.ancora[0], info.ancora[1]) - aj,
+		"quadro": Vector2(info.quadro[0], info.quadro[1]), "top": Vector2(top[0], top[1]) + aj, "altura": -(float(top[1]) + aj.y),
 		"anim": anim, "pasta": pasta, "dir": d}
 	# Ferrugento que roubou: a caçamba cheia de minério por cima (na frente; de costas, também)
 	var carga: Dictionary = data().get("carga_ferrugento", {})
