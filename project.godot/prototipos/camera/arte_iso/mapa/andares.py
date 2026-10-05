@@ -51,6 +51,9 @@ FAIXA_FUNDO = 60                           # Bloco 75: px da lógica de rocha at
 FAIXA_PONTAS = 80                          # ... e além da ponta oeste da faixa (a leste fica o poço e a espiral)
 LARGURA_POCO = 52                          # meia largura (tela) do poço aberto na rocha atrás das gaiolas
 TOM_ROCHA = (1.12, 1.0, 0.86)              # a rocha da coluna puxada pro marrom (a da imagem B), não azul
+## Bloco 76: a rocha de trás de cada andar no tom do tema, como na maquete (coluna_v3): o S2 musgo, o S3
+## barro queimado, o S4 cinza molhado, o S5 cinza azulado — a coluna se lê de longe, faixa por faixa
+TOM_ANDAR = {"nivel2": (0.92, 1.14, 0.84), "abismo": (1.40, 0.94, 0.72), "s4": (1.04, 1.02, 1.0), "s5": (0.88, 1.0, 1.24)}
 ESPIRAL_DX = 250                           # a espiral fica à direita do poço (tela)
 
 # andar: retângulo na lógica (environment.gd: deep_rect / abyss_rect; .tres: rect), degrau do chão
@@ -743,7 +746,8 @@ def main(pasta):
     for n, (nome, a) in enumerate(ANDARES.items()):
         an = Andar(nome, a, 72 + n)
         an.cobre(conteudo(nome, a))
-        img, (tx, ty), piso, quina = desenha_andar(an, a, acima, rocha)
+        tom = TOM_ANDAR.get(nome)
+        img, (tx, ty), piso, quina = desenha_andar(an, a, acima, [tinge(b, tom) for b in rocha] if tom else rocha)
         img.save(os.path.join(pasta, "andar_%s.png" % nome))
         quinas.append(quina)
         tela = tela_jogo(tx, ty)
