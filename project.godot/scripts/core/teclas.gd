@@ -13,6 +13,7 @@ const PADRAO := {
 	"proximo": [KEY_TAB], "seguir": [KEY_F], "pausa": [KEY_P], "dicas": [KEY_H], "musica": [KEY_M],
 	"painel_hub": [KEY_U], "painel_escavadeira": [KEY_E], "painel_oficina": [KEY_O], "painel_enfermaria": [KEY_I],
 	"painel_moral": [KEY_B], "painel_defesa": [KEY_G], "painel_diario": [KEY_J], "painel_lab": [KEY_Q], "painel_sol": [KEY_Y],
+	"painel_trabalho": [KEY_5, KEY_KP_5],
 	"salvar": [KEY_F5], "carregar": [KEY_F9],
 	# fixas (não aparecem pra remapear): Esc, e as de teste/depuração
 	"voltar": [KEY_ESCAPE], "caixas": [KEY_F4], "pular_fase": [KEY_N], "machucar": [KEY_K],
@@ -30,6 +31,7 @@ const NOMES := [
 	["musica", "Música liga/desliga"], ["painel_hub", "Centro da Vila"], ["painel_escavadeira", "Escavadeira"],
 	["painel_oficina", "Oficina"], ["painel_enfermaria", "Enfermaria"], ["painel_moral", "Bem-estar"],
 	["painel_defesa", "Defesa"], ["painel_diario", "Diário"], ["painel_lab", "Laboratório"], ["painel_sol", "O Sol"],
+	["painel_trabalho", "Trabalhadores (áreas de trabalho)"],
 	["salvar", "Salvar"], ["carregar", "Carregar"],
 ]
 

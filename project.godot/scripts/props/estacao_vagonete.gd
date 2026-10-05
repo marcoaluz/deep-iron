@@ -36,6 +36,10 @@ var _wait_t := 0.0
 var _len := 0.0
 var _cart: Node2D
 var _obra := preload("res://scripts/core/obra_site.gd").new()
+## Bloco 77: a área de mina em volta não está operando (desligada / sem mineiro / sem jazida): o vagonete
+## fica parado no ponto e o ponto não recebe carga (work_areas.gd liga e desliga).
+var _parado_area := false
+var _motivo_area := ""
 
 @onready var _label: Label = $StatusLabel
 
@@ -60,7 +64,17 @@ func _accepts(body: Node2D) -> bool:
 
 ## Recebe carga? (cheio ou trilho quebrado com o ponto lotado: não — o minerador vai pro armazém)
 func is_usable() -> bool:
-	return buffered() < buffer_capacity - 1.0 and rail != null and not (is_broken() and buffered() >= cart_capacity)
+	return not _parado_area and buffered() < buffer_capacity - 1.0 and rail != null and not (is_broken() and buffered() >= cart_capacity)
+
+
+## Bloco 77: work_areas.gd chama (o estado da área de mina onde fica o ponto).
+func parar_por_area(on: bool, motivo: String = "") -> void:
+	_parado_area = on
+	_motivo_area = motivo
+
+
+func parado_por_area() -> bool:
+	return _parado_area
 
 
 func accepts_worker(worker: Node) -> bool:
@@ -154,7 +168,9 @@ func _process(delta: float) -> void:
 	match cart_state:
 		"esperando":
 			_wait_t += delta
-			if buffered() >= cart_capacity or (buffered() > 0.0 and _wait_t >= cart_wait):
+			if _parado_area:
+				_wait_t = 0.0  # Bloco 77: a mina não está operando: o carrinho não sai
+			elif buffered() >= cart_capacity or (buffered() > 0.0 and _wait_t >= cart_wait):
 				_load_cart()
 				cart_state = "indo"
 				_wait_t = 0.0
@@ -209,6 +225,8 @@ func _update_label() -> void:
 	if _label == null:
 		return
 	var st: String = "trilho QUEBRADO — engenheiro" if is_broken() else {"esperando": "esperando carga", "indo": "levando", "voltando": "voltando"}.get(cart_state, cart_state)
+	if _parado_area and cart_state == "esperando" and not is_broken():
+		st = "parado — mina: %s" % _motivo_area  # Bloco 77
 	_label.text = "Vagonete\n%s\ncarga: %d/%d  •  levou: %d" % [st, int(buffered()), int(buffer_capacity), int(total_moved)]
 	_label.modulate = Color(1.0, 0.6, 0.4) if is_broken() else Color(0.9, 0.86, 0.8)
 

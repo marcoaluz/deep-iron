@@ -342,6 +342,9 @@ var overtime: bool = false
 ## Função atual (um dos JOBS). Nasce ociosa: só trabalha depois que o jogador designa.
 ## (Save de antes do Bloco 25 sem função vira "minerador" — ver load_save_data / SaveManager.)
 var job: String = ROLE_IDLE
+## Bloco 77: a área de trabalho (work_areas.gd, WorkArea) onde ele foi posto pelo jogador, ou null. Com
+## área, a busca de trabalho da função fica presa ao retângulo dela (e ocioso ele espera lá dentro).
+var work_area = null
 ## Nome próprio mostrado no HUD (o nome do NÓ continua "IpezinhoN": é a chave do save).
 var display_name: String = ""
 ## "menino" ou "menina": sorteado ao nascer (jogo novo / recrutamento), fixo depois.
@@ -1092,7 +1095,7 @@ func _decide_next_action() -> void:
 	_set_state(desired)
 
 	if desired == "idle":
-		if has_no_job() or is_engineer():
+		if has_no_job() or is_engineer() or work_area != null:  # Bloco 77: com área, espera nela
 			_idle_at_hub()
 			return
 		if not _moving and randf() < 0.35:
@@ -1125,6 +1128,11 @@ func _idle_at_hub() -> void:
 	var sun := _sun()
 	if sun and sun.shelter_now():
 		return  # onda solar: quem está lá embaixo fica protegido onde está
+	if work_area != null:  # Bloco 77: sem trabalho na área (sem árvore, mina desligada): espera nela
+		var r: Rect2 = work_area.rect
+		if not r.has_point(global_position) or randf() < 0.2:
+			_go_to(r.position + Vector2(randf_range(0.2, 0.8) * r.size.x, randf_range(0.2, 0.8) * r.size.y))
+		return
 	var hub := _village_hub()
 	if hub == null or not (hub is Node2D):
 		if randf() < 0.35:
@@ -1141,6 +1149,8 @@ func _idle_at_hub() -> void:
 func _station_ok_for(state: String) -> bool:
 	if _station == null or not is_instance_valid(_station) or _slot < 0:
 		return false
+	if state in ["mining", "chopping", "foraging", "hunting"] and not _area_permite(_station, STATE_GROUP[state]):
+		return false  # Bloco 77: a área mudou (desligaram a mina, tiraram ele da área)
 	if state == "mining":
 		return _station.has_ore() and carrying < cargo_capacity
 	if state == "gathering":
@@ -1208,6 +1218,8 @@ func _has_usable_station(group_name: String) -> bool:
 			continue
 		if env and env.has_method("trancado") and env.trancado((node as Node2D).global_position):
 			continue  # Bloco 67
+		if not _area_permite(node, group_name):
+			continue  # Bloco 77: fora da área dele / dentro da área de outros
 		if node.has_method("has_free_slot_for") and not node.has_free_slot_for(self):
 			continue
 		return true
@@ -1224,6 +1236,8 @@ func _find_best_station(group_name: String) -> Node2D:
 			continue
 		if env and env.has_method("trancado") and env.trancado((node as Node2D).global_position):
 			continue  # Bloco 67: o leste ainda não foi desbravado
+		if not _area_permite(node, group_name):
+			continue  # Bloco 77: fora da área dele / dentro da área de outros
 		if node.has_method("has_free_slot_for") and not node.has_free_slot_for(self):
 			continue
 		if node.has_method("accepts_worker") and not node.accepts_worker(self) and node != _station:
@@ -2182,6 +2196,12 @@ func set_job(new_job: String) -> void:
 		return
 	if job == new_job:
 		return
+	if work_area != null and new_job != work_area.job():
+		var wa := _work_areas()
+		if wa:
+			wa.sair(self)  # Bloco 77: trocou de função à mão: deixa o posto da área
+		else:
+			work_area = null
 	if job == ROLE_DOCTOR:
 		_end_duty()  # tirou do médico: o bônus da enfermaria para NA HORA (Bloco 30)
 	if job == ROLE_ENGINEER:
@@ -2203,6 +2223,36 @@ func set_job(new_job: String) -> void:
 	_refresh_tool_texture()
 	if auto_mode and _ai_state != "manual":
 		_decision_timer = randf_range(0.05, 0.4)  # troca de tarefa já
+
+
+# ------------------------------------------------------------ áreas de trabalho (Bloco 77)
+func _work_areas() -> Node:
+	return get_tree().get_first_node_in_group("work_areas") if is_inside_tree() else null
+
+
+## work_areas.gd chama (a lista da área é dela; aqui só o vínculo e a troca de tarefa já).
+func entrar_area(a) -> void:
+	work_area = a
+	_release_station()  # a estação de antes pode estar fora da área
+	if auto_mode and _ai_state != "manual":
+		_decision_timer = randf_range(0.05, 0.4)
+
+
+func sair_area() -> void:
+	work_area = null
+	if auto_mode and _ai_state != "manual":
+		_decision_timer = randf_range(0.05, 0.4)
+
+
+## A estação (do grupo) pode ser usada por ele? (a área dele / área de outros / mina desligada)
+func _area_permite(node: Node, group_name: String) -> bool:
+	var wa := _work_areas()
+	return wa == null or wa.areas.is_empty() or wa.pode_usar(self, (node as Node2D).global_position, group_name)
+
+
+func _area_registra(qtd: float) -> void:
+	if work_area != null and qtd > 0.0:
+		work_area.registra(qtd)
 
 
 # ------------------------------------------------------------ caçador / cozinha (Bloco 27)
@@ -2230,6 +2280,7 @@ func _gather_raw(amount: float, value: float, state: String) -> float:
 		return 0.0
 	_raw_units += taken
 	raw_carrying += taken * value
+	_area_registra(taken * value)  # Bloco 77
 	if state == "hunting":
 		leather_carrying += taken * leather_per_game  # Bloco 42: pele da caça
 	_work_timer = 0.2
@@ -2386,6 +2437,7 @@ func chop(amount: float) -> float:
 	if wood_carrying >= lumber_carry - 0.01:
 		_decision_timer = 0.0  # carga cheia: vai pro armazém já
 	_roll_branch(taken)
+	_area_registra(taken)  # Bloco 77
 	return taken
 
 
@@ -2865,6 +2917,7 @@ func mine(amount: float, ore_type: String = "ferro") -> float:
 	if taken > 0.0:
 		_work_timer = 0.2
 		_roll_injury(taken)
+		_area_registra(taken)  # Bloco 77
 	if carrying >= cargo_capacity - 0.01:
 		_decision_timer = 0.0  # cheio: vai depositar sem esperar o próximo tick
 	_update_cargo_label()
@@ -3091,7 +3144,14 @@ func get_save_data() -> Dictionary:
 		"coletor_pos": SaveUtil.vec2_to_array(_my_coletor().global_position) if _my_coletor() != null else [],  # Bloco 47
 		"coletor_minerio_pos": SaveUtil.vec2_to_array(_my_coletor_minerio().global_position) if _my_coletor_minerio() != null else [],  # Bloco 57
 		"hunt_kills": hunt_kills,  # Bloco 61
+		"area_id": work_area.id if work_area != null else 0,  # Bloco 77
 	}
+
+
+func _religa_area(id: int) -> void:
+	var wa := _work_areas()
+	if wa:
+		wa.religar(self, id)
 
 
 ## Aplicado no _ready (via pending_save_data). A IA recomeça do zero e decide sozinha.
@@ -3152,6 +3212,9 @@ func load_save_data(d: Dictionary) -> void:
 	if SaveUtil.boolean(d, "operates_coletor", false):
 		_relink_coletor.call_deferred(SaveUtil.vec2(d, "coletor_pos", Vector2.INF))  # Bloco 45/47
 	hunt_kills = maxi(SaveUtil.integer(d, "hunt_kills", 0), 0)  # Bloco 61
+	var area_id := SaveUtil.integer(d, "area_id", 0)  # Bloco 77 (save antigo: sem área)
+	if area_id > 0:
+		_religa_area.call_deferred(area_id)
 	var cm_pos := SaveUtil.vec2(d, "coletor_minerio_pos", Vector2.INF)
 	if cm_pos != Vector2.INF:
 		_relink_coletor_minerio.call_deferred(cm_pos)  # Bloco 57

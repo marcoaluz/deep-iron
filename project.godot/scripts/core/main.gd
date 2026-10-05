@@ -82,8 +82,13 @@ func _ready() -> void:
 	var iso_env := OS.get_environment("DEEP_IRON_ISO")
 	if iso_env == "1" or (iso_env != "0" and _environment.has_method("has_iso_map") and _environment.has_iso_map()):
 		_iso.set_enabled.call_deferred(true)
+	# Bloco 77: as áreas de trabalho (antes do save: os ipezinhos religam nelas)
+	var areas := preload("res://scripts/core/work_areas.gd").new()
+	areas.name = "WorkAreas"
+	add_child(areas)
 	# modo de posicionar casa (último filho: recebe o input antes do main e o "consome")
 	add_child(preload("res://scripts/core/house_placer.gd").new())
+	add_child(preload("res://scripts/core/area_placer.gd").new())  # Bloco 77: marcar área (idem)
 	_pause = preload("res://scripts/ui/pause_menu.gd").new()
 	add_child(_pause)
 	_founding = preload("res://scripts/core/founding.gd").new()
@@ -186,6 +191,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				_hud.toggle_panel("lab")
 			"painel_sol":
 				_hud.toggle_panel("sol")
+			"painel_trabalho":
+				_hud.toggle_panel("trabalho")  # Bloco 77
 			"vender":
 				_economy.sell_all()
 			"recrutar":
@@ -256,6 +263,8 @@ func _finish_left_click() -> void:
 			if building.contains_point(click_pos):
 				_hud.open_panel_for(building)
 				return
+		if selection.is_empty() and _open_area_at(click_pos):
+			return
 		select(null)  # chão vazio: solta todo mundo
 
 
@@ -275,7 +284,22 @@ func _finish_left_click_iso(additive: bool) -> void:
 		if node and node.is_in_group("clickable"):
 			_hud.open_panel_for(node)
 			return
+		if selection.is_empty() and _open_area_at(_press_world):
+			return
 		select(null)
+
+
+## Bloco 77: clique no chão de uma área de trabalho (sem ninguém selecionado) abre a janela nela.
+func _open_area_at(pos: Vector2) -> bool:
+	var wa := get_tree().get_first_node_in_group("work_areas")
+	var a = wa.area_em(pos) if wa else null
+	if a == null:
+		return false
+	_hud.open_panel("trabalho")
+	var panel = _hud._panels.get("trabalho")
+	if panel:
+		panel.focus_area(a)
+	return true
 
 
 func _find_ipezinho_at_canvas(canvas_pos: Vector2) -> Node2D:

@@ -1200,6 +1200,7 @@ func _process(_delta: float) -> void:
 			dyn_bbs[b].z_index = zs[b]
 	_sync_ghost()
 	_sync_trilhos()
+	_sync_areas()  # Bloco 77
 	_pulsa_luzes()
 	_overlay.queue_redraw()
 
@@ -1269,6 +1270,104 @@ func _draw_rail(d: Node2D, r: Node) -> void:
 			var rb := to_screen(b + n * lado)
 			d.draw_line(ra.round(), rb.round(), ferro, 2.0)
 			d.draw_line((ra + Vector2(0, -1)).round(), (rb + Vector2(0, -1)).round(), brilho, 1.0)
+
+
+# ------------------------------------------------------------ áreas de trabalho (Bloco 77)
+## Cada área: o chão dela tingido na cor do tipo e o contorno, no CHÃO (z dos trilhos: debaixo das árvores,
+## que continuam por cima); o rótulo ("Madeira 1 · 3/5 · Trabalhando") e o contorno da área destacada vão
+## por cima de tudo (overlay). O retângulo é da lógica: o tingido é feito em ladrilhos de 20 px, cada um
+## na altura do chão dele (a área pode subir um terraço sem desenhar polígono torto).
+var _areas_drawer: Node2D
+var _areas_sel = null
+
+
+func _work_areas() -> Node:
+	return get_tree().get_first_node_in_group("work_areas")
+
+
+func _sync_areas() -> void:
+	if _areas_drawer == null:
+		_areas_drawer = Node2D.new()
+		_areas_drawer.name = "AreasTrabalhoIso"
+		_areas_drawer.z_as_relative = false
+		_areas_drawer.z_index = Order.BASE - 44
+		_things.add_child(_areas_drawer)
+		_areas_drawer.draw.connect(_draw_areas_chao)
+	if _frame % 12 == 0:
+		_areas_drawer.queue_redraw()
+
+
+func _area_borda(r: Rect2) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	var cantos := [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y), r.position]
+	for i in 4:
+		var a: Vector2 = cantos[i]
+		var b: Vector2 = cantos[i + 1]
+		var n := maxi(int(a.distance_to(b) / 16.0), 1)
+		for k in n:
+			pts.append(to_screen(a.lerp(b, float(k) / n)))
+	pts.append(pts[0])
+	return pts
+
+
+func _draw_area_tinta(d: Node2D, r: Rect2, col: Color) -> void:
+	const L := 20.0
+	var y := r.position.y
+	while y < r.end.y - 0.1:
+		var y1 := minf(y + L, r.end.y)
+		var x := r.position.x
+		while x < r.end.x - 0.1:
+			var x1 := minf(x + L, r.end.x)
+			var h := height_at(Vector2((x + x1) * 0.5, (y + y1) * 0.5))
+			d.draw_colored_polygon(PackedVector2Array([to_screen(Vector2(x, y), h), to_screen(Vector2(x1, y), h),
+				to_screen(Vector2(x1, y1), h), to_screen(Vector2(x, y1), h)]), col)
+			x = x1
+		y = y1
+
+
+func _draw_areas_chao() -> void:
+	var wa := _work_areas()
+	if wa == null:
+		return
+	var hud := get_tree().get_first_node_in_group("hud")
+	var panel = hud._panels.get("trabalho") if hud and hud.get("_panels") is Dictionary else null
+	_areas_sel = panel.selected_area() if panel and panel.visible else null
+	for a in wa.areas:
+		var col: Color = a.info().cor
+		var on: bool = wa.funcionando(a)
+		_draw_area_tinta(_areas_drawer, a.rect, Color(col, 0.24 if a == _areas_sel else 0.15))
+		_areas_drawer.draw_polyline(_area_borda(a.rect), Color(col, 0.95 if on else 0.65), 2.5)
+
+
+func _draw_areas_overlay() -> void:
+	var wa := _work_areas()
+	if wa == null:
+		return
+	var font := ThemeDB.fallback_font
+	for a in wa.areas:
+		var borda := _area_borda(a.rect)
+		if a == _areas_sel:
+			_overlay.draw_polyline(borda, Color(a.info().cor, 0.95), 2.5)
+		# o rótulo no MEIO da área (de onde se olha pra ela ele está na tela), numa plaquinha escura
+		var est: String = wa.estado(a)
+		var txt := "%s  %d/%d  ·  %s" % [a.nome(), a.quantos(), a.capacidade, est]
+		var tam := 15
+		var sz := font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam)
+		var c := to_screen(a.centro())
+		var placa := Rect2(c - Vector2(sz.x * 0.5 + 8.0, sz.y * 0.5 + 3.0), sz + Vector2(16.0, 6.0))
+		_overlay.draw_rect(placa, Color(0.08, 0.06, 0.05, 0.72), true)
+		_overlay.draw_rect(placa, Color(a.info().cor, 0.9), false, 1.5)
+		var pos := (c + Vector2(-sz.x * 0.5, font.get_ascent(tam) - sz.y * 0.5)).round()
+		var cor := Color(0.75, 1.0, 0.7) if wa.funcionando(a) else Color(1.0, 0.8, 0.55)
+		_overlay.draw_string(font, pos, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam, cor)
+	# a área sendo marcada
+	var ap := get_tree().get_first_node_in_group("area_placer")
+	if ap and ap.active and ap.arrastando:
+		var r: Rect2 = ap.rect()
+		if r.size.x > 1.0 and r.size.y > 1.0:
+			var col := Color(1.0, 0.4, 0.35) if ap.reason != "" else Color(0.5, 1.0, 0.55)
+			_draw_area_tinta(_overlay, r, Color(col, 0.18))
+			_overlay.draw_polyline(_area_borda(r), Color(col, 0.95), 2.0)
 
 
 # ------------------------------------------------------------ fantasma do posicionador
@@ -1512,6 +1611,7 @@ func _draw_overlay() -> void:
 			_overlay.draw_set_transform(Vector2.ZERO)
 	if _placer and _placer.active and _placer.visible and not _levels.is_empty():
 		_draw_placer()
+	_draw_areas_overlay()  # Bloco 77
 	if not show_boxes:
 		return
 	var w := 1.0 / maxf(_camera.zoom.x, 0.1)

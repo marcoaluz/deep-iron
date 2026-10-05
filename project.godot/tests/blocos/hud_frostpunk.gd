@@ -14,6 +14,9 @@ func _initialize() -> void:
 	var sm = root.get_node("SaveManager")
 	sm.autosave_interval = 0.0
 	sm.save_on_quit = false
+	# (o toggle_hints do fim grava show_hints=true nas configurações: sem isto a rodada seguinte
+	# começava com os atalhos abertos e o teste alternava entre passar e falhar)
+	preload("res://scripts/core/settings.gd").set_value("hud", "show_hints", false)
 	root.size = Vector2i(1152, 648)
 	main = load("res://scenes/game/main.tscn").instantiate()
 	main.founding_on_new_game = false  # (Bloco 37) layout da cena, sem fundação
@@ -75,6 +78,7 @@ func _process(delta: float) -> bool:
 		hud.toggle_hints()
 		check(hud._hint_panel.visible, "H/? abre os atalhos")
 		check(hud.close_panels() and not hud._hint_panel.visible, "Esc fecha os atalhos")
+		preload("res://scripts/core/settings.gd").set_value("hud", "show_hints", false)  # devolve o padrão
 		print("\nFALHAS: %d" % fails)
 		return true
 	return false

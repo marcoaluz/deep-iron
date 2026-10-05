@@ -89,6 +89,8 @@ extends Node
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
+##   Bloco 77: work_areas.gd "areas_trabalho" {proximo_id, areas [{id, tipo, rect, ativa, total}]} —
+##     carregado antes dos ipezinhos; ipezinho.gd area_id (religa na área; save antigo: sem área).
 ##   Bloco 31: obras. casa.gd build_left/build_total/obra (canteiro esperando engenheiro);
 ##     centro_vila.gd pending_upgrade/upgrade_left/upgrade_total/obra; oficina.gd e
 ##     escavadeira.gd ganham "obra" (ordered_at, a ordem da fila). Quem está trabalhando
@@ -466,6 +468,7 @@ func _collect() -> Dictionary:
 		"sun": "sun",
 		"equipment": "equipment",
 		"fundo": "fundo",  # Bloco 70: ventiladores e contadores
+		"areas_trabalho": "work_areas",  # Bloco 77: áreas de trabalho (os ipezinhos guardam o id da área)
 	}
 	for key in singles:
 		var node := tree.get_first_node_in_group(singles[key])
@@ -586,6 +589,7 @@ func apply_pending(main: Node) -> void:
 	var shaft := get_tree().get_first_node_in_group("elevador")
 	if shaft:
 		shaft.sync_state()  # escavadeira pronta => descida aberta (save antigo sem "elevador")
+	_apply_single("work_areas", SaveUtil.dict(data, "areas_trabalho"))  # Bloco 77: antes dos ipezinhos
 	if data.has("workers") and typeof(data.workers) == TYPE_ARRAY:
 		_apply_workers(main, data.workers)
 	# Prompt 29: save de antes do mapa novo — o que caiu em penhasco, escada, paliçada ou paredão

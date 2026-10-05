@@ -502,6 +502,7 @@ func _build_buildings_column() -> void:
 	_buildings_box.add_child(_label("CONSTRUÇÕES", 13, COLOR_TITLE))
 	if _hub:
 		_add_panel("hub", preload("res://scripts/core/hub_panel.gd"), _hub)
+	_add_panel("trabalho", preload("res://scripts/core/work_panel.gd"), null)  # Bloco 77: áreas de trabalho
 	var arm := get_tree().get_first_node_in_group("armazens")
 	if arm and _economy:
 		_add_panel("armazem", preload("res://scripts/core/armazem_panel.gd"), arm)  # Bloco 39
@@ -589,6 +590,7 @@ func _fill_hints() -> void:
 			k.call("minerador"), k.call("cacador"), k.call("medico"), k.call("engenheiro"), k.call("cozinheiro"), k.call("lenhador"),
 			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")],
 		"Economia:  %s vender minério  •  %s recrutar" % [k.call("vender"), k.call("recrutar")],
+		"Trabalho:  %s = TRABALHADORES — marcar áreas (madeira, alimentos, mina) e quantos trabalham em cada uma (até 5)" % k.call("painel_trabalho"),
 		"Construir:  %s = menu de construção (casas, cozinha, lazer, pesquisa, defesa, coleta automática…)" % k.call("construir"),
 		"Prédios:  %s Centro da Vila  •  %s Escavadeira  •  %s Oficina  •  %s Enfermaria  •  %s Bem-estar  •  %s Defesa  •  %s Laboratório  •  %s Sol  •  %s Diário  (ou clique no prédio)" % [
 			k.call("painel_hub"), k.call("painel_escavadeira"), k.call("painel_oficina"), k.call("painel_enfermaria"), k.call("painel_moral"),
@@ -1224,6 +1226,8 @@ func _refresh_worker_rows(workers: Array) -> void:
 				if entry[0] == w.job:
 					tags.append(String(entry[1]).to_lower() + (" %d%%" % roundi(w.combat_skill * 100.0) if w.is_guard() else ""))
 					tag_color = entry[5]
+			if w.work_area != null:
+				tags.append("· " + w.work_area.nome())  # Bloco 77: a área onde trabalha
 		if w.overtime:
 			tags.append("turno extra")
 		if w.mood() > 0:
