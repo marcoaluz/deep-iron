@@ -28,8 +28,12 @@ fazer esta parte aqui" = áreas de trabalho com postos estilo Frostpunk (texto i
   Código: `work_areas.gd` (WorkArea + TIPOS), `area_placer.gd`, `work_panel.gd`, filtro no `ipezinho.gd`.
   `docs/BLOCO77_AREAS_DE_TRABALHO.md` (com os 6 pontos que o Marco pediu no relatório), teste b77.
   A bateria inteira de blocos passou (o hud_frostpunk alternava por estado salvo do próprio teste: corrigido).
-- Próximo do layout (maquete): a boca da escada em espiral na superfície, lotes livres marcados, raízes
-  nas paredes.
+- **O Marco aprovou os Blocos 75–77 ("aprovado, pode aplicar as melhorias")** e as pendências foram
+  aplicadas (Bloco 76, seção 3 do relatório): 4 LOTES LIVRES na vila (cerca de corda, o posicionador
+  encaixa no meio, lote com prédio some — `environment.lotes()` / `lote_perto`), a BOCA DA ESPIRAL na
+  superfície (prop `boca_espiral`, PixelLab c03, `fundo76/espiral.py`), RAÍZES debaixo da floresta
+  (galerias e S2) e o traje de gás masculino corrigido (`fundo76/traje_gas_cor.py`). Teste `b76_faixas_lotes`.
+  Pendência pequena: itens na mão que somem em alguns quadros da caminhada (cassetete, machado).
 
 ## Antes (2026-10-04): Blocos 73 e 74 — feitos, esperando o Marco conferir
 

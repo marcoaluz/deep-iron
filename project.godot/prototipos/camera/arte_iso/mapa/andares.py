@@ -30,7 +30,7 @@ import sys, os, glob, json, math, re, random
 from PIL import Image, ImageDraw
 sys.path.insert(0, "../relevo")
 import tiles
-from monta import OX, OY, NI, NJ, T, FATOR
+from monta import OX, OY, NI, NJ, T, FATOR, PALICADA_X
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.join(AQUI, "..", "..", "..", "..")
@@ -437,6 +437,40 @@ def pinta_queda(b, q, k, nasce=False):
     return b
 
 
+def pinta_raiz(b, i, k, k_topo, comp):
+    """Bloco 76: RAÍZES da floresta de cima descendo pela face da frente do bloco (a da esquerda): 1–3 fios
+    escuros, ondulando contínuos de um bloco pro outro, afinando até `comp` px abaixo do topo da parede."""
+    b = b.copy()
+    px = b.load()
+    h = (i * 2654435761) & 0xFFFF
+    fios = 1 + h % 3
+    for f in range(fios):
+        x0 = 4 + ((h >> (3 + f * 4)) % 24)
+        fase = (h >> f) % 7
+        lim = comp * (0.55 + 0.45 * ((h >> (2 + f)) % 5) / 4.0)
+        for yl in range(0, 32):
+            desce = (k_topo - k) * 32 + yl          # px abaixo do topo da parede
+            if desce > lim:
+                break
+            xc = x0 + 2.2 * math.sin(desce * 0.11 + fase) + 0.8 * math.sin(desce * 0.37 + f)
+            grosso = 2.2 * (1.0 - desce / max(lim, 1.0)) + 0.6
+            for x in range(int(xc - grosso), int(xc + grosso) + 1):
+                if not 0 <= x < 32:
+                    continue
+                y = 16 + x // 2 + yl
+                if 0 <= y < b.height and px[x, y][3] > 0:
+                    luz = x < xc - grosso * 0.3
+                    px[x, y] = (76, 55, 35, 255) if luz else (42, 29, 18, 255)
+            # um raminho pro lado de vez em quando
+            if desce > 8 and int(desce) % 23 == (h + f * 5) % 23:
+                for t in range(1, 6):
+                    x = int(xc + t * (1 if (h + f) % 2 else -1))
+                    y = 16 + max(0, min(31, x)) // 2 + yl + t // 2
+                    if 0 <= x < 32 and 0 <= y < b.height and px[x, y][3] > 0:
+                        px[x, y] = (50, 35, 22, 255)
+    return b
+
+
 def pinta_cortina(b, lo, hi, k):
     """Bloco 76: a CORTINA da cachoeira — todo pixel do bloco (faces e topo) cuja x da tela cai na faixa
     [lo, hi) (x local do quadro do bloco; a faixa vem da coluna da tela, então todas as fileiras e degraus
@@ -541,6 +575,14 @@ def desenha_andar(an, a, acima, rocha):
             anel.pop(t, None)
         for n, i in enumerate(sorted({i for i, _ in rio})[2::7]):
             quedas[i] = ("lava", kc + 4 + (n * 5) % 8)
+    # Bloco 76: raízes da floresta de cima descendo do alto da parede (galerias e S2, só a oeste da paliçada)
+    raizes = {}  # coluna i -> comprimento (px)
+    if tema in ("galerias", "nivel2"):
+        for i in i_de:
+            x_logica = an.logica(centro_tile(i, min(j_de)))[0]
+            hh = (i * 40503) & 0xFF
+            if x_logica < PALICADA_X - 20 and hh % 3 != 0:
+                raizes[i] = 40 + hh % 90
     cortina = None  # a cachoeira: a coluna da tela (i - j) atrás do fx:cachoeira — o meio dele é a divisa
     if cachoeira:   # entre as colunas qi-qj e qi-qj+1; a cortina tem 2 colunas (64 px) de largura
         cortina = qi - qj
@@ -580,6 +622,9 @@ def desenha_andar(an, a, acima, rocha):
                 bb = pinta_queda(bb, quedas[i], k, k == min(topo, quedas[i][1]))
             elif cortina is not None and k >= kc and cortina - 1 <= i - j <= cortina + 1:  # Bloco 76
                 bb = pinta_cortina(bb, (cortina - (i - j)) * T, (cortina + 2 - (i - j)) * T, k)
+            elif raizes and 3 <= r <= 4 and i in raizes and k >= topo - raizes[i] // 32 - 1:  # Bloco 76: raízes
+                # (só no paredão de altura cheia: raiz vem do teto, não do alto de uma saliência)
+                bb = pinta_raiz(bb, i, k, topo, raizes[i])
             itens.append((i + j, k, bb, tiles.tela(i, j, k)))
     # Bloco 76: o rio de lava (no nível do chão, com a laje de rocha embaixo)
     global LAVA

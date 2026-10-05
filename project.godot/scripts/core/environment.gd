@@ -1324,6 +1324,45 @@ func _build_abyss() -> void:
 ## Esconde a decoração (e tira o bloqueio dela) que ficou embaixo das estruturas de
 ## NAV_EXTRA_GROUPS. Não mexe no sorteio: as posições das outras pedras não mudam.
 ## (Chamado de novo quando uma estrutura dessas é construída durante o jogo.)
+## Bloco 76: os LOTES LIVRES da maquete (superficie_v3: terrenos cercados de corda na vila) — lugares onde
+## uma casa cabe, perto do Centro e fora da praça e das ruas, marcados no chão com estacas e corda (a vista
+## iso desenha). Construiu dentro, o lote some (é calculado: nada novo no save); o posicionador encaixa o
+## prédio no lote quando passa perto (house_placer.gd). Só no mapa v3.
+const LOTES := [Vector2(128, -406), Vector2(-48, -470), Vector2(304, 42), Vector2(-208, -470)]
+const LOTE_RECT := Rect2(-58, -48, 118, 126)  # a pegada da casa (arte nova) com folga
+const LOTE_OCUPA := ["casas", "village_hub", "comedouros", "armazens", "oficina", "enfermarias", "tavernas",
+	"laboratorios", "canteiros", "coletores", "coletores_minerio", "campos", "arsenais", "parques", "vestiarios",
+	"escudos", "escavadeira"]
+
+
+func lotes() -> Array:
+	if not vertical_palisade():
+		return []
+	return LOTES.map(func(c): return Rect2(c + LOTE_RECT.position, LOTE_RECT.size))
+
+
+func lote_livre(r: Rect2) -> bool:
+	for g in LOTE_OCUPA:
+		for node in get_tree().get_nodes_in_group(g):
+			if node is Node2D and r.grow(24.0).has_point((node as Node2D).global_position):
+				return false
+	return true
+
+
+func lotes_livres() -> Array:
+	return lotes().filter(func(r): return lote_livre(r))
+
+
+## O meio do lote livre mais perto de `p` (até `raio`), ou Vector2.INF.
+func lote_perto(p: Vector2, raio: float = 56.0) -> Vector2:
+	var best := Vector2.INF
+	for r in lotes_livres():
+		var c: Vector2 = r.position - LOTE_RECT.position
+		if p.distance_to(c) <= raio and (best == Vector2.INF or p.distance_to(c) < p.distance_to(best)):
+			best = c
+	return best
+
+
 func clear_decor_under_extras() -> void:
 	var groups: Array = NAV_EXTRA_GROUPS + ["elevador_abismo", "elevadores", "barricadas", "village_hub", "armazens", "comedouros"]
 	if has_iso_map():  # Prompt 30: os prédios novos são maiores; toda estrutura limpa a pegada dela
@@ -1340,19 +1379,25 @@ func clear_decor_under_extras() -> void:
 						bb = bb.expand(q)
 					# a pegada do desenho novo + folga pra porta e o caminho em volta
 					area = area.merge(bb.grow(40.0 if node.is_in_group("village_hub") else 18.0))
-			for c in get_children():
-				var s := c as Sprite2D
-				if s and not s.region_enabled and area.has_point(s.global_position):
-					s.visible = false
-				elif c is Node2D and c.has_meta("iso_prop") and area.has_point((c as Node2D).global_position):
-					(c as Node2D).visible = false  # decoração do mapa novo (Prompt 30)
-			for i in range(_obstacles.size() - 1, -1, -1):
-				var o: PackedVector2Array = _obstacles[i]
-				var center := Vector2.ZERO
-				for v in o:
-					center += v
-				if o.size() > 0 and area.has_point(center / o.size()):
-					_obstacles.remove_at(i)
+			_limpa_decor(area)
+	for r in lotes():  # Bloco 76: o chão dos lotes livres fica limpo (terreno pronto pra construir)
+		_limpa_decor(r)
+
+
+func _limpa_decor(area: Rect2) -> void:
+	for c in get_children():
+		var s := c as Sprite2D
+		if s and not s.region_enabled and area.has_point(s.global_position):
+			s.visible = false
+		elif c is Node2D and c.has_meta("iso_prop") and area.has_point((c as Node2D).global_position):
+			(c as Node2D).visible = false  # decoração do mapa novo (Prompt 30)
+	for i in range(_obstacles.size() - 1, -1, -1):
+		var o: PackedVector2Array = _obstacles[i]
+		var center := Vector2.ZERO
+		for v in o:
+			center += v
+		if o.size() > 0 and area.has_point(center / o.size()):
+			_obstacles.remove_at(i)
 
 
 func _deep_spot_free(p: Vector2, spacing: float, placed: Array[Vector2], avoid: Array[Vector2], clear: float = -1.0) -> bool:
@@ -1497,6 +1542,8 @@ const MAP_DECOR_V3 := [
 	["arvore_pinheiro_0", Vector2(1120, -840), true], ["arvore_pinheiro_1", Vector2(925, -900), true],
 	["arvore_pinheiro_0", Vector2(640, -520), true], ["arvore_pinheiro_1", Vector2(650, -820), true],
 	["arvore_pinheiro_0", Vector2(720, -620), true],
+	# Bloco 76: a boca da escada em espiral (a casinha de madeira da maquete), em cima da espiral da coluna
+	["boca_espiral", Vector2(744, 320), true],
 ]
 ## Bloco 74: as árvores de enfeite da floresta do oeste (as que dão madeira são as Arvore da cena).
 const FOREST_TREES := ["arvore_pinheiro_0", "arvore_pinheiro_1", "arvore_pinheiro_0", "arvore_carvalho_0", "arvore_carvalho_1",

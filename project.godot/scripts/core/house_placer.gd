@@ -51,6 +51,8 @@ var _area := Rect2()
 var _area_name := ""
 ## Prompt 29: o prédio da arte nova sendo posicionado ("" = sem arte nova): a pegada é a do desenho
 var art_name := ""
+## Bloco 76: o fantasma está encaixado num lote livre
+var no_lote := false
 
 
 func _ready() -> void:
@@ -212,12 +214,20 @@ func check_spot(pos: Vector2) -> String:
 
 func _refresh() -> void:
 	_pos = _pos.round()
+	# Bloco 76: perto de um lote livre (e cabendo nele), o prédio encaixa no meio do lote
+	no_lote = false
+	var env := get_tree().get_first_node_in_group("environment")
+	if env and env.has_method("lote_perto") and not _area.has_area():
+		var l: Vector2 = env.lote_perto(_pos)
+		if l != Vector2.INF and check_spot(l) == "":
+			_pos = l
+			no_lote = true
 	_reason = check_spot(_pos)
 	_ghost.position = _pos
 	_ghost.modulate = Color(COLOR_OK, 0.6) if _reason == "" else Color(COLOR_BAD, 0.6)
 	var cancel_txt := "  •  Esc ou botão direito cancela" if _cancelable else ""
 	if _reason == "":
-		_hint.text = "Onde fica %s?  Clique pra construir%s" % [_what, cancel_txt]
+		_hint.text = "Onde fica %s?  Clique pra construir%s%s" % [_what, "  •  no LOTE LIVRE" if no_lote else "", cancel_txt]
 		_hint.add_theme_color_override("font_color", Color(0.95, 0.9, 0.75))
 	else:
 		_hint.text = "Não dá pra construir aqui: %s%s" % [_reason, ("\n" + cancel_txt.trim_prefix("  •  ")) if _cancelable else ""]

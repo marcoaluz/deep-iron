@@ -55,18 +55,39 @@ Os GIFs `andando_*.gif` mostram os bonecos no jogo.
 
 Fotos: `docs/arte/bloco76/s3_rio_de_lava.jpg`, `s4_cachoeira.jpg` e `coluna_tons_por_andar.jpg`.
 
+## 3. Melhorias depois da aprovação ("aprovado, pode aplicar as melhorias")
+
+- **Lotes livres na vila** (a maquete: terrenos cercados de corda).
+  - São 4 lotes perto do Centro, em lugar de casa válido, fora da praça e das ruas: (128,−406),
+    (−48,−470), (304,42) e (−208,−470).
+  - Cada um tem o chão limpo de enfeite, estacas nos cantos e no meio dos lados, e uma corda caída entre
+    elas. Quando o jogador está escolhendo onde construir, o chão do lote fica verde de leve.
+  - Ao construir, o prédio **encaixa no meio do lote** quando passa perto, se couber lá.
+  - Com um prédio dentro, o lote some. Isso é calculado (`environment.lotes_livres`), sem nada novo no
+    save.
+- **Boca da escada em espiral:** a casinha de madeira da maquete, com degraus descendo, lampião e placa.
+  - Fica em cima da espiral da coluna, ao lado da torre do elevador.
+  - A arte é do PixelLab, `create_image_pro` com o estilo dos prédios. Foram 4 candidatas e a escolhida
+    foi a c03 (`prototipos/camera/arte_iso/fundo76/espiral.py`).
+  - Entrou nas peças fixas com `integra.py props boca_espiral`. O `props <nomes>` é novo e processa só
+    essas peças, sem regravar as outras.
+- **Raízes:** debaixo da floresta (galerias e S2, a oeste da paliçada), raízes escuras descem do teto
+  pelo paredão, ondulando e afinando.
+- **Traje de gás (masculino):** a caminhada saiu duas vezes, nas duas direções, com colete marrom e calça
+  cinza por cima do traje amarelo. Gerar de novo não resolveu. A correção foi `fundo76/traje_gas_cor.py`,
+  que troca os marrons do tronco e os cinzas das pernas pelos tons do amarelo da pose parada da mesma
+  direção. Capacete, máscara, luvas e botas ficam.
+
 ## Testes
 
 - `b73_andar.gd`: a checagem do quadro pela fase usa o número de quadros e a passada da tira.
+- `b76_faixas_lotes.gd` (novo): os lotes, a boca da espiral, a arte das faixas (lava, cachoeira, raízes)
+  e o andar de todos.
 - Passaram: b73, p29_bonecos, p28_iso, b26, b28, b42, b44, p20, p17_criaturas, b61_fauna e p18.
 - A bateria inteira de blocos passou com o Bloco 77.
 
 ## Pendências
 
-- **traje_gas_m, direção NE:** do 2º quadro em diante aparece um colete marrom por cima do traje amarelo.
-  A caminhada de 4 quadros já tinha o mesmo defeito, então nada piorou. Refazer exige apagar a animação
-  no PixelLab, que não gera de novo o mesmo modelo, e pedir outra vez.
 - **Itens na mão que somem em alguns quadros:** o cassetete de guarda e casaco_guarda NE, e o machado
   do lenhador. É pequeno.
-- **Ainda falta da maquete:** a entrada da espiral na superfície, os lotes livres marcados e as raízes
-  nas paredes.
+- Os itens da maquete que faltavam (espiral, lotes, raízes) entraram na seção 3.

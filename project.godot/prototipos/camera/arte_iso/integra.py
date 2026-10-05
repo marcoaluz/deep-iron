@@ -769,15 +769,22 @@ for nome, n in (("igreja", 1), ("torre", 1), ("enxaimel", 3), ("passarela", 2), 
 # Prompts 14 e 18: cova (cemitério), explosivos (pesquisa), antena do satélite, cesto e placa de greve
 for nome in ("cova", "explosivos", "antena", "cesto", "placa_greve"):
     PROPS[nome] = "efeitos/bases/%s.png" % nome
+# Bloco 76: a boca da escada em espiral na superfície (fundo76/espiral.py)
+PROPS["boca_espiral"] = "fundo76/boca_espiral.png"
 
 
-def props():
+def props(so=None):
     """Cada peça: recortada no desenho, âncora = (meio, base - 3) como o `solto` do mapa aprovado
-    (mapa/monta.py), caixa encaixada com uma guia pequena (pegada ~1/3 da largura: tronco, pé)."""
+    (mapa/monta.py), caixa encaixada com uma guia pequena (pegada ~1/3 da largura: tronco, pé).
+    `so` (Bloco 76): só essas peças, mescladas no props.json que já existe (sem regravar as outras)."""
     os.makedirs(PROPS_DEST, exist_ok=True)
     out = {"_obs": "Prompt 29 parte 4 (integra.py props): peça -> img, âncora (pé), caixa (px de arte)", "props": {}}
+    if so:
+        out = json.load(open(os.path.join(PROPS_DEST, "props.json"), encoding="utf-8"))
     pend = []
     for nome, arq in PROPS.items():
+        if so and nome not in so:
+            continue
         src = os.path.join(AQUI, arq)
         if not os.path.exists(src):
             print("  falta:", nome, arq)
@@ -956,6 +963,8 @@ if __name__ == "__main__":
     elif sys.argv[1:2] == ["bonecos"]:
         bonecos()
         contorno()
+    elif sys.argv[1:2] == ["props"] and len(sys.argv) > 2:  # Bloco 76: só algumas peças
+        props(sys.argv[2:])
     elif sys.argv[1:2] == ["props"]:
         props()
         contorno()

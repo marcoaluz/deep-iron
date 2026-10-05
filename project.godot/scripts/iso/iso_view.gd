@@ -1326,6 +1326,7 @@ func _draw_area_tinta(d: Node2D, r: Rect2, col: Color) -> void:
 
 
 func _draw_areas_chao() -> void:
+	_draw_lotes(_areas_drawer)  # Bloco 76
 	var wa := _work_areas()
 	if wa == null:
 		return
@@ -1337,6 +1338,41 @@ func _draw_areas_chao() -> void:
 		var on: bool = wa.funcionando(a)
 		_draw_area_tinta(_areas_drawer, a.rect, Color(col, 0.24 if a == _areas_sel else 0.15))
 		_areas_drawer.draw_polyline(_area_borda(a.rect), Color(col, 0.95 if on else 0.65), 2.5)
+
+
+## Bloco 76: os LOTES LIVRES (environment.lotes_livres): estacas nos cantos e no meio dos lados com uma corda
+## caída entre elas, como na maquete. Escolhendo onde construir, o chão do lote acende de leve.
+func _draw_lotes(d: Node2D) -> void:
+	if not _env.has_method("lotes_livres"):
+		return
+	var escolhendo: bool = _placer != null and _placer.active
+	var madeira := Color(0.3, 0.2, 0.12)
+	var madeira_luz := Color(0.5, 0.36, 0.22)
+	var corda := Color(0.78, 0.68, 0.46) if not escolhendo else Color(0.95, 0.88, 0.55)
+	for r in _env.lotes_livres():
+		var cantos := [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]
+		var pol := PackedVector2Array()
+		for c in cantos:
+			pol.append(to_screen(c))
+		# o chão do lote: terra preparada (escolhendo onde construir: acende de verde)
+		d.draw_colored_polygon(pol, Color(0.6, 1.0, 0.55, 0.13) if escolhendo else Color(0.62, 0.5, 0.34, 0.12))
+		var estacas := []
+		for i in 4:
+			estacas.append(cantos[i])
+			estacas.append((cantos[i] + cantos[(i + 1) % 4]) * 0.5)
+		const ALTO := 11.0
+		for i in estacas.size():
+			var a: Vector2 = to_screen(estacas[i])
+			var b: Vector2 = to_screen(estacas[(i + 1) % estacas.size()])
+			var pts := PackedVector2Array()
+			for k in 9:  # a corda caindo no meio (2,5 px)
+				var t := k / 8.0
+				pts.append((a.lerp(b, t) + Vector2(0, -ALTO + 2.0 + 2.5 * sin(PI * t))).round())
+			d.draw_polyline(pts, corda, 1.5)
+		for e in estacas:
+			var p: Vector2 = to_screen(e).round()
+			d.draw_line(p, p + Vector2(0, -ALTO - 2.0), madeira, 2.0)
+			d.draw_line(p + Vector2(0, -ALTO - 2.0), p + Vector2(0, -ALTO), madeira_luz, 2.0)
 
 
 func _draw_areas_overlay() -> void:
