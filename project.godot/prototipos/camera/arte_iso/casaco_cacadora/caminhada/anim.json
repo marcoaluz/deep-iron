@@ -1,46 +1,27 @@
 {
  "SE": {
-  "quadros": 4,
   "ancora": [
-   59.2,
-   98
-  ],
-  "quadro_px": [
-   112,
-   112
+   58.8,
+   100.0
   ]
  },
  "NE": {
-  "quadros": 4,
   "ancora": [
-   57.8,
-   96
-  ],
-  "quadro_px": [
-   112,
-   112
+   58.5,
+   98.0
   ]
  },
  "SO": {
-  "quadros": 4,
   "ancora": [
-   51.8,
-   98
-  ],
-  "quadro_px": [
-   112,
-   112
+   52.2,
+   100.0
   ]
  },
  "NO": {
-  "quadros": 4,
   "ancora": [
-   53.2,
-   96
-  ],
-  "quadro_px": [
-   112,
-   112
+   52.5,
+   98.0
   ]
- }
+ },
+ "_obs": "Bloco 76: caminhada de 8 quadros (walking-8-frames, skeleton-v3); a de 4 está em caminhada4/"
 }

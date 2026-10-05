@@ -86,7 +86,7 @@ Novo:
 
 ## Testes
 
-- `tests/blocos/b77_areas.gd` (63 checagens): criar arrastando, área inválida, o limite de 5, os
+- `tests/blocos/b77_areas.gd` (59 checagens): criar arrastando, área inválida, o limite de 5, os
   disponíveis, alocar e devolver, a restrição dos dois lados, a troca manual, a mina com o carrinho, a
   produção rodando (5 contra 2) e o save/load.
 - A bateria inteira de blocos (59) rodou depois da mudança: tudo passou. A única falha foi no

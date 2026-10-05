@@ -1,9 +1,37 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-04 (noite). Branch `isometrico`. O remoto está em `875ae827`: os commits dos
-Blocos 72–74 abaixo ainda NÃO foram enviados (push só com ok do Marco).
+Atualizado em 2026-10-05. Branch `isometrico`. O remoto está em `875ae827`: os commits dos Blocos
+72–77 abaixo ainda NÃO foram enviados (push só com ok do Marco).
 
-## AGORA (2026-10-04): Blocos 73 e 74 — feitos, esperando o Marco conferir
+## AGORA (2026-10-05): Blocos 75, 76 e 77 — feitos, esperando o Marco conferir
+
+Pedidos do Marco: (1) "fica na montanha e pode seguir" (ferro fica na montanha; seguir com a coluna da
+maquete); (2) "verificar a movimentação dos personagens todos, se precisar usar o blender... e continua o
+desenvolvimento do layout do jogo com base a maquete montada no blender"; (3) "após ajustar tudo isso
+fazer esta parte aqui" = áreas de trabalho com postos estilo Frostpunk (texto inteiro em
+`docs/BLOCO77_AREAS_DE_TRABALHO_PEDIDO.md`).
+
+- **Bloco 75 (`8b94ce00`) — a coluna da maquete:** os 4 andares viraram FAIXAS largas e rasas debaixo da
+  floresta e da vila (`andares.py`, retângulos novos longe dos antigos; save antigo migra pela posição
+  relativa), galerias de madeira logo abaixo da superfície. `docs/BLOCO75_COLUNA_FAIXAS.md`, teste b75.
+- **Bloco 76 (`4f7ca3c2`, `2d09e142`, `8b175d53` + o commit das caminhadas do elenco) — todos andando +
+  faixas:** S3 com rio de lava ao pé da parede e fios de lava de fendas; S4 com a cachoeira em cortina até
+  a poça; rocha de cada andar no tom do tema. Movimento: criaturas, robô e animais pela distância (passada
+  medida, `ciclo`); a GENTE INTEIRA (42: base, casaco, trajes) com caminhada de 8 quadros do PixelLab
+  (`walking-8-frames`, modo `skeleton-v3` — segura roupa e rosto; o modo comum trocava o colete).
+  Ferramentas `caminhadas8.py` (pede/baixa/troca; a de 4 fica em `caminhada4/`) e `integra.py caminhadas`.
+  Blender não foi preciso. `docs/BLOCO76_CAMINHADAS_E_FAIXAS.md` (pendência: traje_gas_m NE com colete).
+- **Bloco 77 (`94b34071`) — áreas de trabalho (Frostpunk):** tecla 5 / janela TRABALHADORES; marca a área
+  arrastando (madeira, alimentos, mina), [ - ] n/5 [ + ]; disponível = sem função; quem vai ganha a função
+  e só trabalha dentro da área; mina nasce desligada, "Ligar o carrinho", estados Desativada / Sem mineiro
+  / Sem recurso / Operando (o vagonete só anda operando); produção real (5 rende mais que 2); save.
+  Código: `work_areas.gd` (WorkArea + TIPOS), `area_placer.gd`, `work_panel.gd`, filtro no `ipezinho.gd`.
+  `docs/BLOCO77_AREAS_DE_TRABALHO.md` (com os 6 pontos que o Marco pediu no relatório), teste b77.
+  A bateria inteira de blocos passou (o hud_frostpunk alternava por estado salvo do próprio teste: corrigido).
+- Próximo do layout (maquete): a boca da escada em espiral na superfície, lotes livres marcados, raízes
+  nas paredes.
+
+## Antes (2026-10-04): Blocos 73 e 74 — feitos, esperando o Marco conferir
 
 O Marco aprovou a `docs/arte/bloco72/maquete/superficie_v3_legenda.jpg` pra aplicar no jogo e pediu pra
 melhorar o andar dos NPCs ("parece que eles flutuam um pouco").
@@ -98,7 +126,7 @@ sugeriu deixar pra depois; 66 tutorial vem depois do balanceamento). Relatório 
 longa simulada (F3 + telemetria), depois o tutorial (66).
 
 ## Ferramentas e cuidados
-- PixelLab: tier 3, saldo ~9.200 (renova 2026-11-02). Esta conta chama o MCP HTTP pela config de
+- PixelLab: tier 3, saldo ~9.200 antes do Bloco 76, que gastou umas 200–300 gerações nas caminhadas de 8 quadros (conferir o saldo; renova 2026-11-02). Esta conta chama o MCP HTTP pela config de
   `~/.claude.json` (`tools/pixellab/pl.py`, `gen.py` em lote, `chars.py` personagens). Arte nova em
   `prototipos/camera/arte_iso/` (fundo70, fundo71, fundo72, mapa_mundo, relevo/fundo71.py, criaturas/fundo.py).
 - **`integra.py` regrava todos os PNGs** (pixels iguais, bytes diferentes). Depois de conferir, limpar com
