@@ -58,6 +58,9 @@ fazer esta parte aqui" = áreas de trabalho com postos estilo Frostpunk (texto i
   - O carrinho sobe pelo cavalete (desenhado na vista iso, à direita da espiral) até a plataforma na
     superfície e descarrega no armazém.
   - Teste `b79_ferrovia`; relatório `docs/BLOCO79_FERROVIA_DE_CARGA.md`.
+- **Pra ver os Blocos 78/79 no jogo logo no dia 1** (o Marco testou e "não viu": jogou 2 min na superfície; os
+  marcos estão nos andares e a ferrovia só constrói com o S2 aberto): painel **F3** (build de editor) →
+  "Andares: abrir todos" e "Ir para: vila / S2 / S3 / S4 / S5 / ferrovia".
 
 ## Antes (2026-10-04): Blocos 73 e 74 — feitos, esperando o Marco conferir
 

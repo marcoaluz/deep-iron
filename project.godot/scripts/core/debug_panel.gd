@@ -3,6 +3,8 @@ extends CanvasLayer
 ## (OS.is_debug_build()): no executável de release nem é criado.
 ##   tempo x1/x4/x16 · +créditos/minério/madeira/comida · pular fase/dia/estação ·
 ##   disparar invasão · curar todos · liberar todas as pesquisas
+##   Bloco 79: abrir todos os andares (sem esperar a escavadeira e os consertos) e levar a câmera a cada um
+##   (superfície, S2..S5, o cavalete da ferrovia) — pra ver os marcos e testar a ferrovia de carga já no dia 1
 ## Nada aqui é salvo de um jeito especial: mexe nos mesmos números que o jogo usa.
 
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
@@ -34,6 +36,10 @@ func setup(main: Node) -> void:
 	_linha(v, "Dar:", [["+1000 cr", _creditos], ["+200 minério", _minerio], ["+200 madeira", _madeira], ["+100 comida", _comida]])
 	_linha(v, "Pular:", [["fase", _fase], ["dia", _dia], ["estação", _estacao]])
 	_linha(v, "Eventos:", [["invasão agora", _invasao], ["chuva liga/desliga", _chuva], ["curar todos", _curar], ["liberar pesquisas", _pesquisas]])
+	_linha(v, "Andares:", [["abrir todos", _abre_andares]])
+	_linha(v, "Ir para:", [["vila", func(): _vai(Vector2(40, -260))], ["S2", func(): _vai(Vector2(-300, 3730))],
+		["S3", func(): _vai(Vector2(-460, 4110))], ["S4", func(): _vai(Vector2(-340, 4530))], ["S5", func(): _vai(Vector2(-460, 4920))],
+		["ferrovia", _vai_ferrovia]])
 	_info = Label.new()
 	_info.add_theme_font_size_override("font_size", 11)
 	_info.add_theme_color_override("font_color", Color(0.75, 0.72, 0.68))
@@ -156,6 +162,42 @@ func _curar() -> void:
 			w.downed = false
 		if w.get("injured") and w.has_method("_heal"):
 			w._heal()
+
+
+## Bloco 79: abre o S2 (como a escavadeira pronta) e as plataformas do S3, S4 e S5 (como o conserto pronto).
+func _abre_andares() -> void:
+	var sh := _g("elevador")
+	if sh and sh.has_method("unlock"):
+		sh.unlock(false)
+	for e in _main.get_tree().get_nodes_in_group("elevadores"):
+		if e.get("unlocked") == false and e.has_method("_apply"):
+			e.repairing = false
+			e.unlocked = true
+			e._apply(false)
+			if e.has_signal("opened"):
+				e.opened.emit()
+	var hud := _g("hud")
+	if hud and hud.has_method("show_toast"):
+		hud.show_toast("Debug: todos os andares abertos.", Color(1.0, 0.6, 0.4))
+
+
+func _vai(p: Vector2) -> void:
+	var cam = _main.get_node_or_null("Camera2D")
+	if cam and cam.has_method("focus_on"):
+		cam.focus_on(p)
+
+
+func _vai_ferrovia() -> void:
+	var iso = _g("iso_view")
+	var cam = _main.get_node_or_null("Camera2D")
+	if iso == null or cam == null or not iso.has_method("ferrovia_postes"):
+		return
+	var px: Vector2 = iso.ferrovia_postes()
+	var z := maxf(float(cam.get("iso_zoom_min")) if cam.get("iso_zoom_min") != null else 0.5, 0.5)
+	cam.zoom = Vector2(z, z)
+	cam.set("_target_zoom", z)
+	cam.position = Vector2(px.x - 60, 1800)
+	cam._target_pos = cam.position
 
 
 func _pesquisas() -> void:
