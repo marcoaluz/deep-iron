@@ -604,7 +604,37 @@ func _bake_navigation() -> NavigationPolygon:
 				if outline.size() >= 3:
 					source.add_obstruction_outline(outline)
 	NavigationServer2D.bake_from_source_geometry_data(nav_poly, source)
-	return nav_poly
+	return _sem_degenerados(nav_poly)
+
+
+## Bloco 76: o bake do Godot às vezes solta triângulo de ÁREA ZERO (dois vértices no mesmo ponto) na beira das
+## faixas, ou uma fita de meio pixel entre dois enfeites quase encostados; não têm chão nenhum, só repetem a
+## borda do vizinho e a navegação reclama ("Navigation region synchronization had 8 edge error(s)"). Saem da
+## malha (os vizinhos se ligam direto: as bordas deles caem na mesma célula).
+func _sem_degenerados(np: NavigationPolygon) -> NavigationPolygon:
+	var verts := np.get_vertices()
+	var ruins := []
+	for i in np.get_polygon_count():
+		var poly := np.get_polygon(i)
+		var pts := PackedVector2Array()
+		for k in poly:
+			pts.append(verts[k])
+		var menor := INF
+		for k in pts.size():
+			menor = minf(menor, pts[k].distance_to(pts[(k + 1) % pts.size()]))
+		# área zero, ou triângulo-fita (um lado menor que a célula: os vizinhos dele já se ligam direto)
+		if absf(_area(pts)) < 0.5 or (pts.size() == 3 and menor < np.cell_size):
+			ruins.append(i)
+	if ruins.is_empty():
+		return np
+	var out := NavigationPolygon.new()
+	out.agent_radius = np.agent_radius
+	out.cell_size = np.cell_size
+	out.vertices = verts
+	for i in np.get_polygon_count():
+		if not i in ruins:
+			out.add_polygon(np.get_polygon(i))
+	return out
 
 
 ## Bloco 71: contorno (24 lados) da elipse dentro do retângulo.
@@ -774,6 +804,16 @@ func dentro_da_caverna(p: Vector2) -> bool:
 func _ilha(r: Rect2) -> PackedVector2Array:
 	var pol := contorno_do_andar(r)
 	return pol if pol.size() >= 3 else _rect_outline(r.grow(-nav_edge_inset))
+
+
+## A área (com sinal) de um polígono.
+func _area(pol: PackedVector2Array) -> float:
+	var s := 0.0
+	for i in pol.size():
+		var a: Vector2 = pol[i]
+		var b: Vector2 = pol[(i + 1) % pol.size()]
+		s += a.x * b.y - b.x * a.y
+	return s * 0.5
 
 
 ## Ponto da lógica -> chão da VISTA (px de arte): na superfície é só a escala; num andar de

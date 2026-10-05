@@ -33,8 +33,21 @@ fazer esta parte aqui" = áreas de trabalho com postos estilo Frostpunk (texto i
   encaixa no meio, lote com prédio some — `environment.lotes()` / `lote_perto`), a BOCA DA ESPIRAL na
   superfície (prop `boca_espiral`, PixelLab c03, `fundo76/espiral.py`), RAÍZES debaixo da floresta
   (galerias e S2) e o traje de gás masculino corrigido (`fundo76/traje_gas_cor.py`). Teste `b76_faixas_lotes`.
-  Pendência pequena: itens na mão que somem em alguns quadros da caminhada (cassetete, machado).
   (Esse trabalho entrou no commit `336f0961` "commit", feito pelo Marco com o que estava no índice.)
+- **Verificação geral (05/10, pedido do Marco):**
+  - **Itens na mão:** guardas e lenhadores agora andam com a mão vazia em todos os quadros (a ferramenta
+    já vai nas costas). A ferramenta é `fundo76/itens_mao.py`.
+  - **Navegação:** os "8 edge errors" vinham de triângulos de área zero do bake (`environment._sem_degenerados`).
+  - **Saves dele:** as cópias carregam bem (`tests/verifica_save_marco.gd`).
+  - **Testes:** bateria inteira e GUT passaram. Detalhes no relatório do Bloco 76, seção 4.
+- **NovoLayout (`docs/NovoLayout/`, pedido do Marco):**
+  - A análise está em `ANALISE.md`; a maquete v4 em `maquete_v4_legenda.jpg` (script
+    `blender/coluna_maquete_v4.py`).
+  - Conclusão: manter a estrutura, que já é a do NewLayout, e aproveitar três coisas: os marcos por andar
+    (fóssil no S3, fonte termal no S4, cidade no S5, cristais no S2, vila de mineração nas galerias), a
+    ferrovia de carga (minha sugestão: virar jogabilidade, com uma estação por andar subindo o minério) e um
+    monitor de perigos no HUD.
+  - **Esperando o Marco:** aprovar a v4 e escolher a ordem (marcos primeiro, ou ferrovia primeiro).
 
 ## Antes (2026-10-04): Blocos 73 e 74 — feitos, esperando o Marco conferir
 

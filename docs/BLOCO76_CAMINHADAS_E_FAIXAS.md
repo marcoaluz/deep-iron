@@ -78,6 +78,30 @@ Fotos: `docs/arte/bloco76/s3_rio_de_lava.jpg`, `s4_cachoeira.jpg` e `coluna_tons
   que troca os marrons do tronco e os cinzas das pernas pelos tons do amarelo da pose parada da mesma
   direção. Capacete, máscara, luvas e botas ficam.
 
+## 4. Itens na mão e navegação (verificação depois da aprovação)
+
+- **Cassetete do guarda e machado do lenhador sumindo em alguns quadros.** A geração desenhava o item numa
+  passada da caminhada e não na outra. O jogo já desenha a ferramenta ou a arma **nas costas**
+  (`iso_bonecos._item`), então o certo é a mão vazia em todos os quadros.
+  - A ferramenta é `fundo76/itens_mao.py`.
+  - Cada quadro passou pelo `edit_image_pixen` com a instrução "tira o item da mão", e só a região do item
+    volta para o quadro, nas cores do próprio original. Os 8 personagens (guardas e lenhadores, com e sem
+    casaco, SE e NE) somaram 128 edições de 1 geração cada.
+  - A escolha foi conferida quadro a quadro (`ESCOLHA`): o original, a composição que pega só o que sai do
+    contorno, ou a que pega também por dentro.
+  - Os originais e as edições ficam em `fundo76/itens_mao/antes/`. O comando `recompoe` refaz tudo sem
+    gerar de novo.
+- **Navegação:** o jogo avisava "Navigation region synchronization had 8 edge error(s)" sempre que a malha era
+  refeita, desde o Bloco 75. A causa eram 12 triângulos de **área zero** (dois vértices no mesmo ponto) que o
+  bake do Godot solta na beira das faixas, e uma fita de meio pixel entre dois enfeites na floresta. O
+  `environment._sem_degenerados` tira esses triângulos depois do bake; os vizinhos se ligam direto. O aviso
+  sumiu.
+- **Saves do Marco** (cópias, com o código novo; `tests/verifica_save_marco.gd`): o atual, o das 09:50 e o
+  de 02/10 carregam sem erro, com os lotes, a boca da espiral e a vista iso, e a área de trabalho funciona.
+  - O das 09:50 entra em greve em 60 s, mas é a regra do jogo: fome 0, sem cozinha e sem casa.
+  - **Ponto de balanceamento pro Marco:** numa partida nova, sem cozinha nos primeiros ~2 minutos, todo
+    mundo zera a fome e entra em greve.
+
 ## Testes
 
 - `b73_andar.gd`: a checagem do quadro pela fase usa o número de quadros e a passada da tira.
@@ -88,6 +112,5 @@ Fotos: `docs/arte/bloco76/s3_rio_de_lava.jpg`, `s4_cachoeira.jpg` e `coluna_tons
 
 ## Pendências
 
-- **Itens na mão que somem em alguns quadros:** o cassetete de guarda e casaco_guarda NE, e o machado
-  do lenhador. É pequeno.
+- Os itens na mão foram resolvidos (seção 4).
 - Os itens da maquete que faltavam (espiral, lotes, raízes) entraram na seção 3.
