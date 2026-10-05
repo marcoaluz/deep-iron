@@ -1,7 +1,7 @@
 extends Node2D
-## Barricada (grupo "barricadas"): o muro nos dois lugares por onde as criaturas entram.
-##   "tunel" — boca do túnel da clareira (Lumívoros);
-##   "poco"  — boca do poço do elevador (Ferrugentos, depois que o nível 2 abre).
+## Barricada (grupo "barricadas"): o muro no portão por onde as criaturas da floresta entram.
+##   "tunel" — o portão da floresta na paliçada (Lumívoros). É o ÚNICO portão: o do poço do elevador
+##             saiu no Bloco 80 (o que sobe do fundo entra direto; os guardas fazem posto lá).
 ## Níveis: 0 = só as estacas (não segura nada), 1 = paliçada de madeira, 2 = muro de
 ## pedra, 3 = portão de ferro. Tem vida: as criaturas param aqui e batem até quebrar.
 ## Os ipezinhos passam pelo portão normalmente. Conserto e ampliação: janela de Defesa (G).
@@ -12,7 +12,7 @@ signal repaired
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const LEVEL_NAMES := ["sem muro", "Paliçada de madeira", "Muro de pedra", "Portão de ferro"]
 
-@export_enum("tunel", "poco") var gate_id: String = "tunel"
+@export_enum("tunel") var gate_id: String = "tunel"
 ## Bloco 74: o portão numa paliçada de norte a sul (a vila fica a leste): a arte vira de lado.
 @export var vertical := false
 @export var display_name: String = "Portão do túnel"

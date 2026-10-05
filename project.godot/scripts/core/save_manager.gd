@@ -89,6 +89,8 @@ extends Node
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
+##   Bloco 80: o portão do poço saiu: "barricadas"."BarricadaPoco" de save antigo é ignorado (não há o
+##     nó) e ipezinho.gd downed_gate "poco" vira "" (sem brecha).
 ##   Bloco 77: work_areas.gd "areas_trabalho" {proximo_id, areas [{id, tipo, rect, ativa, total}]} —
 ##     carregado antes dos ipezinhos; ipezinho.gd area_id (religa na área; save antigo: sem área).
 ##   Bloco 31: obras. casa.gd build_left/build_total/obra (canteiro esperando engenheiro);

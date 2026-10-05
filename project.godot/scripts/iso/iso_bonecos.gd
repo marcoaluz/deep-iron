@@ -366,8 +366,9 @@ static func robo_pose(r: Node, iso_dir: int, clock: float, moving: bool, andado:
 
 # ------------------------------------------------------------ criaturas (Prompt 17)
 ## Pasta da criatura (kind + variante) no bonecos.json.
+## (Bloco 80: o Ferrugento saiu daqui — virou robô e se desenha pela folha de quadros dele, creature.gd
+## visual_textura; a arte antiga de máquina ficou só nos arquivos.)
 const CRIATURA_PASTA := {"lumivoro": ["criatura_lumivoro", "criatura_lumivoro_bruto"],
-	"ferrugento": ["criatura_ferrugento", "criatura_ferrugento_carregador"],
 	"gosma": ["criatura_gosma", "criatura_gosma"], "magmante": ["criatura_magmante", "criatura_magmante"]}  # Bloco 70
 ## Bloco 62: a arte do chefe de cada tipo.
 const CRIATURA_CHEFE := {"lumivoro": "criatura_lumivoro_matriarca"}
@@ -376,12 +377,14 @@ const CRIATURA_DANO := 0.35
 const CRIATURA_ATAQUE := 0.6
 
 
-## Invasor com a arte nova: anda, ataca, leva golpe, cai (fica deitado no último quadro) e, o
-## Ferrugento, desliga ao amanhecer (a mesma queda). Só lê o estado da criatura (creature.gd).
+## Invasor com a arte nova: anda, ataca, leva golpe, cai (fica deitado no último quadro). Só lê o estado
+## da criatura (creature.gd). Criatura com folha de quadros própria (Bloco 80: o Ferrugento) fica de fora.
 static func criatura_pose(c: Node, iso_dir: int, moving: bool, andado: float = -1.0) -> Dictionary:
 	var env := c.get_tree().get_first_node_in_group("environment") if c.is_inside_tree() else null
 	if env == null or not env.has_method("has_iso_map") or not env.has_iso_map():
 		return {}
+	if c.get("visual_textura") != null:
+		return {}  # Bloco 80: a criatura tem folha de quadros própria (o espelho desenha o Visual dela)
 	var pastas: Array = CRIATURA_PASTA.get(String(c.get("kind")), [])
 	if pastas.is_empty():
 		return {}
@@ -421,9 +424,4 @@ static func criatura_pose(c: Node, iso_dir: int, moving: bool, andado: float = -
 	var out := {"hidden": false, "tex": texture(info.img), "n": n, "frame": frame, "ancora": Vector2(info.ancora[0], info.ancora[1]) - aj,
 		"quadro": Vector2(info.quadro[0], info.quadro[1]), "top": Vector2(top[0], top[1]) + aj, "altura": -(float(top[1]) + aj.y),
 		"anim": anim, "pasta": pasta, "dir": d}
-	# Ferrugento que roubou: a caçamba cheia de minério por cima (na frente; de costas, também)
-	var carga: Dictionary = data().get("carga_ferrugento", {})
-	if c.get("looted") and not c.get("_dying") and carga.has(d) and pasta == pastas[0]:
-		var cg: Array = carga[d]  # [x, y, topo do desenho parado]: a carga sobe e desce com o corpo
-		out["item"] = {"tex": texture(carga.img), "pos": Vector2(cg[0], cg[1] + top[1] - float(cg[2])), "flip": false, "front": true}
 	return out

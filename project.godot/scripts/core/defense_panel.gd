@@ -8,6 +8,7 @@ var _hud: CanvasLayer
 var _def: Node
 var _status: Label
 var _gate_rows: Dictionary = {}  # gate_id -> {label, up, fix}
+var _poco_label: Label
 var _guards_label: Label
 var _campo_button: Button
 var _weapon_rows: Dictionary = {}  # id -> {status, button, fix}
@@ -51,8 +52,8 @@ func _build() -> void:
 	vbox.add_child(_status)
 
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("MURO (as criaturas precisam derrubar pra entrar)", 12, _hud.COLOR_DIM))
-	for id in ["tunel", "poco"]:
+	vbox.add_child(_hud._label("MURO (o que vem da floresta precisa derrubar pra entrar)", 12, _hud.COLOR_DIM))
+	for id in ["tunel"]:  # Bloco 80: o único portão (o do poço saiu)
 		var l: Label = _hud._label("", 12, _hud.COLOR_TEXT)
 		vbox.add_child(l)
 		var row := HBoxContainer.new()
@@ -79,6 +80,9 @@ func _build() -> void:
 			refresh())
 		row.add_child(fix)
 		_gate_rows[id] = {"label": l, "up": up, "fix": fix}
+	_poco_label = _hud._label("", 12, _hud.COLOR_DIM)  # Bloco 80: o poço não tem muro
+	_poco_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(_poco_label)
 
 	vbox.add_child(HSeparator.new())
 	_guards_label = _hud._label("", 12, _hud.COLOR_TEXT)
@@ -170,8 +174,6 @@ func refresh() -> void:
 			continue
 		var name_lvl: String = g.LEVEL_NAMES[g.level]
 		var hp_txt := "" if g.level == 0 else "  •  vida %d/%d" % [roundi(g.hp), roundi(g.max_hp())]
-		if id == "poco" and not _def.level2_open():
-			hp_txt += "  (Ferrugentos só depois do nível 2)"
 		row.label.text = "%s: %s%s" % [g.display_name, name_lvl, hp_txt]
 		var up_reason: String = g.upgrade_block_reason()
 		if up_reason == "nível máximo":
@@ -187,10 +189,13 @@ func refresh() -> void:
 		row.fix.text = "Consertar (%d madeira)" % g.repair_cost() if fix_reason == "" else ("Inteiro" if fix_reason == "inteiro" else "Consertar: " + fix_reason)
 		row.fix.disabled = fix_reason != ""
 
+	_poco_label.text = ("Poço do elevador: SEM MURO — os Ferrugentos (robôs enferrujados) e o que mais vem do fundo "
+		+ "saem direto da boca do poço. Metade dos guardas faz posto lá.") if _def.level2_open() \
+		else "Poço do elevador: fechado (os Ferrugentos só saem dele depois que o nível 2 abre)."
 	var gs: Array = _def.guards()
 	var ready_n := gs.filter(func(w): return w.combat_skill >= 1.0).size()
 	var unarmed: Array = _def.unarmed_guards()
-	var lines: Array[String] = ["Guardas: %d (%d treinados)%s  •  X faz guarda. De dia treinam no campo; à noite vão pros portões." % [
+	var lines: Array[String] = ["Guardas: %d (%d treinados)%s  •  X faz guarda. De dia treinam no campo; à noite vão pro portão (e pro poço, com o nível 2 aberto)." % [
 		gs.size(), ready_n, ("  •  %d DESARMADO%s" % [unarmed.size(), "S" if unarmed.size() > 1 else ""]) if not unarmed.is_empty() else ""]]
 	for w in gs:
 		if w.downed:  # Bloco 36

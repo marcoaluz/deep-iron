@@ -330,5 +330,9 @@ func test_b79_ferrovia() -> void:
 	run_bloco("b79_ferrovia.gd")
 
 
+func test_b80_portao_unico_ferrugento() -> void:
+	run_bloco("b80_portao_unico_ferrugento.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

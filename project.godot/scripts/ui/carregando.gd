@@ -14,7 +14,7 @@ const DICAS := [
 	"Onda solar: quem estiver na rua se queima. O Estudo da explosão solar avisa antes.",
 	"Machucado grave sem leito na enfermaria pode morrer. Médico de plantão cura mais rápido.",
 	"F2 abre o corte da mina: todos os andares de lado, e quem está em cada um.",
-	"Os Ferrugentos sobem pelo poço do elevador quando o nível 2 abre. Guarda lá também!",
+	"Os Ferrugentos — robôs enferrujados — saem do poço do elevador quando o nível 2 abre. O poço não tem muro: ponha guardas lá!",
 	"O escudo solar é o fim do jogo: pesquise o Projeto do escudo e erga as 4 etapas.",
 	"Turno extra (T) rende mais minério, mas deixa os ipezinhos zangados.",
 ]

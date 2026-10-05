@@ -14,10 +14,11 @@ const ENTRIES := {
 	},
 	"ferrugentos": {
 		"title": "Ferrugentos",
-		"text": "Máquinas de antes da explosão, cobertas de ferrugem. Passam o dia paradas, "
-			+ "acumulando restos de energia solar, e despertam à noite. Vivem no fundo da mina e "
-			+ "sobem pelo poço desde que abrimos o nível 2. Comem metal: vão direto no armazém. "
-			+ "Ao amanhecer, desligam.",
+		"text": "Robôs pequenos de antes da explosão: um esqueleto de metal comido pela ferrugem, "
+			+ "um crânio e dois olhos vermelhos. Passam o dia parados, acumulando restos de energia "
+			+ "solar, e despertam à noite. Vivem no fundo da mina e saem pela boca do poço do elevador "
+			+ "desde que abrimos o nível 2 — lá não tem muro, só os guardas. Comem metal: vão direto no "
+			+ "armazém. Ao amanhecer, desligam e desmontam.",
 	},
 	"gosmas": {
 		"title": "Gosmas ácidas",

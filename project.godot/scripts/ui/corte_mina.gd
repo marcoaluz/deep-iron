@@ -307,8 +307,15 @@ func _maquinas() -> void:
 	for c in get_tree().get_nodes_in_group("criaturas"):
 		if not c.has_method("is_alive") or not c.is_alive():
 			continue
+		var folha: Texture2D = c.get("visual_textura")
+		if folha:  # Bloco 80: criatura com folha de quadros (o Ferrugento robô): o 1º quadro, reduzido
+			var q: Vector2 = Vector2(c.visual_quadro)
+			var pf := _no_corte((c as Node2D).global_position, 0.95)
+			var tf := q * 0.6
+			_area.draw_texture_rect_region(folha, Rect2((pf - Vector2(tf.x * 0.5, tf.y)).round(), tf), Rect2(Vector2.ZERO, q), Color(1.0, 0.85, 0.85))
+			continue
 		var forte: bool = c.get("variant") == "forte"
-		var nome: String = {"lumivoro": "criatura_lumivoro", "ferrugento": "criatura_ferrugento"}.get(String(c.get("kind")), "")
+		var nome: String = {"lumivoro": "criatura_lumivoro"}.get(String(c.get("kind")), "")
 		var t := _tex("mini_" + nome + ("_bruto" if forte and nome == "criatura_lumivoro" else ("_carregador" if forte else "")))
 		if t:
 			var p := _no_corte((c as Node2D).global_position, 0.95)

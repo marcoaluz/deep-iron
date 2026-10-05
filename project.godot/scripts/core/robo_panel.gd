@@ -40,7 +40,7 @@ func _build() -> void:
 		visible = false)
 	header.add_child(close)
 	var lore: Label = _hud._label(
-		"Um Ferrugento: máquina de antes da explosão solar, parada há décadas no fundo da mina. "
+		"Um Ferrugento: robô de antes da explosão solar, desligado há décadas no fundo da mina. "
 		+ "Consertado, ele fica do nosso lado.", 12, _hud.COLOR_DIM)
 	lore.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(lore)

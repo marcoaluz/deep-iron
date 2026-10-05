@@ -433,7 +433,8 @@ var _poca_expo := 0.0
 var _molhado := 0.0
 ## Bloco 36: guarda que perdeu a luta — caído no lugar (grave), só o MÉDICO leva pra enfermaria.
 var downed: bool = false
-## Portão onde ele caiu ("tunel"/"poco"): enquanto ele está caído, é a brecha na defesa.
+## Portão onde ele caiu ("tunel"; "" = no posto do poço, sem portão — Bloco 80): enquanto ele está caído
+## no portão, é a brecha na defesa.
 var downed_gate: String = ""
 ## (caído) o médico que vem buscar / quem está carregando agora.
 var _rescuer: Node = null
@@ -1595,8 +1596,9 @@ func _fall_in_combat(cause: String) -> void:
 	if hud:
 		var has_doc := get_tree().get_nodes_in_group("ipezinhos").any(func(w): return w.is_doctor() and not w.injured)
 		hud.show_banner("GUARDA CAÍDO: %s" % _display(),
-			"Caiu no %s e não levanta sozinho. Só um MÉDICO pode levar pra enfermaria%s. Enquanto isso o portão fica aberto pra roubo." % [
-				def.gate_label(downed_gate) if def else "portão", "" if has_doc else " — NÃO HÁ MÉDICO (tecla 3)"])
+			"Caiu no %s e não levanta sozinho. Só um MÉDICO pode levar pra enfermaria%s.%s" % [
+				def.gate_label(downed_gate) if def else "portão", "" if has_doc else " — NÃO HÁ MÉDICO (tecla 3)",
+				" Enquanto isso o portão fica aberto pra roubo." if downed_gate != "" else ""])
 	for w in get_tree().get_nodes_in_group("ipezinhos"):
 		if w.is_doctor():
 			w.wake_decision()
@@ -3220,6 +3222,8 @@ func load_save_data(d: Dictionary) -> void:
 		_relink_coletor_minerio.call_deferred(cm_pos)  # Bloco 57
 	downed = injured and injury_severity == "grave" and SaveUtil.boolean(d, "downed", false)
 	downed_gate = SaveUtil.text(d, "downed_gate", "") if downed else ""
+	if downed_gate != "" and def != null and def.gate(downed_gate) == null:
+		downed_gate = ""  # Bloco 80: save antigo caído no portão do poço (que saiu): sem brecha
 	if downed:
 		_ai_state = "downed"
 		_agent.avoidance_enabled = false

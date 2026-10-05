@@ -236,7 +236,8 @@ func _criaturas() -> void:
 	g("elevador_abismo").unlocked = true
 	check(def.fundo_count("magmante", 3) == 1, "S3 aberto: magmante a partir da onda 3")
 	var gos = def._spawn("gosma")
-	check(gos.kind == "gosma" and gos.gate_id == "poco" and gos.weapon_corrode > 1.0 and gos.barricade_mult > 1.0, "Gosma: sobe pelo poço, corrói arma, derrete barricada")
+	check(gos.kind == "gosma" and gos.gate_id == "" and gos.inside and gos.weapon_corrode > 1.0 and gos.barricade_mult > 1.0,
+		"Gosma: sai do poço (sem portão, Bloco 80: entra direto), corrói arma, derrete barricada")
 	var arm = g("armazens")
 	arm.add_ore(20.0, "ferro")
 	var fe0: float = arm.stock.ferro

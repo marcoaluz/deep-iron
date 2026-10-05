@@ -6,9 +6,11 @@ extends Node
 ## que a defesa começou nesta partida: jogo novo = dia 1; save de antes = o dia em que
 ## carregou, pra ninguém ser pego de surpresa), depois a cada
 ## invasion_every noites, cada onda mais forte. Um aviso aparece no fim da tarde.
-##   - Lumívoros nascem na clareira e descem pelo túnel (barricada "tunel").
-##   - Ferrugentos sobem pelo poço do elevador (barricada "poco") — só depois que
-##     o nível 2 abre (a escavação acordou eles).
+##   - Lumívoros nascem na floresta e entram pelo portão (barricada "tunel", o ÚNICO portão).
+##   - Ferrugentos (robôs pequenos e enferrujados) saem da boca do poço do elevador — só depois
+##     que o nível 2 abre (a escavação acordou eles). Bloco 80: o poço NÃO tem muro (o "portão do
+##     poço" saiu): eles e as criaturas do fundo entram direto, e os guardas fazem POSTO na boca
+##     do poço (guard_post) quando o nível 2 abre. Só o portão da floresta tem brecha (Bloco 36).
 ## Ao amanhecer os que sobraram vão embora (creature.gd -> leave_at_dawn).
 ##
 ## ARSENAL + DESGASTE (Bloco 35):
@@ -36,6 +38,8 @@ extends Node
 ##     invasor daquele portão que chegar num armazém leva raid_ore_percent do minério
 ##     guardado e raid_credit_percent dos créditos. Uma vez por portão por invasão. (O roubo
 ##     de sempre do Ferrugento — steal_amount por golpe — continua igual, à parte.)
+##     Bloco 80: só o portão da floresta abre brecha; guarda caído no posto do poço não abre
+##     (lá não tem portão: o que sobe do fundo já entra direto).
 
 signal invasion_started(wave: int)
 signal invasion_ended(killed: int)
@@ -43,7 +47,7 @@ signal invasion_ended(killed: int)
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const LUMIVORO := preload("res://scenes/creatures/lumivoro.tscn")
 const FERRUGENTO := preload("res://scenes/creatures/ferrugento.tscn")
-## Bloco 70: as criaturas do fundo (sobem pelo poço como o Ferrugento).
+## Bloco 70: as criaturas do fundo (saem do poço como o Ferrugento).
 const GOSMA := preload("res://scenes/creatures/gosma.tscn")
 const MAGMANTE := preload("res://scenes/creatures/magmante.tscn")
 const CENA := {"lumivoro": LUMIVORO, "ferrugento": FERRUGENTO, "gosma": GOSMA, "magmante": MAGMANTE}
@@ -102,6 +106,8 @@ const WEAPON_DESCRIPTIONS := {
 @export var arsenal_build_time: float = 40.0
 ## Máximo de encomendas na fila da forja.
 @export var forge_queue_max: int = 4
+## Bloco 80: distância (px) da boca do poço até o posto dos guardas, pro lado da vila.
+@export var poco_post_dist: float = 40.0
 
 @export_group("Campo de treino")
 @export var campo_credits: int = 120
@@ -330,6 +336,8 @@ func downed_guards() -> Array:
 	return get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return w.get("downed"))
 
 
+## O portão de quem caiu nesse ponto: o portão mais perto — mas se o posto do poço (sem portão, Bloco 80)
+## estiver mais perto que qualquer portão, "" (cair lá não abre brecha).
 func nearest_gate_id(pos: Vector2) -> String:
 	var best := ""
 	var best_d := INF
@@ -338,11 +346,39 @@ func nearest_gate_id(pos: Vector2) -> String:
 		if d < best_d:
 			best_d = d
 			best = g.gate_id
+	var poco := posto_poco()
+	if poco != Vector2.INF and pos.distance_to(poco) < best_d:
+		return ""
 	return best
 
 
+## Bloco 80: a boca do poço do elevador (de onde sobe o que vem do fundo), ou Vector2.INF.
+func boca_poco() -> Vector2:
+	var shaft := get_tree().get_first_node_in_group("elevador") as Node2D
+	return shaft.global_position if shaft else Vector2.INF
+
+
+## Bloco 80: o lado da vila visto da boca do poço (pra onde os guardas do posto olham pra fora).
+func _poco_dentro() -> Vector2:
+	var b := boca_poco()
+	var alvo := get_tree().get_first_node_in_group("armazens") as Node2D
+	if alvo == null:
+		alvo = get_tree().get_first_node_in_group("village_hub") as Node2D
+	if b == Vector2.INF or alvo == null or alvo.global_position.distance_to(b) < 1.0:
+		return Vector2.DOWN
+	return (alvo.global_position - b).normalized()
+
+
+## Bloco 80: o POSTO dos guardas na boca do poço (o poço não tem muro) — só com o nível 2 aberto.
+func posto_poco() -> Vector2:
+	if not level2_open():
+		return Vector2.INF
+	var b := boca_poco()
+	return b + _poco_dentro() * poco_post_dist if b != Vector2.INF else Vector2.INF
+
+
 func gate_label(id: String) -> String:
-	return {"tunel": "portão da floresta", "poco": "portão do poço"}.get(id, "portão")
+	return {"tunel": "portão da floresta"}.get(id, "posto do poço" if id == "" else "portão")
 
 
 ## O portão está aberto pra saque? (guarda dele caído, numa invasão, e ainda não saquearam)
@@ -371,7 +407,7 @@ func raid(creature: Node, armazem: Node) -> void:
 			eco.credits -= cr_taken
 			eco.credits_changed.emit(eco.credits)
 	if ore_taken > 0.0 and creature.get("looted") != null:
-		creature.looted = true  # Prompt 17: sai com a carga (caçamba cheia)
+		creature.looted = true  # Prompt 17: sai carregando o que levou
 	armazem.show_popup("ROUBO: -%d minério  -%d cr" % [roundi(ore_taken), cr_taken], Color(1.0, 0.35, 0.3))
 	Audio.alarm()
 	var who: Array = downed_guards().filter(func(w): return w.downed_gate == gid).map(func(w): return w.display_name)
@@ -382,28 +418,27 @@ func raid(creature: Node, armazem: Node) -> void:
 				", ".join(who) if not who.is_empty() else "o guarda", gate_label(gid), roundi(ore_taken), cr_taken])
 
 
-## Posto de cada guarda: metade no túnel, metade no poço (se o nível 2 abriu).
+## Posto de cada guarda: metade no portão da floresta, metade na boca do poço (Bloco 80: lá não tem
+## muro; o posto só existe com o nível 2 aberto). Os postos: [ponto, lado da vila].
 func guard_post(worker: Node) -> Vector2:
 	var list := guards()
 	var i := maxi(list.find(worker), 0)
-	var gates: Array = []
+	var postos: Array = []
 	var t := gate("tunel")
 	if t:
-		gates.append(t)
-	var p := gate("poco")
-	if p and level2_open():
-		gates.append(p)
-	var base: Vector2
-	if gates.is_empty():
+		var dt: Vector2 = t.inside_dir() if t.has_method("inside_dir") else Vector2.DOWN  # Bloco 74: o lado da vila
+		postos.append([t.global_position + dt * 30.0, dt])
+	var pp := posto_poco()
+	if pp != Vector2.INF:
+		postos.append([pp, _poco_dentro()])
+	if postos.is_empty():
 		var hub := get_tree().get_first_node_in_group("village_hub")
-		base = hub.global_position + Vector2(0, 60) if hub else Vector2.ZERO
-	var dentro := Vector2.DOWN  # Bloco 74: o lado da vila (portão de norte a sul: leste)
-	if not gates.is_empty():
-		var gt: Node2D = gates[i % gates.size()]
-		dentro = gt.inside_dir() if gt.has_method("inside_dir") else Vector2.DOWN
-		base = gt.global_position + dentro * 30.0
-	var slot := i / maxi(gates.size(), 1)
-	var lado := Vector2(dentro.y, -dentro.x)  # ao longo do portão
+		postos.append([hub.global_position + Vector2(0, 60) if hub else Vector2.ZERO, Vector2.DOWN])
+	var posto: Array = postos[i % postos.size()]
+	var base: Vector2 = posto[0]
+	var dentro: Vector2 = posto[1]
+	var slot := i / postos.size()
+	var lado := Vector2(dentro.y, -dentro.x)  # ao longo do portão (ou da boca do poço)
 	return base + lado * (-24.0 + 16.0 * (slot % 4)) + dentro * (10.0 * floorf(slot / 4.0))
 
 
@@ -918,13 +953,14 @@ func _spawn(kind: String) -> Node2D:
 			pos = Vector2(randf_range(r.position.x, r.position.x + r.size.x * 0.55), randf_range(r.position.y, r.end.y))
 		g = gate("tunel")
 	else:
-		var shaft := get_tree().get_first_node_in_group("elevador")
-		pos = shaft.global_position + Vector2(randf_range(-10, 10), -4) if shaft else Vector2.ZERO
-		g = gate("poco")
+		# Bloco 80: sai da boca do poço do elevador, sem barricada no caminho (g = null: entra direto)
+		var b := boca_poco()
+		pos = b + Vector2(randf_range(-10, 10), -4) if b != Vector2.INF else Vector2.ZERO
+		g = null
 	if env:
 		pos = NavigationServer2D.map_get_closest_point(world.get_world_2d().navigation_map, pos)
 	c.position = pos
-	c.gate_id = "tunel" if kind == "lumivoro" else "poco"  # Bloco 36: de que portão ele vem
+	c.gate_id = "tunel" if kind == "lumivoro" else ""  # Bloco 36: de que portão ele vem ("" = do poço, sem portão)
 	world.add_child(c)
 	var tr := tier()
 	c.setup(g, (1.0 + hp_growth * (wave - 1)) * (1.0 + tier_hp_bonus * (tr - 1)))

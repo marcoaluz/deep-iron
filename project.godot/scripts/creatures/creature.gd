@@ -3,16 +3,23 @@ extends Node2D
 ##
 ##   Lumívoro   — come luz e calor. Vem da clareira pelo túnel. Ataca quem está acordado
 ##                lá fora e, nas casas/prédios acesos, assusta quem está dentro (ânimo cai).
-##   Ferrugento — máquina de antes da explosão. Sobe pelo poço do elevador (só depois que
-##                o nível 2 abre). Ataca quem estiver perto e rouba minério do armazém.
-##   Gosma ácida — Bloco 70: do S2 (ácido). Sobe pelo poço. O golpe corrói a arma do guarda e o
-##                ácido derrete barricada mais rápido; no armazém, dissolve o metal (ferro, cobre).
-##   Magmante   — Bloco 70: do S3 (lava). Lento e duro; derrete barricada; no armazém come o
-##                carvão. Derrubado, às vezes deixa cristal rubro.
-## Antes de entrar, precisa derrubar a barricada do caminho (se tiver uma de pé).
-## Bloco 36: com o guarda do portão dele CAÍDO (brecha), vai direto no armazém saquear
-## (defense.gd: raid — uma parte do minério e dos créditos, uma vez por portão por invasão).
+##   Ferrugento — Bloco 80: um ROBÔ pequeno e enferrujado de antes da explosão (esqueleto de metal,
+##                crânio, olhos vermelhos). Sai da boca do poço do elevador (só depois que o nível 2
+##                abre) — o poço não tem muro: entra direto e só os guardas do posto do poço param.
+##                Ataca quem estiver perto e rouba minério do armazém.
+##   Gosma ácida — Bloco 70: do S2 (ácido). Sobe pelo poço (sem muro). O golpe corrói a arma do
+##                guarda; no armazém, dissolve o metal (ferro, cobre).
+##   Magmante   — Bloco 70: do S3 (lava). Lento e duro; no armazém come o carvão. Derrubado, às
+##                vezes deixa cristal rubro.
+## O Lumívoro vem da floresta: antes de entrar, precisa derrubar a barricada do portão (se tiver uma
+## de pé). Bloco 36: com o guarda do portão dele CAÍDO (brecha), vai direto no armazém saquear
+## (defense.gd: raid — uma parte do minério e dos créditos, uma vez por invasão). Bloco 80: o único
+## portão é o da floresta ("tunel"); quem sai do poço não tem portão (gate_id "") e não abre brecha.
 ## Ao amanhecer: o Lumívoro foge da luz e o Ferrugento desliga.
+## Bloco 80: VISUAL CONFIGURÁVEL (grupo "Visual (folha de quadros)"): com `visual_textura`, a criatura
+## se desenha por uma folha — uma linha por animação (`visual_anims`), `visual_quadros` quadros em cada,
+## quadros de `visual_quadro` px, virada pra direita. Trocar os sprites (PixelLab) = trocar esses campos
+## na cena, sem mexer aqui. Sem textura, vale a arte isométrica do bonecos.json (iso_bonecos.gd).
 ## Prompt 17: na vista iso a arte nova vem de iso_bonecos.gd (criatura_pose), pelo estado daqui:
 ## andando, atacando (_attack_at), levando golpe (_hit_at), morrendo (_died_at, fica deitado um
 ## pouco antes de sumir) e desligando ao amanhecer. Variante FORTE (bruto/carregador): defense.gd
@@ -43,8 +50,32 @@ signal died(killed: bool)
 @export var drop_amount: int = 0
 @export_range(0.0, 1.0) var drop_chance: float = 0.0
 
+@export_group("Visual (folha de quadros)")
+## Bloco 80: a folha de quadros da criatura (uma LINHA por animação, na ordem de visual_anims; quadros da
+## esquerda pra direita, virada pra direita). Vazia = a arte isométrica do bonecos.json.
+@export var visual_textura: Texture2D
+## Tamanho de UM quadro na folha (px).
+@export var visual_quadro := Vector2i(24, 32)
+## As animações, na ordem das linhas da folha (as que o jogo usa: parado, caminhada, atacar, dano, morrer).
+@export var visual_anims: PackedStringArray = PackedStringArray(["parado", "caminhada", "atacar", "dano", "morrer"])
+## Quantos quadros cada animação tem (mesma ordem de visual_anims).
+@export var visual_quadros: PackedInt32Array = PackedInt32Array([2, 4, 3, 2, 4])
+## Quadros por segundo (parado, atacar, dano, morrer).
+@export var visual_fps := 8.0
+## Px andados por ciclo da caminhada (a perna acompanha o chão: o pé não escorrega).
+@export var visual_passada := 34.0
+## Escala do desenho (1 = 1 px da folha por px do mundo).
+@export var visual_escala := 1.0
+## Px entre o pé e a borda de baixo do quadro (o pé fica na origem da criatura).
+@export var visual_pe := 2.0
+## O que ele leva quando roubou o armazém (desenhado nas costas; vazio = nada).
+@export var visual_carga: Texture2D
+## Onde fica a carga (px do mundo, a partir do pé, com o desenho virado pra direita: x < 0 = costas).
+@export var visual_carga_pos := Vector2(-6, -16)
+
 var hp: float = 0.0
-## Portão por onde ele vem ("tunel"/"poco") — Bloco 36, pra saber se a brecha é a dele.
+## Portão por onde ele vem ("tunel"; "" = sai do poço, sem portão) — Bloco 36, pra saber se a brecha é
+## a dele (Bloco 80: o portão do poço saiu).
 var gate_id: String = ""
 ## Já passou (ou derrubou) a barricada do caminho?
 var inside: bool = false
@@ -63,12 +94,16 @@ var _attack_at := -100.0
 var _hit_at := -100.0
 var _died_at := -100.0
 var _left_at := -100.0
-## Ferrugento que já roubou minério: a caçamba vai cheia.
+## Ferrugento que já roubou minério: sai carregando (visual_carga nas costas).
 var looted := false
 ## Bloco 62: elite (forte do tier alto) e chefe; o golpe do chefe num guarda armado gasta a arma.
 var elite := false
 var weapon_corrode := 0.0
 var _shout_at := -100.0
+## Bloco 80: andou neste quadro? e quanto já andou (a caminhada da folha de quadros vai pela distância).
+var _andando := false
+var _andado := 0.0
+var _carga: Sprite2D = null
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _agent: NavigationAgent2D = $Agent
@@ -79,6 +114,65 @@ func _ready() -> void:
 	add_to_group("criaturas")
 	hp = max_hp
 	_light.add_to_group("cullable_lights")
+	_monta_visual()
+
+
+## Bloco 80: a folha de quadros (se tiver): o Visual passa a recortar um quadro dela.
+func _monta_visual() -> void:
+	if visual_textura == null:
+		return
+	_visual.texture = visual_textura
+	_visual.hframes = 1
+	_visual.vframes = 1
+	_visual.region_enabled = true
+	_visual.centered = true
+	_visual.scale = Vector2.ONE * visual_escala
+	_visual.offset = Vector2(0.0, -float(visual_quadro.y) * 0.5 + visual_pe)
+	_visual.region_rect = Rect2(Vector2.ZERO, Vector2(visual_quadro))
+	if visual_carga:
+		_carga = Sprite2D.new()
+		_carga.name = "Carga"
+		_carga.texture = visual_carga
+		_carga.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_carga.visible = false
+		add_child(_carga)
+
+
+## A animação de agora: [nome, segundos desde que começou, toca uma vez só].
+func anim_atual() -> Array:
+	if _dying:
+		return ["morrer", _anim - _died_at, true]
+	if _leaving:
+		return ["morrer", _anim - _left_at, true]  # o Ferrugento desliga (a mesma queda)
+	if _anim - _hit_at < 0.35:
+		return ["dano", _anim - _hit_at, true]
+	if _anim - _attack_at < 0.6:
+		return ["atacar", _anim - _attack_at, true]
+	if _andando:
+		return ["caminhada", _anim, false]
+	return ["parado", _anim, false]
+
+
+## Bloco 80: escolhe o quadro da folha pela animação de agora.
+func _atualiza_visual() -> void:
+	if visual_textura == null:
+		_visual.frame = int(_anim * (9.0 if kind == "lumivoro" else 5.0)) % 2
+		return
+	var a := anim_atual()
+	var linha := visual_anims.find(String(a[0]))
+	if linha < 0:
+		linha = maxi(visual_anims.find("parado"), 0)
+	var n: int = maxi(visual_quadros[linha] if linha < visual_quadros.size() else 1, 1)
+	var i: int
+	if String(a[0]) == "caminhada":
+		i = int(_andado / maxf(visual_passada, 1.0) * n) % n
+	else:
+		i = int(float(a[1]) * visual_fps)
+		i = mini(i, n - 1) if a[2] else i % n
+	_visual.region_rect = Rect2(Vector2(i * visual_quadro.x, linha * visual_quadro.y), Vector2(visual_quadro))
+	if _carga:
+		_carga.visible = looted and not _dying
+		_carga.position = Vector2(visual_carga_pos.x * (-1.0 if _visual.flip_h else 1.0), visual_carga_pos.y)
 
 
 ## Chamado pela Defesa logo depois de nascer: qual barricada fica no caminho e quão forte é a onda.
@@ -140,7 +234,8 @@ func is_alive() -> bool:
 
 func _process(delta: float) -> void:
 	_anim += delta
-	_visual.frame = int(_anim * (9.0 if kind == "lumivoro" else 5.0)) % 2
+	_atualiza_visual()
+	_andando = false
 	if _dying or _leaving:
 		return
 	_attack_cd -= delta
@@ -169,6 +264,8 @@ func _process(delta: float) -> void:
 		var next := _agent.get_next_path_position()
 		var step := (next - global_position).limit_length(speed * delta)
 		global_position += step
+		_andando = step.length() > 0.05
+		_andado = fmod(_andado + step.length(), 100000.0)
 		if absf(step.x) > 0.01:
 			_visual.flip_h = step.x < 0.0
 	elif _attack_cd <= 0.0:
@@ -343,7 +440,7 @@ func die(killed: bool) -> void:
 	t.tween_callback(queue_free)
 
 
-## Amanhecer: o Lumívoro foge voando; o Ferrugento desliga e vira pó de ferrugem.
+## Amanhecer: o Lumívoro foge voando; o Ferrugento (robô) desliga, desmonta e vira pó de ferrugem.
 func leave_at_dawn() -> void:
 	if not is_alive():
 		return
@@ -372,5 +469,8 @@ func _draw() -> void:
 	if _dying or hp >= max_hp:
 		return
 	var w := 22.0
-	draw_rect(Rect2(-w * 0.5, -32, w, 3), Color(0, 0, 0, 0.7))
-	draw_rect(Rect2(-w * 0.5, -32, w * clampf(hp / max_hp, 0.0, 1.0), 3), Color(0.9, 0.3, 0.25))
+	var y := -32.0
+	if visual_textura:  # Bloco 80: acima do desenho da folha (o tamanho vem do quadro)
+		y = -(float(visual_quadro.y) - visual_pe) * absf(_visual.scale.y) - 6.0
+	draw_rect(Rect2(-w * 0.5, y, w, 3), Color(0, 0, 0, 0.7))
+	draw_rect(Rect2(-w * 0.5, y, w * clampf(hp / max_hp, 0.0, 1.0), 3), Color(0.9, 0.3, 0.25))

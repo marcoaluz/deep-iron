@@ -74,7 +74,7 @@ func _process(delta: float) -> bool:
 func _dados() -> void:
 	print("== arte exportada")
 	var d: Dictionary = B.data()
-	for pasta in ["criatura_lumivoro", "criatura_lumivoro_bruto", "criatura_ferrugento", "criatura_ferrugento_carregador"]:
+	for pasta in ["criatura_lumivoro", "criatura_lumivoro_bruto"]:  # (Bloco 80: o Ferrugento tem folha própria)
 		var anims: Dictionary = d.get("pastas", {}).get(pasta, {}).get("anims", {})
 		var ok := true
 		for an in ["parado", "caminhada", "atacar", "dano", "morrer"]:
@@ -82,7 +82,14 @@ func _dados() -> void:
 				if not anims.get(an, {}).has(dd):
 					ok = false
 		check(ok, "%s: 5 animações x 4 direções" % pasta)
-	check(d.has("carga_ferrugento"), "carga do Ferrugento (minério na caçamba)")
+	var fr: Node = load("res://scenes/creatures/ferrugento.tscn").instantiate()
+	var tex: Texture2D = fr.visual_textura
+	var largura := 0
+	for n in fr.visual_quadros:
+		largura = maxi(largura, n)
+	check(tex != null and tex.get_width() >= largura * fr.visual_quadro.x and tex.get_height() >= fr.visual_anims.size() * fr.visual_quadro.y,
+		"Ferrugento: folha de quadros cobre %d animações x até %d quadros de %s" % [fr.visual_anims.size(), largura, fr.visual_quadro])
+	fr.free()
 
 
 func _nasce() -> void:
@@ -117,17 +124,21 @@ func _estados() -> void:
 	lumi.make_strong(1.6, 1.3)
 	check(lumi.variant == "forte" and is_equal_approx(lumi.max_hp, max0 * 1.6), "forte: mais vida (x1.6)")
 	check(B.criatura_pose(lumi, 0, false).get("pasta") == "criatura_lumivoro_bruto", "forte: desenho do bruto")
+	print("== Ferrugento (Bloco 80: robô, folha de quadros própria)")
+	check(B.criatura_pose(ferr, 0, true).is_empty(), "sem arte isométrica: o espelho desenha a folha dele")
+	var esc0: Vector2 = ferr._visual.scale
 	ferr.make_strong(1.6, 1.3)
-	check(B.criatura_pose(ferr, 0, false).get("pasta") == "criatura_ferrugento_carregador", "Ferrugento forte: carregador")
+	check(ferr.variant == "forte" and ferr._visual.scale.x > esc0.x, "Ferrugento forte: maior")
 	ferr.variant = ""
 	print("== roubo")
-	check(not B.criatura_pose(ferr, 0, false).has("item"), "caçamba vazia antes de roubar")
+	ferr._atualiza_visual()
+	check(ferr._carga != null and not ferr._carga.visible, "nada nas costas antes de roubar")
 	ferr.looted = true
-	var pf := B.criatura_pose(ferr, 0, true)
-	check(pf.has("item") and pf.item.front, "roubou: minério na caçamba")
+	ferr._atualiza_visual()
+	check(ferr._carga.visible, "roubou: leva o minério nas costas")
 	ferr._leaving = true
 	ferr._left_at = ferr._anim
-	check(B.criatura_pose(ferr, 0, false).get("anim") == "morrer", "amanhecer: o Ferrugento desliga (cai)")
+	check(ferr.anim_atual()[0] == "morrer", "amanhecer: o Ferrugento desliga (cai)")
 	ferr._leaving = false
 
 

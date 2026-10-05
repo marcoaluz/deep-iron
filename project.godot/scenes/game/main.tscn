@@ -229,11 +229,6 @@ gate_id = "tunel"
 display_name = "Portão da floresta"
 vertical = true
 
-[node name="BarricadaPoco" parent="World" instance=ExtResource("53_barricada")]
-position = Vector2(430, 400)
-gate_id = "poco"
-display_name = "Portão do poço"
-
 [node name="ElevadorAbismo" parent="World" instance=ExtResource("49_abismo")]
 position = Vector2(476.2, 3691)
 bottom_position = Vector2(630.0, 4132.6)

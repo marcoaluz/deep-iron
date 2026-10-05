@@ -58,6 +58,16 @@ fazer esta parte aqui" = áreas de trabalho com postos estilo Frostpunk (texto i
   - O carrinho sobe pelo cavalete (desenhado na vista iso, à direita da espiral) até a plataforma na
     superfície e descarrega no armazém.
   - Teste `b79_ferrovia`; relatório `docs/BLOCO79_FERROVIA_DE_CARGA.md`.
+- **CLAUDE.md** na raiz: visão geral, mapa das pastas e as regras fixas (Bloco numerado com teste, save
+  compatível, @export, não mexer em addons/, padrões existentes, testes honestos, plano antes de refatoração
+  grande, produção só por ordem, e **sempre usar as skills de .claude/skills**). Próximo Bloco: o número
+  livre seguinte (os pedidos do Marco chamados "Bloco 49" etc. vêm de uma lista antiga: usar o próximo livre).
+- **Bloco 80 (feito) — portão único + Ferrugento robô** (pedido "Bloco 49"): o portão do poço saiu (só o da
+  floresta; o que sobe do fundo sai da boca do poço sem barricada; guardas fazem posto lá; brecha só no
+  portão da floresta; save antigo com BarricadaPoco/downed_gate "poco" carrega). O Ferrugento virou robô
+  enferrujado estilo exterminador, arte do PixelLab (`criaturas/ferrugento_robo.py`, personagem
+  a48ac19b-…), desenhado por uma FOLHA DE QUADROS configurável (creature.gd `visual_*`). Teste `b80_…`;
+  relatório `docs/BLOCO80_PORTAO_UNICO_FERRUGENTO.md`.
 - **Pra ver os Blocos 78/79 no jogo logo no dia 1** (o Marco testou e "não viu": jogou 2 min na superfície; os
   marcos estão nos andares e a ferrovia só constrói com o S2 aberto): painel **F3** (build de editor) →
   "Andares: abrir todos" e "Ir para: vila / S2 / S3 / S4 / S5 / ferrovia".
