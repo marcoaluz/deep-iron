@@ -52,8 +52,12 @@ fazer esta parte aqui" = áreas de trabalho com postos estilo Frostpunk (texto i
   - Os marcos: vila de mineração nas galerias, cristais e poças d'água no S2, o fóssil gigante no S3, a
     fonte termal (bicas com vapor) no S4 e a cidade (torre e lampiões de cristal) no S5.
   - Arte nova em `fundo78/marcos.py`; teste `b78_marcos`; relatório `docs/BLOCO78_MARCOS_DOS_ANDARES.md`.
-- **Bloco 79 — ferrovia de carga (próximo):** uma estação por andar subindo o minério pelo cavalete até a
-  superfície (como o vagonete do Bloco 64), pra o mineiro do fundo andar menos.
+- **Bloco 79 — ferrovia de carga (feito):**
+  - Uma estação por andar (S2 a S5, de cima pra baixo, só com o andar aberto, construída pelo engenheiro),
+    usando o modo `ferrovia` da `estacao_vagonete.gd`.
+  - O carrinho sobe pelo cavalete (desenhado na vista iso, à direita da espiral) até a plataforma na
+    superfície e descarrega no armazém.
+  - Teste `b79_ferrovia`; relatório `docs/BLOCO79_FERROVIA_DE_CARGA.md`.
 
 ## Antes (2026-10-04): Blocos 73 e 74 — feitos, esperando o Marco conferir
 

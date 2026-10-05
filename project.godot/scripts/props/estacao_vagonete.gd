@@ -22,6 +22,14 @@ const Iso := preload("res://scripts/iso/iso_core.gd")
 ## Bloco 74: o da mina (fixo): o trilho sai do batente da boca, desce reto e vira pra porta do armazém
 ## (em vez do caminho da navegação).
 @export var rota_fixa := false
+## Bloco 79: FERROVIA DE CARGA — o id do andar (S2..S5) onde fica a estação ("" = o vagonete comum). O trilho
+## no chão é só o pedaço até a doca; o resto da viagem é a SUBIDA pelo cavalete até a superfície (a vista iso
+## desenha o cavalete e o carrinho subindo), e a carga vai pro armazém.
+@export var ferrovia := ""
+## Bloco 79: o comprimento da subida (px da lógica) = base + por andar de profundidade.
+const SUBIDA_BASE := 260.0
+const SUBIDA_POR_ANDAR := 150.0
+var _len_chao := 0.0
 
 var stock := {}  # minério esperando o vagonete
 var rail: Node2D = null  # o trilho (Node2D "trilhos" com os pontos)
@@ -48,6 +56,8 @@ func _ready() -> void:
 	super()
 	add_to_group("pontos_carga")
 	add_to_group("obras")
+	if ferrovia != "":
+		add_to_group("ferrovias")  # Bloco 79
 	var v: Sprite2D = $Visual  # o guindaste da pedreira (arte do pacote de objetos), 1 px de arte = 1 px de tela
 	var env := get_tree().get_first_node_in_group("environment")
 	var sc: float = env.iso_scale() if env and env.has_method("has_iso_map") and env.has_iso_map() else 0.5
@@ -113,7 +123,9 @@ func _build_rail() -> void:
 		return
 	var map := get_world_2d().navigation_map
 	var pts := PackedVector2Array([global_position + Vector2(0, 18), a.global_position + Vector2(0, 30)])
-	if rota_fixa:
+	if ferrovia != "":  # Bloco 79: o trilho no chão vai só até a doca (a leste); dali o cavalete sobe
+		pts = PackedVector2Array([global_position + Vector2(-6, 18), global_position + Vector2(52, 18)])
+	elif rota_fixa:
 		var porta := a.global_position + Vector2(0, 30)
 		# (a boca é rocha: o trilho começa no batente, no chão da frente — o vagonete espera ali)
 		pts = PackedVector2Array([global_position + Vector2(0, -30), Vector2(global_position.x, porta.y), porta])
@@ -129,6 +141,9 @@ func _build_rail() -> void:
 	rail.set_points(pts)
 	rail.broken = is_broken()
 	_len = rail.length()
+	_len_chao = _len
+	if ferrovia != "":
+		_len += subida()
 	cart_d = clampf(cart_d, 0.0, _len)
 	_place_cart()
 
@@ -141,9 +156,32 @@ func _make_cart() -> void:
 	get_parent().add_child.call_deferred(_cart)
 
 
+## Bloco 79: o comprimento da subida pelo cavalete (0 = vagonete comum).
+func subida() -> float:
+	if ferrovia == "":
+		return 0.0
+	var n := preload("res://scripts/core/niveis.gd").por_id(ferrovia)
+	return SUBIDA_BASE + SUBIDA_POR_ANDAR * float(n.profundidade if n else 3)
+
+
+## Bloco 79: quanto da subida o carrinho já fez (0..1); -1 = está no chão do andar (no trilho de verdade).
+func progresso_subida() -> float:
+	if ferrovia == "" or cart_d <= _len_chao:
+		return -1.0
+	return clampf((cart_d - _len_chao) / maxf(_len - _len_chao, 1.0), 0.0, 1.0)
+
+
+func carrinho_cheio() -> bool:
+	return not cart_load.is_empty()
+
+
 func _place_cart() -> void:
 	if _cart == null or rail == null or not is_instance_valid(rail):
 		return
+	if ferrovia != "":  # Bloco 79: na subida o carrinho é da vista iso (no cavalete), não do chão
+		_cart.visible = cart_d <= _len_chao
+		if not _cart.visible:
+			return
 	_cart.global_position = rail.point_at(cart_d)
 	_cart.full = not cart_load.is_empty()
 	_cart.dir = rail.dir_at(cart_d) * (1.0 if cart_state != "voltando" else -1.0)
@@ -227,6 +265,11 @@ func _update_label() -> void:
 	var st: String = "trilho QUEBRADO — engenheiro" if is_broken() else {"esperando": "esperando carga", "indo": "levando", "voltando": "voltando"}.get(cart_state, cart_state)
 	if _parado_area and cart_state == "esperando" and not is_broken():
 		st = "parado — mina: %s" % _motivo_area  # Bloco 77
+	if ferrovia != "":  # Bloco 79
+		st = {"indo": "subindo pro armazém", "voltando": "descendo"}.get(cart_state, st)
+		_label.text = "Ferrovia de carga (%s)\n%s\ncarga: %d/%d  •  levou: %d" % [ferrovia, st, int(buffered()), int(buffer_capacity), int(total_moved)]
+		_label.modulate = Color(1.0, 0.6, 0.4) if is_broken() else Color(0.9, 0.86, 0.8)
+		return
 	_label.text = "Vagonete\n%s\ncarga: %d/%d  •  levou: %d" % [st, int(buffered()), int(buffer_capacity), int(total_moved)]
 	_label.modulate = Color(1.0, 0.6, 0.4) if is_broken() else Color(0.9, 0.86, 0.8)
 
@@ -280,7 +323,7 @@ func obra_workers() -> Array[Node]:
 
 # ------------------------------------------------------------ save
 func get_save_data() -> Dictionary:
-	return {"position": [global_position.x, global_position.y], "stock": stock.duplicate(), "rail_left": rail_left,
+	return {"position": [global_position.x, global_position.y], "ferrovia": ferrovia, "stock": stock.duplicate(), "rail_left": rail_left,
 		"repair_left": repair_left, "total": total_moved, "cart_state": cart_state, "cart_d": cart_d, "cart_load": cart_load.duplicate()}
 
 

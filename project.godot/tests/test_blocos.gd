@@ -326,5 +326,9 @@ func test_b78_marcos() -> void:
 	run_bloco("b78_marcos.gd")
 
 
+func test_b79_ferrovia() -> void:
+	run_bloco("b79_ferrovia.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

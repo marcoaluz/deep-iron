@@ -240,6 +240,13 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return hub.vagonete_cost_text(),
 					"reason": func(): return hub.vagonete_block_reason(),
 					"act": func(): hub.build_vagonete()})
+				var prox: String = hub.ferrovia_proximo()  # Bloco 79
+				out.append({"name": "Ferrovia de carga" + (" (%s)" % prox if prox != "" else ""), "tex": "", "many": true, "scales": true,
+					"desc": "Uma estação no andar (a ponta leste, perto do poço): os mineradores de lá entregam nela e o carrinho SOBE pelo cavalete até o armazém. Um andar de cada vez, de cima pra baixo; o trilho gasta e o engenheiro conserta.",
+					"count": func(): return _count("ferrovias"),
+					"cost": func(): return hub.ferrovia_cost_text(),
+					"reason": func(): return hub.ferrovia_block_reason(),
+					"act": func(): hub.build_ferrovia()})
 				out.append({"name": "Coletor de minério", "tex": "coletor_minerio", "frames": 2, "many": true, "scales": true,
 					"desc": "Broca a vapor perto de uma jazida: um minerador opera e ela manda minério do tipo da jazida pro armazém. Cada uma tem o seu operador.",
 					"count": func(): return _count("coletores_minerio"),

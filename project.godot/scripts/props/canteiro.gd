@@ -31,6 +31,7 @@ const KINDS := {
 	"coletor_minerio": ["Coletor de minério", "village_hub", "res://assets/game/coletor_minerio.png", 2],  # Bloco 57
 	"oficina": ["Oficina", "village_hub", "res://assets/game/oficina.png", 2],  # Bloco 58
 	"vagonete": ["Trilho e vagonete", "village_hub", "res://assets/game/iso/props/vagonete_cheio_SE.png", 1],  # Bloco 64
+	"ferrovia": ["Ferrovia de carga", "village_hub", "res://assets/game/iso/props/vagonete_cheio_SE.png", 1],  # Bloco 79
 	"desbravar": ["Desbravar o leste", "village_hub", "", 1],  # Bloco 67
 	"enfermaria": ["Enfermaria", "village_hub", "res://assets/game/enfermaria.png", 2],  # Bloco 47 (extra)
 	"ventilador": ["Ventilador", "fundo", "res://assets/game/ventilador.png", 1],  # Bloco 70 (nível 2)

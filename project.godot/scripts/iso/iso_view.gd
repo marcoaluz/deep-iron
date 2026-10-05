@@ -1241,6 +1241,7 @@ func _process(_delta: float) -> void:
 	_sync_ghost()
 	_sync_trilhos()
 	_sync_areas()  # Bloco 77
+	_sync_ferrovia()  # Bloco 79
 	_pulsa_luzes()
 	_overlay.queue_redraw()
 
@@ -1279,18 +1280,25 @@ func _sync_trilhos() -> void:
 func _draw_rail(d: Node2D, r: Node) -> void:
 	if not is_instance_valid(r) or r.points.size() < 2:
 		return
+	_draw_rail_pts(d, r.points, r.broken)
+
+
+## (Bloco 79: o desenho do trilho por pontos — a ferrovia de carga usa na superfície)
+func _draw_rail_pts(d: Node2D, points: PackedVector2Array, broken: bool) -> void:
+	if points.size() < 2:
+		return
 	# Bloco 74: a bitola e os dormentes no CHÃO (projetados), não na tela — o trilho lê como trilho em
 	# qualquer direção do losango; ferro de 2 px com brilho em cima, dormente de madeira grosso
-	var ferro := Color(0.62, 0.3, 0.25) if r.broken else Color(0.46, 0.45, 0.44)
-	var brilho := Color(0.8, 0.45, 0.38) if r.broken else Color(0.72, 0.7, 0.66)
+	var ferro := Color(0.62, 0.3, 0.25) if broken else Color(0.46, 0.45, 0.44)
+	var brilho := Color(0.8, 0.45, 0.38) if broken else Color(0.72, 0.7, 0.66)
 	var madeira := Color(0.32, 0.21, 0.12)
 	var madeira_luz := Color(0.45, 0.31, 0.18)
 	const BITOLA := 5.0  # meia bitola (px da lógica)
 	const PASSO := 7.0  # entre dormentes (px da lógica)
 	var acc := 0.0
-	for i in range(1, r.points.size()):
-		var a: Vector2 = r.points[i - 1]
-		var b: Vector2 = r.points[i]
+	for i in range(1, points.size()):
+		var a: Vector2 = points[i - 1]
+		var b: Vector2 = points[i]
 		var L := a.distance_to(b)
 		if L < 0.5:
 			continue
@@ -1310,6 +1318,211 @@ func _draw_rail(d: Node2D, r: Node) -> void:
 			var rb := to_screen(b + n * lado)
 			d.draw_line(ra.round(), rb.round(), ferro, 2.0)
 			d.draw_line((ra + Vector2(0, -1)).round(), (rb + Vector2(0, -1)).round(), brilho, 1.0)
+
+
+# ------------------------------------------------------------ ferrovia de carga (Bloco 79)
+## O CAVALETE de madeira à direita da espiral (a maquete v4): dois postes, travessas e as rampas em zigue-zague
+## da doca mais funda até a plataforma na superfície; a DOCA de cada estação (do fim do trilho no chão do andar
+## até o cavalete); e o CARRINHO de cada estação quando está na subida (a estação diz o quanto: progresso_subida).
+## Só aparece com alguma estação construída.
+const FERROVIA_LARG := 64.0   # entre os dois postes (px de arte)
+const FERROVIA_LANCE := 210.0  # quanto cada rampa do zigue-zague sobe
+var _ferrovia_drawer: Node2D
+var _ferrovia_sup: Node2D
+var _ferrovia_tex := {}
+
+
+func _ferrovias() -> Array:
+	return get_tree().get_nodes_in_group("ferrovias").filter(func(f): return is_instance_valid(f) and f.is_inside_tree())
+
+
+## x dos dois postes (à direita da espiral) e o topo (a plataforma na superfície, num ponto do chão da mina).
+func ferrovia_postes() -> Vector2:
+	var esp: Dictionary = _env.andares.get("espiral", {}) if _env.get("andares") is Dictionary else {}
+	var x0: float = float(esp.tela[0]) + 455.0 if esp.has("tela") else 800.0
+	return Vector2(x0, x0 + FERROVIA_LARG)
+
+
+func ferrovia_topo_logico() -> Vector2:
+	return Vector2(330.0 + ferrovia_postes().y / S, 330.0)
+
+
+func ferrovia_topo() -> Vector2:
+	return to_screen(ferrovia_topo_logico())
+
+
+## Na superfície: da plataforma (na beira do chão, em cima do cavalete) até a porta do armazém.
+func ferrovia_trilho_sup() -> PackedVector2Array:
+	var t := ferrovia_topo_logico()
+	var arm := get_tree().get_first_node_in_group("armazens") as Node2D
+	var porta := arm.global_position + Vector2(5, 32) if arm else t + Vector2(-100, -250)
+	return PackedVector2Array([t + Vector2(0, -6), Vector2(t.x - 70, t.y - 50), Vector2(porta.x + 30, porta.y + 30), porta])
+
+
+## O zigue-zague, de baixo (y_fundo) pra cima (o topo).
+func _ferrovia_zigue(y_fundo: float) -> PackedVector2Array:
+	var px := ferrovia_postes()
+	var topo := ferrovia_topo()
+	var pts := PackedVector2Array([Vector2(px.x, y_fundo)])
+	var lado := 1
+	var y := y_fundo
+	while y - FERROVIA_LANCE > topo.y + 40.0:
+		y -= FERROVIA_LANCE
+		pts.append(Vector2(px.y if lado == 1 else px.x, y))
+		lado = -lado
+	pts.append(topo)
+	return pts
+
+
+## O caminho (tela) do carrinho de uma estação: o fim do trilho no chão -> a doca -> entra no zigue-zague na
+## altura dela -> sobe até o topo.
+func ferrovia_caminho(f: Node, y_fundo: float) -> PackedVector2Array:
+	var px := ferrovia_postes()
+	var ini := to_screen((f as Node2D).global_position + Vector2(52, 18))
+	var z := _ferrovia_zigue(y_fundo)
+	var out := PackedVector2Array([ini, Vector2(px.x, ini.y)])
+	for i in range(z.size() - 1):
+		var a: Vector2 = z[i]
+		var b: Vector2 = z[i + 1]
+		if ini.y <= a.y + 0.5 and ini.y > b.y:
+			var t := (a.y - ini.y) / maxf(a.y - b.y, 0.001)
+			out.append(a.lerp(b, t))
+			for k in range(i + 1, z.size()):
+				out.append(z[k])
+			return out
+	out.append(z[z.size() - 1])
+	return out
+
+
+func _ponto_no(pts: PackedVector2Array, t: float) -> Array:
+	var total := 0.0
+	for i in range(pts.size() - 1):
+		total += pts[i].distance_to(pts[i + 1])
+	var alvo := clampf(t, 0.0, 1.0) * total
+	for i in range(pts.size() - 1):
+		var l := pts[i].distance_to(pts[i + 1])
+		if alvo <= l or i == pts.size() - 2:
+			return [pts[i].lerp(pts[i + 1], clampf(alvo / maxf(l, 0.001), 0.0, 1.0)), pts[i + 1] - pts[i]]
+		alvo -= l
+	return [pts[pts.size() - 1], Vector2.UP]
+
+
+## Onde o carrinho dessa estação está na tela (Vector2.INF = no chão do andar, desenhado pelo espelho).
+func ferrovia_carrinho(f: Node) -> Vector2:
+	var t: float = f.progresso_subida()
+	if t < 0.0:
+		return Vector2.INF
+	return _ponto_no(ferrovia_caminho(f, _ferrovia_fundo()), t)[0]
+
+
+func _ferrovia_fundo() -> float:
+	var y := -INF
+	for f in _ferrovias():
+		y = maxf(y, to_screen((f as Node2D).global_position + Vector2(52, 18)).y)
+	return y + 24.0
+
+
+func _sync_ferrovia() -> void:
+	var fs := _ferrovias()
+	if fs.is_empty():
+		if _ferrovia_drawer:
+			_ferrovia_drawer.visible = false
+			_ferrovia_sup.visible = false
+		return
+	if _ferrovia_sup == null:  # a parte da superfície: no chão, como os trilhos (na frente da laje)
+		_ferrovia_sup = Node2D.new()
+		_ferrovia_sup.name = "FerroviaSuperficie"
+		_ferrovia_sup.z_as_relative = false
+		_ferrovia_sup.z_index = Order.BASE - 45
+		_things.add_child(_ferrovia_sup)
+		_ferrovia_sup.draw.connect(_draw_ferrovia_sup)
+		_ferrovia_sup.queue_redraw()
+	if _ferrovia_drawer == null:
+		_ferrovia_drawer = Node2D.new()
+		_ferrovia_drawer.name = "FerroviaCarga"
+		_ferrovia_drawer.z_as_relative = false
+		_ferrovia_drawer.z_index = Order.BASE - 54  # com a espiral (desenhado depois: por cima dela), atrás dos andares
+		_ferrovia_drawer.light_mask = 2
+		_terrain_node.add_child(_ferrovia_drawer)
+		_ferrovia_drawer.draw.connect(_draw_ferrovia)
+	_ferrovia_drawer.visible = true
+	_ferrovia_sup.visible = true
+	_ferrovia_drawer.queue_redraw()
+
+
+func _ferrovia_cart_tex(cheio: bool) -> Texture2D:
+	var k := "vagonete_%s_SE" % ("cheio" if cheio else "vazio")
+	if not _ferrovia_tex.has(k):
+		var path := "res://assets/game/iso/props/%s.png" % k
+		_ferrovia_tex[k] = load(path) if ResourceLoader.exists(path) else null
+	return _ferrovia_tex[k]
+
+
+func _draw_ferrovia_sup() -> void:
+	var t := ferrovia_topo()
+	var madeira := Color(0.30, 0.20, 0.12)
+	var madeira_luz := Color(0.46, 0.32, 0.19)
+	# a plataforma de chegada (tábuas na beira do chão) e o trilho até a porta do armazém
+	var deck := PackedVector2Array([t + Vector2(-40, 0), t + Vector2(0, -20), t + Vector2(40, 0), t + Vector2(0, 20)])
+	_ferrovia_sup.draw_colored_polygon(deck, madeira_luz)
+	for k in range(-3, 4):
+		_ferrovia_sup.draw_line(t + Vector2(-40 + 10 * (k + 3) * 0.5, 0 - 10 * (k + 3) * 0.25) + Vector2(0, 20 - 0), t + Vector2(10 * (k + 3) * 0.5, -20 + 10 * (k + 3) * 0.25), madeira, 1.0)
+	_ferrovia_sup.draw_polyline(PackedVector2Array([deck[0], deck[1], deck[2], deck[3], deck[0]]), madeira, 2.0)
+	_draw_rail_pts(_ferrovia_sup, ferrovia_trilho_sup(), false)
+
+
+func _draw_ferrovia() -> void:
+	var d := _ferrovia_drawer
+	var px := ferrovia_postes()
+	var topo := ferrovia_topo()
+	var fundo := _ferrovia_fundo()
+	var madeira := Color(0.30, 0.20, 0.12)
+	var madeira_luz := Color(0.46, 0.32, 0.19)
+	var ferro := Color(0.46, 0.45, 0.44)
+	# os postes e as travessas
+	for x in [px.x, px.y]:
+		d.draw_line(Vector2(x, topo.y - 6), Vector2(x, fundo + 30), Color(0.12, 0.08, 0.05), 11.0)
+		d.draw_line(Vector2(x, topo.y - 6), Vector2(x, fundo + 30), madeira, 8.0)
+		d.draw_line(Vector2(x - 2, topo.y - 6), Vector2(x - 2, fundo + 30), madeira_luz, 2.0)
+	var y := fundo
+	while y > topo.y:
+		d.draw_line(Vector2(px.x, y), Vector2(px.y, y), madeira, 5.0)
+		d.draw_line(Vector2(px.x, y), Vector2(px.y, y - FERROVIA_LANCE * 0.5), Color(madeira, 0.85), 3.0)
+		d.draw_line(Vector2(px.y, y), Vector2(px.x, y - FERROVIA_LANCE * 0.5), Color(madeira, 0.85), 3.0)
+		y -= FERROVIA_LANCE * 0.5
+	# as rampas do zigue-zague, com os dois trilhos
+	var z := _ferrovia_zigue(fundo)
+	for i in range(z.size() - 1):
+		d.draw_line(z[i] + Vector2(0, 3), z[i + 1] + Vector2(0, 3), Color(0.12, 0.08, 0.05), 12.0)
+		d.draw_line(z[i], z[i + 1], madeira, 10.0)
+		d.draw_line(z[i] + Vector2(0, -3), z[i + 1] + Vector2(0, -3), madeira_luz, 3.0)
+		for o in [-4.0, -8.0]:
+			d.draw_line(z[i] + Vector2(0, o), z[i + 1] + Vector2(0, o), ferro, 1.5)
+	# a plataforma de cima
+	var deck := PackedVector2Array([topo + Vector2(-34, 0), topo + Vector2(0, -17), topo + Vector2(34, 0), topo + Vector2(0, 17)])
+	d.draw_colored_polygon(deck, madeira_luz)
+	d.draw_polyline(PackedVector2Array([deck[0], deck[1], deck[2], deck[3], deck[0]]), madeira, 2.0)
+	# a doca e o carrinho de cada estação
+	for f in _ferrovias():
+		var cam := ferrovia_caminho(f, fundo)
+		var ini: Vector2 = cam[0]
+		var doca: Vector2 = cam[1]
+		d.draw_line(ini + Vector2(0, 3), doca + Vector2(0, 3), Color(0.12, 0.08, 0.05), 12.0)
+		d.draw_line(ini, doca, madeira, 10.0)
+		d.draw_line(ini + Vector2(0, -3), doca + Vector2(0, -3), madeira_luz, 3.0)
+		for o in [-4.0, -8.0]:
+			d.draw_line(ini + Vector2(0, o), doca + Vector2(0, o), Color(0.62, 0.3, 0.25) if f.is_broken() else ferro, 1.5)
+		d.draw_line(doca, cam[2], madeira, 7.0)
+		var t: float = f.progresso_subida()
+		if t >= 0.0:
+			var pr: Array = _ponto_no(cam, t)
+			var tex := _ferrovia_cart_tex(f.carrinho_cheio())
+			if tex:
+				var dirv: Vector2 = pr[1]
+				var r := Rect2((pr[0] - Vector2(tex.get_width() * 0.5, tex.get_height() - 4.0)).round(), tex.get_size())
+				if dirv.x < 0.0:  # indo pra esquerda: espelho
+					r = Rect2(r.position + Vector2(r.size.x, 0), Vector2(-r.size.x, r.size.y))
+				d.draw_texture_rect(tex, r, false)
 
 
 # ------------------------------------------------------------ áreas de trabalho (Bloco 77)

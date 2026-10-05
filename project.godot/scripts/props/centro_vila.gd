@@ -166,6 +166,10 @@ const UPGRADE_NAMES := {
 @export var vagonete_ore: int = 80
 @export var vagonete_wood: int = 80
 @export var vagonete_build_time: float = 50.0
+@export_group("Ferrovia de carga (Bloco 79)")
+## Custo da estação de cada andar: base + por andar de profundidade (créditos, ferro, madeira, segundos de obra).
+@export var ferrovia_base := Vector4i(300, 60, 100, 60)
+@export var ferrovia_por_andar := Vector4i(150, 30, 20, 15)
 @export_group("Coletor de minério (Bloco 57)")
 @export var coletor_min_credits: int = 280
 @export var coletor_min_ore: int = 40
@@ -803,7 +807,7 @@ func desbravar_leste() -> bool:
 # ------------------------------------------------------------ trilho e vagonete (Bloco 64)
 func vagonetes() -> Array:
 	# (Bloco 74: o da mina é fixo — não conta no custo nem vai na lista do save)
-	return get_tree().get_nodes_in_group("pontos_carga").filter(func(v): return not v.is_in_group("ponto_carga_fixo"))
+	return get_tree().get_nodes_in_group("pontos_carga").filter(func(v): return not v.is_in_group("ponto_carga_fixo") and String(v.get("ferrovia")) == "")
 
 
 ## Bloco 74: o ponto de carga fixo da boca da mina (null = mapa sem ele).
@@ -884,6 +888,99 @@ func spawn_vagonete(pos: Vector2) -> Node2D:
 	var n := vagonetes().size()
 	c.name = "EstacaoVagonete" if n == 0 else "EstacaoVagonete%d" % (n + 1)
 	c.position = pos
+	get_parent().add_child(c)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
+	return c
+
+
+# ------------------------------------------------------------ ferrovia de carga (Bloco 79)
+## Os andares que podem ter estação, de cima pra baixo.
+const FERROVIA_ANDARES := ["S2", "S3", "S4", "S5"]
+
+
+func ferrovias() -> Array:
+	return get_tree().get_nodes_in_group("ferrovias")
+
+
+func ferrovia_de(id: String) -> Node:
+	for f in ferrovias():
+		if String(f.ferrovia) == id:
+			return f
+	return null
+
+
+## O próximo andar sem estação (de cima pra baixo), ou "" (todos têm).
+func ferrovia_proximo() -> String:
+	for id in FERROVIA_ANDARES:
+		if ferrovia_de(id) == null:
+			return id
+	return ""
+
+
+func ferrovia_custo(id: String) -> Vector4i:
+	var n := preload("res://scripts/core/niveis.gd").por_id(id)
+	var p: int = n.profundidade if n else 3
+	return ferrovia_base + ferrovia_por_andar * p
+
+
+func ferrovia_cost_text() -> String:
+	var id := ferrovia_proximo()
+	if id == "":
+		return "todos os andares têm"
+	var c := ferrovia_custo(id)
+	return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+
+
+func ferrovia_block_reason() -> String:
+	var c := Canteiro.pending(get_tree(), "ferrovia")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var id := ferrovia_proximo()
+	if id == "":
+		return "todos os andares já têm estação"
+	var Niveis := preload("res://scripts/core/niveis.gd")
+	var n := Niveis.por_id(id)
+	var m: String = Niveis.motivo(get_tree(), n)
+	if m != "":
+		return "%s fechado: %s" % [id, m]
+	if get_tree().get_first_node_in_group("armazens") == null:
+		return "precisa de um armazém (a carga sobe até ele)"
+	var env := get_tree().get_first_node_in_group("environment")
+	if env == null or env.ponto_ferrovia(n) == Vector2.INF:
+		return "sem lugar pra estação no %s" % id
+	var cost := ferrovia_custo(id)
+	var eco := _economy()
+	return eco.missing_text(cost.x, cost.y, "ferro", cost.z, "ferro") if eco else "sem recursos"
+
+
+## Encomenda a estação do próximo andar (lugar fixo: a ponta leste da faixa, perto do poço).
+func build_ferrovia() -> bool:
+	if ferrovia_block_reason() != "":
+		Audio.error()
+		return false
+	var id := ferrovia_proximo()
+	var n := preload("res://scripts/core/niveis.gd").por_id(id)
+	var pos: Vector2 = get_tree().get_first_node_in_group("environment").ponto_ferrovia(n)
+	var cost := ferrovia_custo(id)
+	if not _economy().spend(cost.x, cost.y, "ferro", cost.z):
+		return false
+	Canteiro.order(get_tree(), "ferrovia", pos, float(cost.w))
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Estação da ferrovia no %s encomendada — precisa de engenheiro (tecla 4)." % id, Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_ferrovia(id: String, pos: Vector2) -> Node2D:
+	var c: Node2D = VAGONETE_SCENE.instantiate()
+	c.ferrovia = id
+	c.name = "Ferrovia" + id
+	c.position = pos
+	c.buffer_capacity = 80.0
+	c.cart_capacity = 30.0
 	get_parent().add_child(c)
 	var env := get_tree().get_first_node_in_group("environment")
 	if env:
@@ -1058,6 +1155,15 @@ func finish_build(kind: String, pos: Vector2) -> void:
 		var cam := get_viewport().get_camera_2d()
 		if cam and cam.has_method("focus_on") and env0:
 			cam.bounds = env0.world_rect()
+		return
+	if kind == "ferrovia":  # Bloco 79
+		var nv := preload("res://scripts/core/niveis.gd").do_ponto(get_tree().get_first_node_in_group("environment"), pos)
+		if nv:
+			spawn_ferrovia(String(nv.id), pos)
+		Audio.recruit()
+		var hf := get_tree().get_first_node_in_group("hud")
+		if hf:
+			hf.show_toast("Ferrovia pronta no %s! Os mineradores de lá entregam na estação e o carrinho sobe pro armazém." % (nv.id if nv else "?"), Color(0.55, 1.0, 0.5))
 		return
 	if kind == "vagonete":  # Bloco 64
 		spawn_vagonete(pos)
@@ -1310,6 +1416,7 @@ func get_save_data() -> Dictionary:
 		"coletores_minerio": coletores_minerio().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position),
 			"total": c.total_produced, "jazida": SaveUtil.vec2_to_array(c.chosen_pos) if c.chosen_pos != Vector2.INF else []}),  # Bloco 57
 		"vagonetes": vagonetes().map(func(v): return v.get_save_data()),  # Bloco 64
+		"ferrovias": ferrovias().map(func(v): return v.get_save_data()),  # Bloco 79
 		"estacao_mina": estacao_mina().get_save_data() if estacao_mina() else {},  # Bloco 74
 		"leste_aberto": get_tree().get_first_node_in_group("environment").leste_aberto if get_tree().get_first_node_in_group("environment") else false,  # Bloco 67
 		"enfermarias_extra": extra_enfermarias().map(func(w): return SaveUtil.vec2_to_array(w.global_position))}  # Bloco 47
@@ -1373,6 +1480,22 @@ func load_save_data(d: Dictionary) -> void:
 		if vpos != Vector2.INF:
 			var v := spawn_vagonete(vpos)
 			v.load_save_data(vd)
+	# Bloco 79: as estações da ferrovia de carga (save antigo: nenhuma)
+	for old in ferrovias():
+		if is_instance_valid(old.rail):
+			old.rail.queue_free()
+		old.remove_from_group("ferrovias")
+		old.remove_from_group("pontos_carga")
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	for fd in SaveUtil.array(d, "ferrovias"):
+		if typeof(fd) != TYPE_DICTIONARY:
+			continue
+		var fpos := SaveUtil.vec2(fd, "position", Vector2.INF)
+		var fid := SaveUtil.text(fd, "ferrovia", "")
+		if fpos != Vector2.INF and fid in FERROVIA_ANDARES:
+			var f := spawn_ferrovia(fid, fpos)
+			f.load_save_data(fd)
 	var em := estacao_mina()  # Bloco 74 (save de antes: o da mina começa vazio)
 	if em and not SaveUtil.dict(d, "estacao_mina").is_empty():
 		em.load_save_data(SaveUtil.dict(d, "estacao_mina"))

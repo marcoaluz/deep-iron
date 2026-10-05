@@ -312,6 +312,37 @@ func _build_decoracao_niveis() -> void:
 	_build_decoracao_sorteada(placed, avoid)  # Bloco 72: depois da fixa (ela fica com o lugar)
 
 
+## Bloco 79: o lugar da ESTAÇÃO DA FERROVIA DE CARGA no andar: a ponta leste da faixa (perto do poço, de onde
+## a doca sai pro cavalete), no chão da caverna, longe da gaiola, das jazidas, das poças e dos marcos.
+## Vector2.INF = não achou.
+func ponto_ferrovia(n: Resource) -> Vector2:
+	if n == null:
+		return Vector2.INF
+	var r := rect_do_nivel(n)
+	if not r.has_area():
+		return Vector2.INF
+	var gaiola := Vector2.INF
+	var info: Dictionary = andares.get("andares", {}).get(String(n.area) if n.area != "deep" and n.area != "abyss" else ("nivel2" if n.area == "deep" else "abismo"), {})
+	if info.has("gaiola"):
+		gaiola = Vector2(info.gaiola[0], info.gaiola[1])
+	var ocupado: Array[Vector2] = []
+	for g in STATION_GROUPS + ["pocas_perigo", "nivel_deco", "elevadores", "elevador", "elevador_abismo", "pontos_carga"]:
+		for node in get_tree().get_nodes_in_group(g):
+			if node is Node2D:
+				ocupado.append((node as Node2D).global_position)
+	for dx in range(int(r.end.x) - 170, int(r.position.x) + 200, -20):
+		for fy in [0.55, 0.45, 0.65, 0.35, 0.75]:
+			var p := Vector2(dx, r.position.y + r.size.y * fy)
+			if not dentro_da_caverna(p) or (gaiola != Vector2.INF and p.distance_to(gaiola) < 90.0):
+				continue
+			if not dentro_da_caverna(p + Vector2(52, 18)) or not dentro_da_caverna(p + Vector2(0, 40)):
+				continue
+			if ocupado.any(func(q): return p.distance_to(q) < 64.0):
+				continue
+			return p
+	return Vector2.INF
+
+
 ## Bloco 78: os MARCOS de cada andar (maquete v4) — o que bloqueia a passagem (meia-largura, meia-altura da
 ## elipse no chão) e o que ganha vida: luz no lampião de cristal e no fóssil (o vapor da bica é da vista iso).
 const MARCO_BLOQUEIA := {"fossil_gigante": Vector2(52, 22), "torre_0": Vector2(22, 12), "casa_pedra_0": Vector2(30, 14),
