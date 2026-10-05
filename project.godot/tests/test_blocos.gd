@@ -312,3 +312,7 @@ func test_b73_andar() -> void:
 
 func test_b74_superficie() -> void:
 	run_bloco("b74_superficie.gd")
+
+
+func test_b75_faixas() -> void:
+	run_bloco("b75_faixas.gd")

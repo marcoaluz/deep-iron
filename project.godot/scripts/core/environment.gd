@@ -43,7 +43,7 @@ const NAV_EXTRA_GROUPS := ["enfermarias", "tavernas", "campos", "laboratorios", 
 
 @export_group("Nível 2 (fundo)")
 ## Área do nível 2, abaixo (ao sul) da mina; a descida é o elevador da escavadeira.
-@export var deep_rect: Rect2 = Rect2(-560, 700, 1120, 620)
+@export var deep_rect: Rect2 = Rect2(-700, 3600, 1400, 260)  # (Bloco 75: a faixa; antes Rect2(-560, 700, 1120, 620))
 @export var deep_floor_texture: Texture2D
 ## Chance de acidente multiplicada por isso minerando no nível 2 (acumula com a zanga).
 @export var deep_injury_mult: float = 2.5
@@ -55,7 +55,7 @@ const NAV_EXTRA_GROUPS := ["enfermarias", "tavernas", "campos", "laboratorios", 
 
 @export_group("Nível 3 (abismo)")
 ## Área do nível 3, abaixo do nível 2; a descida é a plataforma do abismo (conserto).
-@export var abyss_rect: Rect2 = Rect2(-480, 1420, 960, 560)
+@export var abyss_rect: Rect2 = Rect2(-700, 4000, 1400, 260)  # (Bloco 75: a faixa; antes Rect2(-480, 1420, 960, 560))
 @export var abyss_floor_texture: Texture2D
 ## Chance de acidente multiplicada por isso minerando no abismo (no lugar da do nível 2).
 @export var abyss_injury_mult: float = 4.0
@@ -301,7 +301,8 @@ func _build_decoracao_niveis() -> void:
 				fx.add_to_group("nivel_deco")
 				continue
 			var fixo: bool = d.size() >= 4 and d[3] == true  # [prop, x, y, true]: lugar escolhido (ponte, píer)
-			var livre := fixo or (_deep_spot_free(p, 40.0, placed, avoid) if not level_of(p).is_empty() else _is_free(p, 18.0, 24.0))
+			# (Bloco 75: na faixa as coisas ficaram mais juntas — o enfeite declarado aceita chegar mais perto)
+			var livre := fixo or (_deep_spot_free(p, 24.0, placed, avoid, 34.0) if not level_of(p).is_empty() else _is_free(p, 18.0, 24.0))
 			if not livre:
 				continue
 			placed.append(p)
@@ -988,7 +989,7 @@ func nearest_ok(pos: Vector2, margin: float = 16.0, walker: bool = false) -> Vec
 func migrate_positions() -> int:
 	if not has_iso_map():
 		return 0
-	var n := 0
+	var n := _migra_andares_antigos()  # Bloco 75: antes de tudo (o resto olha os andares novos)
 	var groups: Array = STATION_GROUPS + NAV_EXTRA_GROUPS + ["ipezinhos", "barricadas", "elevador", "robos"]
 	var seen := {}
 	for group in groups:
@@ -1018,6 +1019,45 @@ func migrate_positions() -> int:
 				print("environment: %s mudou de %s pra %s (lugar inválido no mapa novo)" % [node.name, p.round(), q.round()])
 				n += 1
 	return n + _migrate_overlaps()
+
+
+## Bloco 75: os andares de baixo viraram FAIXAS (retângulos novos na lógica, longe dos antigos). O que um
+## save de antes deixou num retângulo antigo (gente, robô, coletor, ventilador, canteiro...) vai pro mesmo lugar
+## relativo na faixa do andar. Os retângulos antigos não encostam em nada novo: não tem como confundir.
+const ANDARES_ANTIGOS := [
+	[Rect2(-560, 700, 1120, 620), Rect2(-700, 3600, 1400, 260)],
+	[Rect2(-480, 1420, 960, 560), Rect2(-700, 4000, 1400, 260)],
+	[Rect2(-440, 2120, 880, 520), Rect2(-700, 4400, 1400, 260)],
+	[Rect2(-400, 2760, 800, 480), Rect2(-700, 4800, 1400, 260)],
+]
+
+
+## O ponto no retângulo antigo de um andar -> o mesmo lugar relativo na faixa (fora deles: igual).
+func posicao_nova(p: Vector2) -> Vector2:
+	for par in ANDARES_ANTIGOS:
+		var a: Rect2 = par[0]
+		if a.has_point(p):
+			var b: Rect2 = par[1]
+			return b.position + (p - a.position) * (b.size / a.size)
+	return p
+
+
+func _migra_andares_antigos() -> int:
+	var n := 0
+	for node in get_parent().get_children():
+		if not (node is Node2D) or node == self:
+			continue
+		var p: Vector2 = (node as Node2D).global_position
+		var q := posicao_nova(p)
+		if q == p:
+			continue
+		(node as Node2D).global_position = q
+		if node.get("_moving") != null:
+			node.set("_moving", false)  # (o caminho era no andar antigo)
+		migrated.append({"nome": String(node.name), "de": p, "para": q})
+		print("environment: %s mudou de %s pra %s (o andar virou faixa)" % [node.name, p.round(), q.round()])
+		n += 1
+	return n
 
 
 ## Bloco 74: o que é da vila (casas, Centro, prédios) e ficou a oeste da paliçada ou EM CIMA dela (save do
@@ -1207,8 +1247,9 @@ func _build_deep() -> void:
 		avoid.append(shaft.bottom_position)
 	var placed: Array[Vector2] = []
 	var inner := deep_rect.grow(-50.0)
-	for job in [[deep_pebble_count, pebble_textures, 10.0, _add_pebble], [deep_boulder_count, boulder_textures, 45.0, _add_boulder],
-			[deep_crystal_count, crystal_textures, 55.0, _add_crystal]]:
+	# (Bloco 75: os cristais primeiro — na faixa a área é menor e as pedrinhas enchiam antes)
+	for job in [[deep_crystal_count, crystal_textures, 55.0, _add_crystal], [deep_boulder_count, boulder_textures, 45.0, _add_boulder],
+			[deep_pebble_count, pebble_textures, 10.0, _add_pebble]]:
 		var textures: Array = job[1]
 		if textures.is_empty():
 			continue
@@ -1314,12 +1355,13 @@ func clear_decor_under_extras() -> void:
 					_obstacles.remove_at(i)
 
 
-func _deep_spot_free(p: Vector2, spacing: float, placed: Array[Vector2], avoid: Array[Vector2]) -> bool:
+func _deep_spot_free(p: Vector2, spacing: float, placed: Array[Vector2], avoid: Array[Vector2], clear: float = -1.0) -> bool:
 	if not dentro_da_caverna(p):
 		return false  # Bloco 72: fora do chão da caverna (rocha ou o corte)
+	var folga := keep_clear_radius if clear < 0.0 else clear
 	for group in STATION_GROUPS:
 		for node in get_tree().get_nodes_in_group(group):
-			if p.distance_to(node.global_position) < keep_clear_radius:
+			if p.distance_to(node.global_position) < folga:
 				return false
 	for a in avoid:
 		if p.distance_to(a) < 90.0:

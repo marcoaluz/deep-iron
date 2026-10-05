@@ -39,8 +39,8 @@ func _initialize() -> void:
 		["inverno", Vector2(-200, -200), 1, Callable(self, "_inverno")],
 		["invasao", Vector2(0, -470), 1, Callable(self, "_invasao")],
 		["onda_solar", Vector2(-200, -200), 1, Callable(self, "_onda")],
-		["nivel2", Vector2(200, 1000), 1, Callable(self, "_dia")],
-		["abismo", Vector2(100, 1700), 1, Callable()],
+		["nivel2", Vector2(250, 3726), 1, Callable(self, "_dia")],
+		["abismo", Vector2(146, 4130), 1, Callable()],
 		["mapa_longe", Vector2(0, 0), 0, Callable()],
 	]
 

@@ -185,8 +185,13 @@ func _ventilador() -> void:
 	var placer = g("house_placer")
 	check(fundo.build_ventilador() and placer.active, "abre o posicionador")
 	var env = g("environment")
-	var livre := Vector2(250, 1100)
-	check(placer.check_spot(livre) == "", "chão do nível 2 serve (%s)" % placer.check_spot(livre))
+	var livre := Vector2.INF  # (Bloco 75: o primeiro chão livre da faixa do nível 2)
+	var dr: Rect2 = env.deep_rect
+	for x in range(int(dr.position.x) + 40, int(dr.end.x) - 40, 30):
+		for y in range(int(dr.position.y) + 30, int(dr.end.y) - 30, 20):
+			if livre == Vector2.INF and placer.check_spot(Vector2(x, y)) == "":
+				livre = Vector2(x, y)
+	check(livre != Vector2.INF, "chão do nível 2 serve (%s)" % livre)
 	check(placer.check_spot(g("village_hub").global_position + Vector2(200, 0)) != "", "na superfície não (%s)" % placer.check_spot(g("village_hub").global_position + Vector2(200, 0)))
 	check(placer.has_method("cancel"), "dá pra cancelar")
 	placer.cancel()
@@ -194,7 +199,7 @@ func _ventilador() -> void:
 	var acido: Node2D = world().get_node("PocaS2_2")
 	var v = fundo.spawn_ventilador(acido.global_position + Vector2(0, -90))
 	check(v.is_in_group("ventiladores") and fundo.ventiladores().size() == 1, "ventilador no nível 2")
-	check(is_equal_approx(fundo.ventilacao_mult(acido.global_position), 0.5) and is_equal_approx(fundo.ventilacao_mult(Vector2(-450, 1250)), 1.0), "alcance: 50% perto, nada longe")
+	check(is_equal_approx(fundo.ventilacao_mult(acido.global_position), 0.5) and is_equal_approx(fundo.ventilacao_mult(Vector2(-562, 3831)), 1.0), "alcance: 50% perto, nada longe")
 	check(is_equal_approx(fundo.nevoa_mult(), 1.0 - fundo.ventilador_nevoa), "névoa do S2 afina (%.2f)" % fundo.nevoa_mult())
 	var iso = main.get_node("IsoView")
 	var a2: Dictionary = {}

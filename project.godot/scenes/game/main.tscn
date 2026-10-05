@@ -206,22 +206,22 @@ animal = "javali"
 
 [node name="Elevador" parent="World" instance=ExtResource("42_elevador")]
 position = Vector2(580, 320)
-bottom_position = Vector2(482, 762)
+bottom_position = Vector2(630.0, 3732.6)
 
 [node name="JazidaPrata" parent="World" instance=ExtResource("43_prata")]
-position = Vector2(-312, 903)
+position = Vector2(-390, 3685.1)
 
 [node name="JazidaPrata2" parent="World" instance=ExtResource("43_prata")]
-position = Vector2(49, 1051)
+position = Vector2(61.2, 3747.2)
 
 [node name="JazidaPrata3" parent="World" instance=ExtResource("43_prata")]
-position = Vector2(271, 1149)
+position = Vector2(338.8, 3788.3)
 
 [node name="JazidaCobreFundo" parent="World" instance=ExtResource("36_cobre")]
-position = Vector2(-180, 1149)
+position = Vector2(-225, 3788.3)
 
 [node name="JazidaCarvaoFundo" parent="World" instance=ExtResource("37_carvao")]
-position = Vector2(164, 912)
+position = Vector2(205, 3688.9)
 
 [node name="BarricadaTunel" parent="World" instance=ExtResource("53_barricada")]
 position = Vector2(-300, -40)
@@ -235,61 +235,61 @@ gate_id = "poco"
 display_name = "Portão do poço"
 
 [node name="ElevadorAbismo" parent="World" instance=ExtResource("49_abismo")]
-position = Vector2(381, 917)
-bottom_position = Vector2(413, 1476)
+position = Vector2(476.2, 3691)
+bottom_position = Vector2(630.0, 4132.6)
 
 [node name="JazidaSolarita" parent="World" instance=ExtResource("50_solarita")]
-position = Vector2(-98, 1634)
+position = Vector2(-142.9, 4099.4)
 
 [node name="JazidaSolarita2" parent="World" instance=ExtResource("50_solarita")]
-position = Vector2(172, 1749)
+position = Vector2(250.8, 4152.8)
 
 [node name="JazidaSolarita3" parent="World" instance=ExtResource("50_solarita")]
-position = Vector2(271, 1569)
+position = Vector2(395.2, 4069.2)
 
 [node name="JazidaPrataAbismo" parent="World" instance=ExtResource("43_prata")]
-position = Vector2(-230, 1815)
+position = Vector2(-335.4, 4183.4)
 
 [node name="ZonaGas" type="Node2D" parent="World"]
-position = Vector2(373, 1199)
+position = Vector2(466.2, 3809.3)
 script = ExtResource("57_zone")
 kind = "gas"
 radius = 85.0
 sign_offset = Vector2(-95, 10)
 
 [node name="JazidaGasCarvao" parent="World" instance=ExtResource("37_carvao")]
-position = Vector2(394, 1211)
+position = Vector2(492.5, 3814.3)
 ore_total = 450.0
 regen_rate = 0.8
 hazard = "gas"
 
 [node name="JazidaGasPrata" parent="World" instance=ExtResource("43_prata")]
-position = Vector2(346, 1187)
+position = Vector2(432.5, 3804.2)
 ore_total = 300.0
 hazard = "gas"
 
 [node name="ZonaRadiacao" type="Node2D" parent="World"]
-position = Vector2(-385, 813)
+position = Vector2(-481.2, 3647.4)
 script = ExtResource("57_zone")
 kind = "radiacao"
 radius = 80.0
 sign_offset = Vector2(95, 20)
 
 [node name="JazidaRadPrata" parent="World" instance=ExtResource("43_prata")]
-position = Vector2(-385, 818)
+position = Vector2(-481.2, 3649.5)
 ore_total = 500.0
 regen_rate = 0.9
 hazard = "radiacao"
 
 [node name="ZonaCalor" type="Node2D" parent="World"]
-position = Vector2(320, 1860)
+position = Vector2(466.7, 4204.3)
 script = ExtResource("57_zone")
 kind = "calor"
 radius = 80.0
 sign_offset = Vector2(-95, -10)
 
 [node name="JazidaCalorSolarita" parent="World" instance=ExtResource("50_solarita")]
-position = Vector2(326, 1864)
+position = Vector2(475.4, 4206.1)
 ore_total = 450.0
 regen_rate = 0.7
 hazard = "calor"

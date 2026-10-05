@@ -1,4 +1,11 @@
-"""Os ANDARES DE BAIXO na vista do jogo: a coluna da mina DEBAIXO DA VILA (Bloco 72, etapa 2).
+"""Os ANDARES DE BAIXO na vista do jogo: a coluna da mina DEBAIXO DA VILA (Bloco 72, etapa 2; Bloco 75:
+as FAIXAS da maquete aprovada — docs/arte/bloco72/maquete/coluna_v3.png).
+
+Bloco 75: cada andar é uma faixa larga e rasa ao longo da face sul do mapa (1400 x 260 px da lógica, na
+escala da superfície), a parede de trás subindo até a laje do andar de cima, os andares bem mais juntos
+(22 degraus em vez de 36) e, logo abaixo da superfície, a faixa das GALERIAS de madeira (só desenho). Os
+andares ganharam retângulos novos na lógica, longe dos antigos (`antigo` em cada um): o que estava num
+retângulo antigo vai pro mesmo lugar relativo na faixa (`novo()`; o jogo faz o mesmo com saves antigos).
 
   python andares.py [pasta]   -> (padrão: assets/game/iso/mapa) andar_<nome>.png, poco.png, espiral.png e
                                  andares.json (lido pela vista iso e pelo environment.gd)
@@ -29,17 +36,19 @@ AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.join(AQUI, "..", "..", "..", "..")
 REL = "../relevo/final"
 
-K = 0.75                                   # escala dos andares na vista (Marco: ~25% menores por lado)
+K = 1.0                                    # Bloco 75: a escala da superfície (a faixa já é menor em área que o andar antigo)
 F = FATOR * K                              # px de arte por px da lógica num andar
 ELEVADOR = (580, 320)                      # a torre do elevador na vila (main.tscn: Elevador.position)
 POCO = (ELEVADOR[0] - ELEVADOR[1]) * FATOR  # x da tela (ax - ay) do poço: todas as gaiolas nessa vertical
 FACE_AY = OY + NJ * T                      # a face sul do mapa (px de arte): a beira da frente de cada andar
-GAIOLA = (0.86, -0.80)                     # a gaiola de chegada de cada andar (posição normalizada no retângulo)
+GAIOLA = (0.90, 0.02)                      # a gaiola de chegada de cada andar (normalizada no retângulo): a ponta leste
 RAIO_GAIOLA = 72                           # a plataforma redonda da gaiola (px da lógica)
 LAJE = 3                                   # espessura da laje embaixo do chão (degraus)
 SUP_KB = -4                                # a base do corte da superfície (monta.py CORTE)
 FAIXA_ROCHA = 0.25                         # a rocha de trás vai até isso além da borda (normalizado)
-P = 2.3                                    # o chão é uma superelipse |u|^P + |v|^P (2: elipse; 4: quase retângulo)
+P = 5.0                                    # o chão é uma superelipse |u|^P + |v|^P (Bloco 75: 5, a faixa de pontas redondas)
+FAIXA_FUNDO = 60                           # Bloco 75: px da lógica de rocha atrás do chão (o resto fica escondido atrás)
+FAIXA_PONTAS = 80                          # ... e além da ponta oeste da faixa (a leste fica o poço e a espiral)
 LARGURA_POCO = 52                          # meia largura (tela) do poço aberto na rocha atrás das gaiolas
 TOM_ROCHA = (1.12, 1.0, 0.86)              # a rocha da coluna puxada pro marrom (a da imagem B), não azul
 ESPIRAL_DX = 250                           # a espiral fica à direita do poço (tela)
@@ -47,13 +56,27 @@ ESPIRAL_DX = 250                           # a espiral fica à direita do poço 
 # andar: retângulo na lógica (environment.gd: deep_rect / abyss_rect; .tres: rect), degrau do chão
 # (36 degraus entre andares), pasta dos blocos/chão, arquivo de dados (data/niveis)
 ANDARES = {
-    "nivel2": {"rect": (-560, 700, 1120, 620), "k_chao": -32, "pasta": "nivel2", "tres": "S2_acido.tres"},
-    "abismo": {"rect": (-480, 1420, 960, 560), "k_chao": -68, "pasta": "abismo", "tres": "S3_lava.tres"},
-    "s4": {"rect": (-440, 2120, 880, 520), "k_chao": -104, "pasta": "umido", "tres": "S4_cachoeira.tres"},
-    "s5": {"rect": (-400, 2760, 800, 480), "k_chao": -140, "pasta": "lago", "tres": "S5_lago.tres"},
+    "nivel2": {"rect": (-700, 3600, 1400, 260), "antigo": (-560, 700, 1120, 620), "k_chao": -32, "pasta": "nivel2", "tres": "S2_acido.tres"},
+    "abismo": {"rect": (-700, 4000, 1400, 260), "antigo": (-480, 1420, 960, 560), "k_chao": -54, "pasta": "abismo", "tres": "S3_lava.tres"},
+    "s4": {"rect": (-700, 4400, 1400, 260), "antigo": (-440, 2120, 880, 520), "k_chao": -76, "pasta": "umido", "tres": "S4_cachoeira.tres"},
+    "s5": {"rect": (-700, 4800, 1400, 260), "antigo": (-400, 2760, 800, 480), "k_chao": -98, "pasta": "lago", "tres": "S5_lago.tres"},
 }
+## Bloco 75: a faixa das galerias de madeira logo abaixo da superfície (só desenho: trilho, vagonetes, escoras)
+GALERIAS = {"rect": (-700, 3300, 1400, 150), "k_chao": -12, "pasta": "colonia"}
+
+
+def novo(p):
+    """Bloco 75: um ponto que estava no retângulo ANTIGO de um andar -> o mesmo lugar relativo na faixa."""
+    for a in ANDARES.values():
+        x, y, w, h = a["antigo"]
+        if x <= p[0] <= x + w and y <= p[1] <= y + h:
+            nx, ny, nw, nh = a["rect"]
+            return (nx + (p[0] - x) * nw / w, ny + (p[1] - y) * nh / h)
+    return tuple(p)
+
+
 # a descida pro andar de baixo (a ponta de cima do elevador seguinte): perto da gaiola, mais pra frente
-DESCIDA = {"nivel2": (381, 917), "abismo": (298, 1644), "s4": (299, 2302)}
+DESCIDA = {"nivel2": novo((381, 917)), "abismo": novo((298, 1644)), "s4": novo((299, 2302))}
 
 
 def _tres(arquivo):
@@ -80,13 +103,20 @@ def _da_cena():
     return out
 
 
+def obst_novo(o):
+    """Bloco 75: um retângulo (o lago) do retângulo antigo do andar -> a faixa (os dois cantos)."""
+    a = novo((o[0], o[1]))
+    b = novo((o[0] + o[2], o[1] + o[3]))
+    return (a[0], a[1], b[0] - a[0], b[1] - a[1])
+
+
 # Bloco 71: o lago do S5 (`obstaculos` no .tres): chão de água rasa, com a borda de seixos em volta
-AGUA = [tuple(o) for o in _dos_dados("S5_lago.tres", "obstaculos")]
+AGUA = [obst_novo(o) for o in _dos_dados("S5_lago.tres", "obstaculos")]
 BORDA = 1.25   # o anel da borda: até 1,25x a elipse
 # itens de arte: a rocha com ácido em volta das poças de ácido do S2 (`perigos` no .tres)
-ACIDO = [((p[1], p[2]), p[3] * 1.3) for p in _dos_dados("S2_acido.tres", "perigos") if p[0] == "acido"]
+ACIDO = [(novo((p[1], p[2])), p[3] * 1.3) for p in _dos_dados("S2_acido.tres", "perigos") if p[0] == "acido"]
 # zonas de perigo da cena (main.tscn): centro na lógica, raio, tipo
-ZONAS = [(pos, r, n[4:].lower()) for n, pos, r in _da_cena() if n.startswith("Zona") and r > 0]
+ZONAS = [(novo(pos), r, n[4:].lower()) for n, pos, r in _da_cena() if n.startswith("Zona") and r > 0]
 
 
 def borda_de_baixo(x, ia, ja, kb):
@@ -243,20 +273,21 @@ def conteudo(nome, a):
     dentro = lambda p: x <= p[0] <= x + w and y <= p[1] <= y + h
     out = []
     for n, p, r in _da_cena():
+        p = novo(p)  # (Bloco 75: os dados antigos vão pro lugar relativo na faixa)
         if dentro(p):
             out.append((p, r * 0.5 if n.startswith("Zona") else 40.0))
     tres = a["tres"]
     for j in _dos_dados(tres, "jazidas"):
-        out.append(((j[1], j[2]), 40.0))
+        out.append((novo((j[1], j[2])), 40.0))
     for pz in _dos_dados(tres, "perigos"):
-        out.append(((pz[1], pz[2]), pz[3] + 12.0 if len(pz) > 3 else 40.0))
+        out.append((novo((pz[1], pz[2])), pz[3] + 12.0 if len(pz) > 3 else 40.0))
     for d in _dos_dados(tres, "decoracao"):
         # só a decoração de lugar escolhido (ponte, píer): a solta que cair fora do chão o jogo não põe
         if len(d) >= 4 and d[3] is True:
-            out.append(((d[1], d[2]), 30.0))
+            out.append((novo((d[1], d[2])), 30.0))
     for d in _dos_dados(tres, "decalques"):
-        out.append(((d[1], d[2]), 50.0))
-    for ox, oy, ow, oh in _dos_dados(tres, "obstaculos"):  # o lago e a borda de seixos dele
+        out.append((novo((d[1], d[2])), 50.0))
+    for ox, oy, ow, oh in [obst_novo(o) for o in _dos_dados(tres, "obstaculos")]:  # o lago e a borda de seixos dele
         for s in range(32):
             ang = math.tau * s / 32
             out.append(((ox + ow / 2 + math.cos(ang) * ow / 2 * BORDA, oy + oh / 2 + math.sin(ang) * oh / 2 * BORDA), 16.0))
@@ -273,6 +304,67 @@ def tela_jogo(px, py):
 
 def py_de_jogo(gx, gy):
     return gx - (OX - OY - 32), gy - (OX + OY) / 2.0
+
+
+PROPS = os.path.join(RAIZ, "assets", "game", "iso", "props")
+_PROPS = json.load(open(os.path.join(PROPS, "props.json"), encoding="utf-8"))["props"]
+_cache_prop = {}
+
+
+def prop(nome):
+    """(imagem, âncora) de um prop da arte do jogo (assets/game/iso/props)."""
+    if nome not in _cache_prop:
+        d = _PROPS[nome]
+        _cache_prop[nome] = (Image.open(os.path.join(PROPS, d["img"])).convert("RGBA"), d["ancora"])
+    return _cache_prop[nome]
+
+
+def enfeites(an, piso, kc, tema):
+    """Bloco 75: o que vai desenhado JUNTO com a faixa (não é coisa do jogo): na fileira de trás do chão,
+    escoras de madeira e lampiões a cada tanto (a parede da maquete); nas galerias, o trilho correndo a faixa
+    inteira com vagonetes. Itens no formato do compoe: (i + j, k, imagem, (x, y))."""
+    itens = []
+    rnd = random.Random(hash(an.nome) & 0xFFFF)
+    fundo = {}  # coluna i -> a fileira mais de trás (menor j) do chão
+    for (i, j) in piso:
+        if i not in fundo or j < fundo[i]:
+            fundo[i] = j
+    cols = sorted(fundo)
+    if not cols:
+        return itens
+
+    def poe(nome, i, j, dk=0.5, dx=0, dy=0):
+        im, anc = prop(nome)
+        x, y = tiles.tela(i, j, kc)
+        itens.append((i + j + 0.6, kc + dk, im, (int(x + 32 - anc[0] + dx), int(y + 16 - anc[1] + dy))))
+    passo = 7
+    for n, i in enumerate(cols[2:-6:passo]):
+        j = fundo[i]
+        poe("escora", i, j)
+        if n % 2 == 0:
+            poe("tocha_chao_f0", i + 3, fundo.get(i + 3, j), 0.5, 0, -2)
+        if tema in CRISTAIS and rnd.random() < 0.7:
+            poe(CRISTAIS[tema] % rnd.randrange(2), i + 1, fundo.get(i + 1, j) + 1)
+    if tema == "galerias":  # o trilho na fileira do meio, de ponta a ponta, e vagonetes nele
+        meio = {}
+        for (i, j) in piso:
+            meio.setdefault(i, []).append(j)
+        trilho = Image.open(REL + "/mina/trilhos/reto_i.png").convert("RGBA")
+        jm = int(round(sum(sorted(js)[len(js) // 2] for js in meio.values()) / len(meio)))
+        for i in cols:
+            if (i, jm) in piso:
+                x, y = tiles.tela(i, jm, kc)
+                itens.append((i + jm, kc + 0.1, trilho, (x, y)))
+        for i in cols[6::23]:
+            if (i, jm) in piso:
+                poe(rnd.choice(["vagonete_velho", "vagonete_cheio_SE"]), i, jm, 0.6)
+        for i in cols[11::31]:
+            poe(rnd.choice(["tabuas", "caixote", "barril"]), i, fundo[i] + 1)
+    return itens
+
+
+## Bloco 75: o cristal de cada andar (na parede de trás)
+CRISTAIS = {"nivel2": "cristal_lima_%d", "abismo": "cristal_brasa_%d", "s5": "cristal_ciano_%d"}
 
 
 def desenha_andar(an, a, acima, rocha):
@@ -300,16 +392,21 @@ def desenha_andar(an, a, acima, rocha):
             if (i, j) in piso:
                 continue
             axy = centro_tile(i, j)
-            u, v = an.uv(an.logica(axy))
-            th = math.atan2(v, u)
-            if u + v >= 0.2 + 0.12 * math.sin(3 * th + an.fases[3]):
+            pl = an.logica(axy)
+            u, v = an.uv(pl)
+            alem = abs(pl[0] - an.c[0]) - an.hl[0]  # > 0: além da ponta da faixa
+            if v > -0.15 + 0.12 * math.sin(u * 9.0 + an.fases[3]) and alem < 0:
                 continue                            # na frente: o corte (vazio)
-            if an.rho(u, v) > an.raio_em(th) + FAIXA_ROCHA:
+            if pl[1] < an.rect[1] - FAIXA_FUNDO or alem > FAIXA_PONTAS:
                 continue                            # longe demais: a terra de fundo aparece
-            if u > 0.72 and v < -0.5:
-                continue                            # o canto da gaiola: aberto pro poço e pra espiral
+            if pl[0] > an.c[0] and (alem > -30 or u > 0.8 and v > -0.6):
+                continue                            # a ponta leste: aberta pro poço e pra espiral
             if abs((axy[0] - axy[1]) - POCO) < LARGURA_POCO and axy[0] + axy[1] < soma_gaiola:
                 continue                            # o poço do elevador, atrás da gaiola
+            if (axy[0] - axy[1]) > POCO + LARGURA_POCO + 10:
+                continue                            # Bloco 75: a leste do poço é a espiral (o poço dela)
+            if axy[0] < OX + 8:
+                continue                            # Bloco 75: a parede oeste da coluna fica no alinhamento do mapa
             rocha_de[(i, j)] = True
     # anel de cada rocha (1 = encostada no chão): perto do chão a rocha é mais baixa (saliências e
     # prateleiras em degraus, como parede de caverna); do 3º anel pra trás sobe inteira
@@ -370,6 +467,7 @@ def desenha_andar(an, a, acima, rocha):
         b = tiles.escolhe(bloco, i, j, kc, False).copy()
         b.paste(top, (0, 0), top)
         itens.append((i + j, kc, b, tiles.tela(i, j, kc)))
+    itens += enfeites(an, piso, kc, a.get("tema", an.nome))  # Bloco 75
     img, (tx, ty) = compoe(itens)
     if acima is None:  # a rocha não passa da borda de baixo da superfície (ela é desenhada atrás)
         px = img.load()
@@ -488,6 +586,22 @@ def main(pasta):
     quinas = []
     gaiolas = []
     desenhos = []     # (imagem, posição na tela do jogo) pro corpo de terra
+    # Bloco 75: a faixa das galerias de madeira (terra marrom, trilho, vagonetes) — só desenho
+    gal = Andar("galerias", GALERIAS, 71)
+    ref = Andar("nivel2", ANDARES["nivel2"], 72)
+    gal.centro = (ref.centro[0], FACE_AY - gal.hh)
+    terra_blocos = ld(REL + "/colonia/bloco.png") + ld(REL + "/colonia/bloco_[0-9].png")
+    img, (tx, ty), piso_g, _ = desenha_andar(gal, dict(GALERIAS, tema="galerias"), None, terra_blocos)
+    img.save(os.path.join(pasta, "galerias.png"))
+    tela = tela_jogo(tx, ty)
+    desenhos.append((img, tela))
+    gxs = [OX + i * T for i, _ in piso_g]
+    gys = [OY + j * T for _, j in piso_g]
+    meta["galerias"] = {"img": "galerias.png", "tela": [tela[0], tela[1]], "z_chao": gal.kc * 32,
+                        "caixa": [min(gxs), min(gys), max(gxs) + T - min(gxs), max(gys) + T - min(gys)],
+                        "z": [(gal.kc - LAJE) * 32, gal.kc * 32]}
+    print("galerias chão %d tiles, k=%d, imagem %dx%d" % (len(piso_g), gal.kc, img.width, img.height))
+    acima = gal.kc
     for n, (nome, a) in enumerate(ANDARES.items()):
         an = Andar(nome, a, 72 + n)
         an.cobre(conteudo(nome, a))
@@ -535,7 +649,9 @@ def main(pasta):
     print("espiral  imagem %dx%d" % img.size)
     # a terra: o corpo em volta da coluna e a faixa embaixo das faces do mapa (polígonos na tela do jogo)
     def topo_de(gx):
-        y = borda_de_baixo(py_de_jogo(gx, 0)[0] + T, 0, 0, SUP_KB)
+        # (Bloco 75: fora da largura da superfície vale a borda mais perto — nada de ponta pro céu)
+        x0, x1 = OX - FACE_AY, OX + NI * T - OY
+        y = borda_de_baixo(py_de_jogo(min(max(gx, x0 + 2), x1 - 2), 0)[0] + T, 0, 0, SUP_KB)
         return tela_jogo(0, y)[1] if y is not None else -1e9
     meta["terra"] = {"coluna": contorno_terra(desenhos, topo_de), "faixa": faixa_terra(topo_de)}
     json.dump(meta, open(os.path.join(pasta, "andares.json"), "w"), indent=1)

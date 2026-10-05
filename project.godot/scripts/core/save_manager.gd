@@ -597,7 +597,10 @@ func apply_pending(main: Node) -> void:
 	var cam_data := SaveUtil.dict(data, "camera")
 	var cam: Node = main.get_node_or_null("Camera2D")
 	if cam and not cam_data.is_empty():
-		cam.focus_on(SaveUtil.vec2(cam_data, "position", cam.global_position))
+		var foco := SaveUtil.vec2(cam_data, "position", cam.global_position)
+		if map_env and map_env.has_method("posicao_nova"):
+			foco = map_env.posicao_nova(foco)  # Bloco 75: câmera salva num andar antigo -> a faixa
+		cam.focus_on(foco)
 		var z := clampf(SaveUtil.num(cam_data, "zoom", cam.zoom.x), cam.zoom_min, cam.zoom_max)
 		if cam.has_method("set_target_zoom"):
 			cam.set_target_zoom(z)  # Bloco 48: assenta na parada nítida mais perto

@@ -144,12 +144,12 @@ func _process(delta: float) -> bool:
 		check(bad == 0, "%d pares que se sobrepõem (com os terraços), %d na ordem errada" % [pairs, bad])
 		print("== andares de baixo empilhados (formato em camadas)")
 		var surf_low: float = iso.to_screen(Vector2(755, 432)).y  # canto da frente da superfície
-		for pt in [Vector2(-100, 1000), Vector2(200, 1700)]:
+		for pt in [Vector2(-125, 3726), Vector2(292, 4130)]:
 			var scr: Vector2 = iso.to_screen(pt)
 			var hp: Dictionary = iso.pick(scr)
 			check(hp.ground.distance_to(pt) < 2.0, "clique no chão do andar em %s volta pro ponto certo (%s)" % [pt, hp.ground.round()])
 			check(scr.y > surf_low, "o andar fica embaixo da superfície na tela")
-		check(e.height_at(Vector2(200, 1700)) < e.height_at(Vector2(-100, 1000)), "o abismo fica abaixo do nível 2")
+		check(e.height_at(Vector2(292, 4130)) < e.height_at(Vector2(-125, 3726)), "o abismo fica abaixo do nível 2")
 		print("== céu por hora")
 		var sky = iso._sky
 		check(sky != null and sky._sky_layer.visible, "céu ligado")

@@ -64,7 +64,7 @@ func _lugar() -> void:
 	for lv in iso._levels:
 		var c: float = Rect2(lv.sprite.position, lv.sprite.texture.get_size()).get_center().x
 		check(c > esc_x - 900.0 and c < elev_x + 300.0 and c < leste_x, "%s debaixo da vila (centro na tela %.0f; vila %.0f, elevador %.0f)" % [lv.nome, c, vila_x, elev_x])
-		check(float(lv.k) < 1.0, "%s mais compacto (escala %.2f)" % [lv.nome, lv.k])
+		check((lv.rect as Rect2).get_area() < 400000.0, "%s mais compacto (Bloco 75: faixa de %d px²)" % [lv.nome, (lv.rect as Rect2).get_area()])
 	var ys := []
 	for lv in iso._levels:
 		ys.append(lv.sprite.position.y)
@@ -144,7 +144,7 @@ func _vista() -> void:
 	print("== lógica <-> vista")
 	var env = g("environment")
 	var ok := true
-	for p in [Vector2(100, 1000), Vector2(-200, 1700), Vector2(50, 2400), Vector2(-100, 2950)]:
+	for p in [Vector2(125, 3726), Vector2(-292, 4130), Vector2(80, 4540), Vector2(-175, 4903)]:
 		var lv: Dictionary = env.level_of(p)
 		var volta: Vector2 = env.logic_from_view(env.view_ground(p), float(lv.z_chao))
 		ok = ok and volta.distance_to(p) < 0.5

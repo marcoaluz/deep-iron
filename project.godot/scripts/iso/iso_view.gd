@@ -305,6 +305,22 @@ func _build_terrain() -> void:
 		var b := Iso.Box.new(Rect2(c[0] * S, c[1] * S, c[2] * S, c[3] * S), float(info.z[0]), float(info.z[1]),
 			"rampa" if info.get("rampa", false) else "terreno", r, null)
 		_terrain.append([b, sp])
+	# Bloco 75: a faixa das galerias de madeira logo abaixo da superfície (só desenho; caixa na ordem)
+	var gal: Dictionary = _env.andares.get("galerias", {})
+	if not gal.is_empty() and gal.has("caixa"):
+		var tg: Texture2D = load(dir.path_join(gal.img))
+		if tg != null:
+			var sg := Sprite2D.new()
+			sg.name = "Galerias"
+			sg.texture = tg
+			sg.centered = false
+			sg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			sg.position = Vector2(gal.tela[0], gal.tela[1])
+			sg.light_mask = 2
+			_terrain_node.add_child(sg)
+			_em_blocos(sg)
+			var gc: Array = gal.caixa
+			_terrain.append([Iso.Box.new(Rect2(gc[0], gc[1], gc[2], gc[3]), float(gal.z[0]), float(gal.z[1]), "terreno", "galerias", null), sg])
 	# os andares de baixo (nível 2, abismo): uma laje cada, empilhada embaixo da superfície
 	var levels: Dictionary = _env.andares.get("andares", {})
 	for nome in levels:

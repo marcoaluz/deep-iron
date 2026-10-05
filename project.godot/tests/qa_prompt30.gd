@@ -23,8 +23,8 @@ const SHOTS := [
 	["11_onda_solar", "onda", Vector2(-330, -300), 1.0],
 	["12_invasao_portao", "invasao", Vector2(0, -470), 1.0],
 	["13_invasao_poco", "", Vector2(480, 380), 1.0],
-	["14_nivel2", "dia", Vector2(150, 1000), 1.0],
-	["15_abismo", "", Vector2(100, 1700), 1.0],
+	["14_nivel2", "dia", Vector2(188, 3726), 1.0],
+	["15_abismo", "", Vector2(146, 4130), 1.0],
 	["16_mapa_longe", "", Vector2(0, -200), 0.0],
 ]
 const EXTRA := [

@@ -169,7 +169,7 @@ func _agua_e_lago() -> void:
 func _animo_e_gema() -> void:
 	print("== ânimo do nível e gema azul")
 	var w = main.get_tree().get_nodes_in_group("ipezinhos")[1]
-	w.global_position = Niveis.por_id("S5").rect.get_center() + Vector2(0, 160)  # (Bloco 72: no chão da caverna)
+	w.global_position = Niveis.por_id("S5").rect.get_center() + Vector2(450, 0)  # (Bloco 75: na faixa, ao lado do lago)
 	var f: Array = w.happiness_factors()
 	check(f.any(func(x): return x[0] == "a calma do lago azul" and x[1] > 0.0), "no S5: a calma do lago azul")
 	w.global_position = Niveis.por_id("S4").rect.get_center()
