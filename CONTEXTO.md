@@ -34,6 +34,7 @@ fazer esta parte aqui" = áreas de trabalho com postos estilo Frostpunk (texto i
   superfície (prop `boca_espiral`, PixelLab c03, `fundo76/espiral.py`), RAÍZES debaixo da floresta
   (galerias e S2) e o traje de gás masculino corrigido (`fundo76/traje_gas_cor.py`). Teste `b76_faixas_lotes`.
   Pendência pequena: itens na mão que somem em alguns quadros da caminhada (cassetete, machado).
+  (Esse trabalho entrou no commit `336f0961` "commit", feito pelo Marco com o que estava no índice.)
 
 ## Antes (2026-10-04): Blocos 73 e 74 — feitos, esperando o Marco conferir
 
@@ -142,9 +143,10 @@ longa simulada (F3 + telemetria), depois o tutorial (66).
   escrever arquivo e rodar com `python <arquivo>`.
 - Testes: `tests/blocos/*.gd` (um por bloco, registrado em `tests/test_blocos.gd`, linha no TESTING.md);
   rodar sempre com APPDATA/XDG_DATA_HOME/LOCALAPPDATA em `%TEMP%\deep_iron_testes\fake_appdata`. O save
-  real do Marco nunca pode mudar por teste (md5 em 2026-10-05: `1719506EC19DBB11EE42CE351D06AB8C`, gravado POR
-  ELE às 00:31 — jogo aberto pela janela embutida do editor, "jogo salvo (manual)" no logs/godot.log —; os
-  anteriores `97CF252D...` (04/10) e `76C7403D...` eram saves mais antigos dele). Pra testar com ele: copiar pra uma
+  real do Marco nunca pode mudar por teste. Ele JOGA pelo editor e o save muda junto (05/10: 00:31 manual,
+  09:50 autosave/ao fechar), então não adianta fixar md5: se mudou, conferir em `%APPDATA%/Godot/app_userdata/
+  project.godot/logs/godot.log` — "Embedded window only supports Windowed mode" = a janela de jogo do editor
+  (ele); testes rodam headless ou por -s e SEMPRE em pasta com `fake_appdata` (abortam fora dela). Pra testar com ele: copiar pra uma
   pasta com `fake_appdata` no caminho e copiar pra `user://savegame.json` DEPOIS que a cena abre (abrir partida
   nova manda o save existente pros backups). Godot:
   `D:\DEV\Godot\Godot_v4.7.2-stable_win64.exe`. A tela lógica do jogo é 1280x720 (stretch canvas_items).
