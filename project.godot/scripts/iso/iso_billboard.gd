@@ -599,7 +599,7 @@ func _conta_passo(g: Vector2, dt: float) -> void:
 		var d := g.distance_to(_chao_ant)
 		if d > 24.0:  # pulo de lugar (elevador, porta, save): não conta como passo
 			d = 0.0
-		_passo = fmod(_passo + d / PASSO_CICLO, 64.0)
+		_passo = fmod(_passo + d / PASSO_CICLO, 6400.0)  # (Bloco 76: grande — o robô e as criaturas leem em px)
 		if dt > 0.0:
 			_desloc = lerpf(_desloc, d / dt, minf(1.0, dt * 12.0))
 	_chao_ant = g
@@ -713,9 +713,9 @@ func _chama(nome: String, pos: Vector2, on: bool) -> void:
 func _sync_char() -> void:
 	var p: Dictionary
 	if src.is_in_group("robos"):
-		p = IsoBonecos.robo_pose(src, iso_dir, _clock, _moving_now)
+		p = IsoBonecos.robo_pose(src, iso_dir, _clock, _moving_now, _passo * PASSO_CICLO)
 	elif src.is_in_group("criaturas"):
-		p = IsoBonecos.criatura_pose(src, iso_dir, _moving_now)  # Prompt 17
+		p = IsoBonecos.criatura_pose(src, iso_dir, _moving_now, _passo * PASSO_CICLO)  # Prompt 17 (Bloco 76: + distância)
 	else:
 		p = IsoBonecos.pose(src, iso_dir, _clock, _passo, _desloc > MEXENDO)
 	if p.is_empty():

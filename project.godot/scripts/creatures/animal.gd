@@ -11,6 +11,10 @@ const FILE := "res://assets/game/iso/animais/animais.json"
 const DIR := "res://assets/game/iso/animais/"
 const DIRS := ["SE", "SO", "NO", "NE"]
 const ANIM_FPS := 8.0
+## Bloco 76: a perna pela distância andada — um ciclo (2 passos) a cada tantos px da lógica (medido na
+## arte: ~2,2 x a abertura dos pés); fugindo, a passada é mais longa.
+const CICLO := {"coelho": 26.0, "javali": 36.0}
+var _andado := 0.0
 
 var kind := "coelho"
 var toca: Node = null
@@ -113,7 +117,9 @@ func _process(delta: float) -> void:
 		else:
 			var step := to.normalized() * spd * delta
 			_set_dir(step)
-			global_position += step if step.length() < to.length() else to
+			var anda: Vector2 = step if step.length() < to.length() else to
+			global_position += anda
+			_andado += anda.length()
 	_update_sprite()
 
 
@@ -172,7 +178,8 @@ func _update_sprite() -> void:
 	elif _wait > 0.0 and state == "vagar":
 		i = 0  # parado
 	else:
-		i = int(_clock * ANIM_FPS * (1.5 if anim == "fugir" else 1.0)) % n
+		var ciclo: float = float(CICLO.get(kind, 30.0)) * (1.3 if anim == "fugir" else 1.0)
+		i = int(_andado / ciclo * n) % n  # (antes: pelo relógio — o bicho escorregava)
 	var tx := frame_tex(kind, anim, dn, i)
 	if tx and _sprite.texture != tx:
 		_sprite.texture = tx

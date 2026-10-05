@@ -139,6 +139,9 @@ static func _aj(info: Dictionary, frame: int) -> Vector2:
 ## Bloco 73: passo = fase da caminhada em ciclos (o espelho conta pela distância andada no chão, então
 ## a perna acompanha o deslocamento de verdade); mexendo = false quando ele "anda" sem sair do lugar
 ## (empurrando alguém, travado): fica parado em vez de marchar no lugar. Sem passo, o relógio antigo.
+const PASSO_PADRAO := 56.0  # = IsoBillboard.PASSO_CICLO (o passo vem em ciclos dele)
+
+
 static func pose(w: Node, iso_dir: int, clock: float, passo: float = -1.0, mexendo: bool = true) -> Dictionary:
 	if not enabled_for(w):
 		return {}
@@ -204,7 +207,9 @@ static func pose(w: Node, iso_dir: int, clock: float, passo: float = -1.0, mexen
 	if hold_last:
 		frame = n - 1
 	elif walk_clock:
-		frame = int(passo * n) % n if passo >= 0.0 else int(float(w.get("_anim_time"))) % n
+		# Bloco 76: a passada medida da tira (integra.py pes) — passo vem em ciclos de PASSO_CICLO px
+		var escala := PASSO_PADRAO / maxf(float(info.get("ciclo", PASSO_PADRAO)), 1.0)
+		frame = int(passo * escala * n) % n if passo >= 0.0 else int(float(w.get("_anim_time"))) % n
 	else:
 		frame = int(clock * ANIM_FPS) % n
 	# pele: a tira já pintada no tom (integra.py, mesma regra do skin_palette.gd); sem ela, pinta aqui
@@ -311,7 +316,7 @@ static func _item(name: String, d: String, top: Vector2) -> Dictionary:
 ## Robô antigo: no chão (achado, arrastado, conserto 1→2→3 pelo progresso) os estados parados,
 ## todos no mesmo quadro e âncora; ativo, boneco de 4 direções (anda, ataca, desligado quando
 ## apanha demais e fica atordoado até de manhã).
-static func robo_pose(r: Node, iso_dir: int, clock: float, moving: bool) -> Dictionary:
+static func robo_pose(r: Node, iso_dir: int, clock: float, moving: bool, andado: float = -1.0) -> Dictionary:
 	var env := r.get_tree().get_first_node_in_group("environment") if r.is_inside_tree() else null
 	if env == null or not env.has_method("has_iso_map") or not env.has_iso_map() or not data().has("robo_parado"):
 		return {}
@@ -350,6 +355,8 @@ static func robo_pose(r: Node, iso_dir: int, clock: float, moving: bool) -> Dict
 	var info: Dictionary = hit[1]
 	var n: int = maxi(int(info.n), 1)
 	var frame := n - 1 if hold_last else (int(clock * ANIM_FPS) % n if anim != "parado" else 0)
+	if anim == "caminhada" and andado >= 0.0:  # Bloco 76: a perna pela distância andada (px de arte)
+		frame = int(andado / maxf(float(info.get("ciclo", 56)), 1.0) * n) % n
 	var top: Array = info.topo[mini(frame, info.topo.size() - 1)]
 	var aj := _aj(info, frame)
 	return {"hidden": false, "tex": texture(info.img), "n": n, "frame": frame, "ancora": Vector2(info.ancora[0], info.ancora[1]) - aj,
@@ -371,7 +378,7 @@ const CRIATURA_ATAQUE := 0.6
 
 ## Invasor com a arte nova: anda, ataca, leva golpe, cai (fica deitado no último quadro) e, o
 ## Ferrugento, desliga ao amanhecer (a mesma queda). Só lê o estado da criatura (creature.gd).
-static func criatura_pose(c: Node, iso_dir: int, moving: bool) -> Dictionary:
+static func criatura_pose(c: Node, iso_dir: int, moving: bool, andado: float = -1.0) -> Dictionary:
 	var env := c.get_tree().get_first_node_in_group("environment") if c.is_inside_tree() else null
 	if env == null or not env.has_method("has_iso_map") or not env.has_iso_map():
 		return {}
@@ -407,6 +414,8 @@ static func criatura_pose(c: Node, iso_dir: int, moving: bool) -> Dictionary:
 	var n: int = maxi(int(info.n), 1)
 	var frame: int = int(since * ANIM_FPS)
 	frame = mini(frame, n - 1) if once else frame % n
+	if anim == "caminhada" and andado >= 0.0:  # Bloco 76: a perna pela distância andada (px de arte)
+		frame = int(andado / maxf(float(info.get("ciclo", 56)), 1.0) * n) % n
 	var top: Array = info.topo[mini(frame, info.topo.size() - 1)]
 	var aj := _aj(info, frame)
 	var out := {"hidden": false, "tex": texture(info.img), "n": n, "frame": frame, "ancora": Vector2(info.ancora[0], info.ancora[1]) - aj,

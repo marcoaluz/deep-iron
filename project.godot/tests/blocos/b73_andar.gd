@@ -148,8 +148,12 @@ func _pose() -> void:
 	check(aj != Vector2.ZERO and p.ancora == Vector2(info.ancora[0], info.ancora[1]) - aj,
 		"âncora do quadro = âncora da tira - ajuste (%s)" % aj)
 	check(is_equal_approx(p.altura, -(float(info.topo[0][1]) + aj.y)), "altura do boneco já com o ajuste")
-	check(B.pose(w, 0, 0.0, 0.26).frame == 1 and B.pose(w, 0, 0.0, 0.51).frame == 2 and B.pose(w, 0, 0.0, 1.0).frame == 0,
-		"o quadro vem da fase do passo (1/4 de ciclo por quadro)")
+	# Bloco 76: um ciclo da tira = a passada medida dela (info.ciclo px de arte); o passo vem em ciclos de 56 px
+	var n: int = int(info.n)
+	var c: float = float(info.get("ciclo", 56.0)) / B.PASSO_PADRAO  # 1 ciclo da tira, em passos
+	check(B.pose(w, 0, 0.0, c * 1.01 / n).frame == 1 and B.pose(w, 0, 0.0, c * 2.01 / n).frame == 2
+		and B.pose(w, 0, 0.0, c * 0.99).frame == n - 1 and B.pose(w, 0, 0.0, c * 1.001).frame == 0,
+		"o quadro vem da fase do passo (1/%d da passada medida, %s px, por quadro)" % [n, info.get("ciclo", 56)])
 	check(B.pose(w, 0, 0.0, 0.3, false).anim == "parado", "velocidade sem sair do lugar: parado (não marcha no lugar)")
 	check(B.pose(w, 0, 0.0).anim == "caminhada", "sem passo: o relógio de antes (testes antigos)")
 	w.carrying = 0.0

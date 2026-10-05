@@ -594,6 +594,41 @@ def so_criaturas():
     json.dump(out, open(f, "w", encoding="utf-8"), indent=1, ensure_ascii=False)
 
 
+# ------------------------------------------------------------ só as caminhadas (Bloco 76)
+def so_caminhadas(pastas):
+    """Refaz só a caminhada (e a caminhada com picareta) das pastas — tira, tons de pele, pé no chão — no
+    bonecos.json que já existe (sem regravar os outros PNGs). Pra a caminhada de 8 quadros (caminhadas8.py)."""
+    f = os.path.join(BON, "bonecos.json")
+    out = json.load(open(f, encoding="utf-8"))
+    jobs = []
+    for pasta in pastas:
+        if pasta not in out["pastas"]:
+            print("  %s: não está no bonecos.json (pula)" % pasta)
+            continue
+        for anim in ("caminhada", "com_picareta"):
+            if not os.path.isdir(os.path.join(AQUI, pasta, anim)):
+                continue
+            dd = {}
+            for d in DIRS:
+                fr = sorted(glob.glob(os.path.join(AQUI, pasta, anim, d, "*.png")), key=lambda x: int(os.path.basename(x)[:-4]) if os.path.basename(x)[:-4].isdigit() else 0)
+                fr = [x for x in fr if os.path.basename(x)[:-4].isdigit()]
+                if not fr:
+                    continue
+                t, a, sz, top = _tira(fr, _ancoras(pasta, anim, d, fr))
+                t.save(os.path.join(BON, pasta, "%s_%s.png" % (anim, d)))
+                dd[d] = {"img": "%s/%s_%s.png" % (pasta, anim, d), "n": len(fr), "quadro": sz, "ancora": a, "topo": top}
+                jobs.append((os.path.join(BON, dd[d]["img"]), len(fr), sz[0]))
+            if dd:
+                out["pastas"][pasta]["anims"][anim] = dd
+                print("  %-26s %s: %s quadros" % (pasta, anim, sorted({v["n"] for v in dd.values()})))
+    with Pool() as pool:
+        for _ in pool.imap_unordered(_tons_job, jobs, chunksize=4):
+            pass
+    pes_no_chao(out)
+    json.dump(out, open(f, "w", encoding="utf-8"), indent=1, ensure_ascii=False)
+    print("tiras refeitas:", len(jobs), "(+ 3 tons cada)")
+
+
 # ------------------------------------------------------------ pé no chão (Bloco 73)
 ## Animações de andar: os quadros vieram do PixelLab cada um numa altura (na caminhada o pé ficava
 ## em média 6 px, até 13 no robô, acima da linha da âncora) e o boneco subia e descia como se
@@ -609,8 +644,7 @@ def pes_no_chao(out):
     (iso_bonecos.gd) desloca o quadro; os PNGs não mudam."""
     n_aj = 0
     for pasta, info in out["pastas"].items():
-        if pasta.startswith("criatura_gosma"):
-            continue
+        pula = pasta.startswith("criatura_gosma")  # (a gosma pula de propósito: só o ciclo, sem ajuste)
         gente = not pasta.startswith("criatura") and pasta != "robo"
         for anim, dd in info["anims"].items():
             if anim not in ANDAR:
@@ -635,13 +669,31 @@ def pes_no_chao(out):
                     cabeca.append(float(xs[ys <= ys.min() + 10].mean()))
                 xs_ok = [c for c in cabeca if c is not None]
                 meio = float(np.median(xs_ok)) if xs_ok else 0.0
+                # Bloco 76: o ciclo (2 passos) em px de arte = ~2,2 x a maior abertura dos pés (o quanto o
+                # corpo avança enquanto o pé fica plantado); o jogo troca de quadro pela distância andada
+                abre = 0
+                for k in range(i["n"]):
+                    q = a[:, k * w:(k + 1) * w]
+                    linhas = np.nonzero(q.sum(1) >= 2)[0]
+                    if len(linhas) == 0:
+                        continue
+                    ys, xs = np.nonzero(q[linhas.max() - 3:linhas.max() + 1])
+                    if len(xs):
+                        abre = max(abre, int(xs.max() - xs.min()))
+                i["ciclo"] = int(min(160, max(36, round(2.2 * abre))))
                 aj = []
                 for b, c in zip(baixo, cabeca):
                     dx = int(round(meio - c)) if gente and anim in CABECA_FIXA and c is not None else 0
                     aj.append([dx, int(round(ay - b))])
-                if any(v != [0, 0] for v in aj):
+                if any(v != [0, 0] for v in aj) and not pula:
                     i["aj"] = aj
                     n_aj += 1
+            # Bloco 76: o ciclo é o mesmo nas 4 direções (de lado as pernas se sobrepõem na tela e a
+            # medida sai curta): fica o maior
+            cs = [i["ciclo"] for i in dd.values() if "ciclo" in i]
+            for i in dd.values():
+                if cs:
+                    i["ciclo"] = max(cs)
     print("pé no chão:", n_aj, "tiras ajustadas")
 
 
@@ -913,6 +965,8 @@ if __name__ == "__main__":
         so_criaturas()
     elif sys.argv[1:2] == ["luz"]:  # Prompt 19: texturas de luz + janelas acesas + pontos de luz
         luz()
+    elif sys.argv[1:2] == ["caminhadas"]:  # Bloco 76: só as caminhadas (8 quadros) dessas pastas
+        so_caminhadas(sys.argv[2:])
     elif sys.argv[1:2] == ["pes"]:  # Bloco 73: só o pé no chão das animações de andar (bonecos.json)
         f = os.path.join(BON, "bonecos.json")
         out = json.load(open(f, encoding="utf-8"))

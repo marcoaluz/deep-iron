@@ -1,7 +1,7 @@
 extends SceneTree
 ## Bloco 73 (não é teste): os bonecos andando de perto, quadro a quadro, pra ver se o pé fica no chão.
 ## Com janela e APPDATA isolado:
-##   <Godot>.exe --path . -s res://tests/capturas_andar.gd -- <pasta de saída> [fps]
+##   <Godot>.exe --path . -s res://tests/capturas_andar.gd -- <pasta de saída> [fps] [job:genero,...]
 ## Grava <pasta>/q_000.png... (um recorte em volta dos bonecos, a cada quadro, por 4 s; o GIF é montado
 ## à parte). fps = o limite da tela (60 por padrão; 144 testa a suavização).
 const PATH := "user://savegame.json"
@@ -53,12 +53,19 @@ func _prepara() -> void:
 	ws = main.get_tree().get_nodes_in_group("ipezinhos")
 	var jobs := ["minerador", "lenhador", "minerador"]
 	var genders := ["menino", "menino", "menina"]
+	var args := OS.get_cmdline_user_args()
+	if args.size() > 2:  # Bloco 76: quem anda, "job:genero,job:genero,..."
+		jobs.clear()
+		genders.clear()
+		for par in args[2].split(","):
+			jobs.append(par.get_slice(":", 0))
+			genders.append(par.get_slice(":", 1))
 	# cada um vai e volta num eixo do chão (SE/NO, NE/SO) e um na diagonal
 	var rotas := [[Vector2(-80, -10), Vector2(80, -10)], [Vector2(10, -60), Vector2(10, 70)], [Vector2(-60, 50), Vector2(60, -50)]]
 	for i in ws.size():
 		var w = ws[i]
-		w.gender = genders[i % 3]
-		w.set_job(jobs[i % 3])
+		w.gender = genders[i % genders.size()]
+		w.set_job(jobs[i % jobs.size()])
 		w.manual_override_time = 999.0
 		w.global_position = centro + rotas[i % 3][0]
 		alvos[w] = [centro + rotas[i % 3][0], centro + rotas[i % 3][1], 1]
