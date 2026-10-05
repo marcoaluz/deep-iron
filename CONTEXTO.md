@@ -138,8 +138,9 @@ longa simulada (F3 + telemetria), depois o tutorial (66).
   escrever arquivo e rodar com `python <arquivo>`.
 - Testes: `tests/blocos/*.gd` (um por bloco, registrado em `tests/test_blocos.gd`, linha no TESTING.md);
   rodar sempre com APPDATA/XDG_DATA_HOME/LOCALAPPDATA em `%TEMP%\deep_iron_testes\fake_appdata`. O save
-  real do Marco nunca pode mudar (md5 em 2026-10-04: `97CF252DBF6CEBFC458931B10596D19C`, gravado por ele em
-  02/10 22:59; o valor anotado antes era `76C7403D...`, mais antigo). Pra testar com ele: copiar pra uma
+  real do Marco nunca pode mudar por teste (md5 em 2026-10-05: `1719506EC19DBB11EE42CE351D06AB8C`, gravado POR
+  ELE às 00:31 — jogo aberto pela janela embutida do editor, "jogo salvo (manual)" no logs/godot.log —; os
+  anteriores `97CF252D...` (04/10) e `76C7403D...` eram saves mais antigos dele). Pra testar com ele: copiar pra uma
   pasta com `fake_appdata` no caminho e copiar pra `user://savegame.json` DEPOIS que a cena abre (abrir partida
   nova manda o save existente pros backups). Godot:
   `D:\DEV\Godot\Godot_v4.7.2-stable_win64.exe`. A tela lógica do jogo é 1280x720 (stretch canvas_items).
