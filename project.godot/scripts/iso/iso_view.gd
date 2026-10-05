@@ -663,6 +663,8 @@ var _pocas_feitas := {}  # poça -> true (o ambiente põe as poças um quadro de
 func _build_pocas() -> void:
 	for p in get_tree().get_nodes_in_group("pocas_perigo"):
 		_poca_add(p)
+	for n in get_tree().get_nodes_in_group("nivel_deco"):  # Bloco 78: o vapor das bicas que já estão no mapa
+		_marco_fx(n)
 
 
 func _poca_add(p: Node) -> void:
@@ -737,6 +739,43 @@ func _poca_add(p: Node) -> void:
 		_things.add_child(vap)
 		_poca_fx.append(vap)
 		vap.emitting = not Efeitos.reduzidos()
+
+
+## Bloco 78: a bica da fonte termal (S4, prop "bica_vapor") solta uma coluna de vapor, na tela (como o vapor da
+## lava do S4: a partícula mora na vista, não no espelho).
+var _marco_fx_feitos := {}
+
+
+func _marco_fx(n: Node) -> void:
+	if not is_instance_valid(n) or not (n is Node2D) or str(n.get_meta("iso_prop", "")) != "bica_vapor" or _marco_fx_feitos.has(n):
+		return
+	_marco_fx_feitos[n] = true
+	var v := CPUParticles2D.new()
+	v.name = "VaporBica_" + String(n.name)
+	v.texture = IsoFx.tex("vapor")
+	v.amount = 16
+	v.lifetime = 3.0
+	v.scale_amount_min = 1.5
+	v.scale_amount_max = 2.5
+	v.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	v.emission_rect_extents = Vector2(12, 4)
+	v.position = to_screen((n as Node2D).global_position) + Vector2(0, -10)
+	v.direction = Vector2(0, -1)
+	v.spread = 10.0
+	v.gravity = Vector2(2, -6)
+	v.initial_velocity_min = 10.0
+	v.initial_velocity_max = 20.0
+	v.color = Color(0.92, 0.95, 1.0, 0.7)
+	var g := Gradient.new()
+	g.colors = PackedColorArray([Color(1, 1, 1, 0.0), Color(1, 1, 1, 1.0), Color(1, 1, 1, 0.0)])
+	g.offsets = PackedFloat32Array([0.0, 0.2, 1.0])
+	v.color_ramp = g
+	v.light_mask = 0
+	v.z_as_relative = false
+	v.z_index = 3650  # camada 4 (efeitos), embaixo da atmosfera
+	_things.add_child(v)
+	_poca_fx.append(v)
+	v.emitting = not Efeitos.reduzidos()
 
 
 ## Bloco 72: o nível dessa poça tem água (poça "agua")?
@@ -987,6 +1026,7 @@ func _on_world_child_added(n: Node) -> void:
 	# entra no próximo quadro: o _ready dela (grupos, arte) ainda não rodou
 	_add.call_deferred(n)
 	_poca_add.call_deferred(n)  # Bloco 70: a luz e as bolhas da poça
+	_marco_fx.call_deferred(n)  # Bloco 78: o vapor da fonte termal
 
 
 func _on_world_child_removed(n: Node) -> void:

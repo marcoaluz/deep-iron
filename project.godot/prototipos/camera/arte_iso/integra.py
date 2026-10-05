@@ -771,6 +771,9 @@ for nome in ("cova", "explosivos", "antena", "cesto", "placa_greve"):
     PROPS[nome] = "efeitos/bases/%s.png" % nome
 # Bloco 76: a boca da escada em espiral na superfície (fundo76/espiral.py)
 PROPS["boca_espiral"] = "fundo76/boca_espiral.png"
+# Bloco 78: os marcos de cada andar (fundo78/marcos.py)
+for nome in ("fossil_gigante", "bica_vapor", "lampiao_cristal", "cabana_mina", "boca_tunel"):
+    PROPS[nome] = "fundo78/%s.png" % nome
 
 
 def props(so=None):

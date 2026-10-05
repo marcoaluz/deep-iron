@@ -322,5 +322,9 @@ func test_b76_faixas_lotes() -> void:
 	run_bloco("b76_faixas_lotes.gd")
 
 
+func test_b78_marcos() -> void:
+	run_bloco("b78_marcos.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

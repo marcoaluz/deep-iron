@@ -47,7 +47,13 @@ fazer esta parte aqui" = áreas de trabalho com postos estilo Frostpunk (texto i
     (fóssil no S3, fonte termal no S4, cidade no S5, cristais no S2, vila de mineração nas galerias), a
     ferrovia de carga (minha sugestão: virar jogabilidade, com uma estação por andar subindo o minério) e um
     monitor de perigos no HUD.
-  - **Esperando o Marco:** aprovar a v4 e escolher a ordem (marcos primeiro, ou ferrovia primeiro).
+  - O Marco APROVOU a v4 e pediu: primeiro os marcos visuais, depois a ferrovia de carga.
+- **Bloco 78 — marcos dos andares (feito):**
+  - Os marcos: vila de mineração nas galerias, cristais e poças d'água no S2, o fóssil gigante no S3, a
+    fonte termal (bicas com vapor) no S4 e a cidade (torre e lampiões de cristal) no S5.
+  - Arte nova em `fundo78/marcos.py`; teste `b78_marcos`; relatório `docs/BLOCO78_MARCOS_DOS_ANDARES.md`.
+- **Bloco 79 — ferrovia de carga (próximo):** uma estação por andar subindo o minério pelo cavalete até a
+  superfície (como o vagonete do Bloco 64), pra o mineiro do fundo andar menos.
 
 ## Antes (2026-10-04): Blocos 73 e 74 — feitos, esperando o Marco conferir
 

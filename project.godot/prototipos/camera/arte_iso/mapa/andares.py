@@ -367,6 +367,13 @@ def enfeites(an, piso, kc, tema):
                 poe(rnd.choice(["vagonete_velho", "vagonete_cheio_SE"]), i, jm, 0.6)
         for i in cols[11::31]:
             poe(rnd.choice(["tabuas", "caixote", "barril"]), i, fundo[i] + 1)
+        # Bloco 78 (maquete v4): a VILA DE MINERAÇÃO — cabanas de mineiro e bocas de túnel na parede de trás,
+        # alternadas, nos vãos entre as escoras
+        for n, i in enumerate(cols[5:-8:16]):
+            if n % 2 == 0:
+                poe("cabana_mina", i, fundo[i] + 1, 0.55)
+            else:
+                poe("boca_tunel", i, fundo[i], 0.45, 0, 6)
     return itens
 
 

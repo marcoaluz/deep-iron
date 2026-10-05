@@ -2700,6 +2700,81 @@
    ],
    "h": 78.0,
    "fora": 3
+  },
+  "fossil_gigante": {
+   "img": "fossil_gigante.png",
+   "ancora": [
+    96.0,
+    109.0
+   ],
+   "peg": [
+    -32.0,
+    -25.6,
+    70.0,
+    64.4
+   ],
+   "h": 112.0,
+   "fora": 0
+  },
+  "bica_vapor": {
+   "img": "bica_vapor.png",
+   "ancora": [
+    32.0,
+    43.0
+   ],
+   "peg": [
+    -11.2,
+    -8.959999999999999,
+    23.0,
+    21.0
+   ],
+   "h": 40.0,
+   "fora": 0
+  },
+  "lampiao_cristal": {
+   "img": "lampiao_cristal.png",
+   "ancora": [
+    14.0,
+    77.0
+   ],
+   "peg": [
+    -4.8999999999999995,
+    -3.92,
+    10.0,
+    9.0
+   ],
+   "h": 74.0,
+   "fora": 0
+  },
+  "cabana_mina": {
+   "img": "cabana_mina.png",
+   "ancora": [
+    38.5,
+    76.0
+   ],
+   "peg": [
+    -13.475,
+    -10.780000000000001,
+    27.0,
+    25.0
+   ],
+   "h": 74.0,
+   "fora": 3
+  },
+  "boca_tunel": {
+   "img": "boca_tunel.png",
+   "ancora": [
+    30.0,
+    75.0
+   ],
+   "peg": [
+    -10.5,
+    -8.4,
+    22.0,
+    18.0
+   ],
+   "h": 80.0,
+   "fora": 4
   }
  }
 }

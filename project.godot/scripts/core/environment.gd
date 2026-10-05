@@ -306,9 +306,41 @@ func _build_decoracao_niveis() -> void:
 			if not livre:
 				continue
 			placed.append(p)
-			_decor_node(String(d[0]), p, false)
+			_decor_node(String(d[0]), p, MARCO_BLOQUEIA.has(String(d[0])))
 			get_child(get_child_count() - 1).add_to_group("nivel_deco")
+			_marco_vivo(String(d[0]), get_child(get_child_count() - 1))  # Bloco 78
 	_build_decoracao_sorteada(placed, avoid)  # Bloco 72: depois da fixa (ela fica com o lugar)
+
+
+## Bloco 78: os MARCOS de cada andar (maquete v4) — o que bloqueia a passagem (meia-largura, meia-altura da
+## elipse no chão) e o que ganha vida: luz no lampião de cristal e no fóssil (o vapor da bica é da vista iso).
+const MARCO_BLOQUEIA := {"fossil_gigante": Vector2(52, 22), "torre_0": Vector2(22, 12), "casa_pedra_0": Vector2(30, 14),
+	"casa_pedra_1": Vector2(30, 14)}
+
+
+func _marco_vivo(prop: String, n: Node) -> void:
+	match prop:
+		"fossil_gigante", "torre_0", "casa_pedra_0", "casa_pedra_1":
+			if prop == "fossil_gigante":
+				n.add_child(_luz_marco(Color(1.0, 0.45, 0.15), 0.5, 0.6, Vector2(0, -14)))
+			if MARCO_BLOQUEIA.has(prop):
+				_obstacles[_obstacles.size() - 1] = _elipse_outline(Rect2(n.position + Vector2(-MARCO_BLOQUEIA[prop].x, -4.0 - MARCO_BLOQUEIA[prop].y),
+					MARCO_BLOQUEIA[prop] * 2.0))
+		"lampiao_cristal":
+			n.add_child(_luz_marco(Color(0.35, 0.95, 1.0), 0.7, 0.35, Vector2(0, -44)))
+		"bica_vapor":
+			pass  # o vapor é da vista iso (iso_view._marco_fx), como o das poças de lava do S4
+
+
+func _luz_marco(cor: Color, forca: float, escala: float, pos: Vector2) -> PointLight2D:
+	var l := PointLight2D.new()
+	l.name = "LuzMarco"
+	l.position = pos
+	l.color = cor
+	l.energy = forca
+	l.texture = load("res://assets/game/light_radial.tres")
+	l.texture_scale = escala
+	return l
 
 
 ## Bloco 72: espalha a decoração sorteada de cada nível (NivelMina.decoracao_sorteada) no chão dele.
