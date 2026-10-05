@@ -242,6 +242,10 @@ class Andar:
         t = x - math.floor(x)
         return self.raio[b0] * (1 - t) + self.raio[b1] * t
 
+    def tile(self, p):
+        a = self.arte(p)
+        return (int(math.floor((a[0] - OX) / T)), int(math.floor((a[1] - OY) / T)))
+
     def dentro(self, p):
         """o ponto da lógica é chão da caverna?"""
         x, y, w, h = self.rect
@@ -324,7 +328,7 @@ def enfeites(an, piso, kc, tema):
     escoras de madeira e lampiões a cada tanto (a parede da maquete); nas galerias, o trilho correndo a faixa
     inteira com vagonetes. Itens no formato do compoe: (i + j, k, imagem, (x, y))."""
     itens = []
-    rnd = random.Random(hash(an.nome) & 0xFFFF)
+    rnd = random.Random(sum(ord(c) * (k + 1) for k, c in enumerate(an.nome)))  # (hash() de str muda a cada execução)
     fundo = {}  # coluna i -> a fileira mais de trás (menor j) do chão
     for (i, j) in piso:
         if i not in fundo or j < fundo[i]:
@@ -363,6 +367,100 @@ def enfeites(an, piso, kc, tema):
     return itens
 
 
+## Bloco 76: o RIO DE LAVA do S3 (a maquete: um rio correndo a faixa) — as 2 fileiras de rocha logo atrás do
+## chão, ao pé da parede (não é chão: ninguém anda nele); fios de lava saindo de fendas da parede até ele; e a
+## CACHOEIRA do S4 despencando pela parede até uma poça.
+def _lava_tiles():
+    out = []
+    mask = tiles.mascara_topo().load()
+    cores = [(110, 26, 8), (176, 52, 12), (228, 96, 20), (255, 160, 44), (255, 222, 120)]
+    for s_ in range(4):
+        rnd = random.Random(700 + s_)
+        im = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
+        px = im.load()
+        for y in range(0, 32, 2):
+            for x in range(0, 64, 2):
+                n = 0.5 + 0.28 * math.sin(x * 0.19 + y * 0.43 + s_ * 1.7) + 0.22 * math.sin((x - 2 * y) * 0.13 + s_) + 0.2 * (rnd.random() - 0.5)
+                c = cores[max(0, min(len(cores) - 1, int(n * len(cores))))]
+                for dy in (0, 1):
+                    for dx in (0, 1):
+                        if mask[x + dx, y + dy]:
+                            px[x + dx, y + dy] = c + (255,)
+        out.append(im)
+    return out
+
+
+LAVA = None
+
+
+def pinta_queda(b, q, k, nasce=False):
+    """um fio de lava descendo pela face da frente (sul: a da esquerda) do bloco.
+    q = ("lava", k de onde nasce); `nasce`: o bloco de onde ele sai (a fenda acesa no meio da face, o fio só
+    dali pra baixo). O fio serpenteia contínuo de um bloco pro outro
+    (a fase usa a altura na tela, y - 32k) e abre um pouco embaixo."""
+    tipo, k_nasce = q[0], q[1]
+    b = b.copy()
+    px = b.load()
+    if tipo == "lava":
+        cores = [(110, 30, 8), (200, 70, 16), (245, 124, 28), (255, 196, 70), (255, 236, 150), (255, 196, 70),
+                 (245, 124, 28), (200, 70, 16), (110, 30, 8)]
+        y_de = 32 if nasce else 16
+        for x in range(32):
+            for y in range(y_de + x // 2, 48 + x // 2):
+                if not (0 <= y < b.height and px[x, y][3] > 0):
+                    continue
+                yg = y - x // 2 - 32 * k                  # a altura na tela (contínua entre blocos)
+                desce = (k_nasce - k) * 32 + (y - x // 2)  # quanto já desceu desde a fenda
+                meio = 15 + 3.0 * math.sin(yg * 0.09) + 1.5 * math.sin(yg * 0.23 + 1.3)
+                meia = 4.0 + min(3.0, desce / 70.0)
+                dx = abs(x + 0.5 - meio)
+                if dx < meia:
+                    c = cores[min(len(cores) - 1, int((x + 0.5 - meio + meia) / (2 * meia) * len(cores)))]
+                    px[x, y] = c + (255,)
+                elif dx < meia + 4:                        # o halo: a rocha em volta pega o brilho
+                    f = 1.0 - (dx - meia) / 4.0
+                    r_, g_, b_, a_ = px[x, y]
+                    px[x, y] = (min(255, int(r_ + 110 * f)), min(255, int(g_ + 34 * f)), b_, a_)
+        if nasce:  # a fenda acesa de onde a lava sai: uma boca escura com brasa dentro
+            yg = 32 - 32 * k
+            meio = 15 + 3.0 * math.sin(yg * 0.09) + 1.5 * math.sin(yg * 0.23 + 1.3)
+            for x in range(32):
+                for y in range(18 + x // 2, 40 + x // 2):
+                    if not (0 <= y < b.height and px[x, y][3] > 0):
+                        continue
+                    lado = ((x + 0.5 - meio) / 12.0) ** 2 + ((y - x // 2 - 29) / 7.0) ** 2
+                    if lado < 1.0:
+                        px[x, y] = (34, 10, 6, 255) if lado > 0.6 else ((255, 214, 96, 255) if lado < 0.22 else (226, 88, 20, 255))
+    return b
+
+
+def pinta_cortina(b, lo, hi, k):
+    """Bloco 76: a CORTINA da cachoeira — todo pixel do bloco (faces e topo) cuja x da tela cai na faixa
+    [lo, hi) (x local do quadro do bloco; a faixa vem da coluna da tela, então todas as fileiras e degraus
+    da parede alinham numa cortina reta). Listras pela x global, brilho correndo pela altura da tela."""
+    b = b.copy()
+    px = b.load()
+    cores = [(120, 170, 220), (200, 230, 255), (150, 200, 240), (230, 245, 255), (110, 160, 215),
+             (200, 230, 255), (90, 140, 200), (170, 210, 250)]
+    larg = hi - lo
+    for x in range(max(0, lo), min(b.width, hi)):
+        gx = x - lo
+        c = (40, 60, 90) if gx < 2 or gx >= larg - 2 else cores[(gx * len(cores)) // larg]
+        for y in range(b.height):
+            if px[x, y][3] > 0:
+                brilho = 0.9 + 0.1 * math.sin((y - k * 32) * 0.7 + gx)
+                px[x, y] = (min(255, int(c[0] * brilho)), min(255, int(c[1] * brilho)), min(255, int(c[2] * brilho)), 255)
+    return b
+
+
+def queda_da_cachoeira(an):
+    """o ponto (lógica) da cachoeira do S4 (decoração fx:cachoeira do .tres), ou None."""
+    for d in _dos_dados("S4_cachoeira.tres", "decoracao"):
+        if str(d[0]).startswith("fx:cachoeira"):
+            return novo((d[1], d[2]))
+    return None
+
+
 ## Bloco 75: o cristal de cada andar (na parede de trás)
 CRISTAIS = {"nivel2": "cristal_lima_%d", "abismo": "cristal_brasa_%d", "s5": "cristal_ciano_%d"}
 
@@ -386,10 +484,18 @@ def desenha_andar(an, a, acima, rocha):
         for j in j_de:
             if an.dentro(an.logica(centro_tile(i, j))):
                 piso.add((i, j))
+    tema = a.get("tema", an.nome)
+    rio = set()           # (o rio de lava do S3 entra depois da rocha: ele É a 1ª fileira de rocha atrás do chão)
+    quedas = {}           # coluna i -> "lava" / "agua": o que escorre pela parede de trás
+    poca = set()
+    cachoeira = queda_da_cachoeira(an) if tema == "s4" else None
+    if cachoeira:
+        qi, qj = an.tile(cachoeira)
+        poca = {(qi + di, qj + dj) for di in (-2, -1, 0, 1, 2) for dj in (-1, 0, 1, 2) if (qi + di, qj + dj) in piso}
     rocha_de = {}
     for i in i_de:
         for j in j_de:
-            if (i, j) in piso:
+            if (i, j) in piso or (i, j) in rio:
                 continue
             axy = centro_tile(i, j)
             pl = an.logica(axy)
@@ -411,7 +517,7 @@ def desenha_andar(an, a, acima, rocha):
     # anel de cada rocha (1 = encostada no chão): perto do chão a rocha é mais baixa (saliências e
     # prateleiras em degraus, como parede de caverna); do 3º anel pra trás sobe inteira
     anel = {}
-    fila = [t for t in rocha_de if any(v in piso for v in ((t[0] + 1, t[1]), (t[0], t[1] + 1), (t[0] - 1, t[1]), (t[0], t[1] - 1)))]
+    fila = [t for t in rocha_de if any(v in piso or v in rio for v in ((t[0] + 1, t[1]), (t[0], t[1] + 1), (t[0] - 1, t[1]), (t[0], t[1] - 1)))]
     for t in fila:
         anel[t] = 1
     while fila:
@@ -422,6 +528,19 @@ def desenha_andar(an, a, acima, rocha):
                     anel[v] = anel[(i, j)] + 1
                     nova.append(v)
         fila = nova
+    if tema == "abismo":  # Bloco 76: o rio de lava ao pé da parede — as 2 fileiras de rocha logo atrás do chão
+        cols = sorted({i for i, _ in piso})
+        lo, hi = cols[int(len(cols) * 0.03)], cols[int(len(cols) * 0.88)]
+        rio = {t for t, r in anel.items() if r == 1 and (t[0], t[1] + 1) in piso and lo <= t[0] <= hi}
+        rio |= {(i, j - 1) for (i, j) in rio if anel.get((i, j - 1)) == 2}
+        for t in rio:
+            rocha_de.pop(t, None)
+            anel.pop(t, None)
+        for n, i in enumerate(sorted({i for i, _ in rio})[2::7]):
+            quedas[i] = ("lava", kc + 4 + (n * 5) % 8)
+    cortina = None  # a cachoeira: a coluna da tela (i - j) atrás do fx:cachoeira — o meio dele é a divisa
+    if cachoeira:   # entre as colunas qi-qj e qi-qj+1; a cortina tem 2 colunas (64 px) de largura
+        cortina = qi - qj
     itens = []
     # a rocha de trás: da laje até a laje do de cima (o nível 2: até a borda de baixo da superfície)
     kb = kc - LAJE + 1
@@ -453,7 +572,22 @@ def desenha_andar(an, a, acima, rocha):
                 f *= 1.12  # o topo da saliência pega a luz
             if k < kc:
                 f *= 0.82 ** (kc - k)
-            itens.append((i + j, k, tiles.escurece(b, f), tiles.tela(i, j, k)))
+            bb = tiles.escurece(b, f)
+            if i in quedas and r <= 4 and kc <= k <= quedas[i][1]:  # Bloco 76: lava escorrendo pela parede
+                bb = pinta_queda(bb, quedas[i], k, k == min(topo, quedas[i][1]))
+            elif cortina is not None and k >= kc and cortina - 1 <= i - j <= cortina + 1:  # Bloco 76
+                bb = pinta_cortina(bb, (cortina - (i - j)) * T, (cortina + 2 - (i - j)) * T, k)
+            itens.append((i + j, k, bb, tiles.tela(i, j, k)))
+    # Bloco 76: o rio de lava (no nível do chão, com a laje de rocha embaixo)
+    global LAVA
+    if rio and LAVA is None:
+        LAVA = _lava_tiles()
+    for (i, j) in rio:
+        top = tiles.escolhe(LAVA, i, j, 7)
+        b = tiles.escolhe(bloco, i, j, kc, False).copy()
+        b.paste(top, (0, 0), top)
+        itens.append((i + j, kc, b, tiles.tela(i, j, kc)))
+    margem = {t for t in piso if any((t[0] + a_, t[1] + b_) in rio for a_, b_ in ((1, 0), (-1, 0), (0, 1), (0, -1)))}
     # o chão (e a laje embaixo dele onde a frente fica aberta: mais funda e irregular, rocha pendurada)
     for (i, j) in piso:
         if (i + 1, j) not in piso and (i + 1, j) not in rocha_de or (i, j + 1) not in piso and (i, j + 1) not in rocha_de:
@@ -462,6 +596,10 @@ def desenha_andar(an, a, acima, rocha):
                 b = tiles.escolhe(bloco if kc - k < LAJE else rocha, i, j, k, False)
                 itens.append((i + j, k, tiles.escurece(b, 0.82 ** (kc - k)), tiles.tela(i, j, k)))
         kind = zona_em(an.logica(centro_tile(i, j)))
+        if (i, j) in margem:
+            kind = "calor"  # Bloco 76: a margem do rio, rocha rachada com brasa
+        elif (i, j) in poca:
+            kind = "agua"   # Bloco 76: a poça embaixo da cachoeira
         tex = zchao[kind] if kind and zchao.get(kind) else chao
         top = tiles.escolhe(tex, i, j, 3)
         b = tiles.escolhe(bloco, i, j, kc, False).copy()
