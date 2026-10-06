@@ -151,6 +151,13 @@ const UPGRADE_NAMES := {
 @export var coletor_credits: int = 250
 @export var coletor_ore: int = 60
 @export var coletor_build_time: float = 40.0
+@export_group("Fornalha (Bloco 86)")
+## Construir a fornalha: SÓ créditos e minério (madeira nenhuma: não trava o começo); segundos de engenheiro.
+@export var fornalha_credits: int = 180
+@export var fornalha_ore: int = 50
+@export var fornalha_build_time: float = 35.0
+## Estágio da vila em que a fornalha libera (2 = Vilarejo).
+@export_range(1, 5) var fornalha_estagio: int = 2
 @export_group("Oficina (Bloco 58)")
 @export var oficina_credits: int = 200
 @export var oficina_ore: int = 40
@@ -778,6 +785,75 @@ func _load_coletores(d: Dictionary) -> void:
 		fixo.volta_pra_ruina()
 
 
+# ------------------------------------------------------------ fornalha (Bloco 86)
+const FORNALHA_SCENE := preload("res://scenes/props/fornalha.tscn")
+const FORNALHA_TEXTURE := preload("res://assets/game/fornalha.png")
+
+
+func fornalhas() -> Array:
+	return get_tree().get_nodes_in_group("fornalhas")
+
+
+## Custo da PRÓXIMA (x cr, y ferro): cresce a cada uma que já existe (Bloco 47).
+func fornalha_cost() -> Vector3i:
+	var base := Vector3i(fornalha_credits, fornalha_ore, 0)
+	var eco := _economy()
+	return eco.scaled_cost(base, fornalhas().size()) if eco else base
+
+
+func fornalha_cost_text() -> String:
+	var c := fornalha_cost()
+	return "%d cr + %d ferro" % [c.x, c.y]
+
+
+func fornalha_block_reason() -> String:
+	if level < fornalha_estagio:
+		return "precisa da vila no estágio %s" % STAGE_NAMES[clampi(fornalha_estagio, 1, STAGE_NAMES.size()) - 1]
+	var c := Canteiro.pending(get_tree(), "fornalha")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	var cost := fornalha_cost()
+	return eco.missing_text(cost.x, cost.y, "ferro") if eco else "sem recursos"
+
+
+func build_fornalha() -> bool:
+	if fornalha_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_fornalha, FORNALHA_TEXTURE, 2, "a Fornalha",
+		{"footprint": COLETOR_FOOTPRINT, "start": global_position + Vector2(140, 60)})
+	return true
+
+
+func _confirm_fornalha(pos: Vector2) -> bool:
+	if fornalha_block_reason() != "":
+		Audio.error()
+		return false
+	var cost := fornalha_cost()
+	if not _economy().spend(cost.x, cost.y, "ferro"):
+		return false
+	Canteiro.order(get_tree(), "fornalha", pos, fornalha_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Fornalha encomendada — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_fornalha(pos: Vector2) -> Node2D:
+	var f: Node2D = FORNALHA_SCENE.instantiate()
+	var n := fornalhas().size()
+	f.name = "Fornalha" if n == 0 else "Fornalha%d" % (n + 1)
+	f.position = pos
+	get_parent().add_child(f)
+	_coletor_mudou()  # (navegação e decoração por baixo, como o coletor)
+	return f
+
+
 # ------------------------------------------------------------ oficina (Bloco 58)
 func oficina() -> Node:
 	return get_tree().get_first_node_in_group("oficina")
@@ -1229,6 +1305,14 @@ func finish_build(kind: String, pos: Vector2) -> void:
 		if hv:
 			hv.show_toast("Trilho pronto! Os mineradores perto dele entregam no ponto de carga; o vagonete leva pro armazém.", Color(0.55, 1.0, 0.5))
 		return
+	if kind == "fornalha":  # Bloco 86
+		var fo := spawn_fornalha(pos)
+		fo.pop_in()
+		Audio.recruit()
+		var hf := get_tree().get_first_node_in_group("hud")
+		if hf:
+			hf.show_toast("Fornalha pronta! Encomende barras (clique nela) e dê a função FUNDIDOR a alguém.", Color(0.55, 1.0, 0.5))
+		return
 	if kind == "oficina":  # Bloco 58
 		var o := oficina()
 		if o:
@@ -1470,6 +1554,7 @@ func get_save_data() -> Dictionary:
 		"upgrade_left": upgrade_left, "upgrade_total": upgrade_total, "obra": _obra.get_save_data(),
 		"founded": founded, "starter_houses_left": starter_houses_left,
 		"coletores": coletores().map(func(c): return c.get_save_data()),  # Bloco 81: + etapa da restauração e "fixo"
+		"fornalhas": fornalhas().map(func(f): return f.get_save_data()),  # Bloco 86: lugar + fila de ordens
 		"coletores_minerio": coletores_minerio().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position),
 			"total": c.total_produced, "jazida": SaveUtil.vec2_to_array(c.chosen_pos) if c.chosen_pos != Vector2.INF else []}),  # Bloco 57
 		"vagonetes": vagonetes().map(func(v): return v.get_save_data()),  # Bloco 64
@@ -1495,6 +1580,16 @@ func load_save_data(d: Dictionary) -> void:
 	founded = SaveUtil.boolean(d, "founded", true)
 	starter_houses_left = clampi(SaveUtil.integer(d, "starter_houses_left", 0), 0, starter_houses)
 	_load_coletores(d)
+	# Bloco 86: fornalhas (save antigo: nenhuma)
+	for old in fornalhas():
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	for fd in SaveUtil.array(d, "fornalhas"):
+		if typeof(fd) != TYPE_DICTIONARY:
+			continue
+		var fpos := SaveUtil.vec2(fd, "position", Vector2.INF)
+		if fpos != Vector2.INF:
+			spawn_fornalha(fpos).load_save_data(fd)
 	# Bloco 57: coletores de minério (save antigo: nenhum; o operador se religa sozinho)
 	for old in coletores_minerio():
 		old.get_parent().remove_child(old)

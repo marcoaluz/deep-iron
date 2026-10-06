@@ -354,5 +354,9 @@ func test_b85_hora_social() -> void:
 	run_bloco("b85_hora_social.gd")
 
 
+func test_b86_fornalha() -> void:
+	run_bloco("b86_fornalha.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

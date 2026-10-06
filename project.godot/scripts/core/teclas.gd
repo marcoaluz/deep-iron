@@ -14,6 +14,7 @@ const PADRAO := {
 	"painel_hub": [KEY_U], "painel_escavadeira": [KEY_E], "painel_oficina": [KEY_O], "painel_enfermaria": [KEY_I],
 	"painel_moral": [KEY_B], "painel_defesa": [KEY_G], "painel_diario": [KEY_J], "painel_lab": [KEY_Q], "painel_sol": [KEY_Y],
 	"painel_trabalho": [KEY_5, KEY_KP_5],
+	"fundidor": [KEY_6, KEY_KP_6],  # Bloco 86
 	"salvar": [KEY_F5], "carregar": [KEY_F9],
 	# fixas (não aparecem pra remapear): Esc, e as de teste/depuração
 	"voltar": [KEY_ESCAPE], "caixas": [KEY_F4], "pular_fase": [KEY_N], "machucar": [KEY_K],

@@ -82,6 +82,9 @@ func _process(delta: float) -> void:
 			raw_stored += body.deliver_raw(DEPOSIT_RATE * delta)
 			raw_moved = true
 			continue
+		if body.has_method("na_armazem_fundidor") and body.get_state() == "buscando_insumo":
+			body.na_armazem_fundidor(self)  # Bloco 86: larga as barras e pega os insumos da próxima leva
+			continue
 		if body.has_method("receive_raw") and body.get_state() == "fetching":
 			raw_stored -= body.receive_raw(minf(DEPOSIT_RATE * delta, raw_stored))
 			raw_stored = maxf(raw_stored, 0.0)

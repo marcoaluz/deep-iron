@@ -19,7 +19,8 @@ const SkinPalette := preload("res://scripts/iso/skin_palette.gd")
 const DIR_NAMES := ["SE", "SO", "NO", "NE"]
 ## outfit() do ipezinho -> função no bonecos.json
 const OUTFIT_FUNCAO := {"mineiro": "minerador", "civil": "civil", "cozinheiro": "cozinheiro", "lenhador": "lenhador",
-	"guarda": "guarda", "pesquisador": "pesquisador", "cacador": "cacador", "medico": "medico", "engenheiro": "engenheiro"}
+	"guarda": "guarda", "pesquisador": "pesquisador", "cacador": "cacador", "medico": "medico", "engenheiro": "engenheiro",
+	"fundidor": "engenheiro"}  # Bloco 86: provisório (a arte do engenheiro com o tom de fuligem do fundidor)
 ## desenho antigo da mão (assets/game/<nome>.png) -> ferramenta nova (Prompt 4)
 const ITEM_OF := {"pickaxe": "picareta", "pickaxe_aco": "picareta_aco", "axe": "machado", "hammer": "martelo",
 	"porrete": "porrete", "lanca": "lanca", "lanca_prata": "lanca_prata", "besta": "besta", "bow": "arco"}

@@ -185,6 +185,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				_hud.toggle_panel("diario")
 			"guarda":
 				toggle_guard()
+			"fundidor":
+				toggle_smelter()
 			"pesquisador":
 				toggle_research()
 			"painel_lab":
@@ -534,6 +536,11 @@ func toggle_guard() -> void:
 ## Z / botão do HUD: pesquisador (ou tira, se todos já forem).
 func toggle_research() -> void:
 	toggle_job(Worker.ROLE_RESEARCH, "Pesquisador", Color(0.55, 0.95, 0.65))
+
+
+## 6 / botão do HUD: fundidor (ou tira, se todos já forem) — Bloco 86.
+func toggle_smelter() -> void:
+	toggle_job(Worker.ROLE_SMELTER, "Fundidor", Color(1.0, 0.62, 0.32))
 
 
 ## 0 / botão do HUD: tira a função dos selecionados (voltam a ficar ociosos).

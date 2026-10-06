@@ -7,6 +7,8 @@ signal died(worker_name: String)
 
 const STATE_LABELS := {
 	"social": "hora social",  # Bloco 85
+	"buscando_insumo": "indo ao armazém (insumos)",  # Bloco 86
+	"fundindo": "fundindo",
 	"idle": "ocioso",
 	"eating": "comendo",
 	"mining": "minerando",
@@ -42,6 +44,7 @@ const REST_REACH := 12.0
 const Ores := preload("res://scripts/core/ores.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const Schedule := preload("res://scripts/core/schedule.gd")  # Bloco 84
+const Items := preload("res://scripts/core/items.gd")  # Bloco 86
 const Icones := preload("res://scripts/ui/icones.gd")  # Bloco 85: o balão da hora social
 const BALAO := preload("res://assets/game/ui/balao.png")
 const STEEL_PICKAXE := preload("res://assets/game/pickaxe_aco.png")
@@ -68,7 +71,10 @@ const OUTFIT_FILES := {
 	"pesquisador": "res://assets/game/ipezinho_pesquisador_%s%d.png",
 	"medico": "res://assets/game/ipezinho_medico_%s%d.png",  # Bloco 30
 	"engenheiro": "res://assets/game/ipezinho_engenheiro_%s%d.png",  # Bloco 31
+	"fundidor": "res://assets/game/ipezinho_engenheiro_%s%d.png",  # Bloco 86: provisório (tom: FUNDIDOR_TOM)
 }
+## Bloco 86: o tom do fundidor provisório (a roupa do engenheiro "suja de fuligem e calor").
+const FUNDIDOR_TOM := Color(1.0, 0.82, 0.7)
 ## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
 const OUTFITS_WITH_LAMP := ["mineiro"]
 ## Chance (0..1) de cada camada de acessório aparecer (botas, remendo/bolso, lenço).
@@ -93,6 +99,8 @@ const STATE_GROUP := {
 	"training": "campos",
 	"research": "laboratorios",
 	"rearming": "arsenais",  # Bloco 35: guarda buscando/trocando a arma
+	"buscando_insumo": "armazens",  # Bloco 86: fundidor largando barras / pegando insumos
+	"fundindo": "fornalhas",  # Bloco 86: fundidor na fornalha
 }
 ## Função (job) designada pelo jogador — Bloco 25: um campo só, com "ocioso" de padrão.
 ## Função nova (caçador, engenheiro...) = mais uma constante aqui + entrada em JOBS/JOB_LABELS
@@ -106,12 +114,13 @@ const ROLE_RESEARCH := "pesquisador"
 const ROLE_HUNTER := "caçador"  # Bloco 27: colhe fruta / caça (com arco) -> matéria-prima
 const ROLE_DOCTOR := "médico"  # Bloco 30: plantão na enfermaria (cura mais rápida)
 const ROLE_ENGINEER := "engenheiro"  # Bloco 31: sem ele nenhuma obra anda
-const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER]
+const ROLE_SMELTER := "fundidor"  # Bloco 86: opera a Fornalha (só por ordem)
+const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER]
 ## Texto do popup ao receber a função.
 const JOB_LABELS := {
 	ROLE_IDLE: "Sem função", ROLE_MINER: "Minerador!", ROLE_COOK: "Cozinheiro!",
 	ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!",
-	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!", ROLE_ENGINEER: "Engenheiro!",
+	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!", ROLE_ENGINEER: "Engenheiro!", ROLE_SMELTER: "Fundidor!",
 }
 ## Bloco 26/28: outfit inteiro por função (derivado do `job`: nada novo no save).
 ## REGRA (Bloco 28): toda função nova nasce com outfit próprio no mesmo bloco —
@@ -121,6 +130,7 @@ const JOB_OUTFIT := {
 	ROLE_IDLE: "civil", ROLE_MINER: "mineiro", ROLE_COOK: "cozinheiro",
 	ROLE_LUMBER: "lenhador", ROLE_GUARD: "guarda", ROLE_RESEARCH: "pesquisador",
 	ROLE_HUNTER: "cacador", ROLE_DOCTOR: "medico", ROLE_ENGINEER: "engenheiro",
+	ROLE_SMELTER: "fundidor",  # Bloco 86: PROVISÓRIO (pedido do jogador): a roupa do engenheiro + tom de fuligem
 }
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
@@ -1036,6 +1046,9 @@ func _choose_state() -> String:
 		if _has_usable_station("coleta_comida"):
 			return "foraging"
 		return "idle"
+	# Bloco 86: fundidor — só trabalha com ORDEM na fornalha (sem ordem: não pega nada).
+	if is_smelter():
+		return _estado_fundidor()
 	# Bloco 25: sem função não trabalha sozinho — espera no Centro da Vila até o
 	# jogador designar. (Comer, dormir, se tratar, taverna e greve vêm antes e seguem iguais.)
 	if has_no_job():
@@ -1350,6 +1363,8 @@ func _release_station() -> void:
 func _set_state(new_state: String) -> void:
 	if new_state == _ai_state:
 		return
+	if new_state == "buscando_insumo":  # Bloco 86: uma visita nova ao armazém
+		_visita_feita = false
 	if new_state == "eating":  # Bloco 84: indo comer — um prato novo, da refeição da hora (se for)
 		_servido = false
 		_prato = 0.0
@@ -3189,6 +3204,82 @@ func _mostra_balao(icone: String) -> void:
 	_balao_vida = 1.8
 
 
+# ------------------------------------------------------------ fundidor (Bloco 86)
+## Barras prontas que ele leva pro armazém ({item: qtd}).
+var barras_mao: Dictionary = {}
+var _fornalha: Node = null
+var _visita_feita := false
+
+
+func is_smelter() -> bool:
+	return job == ROLE_SMELTER
+
+
+## A fornalha dele: a que tem as unidades que ele começou; senão a mais perto com ordem.
+func _fornalha_alvo() -> Node:
+	if _fornalha != null and is_instance_valid(_fornalha) and _fornalha.fila.tem_trabalho():
+		return _fornalha
+	_fornalha = null
+	var d_min := INF
+	for f in get_tree().get_nodes_in_group("fornalhas"):
+		if not f.fila.tem_trabalho():
+			continue
+		var d := global_position.distance_to(f.global_position)
+		if d < d_min:
+			d_min = d
+			_fornalha = f
+	return _fornalha
+
+
+## A decisão do fundidor (no horário de trabalho): fundir as unidades começadas; buscar insumos (e largar as
+## barras) no armazém; com a ordem pausada (falta insumo) ou sem ordem, espera.
+func _estado_fundidor() -> String:
+	var f := _fornalha_alvo()
+	var tem_barra := not barras_mao.is_empty()
+	if f == null:
+		return "buscando_insumo" if tem_barra else "idle"
+	if f.fila.comecadas() > 0:
+		return "fundindo"
+	if tem_barra:
+		return "buscando_insumo"
+	if f.fila.a_comecar() > 0 and f.falta() == "":
+		return "buscando_insumo"
+	return "idle"  # pausada (falta insumo): espera; nada é gasto
+
+
+## Armazém chama quando ele chega pra "buscar insumo": larga as barras e, no horário de trabalho, COMEÇA a
+## próxima leva (os insumos saem do armazém só agora).
+func na_armazem_fundidor(arm: Node) -> void:
+	if _visita_feita:
+		return
+	_visita_feita = true
+	var eco := get_tree().get_first_node_in_group("economy")
+	for item in barras_mao:
+		arm.add_item(item, float(barras_mao[item]))
+	if not barras_mao.is_empty():
+		_popup("+%s" % ", ".join(barras_mao.keys().map(func(k): return "%d %s" % [int(barras_mao[k]), Items.nome(k).to_lower()])), Color(0.55, 1.0, 0.5))
+	barras_mao.clear()
+	var f := _fornalha_alvo()
+	if f and periodo_agenda() in ["trabalho", "", "cafe", "almoco"] and f.fila.comecadas() == 0:
+		var n: int = f.fila.comecar_unidades(f.lote, eco)
+		if n > 0:
+			_popup("Pegou insumos: %d x (%s)" % [n, f.fila.texto_insumos(f.fila.atual().receita)], Color(1.0, 0.85, 0.45))
+	_decision_timer = 0.0
+
+
+## Fornalha chama quando sai barra: ela vai pras mãos dele.
+func pega_barras(pronto: Dictionary) -> void:
+	for item in pronto:
+		barras_mao[item] = barras_mao.get(item, 0.0) + float(pronto[item])
+	if _fornalha_alvo() == null or (_fornalha != null and _fornalha.fila.comecadas() <= 0):
+		_decision_timer = 0.0  # acabou a leva: leva as barras e busca mais
+
+
+## Fornalha chama a cada quadro com ele fundindo (anima o martelo, como na obra).
+func fundir_tick() -> void:
+	_work_timer = 0.2
+
+
 ## Bloco 84: a carga que ele ainda tem pra largar no armazém (o estado de entregar), "" = nada.
 func _entrega_pendente() -> String:
 	if wood_carrying > 0.0:
@@ -3197,6 +3288,8 @@ func _entrega_pendente() -> String:
 		return "stocking"
 	if carrying > 0.0 and not is_researcher():
 		return "storing"
+	if not barras_mao.is_empty():
+		return "buscando_insumo"  # Bloco 86: o fundidor leva as barras (sem começar leva nova fora de hora)
 	return ""
 
 
@@ -3454,7 +3547,7 @@ func _update_animation(delta: float) -> void:
 		if not lying:
 			_body.position.x = sin(Time.get_ticks_msec() * 0.07) * 0.5
 	else:
-		_body.modulate = Color.WHITE
+		_body.modulate = FUNDIDOR_TOM if is_smelter() else Color.WHITE  # Bloco 86: fundidor provisório
 
 
 func _update_hunger_label() -> void:
@@ -3527,6 +3620,7 @@ func get_save_data() -> Dictionary:
 		"refeicoes_hoje": refeicoes_hoje.keys(),  # Bloco 84
 		"refeicoes_perdidas": refeicoes_perdidas,
 		"animo_social": animo_social,  # Bloco 85
+		"barras_mao": barras_mao.duplicate(),  # Bloco 86
 	}
 
 
@@ -3546,6 +3640,11 @@ func load_save_data(d: Dictionary) -> void:
 			refeicoes_hoje[m] = true
 	refeicoes_perdidas = clampi(SaveUtil.integer(d, "refeicoes_perdidas", 0), 0, 10)
 	animo_social = clampf(SaveUtil.num(d, "animo_social", 0.0), 0.0, 50.0)  # Bloco 85 (save antigo: 0)
+	barras_mao = {}  # Bloco 86 (save antigo: nada na mão)
+	var bm := SaveUtil.dict(d, "barras_mao")
+	for k in bm:
+		if Items.onde(String(k)) == "itens" and float(bm[k]) > 0.0:
+			barras_mao[String(k)] = float(bm[k])
 	carrying = clampf(SaveUtil.num(d, "carrying", 0.0), 0.0, cargo_capacity)
 	var t := SaveUtil.text(d, "cargo_type", "ferro")
 	cargo_type = t if Ores.NAMES.has(t) else "ferro"

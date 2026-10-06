@@ -1,0 +1,72 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/fornalha.gd" id="1_forn"]
+[ext_resource type="Texture2D" path="res://assets/game/fornalha.png" id="2_sprite"]
+[ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="3_shadow"]
+[ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="4_light"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_forn"]
+radius = 42.0
+
+[sub_resource type="Gradient" id="Gradient_smoke"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(0.42, 0.4, 0.42, 0.65, 0.3, 0.3, 0.32, 0)
+
+[node name="Fornalha" type="Area2D"]
+script = ExtResource("1_forn")
+slot_count = 2
+slot_radius = Vector2(22, 30)
+slot_arc_deg = 40.0
+auto_fit_area = false
+obstacle_size = Vector2(36, 8)
+obstacle_offset = Vector2(0, -8)
+obstacle_is_rect = true
+
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -4
+position = Vector2(0, -2)
+scale = Vector2(4.4, 1.5)
+texture = ExtResource("3_shadow")
+
+[node name="Visual" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("2_sprite")
+hframes = 2
+offset = Vector2(0, -20)
+
+[node name="Smoke" type="CPUParticles2D" parent="."]
+position = Vector2(14, -74)
+emitting = false
+amount = 12
+lifetime = 1.8
+direction = Vector2(0.15, -1)
+spread = 14.0
+gravity = Vector2(5, -14)
+initial_velocity_min = 8.0
+initial_velocity_max = 18.0
+scale_amount_min = 3.0
+scale_amount_max = 6.5
+color_ramp = SubResource("Gradient_smoke")
+
+[node name="Luz" type="PointLight2D" parent="."]
+position = Vector2(0, -14)
+enabled = false
+color = Color(1, 0.52, 0.2, 1)
+energy = 0.6
+texture = ExtResource("4_light")
+texture_scale = 0.7
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_forn")
+
+[node name="StatusLabel" type="Label" parent="."]
+offset_left = -120.0
+offset_top = -136.0
+offset_right = 120.0
+offset_bottom = -82.0
+theme_override_colors/font_outline_color = Color(0.03, 0.03, 0.03, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+text = "Fornalha"
+horizontal_alignment = 1
+vertical_alignment = 2

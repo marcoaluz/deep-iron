@@ -17,7 +17,7 @@ const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village
 ## Estruturas que bloqueiam a navegação mas NÃO entram no sorteio da decoração
 ## (pra não mudar as pedras/cristais da mina de saves antigos). A decoração que
 ## cair embaixo delas é escondida depois (_clear_decor_under_extras).
-const NAV_EXTRA_GROUPS := ["enfermarias", "tavernas", "campos", "laboratorios", "escudos", "caca", "canteiros", "arsenais", "parques", "vestiarios", "coletores"]
+const NAV_EXTRA_GROUPS := ["enfermarias", "tavernas", "campos", "laboratorios", "escudos", "caca", "canteiros", "arsenais", "parques", "vestiarios", "coletores", "fornalhas"]  # Bloco 86: + fornalhas
 
 @export_group("Mapa")
 @export var map_rect: Rect2 = Rect2(-720, -440, 1440, 880)
@@ -1166,7 +1166,7 @@ func _migra_andares_antigos() -> int:
 ## Bloco 74: o que é da vila (casas, Centro, prédios) e ficou a oeste da paliçada ou EM CIMA dela (save do
 ## mapa antigo, em que a vila ocupava o oeste). A mata, a caça, a coleta e os coletores de madeira ficam.
 const VILA_SO := ["casas", "village_hub", "comedouros", "armazens", "escavadeira", "oficina", "enfermarias", "tavernas",
-	"campos", "laboratorios", "escudos", "arsenais", "parques", "vestiarios", "canteiros"]
+	"campos", "laboratorios", "escudos", "arsenais", "parques", "vestiarios", "canteiros", "fornalhas"]
 
 
 func _vila_na_floresta(node: Node) -> bool:

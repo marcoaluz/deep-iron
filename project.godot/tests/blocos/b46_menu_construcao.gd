@@ -95,6 +95,7 @@ func _process(delta: float) -> bool:
 		check(not menu.visible and placer.active and "cozinha" in placer._what, "construir fecha o menu e abre o posicionador da cozinha")
 		placer.cancel()
 		press_space()
+		g("village_hub").coletor_fixo().restaura_tudo()  # Bloco 81: o cartão só aparece com a ruína da floresta restaurada
 		menu._show_tab(menu.TAB_NAMES.find("Coleta automática"))
 		menu.refresh()
 		card(menu, "Coletor de madeira").button.emit_signal("pressed")

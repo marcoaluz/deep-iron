@@ -85,6 +85,8 @@ const ORDER_JOBS := [
 		"Treina de dia no campo e defende os portões à noite. A arma se gasta na luta: quebrou, busca outra no Arsenal."],
 	["pesquisador", "Pesquisador", "Z", "res://assets/game/note.png", "toggle_research", COLOR_RESEARCH,
 		"Trabalha no laboratório de dia, gerando pontos pra pesquisa em andamento."],
+	["fundidor", "Fundidor", "6", "res://assets/game/ui/icones/it_barra_ferro.png", "toggle_smelter", Color(1.0, 0.62, 0.32),
+		"Opera a Fornalha: busca o minério no armazém, funde as barras encomendadas e leva pro armazém. Sem ordem, não faz nada."],
 ]
 const TOP_BAR_H := 40.0
 const SIDE_MARGIN := 10.0
@@ -509,6 +511,7 @@ func _build_buildings_column() -> void:
 	if _hub:
 		_add_panel("coletor", preload("res://scripts/core/coletor_panel.gd"), _hub)  # Bloco 45
 		_add_panel("coletor_minerio", preload("res://scripts/core/coletor_minerio_panel.gd"), _hub)  # Bloco 57
+		_add_panel("fornalha", preload("res://scripts/core/fornalha_panel.gd"), _hub)  # Bloco 86
 	if _dig:
 		_add_panel("escavadeira", preload("res://scripts/core/escavadeira_panel.gd"), _dig)
 	if _oficina:
@@ -588,7 +591,7 @@ func _fill_hints() -> void:
 		"Ordens:  botão direito = mover / minerar a jazida clicada",
 		"Funções:  %s minerador  •  %s caçador  •  %s médico  •  %s engenheiro  •  %s cozinheiro  •  %s lenhador  •  %s guarda  •  %s pesquisador  •  %s sem função  •  %s turno extra" % [
 			k.call("minerador"), k.call("cacador"), k.call("medico"), k.call("engenheiro"), k.call("cozinheiro"), k.call("lenhador"),
-			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")],
+			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")] + "  •  %s fundidor" % k.call("fundidor"),
 		"Economia:  %s vender minério  •  %s recrutar" % [k.call("vender"), k.call("recrutar")],
 		"Trabalho:  %s = TRABALHADORES — marcar áreas (madeira, alimentos, mina) e quantos trabalham em cada uma (até 5)" % k.call("painel_trabalho"),
 		"Construir:  %s = menu de construção (casas, cozinha, lazer, pesquisa, defesa, coleta automática…)" % k.call("construir"),

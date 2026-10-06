@@ -11,7 +11,7 @@ extends PanelContainer
 
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const Icones := preload("res://scripts/ui/icones.gd")
-const TAB_NAMES := ["Moradia", "Alimentação", "Saúde", "Lazer", "Pesquisa", "Defesa e equipamento", "Coleta automática", "Vila"]
+const TAB_NAMES := ["Moradia", "Alimentação", "Saúde", "Lazer", "Pesquisa", "Defesa e equipamento", "Coleta automática", "Produção", "Vila"]
 
 var _hud: CanvasLayer
 var _tabs_row: HBoxContainer
@@ -253,6 +253,14 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return hub.coletor_minerio_cost_text(),
 					"reason": func(): return hub.coletor_minerio_block_reason(),
 					"act": func(): hub.build_coletor_minerio()})
+		"Produção":  # Bloco 86: o que transforma (fornalha; o ferreiro no Bloco 87)
+			if hub:
+				out.append({"name": "Fornalha", "tex": "fornalha", "frames": 2, "many": true, "scales": true,
+					"desc": "Funde minério em barra (ferro, cobre, prata, lingote solar; aço no estágio 3) — só por ordem, com quantidade. Opera: o FUNDIDOR.",
+					"count": func(): return _count("fornalhas"),
+					"cost": func(): return hub.fornalha_cost_text(),
+					"reason": func(): return hub.fornalha_block_reason(),
+					"act": func(): hub.build_fornalha()})
 		"Vila":
 			if hub:
 				out.append({"name": "Expandir a vila", "tex": "centro_vila", "frames": 5,
