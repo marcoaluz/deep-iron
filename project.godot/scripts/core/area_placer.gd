@@ -7,6 +7,8 @@ extends Node2D
 ##                                    losango do terreno); soltar cria a área (work_areas.criar) e abre a
 ##                                    janela dos trabalhadores nela
 ##   Esc ou botão direito          -> cancela
+## Bloco 93: begin_custom(nome, valida, confirma, custo) — o mesmo arrastar pra outro sistema (o cemitério do
+## tamanho que o jogador quiser): valida(rect) -> motivo ("" = vale), confirma(rect) -> bool, custo(rect) -> texto.
 ## A roda do mouse e WASD continuam movendo a câmera enquanto isso. O desenho (verde/vermelho) é da vista
 ## iso (iso_view.gd: _draw_areas); na vista de cima (testes) é este nó que desenha.
 
@@ -16,6 +18,8 @@ var active := false
 var tipo := ""
 var arrastando := false
 var reason := ""  # por que o retângulo atual não vale ("" = vale)
+## Bloco 93: o modo de outro sistema (vazio = área de trabalho).
+var _custom := {}
 var _a := Vector2.ZERO
 var _b := Vector2.ZERO
 var _hint_layer: CanvasLayer
@@ -50,7 +54,22 @@ func begin(novo_tipo: String) -> void:
 	var wa := _wa()
 	if wa == null or not wa.TIPOS.has(novo_tipo):
 		return
+	_custom = {}
 	tipo = novo_tipo
+	active = true
+	arrastando = false
+	reason = ""
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud and hud.has_method("close_panels"):
+		hud.close_panels()
+	_refresh()
+	_set_visible(true)
+
+
+## Bloco 93: arrastar um retângulo pra outro sistema (o cemitério).
+func begin_custom(nome: String, valida: Callable, confirma: Callable, custo: Callable = Callable()) -> void:
+	_custom = {"nome": nome, "valida": valida, "confirma": confirma, "custo": custo}
+	tipo = ""
 	active = true
 	arrastando = false
 	reason = ""
@@ -124,6 +143,18 @@ func drag(from: Vector2, to: Vector2) -> void:
 func try_confirm():
 	if not active:
 		return null
+	if not _custom.is_empty():
+		reason = _custom.valida.call(rect())
+		if reason == "" and not _custom.confirma.call(rect()):
+			reason = "não deu pra construir aqui"
+		if reason != "":
+			Audio.error()
+			_refresh()
+			return null
+		Audio.place_sound()
+		_custom = {}
+		_end(null)
+		return true
 	var wa := _wa()
 	reason = wa.motivo_invalido(tipo, rect()) if wa else "sem sistema de áreas"
 	if reason != "":
@@ -143,6 +174,18 @@ func try_confirm():
 
 
 func _refresh() -> void:
+	if not _custom.is_empty():
+		if arrastando:
+			reason = _custom.valida.call(rect())
+		var t := "Arraste no mapa pra marcar %s (o tamanho é você que escolhe)  •  Esc / botão direito cancela" % _custom.nome
+		if arrastando and _custom.custo.is_valid():
+			t += "\n" + String(_custom.custo.call(rect()))
+		if reason != "":
+			t += "\n" + reason
+		_hint.text = t
+		_hint.add_theme_color_override("font_color", Color(1.0, 0.55, 0.45) if reason != "" else Color(1.0, 0.92, 0.7))
+		queue_redraw()
+		return
 	var wa := _wa()
 	var info: Dictionary = wa.TIPOS.get(tipo, {}) if wa else {}
 	if arrastando:

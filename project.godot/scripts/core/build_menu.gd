@@ -283,6 +283,13 @@ func _defs(tab: String) -> Array:
 					"reason": func(): return "",
 					"act": func(): dm.comecar_remover(), "label": "Remover"})
 		"Culto":  # Bloco 88: a igreja (missa, funeral, aconselhamento)
+			if hub:  # Bloco 93: o cemitério (o jogador arrasta o tamanho; pode ter mais de um)
+				out.append({"name": "Cemitério", "tex": "cemiterio", "frames": 1, "many": true,
+					"tag": "%d construído%s" % [hub.cemiterios().size(), "" if hub.cemiterios().size() == 1 else "s"] if not hub.cemiterios().is_empty() else "você escolhe o tamanho",
+					"desc": "Arraste no mapa o tamanho. Começa vazio: o padre traz quem se for e enterra (cruz ou lápide com o nome e o dia). Com a pesquisa Ritos fúnebres, o padre faz o funeral aqui e o ânimo sobe um pouco.",
+					"cost": func(): return "por tamanho (%d cr + %d por vaga; ferro e madeira por trecho de cerca)" % [hub.cemiterio_credits_base, hub.cemiterio_credits_por_vaga],
+					"reason": func(): return hub.cemiterio_block_reason(),
+					"act": func(): hub.build_cemiterio(), "label": "Marcar"})
 			if hub and hub.igreja() == null:
 				out.append({"name": "Igreja", "tex": "igreja", "frames": 1, "tag": "uma só",
 					"desc": "Missa no domingo (todos vão), funeral pra quem se for (alivia o luto) e o padre aconselha quem anda zangado. Também é ponto da hora social.",

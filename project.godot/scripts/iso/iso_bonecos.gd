@@ -227,7 +227,10 @@ static func pose(w: Node, iso_dir: int, clock: float, passo: float = -1.0, mexen
 	var out := {"hidden": false, "tex": tex, "n": n, "frame": frame, "ancora": Vector2(info.ancora[0], info.ancora[1]) - aj,
 		"quadro": Vector2(info.quadro[0], info.quadro[1]), "top": Vector2(top[0], top[1]) + aj, "altura": -(float(top[1]) + aj.y),
 		"anim": anim, "pasta": hit[0], "dir": d}
-	if cargo and moving and not lying:
+	var corpo: Dictionary = w.get("carregando_corpo") if w.get("carregando_corpo") is Dictionary else {}
+	if not corpo.is_empty() and not lying:
+		out["saco"] = _saco(d, out.top, "corpo")  # Bloco 93: o padre com o corpo na mortalha nos ombros
+	elif cargo and moving and not lying:
 		out["saco"] = _saco(d, out.top)
 	# Prompts 2 e 14: na MÃO — a placa de greve (protestando) e o cesto de coleta (caçador sem arco)
 	var hand := ""
@@ -289,8 +292,8 @@ static func _item_name(w: Node) -> String:
 
 ## Saco nas costas (saco.py): canto de cima-esquerdo relativo ao pé, na escala da altura do
 ## boneco naquele quadro (sobe e desce com o passo). SE atrás; SO espelho atrás; NE/NO na frente.
-static func _saco(d: String, top: Vector2) -> Dictionary:
-	var s: Dictionary = data().get("saco", {})
+static func _saco(d: String, top: Vector2, chave := "saco") -> Dictionary:
+	var s: Dictionary = data().get(chave, data().get("saco", {}))
 	var tex := texture(s.get("img", "saco_costas.png"))
 	var off: Array = s.get("offset_do_pe", [-20.7, -67])
 	var esc: float = -top.y / maxf(float(s.get("altura_ref", 76)), 1.0)

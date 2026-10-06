@@ -1467,7 +1467,7 @@ func lote_perto(p: Vector2, raio: float = 56.0) -> Vector2:
 
 
 func clear_decor_under_extras() -> void:
-	var groups: Array = NAV_EXTRA_GROUPS + ["elevador_abismo", "elevadores", "barricadas", "village_hub", "armazens", "comedouros"]
+	var groups: Array = NAV_EXTRA_GROUPS + ["elevador_abismo", "elevadores", "barricadas", "village_hub", "armazens", "comedouros", "cemiterios"]
 	if has_iso_map():  # Prompt 30: os prédios novos são maiores; toda estrutura limpa a pegada dela
 		groups = groups + ["casas", "escavadeira", "oficina", "elevador"]
 	for group in groups:

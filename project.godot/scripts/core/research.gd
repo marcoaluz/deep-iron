@@ -20,7 +20,7 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 const LAB_SCENE := preload("res://scenes/props/laboratorio.tscn")
 const LAB_TEXTURE := preload("res://assets/game/laboratorio.png")
 const Canteiro := preload("res://scripts/props/canteiro.gd")
-const ORDER := ["carrinhos", "explosivos", "escoramento", "trajes", "ventilacao", "bombas", "medicina", "radio", "hidroponia",
+const ORDER := ["carrinhos", "explosivos", "escoramento", "trajes", "ventilacao", "bombas", "medicina", "radio", "hidroponia", "ritos",
 	"estudo_solar", "satelite", "holofotes", "escudo"]
 ## points = pontos de pesquisa; cost = créditos, minério, madeira; ore = tipo do minério.
 const TECHS := {
@@ -51,6 +51,9 @@ const TECHS := {
 	"hidroponia": {"name": "Hidroponia", "branch": "Vila", "req": "medicina", "excl": "radio", "points": 120,
 		"cost": Vector3i(250, 0, 60), "ore": "",
 		"desc": "A horta rende o dobro e a cozinha guarda +60 de comida."},
+	"ritos": {"name": "Ritos fúnebres", "branch": "Vila", "req": "medicina", "excl": "", "points": 90,
+		"cost": Vector3i(150, 0, 40), "ore": "",
+		"desc": "O padre faz o funeral de quem se foi (no cemitério, depois do enterro; sem cemitério, na igreja): a vila se despede, o luto pesa menos e o ânimo sobe um pouco."},
 	"estudo_solar": {"name": "Estudo da explosão solar", "branch": "Sol", "req": "", "excl": "", "points": 150,
 		"cost": Vector3i(300, 30, 0), "ore": "prata",
 		"desc": "Entender o que aconteceu com o sol. Abre os projetos do ramo (e o aviso das ondas solares)."},

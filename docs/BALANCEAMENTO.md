@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **814 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (78)
 
@@ -121,7 +121,7 @@ Total: **814 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `max_steps_per_second` | 8.0 |  | Máximo de passos tocando por segundo somando todos os ipezinhos. |
 | `sfx_max_distance` | 900.0 |  | Distância (em pixels do mundo) além da qual efeitos posicionais não tocam. |
 
-## `scripts/core/calendario.gd` (14)
+## `scripts/core/calendario.gd` (16)
 
 **Padre**
 
@@ -146,6 +146,13 @@ Total: **814 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `funeral_horas` | 1.0 |  | Horas de funeral na igreja, começando na hora social depois da morte. |
 | `funeral_alivio` | 12.0 |  | Quanto o luto da vila cai com cada funeral. |
+
+**Cemitério (Bloco 93)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `enterro_tempo` | 8.0 |  | Segundos que o padre leva enterrando, na vaga. |
+| `enterro_alcance` | 14.0 |  | Distância (px) em que o padre alcança o corpo / a vaga. |
 
 **Domingo à tarde**
 
@@ -629,7 +636,7 @@ Total: **814 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `founding_on_new_game` | true |  | Bloco 37: partida nova começa com a FUNDAÇÃO (o jogador escolhe onde ficam o Centro da Vila e o Armazém; ver founding.gd). false = começa com o layout da cena (testes). |
 
-## `scripts/core/morale.gd` (34)
+## `scripts/core/morale.gd` (36)
 
 **Greve**
 
@@ -661,6 +668,13 @@ Total: **814 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `grief_per_death` | 20.0 |  |  |
 | `grief_max` | 40.0 |  |  |
 | `grief_time` | 300.0 |  | Segundos pra um luto de grief_per_death sumir. |
+
+**Funeral (Bloco 93)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `funeral_bonus` | 5.0 |  | Ânimo a mais pra vila toda depois de um funeral digno (pesquisa "Ritos fúnebres"), e por quantos segundos. |
+| `funeral_bonus_tempo` | 240.0 |  |  |
 
 **Vila**
 
@@ -1175,7 +1189,7 @@ Total: **814 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `level_min_stage` | [0, 2, 3] |  | Pré-requisitos de cada nível [nível 1, 2, 3]: estágio mínimo do Centro da Vila e pesquisa ("" = nenhuma). |
 | `level_research` | ["", "", "medicina"] |  |  |
 
-## `scripts/props/centro_vila.gd` (61)
+## `scripts/props/centro_vila.gd` (69)
 
 **Estágios da vila**
 
@@ -1247,6 +1261,19 @@ Total: **814 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `igreja_wood` | 80 |  |  |
 | `igreja_build_time` | 50.0 |  |  |
 | `igreja_estagio` | 2 |  | Estágio mínimo da vila pra construir. |
+
+**Cemitério (Bloco 93)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `cemiterio_credits_base` | 40 |  | O jogador marca o tamanho: o custo é por VAGA (túmulo) e por TRECHO de cerca (24 px); a obra também. |
+| `cemiterio_credits_por_vaga` | 6 |  |  |
+| `cemiterio_wood_por_trecho` | 3 |  |  |
+| `cemiterio_ore_por_trecho` | 1 |  |  |
+| `cemiterio_segundos_base` | 12.0 |  |  |
+| `cemiterio_segundos_por_trecho` | 1.2 |  |  |
+| `cemiterio_max_trechos` | Vector2i(10, 8) |  | Tamanho em trechos de cerca (mínimo 3 x 2 sempre; máximo aqui). |
+| `cemiterio_estagio` | 2 |  | Estágio mínimo da vila. |
 
 **Fornalha (Bloco 86)**
 

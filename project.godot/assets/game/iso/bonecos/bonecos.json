@@ -55853,5 +55853,14 @@
    -66.0,
    -55.0
   ]
+ },
+ "corpo": {
+  "img": "corpo_costas.png",
+  "offset_do_pe": [
+   -20.0,
+   -72
+  ],
+  "altura_ref": 76,
+  "obs": "Bloco 93: o corpo na mortalha nos ombros do padre (sobreposto à caminhada, como o saco)"
  }
 }

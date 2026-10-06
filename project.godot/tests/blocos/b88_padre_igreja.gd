@@ -154,6 +154,7 @@ func _process(delta: float) -> bool:
 			print("  %s: %d na praça" % [dn.hora_texto(), praca.size()])
 			check(praca.size() >= ws().size() - 1, "festival: todo mundo na praça (%d)" % praca.size())
 			print("== funeral")
+			g("research").done.append("ritos")  # Bloco 93: o funeral é da pesquisa "Ritos fúnebres" (sem cemitério: na igreja)
 			Engine.time_scale = 1.0
 			dn.day = 8
 			dn._pula_para(dn.tempo_da_hora(15.0))

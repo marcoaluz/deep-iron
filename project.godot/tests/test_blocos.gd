@@ -382,5 +382,9 @@ func test_b92_arte_oficios() -> void:
 	run_bloco("b92_arte_oficios.gd")
 
 
+func test_b93_cemiterio() -> void:
+	run_bloco("b93_cemiterio.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

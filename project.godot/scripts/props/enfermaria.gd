@@ -226,7 +226,9 @@ func record_death(worker: Node2D) -> void:
 		"position": SaveUtil.vec2_to_array(pos),
 	}
 	memorial.append(entry)
-	_spawn_grave(pos, entry.name)
+	var cal := get_tree().get_first_node_in_group("calendario")
+	if not (cal and cal.has_method("tem_cemiterio") and cal.tem_cemiterio()):
+		_spawn_grave(pos, entry.name)  # Bloco 93: com cemitério, o padre leva o corpo e enterra lá
 	patient_died.emit(entry.name, entry.cause)
 
 

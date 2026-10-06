@@ -162,6 +162,18 @@ const UPGRADE_NAMES := {
 @export var igreja_build_time: float = 50.0
 ## Estágio mínimo da vila pra construir.
 @export_range(1, 5) var igreja_estagio: int = 2
+@export_group("Cemitério (Bloco 93)")
+## O jogador marca o tamanho: o custo é por VAGA (túmulo) e por TRECHO de cerca (24 px); a obra também.
+@export var cemiterio_credits_base: int = 40
+@export var cemiterio_credits_por_vaga: int = 6
+@export var cemiterio_wood_por_trecho: int = 3
+@export var cemiterio_ore_por_trecho: int = 1
+@export var cemiterio_segundos_base: float = 12.0
+@export var cemiterio_segundos_por_trecho: float = 1.2
+## Tamanho em trechos de cerca (mínimo 3 x 2 sempre; máximo aqui).
+@export var cemiterio_max_trechos: Vector2i = Vector2i(10, 8)
+## Estágio mínimo da vila.
+@export_range(1, 5) var cemiterio_estagio: int = 2
 @export_group("Fornalha (Bloco 86)")
 ## Construir a fornalha: SÓ créditos e minério (madeira nenhuma: não trava o começo); segundos de engenheiro.
 @export var fornalha_credits: int = 180
@@ -861,6 +873,124 @@ func spawn_igreja(pos: Vector2) -> Node2D:
 	get_parent().add_child(ig)
 	_coletor_mudou()  # (navegação e decoração por baixo)
 	return ig
+
+
+# ------------------------------------------------------------ cemitério (Bloco 93)
+const CEMITERIO := preload("res://scripts/props/cemiterio.gd")
+
+
+func cemiterios() -> Array:
+	return get_tree().get_nodes_in_group("cemiterios")
+
+
+## Custo de um cemitério desse tamanho: (créditos, ferro, madeira) e os segundos de engenheiro em w.
+func cemiterio_custo(r: Rect2) -> Vector4:
+	var a := CEMITERIO.alinha(r)
+	var trechos := int(roundf(a.size.x / CEMITERIO.TRECHO) + roundf(a.size.y / CEMITERIO.TRECHO)) * 2
+	var tmp: Node2D = CEMITERIO.new()
+	tmp.rect = a
+	var vagas: int = tmp.vagas_total()
+	tmp.free()
+	return Vector4(cemiterio_credits_base + cemiterio_credits_por_vaga * vagas, cemiterio_ore_por_trecho * trechos,
+		cemiterio_wood_por_trecho * trechos, cemiterio_segundos_base + cemiterio_segundos_por_trecho * trechos)
+
+
+func cemiterio_custo_texto(r: Rect2) -> String:
+	var c := cemiterio_custo(r)
+	var a := CEMITERIO.alinha(r)
+	var tmp: Node2D = CEMITERIO.new()
+	tmp.rect = a
+	var vagas: int = tmp.vagas_total()
+	tmp.free()
+	return "%d vagas  •  %d cr + %d ferro + %d madeira" % [vagas, int(c.x), int(c.y), int(c.z)]
+
+
+func cemiterio_block_reason() -> String:
+	if level < cemiterio_estagio:
+		return "precisa da vila no estágio %s" % STAGE_NAMES[clampi(cemiterio_estagio, 1, STAGE_NAMES.size()) - 1]
+	return ""
+
+
+## Por que ESTE terreno não vale ("" = vale): tamanho, chão andável, nada construído por cima, recursos.
+func motivo_cemiterio(r: Rect2) -> String:
+	var b := cemiterio_block_reason()
+	if b != "":
+		return b
+	var a := CEMITERIO.alinha(r)
+	var nx := int(roundf(a.size.x / CEMITERIO.TRECHO))
+	var ny := int(roundf(a.size.y / CEMITERIO.TRECHO))
+	if nx > cemiterio_max_trechos.x or ny > cemiterio_max_trechos.y:
+		return "grande demais (até %d x %d trechos de cerca)" % [cemiterio_max_trechos.x, cemiterio_max_trechos.y]
+	var map := get_world_2d().navigation_map
+	var y := a.position.y
+	while y <= a.end.y:
+		var x := a.position.x
+		while x <= a.end.x:
+			if NavigationServer2D.map_get_closest_point(map, Vector2(x, y)).distance_to(Vector2(x, y)) > 3.0:
+				return "o terreno precisa ser chão livre (sem pedra, água ou parede)"
+			x += 12.0
+		y += 12.0
+	var env := get_tree().get_first_node_in_group("environment")
+	var grupos: Array = (env.STATION_GROUPS + env.NAV_EXTRA_GROUPS if env else []) + ["casas", "village_hub", "armazens", "comedouros", "cemiterios"]
+	grupos = grupos.filter(func(g): return g not in ["arvores", "coleta_comida", "canteiros"])  # (árvore e horta: a decoração sai)
+	for g in grupos:
+		for n in get_tree().get_nodes_in_group(g):
+			if n is Node2D and a.grow(6.0).intersects(_pegada(n)):
+				return "tem construção no terreno"
+	var c := cemiterio_custo(a)
+	var eco := _economy()
+	return eco.missing_text(int(c.x), int(c.y), "ferro", int(c.z), "ferro") if eco else "sem recursos"
+
+
+## A pegada de uma construção no chão (a do desenho da vista iso, ou o obstáculo; sem nenhum, um quadrado no pé).
+func _pegada(n: Node2D) -> Rect2:
+	if n.has_method("decor_clear_rect") and n.is_in_group("cemiterios"):
+		return n.decor_clear_rect()
+	var r := IsoArt.base_rect(n)
+	if n.has_method("get_obstacle_outline"):
+		var o: PackedVector2Array = n.get_obstacle_outline()
+		if o.size() >= 3:
+			var bb := Rect2(o[0], Vector2.ZERO)
+			for q in o:
+				bb = bb.expand(q)
+			r = bb if not r.has_area() else r.merge(bb)
+	return r if r.has_area() else Rect2(n.global_position - Vector2(16, 16), Vector2(32, 32))
+
+
+func build_cemiterio() -> bool:
+	if cemiterio_block_reason() != "":
+		Audio.error()
+		return false
+	var ap := get_tree().get_first_node_in_group("area_placer")
+	if ap == null:
+		return false
+	ap.begin_custom("o cemitério", motivo_cemiterio, _confirm_cemiterio, cemiterio_custo_texto)
+	return true
+
+
+func _confirm_cemiterio(r: Rect2) -> bool:
+	if motivo_cemiterio(r) != "":
+		return false
+	var c := cemiterio_custo(r)
+	if not _economy().spend(int(c.x), int(c.y), "ferro", int(c.z)):
+		return false
+	spawn_cemiterio(r, c.w)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Cemitério encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_cemiterio(r: Rect2, segundos: float) -> Node2D:
+	var cem: Node2D = CEMITERIO.new()
+	cem.configura(r, segundos)
+	var n := cemiterios().size()
+	cem.name = "Cemiterio" if n == 0 else "Cemiterio%d" % (n + 1)
+	get_parent().add_child(cem)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env and env.has_method("_limpa_decor"):
+		env._limpa_decor(cem.decor_clear_rect())  # (a decoração do mapa não fica dentro da cerca)
+	return cem
 
 
 # ------------------------------------------------------------ fornalha (Bloco 86)

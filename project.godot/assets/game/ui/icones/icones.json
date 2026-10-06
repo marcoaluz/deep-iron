@@ -79,7 +79,8 @@
   "vel_3",
   "fundidor",
   "ferreiro",
-  "padre"
+  "padre",
+  "pq_ritos"
  ],
  "predios": [
   "casa",
@@ -96,6 +97,9 @@
   "centro_vila",
   "escudo",
   "armazem",
-  "escavadeira"
+  "escavadeira",
+  "fornalha",
+  "igreja",
+  "cemiterio"
  ]
 }

@@ -91,6 +91,10 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 93: calendario.gd "calendario" + {cemiterios [{rect [x, y, w, h], total, feito, pronto, covas [{nome, dia,
+##     estacao, causa, tipo, variante, vaga}], obra}], corpos [{info {nome, dia, estacao, causa}, pos [x, y]}]} (o
+##     corpo que o padre carregava volta pro chão); funerais ganham "onde" ("igreja"/"cemiterio"); morale.gd
+##     "funeral_left". Save antigo: sem cemitério, sem corpos, funeral na igreja.
 ##   Bloco 89: caminhos.gd "caminhos" {tamanho, terra [[x, y]], cascalho [...], pedra [...]} (células da grade;
 ##     save antigo: sem caminhos).
 ##   Bloco 88: calendario.gd "calendario" {padre_chegou, escolha, escolha_dia, funerais [{nome, dia}], avisou_dia,

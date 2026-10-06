@@ -8,6 +8,9 @@ signal died(worker_name: String)
 const STATE_LABELS := {
 	"social": "hora social",  # Bloco 85
 	"padre": "na igreja",  # Bloco 88
+	"buscando_corpo": "buscando um corpo",  # Bloco 93
+	"levando_corpo": "levando ao cemitério",
+	"enterrando": "enterrando",
 	"buscando_insumo": "indo ao armazém (insumos)",  # Bloco 86
 	"fundindo": "fundindo",
 	"idle": "ocioso",
@@ -1091,6 +1094,8 @@ func _choose_state() -> String:
 
 func _decide_next_action() -> void:
 	var desired := _choose_state()
+	if not carregando_corpo.is_empty() and desired != "padre":
+		_larga_corpo()  # Bloco 93: emergência no meio do caminho: o corpo volta pro chão (ele busca depois)
 
 	if desired == "home":
 		_release_station()
@@ -1105,12 +1110,17 @@ func _decide_next_action() -> void:
 		return
 
 	if desired == "padre":  # Bloco 88: o padre fica na porta da igreja (sem igreja: na praça)
+		var cal := get_tree().get_first_node_in_group("calendario")
+		if cal and _padre_enterro(cal):
+			return  # Bloco 93: buscando, levando ou enterrando alguém
 		if _ai_state != "padre":
 			_release_station()
 			_set_state("padre")
-		var cal := get_tree().get_first_node_in_group("calendario")
 		var ig: Node = cal.igreja() if cal else null
 		var dest: Vector2 = ig.altar_pos() if ig else (_village_hub().global_position + Vector2(0, 70) if _village_hub() else global_position)
+		var fl: Node = cal.funeral_lugar_agora() if cal else null
+		if fl != null and fl.has_method("portao_pos"):
+			dest = fl.portao_pos()  # Bloco 93: o funeral é no cemitério
 		if global_position.distance_to(dest) > 12.0 and (not _moving or _target.distance_to(dest) > 2.0):
 			_go_to(dest)
 		elif cal and cal.pregando_agora():
@@ -2309,6 +2319,8 @@ func has_no_job() -> bool:
 func set_job(new_job: String) -> void:
 	if new_job == ROLE_PRIEST and motivo_padre() != "":
 		return  # Bloco 92: só homem vira padre, e a vila tem um só (main.gd avisa o motivo)
+	if new_job != ROLE_PRIEST and not carregando_corpo.is_empty():
+		_larga_corpo()  # Bloco 93: deixou de ser padre com um corpo nos ombros
 	if not new_job in JOBS:
 		push_warning("Ipezinho: função desconhecida '%s'" % new_job)
 		return
@@ -2934,8 +2946,12 @@ func _die() -> void:
 		inf.record_death(self)  # o HUD mostra a faixa pelo sinal patient_died
 	Audio.toll()
 	var cal := get_tree().get_first_node_in_group("calendario")
+	if not carregando_corpo.is_empty():
+		_larga_corpo()
 	if cal:
 		cal.on_morte(_display())  # Bloco 88: funeral na hora social seguinte
+		if cal.tem_cemiterio():
+			cal.novo_corpo(_display(), global_position, String(injury_cause))  # Bloco 93: o padre vem buscar
 	died.emit(_display())
 	var main := get_tree().get_first_node_in_group("game_main")
 	if main and main.is_selected(self):
@@ -3287,6 +3303,10 @@ func _mostra_balao(icone: String) -> void:
 # ------------------------------------------------------------ fundidor (Bloco 86)
 ## Barras prontas que ele leva pro armazém ({item: qtd}).
 var barras_mao: Dictionary = {}
+## Bloco 93: o corpo que o padre leva nos ombros ({nome, dia, estacao, causa}; vazio = nada).
+var carregando_corpo: Dictionary = {}
+var _corpo_alvo: Node2D = null
+var _enterro_ini := -1.0
 var _fornalha: Node = null
 var _visita_feita := false
 
@@ -3303,6 +3323,83 @@ func is_smith() -> bool:
 ## Bloco 88: o padre.
 func is_priest() -> bool:
 	return job == ROLE_PRIEST
+
+
+## Bloco 93: o padre e os mortos (com cemitério). De dia e fora da missa/funeral: vai até o corpo que espera (o
+## mais perto, reservado pra ele), pega (o corpo sai do chão e vai nos ombros: iso_bonecos "corpo"), leva até a
+## vaga do cemitério com lugar e enterra (enterro_tempo segundos, rezando: a animação "pregar"); a cruz ou a
+## lápide aparece (cemiterio.enterra) e, com os ritos, o funeral é marcado (calendario.on_enterro).
+## Devolve true enquanto está nisso.
+func _padre_enterro(cal: Node) -> bool:
+	if _is_night() or cal.pregando_agora():
+		return false
+	var dest_cem: Node = cal.cemiterio_com_vaga(global_position)
+	if not carregando_corpo.is_empty():
+		if dest_cem == null:
+			_larga_corpo()  # (o cemitério encheu ou sumiu)
+			return false
+		var vaga: Vector2 = dest_cem.vaga_pos()
+		if global_position.distance_to(vaga) > cal.enterro_alcance:
+			if _ai_state != "levando_corpo":
+				_release_station()
+				_set_state("levando_corpo")
+			if not _moving or _target.distance_to(vaga) > 2.0:
+				_go_to(vaga)
+			_enterro_ini = -1.0
+			return true
+		if _ai_state != "enterrando":
+			_set_state("enterrando")
+			_moving = false
+		if _enterro_ini < 0.0:
+			_enterro_ini = Time.get_ticks_msec() / 1000.0
+		_work_timer = decision_interval * 1.2  # rezando na cova
+		if Time.get_ticks_msec() / 1000.0 - _enterro_ini >= cal.enterro_tempo / maxf(Engine.time_scale, 0.01):
+			var info := carregando_corpo.duplicate()
+			carregando_corpo = {}
+			_enterro_ini = -1.0
+			dest_cem.enterra(info)
+			cal.on_enterro(String(info.get("nome", "?")))
+			_work_timer = 0.0
+			_decision_timer = 0.0
+		return true
+	if dest_cem == null:
+		return false
+	if _corpo_alvo == null or not is_instance_valid(_corpo_alvo) or not _corpo_alvo.livre_pra(self):
+		_corpo_alvo = null
+		for c in get_tree().get_nodes_in_group("corpos"):
+			if c.livre_pra(self) and (_corpo_alvo == null or c.global_position.distance_to(global_position) < _corpo_alvo.global_position.distance_to(global_position)):
+				_corpo_alvo = c
+	if _corpo_alvo == null:
+		return false
+	_corpo_alvo.reservado_por = self
+	if global_position.distance_to(_corpo_alvo.global_position) > cal.enterro_alcance:
+		if _ai_state != "buscando_corpo":
+			_release_station()
+			_set_state("buscando_corpo")
+		if not _moving or _target.distance_to(_corpo_alvo.global_position) > 2.0:
+			_go_to(_corpo_alvo.global_position)
+		return true
+	carregando_corpo = _corpo_alvo.info()  # pegou: vai nos ombros
+	_corpo_alvo.get_parent().remove_child(_corpo_alvo)
+	_corpo_alvo.queue_free()
+	_corpo_alvo = null
+	_popup("Levando %s" % String(carregando_corpo.get("nome", "")), Color(0.85, 0.82, 0.95))
+	_decision_timer = 0.0
+	return true
+
+
+## O corpo que ele carrega volta pro chão onde ele está (outra emergência, trocou de função, morreu).
+func _larga_corpo() -> void:
+	var cal := get_tree().get_first_node_in_group("calendario") if is_inside_tree() else null
+	if cal and not carregando_corpo.is_empty():
+		var c: Node2D = cal.CORPO.new()
+		c.monta(carregando_corpo)
+		c.position = global_position + Vector2(8, 4)
+		var hub := get_tree().get_first_node_in_group("village_hub")
+		(hub.get_parent() if hub else get_parent()).add_child(c)
+	carregando_corpo = {}
+	_enterro_ini = -1.0
+	_corpo_alvo = null
 
 
 ## Bloco 92: por que ESTE ipezinho não pode virar padre agora ("" = pode): só homem; um padre por vila; e a

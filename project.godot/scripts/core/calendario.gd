@@ -10,6 +10,11 @@ extends Node
 ##   emergência vão (a agenda vira "missa"; o médico segue de plantão). Quem foi ganha o fator "foi à missa".
 ## - FUNERAL: quem morre (ipezinho._die) ganha um funeral na hora social seguinte (funeral_horas na igreja);
 ##   no fim o luto da vila (morale.grief) cai funeral_alivio. Sem padre ou sem igreja: só o luto de sempre.
+## - Bloco 93: CEMITÉRIO (cemiterio.gd, o terreno que o jogador marca) — com ele, quem morre deixa o CORPO
+##   (corpo.gd) onde caiu; o PADRE vai buscar, leva e enterra (ipezinho._padre_enterro): a cruz ou a lápide
+##   aparece com o nome e quando morreu. O FUNERAL só existe com a pesquisa "Ritos fúnebres" (research "ritos"):
+##   com cemitério ele é no cemitério, depois do enterro; sem cemitério, na igreja como antes. No fim do
+##   funeral, além do alívio do luto, a vila ganha o fator "funeral digno" (morale.funeral_bonus).
 ## - ACONSELHAMENTO: quem fica na igreja (missa, funeral ou hora social) perde zanga
 ##   (aconselhamento_por_segundo; com o padre lá, x2).
 ## - DOMINGO À TARDE (tarde_inicio..fim do expediente): o jogador escolhe — FESTIVAL (a festa do morale.gd:
@@ -19,6 +24,8 @@ extends Node
 ##   mais). O HUD mostra o próximo evento (coluna da direita e a dica do relógio).
 
 const WORKER_SCENE := preload("res://scenes/characters/Ipezinho.tscn")
+const CEMITERIO := preload("res://scripts/props/cemiterio.gd")
+const CORPO := preload("res://scripts/props/corpo.gd")
 
 @export_group("Padre")
 ## Estágio da vila em que o padre chega (2 = Vilarejo).
@@ -41,6 +48,12 @@ const WORKER_SCENE := preload("res://scenes/characters/Ipezinho.tscn")
 ## Quanto o luto da vila cai com cada funeral.
 @export var funeral_alivio: float = 12.0
 
+@export_group("Cemitério (Bloco 93)")
+## Segundos que o padre leva enterrando, na vaga.
+@export var enterro_tempo: float = 8.0
+## Distância (px) em que o padre alcança o corpo / a vaga.
+@export var enterro_alcance: float = 14.0
+
 @export_group("Domingo à tarde")
 ## A tarde do domingo começa (até o fim do expediente).
 @export_range(0.0, 24.0, 0.25) var tarde_inicio: float = 13.0
@@ -59,7 +72,7 @@ var padre_chegou := false
 ## A escolha do domingo de hoje ("festival", "livre", "trabalhar"; "" = ainda não escolheu) e o dia dela.
 var escolha := ""
 var escolha_dia := -1
-## Funerais esperando: [{nome, dia}].
+## Funerais esperando: [{nome, dia, onde ("igreja"/"cemiterio")}].
 var funerais: Array = []
 ## Último domingo em que a janela da escolha abriu sozinha.
 var _avisou_dia := -1
@@ -155,7 +168,80 @@ func periodo_domingo(h: float) -> String:
 ## Bloco 92: o padre está pregando agora (missa ou funeral)? A animação "pregar" dele.
 func pregando_agora() -> bool:
 	var dn := _dn()
-	return dn != null and igreja() != null and (periodo_domingo(dn.hora()) == "missa" or funeral_agora())
+	return dn != null and ((igreja() != null and periodo_domingo(dn.hora()) == "missa") or funeral_agora())
+
+
+# ------------------------------------------------------------ cemitério (Bloco 93)
+func cemiterios() -> Array:
+	return get_tree().get_nodes_in_group("cemiterios")
+
+
+func tem_cemiterio() -> bool:
+	return cemiterios().any(func(c): return c.pronto)
+
+
+## O cemitério pronto com vaga mais perto de p (null = nenhum).
+func cemiterio_com_vaga(p: Vector2) -> Node:
+	var melhor: Node = null
+	for c in cemiterios():
+		if c.pronto and not c.cheio() and (melhor == null or c.global_position.distance_to(p) < melhor.global_position.distance_to(p)):
+			melhor = c
+	return melhor
+
+
+## Quem morreu deixa o corpo onde caiu (com cemitério); o padre vem buscar.
+func novo_corpo(nome: String, pos: Vector2, causa: String) -> Node2D:
+	var dn := _dn()
+	var sun := get_tree().get_first_node_in_group("sun")
+	var c: Node2D = CORPO.new()
+	c.monta({"nome": nome, "dia": dn.day if dn else 1, "estacao": sun.season_name() if sun and sun.has_method("season_name") else "",
+		"causa": causa})
+	c.position = pos
+	var hub := get_tree().get_first_node_in_group("village_hub")
+	(hub.get_parent() if hub else get_parent()).add_child(c)
+	if padre() == null:
+		var hud := _hud()
+		if hud:
+			hud.show_toast("O corpo de %s espera: sem padre, ninguém leva ao cemitério (função Padre, tecla 8)." % nome, Color(0.85, 0.8, 0.9))
+	return c
+
+
+## A pesquisa "Ritos fúnebres" libera o funeral feito pelo padre.
+func funeral_liberado() -> bool:
+	var res := get_tree().get_first_node_in_group("research")
+	return res != null and res.has("ritos")
+
+
+## O padre enterrou alguém: com os ritos, funeral no cemitério na próxima hora social.
+func on_enterro(nome: String) -> void:
+	var hud := _hud()
+	if not funeral_liberado():
+		if hud:
+			hud.show_toast("%s foi enterrado no cemitério." % nome, Color(0.8, 0.8, 0.9))
+		return
+	var dn := _dn()
+	if dn == null:
+		return
+	var h: float = dn.hora()
+	var dia: int = dn.day if _entre(h, dn.hora_amanhecer, dn.hora_anoitecer) else dn.day + 1
+	funerais.append({"nome": nome, "dia": dia, "onde": "cemiterio"})
+	if hud:
+		hud.show_toast("%s foi enterrado. Funeral no cemitério hoje às %s." % [nome, dn.hora_texto(dn.hora_anoitecer)], Color(0.8, 0.8, 0.9))
+
+
+## Onde é o funeral da vez (o nó do lugar; null = não tem lugar).
+func _lugar_funeral(f: Dictionary) -> Node:
+	if String(f.get("onde", "igreja")) == "cemiterio":
+		for c in cemiterios():
+			if c.pronto:
+				return c
+		return null
+	return igreja()
+
+
+## O lugar do funeral de agora (null = não tem funeral agora).
+func funeral_lugar_agora() -> Node:
+	return _lugar_funeral(funerais[0]) if funeral_agora() else null
 
 
 ## Hoje é domingo e a tarde é de festival? (todos na praça)
@@ -164,10 +250,10 @@ func festival_agora() -> bool:
 	return dn != null and escolha_hoje() == "festival" and _entre(dn.hora(), tarde_inicio, dn.hora_fim_expediente)
 
 
-## Funeral agora (na hora social do dia dele)?
+## Funeral agora (na hora social do dia dele)? Bloco 93: com padre, no lugar dele (igreja ou cemitério).
 func funeral_agora() -> bool:
 	var dn := _dn()
-	if dn == null or funerais.is_empty() or not missa_ativa():
+	if dn == null or funerais.is_empty() or padre() == null or _lugar_funeral(funerais[0]) == null:
 		return false
 	return int(funerais[0].dia) == dn.day and _entre(dn.hora(), dn.hora_anoitecer, dn.hora_anoitecer + funeral_horas)
 
@@ -187,7 +273,9 @@ func _calcula_ponto_forcado() -> Node:
 	if dn == null:
 		return null
 	var ig := igreja()
-	if ig and (periodo_domingo(dn.hora()) == "missa" or funeral_agora()):
+	if funeral_agora():
+		return funeral_lugar_agora().ponto()  # Bloco 93: igreja ou cemitério
+	if ig and periodo_domingo(dn.hora()) == "missa":
 		return ig.ponto()
 	if festival_agora():
 		for s in get_tree().get_nodes_in_group("social_spots"):
@@ -309,14 +397,15 @@ func proximo_texto() -> String:
 
 
 # ------------------------------------------------------------ funeral
-## Alguém morreu (ipezinho._die): funeral na próxima hora social (com padre e igreja).
+## Alguém morreu (ipezinho._die): funeral na próxima hora social (com padre e igreja). Bloco 93: só com a
+## pesquisa dos ritos; com cemitério o funeral é depois do enterro (on_enterro), não aqui.
 func on_morte(nome: String) -> void:
 	var dn := _dn()
-	if dn == null:
+	if dn == null or not funeral_liberado() or tem_cemiterio():
 		return
 	var h: float = dn.hora()
 	var dia: int = dn.day if _entre(h, dn.hora_amanhecer, dn.hora_anoitecer) else dn.day + 1
-	funerais.append({"nome": nome, "dia": dia})
+	funerais.append({"nome": nome, "dia": dia, "onde": "igreja"})
 	if missa_ativa():
 		var hud := _hud()
 		if hud:
@@ -332,10 +421,11 @@ func _confere_funerais(dn: Node) -> void:
 		if not passou:
 			return
 		funerais.pop_front()
-		if missa_ativa():
+		if padre() != null and _lugar_funeral(f) != null:
 			var mor := get_tree().get_first_node_in_group("morale")
 			if mor:
 				mor.grief = maxf(mor.grief - funeral_alivio, 0.0)
+				mor.funeral_left = mor.funeral_bonus_tempo  # Bloco 93: "funeral digno" (o ânimo sobe um pouco)
 			var hud := _hud()
 			if hud:
 				hud.show_toast("A vila se despediu de %s. O luto pesa menos." % f.nome, Color(0.8, 0.85, 1.0))
@@ -348,7 +438,7 @@ func _placa_igreja(dn: Node) -> void:
 	var txt := ""
 	if periodo_domingo(dn.hora()) == "missa":
 		txt = "missa agora"
-	elif funeral_agora():
+	elif funeral_agora() and funeral_lugar_agora() == ig:
 		txt = "funeral de %s" % funerais[0].nome
 	elif padre() == null:
 		txt = "sem padre"
@@ -358,8 +448,14 @@ func _placa_igreja(dn: Node) -> void:
 # ------------------------------------------------------------ save
 func get_save_data() -> Dictionary:
 	var ig := igreja()
+	var corpos: Array = get_tree().get_nodes_in_group("corpos").map(func(c): return {"info": c.info(),
+		"pos": [c.global_position.x, c.global_position.y]})
+	var pd := padre()
+	if pd and not pd.carregando_corpo.is_empty():  # (o que o padre carrega volta pro chão onde ele está)
+		corpos.append({"info": pd.carregando_corpo.duplicate(), "pos": [pd.global_position.x, pd.global_position.y]})
 	return {"padre_chegou": padre_chegou, "escolha": escolha, "escolha_dia": escolha_dia, "funerais": funerais.duplicate(true),
-		"avisou_dia": _avisou_dia, "igreja": [ig.global_position.x, ig.global_position.y] if ig else []}
+		"avisou_dia": _avisou_dia, "igreja": [ig.global_position.x, ig.global_position.y] if ig else [],
+		"cemiterios": cemiterios().map(func(c): return c.get_save_data()), "corpos": corpos}
 
 
 ## Save antigo: sem padre (chega quando a vila tiver o estágio), sem igreja, sem funeral pendente.
@@ -371,7 +467,7 @@ func load_save_data(d: Dictionary) -> void:
 	funerais = []
 	for f in d.get("funerais", []):
 		if f is Dictionary and f.has("nome"):
-			funerais.append({"nome": String(f.nome), "dia": int(f.get("dia", 0))})
+			funerais.append({"nome": String(f.nome), "dia": int(f.get("dia", 0)), "onde": String(f.get("onde", "igreja"))})
 	for old in get_tree().get_nodes_in_group("igrejas"):
 		old.get_parent().remove_child(old)
 		old.queue_free()
@@ -380,3 +476,22 @@ func load_save_data(d: Dictionary) -> void:
 		var hub := get_tree().get_first_node_in_group("village_hub")
 		if hub and hub.has_method("spawn_igreja"):
 			hub.spawn_igreja(Vector2(float(pos[0]), float(pos[1])))
+	# Bloco 93: cemitérios (com os túmulos) e os corpos esperando o padre; save antigo: nenhum
+	for old in get_tree().get_nodes_in_group("cemiterios") + get_tree().get_nodes_in_group("corpos"):
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	var hub2 := get_tree().get_first_node_in_group("village_hub")
+	var mundo: Node = hub2.get_parent() if hub2 else get_parent()
+	for cd in d.get("cemiterios", []):
+		if cd is Dictionary:
+			var c: Node2D = CEMITERIO.new()
+			c.load_save_data(cd)
+			c.name = "Cemiterio"
+			mundo.add_child(c)
+			c.restaura_tumulos()
+	for kd in d.get("corpos", []):
+		if kd is Dictionary and kd.get("info") is Dictionary and kd.get("pos") is Array and kd.pos.size() == 2:
+			var k: Node2D = CORPO.new()
+			k.monta(kd.info)
+			k.position = Vector2(float(kd.pos[0]), float(kd.pos[1]))
+			mundo.add_child(k)

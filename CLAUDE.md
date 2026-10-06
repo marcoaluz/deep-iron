@@ -84,6 +84,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 | `escavadeira.gd` | Montada peça por peça; abre o S2. |
 | `escudo.gd` | O projeto final. |
 | `coletor_madeira.gd` | Coletor de madeira; o primeiro é a ruína da floresta, restaurada por etapas (Bloco 81). |
+| `cemiterio.gd` + `corpo.gd` | Cemitério do tamanho que o jogador arrasta (Bloco 93): cerca modular, obra por etapas, túmulos com nome e dia; o corpo de quem morreu espera o padre. |
 | `fornalha.gd` | Fornalha: barras por ordem do jogador, operada pelo fundidor (Bloco 86). |
 | `igreja.gd` | Igreja: ponto social com bancos, missa e funerais (Bloco 88). |
 | `social_spot.gd` | Ponto social (Bloco 85): componente com vagas em rodas (refeitório, praça, taverna, parque, igreja, banco, mesa). |
@@ -95,8 +96,8 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
   invasão, greve) → **agenda** (`_agenda_estado`: refeições, voltar, hora social, dormir, missa; plantão do
   médico, vigília dos guardas, padre) → **necessidades** (comer com fome braba, taverna) → **função**.
 - Funções: minerador, caçador, médico, engenheiro (só obras de construção), cozinheiro, lenhador, guarda,
-  pesquisador, **fundidor** (Fornalha), **ferreiro** (Oficina e Arsenal) e o **padre** (um só, chega por evento,
-  não recrutável).
+  pesquisador, **fundidor** (Fornalha), **ferreiro** (Oficina e Arsenal; homem ou mulher) e o **padre** (função da
+  barra, tecla 8: só homem, um por vila; busca os mortos e enterra no cemitério; o Padre Bento chega por evento).
 - `_find_best_station(grupo)` escolhe a estação, filtrada por área de trabalho e por andar trancado.
 - `set_job()` troca a função com segurança: ele entrega o que carrega antes.
 - Tem também necessidades, ferimentos, humor e o save do ipezinho.
@@ -111,7 +112,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b91**; o próximo é o **b92**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b93**; o próximo é o **b94**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:
@@ -175,6 +176,27 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
     | Produção e recursos | `survival-crafting` |
 
     O objetivo é deixar o jogo melhor, não só cumprir o pedido.
+11. **Arte nova é do PixelLab, no nível do resto do jogo — nada de placeholder** (pedido do Marco, Bloco 92).
+    Piloto antes do lote.
+    - **Personagem novo** (função × gênero): a receita do elenco, em `prototipos/camera/arte_iso/oficios92.py`.
+      1. `create_image_pro` 48×84 com o minerador/médica e a guia 2:1.
+      2. `create_character` v3, câmera "high top-down".
+      3. Caminhada de 8 quadros em skeleton-v3, depois `caminhadas8.py troca` e o pé no chão.
+      4. Comer, ferido e deitar (as mesmas descrições do elenco) e mancar (`sad-walk`).
+      5. O trabalho (v3, 8 quadros, "only the character and his <tool>: no …").
+      6. O casaco de inverno.
+      7. O retrato com as **5 expressões**, com as frases de sempre ("same character, tired and sad: droopy
+         half-closed eyes, sad mouth, a drop of sweat; keep the face, hair, helmet/hat, clothes, colors and framing
+         identical"…) e uma nota por personagem se o modelo inventar chapéu (`retratos.py NOTA`).
+      8. O ícone na barra.
+      - Integração parcial: `integra.py bonecos <funções>` e `retratos.py exporta <nomes>`.
+    - **Estrutura nova:** sempre a **evolução da obra até ficar pronta** (obra 1 → 2 → 3 → pronto).
+      1. Guia: `predio.py guia` + `pixelart_workbench draw`.
+      2. Pronto: `create_image_pro` com a guia, a casa aprovada e o minerador.
+      3. Obra 2: o esqueleto no mesmo quadro.
+      4. Obra 1 e 3: `obras.py`.
+      5. `integra.py predios <nomes>`.
+      - Estrutura de tamanho livre (o cemitério): peças modulares que montam cada etapa.
 
 ## Notas práticas
 

@@ -813,12 +813,25 @@ for nome in ("cova", "explosivos", "antena", "cesto", "placa_greve"):
     PROPS[nome] = "efeitos/bases/%s.png" % nome
 # Bloco 76: a boca da escada em espiral na superfície (fundo76/espiral.py)
 PROPS["boca_espiral"] = "fundo76/boca_espiral.png"
+# Bloco 93: o cemitério MODULAR (predios93.py): cerca, poste e portão em volta do retângulo do jogador; cruzes
+# e lápides que aparecem a cada enterro; o corpo na mortalha
+# (cem_cerca = o trecho em "\", ao longo do x do mundo; cem_cerca_y = o espelho, em "/", ao longo do y)
+for jogo, arq in (("cem_cerca", "cerca_cem"), ("cem_cerca_y", "cerca_cem_y"), ("cem_poste", "poste_cem"),
+                  ("cem_portao", "portao_cem"), ("corpo", "corpo")):
+    PROPS[jogo] = "cemiterio/%s.png" % arq
+for k in range(3):
+    PROPS["cem_cruz_%d" % k] = "cemiterio/cruz_%d.png" % k
+    PROPS["cem_lapide_%d" % k] = "cemiterio/lapide_%d.png" % k
 # Bloco 92: a decoração do jogador que faltava (predios92.py; banco, mesa e tocha já existiam)
 for nome in ("lampiao", "cerca", "canteiro_flores", "bandeira"):
     PROPS["decor_" + nome] = "decor92/%s.png" % nome
 # Bloco 78: os marcos de cada andar (fundo78/marcos.py)
 for nome in ("fossil_gigante", "bica_vapor", "lampiao_cristal", "cabana_mina", "boca_tunel"):
     PROPS[nome] = "fundo78/%s.png" % nome
+
+
+## Bloco 93: peças em diagonal emendadas pelo jogo (a cerca do cemitério): âncora no meio da linha do pé.
+ANCORA_NA_LINHA = ("cem_cerca", "cem_cerca_y", "cem_portao")
 
 
 def props(so=None):
@@ -844,6 +857,10 @@ def props(so=None):
         if nome in AJUSTA_BRILHO:
             print("  brilho %s: %.3f -> %.3f" % ((nome,) + ajusta_brilho(dst)))
         anc = (im.width / 2.0, im.height - 3.0)
+        if nome in ANCORA_NA_LINHA:  # Bloco 93: peça comprida em diagonal (cerca): o nó fica no meio da linha do pé
+            al = np.array(im)[..., 3] > 40
+            pes = [int(np.nonzero(al[:, x])[0].max()) for x in range(im.width) if al[:, x].any()]
+            anc = (im.width / 2.0, (pes[0] + pes[-1]) / 2.0 + 1.0)
         g = max(8.0, min(64.0, im.width * 0.35))
         out["props"][nome] = {"img": nome + ".png", "ancora": list(anc)}
         pend.append((nome, (dst, anc[0], anc[1], g, g * 0.8, float(im.height))))
