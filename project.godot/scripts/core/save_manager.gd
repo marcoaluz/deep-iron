@@ -89,6 +89,8 @@ extends Node
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
+##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
+##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
 ##   Bloco 89: caminhos.gd "caminhos" {tamanho, terra [[x, y]], cascalho [...], pedra [...]} (células da grade;
 ##     save antigo: sem caminhos).
 ##   Bloco 88: calendario.gd "calendario" {padre_chegou, escolha, escolha_dia, funerais [{nome, dia}], avisou_dia,
@@ -495,6 +497,7 @@ func _collect() -> Dictionary:
 		"areas_trabalho": "work_areas",  # Bloco 77: áreas de trabalho (os ipezinhos guardam o id da área)
 		"calendario": "calendario",  # Bloco 88: padre, igreja, escolha do domingo, funerais
 		"caminhos": "caminhos",  # Bloco 89: células de caminho por tipo
+		"decoracoes": "decoracoes_mgr",  # Bloco 90: as peças de decoração do jogador
 	}
 	for key in singles:
 		var node := tree.get_first_node_in_group(singles[key])
@@ -578,6 +581,7 @@ func apply_pending(main: Node) -> void:
 	_apply_single("fundo", SaveUtil.dict(data, "fundo"))  # Bloco 70: ventiladores (save antigo: nenhum)
 	_apply_single("calendario", SaveUtil.dict(data, "calendario"))  # Bloco 88: refaz a igreja (antes dos ipezinhos)
 	_apply_single("caminhos", SaveUtil.dict(data, "caminhos"))  # Bloco 89 (save antigo: sem caminhos)
+	_apply_single("decoracoes_mgr", SaveUtil.dict(data, "decoracoes"))  # Bloco 90 (save antigo: sem decoração)
 	for c in get_tree().get_nodes_in_group("canteiros"):  # (troca pelos do save)
 		c.remove_from_group("canteiros")
 		c.remove_from_group("obras")

@@ -1467,6 +1467,11 @@ func happiness_factors() -> Array:
 	f.append(["tem cama", 8.0] if has_home() else ["sem cama", -15.0])
 	if has_home() and _home.has_method("comfort_bonus") and _home.comfort_bonus() > 0.0:
 		f.append(["casa nível %d" % _home.level, _home.comfort_bonus()])  # Bloco 56
+	if has_home():
+		var dec := get_tree().get_first_node_in_group("decoracoes_mgr")
+		var bel: float = dec.beleza_da_casa(_home) if dec else 0.0
+		if bel >= 0.5:
+			f.append(["casa enfeitada", bel])  # Bloco 90: decoração perto de casa
 	if hunger <= 0.0:
 		f.append(["passando fome", -30.0])
 	elif hunger < hunger_threshold:

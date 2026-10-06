@@ -22,6 +22,7 @@ extends Node2D
 ##   start: Vector2     onde o fantasma aparece
 ##   area: Rect2        onde pode (em vez da área da mina) — Bloco 45: coletor na clareira
 ##   area_name: String  como chamar essa área no aviso ("fora da clareira")
+##   repeat: bool       Bloco 90: depois de confirmar, continua no modo (decoração: várias em sequência)
 
 signal finished(confirmed: bool)
 
@@ -49,6 +50,7 @@ var _radius := 0.0
 var _radius_center := Vector2.ZERO
 var _area := Rect2()
 var _area_name := ""
+var _repeat := false
 ## Prompt 29: o prédio da arte nova sendo posicionado ("" = sem arte nova): a pegada é a do desenho
 var art_name := ""
 ## Bloco 76: o fantasma está encaixado num lote livre
@@ -104,6 +106,7 @@ func begin(on_confirm: Callable, texture: Texture2D = CASA_TEXTURE, hframes: int
 	_area = opts.get("area", Rect2())
 	_area_name = opts.get("area_name", "da área")
 	_extra_check = opts.get("check", Callable())  # Bloco 57: motivo extra ("" = pode)
+	_repeat = opts.get("repeat", false)  # Bloco 90
 	active = true
 	_collect_blockers()
 	var hud := get_tree().get_first_node_in_group("hud")
@@ -129,6 +132,7 @@ func _end(confirmed: bool) -> void:
 	_cancelable = true
 	_radius = 0.0
 	_area = Rect2()
+	_repeat = false
 	finished.emit(confirmed)
 
 
@@ -170,8 +174,12 @@ func try_confirm() -> bool:
 		flash.tween_property(_ghost, "scale", Vector2(2, 2), 0.15)
 		return false
 	if _on_confirm.is_valid() and _on_confirm.call(_pos):
-		_end(true)
 		Audio.place_sound()  # Bloco 55: estaca na terra
+		if _repeat:  # Bloco 90: põe outra (a peça nova já conta como obstáculo)
+			_collect_blockers()
+			_refresh()
+			return true
+		_end(true)
 		return true
 	return false
 
@@ -292,6 +300,9 @@ func _collect_blockers() -> void:
 	if env:
 		for o in env.decoration_obstacles():
 			_blockers.append({"rect": _bbox(o).grow(4.0), "name": "uma pedra/decoração"})
+	for dec in get_tree().get_nodes_in_group("decoracoes"):  # Bloco 90: a decoração do jogador
+		if not _ignore.has(dec):
+			_blockers.append({"rect": dec.pegada_rect().grow(3.0), "name": "a decoração (%s)" % String(dec.get("id"))})
 
 
 func _display_name(node: Node) -> String:

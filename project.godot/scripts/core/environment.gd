@@ -17,7 +17,7 @@ const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village
 ## Estruturas que bloqueiam a navegação mas NÃO entram no sorteio da decoração
 ## (pra não mudar as pedras/cristais da mina de saves antigos). A decoração que
 ## cair embaixo delas é escondida depois (_clear_decor_under_extras).
-const NAV_EXTRA_GROUPS := ["enfermarias", "tavernas", "campos", "laboratorios", "escudos", "caca", "canteiros", "arsenais", "parques", "vestiarios", "coletores", "fornalhas", "igrejas"]  # Blocos 86/88: + fornalhas, igrejas
+const NAV_EXTRA_GROUPS := ["enfermarias", "tavernas", "campos", "laboratorios", "escudos", "caca", "canteiros", "arsenais", "parques", "vestiarios", "coletores", "fornalhas", "igrejas", "decor_obstaculos"]  # Blocos 86/88/90: + fornalhas, igrejas, decoração grande
 
 @export_group("Mapa")
 @export var map_rect: Rect2 = Rect2(-720, -440, 1440, 880)

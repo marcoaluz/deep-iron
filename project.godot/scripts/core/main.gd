@@ -94,6 +94,9 @@ func _ready() -> void:
 	add_child(preload("res://scripts/core/house_placer.gd").new())
 	add_child(preload("res://scripts/core/area_placer.gd").new())  # Bloco 77: marcar área (idem)
 	add_child(preload("res://scripts/core/caminho_placer.gd").new())  # Bloco 89: pintar caminhos (idem)
+	var decor := preload("res://scripts/core/decoracoes.gd").new()  # Bloco 90: decoração (modo remover: idem)
+	decor.name = "Decoracoes"
+	add_child(decor)
 	_pause = preload("res://scripts/ui/pause_menu.gd").new()
 	add_child(_pause)
 	_founding = preload("res://scripts/core/founding.gd").new()

@@ -370,5 +370,9 @@ func test_b89_caminhos() -> void:
 	run_bloco("b89_caminhos.gd")
 
 
+func test_b90_decoracao() -> void:
+	run_bloco("b90_decoracao.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

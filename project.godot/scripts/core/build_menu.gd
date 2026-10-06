@@ -11,7 +11,7 @@ extends PanelContainer
 
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const Icones := preload("res://scripts/ui/icones.gd")
-const TAB_NAMES := ["Moradia", "Alimentação", "Saúde", "Lazer", "Pesquisa", "Defesa e equipamento", "Coleta automática", "Produção", "Culto", "Vila"]
+const TAB_NAMES := ["Moradia", "Alimentação", "Saúde", "Lazer", "Pesquisa", "Defesa e equipamento", "Coleta automática", "Produção", "Culto", "Decoração", "Vila"]
 
 var _hud: CanvasLayer
 var _tabs_row: HBoxContainer
@@ -261,6 +261,27 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return hub.fornalha_cost_text(),
 					"reason": func(): return hub.fornalha_block_reason(),
 					"act": func(): hub.build_fornalha()})
+		"Decoração":  # Bloco 90: peças instantâneas (sem engenheiro), várias em sequência
+			var dm := _g("decoracoes_mgr")
+			if dm:
+				for did in dm.Catalogo.CATALOGO:
+					var info: Dictionary = dm.Catalogo.info(did)
+					var extra: Array[String] = []
+					if dm.Catalogo.tem_luz(did):
+						extra.append("luz à noite (atrai Lumívoros)")
+					if int(info.assentos) > 0:
+						extra.append("%d lugares (hora social)" % int(info.assentos))
+					extra.append("beleza %s" % str(info.beleza))
+					out.append({"name": info.nome, "tex": "", "many": true,
+						"desc": "Instantâneo, sem engenheiro; ponha várias seguidas (Esc termina). " + ", ".join(extra) + ".",
+						"cost": func(): return dm.custo_texto(did),
+						"reason": func(): return dm.motivo(did),
+						"act": func(): dm.comecar(did), "label": "Pôr"})
+				out.append({"name": "Remover decoração", "tex": "", "many": true,
+					"desc": "Clique numa peça pra tirar (devolve %d%% do custo)." % roundi(dm.reembolso * 100.0),
+					"cost": func(): return "",
+					"reason": func(): return "",
+					"act": func(): dm.comecar_remover(), "label": "Remover"})
 		"Culto":  # Bloco 88: a igreja (missa, funeral, aconselhamento)
 			if hub and hub.igreja() == null:
 				out.append({"name": "Igreja", "tex": "igreja", "frames": 1, "tag": "uma só",

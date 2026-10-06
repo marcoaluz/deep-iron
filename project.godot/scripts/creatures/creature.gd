@@ -50,6 +50,11 @@ signal died(killed: bool)
 @export var drop_amount: int = 0
 @export_range(0.0, 1.0) var drop_chance: float = 0.0
 
+@export_group("Luz (Bloco 90)")
+## Lumívoro: o quanto uma tocha/lampião aceso da decoração atrai mais que um prédio aceso (a distância conta
+## dividida por isto: 2 = uma luz a 200 px pesa como um prédio a 100 px).
+@export var atracao_luz: float = 2.0
+
 @export_group("Visual (folha de quadros)")
 ## Bloco 80: a folha de quadros da criatura (uma LINHA por animação, na ordem de visual_anims; quadros da
 ## esquerda pra direita, virada pra direita). Vazia = a arte isométrica do bonecos.json.
@@ -332,7 +337,16 @@ func _pick_target() -> Node2D:
 					lit.append(n)
 		if lit.is_empty():
 			lit = get_tree().get_nodes_in_group("village_hub")
-		return _nearest(lit)
+		# Bloco 90: tochas e lampiões acesos da decoração atraem mais (atracao_luz)
+		var melhor := _nearest(lit)
+		var nota := global_position.distance_to(melhor.global_position) if melhor else INF
+		for d in get_tree().get_nodes_in_group("decor_luzes"):
+			if d.acesa():
+				var nd := global_position.distance_to(d.global_position) / maxf(atracao_luz, 0.01)
+				if nd < nota:
+					nota = nd
+					melhor = d
+		return melhor
 	# ferrugento (e os do fundo): quem estiver perto; senão o minério do armazém
 	var near := _nearest(awake, notice_range)
 	if near:
