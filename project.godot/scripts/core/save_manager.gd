@@ -89,6 +89,8 @@ extends Node
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
+##   Bloco 89: caminhos.gd "caminhos" {tamanho, terra [[x, y]], cascalho [...], pedra [...]} (células da grade;
+##     save antigo: sem caminhos).
 ##   Bloco 88: calendario.gd "calendario" {padre_chegou, escolha, escolha_dia, funerais [{nome, dia}], avisou_dia,
 ##     igreja [x, y]}; o padre é um ipezinho (job "padre", salvo com os outros); ipezinho.gd "animo_fe".
 ##     Save antigo: sem padre (chega no estágio), sem igreja, nenhum funeral.
@@ -492,6 +494,7 @@ func _collect() -> Dictionary:
 		"fundo": "fundo",  # Bloco 70: ventiladores e contadores
 		"areas_trabalho": "work_areas",  # Bloco 77: áreas de trabalho (os ipezinhos guardam o id da área)
 		"calendario": "calendario",  # Bloco 88: padre, igreja, escolha do domingo, funerais
+		"caminhos": "caminhos",  # Bloco 89: células de caminho por tipo
 	}
 	for key in singles:
 		var node := tree.get_first_node_in_group(singles[key])
@@ -574,6 +577,7 @@ func apply_pending(main: Node) -> void:
 	_apply_single("equipment", SaveUtil.dict(data, "equipment"))  # Bloco 42: vestiário e fila
 	_apply_single("fundo", SaveUtil.dict(data, "fundo"))  # Bloco 70: ventiladores (save antigo: nenhum)
 	_apply_single("calendario", SaveUtil.dict(data, "calendario"))  # Bloco 88: refaz a igreja (antes dos ipezinhos)
+	_apply_single("caminhos", SaveUtil.dict(data, "caminhos"))  # Bloco 89 (save antigo: sem caminhos)
 	for c in get_tree().get_nodes_in_group("canteiros"):  # (troca pelos do save)
 		c.remove_from_group("canteiros")
 		c.remove_from_group("obras")

@@ -275,6 +275,20 @@ func _defs(tab: String) -> Array:
 					"reason": func(): return "",
 					"act": func(): _hud.open_panel("calendario"), "label": "Abrir"})
 		"Vila":
+			var cam := _g("caminhos")
+			if cam:  # Bloco 89: pintar caminhos (arrastar)
+				for tp in ["terra", "cascalho", "pedra"]:
+					out.append({"name": "Caminho: %s" % cam.NOMES[tp].to_lower(), "tex": "", "many": true,
+						"desc": "Pinte arrastando no mapa (%s por célula). Quem anda nele fica %d%% mais rápido; as Trilhas aumentam isso. Não bloqueia ninguém." % [
+							cam.custo_texto(tp), roundi(float(cam.bonus[tp]) * 100.0)],
+						"cost": func(): return "%s / célula" % cam.custo_texto(tp),
+						"reason": func(): return cam.motivo_pintar(tp),
+						"act": func(): _g("caminho_placer").begin(tp), "label": "Pintar"})
+				out.append({"name": "Apagar caminhos", "tex": "", "many": true,
+					"desc": "Arraste no mapa pra apagar caminho (não devolve o que custou).",
+					"cost": func(): return "",
+					"reason": func(): return "",
+					"act": func(): _g("caminho_placer").begin("apagar"), "label": "Apagar"})
 			if hub:
 				out.append({"name": "Expandir a vila", "tex": "centro_vila", "frames": 5,
 					"desc": "Próximo estágio (o Centro da Vila é um só). Abre galerias e aumenta o raio das casas.",

@@ -481,6 +481,7 @@ var _refeicao_alvo := ""  # a refeição que ele foi fazer ("" = fome braba fora
 var _periodo := ""  # período da agenda na última olhada
 var _agenda_t := 0.0
 var _sched: Node = null
+var _caminhos: Node = null  # Bloco 89
 ## Bloco 85 (hora social): ânimo de ter conversado (fator do ânimo; some devagar), o ponto social e o lugar
 ## reservados, quanto falta pra trocar de ponto, se já chegou na roda, o passeio (waypoints) e o balão.
 var animo_social := 0.0
@@ -790,10 +791,11 @@ func _get_effective_speed() -> float:
 	return s * _speed_bonus()
 
 
-## Bônus de velocidade das "Trilhas batidas" do Centro da Vila.
+## Bloco 89: bônus de velocidade do CAMINHO embaixo dele (a melhoria Trilhas aumenta o bônus dos caminhos).
 func _speed_bonus() -> float:
-	var hub := _village_hub()
-	return hub.speed_mult() if hub else 1.0
+	if _caminhos == null or not is_instance_valid(_caminhos):
+		_caminhos = get_tree().get_first_node_in_group("caminhos") if is_inside_tree() else null
+	return _caminhos.velocidade_em(global_position) if _caminhos else 1.0
 
 
 func _village_hub() -> Node:
@@ -3145,8 +3147,14 @@ func _social_vai() -> void:
 		if desvio < menor and global_position.distance_to(c) > 40.0 and c.distance_to(destino) > 40.0:
 			menor = desvio
 			via = c
-	if via != Vector2.INF:
-		_passeio.append(via)  # (Bloco 89: os caminhos pintados entram aqui)
+	# Bloco 89: com caminho pintado entre ele e o ponto, o passeio segue o caminho
+	var cam := get_tree().get_first_node_in_group("caminhos")
+	var pelo_caminho: PackedVector2Array = cam.rota(global_position, destino) if cam else PackedVector2Array()
+	if not pelo_caminho.is_empty():
+		for q in pelo_caminho:
+			_passeio.append(q)
+	elif via != Vector2.INF:
+		_passeio.append(via)
 	_passeio.append(destino)
 	_go_to(_passeio[0])
 

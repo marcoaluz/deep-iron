@@ -1241,6 +1241,7 @@ func _process(_delta: float) -> void:
 	_sync_ghost()
 	_sync_trilhos()
 	_sync_areas()  # Bloco 77
+	_sync_caminhos()  # Bloco 89
 	_sync_ferrovia()  # Bloco 79
 	_pulsa_luzes()
 	_overlay.queue_redraw()
@@ -1536,6 +1537,66 @@ var _areas_sel = null
 
 func _work_areas() -> Node:
 	return get_tree().get_first_node_in_group("work_areas")
+
+
+# ------------------------------------------------------------ caminhos (Bloco 89)
+var _caminhos_drawer: Node2D
+var _caminhos_versao := -1
+
+
+## A camada dos caminhos no chão (abaixo das áreas e dos personagens); refaz só quando os caminhos mudam.
+func _sync_caminhos() -> void:
+	var cam := get_tree().get_first_node_in_group("caminhos")
+	if cam == null:
+		return
+	if _caminhos_drawer == null:
+		_caminhos_drawer = Node2D.new()
+		_caminhos_drawer.name = "CaminhosIso"
+		_caminhos_drawer.z_as_relative = false
+		_caminhos_drawer.z_index = Order.BASE - 46
+		_things.add_child(_caminhos_drawer)
+		_caminhos_drawer.draw.connect(_draw_caminhos)
+	if cam.versao != _caminhos_versao:
+		_caminhos_versao = cam.versao
+		_caminhos_drawer.queue_redraw()
+
+
+## Visual PROVISÓRIO: cada célula é o losango do chão na cor do tipo, com pedrinhas (cascalho) ou juntas
+## (pedra); a borda escurece onde o vizinho não é caminho (o trecho fica com contorno).
+const COR_CAMINHO := {"terra": Color(0.5, 0.38, 0.25, 0.9), "cascalho": Color(0.56, 0.53, 0.49, 0.93), "pedra": Color(0.66, 0.64, 0.6, 0.96)}
+
+
+func _draw_caminhos() -> void:
+	var cam := get_tree().get_first_node_in_group("caminhos")
+	if cam == null:
+		return
+	var t: float = cam.tamanho
+	for c in cam.celulas:
+		var tipo: String = cam.celulas[c]
+		var r: Rect2 = cam.rect_de(c)
+		var h := height_at(r.get_center())
+		var cantos := [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]
+		var pol := PackedVector2Array()
+		for p in cantos:
+			pol.append(to_screen(p, h))
+		var cor: Color = COR_CAMINHO.get(tipo, Color(0.5, 0.4, 0.3, 0.9))
+		_caminhos_drawer.draw_colored_polygon(pol, cor)
+		var semente := absi(c.x * 73856093 ^ c.y * 19349663)
+		if tipo == "cascalho":
+			for k in 5:
+				var q := r.position + Vector2(fposmod(semente * (k + 3) * 0.37, t), fposmod(semente * (k + 7) * 0.53, t))
+				_caminhos_drawer.draw_rect(Rect2(to_screen(q, h).round(), Vector2(2, 1)), Color(0.36, 0.34, 0.32, 0.9))
+		elif tipo == "pedra":
+			var meio := r.position + Vector2(t * 0.5, 0.0)
+			_caminhos_drawer.draw_line(to_screen(meio, h), to_screen(meio + Vector2(0, t), h), Color(0.42, 0.4, 0.38, 0.8), 1.0)
+			var meio2 := r.position + Vector2(0.0, t * 0.5)
+			_caminhos_drawer.draw_line(to_screen(meio2, h), to_screen(meio2 + Vector2(t, 0), h), Color(0.42, 0.4, 0.38, 0.8), 1.0)
+		# borda: lado sem vizinho de caminho fica mais escuro
+		var escuro := Color(cor.r * 0.6, cor.g * 0.6, cor.b * 0.6, 0.9)
+		var lados := [[Vector2i(0, -1), 0, 1], [Vector2i(1, 0), 1, 2], [Vector2i(0, 1), 2, 3], [Vector2i(-1, 0), 3, 0]]
+		for l in lados:
+			if not cam.celulas.has(c + l[0]):
+				_caminhos_drawer.draw_line(pol[l[1]], pol[l[2]], escuro, 1.5)
 
 
 func _sync_areas() -> void:

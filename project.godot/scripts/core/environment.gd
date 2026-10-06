@@ -1485,6 +1485,9 @@ func clear_decor_under_extras() -> void:
 			_limpa_decor(area)
 	for r in lotes():  # Bloco 76: o chão dos lotes livres fica limpo (terreno pronto pra construir)
 		_limpa_decor(r)
+	var cam := get_tree().get_first_node_in_group("caminhos")
+	if cam:
+		cam.remover_sob_predios()  # Bloco 89: prédio por cima de caminho apaga o trecho
 
 
 func _limpa_decor(area: Rect2) -> void:

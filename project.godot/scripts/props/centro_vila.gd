@@ -21,7 +21,8 @@ extends "res://scripts/props/station.gd"
 ##                       nova (4 camas) que o JOGADOR posiciona no mapa (HousePlacer).
 ##                       O custo só é pago quando ele confirma o lugar; Esc cancela.
 ##     Enfermaria:       +1 leito na Enfermaria e -recovery_cut_per_level no tempo de cura (por nível).
-##     Trilhas batidas:  +speed_bonus_per_level na velocidade de caminhada (por nível).
+##     Trilhas batidas:  Bloco 89 — aumenta o BÔNUS DOS CAMINHOS (+trilhas_bonus_por_nivel do bônus por nível);
+##                       não acelera mais todo mundo.
 ##
 ## Bloco 31: comprar uma melhoria (ou uma casa) paga na hora e ENCOMENDA a obra —
 ## ela só anda com um engenheiro trabalhando (melhoria: aqui na frente do Centro;
@@ -120,8 +121,10 @@ const UPGRADE_NAMES := {
 
 @export_group("Melhoria: Trilhas batidas")
 @export var trilhas_costs: Array[Vector2i] = [Vector2i(150, 25), Vector2i(375, 100), Vector2i(810, 250)]
-## Velocidade extra por nível (0.1 = +10% por nível).
+## (Antes do Bloco 89: velocidade extra pra todo mundo por nível. Não é mais usado; fica pro save/inspector.)
 @export var speed_bonus_per_level: float = 0.1
+## Bloco 89: quanto cada nível de Trilhas aumenta o bônus de velocidade dos CAMINHOS (0.5 = +50% do bônus).
+@export var trilhas_bonus_por_nivel: float = 0.5
 
 @export_group("Obras (Bloco 31)")
 ## Segundos de trabalho de engenheiro pra cada nível de cada melhoria.
@@ -270,8 +273,14 @@ func recovery_mult() -> float:
 	return maxf(0.1, 1.0 - recovery_cut_per_level * upgrades.enfermaria)
 
 
+## Bloco 89: a velocidade não sobe mais pra todo mundo (fica 1.0); quem acelera é o caminho (caminhos.gd).
 func speed_mult() -> float:
-	return 1.0 + speed_bonus_per_level * upgrades.trilhas
+	return 1.0
+
+
+## Bloco 89: o bônus dos caminhos é multiplicado por isto (Trilhas batidas).
+func trilhas_bonus_mult() -> float:
+	return 1.0 + trilhas_bonus_por_nivel * upgrades.trilhas
 
 
 # ------------------------------------------------------------ progresso
@@ -547,7 +556,7 @@ func upgrade_effect_text(id: String, lvl: int) -> String:
 			return "%d leitos, cura %ds/%ds" % [inf.base_beds + inf.beds_per_level * lvl,
 				roundi(inf.heal_time_leve * mult), roundi(inf.heal_time_grave * mult)]
 		"trilhas":
-			return "velocidade +%d%%" % roundi(speed_bonus_per_level * lvl * 100.0)
+			return "bônus dos caminhos +%d%%" % roundi(trilhas_bonus_por_nivel * lvl * 100.0)
 	return ""
 
 
@@ -558,7 +567,7 @@ func upgrade_description(id: String) -> String:
 		"enfermaria":
 			return "+1 leito na Enfermaria e cura %d%% mais rápida por nível. Machucado só se cura lá." % roundi(recovery_cut_per_level * 100.0)
 		"trilhas":
-			return "Todos os ipezinhos andam %d%% mais rápido por nível." % roundi(speed_bonus_per_level * 100.0)
+			return "Os CAMINHOS (menu Construir, aba Vila) aceleram %d%% mais por nível." % roundi(trilhas_bonus_por_nivel * 100.0)
 	return ""
 
 

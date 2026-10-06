@@ -366,5 +366,9 @@ func test_b88_padre_igreja() -> void:
 	run_bloco("b88_padre_igreja.gd")
 
 
+func test_b89_caminhos() -> void:
+	run_bloco("b89_caminhos.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

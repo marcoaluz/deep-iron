@@ -86,9 +86,14 @@ func _ready() -> void:
 	var areas := preload("res://scripts/core/work_areas.gd").new()
 	areas.name = "WorkAreas"
 	add_child(areas)
+	# Bloco 89: os caminhos pintados (antes do save)
+	var caminhos := preload("res://scripts/core/caminhos.gd").new()
+	caminhos.name = "Caminhos"
+	add_child(caminhos)
 	# modo de posicionar casa (último filho: recebe o input antes do main e o "consome")
 	add_child(preload("res://scripts/core/house_placer.gd").new())
 	add_child(preload("res://scripts/core/area_placer.gd").new())  # Bloco 77: marcar área (idem)
+	add_child(preload("res://scripts/core/caminho_placer.gd").new())  # Bloco 89: pintar caminhos (idem)
 	_pause = preload("res://scripts/ui/pause_menu.gd").new()
 	add_child(_pause)
 	_founding = preload("res://scripts/core/founding.gd").new()
