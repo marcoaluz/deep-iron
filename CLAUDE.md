@@ -12,8 +12,9 @@
 
 A lógica é 2D: o nó `World` e as posições ficam num plano. O jogador vê pela **vista isométrica** em pixel art
 (`scripts/iso/`), que espelha o mundo. O jogador não controla cada ipezinho: dá a **função** (minerador,
-lenhador, cozinheiro, guarda…) ou marca **áreas de trabalho** com quantos trabalham em cada uma, e a IA de cada
-um decide o resto.
+lenhador, cozinheiro, guarda, fundidor, ferreiro…) ou marca **áreas de trabalho** com quantos trabalham em cada
+uma, e a IA de cada um decide o resto, seguindo a **agenda do dia** (relógio de 24 h: café, trabalho, almoço,
+hora social, dormir) e o **calendário** (missa de domingo, festivais).
 
 O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start_menu.tscn`, e a partida é
 `scenes/game/main.tscn`. Os autoloads são `Audio`, `SaveManager` e `WindowManager`.
@@ -45,9 +46,15 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 |---|---|
 | `main.gd` | Entrada do jogador: seleção, ordens, atalhos (via `teclas.gd`, remapeável). Cria `house_placer`, `area_placer`, `WorkAreas`, `founding` e `weather`. |
 | `environment.gd` | Monta o mapa: superfície, faixas dos andares, decoração, navegação, níveis por dados, lotes. |
-| `economy.gd` | Créditos, vender minério, recrutar. |
+| `economy.gd` | Créditos, vender (minério e itens), recrutar; `quantidade(id)`, `add_item`/`take_item`; custos em metal (`metal_falta`, `paga_metal`, `custo_metal_texto`: barra a partir do estágio da fornalha, Bloco 87). |
 | `save_manager.gd` + `save_util.gd` | Save em JSON (`user://savegame.json`), backups, migração de versões, leitura tolerante. |
-| `day_night.gd` | Turno de trabalho. |
+| `day_night.gd` | Relógio de 24 h (Bloco 83): `hora()`, `hora_texto()`, semana (o 7º dia é domingo), marcos (amanhecer, fim do expediente, anoitecer, dormir), `is_night()`, "Pular dia". `time` = segundos reais desde o amanhecer. |
+| `schedule.gd` | A AGENDA dos ipezinhos (Bloco 84): `periodo(ipezinho)`, refeições (porção por refeição, refeição perdida), exceções (médico, guardas, cozinheiro), números da hora social (Bloco 85). |
+| `calendario.gd` | Padre, igreja, missa de domingo, funeral, escolha do domingo à tarde e festivais por estação (Bloco 88). |
+| `items.gd` | Catálogo de itens (Bloco 82): id, nome, categoria, ícone, preço e onde fica guardado (`stock` de minério ou `itens` processados). |
+| `production_queue.gd` | Ordens de produção genéricas (Bloco 86): receita + quantidade, insumo pago quando a unidade começa, pausa sem insumo, cancelar devolve. |
+| `caminhos.gd` + `caminho_placer.gd` | Caminhos pintados na grade (Bloco 89): bônus de velocidade, rota do passeio, save compacto. |
+| `decor.gd` + `decoracoes.gd` | Decoração do jogador (Bloco 90): catálogo, pôr/remover, luz, beleza, rebuild agrupado. |
 | `sun.gd` | Estações, ondas solares, escudo e vitória. |
 | `morale.gd` | Ânimo, greve, festa, luto, taverna. |
 | `defense.gd` | Muro, armas, campo de treino, ondas de criaturas e a **fila da forja** do Arsenal (só anda com engenheiro). |
@@ -76,10 +83,20 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 | `deep_shaft.gd` / `abyss_shaft.gd` | Ligações entre andares (elevador e plataformas). |
 | `escavadeira.gd` | Montada peça por peça; abre o S2. |
 | `escudo.gd` | O projeto final. |
+| `coletor_madeira.gd` | Coletor de madeira; o primeiro é a ruína da floresta, restaurada por etapas (Bloco 81). |
+| `fornalha.gd` | Fornalha: barras por ordem do jogador, operada pelo fundidor (Bloco 86). |
+| `igreja.gd` | Igreja: ponto social com bancos, missa e funerais (Bloco 88). |
+| `social_spot.gd` | Ponto social (Bloco 85): componente com vagas em rodas (refeitório, praça, taverna, parque, igreja, banco, mesa). |
+| `decoracao.gd` | Uma peça de decoração do jogador (Bloco 90). |
 
 **`scripts/workers/ipezinho.gd`**
 
-- `_choose_state()` decide o que fazer, por prioridade: ferido → noite → fome → lazer → função.
+- `_choose_state()` decide o que fazer, por prioridade: **emergência** (caído, ferido, resgate, onda solar,
+  invasão, greve) → **agenda** (`_agenda_estado`: refeições, voltar, hora social, dormir, missa; plantão do
+  médico, vigília dos guardas, padre) → **necessidades** (comer com fome braba, taverna) → **função**.
+- Funções: minerador, caçador, médico, engenheiro (só obras de construção), cozinheiro, lenhador, guarda,
+  pesquisador, **fundidor** (Fornalha), **ferreiro** (Oficina e Arsenal) e o **padre** (um só, chega por evento,
+  não recrutável).
 - `_find_best_station(grupo)` escolhe a estação, filtrada por área de trabalho e por andar trancado.
 - `set_job()` troca a função com segurança: ele entrega o que carrega antes.
 - Tem também necessidades, ferimentos, humor e o save do ipezinho.
@@ -94,7 +111,9 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b79**; o próximo é o **b80**.
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b91**; o próximo é o **b92**. (Pedido
+   que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
+   número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:
      - script `SceneTree`;
      - aborta fora da pasta `fake_appdata`;
@@ -121,7 +140,11 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
    | Obra paga que espera engenheiro | `Canteiro` + `ObraSite` (`canteiro.gd` `KINDS`, `obra_site.gd`) |
    | Escolher lugar no mapa | `house_placer.gd` |
    | Cartão no menu CONSTRUIR | `build_menu.gd` |
-   | Fila de produção | A fila da forja em `defense.gd` (e a da Oficina em `equipment.gd`) |
+   | Fila de produção | `production_queue.gd` (Fornalha, encomendas da Oficina); a forja das armas é a fila do `defense.gd` (Arsenal) e a do equipamento é a do `equipment.gd` — todas feitas pelo ferreiro/fundidor |
+   | Item, preço, onde guardar | `items.gd` + `Economy.quantidade/add_item/take_item` |
+   | Custo em metal | `Economy.metal_falta` / `paga_metal` / `custo_metal_texto` (barra a partir do estágio da fornalha) |
+   | Horário e agenda | `DayNight.hora()` / `tempo_da_hora()` / sinal `marco`; `Schedule.periodo(ipezinho)` |
+   | Lugar pra conversar | `social_spot.gd` (`SocialSpot.criar(...)` no `_ready` do prédio) |
    | Janela | `hud._add_panel` (padrão `setup` / `refresh` / `button_text` / `has_available_action`) |
 
 7. **Rodar os testes** (ver `TESTING.md`).
@@ -160,3 +183,9 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
   `integra.py caminhadas <pastas>`) quando der.
 - Arte nova vem do PixelLab (`tools/pixellab/`). Fazer um piloto antes de qualquer lote.
 - Push só com o OK do jogador / dono do projeto.
+- **Memória:** com o editor do Godot aberto, a bateria inteira de testes em segundo plano foi derrubada pelo
+  sistema. Rodar os testes **um por vez, em primeiro plano**, e listar no relatório os que não foram conferidos.
+- **Pra ver as coisas no jogo depressa (F3, build de editor):**
+  - "Andares: abrir todos" e "Ir para: …";
+  - "Criaturas: invasão com todos os tipos";
+  - "Pular dia" (na barra de cima).

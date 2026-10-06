@@ -1,9 +1,75 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-05. Branch `isometrico`. O remoto está em `875ae827`: os commits dos Blocos
-72–77 abaixo ainda NÃO foram enviados (push só com ok do Marco).
+Atualizado em 2026-10-06. Branch `isometrico`. Os commits dos **Blocos 80 a 91 ainda NÃO foram enviados**
+(12 commits à frente de `origin/isometrico`). Push só com o OK do Marco. Ele disse "pode executar todos os
+prompts que depois eu valido".
 
-## AGORA (2026-10-05): Blocos 75, 76 e 77 — feitos, esperando o Marco conferir
+## AGORA (2026-10-06): Blocos 81–91 — feitos, esperando o Marco validar
+
+**De onde veio:** os pedidos estão em `docs/Prompt/Ultimo_84.txt` (numerados lá como Blocos 50–59 com testes
+b51–b59). Esses números já existiam no histórico, então cada um virou **o próximo livre**, com o teste do mesmo
+número, explicado em cada relatório.
+
+**O pedido final do Marco:** "no final atualizar os arquivos CLAUDE.md e Contexto" (feito).
+
+| Bloco | Commit | O quê | Relatório |
+|---|---|---|---|
+| 81 | `0b84c11b` | Coletor de madeira nasce em RUÍNA na floresta (-420, 260) e é restaurado por etapas pagas pelo jogador e feitas pelo engenheiro; extras só depois dele | `docs/BLOCO81_COLETOR_RUINA.md` |
+| 82 | `ebfcb099` | Catálogo de itens `items.gd` (barras, aço, lingote, prego...), dicionário `itens` no armazém (fora do `stock`), janela do armazém em grade por categoria | `docs/BLOCO82_ITENS_ARMAZEM.md` |
+| 83 | `86bf485c` | Relógio de 24 h (9 min reais, 1 h = 22,5 s; marcos 05:00/18:00/18:30/21:30), semana (7º = domingo), estações de 2 semanas, invasão às 22:00 (aviso 21:00), velocidade pausa/1x/2x/4x e "Pular dia" | `docs/BLOCO83_RELOGIO_24H.md` |
+| 84 | `67fe6be0` | AGENDA (`Schedule`): emergência > agenda > necessidades; café/almoço/jantar (uma porção cada), voltar 18:00, social 18:30, dormir 21:30; médico de plantão, vigília em rodízio, cozinheiro cedo; HUD "porções (hoje N)" | `docs/BLOCO84_AGENDA.md` |
+| 85 | `6967a11d` | Hora social: pontos sociais (`social_spot.gd`: refeitório, praça, taverna, parque), rodas de conversa com balão, passeios com waypoint, chuva → cobertos | `docs/BLOCO85_HORA_SOCIAL.md` |
+| 86 | `43f18076` | `production_queue.gd` (só por ordem, quantidade, pausa sem insumo, cancelar devolve) + Fornalha (aba Produção) + função **fundidor** (tecla 6) | `docs/BLOCO86_FORNALHA.md` |
+| 87 | `e6195b3d` | Função **ferreiro** (tecla 7): Oficina e Arsenal são dele (o engenheiro só constrói); pregos e ferragens; custos migrados pra **barras** a partir do estágio da fornalha (1 barra = 2 minérios, `Economy.metal()`) | `docs/BLOCO87_FERREIRO_BARRAS.md` (com a tabela) |
+| 88 | `695e92e0` | Padre (chega no estágio 2), Igreja (aba Culto), missa de domingo, funeral (alivia o luto), aconselhamento, escolha de domingo à tarde (Festival / Dia livre / Trabalhar), festivais por estação, nó `Calendario` | `docs/BLOCO88_PADRE_IGREJA.md` |
+| 89 | `d082e87f` | Caminhos pintados (terra / cascalho / pedra) com bônus de velocidade; Trilhas aumenta o bônus; o passeio segue os caminhos; não mexem na navegação | `docs/BLOCO89_CAMINHOS.md` |
+| 90 | `ee354d09` | Decoração do jogador (`decor.gd` + `decoracoes.gd`): 7 peças, aba Decoração, várias em sequência, remover com reembolso, luz à noite (o Lumívoro é atraído e apaga), banco/mesa = ponto social, beleza perto de casa, rebuild de navegação agrupado | `docs/BLOCO90_DECORACAO.md` |
+| 91 | `f512fff7` | Criaturas do PixelLab (Lumívoro, Matriarca, Gosma, Magmante): já estavam integradas (Blocos 62/70); conferidas no jogo, teste de carga e **F3 → "invasão com todos os tipos"** | `docs/BLOCO91_CRIATURAS_PIXELLAB.md` |
+
+**Arte provisória** (geradores em `prototipos/camera/arte_iso/`):
+- ruína do coletor: `coletor_ruina.py`;
+- ícones dos itens: `ui/icones_itens.py`;
+- fornalha: `fornalha_provisoria.py`;
+- igreja: `igreja_provisoria.py`;
+- decoração: `decor_provisoria.py`;
+- balão de fala;
+- fundidor, ferreiro e padre com a roupa de outro ofício e um tom de cor (`FUNDIDOR_TOM`, `FERREIRO_TOM`,
+  `PADRE_TOM` no `ipezinho.gd`).
+
+O PixelLab não foi usado nestes blocos (a não ser pra listar as criaturas no 91).
+
+**Testes:**
+- Cada bloco tem o seu teste (b81–b91), e todos passam.
+- Também passaram depois das mudanças: b25, b26, b27, b28, b29_30, b31, b31b, b32, b33, b34, b35, b36, b37,
+  b39, b40, b41, b42, b44, b45, b46, b47, b52, b55, b56, b57, b58, b60, b61, b62, b71, b77, b80, p17, p18,
+  p19, p20, p28_save, p29_predios, hud_frostpunk.
+- **Testes antigos ajustados:**
+  - b45 e b47 (coletor em ruína);
+  - b40, b60, p18 e p19 (relógio de 24 h);
+  - b31, b31b, b32, b35, b42 e b47 (ferreiro, barras);
+  - b46 (o cartão do coletor só aparece com a ruína restaurada);
+  - b84 (a hora social do 85);
+  - `tests/ciclo_luz.gd` (as fotos usam horas).
+- **A bateria inteira não rodou.** O sistema derrubou a bateria em segundo plano por falta de memória: os
+  editores do Marco ocupam ~1,8 GB e sobravam ~4,5 GB livres. Desde então, os testes rodam **um por vez, em
+  primeiro plano**.
+- **Não conferidos depois dos Blocos 81–91:** b37, b38, b48, b51 (longo), b54, b63, b64, b67, b68, b69, b70,
+  b72, b73, b74, b75, b76, b78, b79, b81 (depois do 84), b82, p2, p28_iso, p29_bonecos, p29_mapa,
+  p29_natureza, manut_backups. Rodar a bateria inteira quando a memória deixar (fechar o editor antes).
+
+**Próximo:**
+- o Marco valida os blocos;
+- push com o OK dele;
+- arte de verdade (PixelLab) pra fornalha, igreja, decoração, fundidor, ferreiro, padre e a ruína do coletor,
+  se ele quiser.
+
+**Pra ver as coisas novas rápido (F3):**
+- "Andares: abrir todos" + "Ir para: …";
+- "Criaturas: invasão com todos os tipos";
+- "Pular dia" na barra de cima;
+- o domingo é o dia 7: a missa às 09:00 precisa do padre (estágio 2) e da igreja.
+
+## Antes (2026-10-05): Blocos 75, 76 e 77 — feitos, esperando o Marco conferir
 
 Pedidos do Marco: (1) "fica na montanha e pode seguir" (ferro fica na montanha; seguir com a coluna da
 maquete); (2) "verificar a movimentação dos personagens todos, se precisar usar o blender... e continua o

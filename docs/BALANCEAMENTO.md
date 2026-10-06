@@ -9,9 +9,9 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
+Total: **814 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
-## `scripts/core/audio_manager.gd` (63)
+## `scripts/core/audio_manager.gd` (78)
 
 **Volumes (0 a 1)**
 
@@ -93,6 +93,26 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `ui_db` | -6.0 |  |  |
 | `pitch_variation` | 0.08 |  | Variação aleatória de pitch (0.08 = ±8%), pra não soar repetitivo. |
 
+**Bloco 55: sons novos, ambiência e música**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `build_db` | -12.0 |  |  |
+| `build_done_db` | -6.0 |  |  |
+| `harvest_db` | -12.0 |  |  |
+| `equip_db` | -10.0 |  |  |
+| `party_db` | -8.0 |  |  |
+| `place_db` | -8.0 |  |  |
+| `creature_down_db` | -8.0 |  |  |
+| `drill_db` | -14.0 |  |  |
+| `ui_panel_db` | -14.0 |  |  |
+| `max_same_voice` | 4 |  | Quantas vozes do MESMO som ao mesmo tempo (15 mineradores batendo não viram um muro de som). |
+| `music_crossfade` | 2.5 |  | Segundos da troca de música (calma <-> perigo) e de ambiência (mina, superfície, fundo). |
+| `ambience_crossfade` | 2.0 |  |  |
+| `ambience_db` | {"mina": 0.0, "dia": -4.0, "noite": -5.0, "fundo": -1.0} |  | Volume de cada ambiência (dB) e da chuva por cima. |
+| `rain_db` | -6.0 |  |  |
+| `limiter_ceiling_db` | -0.5 |  | Teto do limitador no Master (dB): nada passa disso, nem com tudo tocando junto. |
+
 **Limites**
 
 | valor | padrão | na cena | o quê |
@@ -100,6 +120,47 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `max_voices` | 24 |  |  |
 | `max_steps_per_second` | 8.0 |  | Máximo de passos tocando por segundo somando todos os ipezinhos. |
 | `sfx_max_distance` | 900.0 |  | Distância (em pixels do mundo) além da qual efeitos posicionais não tocam. |
+
+## `scripts/core/calendario.gd` (14)
+
+**Padre**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `padre_estagio` | 2 |  | Estágio da vila em que o padre chega (2 = Vilarejo). |
+| `padre_nome` | "Padre Bento" |  | Nome dele. |
+
+**Missa (domingo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `missa_inicio` | 9.0 |  |  |
+| `missa_fim` | 11.0 |  |  |
+| `missa_animo` | 6.0 |  | Ânimo de quem foi à missa (fator "foi à missa"), que some aos poucos (por segundo). |
+| `missa_decai` | 0.012 |  |  |
+| `aconselhamento_por_segundo` | 0.6 |  | Zanga a menos por segundo de quem está na igreja (o padre lá dobra). |
+
+**Funeral**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `funeral_horas` | 1.0 |  | Horas de funeral na igreja, começando na hora social depois da morte. |
+| `funeral_alivio` | 12.0 |  | Quanto o luto da vila cai com cada funeral. |
+
+**Domingo à tarde**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `tarde_inicio` | 13.0 |  | A tarde do domingo começa (até o fim do expediente). |
+| `aviso_escolha` | 12.0 |  | A janela da escolha abre sozinha a esta hora do domingo. |
+| `domingo_trabalho_zanga` | 20.0 |  | Trabalhar no domingo: zanga a mais de uma vez pra cada um (hora extra). |
+| `festival_mult` | 1.5 |  | Festival do dia de festa da estação: o ânimo da festa x isto. |
+
+**Calendário**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `festivais` | PackedStringArray(["Festa das Flores", "Festa do Sol", "Festa da Colheita", "Festa das Lanternas"]) |  | Nome do festival de cada estação (primavera, verão, outono, inverno). |
 
 ## `scripts/core/camera_controller.gd` (16)
 
@@ -134,16 +195,37 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `bounds` | Rect2() |  | Área onde o centro da câmera pode ficar (normalmente o mapa). Tamanho zero = sem limite. |
 | `bounds_margin` | 80.0 |  |  |
 
-## `scripts/core/day_night.gd` (18)
+## `scripts/core/caminhos.gd` (5)
 
-**Duração (segundos reais)**
+**(sem grupo)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `day_duration` | 180.0 |  |  |
-| `night_duration` | 60.0 |  |  |
+| `tamanho` | 20.0 |  | Lado de uma célula da grade (px do chão). |
+| `custos` | {"terra": Vector3i(2, 0, 0), "cascalho": Vector3i(3, 1, 0), "pedra": Vector3i(5, 2, 0)} |  | Custo por célula: x = créditos, y = ferro (pedra/cascalho), z = madeira. |
+| `bonus` | {"terra": 0.12, "cascalho": 0.2, "pedra": 0.3} |  | Bônus de velocidade de quem anda sobre o caminho (0.15 = +15%), por tipo. |
+| `rota_entrada` | 140.0 |  | Rota do passeio: só usa caminho que comece/termine até esta distância (px) de quem sai e do destino. |
+| `rota_passo` | 3 |  | Rota do passeio: um waypoint a cada tantas células. |
+
+## `scripts/core/day_night.gd` (22)
+
+**Relógio de 24 horas (Bloco 83)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `duracao_dia_real` | 540.0 |  | Segundos REAIS de um dia inteiro (24 h de jogo). 540 = 9 minutos; 1 hora de jogo = 22,5 s. |
+| `hora_amanhecer` | 5.0 |  | Hora em que amanhece (o turno começa, o dia do jogo vira). 5.0 = 05:00. |
+| `hora_fim_expediente` | 18.0 |  | Hora do fim do expediente (a agenda manda voltar e largar a carga). 18.0 = 18:00. |
+| `hora_anoitecer` | 18.5 |  | Hora em que anoitece (is_night: todo mundo pra casa). 18.5 = 18:30. |
+| `hora_dormir` | 21.5 |  | Hora de dormir (a hora social acaba). 21.5 = 21:30. |
 | `time_scale` | 1.0 |  | Acelera o relógio (2 = passa 2x mais rápido). Útil pra testar. |
 | `start_time` | 0.0 |  | Em que ponto do dia o jogo começa (segundos desde o amanhecer). |
+
+**Pular dia (Bloco 83)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `pular_velocidade` | 8.0 |  | Velocidade do jogo enquanto pula o dia (Engine.time_scale): a simulação roda de verdade, só mais rápida. |
 
 **Horários da luz (segundos em volta da virada)**
 
@@ -179,7 +261,18 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `torch_on_at` | 0.25 |  | Escuridão (0 = dia, 1 = noite) em que as tochas começam a acender... |
 | `torch_full_at` | 0.6 |  | ...e em que ficam totalmente acesas. |
 
-## `scripts/core/defense.gd` (35)
+## `scripts/core/decoracoes.gd` (4)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `reembolso` | 0.5 |  | Fração do custo devolvida ao remover uma peça. |
+| `beleza_raio` | 110.0 |  | Distância (px do chão) em que a decoração enfeita uma casa. |
+| `beleza_teto` | 6.0 |  | Teto do ânimo de "casa enfeitada". |
+| `nav_espera` | 0.6 |  | Segundos sem pôr/tirar peça grande até refazer a navegação (uma vez só pra várias). |
+
+## `scripts/core/defense.gd` (59)
 
 **Armas (na ordem de WEAPON_IDS)**
 
@@ -213,6 +306,7 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `arsenal_wood` | 60 |  |  |
 | `arsenal_build_time` | 40.0 |  | Segundos de engenheiro pra erguer o Arsenal. |
 | `forge_queue_max` | 4 |  | Máximo de encomendas na fila da forja. |
+| `poco_post_dist` | 40.0 |  | Bloco 80: distância (px) da boca do poço até o posto dos guardas, pro lado da vila. |
 
 **Campo de treino**
 
@@ -233,15 +327,43 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `lumi_max` | 10 |  |  |
 | `ferr_per_wave` | 1 |  |  |
 | `ferr_max` | 6 |  |  |
+| `gosma_from_wave` | 2 |  | Bloco 70: Gosma ácida (com o S2 aberto) e Magmante (com o S3 aberto), a partir da onda indicada. |
+| `gosma_per_wave` | 1 |  |  |
+| `gosma_max` | 4 |  |  |
+| `magmante_from_wave` | 3 |  |  |
+| `magmante_per_wave` | 1 |  |  |
+| `magmante_max` | 3 |  |  |
 | `hp_growth` | 0.15 |  | Vida das criaturas cresce essa fração por onda. |
-| `warn_before` | 40.0 |  | Aviso quando faltar isso (s) pro anoitecer numa noite de invasão. |
-| `spawn_spread` | 20.0 |  | As criaturas vão chegando ao longo desses segundos do começo da noite. |
+| `hora_aviso_invasao` | 21.0 |  | Bloco 83: numa noite de invasão o aviso toca a esta hora do relógio (o rádio adianta research.radio_warning_bonus segundos)... |
+| `hora_invasao` | 22.0 |  | ...e a invasão começa a esta hora (todo mundo já em casa, os guardas nos postos). Acaba no amanhecer. |
+| `spawn_spread` | 20.0 |  | As criaturas vão chegando ao longo desses segundos do começo da invasão. |
 | `strong_from_wave` | 4 |  | Prompt 17: a partir dessa onda, 1 a cada `strong_every` criaturas vem na forma FORTE (Lumívoro bruto, Ferrugento carregador), com mais vida e dano. 0 = nunca. |
 | `strong_every` | 3 |  |  |
 | `strong_hp_mult` | 1.6 |  |  |
 | `strong_damage_mult` | 1.3 |  |  |
 
-## `scripts/core/economy.gd` (15)
+**Tiers e chefe (Bloco 62)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `tier_every_waves` | 3 |  | Tier da onda = 1 + onda / tier_every_waves + pesquisas feitas / tier_research_step. |
+| `tier_research_step` | 4 |  |  |
+| `tier_hp_bonus` | 0.12 |  | Por tier acima do 1: vida extra e o forte vem mais vezes (strong_every - 1 por tier, mínimo 2). |
+| `elite_from_tier` | 3 |  | A partir deste tier, os fortes viram ELITE (ancião/blindado): mais vida e dano. |
+| `elite_hp_mult` | 1.35 |  |  |
+| `elite_damage_mult` | 1.2 |  |  |
+| `boss_from_season` | 1 |  | O CHEFE (Matriarca dos Lumívoros): uma vez por estação, a partir desta estação da partida (0 = 1ª primavera, 1 = 1º verão...), na 1ª invasão dela. |
+| `boss_hp_mult` | 10.0 |  |  |
+| `boss_damage_mult` | 2.0 |  |  |
+| `boss_call_every` | 9.0 |  | Grito: a cada tantos segundos chama mais Lumívoros perto dela (até boss_call_max no total). |
+| `boss_call_count` | 2 |  |  |
+| `boss_call_max` | 8 |  |  |
+| `boss_weapon_corrode` | 4.0 |  | Golpe dela num guarda armado gasta a arma (pontos de durabilidade a mais). |
+| `boss_reward_solarita` | 40 |  | Recompensa: solarita, peças raras e pontos na pesquisa em andamento. |
+| `boss_reward_parts` | 2 |  |  |
+| `boss_reward_research` | 80.0 |  |  |
+
+## `scripts/core/economy.gd` (20)
 
 **Venda**
 
@@ -252,7 +374,17 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `coal_price` | 3.0 |  | Créditos por unidade de carvão. |
 | `silver_price` | 8.0 |  | Créditos por unidade de prata (nível 2: mais perigoso, paga mais). |
 | `solarita_price` | 14.0 |  | Créditos por unidade de solarita (nível 3, o abismo). |
+| `cristal_verde_price` | 10.0 |  | Bloco 70: cristal verde (S2, galerias de ácido) e cristal rubro (S3, poços de lava). |
+| `cristal_rubro_price` | 18.0 |  |  |
+| `gema_azul_price` | 30.0 |  | Bloco 71: gema azul (S5, a beira do lago). |
+| `precos_itens` | {} |  | Bloco 82: troca o preço de venda (créditos por unidade) de itens do catálogo que não são minério, ex.: {"barra_ferro": 10.0}. Vazio = o preço base do items.gd. Preço 0 = não se vende. |
 | `starting_credits` | 0.0 |  |  |
+
+**Metal: custos em barra (Bloco 87)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `minerios_por_barra` | 2.0 |  | Nos custos MIGRADOS pra barra (armas, ampliação das barricadas, peças da Escavadeira, reatores, coletores, laboratório): quantos minérios valem UMA barra. Os campos de custo continuam em minério; a partir do estágio da fornalha (centro_vila.fornalha_estagio) o jogo pede ceil(minério / isto) barras do tipo. |
 | `auto_sell` | false |  | Vende sozinho o que estiver no armazém a cada auto_sell_interval segundos. |
 | `auto_sell_interval` | 4.0 |  |  |
 
@@ -302,7 +434,7 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `deep_rect` | Rect2(-560, 700, 1120, 620) |  | Área do nível 2, abaixo (ao sul) da mina; a descida é o elevador da escavadeira. |
+| `deep_rect` | Rect2(-700, 3600, 1400, 260) |  | Área do nível 2, abaixo (ao sul) da mina; a descida é o elevador da escavadeira. |
 | `deep_floor_texture` | — | **(recurso)** (main.tscn) |  |
 | `deep_injury_mult` | 2.5 |  | Chance de acidente multiplicada por isso minerando no nível 2 (acumula com a zanga). |
 | `deep_boulder_count` | 12 |  |  |
@@ -314,7 +446,7 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `abyss_rect` | Rect2(-480, 1420, 960, 560) |  | Área do nível 3, abaixo do nível 2; a descida é a plataforma do abismo (conserto). |
+| `abyss_rect` | Rect2(-700, 4000, 1400, 260) |  | Área do nível 3, abaixo do nível 2; a descida é a plataforma do abismo (conserto). |
 | `abyss_floor_texture` | — | **(recurso)** (main.tscn) |  |
 | `abyss_injury_mult` | 4.0 |  | Chance de acidente multiplicada por isso minerando no abismo (no lugar da do nível 2). |
 | `abyss_boulder_count` | 10 |  |  |
@@ -366,7 +498,7 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `palisade_y` | -462.0 |  | Paliçada entre a floresta e a vila: y da linha e meia largura da abertura do portão. |
+| `palisade_y` | -462.0 |  | Paliçada entre a floresta e a vila: y da linha e meia largura da abertura do portão. (Bloco 74: com o mapa da maquete v3 a paliçada corre de norte a sul — ver palisade_x; o y fica sendo a beira da floresta do leste.) |
 | `gate_half_width` | 40.0 |  |  |
 | `cliff_thickness` | 6.0 |  | Espessura (px do mundo) da "parede" que a navegação vê na beira de um penhasco. |
 
@@ -428,6 +560,55 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `bobina_chance` | 0.08 |  |  |
 | `robot_chance` | 0.1 |  |  |
 | `robot_guarantee_after` | 6 |  | Achados no fundo até o robô aparecer com certeza. |
+
+## `scripts/core/fundo.gd` (22)
+
+**Poça de ácido (S2)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `acido_lentidao` | 0.6 |  | Velocidade de quem está dentro sem máscara (0.6 = 60%). |
+| `acido_exposicao` | 5.0 |  | Segundos dentro sem máscara até queimar (machucado leve). |
+| `acido_grave` | 0.0 |  | Chance da queimadura de ácido ser grave. |
+
+**Poço de lava (S3)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `lava_lentidao` | 0.5 |  |  |
+| `lava_exposicao` | 2.5 |  |  |
+| `lava_grave` | 0.3 |  |  |
+
+**Água (S4)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `agua_lentidao` | 0.8 |  | Bloco 71: a água do S4 não pede traje: atrasa um pouco e molha; molhado, a lava queima x molhado_lava. |
+| `agua_molhado` | 20.0 |  |  |
+| `molhado_lava` | 0.3 |  |  |
+
+**Ventilador (S2)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `ventilador_credits` | 400 |  |  |
+| `ventilador_ore` | 60 |  |  |
+| `ventilador_ore_type` | "prata" |  |  |
+| `ventilador_wood` | 40 |  |  |
+| `ventilador_build_time` | 45.0 |  | Segundos de engenheiro pra montar. |
+| `ventilador_max` | 4 |  |  |
+| `ventilador_alcance` | 260.0 |  | Alcance (px da lógica) e quanto ele corta: a máscara gasta e o ácido queima x (1 - redução). |
+| `ventilador_reducao` | 0.5 |  |  |
+| `ventilador_nevoa` | 0.2 |  | Cada ventilador tira essa fração da névoa verde do S2 (no máximo ventilador_nevoa_max). |
+| `ventilador_nevoa_max` | 0.6 |  |  |
+
+**Escavadeira no fundo**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `broca_cristal_verde` | 0.12 |  | Chance de cada minério da broca virar cristal (S2 aberto: verde; S3 aberto: rubro). |
+| `broca_cristal_rubro` | 0.08 |  |  |
+| `broca_s3_mult` | 1.25 |  | Com o S3 aberto a broca rende mais (o fundo do abismo é mais quente e mais mole). |
 
 ## `scripts/core/hud.gd` (4)
 
@@ -514,7 +695,47 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `park_rate` | 0.5 |  | Ânimo ganho por segundo por quem está no raio (ao ar livre). |
 | `park_cap` | 100.0 |  | O parque só leva o ânimo até aqui (o teto geral é 100). |
 
-## `scripts/core/research.gd` (18)
+## `scripts/core/nivel_mina.gd` (33)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `id` | "S1" |  | Identificador (S1, S2...) e nome na tela. |
+| `nome` | "Mina" |  |  |
+| `profundidade` | 1 |  | Profundidade (0 = superfície; 1, 2, 3...). Ordem no corte da mina. |
+| `area` | "mapa" |  | Onde fica na lógica: "mapa" (a pedreira/vila), "deep" (deep_rect), "abyss" (abyss_rect), um nome próprio com `rect` (Bloco 71: "s4", "s5") ou "" (ainda não existe). |
+| `rect` | Rect2() |  | Bloco 71: o retângulo na lógica dos níveis novos (os antigos usam deep_rect/abyss_rect do ambiente). |
+| `perigo` | "" |  | Perigo principal: "" (nenhum), "poeira", "gas", "calor", "radiacao", "acido", "agua". |
+| `traje` | "" |  | Traje que o perigo pede (equipment.gd: "gas", "calor", "radiacao"; "" = nenhum). |
+| `pesquisa` | "" |  | Pesquisa que libera a descida ("" = nenhuma) e o grupo da ligação (elevador) que chega aqui. |
+| `ligacao` | "" |  |  |
+| `em_breve` | false |  | Declarado mas ainda não jogável (aparece como "em breve"). |
+| `minerios` | PackedStringArray() |  | Minérios e criaturas típicos (informativo + conteúdo do Bloco 70). |
+| `criaturas` | PackedStringArray() |  |  |
+| `cor_ambiente` | Color(1, 1, 1) |  | Atmosfera (Bloco 69): luz ambiente, cor da névoa, partículas ("", "poeira", "acido", "calor", "bolhas", "gotas"). |
+| `cor_nevoa` | Color(0, 0, 0, 0) |  |  |
+| `particulas` | "" |  |  |
+| `mapa_regiao` | Rect2() |  | Bloco 72: onde o nível fica no MAPA DO MUNDO (assets/game/ui/corte/mapa_mundo.png, px da imagem): é ali que aparecem os ipezinhos, as jazidas e o clique do nível. |
+| `faixa` | "" |  | Faixa do corte da mina (assets/game/ui/corte/<faixa>.png; "" = cor lisa) e a cor da faixa sem arte. |
+| `cor_faixa` | Color(0.2, 0.18, 0.16) |  |  |
+| `decoracao` | [] |  | Decoração por dados (Bloco 69): [prop, x, y] na lógica, colocada pelo ambiente quando o nível existe. |
+| `decoracao_sorteada` | [] |  | Bloco 72: decoração SORTEADA por dados: [quantas, [props...]] — o ambiente espalha em lugar livre do nível (longe de jazida, poça, gaiola e uma da outra), com sorteio fixo por nível (a mesma em todo jogo). |
+| `decalques` | [] |  | Bloco 72: decalques deitados no chão da laje (só visual): [imagem em assets/game/iso/chao, x, y]. Os de nome "rio_lava*" brilham como lava. |
+| `perigos` | [] |  | Bloco 70: poças de perigo do chão (props/poca_perigo.gd): [tipo ("acido"/"lava"), x, y, raio]. |
+| `jazidas` | [] |  | Bloco 70: jazidas do nível: [minério, x, y] ou [minério, x, y, total, ritmo, regeneração]. Nome fixo no save: Jazida<id>_<n> (JazidaS2_1...). |
+| `ligacao_topo` | Vector2.ZERO |  | Bloco 71: a ligação que chega aqui, montada pelo ambiente quando não está na cena (grupo = `ligacao`): a plataforma arruinada fica no nível de cima (`ligacao_topo`), a gaiola de chegada aqui (`ligacao_fundo`); o conserto custa créditos (x), peças raras (y), minério (z, do tipo `conserto_minerio`) e segundos (w), com a vila no estágio `conserto_estagio`. `ligacao_acima` = o grupo da ligação que tem que estar aberta antes. |
+| `ligacao_fundo` | Vector2.ZERO |  |  |
+| `ligacao_acima` | "" |  |  |
+| `conserto` | Vector4i(2000, 14, 150, 120) |  |  |
+| `conserto_minerio` | "solarita" |  |  |
+| `conserto_estagio` | 5 |  |  |
+| `obstaculos` | [] |  | Bloco 71: áreas não andáveis do nível: a ELIPSE dentro de [x, y, w, h] (na lógica: o lago). |
+| `animo` | 0.0 |  | Bloco 71: soma no alvo de ânimo de quem está no nível (o lago azul acalma; negativo = pesa), com o motivo que aparece na janela do ipezinho. |
+| `animo_motivo` | "" |  |  |
+| `titulo_abertura` | "" |  | Bloco 71: a faixa que aparece quando a ligação abre (título; o texto é a descrição). |
+
+## `scripts/core/research.gd` (27)
 
 **Laboratório**
 
@@ -544,6 +765,20 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `floodlight_damage` | 1.3 |  |  |
 | `satellite_every_days` | 2 |  |  |
 
+**Dinamite e rádio (Bloco 60)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `dynamite_credits` | 40 |  | Custo de uma dinamite (créditos e carvão) e quantas cabem no paiol. |
+| `dynamite_coal` | 15 |  |  |
+| `dynamite_max` | 5 |  |  |
+| `dynamite_risk_miner` | 0.04 |  | Chance de acidente ao explodir: minerador (sabe mexer) e qualquer outro. |
+| `dynamite_risk_untrained` | 0.2 |  |  |
+| `dynamite_fuse` | 2.5 |  | Segundos do pavio depois de chegar no entulho; desiste (devolve a dinamite) depois deste tempo andando. |
+| `dynamite_walk_timeout` | 60.0 |  |  |
+| `radio_warning_bonus` | 60.0 |  | Rádio: o aviso de invasão vem estes segundos antes do normal; com satélite, um colono a cada N dias. |
+| `radio_satellite_every_days` | 1 |  |  |
+
 ## `scripts/core/save_manager.gd` (3)
 
 **(sem grupo)**
@@ -554,17 +789,56 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `save_on_quit` | true |  | Salva sozinho ao fechar a janela. |
 | `max_backups` | 5 |  | Quantos backups com data/hora manter em user://backups (o mais antigo, por data, sai). |
 
-## `scripts/core/sun.gd` (18)
+## `scripts/core/schedule.gd` (20)
+
+**Agenda (horas do relógio; os marcos ficam no DayNight)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `cafe_fim` | 7.0 |  | Fim do café (o trabalho da manhã começa). 7.0 = 07:00. |
+| `almoco_inicio` | 12.0 |  | Almoço: começo e fim. |
+| `almoco_fim` | 13.0 |  |  |
+
+**Exceções**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `cozinheiro_inicio` | 4.0 |  | O cozinheiro acorda e começa a cozinhar (o café) a esta hora. |
+| `jantar_preparo` | 16.0 |  | Daqui até o anoitecer o cozinheiro prepara o jantar (sem o "voltar" das 18:00). |
+| `medico_turno` | 0.5 |  | Horas de cada turno de refeição do médico (o 2º médico come depois do 1º, e assim por diante). |
+| `vigilia_fracao` | 0.5 |  | Fração dos guardas de vigia numa noite comum (gira a cada dia; pelo menos 1). Noite de invasão: todos. |
+
+**Refeições**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `porcao` | 8.0 |  | Unidades de comida do comedouro que uma refeição gasta (uma porção). |
+| `refeicao_fome` | 45.0 |  | Fome que uma refeição restaura (a fome vai até 100). |
+| `refeicao_dispensa` | 0.9 |  | Acima desta fração da fome máxima ele pula a refeição (sem fome; não conta como perdida). |
+| `perda_por_refeicao` | 0.12 |  | Quanto o trabalho rende a menos por refeição perdida (0.12 = -12%)... |
+| `perda_max` | 3 |  | ...até este tanto de refeições perdidas seguidas. |
+
+**Hora social (Bloco 85)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `conversa_min` | 10.0 |  | Segundos REAIS que ele fica em cada ponto antes de trocar (sorteado entre os dois). |
+| `conversa_max` | 22.0 |  |  |
+| `animo_por_segundo` | 0.5 |  | Ânimo por segundo conversando com alguém na roda (x animo_mult do ponto)... |
+| `animo_max` | 8.0 |  | ...até este tanto (fator "conversou com os amigos" no ânimo)... |
+| `animo_decai` | 0.01 |  | ...que vai sumindo devagar depois (por segundo). |
+| `balao_min` | 2.0 |  | Intervalo (s) entre um balão e outro de quem está numa roda (sorteado entre os dois). |
+| `balao_max` | 4.5 |  |  |
+| `passeio_desvio` | 160.0 |  | Passeio: passa por outro ponto no caminho se o desvio for até isto (px do chão). |
+
+## `scripts/core/sun.gd` (17)
 
 **Estações (índice 0 = Primavera)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `days_per_season` | 4 |  |  |
-| `adjust_day_length` | true |  | Mexe na duração do dia/noite conforme a estação (desligue pra testar com dia fixo). |
-| `season_day_mult` | [1.0, 1.2, 1.0, 0.8] |  |  |
-| `season_night_mult` | [1.0, 0.8, 1.0, 1.25] |  |  |
-| `season_wave_chance` | [0.3, 0.6, 0.3, 0.15] |  |  |
+| `semanas_por_estacao` | 2 |  | Bloco 83: semanas (de 7 dias) por estação. |
+| `season_wave_chance` | [0.25, 0.5, 0.25, 0.12] |  | Chance POR DIA de ter onda solar, em cada estação (Bloco 83: com estações de 14 dias e dias de 9 min, um pouco menor que antes, pra não virar onda todo dia no verão). |
 | `season_hunger_mult` | [1.0, 1.0, 1.0, 1.25] |  |  |
 | `season_garden_mult` | [1.3, 1.0, 0.8, 0.5] |  |  |
 | `winter_joy` | -3.0 |  | Ânimo no inverno (frio). |
@@ -574,6 +848,8 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `first_wave_day` | 2 |  |  |
+| `onda_hora_min` | 8.0 |  | Bloco 83: a onda chega numa hora sorteada entre estas (horas do relógio; 8.0 = 08:00). |
+| `onda_hora_max` | 16.0 |  |  |
 | `wave_duration` | 35.0 |  |  |
 | `wave_growth` | 0.08 |  | Intensidade cresce isso por dia (o sol está piorando). |
 | `warn_time_studied` | 60.0 |  | Aviso antes da onda: com o Estudo da explosão solar / sem. |
@@ -657,8 +933,8 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `hunger_max` | 100.0 |  |  |
-| `hunger_decay` | 0.8 |  | Fome gasta por segundo (ritmo: era 0.7). |
-| `hunger_threshold` | 30.0 |  |  |
+| `hunger_decay` | 0.2 |  | Fome gasta por segundo REAL. Bloco 84 (fome controlada): devagar — 0,2/s = 4,5 por hora de jogo; quem enche são as 3 refeições da agenda (Schedule). (Era 0.8 com o comer contínuo.) |
+| `hunger_threshold` | 30.0 |  | Abaixo disso come FORA da hora das refeições (fome braba: uma porção). |
 | `eat_until_ratio` | 0.95 |  | Come até atingir essa fração da fome máxima. |
 
 **Turno / casa**
@@ -791,10 +1067,10 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `walk_anim_fps` | 9.0 |  |  |
+| `walk_anim_fps` | 13.0 |  | Bloco 73: 13 quadros/s na velocidade normal = o passo da vista iso (IsoBillboard.PASSO_CICLO: 4 quadros a cada 56 px de arte = ~37 px daqui); o som do passo cai junto com o pé. |
 | `head_lamp_enabled` | true |  |  |
 
-## `scripts/props/abyss_shaft.gd` (7)
+## `scripts/props/abyss_shaft.gd` (13)
 
 **(sem grupo)**
 
@@ -802,6 +1078,15 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 |---|---|---|---|
 | `bottom_position` | Vector2(-360, 1500) |  | Onde fica a gaiola de chegada lá embaixo (coordenadas do mundo, dentro do abismo). |
 | `link_travel_cost` | 0.05 |  |  |
+
+**Andar (Bloco 71)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `grupo` | "elevador_abismo" |  | A mesma plataforma serve de ligação pros níveis novos (montada pelo ambiente a partir do .tres): grupo próprio, o nível que ela abre e a ligação de cima que tem que estar aberta antes. |
+| `nivel_id` | "S3" |  |  |
+| `requer_grupo` | "elevador" |  |  |
+| `repair_ore` | "prata" |  | Minério gasto no conserto (o do abismo é prata). |
 
 **Conserto**
 
@@ -812,6 +1097,13 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `repair_silver` | 150 |  |  |
 | `repair_time` | 120.0 |  |  |
 | `repair_min_stage` | 4 |  | Estágio mínimo da vila pra começar o conserto. |
+
+**Viagem (Bloco 68)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `travel_time` | 1.6 |  | Segundos na gaiola por viagem e quantos cabem nela de uma vez (mais gente = espera a próxima). |
+| `capacity` | 4 |  |  |
 
 ## `scripts/props/armazem.gd` (4)
 
@@ -837,13 +1129,14 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 |---|---|---|---|
 | `forge_sound_interval` | 0.9 |  | Intervalo entre as marteladas enquanto forja. |
 
-## `scripts/props/barricada.gd` (6)
+## `scripts/props/barricada.gd` (7)
 
 **(sem grupo)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `gate_id` | "tunel" |  |  |
+| `vertical` | false |  | Bloco 74: o portão numa paliçada de norte a sul (a vila fica a leste): a arte vira de lado. |
 | `display_name` | "Portão do túnel" |  |  |
 | `hp_per_level` | [0.0, 120.0, 260.0, 450.0] |  | Vida por nível (índice = nível). |
 | `upgrade_costs` | [Vector3i.ZERO, Vector3i(80, 0, 60), Vector3i(250, 120, 40), Vector3i(500, 200, 30)] |  | Ampliar pro nível i: x = créditos, y = minério, z = madeira. (índice 0 não usado) |
@@ -858,7 +1151,7 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 |---|---|---|---|
 | `train_rate` | 0.009 |  | Habilidade ganha por segundo treinando (1.0 = 100%). 0.009 -> ~110 s pra ficar pronto. |
 
-## `scripts/props/casa.gd` (3)
+## `scripts/props/casa.gd` (12)
 
 **(sem grupo)**
 
@@ -868,7 +1161,21 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `placed_by_player` | false |  | true = casa nova que o jogador posicionou (a posição vai pro save; as 3 iniciais são fixas). |
 | `starter_house` | false |  | Bloco 37: casa inicial da fundação (não soma no limite de ipezinhos quando fica pronta). |
 
-## `scripts/props/centro_vila.gd` (32)
+**Níveis (Bloco 56)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `max_nivel` | 3 |  |  |
+| `beds_by_level` | [4, 6, 8] |  | Camas e conforto (ânimo de quem mora) por nível: [nível 1, nível 2, nível 3]. |
+| `comfort_by_level` | [0.0, 4.0, 8.0] |  |  |
+| `upgrade_credits` | [0, 220, 420] |  | Custo pra CHEGAR em cada nível [nível 1 (não usado), nível 2, nível 3]: créditos, ferro, madeira, segundos de engenheiro. |
+| `upgrade_ore` | [0, 40, 90] |  |  |
+| `upgrade_wood` | [0, 40, 70] |  |  |
+| `upgrade_seconds` | [0.0, 40.0, 60.0] |  |  |
+| `level_min_stage` | [0, 2, 3] |  | Pré-requisitos de cada nível [nível 1, 2, 3]: estágio mínimo do Centro da Vila e pesquisa ("" = nenhuma). |
+| `level_research` | ["", "", "medicina"] |  |  |
+
+## `scripts/props/centro_vila.gd` (61)
 
 **Estágios da vila**
 
@@ -898,7 +1205,8 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `trilhas_costs` | [Vector2i(150, 25), Vector2i(375, 100), Vector2i(810, 250)] |  |  |
-| `speed_bonus_per_level` | 0.1 |  | Velocidade extra por nível (0.1 = +10% por nível). |
+| `speed_bonus_per_level` | 0.1 |  | (Antes do Bloco 89: velocidade extra pra todo mundo por nível. Não é mais usado; fica pro save/inspector.) |
+| `trilhas_bonus_por_nivel` | 0.5 |  | Bloco 89: quanto cada nível de Trilhas aumenta o bônus de velocidade dos CAMINHOS (0.5 = +50% do bônus). |
 
 **Obras (Bloco 31)**
 
@@ -930,6 +1238,69 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `coletor_ore` | 60 |  |  |
 | `coletor_build_time` | 40.0 |  |  |
 
+**Igreja (Bloco 88)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `igreja_credits` | 220 |  | Construir a igreja (uma por vila): créditos, pedra (ferro) e madeira; segundos de engenheiro. |
+| `igreja_ore` | 40 |  |  |
+| `igreja_wood` | 80 |  |  |
+| `igreja_build_time` | 50.0 |  |  |
+| `igreja_estagio` | 2 |  | Estágio mínimo da vila pra construir. |
+
+**Fornalha (Bloco 86)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `fornalha_credits` | 180 |  | Construir a fornalha: SÓ créditos e minério (madeira nenhuma: não trava o começo); segundos de engenheiro. |
+| `fornalha_ore` | 50 |  |  |
+| `fornalha_build_time` | 35.0 |  |  |
+| `fornalha_estagio` | 2 |  | Estágio da vila em que a fornalha libera (2 = Vilarejo). |
+
+**Oficina (Bloco 58)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `oficina_credits` | 200 |  |  |
+| `oficina_ore` | 40 |  |  |
+| `oficina_wood` | 60 |  |  |
+| `oficina_build_time` | 40.0 |  |  |
+
+**Desbravar o leste (Bloco 67)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `leste_credits` | 900 |  |  |
+| `leste_ore` | 120 |  |  |
+| `leste_wood` | 160 |  |  |
+| `leste_build_time` | 80.0 |  |  |
+| `leste_min_stage` | 2 |  |  |
+
+**Trilho e vagonete (Bloco 64)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `vagonete_credits` | 260 |  |  |
+| `vagonete_ore` | 80 |  |  |
+| `vagonete_wood` | 80 |  |  |
+| `vagonete_build_time` | 50.0 |  |  |
+
+**Ferrovia de carga (Bloco 79)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `ferrovia_base` | Vector4i(300, 60, 100, 60) |  | Custo da estação de cada andar: base + por andar de profundidade (créditos, ferro, madeira, segundos de obra). |
+| `ferrovia_por_andar` | Vector4i(150, 30, 20, 15) |  |  |
+
+**Coletor de minério (Bloco 57)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `coletor_min_credits` | 280 |  |  |
+| `coletor_min_ore` | 40 |  |  |
+| `coletor_min_wood` | 60 |  |  |
+| `coletor_min_build_time` | 45.0 |  |  |
+
 **Enfermaria extra (Bloco 47)**
 
 | valor | padrão | na cena | o quê |
@@ -947,13 +1318,33 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `house_radius_per_stage` | 70.0 |  | ...e o raio cresce isso a cada estágio da vila. |
 | `house_radius_enabled` | false |  | false = sem limite (casa em qualquer lugar livre da mina). Prompt 29 (decisão do Marco, 2026-10-01): DESLIGADO — casa em qualquer lugar da pedreira (o lado da vila da paliçada), não precisa ficar perto do Centro. O parque também (usa o mesmo raio). |
 
-## `scripts/props/coletor_madeira.gd` (1)
+## `scripts/props/coletor_madeira.gd` (7)
 
 **(sem grupo)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `wood_per_sec` | 0.6 |  | Madeira por segundo com o operador no posto (antes da zanga/ânimo dele). |
+
+**Restauração (Bloco 81)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `fixo` | false |  | A ruína da cena (o primeiro coletor): começa em `etapa_inicial` e salva a etapa no save do Centro da Vila. |
+| `etapa_inicial` | 4 |  | Etapa em que ele nasce (0 = ruína; os extras construídos nascem funcionando). |
+| `etapa_nomes` | PackedStringArray(["Ruína", "Limpar folhas e entulho", "Desenferrujar", |  | Nome de cada etapa (índice = etapa). |
+| `etapa_custo` | [Vector3i.ZERO, Vector3i(0, 0, 30), Vector3i(0, 45, 0), Vector3i(180, 50, 0), Vector3i.ZERO] |  | Custo de cada etapa (índice 1..3): x = créditos, y = ferro, z = madeira. |
+| `etapa_segundos` | PackedFloat32Array([0.0, 25.0, 35.0, 45.0, 0.0]) |  | Segundos de engenheiro de cada etapa (índice 1..3). |
+| `etapa_estagio` | PackedInt32Array([0, 0, 0, 0, 0]) |  | Estágio mínimo da vila pra pedir cada etapa (índice 1..3; 0 = qualquer). |
+
+## `scripts/props/coletor_minerio.gd` (2)
+
+**Coleta (Bloco 57)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `ore_per_sec` | 0.5 |  | Minério por segundo com o operador no posto (antes da zanga/ânimo dele). |
+| `reach` | 230.0 |  | Até onde a broca alcança uma jazida (px da lógica). |
 
 ## `scripts/props/comedouro.gd` (6)
 
@@ -978,7 +1369,7 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 |---|---|---|---|
 | `eat_sound_interval` | 0.9 |  | Intervalo entre os sons de mastigar enquanto alguém come. |
 
-## `scripts/props/deep_shaft.gd` (2)
+## `scripts/props/deep_shaft.gd` (4)
 
 **(sem grupo)**
 
@@ -986,6 +1377,13 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 |---|---|---|---|
 | `bottom_position` | Vector2(440, 790) |  | Onde fica a gaiola de chegada lá embaixo (coordenadas do mundo, dentro do nível 2). |
 | `link_travel_cost` | 0.05 |  | Custo de navegação da descida (baixo = os ipezinhos acham que "descer é perto"). |
+
+**Viagem (Bloco 68)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `travel_time` | 1.6 |  | Segundos na gaiola por viagem e quantos cabem nela de uma vez (mais gente = espera a próxima). |
+| `capacity` | 4 |  |  |
 
 ## `scripts/props/enfermaria.gd` (7)
 
@@ -1051,6 +1449,21 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `nucleo_parts` | 15 |  |  |
 | `emissor_solarita` | 100 |  |  |
 
+## `scripts/props/estacao_vagonete.gd` (8)
+
+**Vagonete (Bloco 64)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `buffer_capacity` | 60.0 |  | Minério que o ponto guarda esperando o vagonete, e quanto o vagonete leva por viagem. |
+| `cart_capacity` | 25.0 |  |  |
+| `cart_speed` | 55.0 |  | Velocidade do vagonete (px da lógica / s) e quanto espera juntar carga antes de sair. |
+| `cart_wait` | 8.0 |  |  |
+| `rail_trips` | 25 |  | Viagens até o trilho quebrar e segundos de engenheiro pra consertar. |
+| `repair_seconds` | 20.0 |  |  |
+| `rota_fixa` | false |  | Bloco 74: o da mina (fixo): o trilho sai do batente da boca, desce reto e vira pra porta do armazém (em vez do caminho da navegação). |
+| `ferrovia` | "" |  | Bloco 79: FERROVIA DE CARGA — o id do andar (S2..S5) onde fica a estação ("" = o vagonete comum). O trilho no chão é só o pedaço até a doca; o resto da viagem é a SUBIDA pelo cavalete até a superfície (a vista iso desenha o cavalete e o carrinho subindo), e a carga vai pro armazém. |
+
 ## `scripts/props/food_source.gd` (5)
 
 **Colheita**
@@ -1063,6 +1476,16 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `depleted_cooldown` | 25.0 |  | Segundos "colhida" depois de esgotar, antes de começar a regenerar. |
 | `min_food_to_harvest` | 5.0 |  | Abaixo disso a horta não atrai cozinheiros novos. |
 
+## `scripts/props/fornalha.gd` (3)
+
+**Receitas (Bloco 86)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `receitas` | [ |  | {id, nome, insumos {item: qtd}, produto {item: qtd}, segundos (de fundidor por unidade), estagio (mínimo da vila; 0 = qualquer)}. Itens = ids do items.gd. |
+| `max_fila` | 4 |  | Máximo de ordens na fila. |
+| `lote` | 2 |  | Unidades que o fundidor começa (pega os insumos) por viagem ao armazém. |
+
 ## `scripts/props/hazard_zone.gd` (3)
 
 **(sem grupo)**
@@ -1073,7 +1496,7 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `radius` | 90.0 | **85.0** (main.tscn); **80.0** (main.tscn); **80.0** (main.tscn) | Raio da zona (px do mundo), achatado na vertical como o resto do mapa. |
 | `sign_offset` | Vector2(-70, 60) | **Vector2(-95, 10)** (main.tscn); **Vector2(95, 20)** (main.tscn); **Vector2(-95, -10)** (main.tscn) | Onde fica a placa (em relação ao centro): a "entrada". |
 
-## `scripts/props/hunt_spot.gd` (7)
+## `scripts/props/hunt_spot.gd` (16)
 
 **Caça**
 
@@ -1086,6 +1509,29 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `min_game_to_hunt` | 4.0 |  | Abaixo disso a toca não atrai caçadores novos. |
 | `meat_raw_value` | 2.5 |  | Matéria-prima que cada unidade de caça rende (uma unidade de fruta rende 1). |
 | `required_tool` | "arco" |  | Ferramenta da Oficina exigida pra caçar aqui. |
+
+**Bichos (Bloco 61)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `animal` | "coelho" |  | "coelho" ou "javali" (javali: mais carne, menos bichos, nasce mais devagar, pode ferir). |
+| `max_animals_by_kind` | [4, 2] |  | Por tipo: [coelho, javali]. |
+| `meat_by_kind` | [4.0, 12.0] |  |  |
+| `spawn_every_by_kind` | [45.0, 120.0] |  |  |
+| `season_spawn_mult` | [1.0, 1.2, 0.8, 0.3] |  | Ritmo de nascer por estação (primavera, verão, outono, inverno) e o limite no inverno. |
+| `winter_max_mult` | 0.5 |  |  |
+| `javali_risk_novice` | 0.3 |  | Javali fere o caçador: chance por javali caçado, novato x experiente (abates pra deixar de ser novato). |
+| `javali_risk_expert` | 0.05 |  |  |
+| `javali_xp` | 5 |  |  |
+
+## `scripts/props/igreja.gd` (2)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `rodas_bancos` | 6 |  | Bancos (lugares) na frente da igreja: rodas x lugares por roda. |
+| `lugares_por_banco` | 4 |  |  |
 
 ## `scripts/props/mineral_node.gd` (11)
 
@@ -1120,7 +1566,7 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `textures` | [] | **(recurso)** (mineral_node.tscn) | Variantes de sprite sorteadas no _ready (vazio = mantém a textura da cena). |
 | `min_visual_scale` | 0.6 |  |  |
 
-## `scripts/props/oficina.gd` (7)
+## `scripts/props/oficina.gd` (9)
 
 **Ferramentas (na ordem de TOOL_IDS)**
 
@@ -1131,6 +1577,13 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `tool_wood_costs` | [30, 25, 40, 30, 35] |  | Madeira gasta em cada ferramenta (cabo/estrutura) — referência: 1 madeira pra 5 minério. |
 | `tool_min_stage` | [1, 2, 4, 4, 1] |  | Estágio mínimo da vila (Centro da Vila) pra fabricar cada ferramenta. |
 
+**Encomendas do ferreiro (Bloco 87)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `receitas_ferreiro` | [ |  | Pregos e ferragens: só por ORDEM (quantidade do jogador), o FERREIRO faz aqui; os insumos saem do armazém quando cada unidade começa e o produto vai pro armazém. (Ferramentas, armas e equipamentos são as filas de sempre — Oficina, Arsenal, Equipment —, agora feitas pelo ferreiro.) |
+| `max_fila_ferreiro` | 4 |  | Máximo de ordens na fila do ferreiro. |
+
 **Efeitos**
 
 | valor | padrão | na cena | o quê |
@@ -1138,6 +1591,15 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `forge_sound_interval` | 0.7 |  |  |
 | `idle_forge_energy` | 0.45 |  |  |
 | `active_forge_energy` | 1.1 |  |  |
+
+## `scripts/props/poca_perigo.gd` (2)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `kind` | "acido" |  |  |
+| `radius` | 44.0 |  | Raio (px da lógica), achatado na vertical como o resto do mapa. |
 
 ## `scripts/props/robo.gd` (11)
 
@@ -1161,6 +1623,22 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `robot_damage` | 9.0 |  |  |
 | `robot_attack_interval` | 1.2 |  |  |
 | `robot_aggro` | 220.0 |  |  |
+
+## `scripts/props/social_spot.gd` (9)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `tipo` | "praca" |  | "refeitorio", "praca", "taverna", "parque", "banco", "fogueira", "igreja". |
+| `nome` | "Praça" |  | Nome pra janela/rótulo ("Praça", "Refeitório"...). |
+| `coberto` | false |  | Coberto: vale com chuva e onda solar. |
+| `rodas` | 2 |  | Quantas rodas de conversa e quantos lugares em cada. |
+| `por_roda` | 3 |  |  |
+| `raio_roda` | 18.0 |  | Distância (px do chão) do centro da roda até cada lugar; e entre os centros das rodas. |
+| `espaco_rodas` | 62.0 |  |  |
+| `deslocamento` | Vector2(0, 44) |  | Onde ficam as rodas em relação ao dono (na frente do prédio = +y). |
+| `animo_mult` | 1.0 |  | Multiplica o ânimo de conversar aqui (taverna e igreja animam mais). |
 
 ## `scripts/props/station.gd` (9)
 
@@ -1207,20 +1685,45 @@ Total: **555 valores** em 4 pastas de scripts (62 trocados por alguma cena).
 | `min_wood_to_chop` | 4.0 |  | Abaixo disso a árvore não atrai lenhadores novos. |
 | `chop_sound_interval` | 0.55 |  | Intervalo entre as machadadas (som). |
 
-## `scripts/creatures/creature.gd` (10)
+## `scripts/creatures/creature.gd` (25)
 
 **(sem grupo)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `kind` | "lumivoro" | **"ferrugento"** (ferrugento.tscn); **"lumivoro"** (lumivoro.tscn) |  |
-| `max_hp` | 18.0 | **42.0** (ferrugento.tscn); **18.0** (lumivoro.tscn) |  |
-| `speed` | 68.0 | **44.0** (ferrugento.tscn); **72.0** (lumivoro.tscn) |  |
-| `damage` | 4.0 | **7.0** (ferrugento.tscn); **4.0** (lumivoro.tscn) |  |
-| `attack_interval` | 1.0 | **1.4** (ferrugento.tscn); **1.0** (lumivoro.tscn) |  |
+| `kind` | "lumivoro" | **"ferrugento"** (ferrugento.tscn); **"gosma"** (gosma.tscn); **"lumivoro"** (lumivoro.tscn); **"magmante"** (magmante.tscn) |  |
+| `max_hp` | 18.0 | **42.0** (ferrugento.tscn); **24.0** (gosma.tscn); **18.0** (lumivoro.tscn); **70.0** (magmante.tscn) |  |
+| `speed` | 68.0 | **44.0** (ferrugento.tscn); **62.0** (gosma.tscn); **72.0** (lumivoro.tscn); **34.0** (magmante.tscn) |  |
+| `damage` | 4.0 | **7.0** (ferrugento.tscn); **5.0** (gosma.tscn); **4.0** (lumivoro.tscn); **10.0** (magmante.tscn) |  |
+| `attack_interval` | 1.0 | **1.4** (ferrugento.tscn); **1.1** (gosma.tscn); **1.0** (lumivoro.tscn); **1.8** (magmante.tscn) |  |
 | `attack_range` | 18.0 |  |  |
-| `grave_chance` | 0.15 | **0.4** (ferrugento.tscn); **0.15** (lumivoro.tscn) | Ipezinho (não guarda) atingido: chance do machucado ser grave. |
-| `steal_amount` | 3.0 |  | Ferrugento no armazém: minério roubado por golpe. |
+| `grave_chance` | 0.15 | **0.4** (ferrugento.tscn); **0.2** (gosma.tscn); **0.15** (lumivoro.tscn); **0.45** (magmante.tscn) | Ipezinho (não guarda) atingido: chance do machucado ser grave. |
+| `steal_amount` | 3.0 | **4.0** (gosma.tscn); **5.0** (magmante.tscn) | Ferrugento no armazém: minério roubado por golpe. |
 | `scare_amount` | 1.0 |  | Lumívoro num prédio aceso: ânimo tirado de cada um lá dentro, por golpe. |
 | `notice_range` | 150.0 |  | Distância em que ele larga o alvo e parte pra cima de quem está perto. |
+| `barricade_mult` | 1.0 | **1.5** (gosma.tscn); **2.0** (magmante.tscn) | Bloco 70: multiplica o dano na barricada (o ácido e a lava derretem). |
+| `drop_ore` | "" | **"cristal_verde"** (gosma.tscn); **"cristal_rubro"** (magmante.tscn) | Bloco 70: derrubado, chance de deixar cristal (minério, quantidade) no armazém. |
+| `drop_amount` | 0 | **2** (gosma.tscn); **3** (magmante.tscn) |  |
+| `drop_chance` | 0.0 | **0.35** (gosma.tscn); **0.5** (magmante.tscn) |  |
+
+**Luz (Bloco 90)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `atracao_luz` | 2.0 |  | Lumívoro: o quanto uma tocha/lampião aceso da decoração atrai mais que um prédio aceso (a distância conta dividida por isto: 2 = uma luz a 200 px pesa como um prédio a 100 px). |
+
+**Visual (folha de quadros)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `visual_textura` | — | **(recurso)** (ferrugento.tscn) | Bloco 80: a folha de quadros da criatura (uma LINHA por animação, na ordem de visual_anims; quadros da esquerda pra direita, virada pra direita). Vazia = a arte isométrica do bonecos.json. |
+| `visual_quadro` | Vector2i(24, 32) | **Vector2i(90, 87)** (ferrugento.tscn) | Tamanho de UM quadro na folha (px). |
+| `visual_anims` | PackedStringArray(["parado", "caminhada", "atacar", "dano", "morrer"]) | **PackedStringArray("parado", "caminhada", "atacar", "dano", "morrer")** (ferrugento.tscn) | As animações, na ordem das linhas da folha (as que o jogo usa: parado, caminhada, atacar, dano, morrer). |
+| `visual_quadros` | PackedInt32Array([2, 4, 3, 2, 4]) | **PackedInt32Array(4, 6, 6, 4, 6)** (ferrugento.tscn) | Quantos quadros cada animação tem (mesma ordem de visual_anims). |
+| `visual_fps` | 8.0 | **10.0** (ferrugento.tscn) | Quadros por segundo (parado, atacar, dano, morrer). |
+| `visual_passada` | 34.0 | **40.0** (ferrugento.tscn) | Px andados por ciclo da caminhada (a perna acompanha o chão: o pé não escorrega). |
+| `visual_escala` | 1.0 | **0.6667** (ferrugento.tscn) | Escala do desenho (1 = 1 px da folha por px do mundo). |
+| `visual_pe` | 2.0 | **6.0** (ferrugento.tscn) | Px entre o pé e a borda de baixo do quadro (o pé fica na origem da criatura). |
+| `visual_carga` | — | **(recurso)** (ferrugento.tscn) | O que ele leva quando roubou o armazém (desenhado nas costas; vazio = nada). |
+| `visual_carga_pos` | Vector2(-6, -16) | **Vector2(-11, -30)** (ferrugento.tscn) | Onde fica a carga (px do mundo, a partir do pé, com o desenho virado pra direita: x < 0 = costas). |
 
