@@ -1,10 +1,42 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-06. Branch `isometrico`. Os commits dos **Blocos 80 a 91 ainda NÃO foram enviados**
-(12 commits à frente de `origin/isometrico`). Push só com o OK do Marco. Ele disse "pode executar todos os
-prompts que depois eu valido".
+Atualizado em 2026-10-06 (noite). Branch `isometrico`. Os commits dos **Blocos 80 a 93 ainda NÃO foram
+enviados** (16 commits à frente de `origin/isometrico`). Push só com o OK do Marco. Ele disse "pode executar todos os prompts que depois eu valido".
 
-## AGORA (2026-10-06): Blocos 81–91 — feitos, esperando o Marco validar
+## AGORA (2026-10-06): os ajustes do Marco depois dos Blocos 81–91
+
+O Marco viu o resumo dos Blocos 81–91 e pediu:
+1. vender a quantidade que quiser no armazém;
+2. a arte dos 86/87/88/90 **no PixelLab, no nível do jogo** (nada de provisório);
+3. fundidor e padre como funções (padre só homem, um só; ferreiro homem e mulher);
+4. o cemitério.
+
+E duas regras para sempre, gravadas na memória (`feedback_receita_arte_nova.md`) e no CLAUDE.md (regra 11):
+- **personagem novo:** a receita inteira do elenco, com as 5 expressões do retrato e a caminhada ajustada;
+- **estrutura nova:** a evolução da obra até ficar pronta.
+
+| Commit | O quê | Relatório |
+|---|---|---|
+| `0584027a` bloco-82 | vender a quantidade escolhida: "Vender…" seleciona o item e a barra de venda tem −10/−1/+1/+10/Tudo e "Vender N"; `Economy.sell(item, quantidade)` | `docs/BLOCO82_ITENS_ARMAZEM.md` (fim) |
+| `cd1efdcf` bloco-92 | arte do PixelLab: fundidor/a, ferreiro/a e padre com a receita do elenco (fundir/forjar/pregar, casaco, retrato com 5 expressões, ícone da barra); fornalha = a Fundição do Prompt 12; igreja nova (obra 1-2-3-pronto); decoração pelo desenho do PixelLab (lampião, cerca, canteiro e bandeira novos; a tocha acende/apaga). **Padre = função [8]**: só homem, um por vila, pode trocar de função, prega na missa | `docs/BLOCO92_ARTE_OFICIOS_PIXELLAB.md` |
+| `ec4efdf4` bloco-93 | **cemitério** do tamanho que o jogador arrasta; começa vazio; a obra aparece em etapas (estacas, postes, cerca, pronto com portão); quem morre deixa o corpo; o padre busca, leva nos ombros e enterra (cruz ou lápide com nome e dia); pesquisa **Ritos fúnebres**: funeral no cemitério, o luto cai e o ânimo sobe ("funeral digno") | `docs/BLOCO93_CEMITERIO.md` |
+
+**Detalhes que importam:**
+- **Casaco no trabalho:** o trabalho de casaco do fundidor e do ferreiro saiu ruim no PixelLab (picareta, fogo).
+  Na fornalha e na forja eles trabalham **sem o casaco** (o jogo cai sozinho na animação da base); o padre prega
+  de casaco.
+- **Funeral (mudou o Bloco 88):** agora precisa da pesquisa "Ritos fúnebres". Com cemitério, é lá depois do
+  enterro; sem cemitério, na igreja.
+- **Barra de funções:** são 14 botões com o Padre; cada um foi de 90 para 82 px.
+- **PixelLab:** saldo de 8.669 → 7.917 depois do 92; o 93 gastou mais ~195 (cemitério, peças, cerca, ícone): saldo 7.722.
+  Os candidatos não escolhidos ficaram fora do repositório (os ids estão nos `*_jobs.json`).
+- **Testes:**
+  - b92 passa;
+  - b93: passa (0 falhas); depois do 93 também passaram b88, b77 e b36;
+  - depois das mudanças, passaram b82, b39, b86, b87, b88, b90, p29_bonecos, p29_predios, hud_frostpunk e b54.
+- A **bateria inteira** não rodou (memória: um teste por vez).
+
+## Antes (2026-10-06): Blocos 81–91 — feitos, esperando o Marco validar
 
 **De onde veio:** os pedidos estão em `docs/Prompt/Ultimo_84.txt` (numerados lá como Blocos 50–59 com testes
 b51–b59). Esses números já existiam no histórico, então cada um virou **o próximo livre**, com o teste do mesmo
