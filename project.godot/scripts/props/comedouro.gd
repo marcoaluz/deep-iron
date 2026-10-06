@@ -8,6 +8,9 @@ extends "res://scripts/props/station.gd"
 ##   PREPARA aqui: a leva leva um tempo (prep_time_per_raw no ipezinho) e só no fim
 ##   vira comida pronta no estoque.
 ## - "delivering" ainda descarrega comida pronta (cesta de saves antigos).
+## - Bloco 84 (refeições): quem chega pra comer recebe UMA porção (Schedule.porcao unidades de comida, que
+##   restaura Schedule.refeicao_fome) e come o prato aos poucos (FEED_RATE). Sem porção inteira no estoque,
+##   serve o que tiver (o prato fica menor).
 ## - O sprite mostra cheio / pela metade / vazio.
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
@@ -77,6 +80,17 @@ func _process(delta: float) -> void:
 			food_stock += body.cook_tick(delta, space_left())  # 0 até a leva ficar pronta
 			cooking = true
 			continue
+		if body.has_method("recebe_prato"):  # Bloco 84: uma porção por refeição
+			if body.quer_prato():
+				if food_stock <= 0.0:
+					continue
+				var porcao := _porcao()
+				var p := minf(porcao, food_stock)
+				food_stock -= p
+				body.recebe_prato(p / porcao * _fome_da_porcao())
+			if body.come_prato(FEED_RATE * delta) > 0.0:
+				eating = true
+			continue
 		if food_stock <= 0.0 or body.hunger >= body.hunger_max:
 			continue
 		var wanted := minf(FEED_RATE * delta, body.hunger_max - body.hunger)
@@ -91,6 +105,17 @@ func _process(delta: float) -> void:
 		_sound_timer = eat_sound_interval * randf_range(0.8, 1.2)
 		Audio.eat(global_position)
 	_update_visual()
+
+
+## Bloco 84: a porção e quanto ela enche (do Schedule; sem ele, os padrões).
+func _porcao() -> float:
+	var s := get_tree().get_first_node_in_group("schedule")
+	return maxf(s.porcao, 0.01) if s else 8.0
+
+
+func _fome_da_porcao() -> float:
+	var s := get_tree().get_first_node_in_group("schedule")
+	return s.refeicao_fome if s else 45.0
 
 
 func _update_visual() -> void:

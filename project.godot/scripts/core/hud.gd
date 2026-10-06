@@ -1017,8 +1017,21 @@ func _refresh_top_bar(workers: Array) -> void:
 		food_color = COLOR_HUNGER_BAD
 	elif capacity > 0.0 and stock / capacity < 0.25:
 		food_color = COLOR_HUNGER_LOW
-	_set_chip("food", "ACABOU" if stock <= 0.0 else "%d/%d" % [int(stock), int(capacity)], food_color,
-		"Na cozinha." + ("\nNinguém cozinhando!" if cooks == 0 else ""))
+	var sched := get_tree().get_first_node_in_group("schedule")
+	if sched:
+		# Bloco 84: porções no estoque x refeições que ainda faltam hoje (vermelho se não dá pra todos)
+		var porcoes := floori(sched.porcoes_em_estoque())
+		var faltam: int = sched.refeicoes_restantes_hoje()
+		if stock > 0.0 and porcoes < faltam:
+			food_color = COLOR_HUNGER_LOW if porcoes * 2 >= faltam else COLOR_HUNGER_BAD
+		_set_chip("food", "ACABOU" if stock <= 0.0 else "%d (hoje %d)" % [porcoes, faltam], food_color,
+			"Porções na cozinha: %d (%d de comida de %d; %s por porção).\nRefeições que ainda faltam hoje: %d (café, almoço e jantar de cada um).%s%s" % [
+			porcoes, int(stock), int(capacity), str(snappedf(sched.porcao, 0.1)), faltam,
+			("\nNão dá pra todo mundo: faltam %d porções!" % (faltam - porcoes)) if porcoes < faltam else "",
+			"\nNinguém cozinhando!" if cooks == 0 else ""])
+	else:
+		_set_chip("food", "ACABOU" if stock <= 0.0 else "%d/%d" % [int(stock), int(capacity)], food_color,
+			"Na cozinha." + ("\nNinguém cozinhando!" if cooks == 0 else ""))
 	_chip_icon("food", "al_falta_comida" if stock <= 0.0 else "comida")  # Prompt 21
 
 	# camas

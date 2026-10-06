@@ -40,6 +40,7 @@ const STATE_LABELS := {
 const REST_REACH := 12.0
 const Ores := preload("res://scripts/core/ores.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const Schedule := preload("res://scripts/core/schedule.gd")  # Bloco 84
 const STEEL_PICKAXE := preload("res://assets/game/pickaxe_aco.png")
 const FOOD_BASKET := preload("res://assets/game/food_basket.png")
 ## Nomes sorteados (sem repetir enquanto houver nome livre).
@@ -161,9 +162,11 @@ const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 
 @export_group("Fome")
 @export var hunger_max: float = 100.0
-## Fome gasta por segundo (ritmo: era 0.7).
-@export var hunger_decay: float = 0.8
-@export var hunger_threshold: float = 30.0  # abaixo disso, prioridade vira comer
+## Fome gasta por segundo REAL. Bloco 84 (fome controlada): devagar — 0,2/s = 4,5 por hora de jogo; quem
+## enche são as 3 refeições da agenda (Schedule). (Era 0.8 com o comer contínuo.)
+@export var hunger_decay: float = 0.2
+## Abaixo disso come FORA da hora das refeições (fome braba: uma porção).
+@export var hunger_threshold: float = 30.0
 ## Come até atingir essa fração da fome máxima.
 @export_range(0.5, 1.0) var eat_until_ratio: float = 0.95
 
@@ -444,6 +447,16 @@ var _rescue: Node = null
 var carrying_patient: Node = null
 var _broken_icon: Sprite2D
 var _hub_node: Node = null
+## Bloco 84 (agenda e refeições): as refeições que ele já fez hoje ("cafe", "almoco", "jantar"; zeram no
+## amanhecer) e as perdidas seguidas (estava com fome e a hora passou sem comer: rende menos até comer).
+var refeicoes_hoje: Dictionary = {}
+var refeicoes_perdidas: int = 0
+var _prato := 0.0  # fome que ainda falta comer do prato servido
+var _servido := false  # já pegou o prato nesta ida ao comedouro
+var _refeicao_alvo := ""  # a refeição que ele foi fazer ("" = fome braba fora de hora)
+var _periodo := ""  # período da agenda na última olhada
+var _agenda_t := 0.0
+var _sched: Node = null
 ## Preenchido pelo SaveManager antes de entrar na árvore (ipezinho vindo do save).
 var pending_save_data: Dictionary = {}
 var _saved_home: String = ""  # nome da casa salva (a cama volta pro mesmo dono)
@@ -586,7 +599,11 @@ func get_state_label() -> String:
 		var sun := _sun()
 		if sun and sun.shelter_now() and not _is_night():
 			return "abrigado do sol" if _inside else "sem abrigo, no sol!"
+		if _periodo in ["social", "voltar"]:  # Bloco 84: ainda não é hora de dormir
+			return "descansando em casa" if _inside else "descansando ao relento"
 		return "dormindo" if _inside else "dormindo ao relento"
+	if _ai_state == "eating" and _refeicao_alvo != "":  # Bloco 84
+		return "%s (%s)" % ["comendo" if _servido else "indo comer", Schedule.nome_refeicao(_refeicao_alvo)]
 	if _ai_state == "idle" and has_no_job():
 		return "sem função — esperando ordem"
 	if _ai_state == "idle" and is_cook():
@@ -749,6 +766,7 @@ func _process(delta: float) -> void:
 		_update_hunger_label()
 	if hunger <= 0.0 and not was_starving:
 		_on_starving()
+	_agenda_tick(delta)  # Bloco 84
 
 	_work_timer = maxf(_work_timer - delta, 0.0)
 	_update_anger(delta)
@@ -873,18 +891,24 @@ func _choose_state() -> String:
 		if _ai_state == "mining" and _station_ok_for("mining"):
 			return "mining"
 		return "idle"
-	# Prioridade 0: de noite o turno acabou — todo mundo pra casa, mesmo com fome ou carga.
-	# Exceção: quem está em TURNO EXTRA continua trabalhando (e ficando zangado).
-	if _is_night() and not overtime and not is_guard():
-		return "home"
+	# Bloco 84: invasão em andamento — quem não é guarda fica em casa (o médico, no plantão).
+	var def_inv := _defense()
+	if def_inv and def_inv.invasion_active and not is_guard():
+		return "doctor" if is_doctor() and _has_infirmary() else "home"
 	# Sem enfermaria na cena (fallback antigo): machucado descansa em casa.
 	if injured:
 		return "home"
-	# Prioridade 1: comer. Quem já está comendo só sai quando estiver quase cheio.
-	# Sem comida no comedouro não adianta esperar lá: segue trabalhando (com fome).
+	# Bloco 84: comendo (pegou o prato, ou indo pegar com comida lá): fica até acabar.
 	var food_ok := _food_available()
-	if _ai_state == "eating" and hunger < hunger_max * eat_until_ratio and food_ok:
+	if _ai_state == "eating" and ((not _servido and food_ok) or _prato > 0.0):
 		return "eating"
+	# Bloco 84: a AGENDA (Schedule): dormir, refeições, voltar, hora social, plantão, vigília. "" = horário
+	# de trabalho (ou sem relógio): segue a lógica de sempre aqui embaixo.
+	var ag := _agenda_estado(food_ok)
+	if ag != "":
+		return ag
+	# Prioridade 1: comer FORA de hora só com fome braba (uma porção).
+	# Sem comida no comedouro não adianta esperar lá: segue trabalhando (com fome).
 	if hunger < hunger_threshold and food_ok:
 		return "eating"
 	# Lazer: triste vai pra taverna (se existir) e fica até se animar.
@@ -1297,6 +1321,10 @@ func _release_station() -> void:
 func _set_state(new_state: String) -> void:
 	if new_state == _ai_state:
 		return
+	if new_state == "eating":  # Bloco 84: indo comer — um prato novo, da refeição da hora (se for)
+		_servido = false
+		_prato = 0.0
+		_refeicao_alvo = _refeicao_da_hora()
 	if _ai_state == "home":
 		_stop_resting()
 	if _ai_state == "infirmary":
@@ -2514,7 +2542,13 @@ func mood_label() -> String:
 
 ## Multiplicador da produção pela zanga e pela felicidade.
 func work_mult() -> float:
-	return [1.0, irritated_work_mult, furious_work_mult][_mood] * _happiness_work_mult() * _cold_mult()
+	return [1.0, irritated_work_mult, furious_work_mult][_mood] * _happiness_work_mult() * _cold_mult() * _mult_refeicoes()
+
+
+## Bloco 84: refeição perdida rende menos (Schedule.perda_por_refeicao cada, até perda_max).
+func _mult_refeicoes() -> float:
+	var s := _schedule()
+	return s.mult_refeicoes(refeicoes_perdidas) if s else 1.0
 
 
 # ------------------------------------------------------------ equipamento (Bloco 42)
@@ -2884,6 +2918,138 @@ func _popup(text: String, color: Color) -> void:
 	tween.chain().tween_callback(label.queue_free)
 
 
+# ------------------------------------------------------------ agenda e refeições (Bloco 84)
+func _schedule() -> Node:
+	if _sched == null or not is_instance_valid(_sched):
+		_sched = get_tree().get_first_node_in_group("schedule") if is_inside_tree() else null
+	return _sched
+
+
+## Período da agenda agora ("" = sem Schedule).
+func periodo_agenda() -> String:
+	var s := _schedule()
+	return s.periodo(self) if s else ""
+
+
+## A refeição desta hora que ele ainda não fez ("" = nenhuma).
+func _refeicao_da_hora() -> String:
+	var s := _schedule()
+	if s == null:
+		return ""
+	var m: String = s.refeicao_do(s.periodo(self))
+	return m if m != "" and not refeicoes_hoje.has(m) else ""
+
+
+## A camada da agenda no _choose_state. "" = deixa a lógica de sempre decidir (horário de trabalho, sem
+## relógio, ou o turno extra fora de hora).
+func _agenda_estado(food_ok: bool) -> String:
+	var s := _schedule()
+	if s == null:  # (cena sem Schedule: o de antes — de noite pra casa)
+		return "home" if _is_night() and not overtime and not is_guard() else ""
+	var p: String = s.periodo(self)
+	var m: String = s.refeicao_do(p)
+	if m != "" and not refeicoes_hoje.has(m) and food_ok and hunger < hunger_max * s.refeicao_dispensa:
+		return "eating"  # a refeição da hora (uma porção)
+	if is_doctor() and _has_infirmary():
+		return "doctor"  # sempre de plantão (come nos turnos dele, acima)
+	# Bloco 84: fora do horário de trabalho, quem ainda tem carga termina a entrega antes de ir pra casa
+	# ("voltar" dura meia hora de jogo, ~11 s: nem sempre dá pra chegar no armazém dentro dela)
+	if p in ["voltar", "social", "dormir"] and not overtime:
+		var entrega := _entrega_pendente()
+		if entrega != "":
+			return entrega
+	match p:
+		"dormir":
+			if overtime or (is_guard() and _is_night() and s.de_vigia(self)):
+				return ""
+			return "home"
+		"vigilia":
+			return ""  # (o guarda de vigia: a lógica do guarda manda pro posto)
+		"social":
+			if overtime:
+				return ""
+			# depois do jantar: taverna se estiver pra baixo (Bloco 85: a hora social de verdade)
+			if (_ai_state == "leisure" and happiness < leisure_until and _station_ok_for("leisure")) \
+					or (happiness < leisure_below and _has_usable_station("tavernas")):
+				return "leisure"
+			return "home"
+		"voltar":
+			if overtime:
+				return ""
+			return "home"  # (a carga já foi entregue acima)
+	return ""
+
+
+## Bloco 84: a carga que ele ainda tem pra largar no armazém (o estado de entregar), "" = nada.
+func _entrega_pendente() -> String:
+	if wood_carrying > 0.0:
+		return "hauling"
+	if raw_carrying > 0.0 and not is_cook():
+		return "stocking"
+	if carrying > 0.0 and not is_researcher():
+		return "storing"
+	return ""
+
+
+## Olha a agenda de tempos em tempos: virou o período? Decide já, e confere se perdeu a refeição.
+func _agenda_tick(delta: float) -> void:
+	_agenda_t -= delta
+	if _agenda_t > 0.0:
+		return
+	_agenda_t = 0.25
+	var p := periodo_agenda()
+	if p == _periodo:
+		return
+	_fim_de_periodo(_periodo)
+	_periodo = p
+	wake_decision()
+
+
+## Acabou um período de refeição: com fome e sem ter comido = perdeu (rende menos até comer).
+## (Quem está a caminho do prato não perde; ferido/caído não conta.)
+func _fim_de_periodo(antes: String) -> void:
+	var s := _schedule()
+	if s == null or antes == "":
+		return
+	var m: String = s.refeicao_do(antes)
+	if m == "" or refeicoes_hoje.has(m) or injured or downed:
+		return
+	if _ai_state == "eating" and _refeicao_alvo == m:
+		return
+	if hunger >= hunger_max * s.refeicao_dispensa:
+		return  # sem fome: pular não faz falta
+	refeicoes_perdidas += 1
+	_popup("Perdi o %s!" % s.nome_refeicao(m), Color(1.0, 0.6, 0.4))
+
+
+## Comedouro: ele chegou pra comer e ainda não pegou o prato?
+func quer_prato() -> bool:
+	return _ai_state == "eating" and not _servido
+
+
+## Comedouro serviu UMA porção (fome que ela restaura). Conta a refeição da hora.
+func recebe_prato(fome: float) -> void:
+	_servido = true
+	_prato = maxf(fome, 0.0)
+	if _refeicao_alvo != "":
+		refeicoes_hoje[_refeicao_alvo] = true
+		refeicoes_perdidas = 0
+
+
+## Comedouro chama a cada quadro: come até `maximo` do prato. Retorna quanto comeu.
+func come_prato(maximo: float) -> float:
+	if _prato <= 0.0:
+		return 0.0
+	var c := minf(maximo, _prato)
+	_prato -= c
+	feed(c)
+	if hunger >= hunger_max:
+		_prato = 0.0  # (cheio: o resto fica no prato)
+	if _prato <= 0.0:
+		_decision_timer = 0.0  # acabou: decide o próximo passo já
+	return c
+
+
 # ------------------------------------------------------------ interações (duck typing)
 func _on_starving() -> void:
 	_hunger_label.modulate = Color.RED
@@ -3149,6 +3315,8 @@ func get_save_data() -> Dictionary:
 		"coletor_minerio_pos": SaveUtil.vec2_to_array(_my_coletor_minerio().global_position) if _my_coletor_minerio() != null else [],  # Bloco 57
 		"hunt_kills": hunt_kills,  # Bloco 61
 		"area_id": work_area.id if work_area != null else 0,  # Bloco 77
+		"refeicoes_hoje": refeicoes_hoje.keys(),  # Bloco 84
+		"refeicoes_perdidas": refeicoes_perdidas,
 	}
 
 
@@ -3161,6 +3329,12 @@ func _religa_area(id: int) -> void:
 ## Aplicado no _ready (via pending_save_data). A IA recomeça do zero e decide sozinha.
 func load_save_data(d: Dictionary) -> void:
 	hunger = clampf(SaveUtil.num(d, "hunger", hunger_max), 0.0, hunger_max)
+	# Bloco 84 (save antigo: nenhuma refeição feita hoje, nenhuma perdida)
+	refeicoes_hoje = {}
+	for m in SaveUtil.array(d, "refeicoes_hoje"):
+		if m in ["cafe", "almoco", "jantar"]:
+			refeicoes_hoje[m] = true
+	refeicoes_perdidas = clampi(SaveUtil.integer(d, "refeicoes_perdidas", 0), 0, 10)
 	carrying = clampf(SaveUtil.num(d, "carrying", 0.0), 0.0, cargo_capacity)
 	var t := SaveUtil.text(d, "cargo_type", "ferro")
 	cargo_type = t if Ores.NAMES.has(t) else "ferro"

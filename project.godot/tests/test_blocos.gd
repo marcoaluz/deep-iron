@@ -346,5 +346,9 @@ func test_b83_relogio_24h() -> void:
 	run_bloco("b83_relogio_24h.gd")
 
 
+func test_b84_agenda() -> void:
+	run_bloco("b84_agenda.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")
