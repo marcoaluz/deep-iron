@@ -56,6 +56,7 @@ extends "res://scripts/props/station.gd"
 signal level_changed(level: int)
 signal upgrade_bought(id: String, new_level: int)
 
+const SocialSpot := preload("res://scripts/props/social_spot.gd")  # Bloco 85
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
 const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
@@ -220,6 +221,7 @@ var _growing := false
 func _ready() -> void:
 	super()
 	add_to_group("village_hub")
+	add_child(SocialSpot.criar("praca", "Praça", false, 3, 3, Vector2(0, 34)))  # Bloco 85
 	add_to_group("obras")
 	add_to_group("clickable")
 	$WindowLight.add_to_group("cullable_lights")

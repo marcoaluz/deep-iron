@@ -6,6 +6,7 @@ extends Node2D
 ## Construído pelo engenheiro (canteiro "parque"), posicionado como as casas (no raio do
 ## Centro da Vila). Clicar abre a janela de Bem-estar. Pode ter mais de um.
 
+const SocialSpot := preload("res://scripts/props/social_spot.gd")  # Bloco 85
 const IsoArt := preload("res://scripts/iso/iso_art.gd")
 
 ## Pro HUD saber qual janela abrir quando clicam aqui.
@@ -14,6 +15,7 @@ var panel_id := "moral"
 
 func _ready() -> void:
 	add_to_group("parques")
+	add_child(SocialSpot.criar("parque", "Parque", false, 2, 3, Vector2(0, 10), 1.2))  # Bloco 85
 	add_to_group("clickable")
 	$Light.add_to_group("cullable_lights")
 	queue_redraw()

@@ -6,6 +6,7 @@ signal mood_changed(level: int)  # 0 calmo, 1 irritado, 2 furioso
 signal died(worker_name: String)
 
 const STATE_LABELS := {
+	"social": "hora social",  # Bloco 85
 	"idle": "ocioso",
 	"eating": "comendo",
 	"mining": "minerando",
@@ -41,6 +42,8 @@ const REST_REACH := 12.0
 const Ores := preload("res://scripts/core/ores.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const Schedule := preload("res://scripts/core/schedule.gd")  # Bloco 84
+const Icones := preload("res://scripts/ui/icones.gd")  # Bloco 85: o balão da hora social
+const BALAO := preload("res://assets/game/ui/balao.png")
 const STEEL_PICKAXE := preload("res://assets/game/pickaxe_aco.png")
 const FOOD_BASKET := preload("res://assets/game/food_basket.png")
 ## Nomes sorteados (sem repetir enquanto houver nome livre).
@@ -457,6 +460,18 @@ var _refeicao_alvo := ""  # a refeição que ele foi fazer ("" = fome braba fora
 var _periodo := ""  # período da agenda na última olhada
 var _agenda_t := 0.0
 var _sched: Node = null
+## Bloco 85 (hora social): ânimo de ter conversado (fator do ânimo; some devagar), o ponto social e o lugar
+## reservados, quanto falta pra trocar de ponto, se já chegou na roda, o passeio (waypoints) e o balão.
+var animo_social := 0.0
+var _spot: Node = null
+var _spot_i := -1
+var _social_t := 0.0
+var _conversando := false
+var _com_companhia := false
+var _passeio: Array[Vector2] = []
+var _balao_t := 0.0
+var _balao: Sprite2D = null
+var _balao_vida := 0.0
 ## Preenchido pelo SaveManager antes de entrar na árvore (ipezinho vindo do save).
 var pending_save_data: Dictionary = {}
 var _saved_home: String = ""  # nome da casa salva (a cama volta pro mesmo dono)
@@ -602,6 +617,12 @@ func get_state_label() -> String:
 		if _periodo in ["social", "voltar"]:  # Bloco 84: ainda não é hora de dormir
 			return "descansando em casa" if _inside else "descansando ao relento"
 		return "dormindo" if _inside else "dormindo ao relento"
+	if _ai_state == "social":  # Bloco 85
+		if _spot == null or not is_instance_valid(_spot):
+			return "hora social"
+		if _conversando:
+			return ("conversando: %s" if _com_companhia else "esperando alguém: %s") % _spot.nome
+		return "passeando até: %s" % _spot.nome
 	if _ai_state == "eating" and _refeicao_alvo != "":  # Bloco 84
 		return "%s (%s)" % ["comendo" if _servido else "indo comer", Schedule.nome_refeicao(_refeicao_alvo)]
 	if _ai_state == "idle" and has_no_job():
@@ -767,6 +788,7 @@ func _process(delta: float) -> void:
 	if hunger <= 0.0 and not was_starving:
 		_on_starving()
 	_agenda_tick(delta)  # Bloco 84
+	_social_process(delta)  # Bloco 85
 
 	_work_timer = maxf(_work_timer - delta, 0.0)
 	_update_anger(delta)
@@ -1051,6 +1073,13 @@ func _decide_next_action() -> void:
 		_release_station()
 		_set_state("strike")
 		_go_protest()
+		return
+
+	if desired == "social":  # Bloco 85
+		if _ai_state != "social":
+			_release_station()
+			_set_state("social")
+			_social_vai()
 		return
 
 	if desired == "guard":
@@ -1343,6 +1372,8 @@ func _set_state(new_state: String) -> void:
 		_foe = null
 	if _ai_state == "rescue":
 		_drop_patient()
+	if _ai_state == "social":
+		_social_sai()  # Bloco 85: solta o lugar no ponto
 	_ai_state = new_state
 	state_changed.emit(new_state)
 
@@ -1406,6 +1437,8 @@ func happiness_factors() -> Array:
 	var nx: Resource = env.nivel_extra_em(global_position) if env and env.has_method("nivel_extra_em") else null
 	if nx and nx.animo != 0.0:  # Bloco 71: o nível novo pesa ou acalma (o lago azul)
 		f.append([nx.animo_motivo if nx.animo_motivo != "" else nx.nome, nx.animo])
+	if animo_social >= 0.5:
+		f.append(["conversou com os amigos", animo_social])  # Bloco 85
 	var m := _morale()
 	if m:
 		f.append_array(m.village_factors())
@@ -2972,12 +3005,188 @@ func _agenda_estado(food_ok: bool) -> String:
 			if (_ai_state == "leisure" and happiness < leisure_until and _station_ok_for("leisure")) \
 					or (happiness < leisure_below and _has_usable_station("tavernas")):
 				return "leisure"
+			# Bloco 85: hora social — um ponto social com lugar (com chuva, só coberto); senão, casa
+			if (_ai_state == "social" and _spot != null and is_instance_valid(_spot)) or _escolhe_spot(true) != null:
+				return "social"
 			return "home"
 		"voltar":
 			if overtime:
 				return ""
 			return "home"  # (a carga já foi entregue acima)
 	return ""
+
+
+# ------------------------------------------------------------ hora social (Bloco 85)
+## Chove ou tem onda solar agora? (aí só valem os pontos cobertos)
+func _precisa_coberto() -> bool:
+	var w := get_tree().get_first_node_in_group("weather")
+	var sun := _sun()
+	var chuva: bool = w != null and (w.get("forcar_chuva") == true or (w.has_method("is_raining") and w.is_raining()))
+	return chuva or (sun != null and sun.wave_active())
+
+
+## O melhor ponto social pra ele agora (null = nenhum com lugar). `so_ver` = só olhar, sem reservar.
+## Nota: perto ganha, ponto com gente (e lugar) ganha, um pouco de sorte pra não irem todos pro mesmo.
+func _escolhe_spot(so_ver := false) -> Node:
+	var coberto := _precisa_coberto()
+	var melhor: Node = null
+	var melhor_nota := -INF
+	for sp in get_tree().get_nodes_in_group("social_spots"):
+		if sp == _spot or (coberto and not sp.coberto) or sp.livres() <= 0:
+			continue
+		var d: float = global_position.distance_to(sp.centro())
+		var gente: int = sp.ocupantes().size()
+		var nota := -d / 40.0 + (6.0 if gente > 0 else 0.0) + randf() * 6.0
+		if nota > melhor_nota:
+			melhor_nota = nota
+			melhor = sp
+	if melhor == null and not so_ver and _spot != null and is_instance_valid(_spot):
+		return _spot  # (sem outro: fica onde está)
+	return melhor
+
+
+## Vai pra um ponto social: reserva o lugar e monta o passeio (passa por outro ponto se o desvio for curto).
+func _social_vai() -> void:
+	var novo := _escolhe_spot()
+	if novo == null:
+		_decision_timer = 0.0
+		return
+	if novo != _spot:
+		_social_solta()
+		_spot = novo
+	_spot_i = _spot.reservar(self)
+	if _spot_i < 0:
+		_spot = null
+		_decision_timer = 0.0
+		return
+	_conversando = false
+	_com_companhia = false
+	_social_t = 0.0
+	var destino: Vector2 = _spot.lugar(_spot_i)
+	_passeio = []
+	var s := _schedule()
+	var desvio_max: float = s.passeio_desvio if s else 160.0
+	var direto := global_position.distance_to(destino)
+	var via: Vector2 = Vector2.INF
+	var menor := desvio_max
+	for sp in get_tree().get_nodes_in_group("social_spots"):
+		if sp == _spot:
+			continue
+		var c: Vector2 = sp.centro()
+		var desvio := global_position.distance_to(c) + c.distance_to(destino) - direto
+		if desvio < menor and global_position.distance_to(c) > 40.0 and c.distance_to(destino) > 40.0:
+			menor = desvio
+			via = c
+	if via != Vector2.INF:
+		_passeio.append(via)  # (Bloco 89: os caminhos pintados entram aqui)
+	_passeio.append(destino)
+	_go_to(_passeio[0])
+
+
+## Solta o lugar reservado (sem sair do estado).
+func _social_solta() -> void:
+	if _spot != null and is_instance_valid(_spot):
+		_spot.liberar(self)
+	_spot_i = -1
+	_conversando = false
+	_com_companhia = false
+
+
+## Saiu da hora social: solta tudo e esconde o balão.
+func _social_sai() -> void:
+	_social_solta()
+	_spot = null
+	_passeio.clear()
+	if _balao:
+		_balao.visible = false
+
+
+## O ponto social chama: está na roda conversando?
+func esta_conversando() -> bool:
+	return _ai_state == "social" and _conversando
+
+
+## A cada quadro, barato: o ânimo de conversar sumindo e, na hora social, chegar/conversar/trocar de ponto.
+func _social_process(delta: float) -> void:
+	if _balao and _balao.visible:
+		_balao_vida -= delta
+		if _balao_vida <= 0.0:
+			_balao.visible = false
+	var s := _schedule()
+	if _ai_state != "social":
+		if animo_social > 0.0 and s:
+			animo_social = maxf(animo_social - s.animo_decai * delta, 0.0)
+		return
+	if s == null or _spot == null or not is_instance_valid(_spot):
+		_decision_timer = 0.0
+		return
+	if not _conversando:
+		if _moving:
+			return
+		if _passeio.size() > 1:  # chegou no ponto do caminho: segue pro lugar
+			_passeio.pop_front()
+			_go_to(_passeio[0])
+			return
+		_conversando = true
+		_social_t = randf_range(s.conversa_min, maxf(s.conversa_max, s.conversa_min))
+		_balao_t = randf_range(0.3, s.balao_max)
+		return
+	_social_t -= delta
+	_balao_t -= delta
+	if _balao_t <= 0.0:
+		_balao_t = randf_range(s.balao_min, maxf(s.balao_max, s.balao_min))
+		var comp: Array = _spot.companheiros(self)
+		_com_companhia = not comp.is_empty()
+		if _com_companhia:
+			var outro: Node2D = comp[randi() % comp.size()]
+			_facing = signf(outro.global_position.x - global_position.x) if absf(outro.global_position.x - global_position.x) > 1.0 else _facing
+			_mostra_balao(_assunto())
+		if _precisa_coberto() and not _spot.coberto:
+			_social_t = 0.0  # começou a chover: procura um lugar coberto
+	if _com_companhia:
+		animo_social = minf(animo_social + s.animo_por_segundo * _spot.animo_mult * delta, s.animo_max)
+	if _social_t <= 0.0:
+		_social_vai()  # troca de ponto (o passeio passa por outro no caminho)
+
+
+## O assunto do balão: o que pesa pra ele agora (fome, frio, a função, a estação...), com um pouco de sorte.
+func _assunto() -> String:
+	var temas: Array[String] = ["animo", "creditos", "minerio", "madeira"]
+	if hunger < hunger_max * 0.5:
+		temas.append("comida")
+	if is_cold():
+		temas.append("frio")
+	if anger >= anger_furious_at * 0.5:
+		temas.append("zanga")
+	var icone_funcao: String = Icones.FUNCAO.get(job, "")
+	if icone_funcao != "":
+		temas.append(icone_funcao)
+	var dn := get_tree().get_first_node_in_group("day_night")
+	if dn and dn.has_method("season_index") and dn.season_index() >= 0:
+		temas.append(Icones.ESTACAO[dn.season_index()])
+	return temas[randi() % temas.size()]
+
+
+## Balão de fala com um ícone em cima da cabeça (some sozinho).
+func _mostra_balao(icone: String) -> void:
+	if _balao == null:
+		_balao = Sprite2D.new()
+		_balao.name = "Balao"
+		_balao.texture = BALAO
+		_balao.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_balao.position = Vector2(12, -66)
+		_balao.z_index = 21
+		var ic := Sprite2D.new()
+		ic.name = "Icone"
+		ic.scale = Vector2(0.34, 0.34)
+		ic.position = Vector2(0, -2)
+		ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_balao.add_child(ic)
+		add_child(_balao)
+	var tex := Icones.tex(icone)
+	(_balao.get_node("Icone") as Sprite2D).texture = tex
+	_balao.visible = tex != null
+	_balao_vida = 1.8
 
 
 ## Bloco 84: a carga que ele ainda tem pra largar no armazém (o estado de entregar), "" = nada.
@@ -3317,6 +3526,7 @@ func get_save_data() -> Dictionary:
 		"area_id": work_area.id if work_area != null else 0,  # Bloco 77
 		"refeicoes_hoje": refeicoes_hoje.keys(),  # Bloco 84
 		"refeicoes_perdidas": refeicoes_perdidas,
+		"animo_social": animo_social,  # Bloco 85
 	}
 
 
@@ -3335,6 +3545,7 @@ func load_save_data(d: Dictionary) -> void:
 		if m in ["cafe", "almoco", "jantar"]:
 			refeicoes_hoje[m] = true
 	refeicoes_perdidas = clampi(SaveUtil.integer(d, "refeicoes_perdidas", 0), 0, 10)
+	animo_social = clampf(SaveUtil.num(d, "animo_social", 0.0), 0.0, 50.0)  # Bloco 85 (save antigo: 0)
 	carrying = clampf(SaveUtil.num(d, "carrying", 0.0), 0.0, cargo_capacity)
 	var t := SaveUtil.text(d, "cargo_type", "ferro")
 	cargo_type = t if Ores.NAMES.has(t) else "ferro"

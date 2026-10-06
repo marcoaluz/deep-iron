@@ -27,6 +27,11 @@ extends Node
 ## refeicao_dispensa do máximo) pula a refeição sem problema; quem estava com fome e deixou a janela passar sem
 ## comer PERDEU a refeição: rende perda_por_refeicao a menos (até perda_max seguidas) até comer de novo.
 ## O HUD mostra as refeições que ainda faltam hoje x as porções no estoque.
+##
+## Bloco 85: a HORA SOCIAL (anoitecer..dormir, depois do jantar): os ipezinhos escolhem um PONTO SOCIAL
+## (social_spot.gd: refeitório, praça, taverna, parque...), reservam um lugar numa roda, vão passando por
+## outro ponto no caminho (waypoint) e conversam em pares/grupos (balão com ícone); depois de um tempo trocam
+## de ponto. Com chuva ou onda solar só valem os pontos cobertos. Conversar dá um pouco de ânimo.
 
 const MEALS := ["cafe", "almoco", "jantar"]
 const NOMES_REFEICAO := {"cafe": "café", "almoco": "almoço", "jantar": "jantar"}
@@ -59,6 +64,22 @@ const NOMES_REFEICAO := {"cafe": "café", "almoco": "almoço", "jantar": "jantar
 @export_range(0.0, 0.5, 0.01) var perda_por_refeicao: float = 0.12
 ## ...até este tanto de refeições perdidas seguidas.
 @export_range(0, 6) var perda_max: int = 3
+
+@export_group("Hora social (Bloco 85)")
+## Segundos REAIS que ele fica em cada ponto antes de trocar (sorteado entre os dois).
+@export var conversa_min: float = 10.0
+@export var conversa_max: float = 22.0
+## Ânimo por segundo conversando com alguém na roda (x animo_mult do ponto)...
+@export var animo_por_segundo: float = 0.5
+## ...até este tanto (fator "conversou com os amigos" no ânimo)...
+@export var animo_max: float = 8.0
+## ...que vai sumindo devagar depois (por segundo).
+@export var animo_decai: float = 0.01
+## Intervalo (s) entre um balão e outro de quem está numa roda (sorteado entre os dois).
+@export var balao_min: float = 2.0
+@export var balao_max: float = 4.5
+## Passeio: passa por outro ponto no caminho se o desvio for até isto (px do chão).
+@export var passeio_desvio: float = 160.0
 
 var _dn: Node
 var _cache := {}

@@ -89,6 +89,8 @@ extends Node
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
+##   Bloco 85: ipezinho.gd "animo_social" (ânimo de ter conversado na hora social; save antigo: 0). Os
+##     pontos sociais e as vagas não vão pro save (refeitos ao carregar).
 ##   Bloco 84: ipezinho.gd "refeicoes_hoje" [refeições feitas hoje: "cafe"/"almoco"/"jantar"] e
 ##     "refeicoes_perdidas" (seguidas: rende menos). Save antigo: nenhuma feita, nenhuma perdida. A agenda
 ##     (Schedule) não salva nada: é só horário.

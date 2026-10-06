@@ -7,6 +7,7 @@ extends "res://scripts/props/station.gd"
 ## - Ter taverna na vila já anima um pouco todo mundo (taverna_bonus, no morale.gd).
 ## - Nível 2 (ampliação): mais lugares e diversão mais rápida.
 
+const SocialSpot := preload("res://scripts/props/social_spot.gd")  # Bloco 85
 const NOTE := preload("res://assets/game/note.png")
 
 @export_group("Lugares e diversão")
@@ -35,6 +36,7 @@ var _cheers_timer := 2.0
 func _ready() -> void:
 	super()
 	add_to_group("tavernas")
+	add_child(SocialSpot.criar("taverna", "Taverna", true, 2, 3, Vector2(0, 26), 1.4))  # Bloco 85: na porta
 	add_to_group("clickable")
 	_window_light.add_to_group("cullable_lights")
 	refresh_seats()

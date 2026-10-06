@@ -13,6 +13,7 @@ extends "res://scripts/props/station.gd"
 ##   serve o que tiver (o prato fica menor).
 ## - O sprite mostra cheio / pela metade / vazio.
 
+const SocialSpot := preload("res://scripts/props/social_spot.gd")  # Bloco 85
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 
 @export_group("Ritmo")
@@ -46,6 +47,7 @@ var is_cooking: bool = false
 func _ready() -> void:
 	super()
 	add_to_group("comedouros")
+	add_child(SocialSpot.criar("refeitorio", "Refeitório", true, 2, 4, Vector2(0, 26)))  # Bloco 85: as mesas
 	food_stock = clampf(start_food, 0.0, food_capacity)
 	_update_visual()
 
