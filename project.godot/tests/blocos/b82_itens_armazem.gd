@@ -116,9 +116,20 @@ func _process(delta: float) -> bool:
 		print("== vender")
 		var c0: float = eco.credits
 		cf.button.pressed.emit()
+		check(p._sel_id == "barra_ferro" and p._sel_qtd == 10, "'Vender…' seleciona o item na barra de venda (quantidade = tudo: %d)" % p._sel_qtd)
+		p._sel_qtd = 4
+		p.vender_selecionado()
+		check(is_equal_approx(eco.credits - c0, 4.0 * Items.preco_base("barra_ferro")) and eco.quantidade("barra_ferro") == 6.0,
+			"escolheu 4: vendeu 4 barras (+%d cr), ficaram 6" % (eco.credits - c0))
+		check(eco.sell("ferro", 15.0) == 15.0 * eco.ore_price and eco.quantidade("ferro") == 25.0, "Economy.sell(minério, 15) vende só 15")
+		g("armazens").stock["ferro"] = 40.0
+		g("armazens")._recount()
+		c0 = eco.credits
+		p._sel_tudo.pressed.emit()
+		p.vender_selecionado()
 		var ganho: float = eco.credits - c0
-		check(is_equal_approx(ganho, 10.0 * Items.preco_base("barra_ferro")) and eco.quantidade("barra_ferro") == 0.0 and eco.quantidade("ferro") == 40.0,
-			"vender barra de ferro: +%d cr (10 x %s), minério intocado" % [ganho, Items.preco_base("barra_ferro")])
+		check(is_equal_approx(ganho, 6.0 * Items.preco_base("barra_ferro")) and eco.quantidade("barra_ferro") == 0.0 and eco.quantidade("ferro") == 40.0,
+			"'Tudo': vendeu as 6 que restavam (+%d cr), minério intocado" % ganho)
 		check(cf.cell.modulate.a < 0.5, "depois de vender, a célula esmaece")
 		eco.precos_itens = {"barra_cobre": 20.0}
 		check(eco.price_of("barra_cobre") == 20.0, "preço de um item trocado na Economia (precos_itens)")

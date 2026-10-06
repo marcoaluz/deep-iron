@@ -4,8 +4,9 @@ extends PanelContainer
 ##
 ## Bloco 82: uma GRADE por categoria do catálogo de itens (items.gd: minério, metal, madeira, comida, peças e
 ## materiais, equipamento), cada célula com ícone, nome, quantidade e preço. Quantidade zero fica esmaecida.
-## Vender: um tipo (botão da célula) ou a categoria inteira (botão do título; no minério é o "Vender tudo" de
-## sempre). Os números somam TODOS os armazéns (Bloco 47: cada armazém guarda o seu, a vila vende a soma).
+## Vender: a categoria inteira (botão do título; no minério é o "Vender tudo" de sempre) ou UM item na
+## quantidade escolhida: o botão "Vender…" da célula seleciona o item na barra de venda embaixo da grade
+## (-10 / -1 / +1 / +10 / Tudo e "Vender N"; a quantidade começa em tudo o que tem). Os números somam TODOS os armazéns (Bloco 47: cada armazém guarda o seu, a vila vende a soma).
 ## Minério ainda não liberado pela Oficina e sem estoque fica escondido (não estraga a surpresa).
 
 const Ores := preload("res://scripts/core/ores.gd")
@@ -27,6 +28,14 @@ var _secoes: Dictionary = {}
 ## O "Vender tudo" (todo o minério) — o botão do título da categoria Minério.
 var _sell_all: Button
 var _other_label: Label
+## Barra de venda: o item selecionado e a quantidade.
+var _sel_id := ""
+var _sel_qtd := 0
+var _sel_box: HBoxContainer
+var _sel_info: Label
+var _sel_qtd_label: Label
+var _sel_vender: Button
+var _sel_tudo: Button
 
 
 func setup(hud: CanvasLayer, arm: Node, economy: Node) -> void:
@@ -77,6 +86,7 @@ func _build() -> void:
 		if ids.is_empty():
 			continue  # (equipamento: entra quando houver item — Bloco 87)
 		_secao(corpo, cat, ids)
+	_monta_barra_venda(vbox)
 	vbox.add_child(HSeparator.new())
 	_other_label = _hud._label("", 12, _hud.COLOR_DIM)
 	_other_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -154,14 +164,103 @@ func _celula(grade: GridContainer, id: String) -> Dictionary:
 	col.add_child(preco)
 	var b: Button = null
 	if _economy.pode_vender(id):
-		b = _hud._button("Vender")
+		b = _hud._button("Vender…")
 		b.add_theme_font_size_override("font_size", 11)
 		b.pressed.connect(func():
 			Audio.click()
-			_economy.sell(id)
-			refresh())
+			seleciona(id))
 		col.add_child(b)
 	return {"cell": cell, "label": qtd, "name": nome, "price": preco, "button": b}
+
+
+## A barra de venda: [ícone nome (tem N)] [-10][-1] N [+1][+10] [Tudo] [Vender N (+X cr)].
+func _monta_barra_venda(vbox: VBoxContainer) -> void:
+	vbox.add_child(HSeparator.new())
+	_sel_box = HBoxContainer.new()
+	_sel_box.add_theme_constant_override("separation", 4)
+	vbox.add_child(_sel_box)
+	_sel_info = _hud._label("Escolha um item (Vender…) pra vender a quantidade que quiser.", 12, _hud.COLOR_DIM)
+	_sel_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_sel_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_sel_box.add_child(_sel_info)
+	for passo in [-10, -1]:
+		_sel_box.add_child(_botao_passo(passo))
+	_sel_qtd_label = _hud._label("", 15, _hud.COLOR_TITLE)
+	_sel_qtd_label.custom_minimum_size.x = 40
+	_sel_qtd_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_sel_box.add_child(_sel_qtd_label)
+	for passo in [1, 10]:
+		_sel_box.add_child(_botao_passo(passo))
+	_sel_tudo = _hud._button("Tudo")
+	_sel_tudo.add_theme_font_size_override("font_size", 12)
+	_sel_tudo.pressed.connect(func():
+		Audio.click()
+		_sel_qtd = _tem(_sel_id)
+		refresh())
+	_sel_box.add_child(_sel_tudo)
+	_sel_vender = _hud._button("")
+	_sel_vender.add_theme_font_size_override("font_size", 12)
+	_sel_vender.pressed.connect(func():
+		Audio.click()
+		vender_selecionado())
+	_sel_box.add_child(_sel_vender)
+
+
+func _botao_passo(passo: int) -> Button:
+	var b: Button = _hud._button("%+d" % passo)
+	b.add_theme_font_size_override("font_size", 12)
+	b.custom_minimum_size = Vector2(34, 0)
+	b.pressed.connect(func():
+		Audio.click()
+		_sel_qtd = clampi(_sel_qtd + passo, 0, _tem(_sel_id))
+		refresh())
+	return b
+
+
+## Quantas unidades inteiras a vila tem do item.
+func _tem(id: String) -> int:
+	return int(floorf(_economy.quantidade(id))) if id != "" else 0
+
+
+## Seleciona o item na barra de venda (a quantidade começa em tudo o que tem).
+func seleciona(id: String) -> void:
+	_sel_id = id if _economy.pode_vender(id) else ""
+	_sel_qtd = _tem(_sel_id)
+	refresh()
+
+
+## Vende a quantidade escolhida do item selecionado. Retorna os créditos.
+func vender_selecionado() -> float:
+	if _sel_id == "" or _sel_qtd <= 0:
+		Audio.error()
+		return 0.0
+	var ganho: float = _economy.sell(_sel_id, float(_sel_qtd))
+	_sel_qtd = mini(_sel_qtd, _tem(_sel_id))
+	refresh()
+	return ganho
+
+
+func _refresh_barra_venda() -> void:
+	var tem := _tem(_sel_id)
+	_sel_qtd = clampi(_sel_qtd, 0, tem)
+	var ativo := _sel_id != ""
+	for c in _sel_box.get_children():
+		if c is Button:
+			c.disabled = not ativo or tem <= 0
+	if not ativo:
+		_sel_info.text = "Escolha um item (Vender…) pra vender a quantidade que quiser."
+		_sel_qtd_label.text = "-"
+		_sel_vender.text = "Vender"
+		return
+	_sel_info.text = "%s (tem %d, %s cr cada)" % [Items.nome(_sel_id), tem, str(snappedf(_economy.price_of(_sel_id), 0.1))]
+	_sel_qtd_label.text = str(_sel_qtd)
+	_sel_vender.text = "Vender %d  (+%d cr)" % [_sel_qtd, int(_sel_qtd * _economy.price_of(_sel_id))]
+	_sel_vender.disabled = _sel_qtd <= 0
+	for id in _rows:
+		var st: StyleBoxFlat = _rows[id].cell.get_theme_stylebox("panel")
+		if st:
+			st.border_color = Color(1.0, 0.8, 0.35) if id == _sel_id else Color(0.36, 0.28, 0.2)
+			st.set_border_width_all(2 if id == _sel_id else 1)
 
 
 ## Ícone do item: o da pasta de ícones; sem arquivo, o pedaço de minério (ou nada).
@@ -205,6 +304,7 @@ func refresh() -> void:
 			b.text = ("Vender %s  (+%d cr)" % [Items.nome_categoria(cat).to_lower(), total]) if total > 0 else "Nada pra vender"
 		b.disabled = total <= 0
 	_other_label.text = "Os itens de metal saem da Fornalha (quando houver); minério bruto ainda serve pras obras do começo."
+	_refresh_barra_venda()
 
 
 func button_text() -> String:

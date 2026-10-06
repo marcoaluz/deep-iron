@@ -46,6 +46,9 @@ func _process(delta: float) -> bool:
 		var hud = get_first_node_in_group("hud")
 		hud.open_panel("armazem")
 		hud._panels["armazem"].refresh()
+		hud._panels["armazem"].seleciona("barra_ferro")  # (a barra de venda com um item escolhido)
+		hud._panels["armazem"]._sel_qtd = 5
+		hud._panels["armazem"].refresh()
 		step = 1
 		t = 0.0
 	elif step == 1 and t > 1.0:

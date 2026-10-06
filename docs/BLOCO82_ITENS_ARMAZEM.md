@@ -97,3 +97,18 @@ Foto: `docs/arte/bloco82/janela_armazem.png`.
   - preço trocado;
   - save e save antigo sem `itens`.
 - **Passaram também:** `b39_economia` (usa `_rows["ferro"].label` e `_sell_all` da janela), `b42_equipamento` (couro) e `b27_cacador_cozinheiro` (matéria-prima).
+
+## Ajuste (2026-10-06, pedido do Marco): vender a QUANTIDADE escolhida
+
+- **Escolher o item:** o botão de cada célula virou **"Vender…"**. Ele seleciona o item (a célula fica com a
+  borda dourada) na **barra de venda** embaixo da grade.
+- **A barra de venda:** "Barra de ferro (tem 12, 8 cr cada)", com **−10 / −1 / quantidade / +1 / +10 /
+  Tudo**, e **"Vender N (+X cr)"**. A quantidade começa em tudo o que tem.
+- **Vender tudo continua igual:** "Vender tudo" (todo o minério) e "Vender metal" no título de cada categoria.
+- **`Economy.sell(item, quantidade)`:** vende só essa quantidade, tirando dos armazéns um atrás do outro. Sem
+  quantidade, vende tudo, como antes.
+- **Teste `b82`:**
+  - "Vender…" seleciona com a quantidade = tudo;
+  - escolhendo 4, vende 4 e ficam 6;
+  - `sell(ferro, 15)` vende 15;
+  - "Tudo" vende o resto.

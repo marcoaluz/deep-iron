@@ -130,15 +130,17 @@ func sale_value() -> int:
 
 
 ## Bloco 39: vende um tipo só ("" = tudo). Retorna os créditos ganhos.
-## Bloco 82: também qualquer item processado com preço (barra, prego...).
-func sell(ore_type: String = "") -> float:
+## Bloco 82: também qualquer item processado com preço (barra, prego...). `quantidade` (unidades inteiras)
+## vende só isso, tirando dos armazéns um atrás do outro; < 0 = tudo o que tem.
+func sell(ore_type: String = "", quantidade: float = -1.0) -> float:
 	if ore_type == "":
 		return sell_all()
 	if not Ores.TYPES.has(ore_type):
-		return _sell_item(ore_type)
+		return _sell_item(ore_type, quantidade)
 	var sold := 0.0
+	var resta := floorf(quantidade) if quantidade >= 0.0 else INF
 	for a in get_tree().get_nodes_in_group("armazens"):
-		var amount := floorf(a.stock.get(ore_type, 0.0))
+		var amount := minf(floorf(a.stock.get(ore_type, 0.0)), resta - sold)
 		if amount < 1.0:
 			continue
 		var got: float = a.take(amount, ore_type)
@@ -236,13 +238,14 @@ func paga_metal(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.
 	return true
 
 
-## Bloco 82: vende um item processado (todas as unidades inteiras, de todos os armazéns).
-func _sell_item(id: String) -> float:
+## Bloco 82: vende um item processado (as unidades inteiras pedidas; < 0 = todas), de todos os armazéns.
+func _sell_item(id: String, quantidade: float = -1.0) -> float:
 	if Items.onde(id) != "itens" or price_of(id) <= 0.0:
 		return 0.0
 	var sold := 0.0
+	var resta := floorf(quantidade) if quantidade >= 0.0 else INF
 	for a in get_tree().get_nodes_in_group("armazens"):
-		var amount := floorf(a.item_count(id))
+		var amount := minf(floorf(a.item_count(id)), resta - sold)
 		if amount < 1.0:
 			continue
 		var got: float = a.take_item(id, amount)
