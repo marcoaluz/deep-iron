@@ -1,0 +1,62 @@
+Leia o CLAUDE.md. Tarefa (Bloco 82): crie um catálogo de itens (scripts/core/items.gd, no estilo de ores.gd) com id, nome, categoria (minério, metal, madeira, comida, peças, equipamento), ícone e preço de venda. Inclua os minérios atuais, madeira, comida crua, couro, peças raras e os itens novos (barra de ferro, barra de cobre, aço, barra de prata, lingote solar, prego), com ícones placeholder quando ainda não existir arte.
+Refaça a janela do armazém (armazem_panel.gd): uma grade com ícone, nome e quantidade de cada item, agrupada por categoria, mantendo as ações de vender (tudo ou por tipo). Itens com quantidade zero ficam esmaecidos.
+Antes de codar, investigue como os vários armazéns (Bloco 47) compartilham estoque e proponha, em um plano curto, o jeito menos arriscado de guardar itens processados sem quebrar o dicionário stock atual. Economy deve vender os itens novos. Save compatível. Teste b51.
+Leia o CLAUDE.md e mostre um plano curto antes de codar. Tarefa (Bloco 83): refatore day_night.gd para um relógio de 24 horas, mantendo a API usada pelo resto do jogo (phase_changed, day_started, torch_level e afins).
+- Hora e minuto (hh:mm no HUD), dia da semana (7 dias, o 7º é domingo) e contagem de semanas. Estações em múltiplos de semana (padrão 2 semanas, em @export); ajuste sun.gd e as chances de onda solar.
+- Duração do dia em @export (padrão 9 minutos reais; 1 hora de jogo = 22,5 s).
+- Marcos configuráveis: amanhecer 05:00, fim do expediente 18:00, anoitecer 18:30, dormir 21:30.
+- Noite de invasão: o aviso toca às 21:00 e a invasão começa às 22:00, com todos em casa e os guardas nos postos. Ajuste defense.gd.
+- Controle de velocidade no HUD (pausa, 1x, 2x, 4x), unificando o que já existe.
+- Botão "Pular dia": acelera até as 05:00 do dia seguinte com a simulação rodando de verdade e para sozinho em invasão, onda solar, ferido grave, morte ou greve.
+Mantenha um helper para os testes avançarem o relógio. Adapte os testes antigos que dependem de tempo e crie o b52.
+
+Leia o CLAUDE.md e mostre um plano curto antes de codar. Tarefa (Bloco 84): crie a camada de AGENDA dos ipezinhos sobre o _choose_state de ipezinho.gd, sem reescrever o que já funciona. Prioridade: emergência (ferido, caído, onda solar, invasão, greve) > agenda > necessidades.
+Agenda: 05:00–07:00 acordar e café; 07:00–12:00 trabalho; 12:00–13:00 almoço; 13:00–18:00 trabalho; 18:00–18:30 voltar e largar a carga; 18:30–21:30 hora social (Prompt 6); 21:30 dormir. Os horários ficam em @export num nó novo (Schedule).
+Exceções: o médico fica sempre de plantão (almoça e janta em turnos); os guardas fazem vigília noturna em rodízio (todos na noite de invasão); o cozinheiro começa mais cedo (café) e prepara o jantar a partir das 16:00.
+Fome controlada: troque a queda contínua por refeições em horário fixo. A fome cai devagar (valores em @export), cada refeição restaura, e perder refeição reduz produtividade. O comedouro consome porções por refeição, e o HUD mostra "refeições necessárias hoje x estoque". Teste b53.
+
+Leia o CLAUDE.md. Tarefa (Bloco 85): implemente a hora social das 18:30 às 21:30. Os ipezinhos jantam e depois conversam e passeiam pela vila de forma organizada.
+Crie o conceito de "pontos sociais" (grupo social_spots): refeitório com mesas, praça do Centro da Vila, taverna, parque e, futuramente, bancos, fogueira e igreja. Cada ponto tem vagas reservadas, para ninguém empilhar no mesmo pixel. O ipezinho escolhe um ponto, anda até lá e fica em pares ou grupos conversando (balão de fala com ícones), depois troca de ponto. Os passeios usam waypoints entre os pontos. Com chuva ou onda solar, vão para locais cobertos. Conversar dá um pouco de ânimo (@export). Mantenha o custo de CPU baixo com muitos ipezinhos. Teste b54.
+
+Leia o CLAUDE.md. Tarefa (Bloco 86):
+1) Módulo genérico de ORDENS DE PRODUÇÃO (production_queue.gd), baseado na fila da forja de defense.gd. Regras obrigatórias: nada é produzido sozinho. O jogador escolhe a receita e a QUANTIDADE (ex.: 10 barras de ferro) e confirma. O trabalhador faz exatamente essa quantidade e para. Sem ordem ativa ele não pega material nem produz nada. Cada unidade consome os insumos só quando começa; se faltarem insumos, a ordem fica pausada com aviso do que falta e nada mais é gasto. O jogador pode cancelar a qualquer momento. Fila com tamanho máximo em @export.
+2) Prédio Fornalha: posicionada pelo jogador (house_placer.gd), construída pelo engenheiro (Canteiro), liberada em certo estágio da vila. O custo dela usa só minério e créditos, para não travar a progressão. Painel com receitas, quantidade (+/-), fila e progresso.
+3) Ofício novo "fundidor": opera a fornalha, busca os insumos no armazém como o cozinheiro faz, e deposita o produto no armazém. Outfit placeholder até haver arte.
+4) Receitas iniciais: minério de ferro + carvão = barra de ferro; minério de cobre + carvão = barra de cobre; prata = barra de prata; solarita = lingote solar. O aço (barra de ferro + carvão) fica para a Fundição no estágio 3. Tudo em @export.
+Teste b55.
+
+Leia o CLAUDE.md. Tarefa (Bloco 87), usando o production_queue.gd do Bloco 55 e as mesmas regras (só produz por ordem, quantidade definida pelo jogador, pausa se faltar material, sem produção automática):
+1) Ofício novo "ferreiro": opera a Oficina e o Arsenal. Receitas: pregos, ferragens, ferramentas, armas e equipamentos. O engenheiro continua só nas obras de construção. A fila da forja atual do Arsenal passa a ser executada pelo ferreiro, preservando fabricar x consertar e o desgaste das armas.
+2) Migre os custos em minério bruto para barras: armas, ampliação das barricadas, peças da Escavadeira, reatores, coletor e laboratório. Faça um levantamento (grep nos campos de custo em minério) e me mostre a tabela proposta ANTES de alterar. Ponto de partida: 1 barra ≈ 2 minérios.
+3) Prédios iniciais continuam possíveis só com minério bruto (para não travar o começo). A partir do estágio da fornalha, o jogo pede barras.
+Outfit placeholder do ferreiro. Teste b56.
+
+Leia o CLAUDE.md. Tarefa (Bloco 88):
+- Padre: um único, não recrutável. Chega à vila por evento (estágio configurável) com banner e entrada no diário. Outfit placeholder.
+- Igreja: posicionada pelo jogador e construída pelo engenheiro (Canteiro kind "igreja"). Funciona como ponto social.
+- Funções: missa de domingo (09:00–11:00, todos que não estejam em emergência comparecem); funeral (integrar ao sistema de luto de morale.gd); aconselhamento (reduz a zanga de quem frequenta).
+- Domingo à tarde: um painel de escolha — Festival (gasta comida e créditos, grande ânimo, todos se reúnem na praça), Dia livre (passeiam pela vila) ou Trabalhar (hora extra, mais zanga). A festa atual do morale.gd passa a fazer parte disso.
+- Calendário: festivais por estação com nomes próprios, visíveis no HUD (dia da semana e próximo evento).
+Tudo em @export, com save. Teste b57.
+
+
+Leia o CLAUDE.md. Tarefa (Bloco 89): ferramenta de caminhos no menu de construção. O jogador pinta e apaga caminhos em uma grade (arrastando o mouse) com 3 tipos: terra batida, cascalho e pedra, cada um com custo por tile.
+- Quem anda sobre um caminho ganha bônus de velocidade por tipo (@export). Transforme "Trilhas batidas" em melhoria que aumenta esse bônus, em vez de acelerar todo mundo.
+- Os waypoints do passeio social (Prompt 6) seguem os caminhos.
+- Caminhos não bloqueiam a navegação nem exigem rebuild_navigation. Construir um prédio por cima de um caminho remove o trecho.
+- Desenho por camada própria, abaixo dos personagens, com visual provisório. Save compacto (lista de tiles por tipo).
+Teste b58. Se o custo de rota preferencial na navegação do Godot for viável, proponha como etapa futura, sem implementar agora.
+
+Leia o CLAUDE.md. Tarefa (Bloco 90): sistema de decoração construída pelo jogador.
+- Nova categoria "Decoração" no build_menu.gd, e deixe o menu organizado também com "Produção" (fornalha) e "Culto" (igreja).
+- Catálogo data-driven (decor.gd): tocha, lampião, banco, mesa, cerca, canteiro de flores e bandeira, cada um com id, nome, textura, pegada, custo, luz, vagas de sentar e valor de beleza.
+- Posicionamento com house_placer.gd, podendo colocar vários em sequência. Construção instantânea (sem engenheiro) com custo. Modo remover, com reembolso parcial.
+- Tochas e lampiões usam as luzes com cullable_lights e acendem com torch_level do DayNight. Lumívoros são atraídos por lugares iluminados, com multiplicador em @export. Bancos viram pontos sociais (Prompt 6).
+- Beleza: decoração perto das casas dá um pequeno bônus de ânimo, com teto.
+- Só obstáculos grandes entram na navegação, com rebuild_navigation agrupado (debounce) para não travar ao colocar muita coisa.
+- Não altere as tochas sorteadas por seed do environment.gd. Lista própria no save. Texturas provisórias em assets/game/decor/, prontas para trocar.
+Teste b59.
+
+Leia o CLAUDE.md. Encaixe os sprites do PixelLab de [NOME] em assets/game/[pasta]/[arquivo].png. Detalhes: tamanho do quadro [LxA px]; direções [ex.: 4 ou 8]; animações e quadros [andar: N, atacar: N, morrer: N]. Configure SpriteFrames/AnimatedSprite2D, filtro nearest, escala coerente com os ipezinhos e sombra no padrão do jogo, sem mudar a lógica. Se for criatura nova, adicione o kind em creature.gd, a cena em scenes/creatures/, as regras de invasão em defense.gd e a entrada no diário. Teste de carga da cena.
+
+e sobre as criaturas criadas no pixellab, precisamos implementar elas no jogo o Magmante, Gosma Acida, Matriaca dos Lumivos, criatura_lumiva
