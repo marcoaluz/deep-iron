@@ -37,6 +37,7 @@ func setup(main: Node) -> void:
 	_linha(v, "Pular:", [["fase", _fase], ["dia", _dia], ["estação", _estacao]])
 	_linha(v, "Eventos:", [["invasão agora", _invasao], ["chuva liga/desliga", _chuva], ["curar todos", _curar], ["liberar pesquisas", _pesquisas]])
 	_linha(v, "Andares:", [["abrir todos", _abre_andares]])
+	_linha(v, "Criaturas:", [["invasão com todos os tipos", _todas_criaturas]])  # Bloco 91
 	_linha(v, "Ir para:", [["vila", func(): _vai(Vector2(40, -260))], ["S2", func(): _vai(Vector2(-300, 3730))],
 		["S3", func(): _vai(Vector2(-460, 4110))], ["S4", func(): _vai(Vector2(-340, 4530))], ["S5", func(): _vai(Vector2(-460, 4920))],
 		["ferrovia", _vai_ferrovia]])
@@ -165,6 +166,23 @@ func _curar() -> void:
 
 
 ## Bloco 79: abre o S2 (como a escavadeira pronta) e as plataformas do S3, S4 e S5 (como o conserto pronto).
+## Bloco 91: uma invasão com UMA DE CADA criatura (Lumívoro, Matriarca, Gosma, Magmante, Ferrugento) — pra ver a
+## arte do PixelLab de todas sem esperar o S2/S3 nem a estação do chefe. De noite, na hora.
+func _todas_criaturas() -> void:
+	var d := _g("defense")
+	var dn := _g("day_night")
+	if d == null:
+		return
+	if dn and not dn.is_night():
+		dn.ir_para_hora(22.0)
+	if not d.invasion_active:
+		d.start_invasion()
+	for k in ["gosma", "magmante", "ferrugento"]:
+		d._spawn(k)
+	if not d.boss_alive():
+		d._spawn_boss()
+
+
 func _abre_andares() -> void:
 	var sh := _g("elevador")
 	if sh and sh.has_method("unlock"):

@@ -374,5 +374,9 @@ func test_b90_decoracao() -> void:
 	run_bloco("b90_decoracao.gd")
 
 
+func test_b91_criaturas_pixellab() -> void:
+	run_bloco("b91_criaturas_pixellab.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")
