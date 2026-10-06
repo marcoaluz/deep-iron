@@ -3,24 +3,24 @@ extends SceneTree
 ## Roda COM JANELA e APPDATA isolado:
 ##   <Godot>.exe --path . -s res://tests/ciclo_luz.gd -- <pasta de saída>
 const PATH := "user://savegame.json"
-## [arquivo, segundos desde o amanhecer, ponto do chão, parada de zoom, dia (estação)]
+## [arquivo, HORA do relógio (Bloco 83: 24 h), ponto do chão, parada de zoom, dia (estação; 14 dias cada)]
 const SHOTS := [
-	["c01_amanhecer", 6.0, Vector2(-200, -150), 1, 1],
-	["c02_manha", 40.0, Vector2(-200, -150), 1, 1],
-	["c03_meio_dia", 90.0, Vector2(-200, -150), 1, 1],
-	["c04_tarde", 150.0, Vector2(-200, -150), 1, 1],
-	["c05_entardecer", 172.0, Vector2(-200, -150), 1, 1],
-	["c06_anoitecer", 184.0, Vector2(-200, -150), 1, 1],
-	["c07_noite", 205.0, Vector2(-200, -150), 1, 1],
-	["c08_madrugada", 232.0, Vector2(-200, -150), 1, 1],
-	["n1_vila_noite", 215.0, Vector2(-420, -300), 3, 1],
-	["n2_oficina_lab_noite", 215.0, Vector2(150, -250), 2, 1],
-	["n3_nivel2_cristais", 215.0, Vector2(188, 3705), 1, 1],
-	["n4_abismo_lava", 215.0, Vector2(554, 4214), 1, 1],
-	["n5_inverno_noite", 215.0, Vector2(-420, -300), 2, 13],
-	["n6_verao_noite", 215.0, Vector2(-420, -300), 2, 5],
-	["n7_inverno_dia", 90.0, Vector2(-420, -300), 2, 13],
-	["n8_verao_dia", 90.0, Vector2(-420, -300), 2, 5],
+	["c01_amanhecer", 5.25, Vector2(-200, -150), 1, 1],
+	["c02_manha", 8.0, Vector2(-200, -150), 1, 1],
+	["c03_meio_dia", 12.0, Vector2(-200, -150), 1, 1],
+	["c04_tarde", 16.0, Vector2(-200, -150), 1, 1],
+	["c05_entardecer", 17.75, Vector2(-200, -150), 1, 1],
+	["c06_anoitecer", 18.65, Vector2(-200, -150), 1, 1],
+	["c07_noite", 20.5, Vector2(-200, -150), 1, 1],
+	["c08_madrugada", 4.5, Vector2(-200, -150), 1, 1],
+	["n1_vila_noite", 22.0, Vector2(-420, -300), 3, 1],
+	["n2_oficina_lab_noite", 22.0, Vector2(150, -250), 2, 1],
+	["n3_nivel2_cristais", 22.0, Vector2(188, 3705), 1, 1],
+	["n4_abismo_lava", 22.0, Vector2(554, 4214), 1, 1],
+	["n5_inverno_noite", 22.0, Vector2(-420, -300), 2, 43],
+	["n6_verao_noite", 22.0, Vector2(-420, -300), 2, 15],
+	["n7_inverno_dia", 12.0, Vector2(-420, -300), 2, 43],
+	["n8_verao_dia", 12.0, Vector2(-420, -300), 2, 15],
 ]
 var main: Node
 var out_dir := ""
@@ -84,9 +84,9 @@ func _hold() -> void:
 	var s: Array = SHOTS[cur]
 	var dn = main.get_node("DayNight")
 	dn.day = s[4]
-	dn.time = s[1]
+	dn.time = dn.tempo_da_hora(s[1])
 	dn.snap_lighting()
-	var night: bool = s[1] >= dn.day_duration - 10.0
+	var night: bool = dn.time >= dn.day_duration - 10.0
 	for c in main.get_tree().get_nodes_in_group("casas"):
 		var wl = c.get_node_or_null("WindowLight")
 		if wl:

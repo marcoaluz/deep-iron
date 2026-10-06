@@ -77,7 +77,7 @@ func _process(delta: float) -> bool:
 
 
 func _noite() -> void:
-	dn().time = 215.0
+	dn().time = dn().day_duration + 35.0  # noite (Bloco 83: o dia agora vai até 18:30)
 	dn().snap_lighting()
 
 
@@ -169,7 +169,7 @@ func _estacoes() -> void:
 	check(cores[3].b / maxf(cores[3].r, 0.01) > cores[0].b / maxf(cores[0].r, 0.01), "inverno mais frio (azulado) que a primavera")
 	check(cores[1].r >= cores[1].b and cores[1] != cores[0], "verão mais quente")
 	dn().day = 1 + sun.days_per_season * 3
-	dn().time = 215.0
+	dn().time = dn().day_duration + 35.0  # noite (Bloco 83: o dia agora vai até 18:30)
 	dn().snap_lighting()
 	var inv: Color = main.get_node("Ambient").color
 	dn().day = 1

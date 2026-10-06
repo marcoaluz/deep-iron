@@ -342,5 +342,9 @@ func test_b82_itens_armazem() -> void:
 	run_bloco("b82_itens_armazem.gd")
 
 
+func test_b83_relogio_24h() -> void:
+	run_bloco("b83_relogio_24h.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

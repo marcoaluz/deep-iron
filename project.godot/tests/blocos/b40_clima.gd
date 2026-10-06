@@ -45,7 +45,7 @@ func levels(w) -> String:
 func mech(sun) -> Array:
 	var out := []
 	for s in 4:
-		out.append([sun.season_hunger_mult[s], sun.season_garden_mult[s], sun.season_day_mult[s], sun.season_night_mult[s], sun.season_wave_chance[s]])
+		out.append([sun.season_hunger_mult[s], sun.season_garden_mult[s], sun.season_wave_chance[s]])  # (Bloco 83: o dia não muda mais de tamanho)
 	return out
 
 

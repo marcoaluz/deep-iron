@@ -150,7 +150,8 @@ func _radio() -> void:
 	while not d.is_invasion_night(dia):
 		dia += 1
 	dn.day = dia
-	dn.time = dn.day_duration - (d.warn_before + 30.0)
+	dn.time = d.tempo_invasao() - (base + 30.0)  # Bloco 83: antes do aviso das 21:00 (a invasão é às 22:00)
+	d._t_antes = INF
 	dn._process(0.0)
 	d._warned_day = -1
 	d._process(0.0)

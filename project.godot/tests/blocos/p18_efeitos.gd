@@ -132,7 +132,7 @@ func _liga_eventos() -> void:
 	var sun := node("sun")
 	sun.wave_left = 20.0
 	var dn := node("day_night")
-	dn.time = 215.0  # noite: fogos
+	dn.time = dn.day_duration + 35.0  # noite: fogos
 	dn.snap_lighting()
 
 

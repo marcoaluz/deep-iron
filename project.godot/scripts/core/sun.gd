@@ -1,9 +1,10 @@
 extends Node
 ## O Sol (nó Sun, grupo "sun"): ESTAÇÕES do ano, ONDAS SOLARES e o ESCUDO (vitória).
 ##
-## Estações: days_per_season dias cada (Primavera, Verão, Outono, Inverno). Mudam o
-## tamanho do dia/noite, a fome, a horta e a chance de onda solar.
-## Ondas solares: só de dia. Quem está exposto no nível da mina/clareira (fora de casa)
+## Estações: semanas_por_estacao semanas cada (Primavera, Verão, Outono, Inverno; Bloco 83: em múltiplos
+## de semana, padrão 2 = 14 dias). Mudam a fome, a horta, a luz e a chance de onda solar (o tamanho do dia
+## não muda mais: os marcos do relógio de 24 h são fixos, ver day_night.gd).
+## Ondas solares: só de dia, entre onda_hora_min e onda_hora_max (Bloco 83: horas do relógio). Quem está exposto no nível da mina/clareira (fora de casa)
 ## acumula radiação e se machuca; os ipezinhos correm pros abrigos, e quem está no
 ## nível 2 ou no abismo segue trabalhando (a rocha protege). A cada dia as ondas ficam
 ## mais fortes. Com a pesquisa "Estudo da explosão solar" a vila recebe a previsão do dia
@@ -23,18 +24,17 @@ const VictoryScreen := preload("res://scripts/ui/victory.gd")
 const SEASONS := ["Primavera", "Verão", "Outono", "Inverno"]
 const SEASON_NOTES := [
 	"a horta cresce mais rápido",
-	"dias longos e o sol no pico: mais ondas solares",
+	"o sol no pico: mais ondas solares",
 	"a horta desacelera",
-	"dias curtos, frio (mais fome) e a horta quase para",
+	"frio (mais fome) e a horta quase para",
 ]
 
 @export_group("Estações (índice 0 = Primavera)")
-@export var days_per_season: int = 4
-## Mexe na duração do dia/noite conforme a estação (desligue pra testar com dia fixo).
-@export var adjust_day_length: bool = true
-@export var season_day_mult: Array[float] = [1.0, 1.2, 1.0, 0.8]
-@export var season_night_mult: Array[float] = [1.0, 0.8, 1.0, 1.25]
-@export var season_wave_chance: Array[float] = [0.3, 0.6, 0.3, 0.15]
+## Bloco 83: semanas (de 7 dias) por estação.
+@export_range(1, 12) var semanas_por_estacao: int = 2
+## Chance POR DIA de ter onda solar, em cada estação (Bloco 83: com estações de 14 dias e dias de 9 min,
+## um pouco menor que antes, pra não virar onda todo dia no verão).
+@export var season_wave_chance: Array[float] = [0.25, 0.5, 0.25, 0.12]
 @export var season_hunger_mult: Array[float] = [1.0, 1.0, 1.0, 1.25]
 @export var season_garden_mult: Array[float] = [1.3, 1.0, 0.8, 0.5]
 ## Ânimo no inverno (frio).
@@ -42,6 +42,9 @@ const SEASON_NOTES := [
 
 @export_group("Ondas solares")
 @export var first_wave_day: int = 2
+## Bloco 83: a onda chega numa hora sorteada entre estas (horas do relógio; 8.0 = 08:00).
+@export_range(0.0, 24.0, 0.5) var onda_hora_min: float = 8.0
+@export_range(0.0, 24.0, 0.5) var onda_hora_max: float = 16.0
 @export var wave_duration: float = 35.0
 ## Intensidade cresce isso por dia (o sol está piorando).
 @export var wave_growth: float = 0.08
@@ -66,9 +69,11 @@ var wave_left: float = 0.0
 var wave_intensity: float = 1.0
 var warned: bool = false
 var won: bool = false
-var _base_day: float = -1.0
-var _base_night: float = -1.0
 var _last_season: int = -1
+## Dias por estação (Bloco 83: semanas_por_estacao x 7). Só leitura (o resto do jogo usa este nome).
+var days_per_season: int:
+	get:
+		return maxi(semanas_por_estacao, 1) * 7
 
 
 func _ready() -> void:
@@ -80,8 +85,6 @@ func _connect_cycle() -> void:
 	var dn := _dn()
 	if dn:
 		dn.day_started.connect(_on_day_started)
-		_base_day = dn.day_duration
-		_base_night = dn.night_duration
 		_last_season = season_index()
 
 
@@ -114,17 +117,7 @@ func garden_mult() -> float:
 	return season_garden_mult[season_index()]
 
 
-func _apply_day_length() -> void:
-	var dn := _dn()
-	if dn == null or not adjust_day_length or _base_day <= 0.0:
-		return
-	var s := season_index()
-	dn.day_duration = _base_day * season_day_mult[s]
-	dn.night_duration = _base_night * season_night_mult[s]
-
-
 func _on_day_started(day: int) -> void:
-	_apply_day_length()
 	var s := season_index(day)
 	if s != _last_season:
 		_last_season = s
@@ -149,7 +142,8 @@ func _plan_wave(day: int) -> void:
 	if randf() < season_wave_chance[season_index(day)]:
 		var dn := _dn()
 		wave_today = true
-		wave_at = randf_range(0.25, 0.7) * (dn.day_duration if dn else 180.0)
+		var h := randf_range(onda_hora_min, maxf(onda_hora_max, onda_hora_min))
+		wave_at = dn.tempo_da_hora(h) if dn else 100.0  # (segundos desde o amanhecer)
 		wave_intensity = 1.0 + wave_growth * (day - 1)
 
 
@@ -341,7 +335,6 @@ func load_save_data(d: Dictionary) -> void:
 	warned = SaveUtil.boolean(d, "warned", false)
 	won = SaveUtil.boolean(d, "won", false)
 	_last_season = season_index()
-	_apply_day_length()
 	var sd := SaveUtil.dict(d, "shield")
 	if not sd.is_empty() and shield() == null:
 		var pos := SaveUtil.vec2(sd, "position", Vector2.INF)

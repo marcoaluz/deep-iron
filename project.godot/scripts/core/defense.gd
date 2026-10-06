@@ -132,9 +132,12 @@ const WEAPON_DESCRIPTIONS := {
 @export var magmante_max: int = 3
 ## Vida das criaturas cresce essa fração por onda.
 @export var hp_growth: float = 0.15
-## Aviso quando faltar isso (s) pro anoitecer numa noite de invasão.
-@export var warn_before: float = 40.0
-## As criaturas vão chegando ao longo desses segundos do começo da noite.
+## Bloco 83: numa noite de invasão o aviso toca a esta hora do relógio (o rádio adianta
+## research.radio_warning_bonus segundos)...
+@export_range(0.0, 24.0, 0.25) var hora_aviso_invasao: float = 21.0
+## ...e a invasão começa a esta hora (todo mundo já em casa, os guardas nos postos). Acaba no amanhecer.
+@export_range(0.0, 24.0, 0.25) var hora_invasao: float = 22.0
+## As criaturas vão chegando ao longo desses segundos do começo da invasão.
 @export var spawn_spread: float = 20.0
 ## Prompt 17: a partir dessa onda, 1 a cada `strong_every` criaturas vem na forma FORTE (Lumívoro
 ## bruto, Ferrugento carregador), com mais vida e dano. 0 = nunca.
@@ -193,6 +196,8 @@ var _sound_timer := 0.0
 ## Bloco 62: chefe por estação da partida: {"<n>": "veio" | "derrotado" | "fugiu"}.
 var bosses := {}
 var _boss: Node = null
+## Bloco 83: `time` do relógio no quadro anterior (INF = ainda não sabe: depois de carregar não dispara).
+var _t_antes := INF
 var _boss_called := 0
 var _boss_call_t := 0.0
 ## O que aconteceu com a última onda (telemetria): {onda, tier, total, derrubadas, chefe}.
@@ -274,7 +279,7 @@ func is_invasion_night(day: int) -> bool:
 func next_invasion_day() -> int:
 	var dn := _dn()
 	var d: int = dn.day if dn else 1
-	if dn and dn.is_night():
+	if dn and dn.time >= tempo_invasao():
 		d += 1  # a de hoje já começou (ou não era hoje)
 	while not is_invasion_night(d):
 		d += 1
@@ -778,16 +783,24 @@ func _process(delta: float) -> void:
 		return
 	if start_day < 0 and not SaveManager.pending_load:
 		start_day = dn.day  # jogo novo (dia 1) ou save de antes da defesa
-	# aviso no fim da tarde
-	if not dn.is_night() and is_invasion_night(dn.day) and _warned_day != dn.day \
-			and dn.time_left_in_phase() <= warn_time():
+	# Bloco 83: na noite de invasão, a invasão começa às hora_invasao (22:00) — quando o relógio PASSA
+	# por ela (carregar um save depois dela não começa de novo; as criaturas não vão pro save)
+	var t_inv := tempo_invasao()
+	var antes := _t_antes
+	_t_antes = dn.time
+	if antes != INF and antes < t_inv and dn.time >= t_inv and dn.time - antes < dn.cycle_length() * 0.5 \
+			and is_invasion_night(dn.day) and not invasion_active:
+		start_invasion()
+	# aviso à noite (hora_aviso_invasao, 21:00; com o rádio, antes)
+	if is_invasion_night(dn.day) and _warned_day != dn.day and not invasion_active \
+			and dn.time < t_inv and t_inv - dn.time <= warn_time():
 		_warned_day = dn.day
 		var hud := get_tree().get_first_node_in_group("hud")
 		if hud:
 			var ferr := " e os Ferrugentos se mexem no poço" if level2_open() else ""
 			var radio := "O rádio pegou o chiado deles bem antes: " if _has_radio() else ""
 			hud.show_banner("VEM AÍ UMA INVASÃO",
-				"%sOs Lumívoros se juntam na clareira%s. Esta noite eles atacam — guardas nos portões! (G: Defesa)" % [radio, ferr])
+				"%sOs Lumívoros se juntam na clareira%s. Às %s eles atacam — todo mundo em casa, guardas nos portões! (G: Defesa)" % [radio, ferr, dn.hora_texto(hora_invasao)])
 		Audio.alarm()
 	# criaturas chegando aos poucos
 	if invasion_active:
@@ -807,16 +820,25 @@ func _has_radio() -> bool:
 	return res != null and res.has("radio")
 
 
+## Segundos (reais) antes da invasão em que o aviso toca: de hora_aviso_invasao até hora_invasao, mais o
+## bônus do rádio.
 func warn_time() -> float:
 	var res := get_tree().get_first_node_in_group("research")
-	return warn_before + (res.radio_warning_bonus if _has_radio() else 0.0)
-
-
-func _on_phase_changed(night: bool) -> void:
 	var dn := _dn()
-	if night and dn and is_invasion_night(dn.day) and not invasion_active:
-		start_invasion()
-	elif not night and invasion_active:
+	var sph: float = dn.segundos_por_hora() if dn else 22.5
+	var base := fposmod(hora_invasao - hora_aviso_invasao, 24.0) * sph
+	return base + (res.radio_warning_bonus if _has_radio() else 0.0)
+
+
+## Bloco 83: `time` do relógio (segundos desde o amanhecer) em que a invasão começa.
+func tempo_invasao() -> float:
+	var dn := _dn()
+	return dn.tempo_da_hora(hora_invasao) if dn else 0.0
+
+
+## No amanhecer a invasão acaba (Bloco 83: ela começa às hora_invasao, ver _process).
+func _on_phase_changed(night: bool) -> void:
+	if not night and invasion_active:
 		end_invasion()
 
 

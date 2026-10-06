@@ -921,17 +921,33 @@ func _refresh() -> void:
 	_refresh_worker_rows(workers)
 
 
+## Bloco 83: nome curto de cada marco do relógio (o próximo aparece do lado da hora).
+const MARCO_TEXTO := {"amanhecer": "amanhece", "fim_expediente": "fim do turno", "anoitecer": "anoitece", "dormir": "dormir"}
+
+
+## Bloco 83: relógio de 24 h — "14:35 TER" e "dia 3 · sem. 1" (o próximo marco e os horários na dica).
 func _refresh_phase() -> void:
 	if _day_night == null:
 		return
 	var night: bool = _day_night.is_night()
 	var color := COLOR_NIGHT if night else COLOR_DAY
-	_phase_label.text = ("NOITE %d" if night else "DIA %d") % _day_night.day
+	_phase_label.text = "%s %s" % [_day_night.hora_texto(), _day_night.nome_dia(true)]
 	_phase_label.add_theme_color_override("font_color", color)
-	var left := ceili(_day_night.time_left_in_phase())
-	_phase_time_label.text = ("amanhece em %d:%02d" if night else "anoitece em %d:%02d") % [left / 60, left % 60]
+	_phase_time_label.text = "dia %d · sem. %d" % [_day_night.day, _day_night.semana()]
+	var prox: Array = _day_night.proximo_marco()
+	var dica := "%s, dia %d (semana %d).%s
+Amanhece às %s, fim do turno às %s, anoitece às %s, dormir às %s." % [
+		_day_night.nome_dia(), _day_night.day, _day_night.semana(),
+		(" Próximo: %s às %s." % [MARCO_TEXTO.get(prox[0], prox[0]), _day_night.hora_texto(prox[1])]) if not prox.is_empty() else "",
+		_day_night.hora_texto(_day_night.hora_amanhecer), _day_night.hora_texto(_day_night.hora_fim_expediente),
+		_day_night.hora_texto(_day_night.hora_anoitecer), _day_night.hora_texto(_day_night.hora_dormir)]
+	_phase_label.tooltip_text = dica
+	_phase_time_label.tooltip_text = dica
+	_phase_bar.tooltip_text = dica
 	_phase_bar.value = _day_night.phase_progress() * 100.0
 	(_phase_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = color
+	if _pular_button:
+		_pular_button.set_pressed_no_signal(_day_night.pulando)
 
 
 func _refresh_top_bar(workers: Array) -> void:
@@ -1399,11 +1415,14 @@ func _chip_icon(id: String, nome: String) -> void:
 
 
 # =================================================================== velocidade (Prompt 20/21)
-const SPEEDS := [0.0, 1.0, 2.0, 3.0]
+## Bloco 83: pausa, 1x, 2x, 4x (o F3 e o "Pular dia" passam por aqui também).
+const SPEEDS := [0.0, 1.0, 2.0, 4.0]
 var _speed_buttons: Array[Button] = []
+var _pular_button: Button
 
 
-## Pausa, 1x, 2x, 3x (Engine.time_scale): botões pequenos no canto da barra de cima.
+## Pausa, 1x, 2x, 4x (Engine.time_scale): botões pequenos no canto da barra de cima. Bloco 83: e o
+## "Pular dia" (acelera até as 05:00 com a simulação rodando; para sozinho se algo importante acontecer).
 func _build_speed(row: HBoxContainer) -> void:
 	if Icones.tex("vel_1") == null:
 		return
@@ -1416,7 +1435,7 @@ func _build_speed(row: HBoxContainer) -> void:
 		b.focus_mode = Control.FOCUS_NONE
 		b.icon = Icones.tex(["vel_pausa", "vel_1", "vel_2", "vel_3"][i])
 		b.custom_minimum_size = Vector2(30, 28)
-		b.tooltip_text = ["Pausar o tempo (sem menu)", "Velocidade normal", "Velocidade 2x", "Velocidade 3x"][i]
+		b.tooltip_text = ["Pausar o tempo (sem menu)", "Velocidade normal", "Velocidade 2x", "Velocidade 4x"][i]
 		if UiSkin.ok():
 			UiSkin.aplica_botao(b, true)
 		b.pressed.connect(func():
@@ -1424,6 +1443,33 @@ func _build_speed(row: HBoxContainer) -> void:
 			set_speed(SPEEDS[i]))
 		box.add_child(b)
 		_speed_buttons.append(b)
+	_pular_button = Button.new()
+	_pular_button.toggle_mode = true
+	_pular_button.focus_mode = Control.FOCUS_NONE
+	_pular_button.icon = Icones.tex("vel_pular")  # (⏭: cabe na barra junto dos outros)
+	if _pular_button.icon == null:
+		_pular_button.text = "Pular dia"
+	_pular_button.custom_minimum_size = Vector2(30, 28)
+	_pular_button.tooltip_text = "Pular dia: acelera até as 05:00 do dia seguinte (a vila trabalha de verdade, só mais rápido). Para sozinho em invasão, onda solar, ferido grave, morte ou greve."
+	if UiSkin.ok():
+		UiSkin.aplica_botao(_pular_button, true)
+	_pular_button.pressed.connect(func():
+		Audio.click()
+		pular_dia())
+	box.add_child(_pular_button)
+	_mark_speed()
+
+
+## Bloco 83: liga/desliga o "Pular dia".
+func pular_dia() -> void:
+	if _day_night == null:
+		return
+	if _day_night.pulando:
+		_day_night.parar_pulo("")
+		set_speed(1.0)
+	else:
+		_day_night.pular_dia()
+		_speed_mexeu = true
 	_mark_speed()
 
 
@@ -1439,14 +1485,19 @@ func _exit_tree() -> void:
 
 
 func set_speed(v: float) -> void:
+	if _day_night and _day_night.pulando:
+		_day_night.parar_pulo("")  # Bloco 83: mexer na velocidade cancela o "Pular dia"
 	Engine.time_scale = v
 	_speed_mexeu = not is_equal_approx(v, 1.0)
 	_mark_speed()
 
 
 func _mark_speed() -> void:
+	var pulando: bool = _day_night != null and _day_night.pulando
 	for i in _speed_buttons.size():
-		_speed_buttons[i].set_pressed_no_signal(is_equal_approx(Engine.time_scale, SPEEDS[i]))
+		_speed_buttons[i].set_pressed_no_signal(not pulando and is_equal_approx(Engine.time_scale, SPEEDS[i]))
+	if _pular_button:
+		_pular_button.set_pressed_no_signal(pulando)
 
 
 # =================================================================== cursor (Prompt 20)
