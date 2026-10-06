@@ -514,6 +514,9 @@ func _build_buildings_column() -> void:
 		_add_panel("coletor", preload("res://scripts/core/coletor_panel.gd"), _hub)  # Bloco 45
 		_add_panel("coletor_minerio", preload("res://scripts/core/coletor_minerio_panel.gd"), _hub)  # Bloco 57
 		_add_panel("fornalha", preload("res://scripts/core/fornalha_panel.gd"), _hub)  # Bloco 86
+	var cal := get_tree().get_first_node_in_group("calendario")
+	if cal:
+		_add_panel("calendario", preload("res://scripts/core/calendario_panel.gd"), cal)  # Bloco 88
 	if _dig:
 		_add_panel("escavadeira", preload("res://scripts/core/escavadeira_panel.gd"), _dig)
 	if _oficina:
@@ -946,6 +949,9 @@ Amanhece às %s, fim do turno às %s, anoitece às %s, dormir às %s." % [
 		(" Próximo: %s às %s." % [MARCO_TEXTO.get(prox[0], prox[0]), _day_night.hora_texto(prox[1])]) if not prox.is_empty() else "",
 		_day_night.hora_texto(_day_night.hora_amanhecer), _day_night.hora_texto(_day_night.hora_fim_expediente),
 		_day_night.hora_texto(_day_night.hora_anoitecer), _day_night.hora_texto(_day_night.hora_dormir)]
+	var cal_dica := get_tree().get_first_node_in_group("calendario")
+	if cal_dica:
+		dica += "\nPróximo evento: %s" % cal_dica.proximo_texto()  # Bloco 88
 	_phase_label.tooltip_text = dica
 	_phase_time_label.tooltip_text = dica
 	_phase_bar.tooltip_text = dica

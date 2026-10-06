@@ -50,6 +50,12 @@ const ENTRIES := {
 			+ "pedra vazias — alguém morou aqui antes da explosão, longe do sol. É o lugar mais quieto "
 			+ "que a gente já viu: quem trabalha aqui volta mais calmo.",
 	},
+	"padre": {  # Bloco 88
+		"title": "O padre",
+		"text": "Um padre chegou à vila, de batina gasta e botas de mina. Diz que veio porque soube que "
+			+ "aqui tinha gente cavando no escuro. Reza a missa no domingo, enterra quem se vai e escuta "
+			+ "quem anda zangado — a zanga sai mais leve da igreja.",
+	},
 	"matriarca": {
 		"title": "A Matriarca",
 		"text": "Os Lumívoros têm uma rainha. É duas vezes maior, coberta de cristais roxos, e "

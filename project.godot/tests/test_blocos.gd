@@ -362,5 +362,9 @@ func test_b87_ferreiro_barras() -> void:
 	run_bloco("b87_ferreiro_barras.gd")
 
 
+func test_b88_padre_igreja() -> void:
+	run_bloco("b88_padre_igreja.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

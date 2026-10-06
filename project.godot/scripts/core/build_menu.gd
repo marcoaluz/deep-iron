@@ -11,7 +11,7 @@ extends PanelContainer
 
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const Icones := preload("res://scripts/ui/icones.gd")
-const TAB_NAMES := ["Moradia", "Alimentação", "Saúde", "Lazer", "Pesquisa", "Defesa e equipamento", "Coleta automática", "Produção", "Vila"]
+const TAB_NAMES := ["Moradia", "Alimentação", "Saúde", "Lazer", "Pesquisa", "Defesa e equipamento", "Coleta automática", "Produção", "Culto", "Vila"]
 
 var _hud: CanvasLayer
 var _tabs_row: HBoxContainer
@@ -261,6 +261,19 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return hub.fornalha_cost_text(),
 					"reason": func(): return hub.fornalha_block_reason(),
 					"act": func(): hub.build_fornalha()})
+		"Culto":  # Bloco 88: a igreja (missa, funeral, aconselhamento)
+			if hub and hub.igreja() == null:
+				out.append({"name": "Igreja", "tex": "igreja", "frames": 1, "tag": "uma só",
+					"desc": "Missa no domingo (todos vão), funeral pra quem se for (alivia o luto) e o padre aconselha quem anda zangado. Também é ponto da hora social.",
+					"cost": func(): return hub.igreja_cost_text(),
+					"reason": func(): return hub.igreja_block_reason(),
+					"act": func(): hub.build_igreja()})
+			elif hub:
+				out.append({"name": "Igreja", "tex": "igreja", "frames": 1, "open": "calendario", "tag": "construída (uma só)",
+					"desc": "O calendário: missa, funerais, domingo à tarde e os festivais.",
+					"cost": func(): return "",
+					"reason": func(): return "",
+					"act": func(): _hud.open_panel("calendario"), "label": "Abrir"})
 		"Vila":
 			if hub:
 				out.append({"name": "Expandir a vila", "tex": "centro_vila", "frames": 5,

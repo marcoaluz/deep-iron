@@ -151,6 +151,14 @@ const UPGRADE_NAMES := {
 @export var coletor_credits: int = 250
 @export var coletor_ore: int = 60
 @export var coletor_build_time: float = 40.0
+@export_group("Igreja (Bloco 88)")
+## Construir a igreja (uma por vila): créditos, pedra (ferro) e madeira; segundos de engenheiro.
+@export var igreja_credits: int = 220
+@export var igreja_ore: int = 40
+@export var igreja_wood: int = 80
+@export var igreja_build_time: float = 50.0
+## Estágio mínimo da vila pra construir.
+@export_range(1, 5) var igreja_estagio: int = 2
 @export_group("Fornalha (Bloco 86)")
 ## Construir a fornalha: SÓ créditos e minério (madeira nenhuma: não trava o começo); segundos de engenheiro.
 @export var fornalha_credits: int = 180
@@ -786,6 +794,66 @@ func _load_coletores(d: Dictionary) -> void:
 		fixo.volta_pra_ruina()
 
 
+# ------------------------------------------------------------ igreja (Bloco 88)
+const IGREJA_SCENE := preload("res://scenes/props/igreja.tscn")
+const IGREJA_TEXTURE := preload("res://assets/game/igreja.png")
+
+
+func igreja() -> Node:
+	return get_tree().get_first_node_in_group("igrejas")
+
+
+func igreja_cost_text() -> String:
+	return "%d cr + %d ferro + %d madeira" % [igreja_credits, igreja_ore, igreja_wood]
+
+
+func igreja_block_reason() -> String:
+	if igreja() != null:
+		return "já construída (é uma só)"
+	if level < igreja_estagio:
+		return "precisa da vila no estágio %s" % STAGE_NAMES[clampi(igreja_estagio, 1, STAGE_NAMES.size()) - 1]
+	var c := Canteiro.pending(get_tree(), "igreja")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	return eco.missing_text(igreja_credits, igreja_ore, "ferro", igreja_wood, "ferro") if eco else "sem recursos"
+
+
+func build_igreja() -> bool:
+	if igreja_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_igreja, IGREJA_TEXTURE, 1, "a Igreja",
+		{"footprint": COLETOR_FOOTPRINT, "start": global_position + Vector2(-160, -40)})
+	return true
+
+
+func _confirm_igreja(pos: Vector2) -> bool:
+	if igreja_block_reason() != "":
+		Audio.error()
+		return false
+	if not _economy().spend(igreja_credits, igreja_ore, "ferro", igreja_wood):
+		return false
+	Canteiro.order(get_tree(), "igreja", pos, igreja_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Igreja encomendada — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_igreja(pos: Vector2) -> Node2D:
+	var ig: Node2D = IGREJA_SCENE.instantiate()
+	ig.name = "Igreja"
+	ig.position = pos
+	get_parent().add_child(ig)
+	_coletor_mudou()  # (navegação e decoração por baixo)
+	return ig
+
+
 # ------------------------------------------------------------ fornalha (Bloco 86)
 const FORNALHA_SCENE := preload("res://scenes/props/fornalha.tscn")
 const FORNALHA_TEXTURE := preload("res://assets/game/fornalha.png")
@@ -1306,6 +1374,15 @@ func finish_build(kind: String, pos: Vector2) -> void:
 		var hv := get_tree().get_first_node_in_group("hud")
 		if hv:
 			hv.show_toast("Trilho pronto! Os mineradores perto dele entregam no ponto de carga; o vagonete leva pro armazém.", Color(0.55, 1.0, 0.5))
+		return
+	if kind == "igreja":  # Bloco 88
+		var ig := spawn_igreja(pos)
+		ig.pop_in()
+		Audio.recruit()
+		var hi := get_tree().get_first_node_in_group("hud")
+		if hi:
+			var cal := get_tree().get_first_node_in_group("calendario")
+			hi.show_toast("Igreja pronta! %s" % ("Missa no domingo às 09:00." if cal and cal.padre() != null else "Quando o padre chegar, tem missa no domingo."), Color(0.55, 1.0, 0.5))
 		return
 	if kind == "fornalha":  # Bloco 86
 		var fo := spawn_fornalha(pos)

@@ -89,6 +89,9 @@ extends Node
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
+##   Bloco 88: calendario.gd "calendario" {padre_chegou, escolha, escolha_dia, funerais [{nome, dia}], avisou_dia,
+##     igreja [x, y]}; o padre é um ipezinho (job "padre", salvo com os outros); ipezinho.gd "animo_fe".
+##     Save antigo: sem padre (chega no estágio), sem igreja, nenhum funeral.
 ##   Bloco 87: oficina.gd "encomendas" [fila de pregos/ferragens do ferreiro] (save antigo: nenhuma). Os custos
 ##     em barra são só regra (Economy.metal): nada novo no save.
 ##   Bloco 86: centro_vila "fornalhas" [{position, fila [{receita, quantidade, feitas, comecadas, progresso,
@@ -488,6 +491,7 @@ func _collect() -> Dictionary:
 		"equipment": "equipment",
 		"fundo": "fundo",  # Bloco 70: ventiladores e contadores
 		"areas_trabalho": "work_areas",  # Bloco 77: áreas de trabalho (os ipezinhos guardam o id da área)
+		"calendario": "calendario",  # Bloco 88: padre, igreja, escolha do domingo, funerais
 	}
 	for key in singles:
 		var node := tree.get_first_node_in_group(singles[key])
@@ -569,6 +573,7 @@ func apply_pending(main: Node) -> void:
 	_apply_single("sun", SaveUtil.dict(data, "sun"))  # ondas, vitória e o gerador do escudo
 	_apply_single("equipment", SaveUtil.dict(data, "equipment"))  # Bloco 42: vestiário e fila
 	_apply_single("fundo", SaveUtil.dict(data, "fundo"))  # Bloco 70: ventiladores (save antigo: nenhum)
+	_apply_single("calendario", SaveUtil.dict(data, "calendario"))  # Bloco 88: refaz a igreja (antes dos ipezinhos)
 	for c in get_tree().get_nodes_in_group("canteiros"):  # (troca pelos do save)
 		c.remove_from_group("canteiros")
 		c.remove_from_group("obras")

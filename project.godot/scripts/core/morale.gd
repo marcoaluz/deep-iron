@@ -345,7 +345,9 @@ func festa_block_reason() -> String:
 	return "falta " + " + ".join(parts) if not parts.is_empty() else ""
 
 
-func throw_festa() -> bool:
+## Bloco 88: a festa é o FESTIVAL do domingo à tarde (calendario.gd chama). mult: o festival do dia de festa
+## da estação anima mais; titulo: o nome dele.
+func throw_festa(mult: float = 1.0, titulo: String = "") -> bool:
 	if festa_block_reason() != "":
 		Audio.error()
 		return false
@@ -364,11 +366,12 @@ func throw_festa() -> bool:
 	last_festa_day = dn.day if dn else 1
 	festa_left = festa_duration
 	for w in workers():
-		w.cheer(festa_boost)
+		w.cheer(festa_boost * mult)
 	var hud := _hud()
 	if hud:
-		hud.show_banner("FESTA NA VILA!", "+%d de ânimo pra todo mundo agora, e mais alegria pelos próximos %d minutos." % [
-			roundi(festa_boost), roundi(festa_duration / 60.0)])
+		hud.show_banner(("%s!" % titulo.to_upper()) if titulo != "" and titulo != "Festival" else "FESTIVAL NA VILA!",
+			"+%d de ânimo pra todo mundo agora, todos na praça, e mais alegria pelos próximos %d minutos." % [
+			roundi(festa_boost * mult), roundi(festa_duration / 60.0)])
 	Audio.party()  # Bloco 55
 	return true
 

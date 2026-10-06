@@ -444,7 +444,8 @@ func _add_credits(amount: float) -> void:
 
 # ------------------------------------------------------------ recrutamento
 func worker_count() -> int:
-	return get_tree().get_nodes_in_group("ipezinhos").size()
+	# Bloco 88: o padre não é recrutado (não conta no limite nem precisa de cama)
+	return get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return not (w.has_method("is_priest") and w.is_priest())).size()
 
 
 func recruit_cost() -> int:

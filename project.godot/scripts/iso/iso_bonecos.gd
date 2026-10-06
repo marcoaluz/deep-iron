@@ -20,7 +20,7 @@ const DIR_NAMES := ["SE", "SO", "NO", "NE"]
 ## outfit() do ipezinho -> função no bonecos.json
 const OUTFIT_FUNCAO := {"mineiro": "minerador", "civil": "civil", "cozinheiro": "cozinheiro", "lenhador": "lenhador",
 	"guarda": "guarda", "pesquisador": "pesquisador", "cacador": "cacador", "medico": "medico", "engenheiro": "engenheiro",
-	"fundidor": "engenheiro", "ferreiro": "engenheiro"}  # Bloco 86: provisório (a arte do engenheiro com o tom de fuligem do fundidor)
+	"fundidor": "engenheiro", "ferreiro": "engenheiro", "padre": "civil"}  # Bloco 86: provisório (a arte do engenheiro com o tom de fuligem do fundidor)
 ## desenho antigo da mão (assets/game/<nome>.png) -> ferramenta nova (Prompt 4)
 const ITEM_OF := {"pickaxe": "picareta", "pickaxe_aco": "picareta_aco", "axe": "machado", "hammer": "martelo",
 	"porrete": "porrete", "lanca": "lanca", "lanca_prata": "lanca_prata", "besta": "besta", "bow": "arco"}

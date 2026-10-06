@@ -119,6 +119,12 @@ func periodo(w: Node) -> String:
 	var h: float = dn.hora()
 	if w != null and w.has_method("is_doctor") and w.is_doctor():
 		return _periodo_medico(w, dn, h)
+	# Bloco 88: o domingo (missa de manhã; a tarde que o jogador escolheu) — o padre tem a agenda dele
+	var cal := get_tree().get_first_node_in_group("calendario")
+	if cal and not (w != null and w.has_method("is_priest") and w.is_priest()):
+		var pd: String = cal.periodo_domingo(h)
+		if pd != "":
+			return pd
 	if w != null and w.has_method("is_guard") and w.is_guard() and dn.is_night() and de_vigia(w):
 		# o guarda de vigia janta primeiro (na hora do jantar, com fome) e depois vai pro posto
 		if periodo_geral(h) == "social" and not w.refeicoes_hoje.has("jantar") and w.hunger < w.hunger_max * refeicao_dispensa:

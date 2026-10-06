@@ -191,14 +191,14 @@ func _process(delta: float) -> bool:
 			check(w(1).get_state() == "hauling" and w(0).get_state() == "storing", "voltar: lenhador leva a madeira, minerador o minério")
 		if dn.hora() >= 19.0 and not has_meta("v2"):
 			set_meta("v2", true)
-			var fora: Array = [w(0), w(1)].filter(func(x): return x.get_state() != "home")
+			var fora: Array = [w(0), w(1)].filter(func(x): return x.get_state() not in ["home", "social"])  # (Bloco 85: depois das 18:30, casa ou hora social)
 			check(fora.is_empty() and w(1).wood_carrying <= 0.0 and w(0).carrying <= 0.0, "largaram a carga e foram pra casa (%s)" % [fora.map(func(x): return x.get_state())])
 			check(w(2).get_state() == "doctor", "médico de plantão (%s)" % w(2).get_state())
-			set_meta("mult0", w(6).work_mult())
+			set_meta("mult0", w(6)._mult_refeicoes())
 		if dn.hora() >= 21.7 and dn.hora() < 23.0 and not has_meta("v3"):
 			set_meta("v3", true)
 			check(w(6).refeicoes_perdidas == 1 and not w(6).refeicoes_hoje.has("jantar"), "sem comida, perdeu o jantar (perdidas %d)" % w(6).refeicoes_perdidas)
-			check(w(6).work_mult() < get_meta("mult0") - 0.05, "refeição perdida rende menos (%.2f -> %.2f)" % [get_meta("mult0"), w(6).work_mult()])
+			check(w(6)._mult_refeicoes() < get_meta("mult0") - 0.05, "refeição perdida rende menos (%.2f -> %.2f)" % [get_meta("mult0"), w(6)._mult_refeicoes()])
 			var nao_casa: Array = [w(0), w(1), w(5), w(6)].filter(func(x): return x.get_state() != "home")
 			check(nao_casa.is_empty(), "21:30: hora de dormir, todos em casa (%s)" % [nao_casa.map(func(x): return x.get_state())])
 		if dn.hora() >= 22.5 and dn.hora() < 23.5:

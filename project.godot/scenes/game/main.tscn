@@ -61,6 +61,7 @@
 [ext_resource type="Script" path="res://scripts/props/hazard_zone.gd" id="57_zone"]
 [ext_resource type="PackedScene" path="res://scenes/props/coletor_madeira.tscn" id="70_coletor"]
 [ext_resource type="Script" path="res://scripts/core/schedule.gd" id="71_agenda"]
+[ext_resource type="Script" path="res://scripts/core/calendario.gd" id="72_cal"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
@@ -335,6 +336,9 @@ script = ExtResource("55_sun")
 
 [node name="Schedule" type="Node" parent="."]
 script = ExtResource("71_agenda")
+
+[node name="Calendario" type="Node" parent="."]
+script = ExtResource("72_cal")
 
 [node name="Equipment" type="Node" parent="."]
 script = ExtResource("56_equip")

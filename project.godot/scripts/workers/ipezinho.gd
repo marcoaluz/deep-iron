@@ -7,6 +7,7 @@ signal died(worker_name: String)
 
 const STATE_LABELS := {
 	"social": "hora social",  # Bloco 85
+	"padre": "na igreja",  # Bloco 88
 	"buscando_insumo": "indo ao armazém (insumos)",  # Bloco 86
 	"fundindo": "fundindo",
 	"idle": "ocioso",
@@ -73,11 +74,14 @@ const OUTFIT_FILES := {
 	"engenheiro": "res://assets/game/ipezinho_engenheiro_%s%d.png",  # Bloco 31
 	"fundidor": "res://assets/game/ipezinho_engenheiro_%s%d.png",  # Bloco 86: provisório (tom: FUNDIDOR_TOM)
 	"ferreiro": "res://assets/game/ipezinho_engenheiro_%s%d.png",  # Bloco 87: provisório (tom: FERREIRO_TOM)
+	"padre": "res://assets/game/ipezinho_civil_%s%d.png",  # Bloco 88: provisório (tom: PADRE_TOM)
 }
 ## Bloco 86: o tom do fundidor provisório (a roupa do engenheiro "suja de fuligem e calor").
 const FUNDIDOR_TOM := Color(1.0, 0.82, 0.7)
 ## Bloco 87: o tom do ferreiro provisório (azulado, de aço).
 const FERREIRO_TOM := Color(0.8, 0.86, 1.0)
+## Bloco 88: o tom do padre provisório (a roupa escura de batina).
+const PADRE_TOM := Color(0.55, 0.52, 0.62)
 ## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
 const OUTFITS_WITH_LAMP := ["mineiro"]
 ## Chance (0..1) de cada camada de acessório aparecer (botas, remendo/bolso, lenço).
@@ -119,12 +123,13 @@ const ROLE_DOCTOR := "médico"  # Bloco 30: plantão na enfermaria (cura mais r�
 const ROLE_ENGINEER := "engenheiro"  # Bloco 31: sem ele nenhuma obra anda
 const ROLE_SMELTER := "fundidor"  # Bloco 86: opera a Fornalha (só por ordem)
 const ROLE_SMITH := "ferreiro"  # Bloco 87: opera a Oficina e o Arsenal (só por ordem)
-const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER, ROLE_SMITH]
+const ROLE_PRIEST := "padre"  # Bloco 88: o padre (um só, chega por evento; ninguém troca a função dele)
+const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER, ROLE_SMITH, ROLE_PRIEST]
 ## Texto do popup ao receber a função.
 const JOB_LABELS := {
 	ROLE_IDLE: "Sem função", ROLE_MINER: "Minerador!", ROLE_COOK: "Cozinheiro!",
 	ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!",
-	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!", ROLE_ENGINEER: "Engenheiro!", ROLE_SMELTER: "Fundidor!", ROLE_SMITH: "Ferreiro!",
+	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!", ROLE_ENGINEER: "Engenheiro!", ROLE_SMELTER: "Fundidor!", ROLE_SMITH: "Ferreiro!", ROLE_PRIEST: "Padre",
 }
 ## Bloco 26/28: outfit inteiro por função (derivado do `job`: nada novo no save).
 ## REGRA (Bloco 28): toda função nova nasce com outfit próprio no mesmo bloco —
@@ -136,6 +141,7 @@ const JOB_OUTFIT := {
 	ROLE_HUNTER: "cacador", ROLE_DOCTOR: "medico", ROLE_ENGINEER: "engenheiro",
 	ROLE_SMELTER: "fundidor",  # Bloco 86: PROVISÓRIO (pedido do jogador): a roupa do engenheiro + tom de fuligem
 	ROLE_SMITH: "ferreiro",  # Bloco 87: PROVISÓRIO: a roupa do engenheiro + tom de aço
+	ROLE_PRIEST: "padre",  # Bloco 88: PROVISÓRIO: a roupa de civil + tom de batina
 }
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
@@ -478,6 +484,8 @@ var _sched: Node = null
 ## Bloco 85 (hora social): ânimo de ter conversado (fator do ânimo; some devagar), o ponto social e o lugar
 ## reservados, quanto falta pra trocar de ponto, se já chegou na roda, o passeio (waypoints) e o balão.
 var animo_social := 0.0
+## Bloco 88: ânimo de ter ido à missa (fator "foi à missa"; some devagar).
+var animo_fe := 0.0
 var _spot: Node = null
 var _spot_i := -1
 var _social_t := 0.0
@@ -1098,6 +1106,17 @@ func _decide_next_action() -> void:
 		_go_protest()
 		return
 
+	if desired == "padre":  # Bloco 88: o padre fica na porta da igreja (sem igreja: na praça)
+		if _ai_state != "padre":
+			_release_station()
+			_set_state("padre")
+		var cal := get_tree().get_first_node_in_group("calendario")
+		var ig: Node = cal.igreja() if cal else null
+		var dest: Vector2 = ig.altar_pos() if ig else (_village_hub().global_position + Vector2(0, 70) if _village_hub() else global_position)
+		if global_position.distance_to(dest) > 12.0 and (not _moving or _target.distance_to(dest) > 2.0):
+			_go_to(dest)
+		return
+
 	if desired == "social":  # Bloco 85
 		if _ai_state != "social":
 			_release_station()
@@ -1464,6 +1483,8 @@ func happiness_factors() -> Array:
 		f.append([nx.animo_motivo if nx.animo_motivo != "" else nx.nome, nx.animo])
 	if animo_social >= 0.5:
 		f.append(["conversou com os amigos", animo_social])  # Bloco 85
+	if animo_fe >= 0.5:
+		f.append(["foi à missa", animo_fe])  # Bloco 88
 	var m := _morale()
 	if m:
 		f.append_array(m.village_factors())
@@ -2281,6 +2302,8 @@ func has_no_job() -> bool:
 ## trabalho é seguro: o _choose_state() faz ele entregar primeiro o que estiver
 ## carregando (minério -> armazém, comida -> comedouro, madeira -> armazém).
 func set_job(new_job: String) -> void:
+	if is_priest() and new_job != ROLE_PRIEST:
+		return  # Bloco 88: o padre não troca de função (nem vira outra coisa)
 	if not new_job in JOBS:
 		push_warning("Ipezinho: função desconhecida '%s'" % new_job)
 		return
@@ -2905,6 +2928,9 @@ func _die() -> void:
 	if inf:
 		inf.record_death(self)  # o HUD mostra a faixa pelo sinal patient_died
 	Audio.toll()
+	var cal := get_tree().get_first_node_in_group("calendario")
+	if cal:
+		cal.on_morte(_display())  # Bloco 88: funeral na hora social seguinte
 	died.emit(_display())
 	var main := get_tree().get_first_node_in_group("game_main")
 	if main and main.is_selected(self):
@@ -3012,6 +3038,10 @@ func _agenda_estado(food_ok: bool) -> String:
 		return "eating"  # a refeição da hora (uma porção)
 	if is_doctor() and _has_infirmary():
 		return "doctor"  # sempre de plantão (come nos turnos dele, acima)
+	if is_priest():
+		return "padre"  # Bloco 88: na igreja (de noite também: dorme lá)
+	if p == "missa":
+		return "social"  # Bloco 88: missa de domingo — o ponto é a igreja (calendario.ponto_forcado)
 	# Bloco 84: fora do horário de trabalho, quem ainda tem carga termina a entrega antes de ir pra casa
 	# ("voltar" dura meia hora de jogo, ~11 s: nem sempre dá pra chegar no armazém dentro dela)
 	if p in ["voltar", "social", "dormir"] and not overtime:
@@ -3055,6 +3085,11 @@ func _precisa_coberto() -> bool:
 ## O melhor ponto social pra ele agora (null = nenhum com lugar). `so_ver` = só olhar, sem reservar.
 ## Nota: perto ganha, ponto com gente (e lugar) ganha, um pouco de sorte pra não irem todos pro mesmo.
 func _escolhe_spot(so_ver := false) -> Node:
+	# Bloco 88: missa e funeral (igreja) e festival (praça): todo mundo pro mesmo ponto
+	var forcado := _ponto_forcado()
+	if forcado != null:
+		if forcado == _spot or forcado.livres() > 0:
+			return forcado
 	var coberto := _precisa_coberto()
 	var melhor: Node = null
 	var melhor_nota := -INF
@@ -3073,6 +3108,12 @@ func _escolhe_spot(so_ver := false) -> Node:
 
 
 ## Vai pra um ponto social: reserva o lugar e monta o passeio (passa por outro ponto se o desvio for curto).
+## Bloco 88: o ponto pra onde o calendário manda todo mundo agora (null = livre).
+func _ponto_forcado() -> Node:
+	var cal := get_tree().get_first_node_in_group("calendario")
+	return cal.ponto_forcado() if cal else null
+
+
 func _social_vai() -> void:
 	var novo := _escolhe_spot()
 	if novo == null:
@@ -3140,6 +3181,9 @@ func _social_process(delta: float) -> void:
 		if _balao_vida <= 0.0:
 			_balao.visible = false
 	var s := _schedule()
+	if animo_fe > 0.0:  # Bloco 88: o ânimo da missa some devagar
+		var calf := get_tree().get_first_node_in_group("calendario")
+		animo_fe = maxf(animo_fe - (calf.missa_decai if calf else 0.01) * delta, 0.0)
 	if _ai_state != "social":
 		if animo_social > 0.0 and s:
 			animo_social = maxf(animo_social - s.animo_decai * delta, 0.0)
@@ -3158,7 +3202,20 @@ func _social_process(delta: float) -> void:
 		_social_t = randf_range(s.conversa_min, maxf(s.conversa_max, s.conversa_min))
 		_balao_t = randf_range(0.3, s.balao_max)
 		return
-	_social_t -= delta
+	var forcado := _ponto_forcado()
+	if forcado == null or forcado == _spot:
+		if forcado == null:
+			_social_t -= delta  # (no ponto forçado ele fica até acabar)
+	else:
+		_social_t = 0.0  # começou a missa/funeral/festival: vai pra lá
+	if _spot.tipo == "igreja":  # Bloco 88: aconselhamento (o padre lá dobra) e a missa
+		var cal := get_tree().get_first_node_in_group("calendario")
+		if cal:
+			var pd: Node = cal.padre()
+			var mult := 2.0 if pd != null and pd.get_state() == "padre" else 1.0
+			anger = maxf(anger - cal.aconselhamento_por_segundo * mult * delta, 0.0)
+			if periodo_agenda() == "missa":
+				animo_fe = maxf(animo_fe, cal.missa_animo)
 	_balao_t -= delta
 	if _balao_t <= 0.0:
 		_balao_t = randf_range(s.balao_min, maxf(s.balao_max, s.balao_min))
@@ -3230,6 +3287,11 @@ func is_smelter() -> bool:
 ## Bloco 87: o ferreiro (Oficina e Arsenal).
 func is_smith() -> bool:
 	return job == ROLE_SMITH
+
+
+## Bloco 88: o padre.
+func is_priest() -> bool:
+	return job == ROLE_PRIEST
 
 
 ## A fornalha dele: a que tem as unidades que ele começou; senão a mais perto com ordem.
@@ -3564,7 +3626,7 @@ func _update_animation(delta: float) -> void:
 		if not lying:
 			_body.position.x = sin(Time.get_ticks_msec() * 0.07) * 0.5
 	else:
-		_body.modulate = FUNDIDOR_TOM if is_smelter() else (FERREIRO_TOM if is_smith() else Color.WHITE)  # Blocos 86/87: provisórios
+		_body.modulate = FUNDIDOR_TOM if is_smelter() else (FERREIRO_TOM if is_smith() else (PADRE_TOM if is_priest() else Color.WHITE))  # Blocos 86-88: provisórios
 
 
 func _update_hunger_label() -> void:
@@ -3637,6 +3699,7 @@ func get_save_data() -> Dictionary:
 		"refeicoes_hoje": refeicoes_hoje.keys(),  # Bloco 84
 		"refeicoes_perdidas": refeicoes_perdidas,
 		"animo_social": animo_social,  # Bloco 85
+		"animo_fe": animo_fe,  # Bloco 88
 		"barras_mao": barras_mao.duplicate(),  # Bloco 86
 	}
 
@@ -3657,6 +3720,7 @@ func load_save_data(d: Dictionary) -> void:
 			refeicoes_hoje[m] = true
 	refeicoes_perdidas = clampi(SaveUtil.integer(d, "refeicoes_perdidas", 0), 0, 10)
 	animo_social = clampf(SaveUtil.num(d, "animo_social", 0.0), 0.0, 50.0)  # Bloco 85 (save antigo: 0)
+	animo_fe = clampf(SaveUtil.num(d, "animo_fe", 0.0), 0.0, 50.0)  # Bloco 88 (save antigo: 0)
 	barras_mao = {}  # Bloco 86 (save antigo: nada na mão)
 	var bm := SaveUtil.dict(d, "barras_mao")
 	for k in bm:

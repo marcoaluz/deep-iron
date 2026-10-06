@@ -81,7 +81,7 @@ func _build() -> void:
 	_festa_button = _hud._button("")
 	_festa_button.pressed.connect(func():
 		Audio.click()
-		_morale.throw_festa()
+		_hud.open_panel("calendario")  # Bloco 88: a festa é o Festival do domingo à tarde
 		refresh())
 	vbox.add_child(_festa_button)
 	_taverna_label = _hud._label("", 12, _hud.COLOR_DIM)
