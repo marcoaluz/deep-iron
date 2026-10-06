@@ -91,6 +91,7 @@ func _process(delta: float) -> bool:
 			arm.stock[k] = 9000.0
 		arm.wood_stored = 9000.0
 		arm.lifetime_stored = 999999.0
+		arm.itens["barra_ferro"] = 9000.0  # Bloco 87: no estágio da fornalha os custos migrados pedem barra
 		arm._recount()
 		g("finds").rare_parts = 99
 		hub.level = 4  # lab (2) e escudo (4) liberados; expandir 4 -> 5

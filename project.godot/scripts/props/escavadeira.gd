@@ -316,7 +316,7 @@ func part_block_reason(id: String) -> String:
 	var eco := get_tree().get_first_node_in_group("economy")
 	if eco == null:
 		return "sem recursos"
-	var missing: String = eco.missing_text(cost.x, cost.y)
+	var missing: String = eco.metal_falta(cost.x, cost.y, "")  # Bloco 87: barra de ferro
 	if missing != "":
 		return missing
 	return ""
@@ -329,7 +329,7 @@ func start_part(id: String) -> bool:
 		Audio.error()
 		return false
 	var cost := part_cost(id)
-	if not get_tree().get_first_node_in_group("economy").spend(cost.x, cost.y):
+	if not get_tree().get_first_node_in_group("economy").paga_metal(cost.x, cost.y, ""):
 		return false
 	fabricating = id
 	fab_left = float(cost.z)
@@ -504,7 +504,7 @@ func reactor_block_reason(id: String) -> String:
 		parts.append("%d peças raras" % (cost.z - finds.rare_parts))
 	var eco := get_tree().get_first_node_in_group("economy")
 	if eco:
-		var m: String = eco.missing_text(cost.x, cost.y, "ferro")
+		var m: String = eco.metal_falta(cost.x, cost.y, "ferro")  # Bloco 87
 		if m != "":
 			parts.append(m.trim_prefix("falta "))
 	return "falta " + ", ".join(parts) if not parts.is_empty() else ""
@@ -517,7 +517,7 @@ func build_reactor(id: String) -> bool:
 		return false
 	var cost := reactor_cost(id)
 	var eco := get_tree().get_first_node_in_group("economy")
-	if not eco.spend(cost.x, cost.y, "ferro"):
+	if not eco.paga_metal(cost.x, cost.y, "ferro"):
 		return false
 	get_tree().get_first_node_in_group("finds").spend_parts(cost.z)
 	# Bloco 31b: pagou -> vira obra; o reator só entra quando o engenheiro terminar

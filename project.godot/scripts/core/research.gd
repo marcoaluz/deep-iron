@@ -146,7 +146,8 @@ func lab_cost() -> Vector3i:
 
 func lab_cost_text() -> String:
 	var c := lab_cost()
-	return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+	var eco := get_tree().get_first_node_in_group("economy")
+	return eco.custo_metal_texto(c.x, c.y, "ferro", c.z) if eco else "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]  # Bloco 87
 
 
 func researchers() -> Array:
@@ -163,7 +164,7 @@ func lab_block_reason() -> String:
 		return "requer vila nível %d" % lab_min_stage
 	var eco := get_tree().get_first_node_in_group("economy")
 	var cost := lab_cost()
-	return eco.missing_text(cost.x, cost.y, "ferro", cost.z) if eco else "sem recursos"
+	return eco.metal_falta(cost.x, cost.y, "ferro", cost.z) if eco else "sem recursos"  # Bloco 87: barra
 
 
 func build_lab() -> bool:
@@ -182,7 +183,7 @@ func _confirm_lab(pos: Vector2) -> bool:
 		Audio.error()
 		return false
 	var cost := lab_cost()
-	if not get_tree().get_first_node_in_group("economy").spend(cost.x, cost.y, "ferro", cost.z):
+	if not get_tree().get_first_node_in_group("economy").paga_metal(cost.x, cost.y, "ferro", cost.z):
 		return false
 	Canteiro.order(get_tree(), "laboratorio", pos, lab_build_time)
 	Audio.click()

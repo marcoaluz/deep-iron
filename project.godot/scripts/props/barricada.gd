@@ -87,7 +87,7 @@ func upgrade_block_reason() -> String:
 		return "nível máximo"
 	var c := upgrade_costs[level + 1]
 	var eco := get_tree().get_first_node_in_group("economy")
-	return eco.missing_text(c.x, c.y, upgrade_ore[level + 1], c.z) if eco else "sem recursos"
+	return eco.metal_falta(c.x, c.y, upgrade_ore[level + 1], c.z) if eco else "sem recursos"  # Bloco 87: barra
 
 
 func upgrade() -> bool:
@@ -95,7 +95,7 @@ func upgrade() -> bool:
 		Audio.error()
 		return false
 	var c := upgrade_costs[level + 1]
-	if not get_tree().get_first_node_in_group("economy").spend(c.x, c.y, upgrade_ore[level + 1], c.z):
+	if not get_tree().get_first_node_in_group("economy").paga_metal(c.x, c.y, upgrade_ore[level + 1], c.z):
 		return false
 	level += 1
 	hp = max_hp()  # muro novo, inteiro

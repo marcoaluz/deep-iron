@@ -18,6 +18,8 @@ signal tool_crafted(id: String)
 const Ores := preload("res://scripts/core/ores.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
+const ProductionQueue := preload("res://scripts/core/production_queue.gd")  # Bloco 87
+const Items := preload("res://scripts/core/items.gd")
 const TOOL_IDS := ["picareta_aco", "lampiao", "broca", "traje", "arco"]
 const TOOL_NAMES := {
 	"picareta_aco": "Picareta de aço temperado",
@@ -62,6 +64,17 @@ const TOOL_UNLOCKS_EXTRA := {"cristal_verde": "broca", "cristal_rubro": "traje"}
 ## Estágio mínimo da vila (Centro da Vila) pra fabricar cada ferramenta.
 @export var tool_min_stage: Array[int] = [1, 2, 4, 4, 1]
 
+@export_group("Encomendas do ferreiro (Bloco 87)")
+## Pregos e ferragens: só por ORDEM (quantidade do jogador), o FERREIRO faz aqui; os insumos saem do armazém
+## quando cada unidade começa e o produto vai pro armazém. (Ferramentas, armas e equipamentos são as filas
+## de sempre — Oficina, Arsenal, Equipment —, agora feitas pelo ferreiro.)
+@export var receitas_ferreiro: Array[Dictionary] = [
+	{"id": "prego", "nome": "Pregos (6)", "insumos": {"barra_ferro": 1}, "produto": {"prego": 6}, "segundos": 8.0, "estagio": 0},
+	{"id": "ferragem", "nome": "Ferragem", "insumos": {"barra_ferro": 2, "prego": 4}, "produto": {"ferragem": 1}, "segundos": 12.0, "estagio": 0},
+]
+## Máximo de ordens na fila do ferreiro.
+@export var max_fila_ferreiro: int = 4
+
 @export_group("Efeitos")
 @export var forge_sound_interval: float = 0.7
 @export var idle_forge_energy: float = 0.45
@@ -69,6 +82,10 @@ const TOOL_UNLOCKS_EXTRA := {"cristal_verde": "broca", "cristal_rubro": "traje"}
 
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 var panel_id := "oficina"
+## Bloco 87: a obra daqui é do FERREIRO (o engenheiro só faz obras de construção).
+var oficio := "ferreiro"
+## Bloco 87: as encomendas de pregos e ferragens (ProductionQueue).
+var fila_ferreiro
 ## Bloco 58: a Oficina é construída pelo engenheiro (jogo novo com fundação). Não construída: fica
 ## no mapa invisível, sem clique, sem obra, sem bloquear caminho — mas no grupo "oficina" (as
 ## ferramentas que ela ainda não fez continuam trancando os minérios). Save antigo: já construída.
@@ -89,6 +106,9 @@ var _obra := ObraSite.new()
 
 func _ready() -> void:
 	super()
+	fila_ferreiro = ProductionQueue.new(receitas_ferreiro, max_fila_ferreiro)  # Bloco 87
+	_obra.trabalhador = "ferreiro"
+	_obra.verbo = "forjando"
 	add_to_group("oficina")
 	if built:
 		add_to_group("obras")
@@ -126,18 +146,29 @@ func obra_pending() -> bool:
 	if not built:
 		return false
 	var eq := _equip()
-	return crafting != "" or (eq != null and eq.pending())
+	return crafting != "" or (eq != null and eq.pending()) or _encomenda_andando()
+
+
+## Bloco 87: tem encomenda de pregos/ferragens pra fazer agora (começada, ou com insumo pra começar)?
+func _encomenda_andando() -> bool:
+	if fila_ferreiro == null or not fila_ferreiro.tem_trabalho():
+		return false
+	return fila_ferreiro.comecadas() > 0 or fila_ferreiro.falta_para(get_tree().get_first_node_in_group("economy")) == ""
 
 
 func obra_title() -> String:
 	if crafting == "" and _equip() and _equip().pending():
 		return _equip().title()
+	if crafting == "" and _encomenda_andando():
+		return fila_ferreiro.texto_ordem(0)
 	return TOOL_NAMES.get(crafting, "ferramenta")
 
 
 func obra_progress() -> float:
 	if crafting == "" and _equip() and _equip().pending():
 		return _equip().progress()
+	if crafting == "" and _encomenda_andando():
+		return fila_ferreiro.progresso_unidade()
 	return craft_progress()
 
 
@@ -145,17 +176,64 @@ func obra_position(worker: Node) -> Vector2:
 	return IsoArt.front(self, Vector2(0, 30)) + _obra.offset_for(worker)
 
 
-## O engenheiro trabalhou `seconds` aqui: só assim a forja anda.
+## O FERREIRO (Bloco 87; era o engenheiro) trabalhou `seconds` aqui: só assim a forja anda.
 func obra_work(seconds: float) -> void:
 	if crafting == "":
 		var eq := _equip()
 		if eq and eq.pending():
 			eq.work(seconds)
 			_update_label()
+			return
+		if _encomenda_andando():
+			_trabalha_encomenda(seconds)
 		return
 	craft_left -= seconds
 	if craft_left <= 0.0:
 		_finish(crafting)
+
+
+## Bloco 87: uma unidade de prego/ferragem por vez: começa (paga os insumos) e, pronta, vai pro armazém.
+func _trabalha_encomenda(seconds: float) -> void:
+	var eco := get_tree().get_first_node_in_group("economy")
+	if fila_ferreiro.comecadas() <= 0 and fila_ferreiro.comecar_unidades(1, eco) <= 0:
+		return  # faltou insumo: pausada (nada gasto)
+	var pronto: Dictionary = fila_ferreiro.trabalhar(seconds)
+	for item in pronto:
+		eco.add_item(item, pronto[item], global_position)
+	if not pronto.is_empty():
+		_popup("+%s" % ", ".join(pronto.keys().map(func(k): return "%d %s" % [int(pronto[k]), Items.plural(k)])), Color(0.55, 1.0, 0.5))
+		Audio.forge(global_position)
+	_update_label()
+
+
+## Bloco 87: o jogador encomendou `qtd` unidades (nada é gasto agora).
+func encomendar(id: String, qtd: int) -> bool:
+	var hub := get_tree().get_first_node_in_group("village_hub")
+	var lvl: int = int(hub.level) if hub else 1
+	if fila_ferreiro.motivo_encomenda(id, qtd, lvl) != "":
+		Audio.error()
+		return false
+	fila_ferreiro.encomendar(id, qtd, lvl)
+	if _obra.ordered_at <= 0.0:
+		_obra.start()  # (entra na fila das obras pela ordem de encomenda)
+	Audio.click()
+	_update_label()
+	return true
+
+
+func cancelar(i: int) -> bool:
+	var ok: bool = fila_ferreiro.cancelar(i, get_tree().get_first_node_in_group("economy"), global_position)
+	if ok:
+		Audio.click()
+		_update_label()
+	return ok
+
+
+## O que falta pra encomenda da vez continuar ("" = nada).
+func falta_encomenda() -> String:
+	if fila_ferreiro == null or not fila_ferreiro.tem_trabalho() or fila_ferreiro.comecadas() > 0:
+		return ""
+	return fila_ferreiro.falta_para(get_tree().get_first_node_in_group("economy"))
 
 
 func obra_ordered_at() -> float:
@@ -368,7 +446,8 @@ func _popup(text: String, color: Color) -> void:
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	return {"crafted": crafted.duplicate(), "crafting": crafting, "craft_left": craft_left,
-		"obra": _obra.get_save_data(), "built": built, "position": SaveUtil.vec2_to_array(global_position)}
+		"obra": _obra.get_save_data(), "built": built, "position": SaveUtil.vec2_to_array(global_position),
+		"encomendas": fila_ferreiro.get_save_data()}  # Bloco 87
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -380,6 +459,7 @@ func load_save_data(d: Dictionary) -> void:
 		crafting = ""
 	craft_left = maxf(SaveUtil.num(d, "craft_left", 0.0), 0.0) if crafting != "" else 0.0
 	_obra.load_save_data(SaveUtil.dict(d, "obra"))  # save antigo: ordered_at 0 (vai primeiro na fila)
+	fila_ferreiro.load_save_data(SaveUtil.array(d, "encomendas"))  # Bloco 87 (save antigo: nenhuma)
 	# Bloco 58: save antigo (Oficina fixa) = já construída, no lugar da cena
 	var pos := SaveUtil.vec2(d, "position", Vector2.INF)
 	if pos != Vector2.INF:

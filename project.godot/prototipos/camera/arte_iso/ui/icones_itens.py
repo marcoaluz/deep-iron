@@ -107,6 +107,20 @@ def pecas_raras():
     return contorno(im)
 
 
+def ferragem():
+    """Bloco 87: uma dobradiça/cantoneira de ferro com pregos."""
+    im = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.polygon([(6, 8), (24, 8), (24, 13), (11, 13), (11, 25), (6, 25)], fill=(118, 112, 110))
+    d.line([(7, 9), (23, 9)], fill=(176, 170, 166))
+    d.line([(7, 10), (7, 24)], fill=(150, 144, 140))
+    for x, y in ((9, 11), (16, 11), (22, 11), (9, 17), (9, 23)):
+        d.point((x, y), fill=(60, 56, 54))
+    d.ellipse([18, 17, 26, 25], fill=(96, 90, 88))
+    d.ellipse([20, 19, 24, 23], fill=(40, 36, 34))
+    return contorno(im)
+
+
 def de_pedaco(arq):
     """Cristais e gema: o pedaço de minério do jogo, ampliado sem borrar e centrado."""
     p = Image.open(os.path.join(GAME, arq)).convert("RGBA")
@@ -126,6 +140,7 @@ def main():
     feitos["prego"] = prego()
     feitos["couro"] = couro()
     feitos["pecas_raras"] = pecas_raras()
+    feitos["ferragem"] = ferragem()
     for nome in ("cristal_verde", "cristal_rubro", "gema_azul"):
         feitos[nome] = de_pedaco("chunk_%s.png" % nome)
     for nome, im in feitos.items():

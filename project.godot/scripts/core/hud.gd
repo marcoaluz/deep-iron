@@ -87,6 +87,8 @@ const ORDER_JOBS := [
 		"Trabalha no laboratório de dia, gerando pontos pra pesquisa em andamento."],
 	["fundidor", "Fundidor", "6", "res://assets/game/ui/icones/it_barra_ferro.png", "toggle_smelter", Color(1.0, 0.62, 0.32),
 		"Opera a Fornalha: busca o minério no armazém, funde as barras encomendadas e leva pro armazém. Sem ordem, não faz nada."],
+	["ferreiro", "Ferreiro", "7", "res://assets/game/ui/icones/it_martelo.png", "toggle_smith", Color(0.62, 0.74, 1.0),
+		"Opera a Oficina e o Arsenal: ferramentas, armas, equipamentos, pregos e ferragens — só o que foi encomendado. (O engenheiro fica nas obras.)"],
 ]
 const TOP_BAR_H := 40.0
 const SIDE_MARGIN := 10.0
@@ -591,7 +593,7 @@ func _fill_hints() -> void:
 		"Ordens:  botão direito = mover / minerar a jazida clicada",
 		"Funções:  %s minerador  •  %s caçador  •  %s médico  •  %s engenheiro  •  %s cozinheiro  •  %s lenhador  •  %s guarda  •  %s pesquisador  •  %s sem função  •  %s turno extra" % [
 			k.call("minerador"), k.call("cacador"), k.call("medico"), k.call("engenheiro"), k.call("cozinheiro"), k.call("lenhador"),
-			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")] + "  •  %s fundidor" % k.call("fundidor"),
+			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")] + "  •  %s fundidor  •  %s ferreiro" % [k.call("fundidor"), k.call("ferreiro")],
 		"Economia:  %s vender minério  •  %s recrutar" % [k.call("vender"), k.call("recrutar")],
 		"Trabalho:  %s = TRABALHADORES — marcar áreas (madeira, alimentos, mina) e quantos trabalham em cada uma (até 5)" % k.call("painel_trabalho"),
 		"Construir:  %s = menu de construção (casas, cozinha, lazer, pesquisa, defesa, coleta automática…)" % k.call("construir"),
@@ -1112,10 +1114,16 @@ func _refresh_workforce(workers: Array) -> void:
 		_no_job_label.text = "Todos com função"
 		_no_job_label.add_theme_color_override("font_color", COLOR_DIM)
 	# Bloco 31: obras encomendadas e se tem engenheiro pra elas
-	var obras := get_tree().get_nodes_in_group("obras").filter(func(o): return o.has_method("obra_pending") and o.obra_pending())
+	var todas := get_tree().get_nodes_in_group("obras").filter(func(o): return o.has_method("obra_pending") and o.obra_pending())
+	var obras := todas.filter(func(o): return o.get("oficio") != "ferreiro")  # Bloco 87: as da forja são do ferreiro
+	var forja := todas.filter(func(o): return o.get("oficio") == "ferreiro")
+	var smiths := workers.filter(func(w): return w.has_method("is_smith") and w.is_smith()).size()
 	var engineers := workers.filter(func(w): return w.has_method("is_engineer") and w.is_engineer()).size()
 	var working := obras.filter(func(o): return not o.obra_workers().is_empty()).size()
-	_obras_label.visible = not obras.is_empty()
+	_obras_label.visible = not obras.is_empty() or (not forja.is_empty() and smiths == 0)
+	if obras.is_empty() and not forja.is_empty() and smiths == 0:
+		_obras_label.text = "FORJA: %d encomenda%s esperando FERREIRO (tecla 7)" % [forja.size(), "s" if forja.size() > 1 else ""]
+		_obras_label.add_theme_color_override("font_color", COLOR_NO_JOB)
 	if not obras.is_empty():
 		var names: Array[String] = []
 		for o in obras.slice(0, 3):

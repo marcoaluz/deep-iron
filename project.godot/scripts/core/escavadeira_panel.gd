@@ -137,7 +137,7 @@ func _make_part_row(parent: VBoxContainer, id: String) -> Dictionary:
 	bottom.add_theme_constant_override("separation", 6)
 	v.add_child(bottom)
 	var cost: Vector3i = _dig.part_cost(id)
-	var cost_label: Label = _hud._label("%d cr + %d minério  •  %ds  •  vila nível %d" % [cost.x, cost.y, cost.z, _dig.part_stage(id)], 12, _hud.COLOR_TEXT)
+	var cost_label: Label = _hud._label(_texto_peca(id), 12, _hud.COLOR_TEXT)
 	cost_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom.add_child(cost_label)
 	var button: Button = _hud._button("Fabricar")
@@ -147,7 +147,14 @@ func _make_part_row(parent: VBoxContainer, id: String) -> Dictionary:
 		_dig.start_part(id)
 		refresh())
 	bottom.add_child(button)
-	return {"status": status, "button": button}
+	return {"status": status, "button": button, "cost": cost_label}
+
+
+## Bloco 87: o custo da peça (o metal em barra a partir do estágio da fornalha).
+func _texto_peca(id: String) -> String:
+	var cost: Vector3i = _dig.part_cost(id)
+	var metal: String = _economy.custo_metal_texto(cost.x, cost.y, "") if _economy else "%d cr + %d minério" % [cost.x, cost.y]
+	return "%s  •  %ds  •  vila nível %d" % [metal, cost.z, _dig.part_stage(id)]
 
 
 func _make_reactor_row(parent: VBoxContainer, id: String) -> Dictionary:
@@ -204,7 +211,7 @@ func _refresh_reactors() -> void:
 		if cost.x > 0:
 			bits.append("%d cr" % cost.x)
 		if cost.y > 0:
-			bits.append("%d ferro" % cost.y)
+			bits.append(_economy.metal_texto(cost.y, "ferro") if _economy else "%d ferro" % cost.y)  # Bloco 87
 		var cost_text := "vem com a escavadeira" if id == "vapor" else " + ".join(bits)
 		match reason:
 			"instalado":
@@ -261,6 +268,8 @@ func refresh() -> void:
 
 	for id in _rows:
 		var row: Dictionary = _rows[id]
+		if row.has("cost"):
+			row.cost.text = _texto_peca(id)  # Bloco 87
 		var reason: String = _dig.part_block_reason(id)
 		var status: Label = row.status
 		var button: Button = row.button

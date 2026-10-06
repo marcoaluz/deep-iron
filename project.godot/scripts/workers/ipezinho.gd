@@ -72,9 +72,12 @@ const OUTFIT_FILES := {
 	"medico": "res://assets/game/ipezinho_medico_%s%d.png",  # Bloco 30
 	"engenheiro": "res://assets/game/ipezinho_engenheiro_%s%d.png",  # Bloco 31
 	"fundidor": "res://assets/game/ipezinho_engenheiro_%s%d.png",  # Bloco 86: provisório (tom: FUNDIDOR_TOM)
+	"ferreiro": "res://assets/game/ipezinho_engenheiro_%s%d.png",  # Bloco 87: provisório (tom: FERREIRO_TOM)
 }
 ## Bloco 86: o tom do fundidor provisório (a roupa do engenheiro "suja de fuligem e calor").
 const FUNDIDOR_TOM := Color(1.0, 0.82, 0.7)
+## Bloco 87: o tom do ferreiro provisório (azulado, de aço).
+const FERREIRO_TOM := Color(0.8, 0.86, 1.0)
 ## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
 const OUTFITS_WITH_LAMP := ["mineiro"]
 ## Chance (0..1) de cada camada de acessório aparecer (botas, remendo/bolso, lenço).
@@ -115,12 +118,13 @@ const ROLE_HUNTER := "caçador"  # Bloco 27: colhe fruta / caça (com arco) -> m
 const ROLE_DOCTOR := "médico"  # Bloco 30: plantão na enfermaria (cura mais rápida)
 const ROLE_ENGINEER := "engenheiro"  # Bloco 31: sem ele nenhuma obra anda
 const ROLE_SMELTER := "fundidor"  # Bloco 86: opera a Fornalha (só por ordem)
-const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER]
+const ROLE_SMITH := "ferreiro"  # Bloco 87: opera a Oficina e o Arsenal (só por ordem)
+const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER, ROLE_SMITH]
 ## Texto do popup ao receber a função.
 const JOB_LABELS := {
 	ROLE_IDLE: "Sem função", ROLE_MINER: "Minerador!", ROLE_COOK: "Cozinheiro!",
 	ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!",
-	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!", ROLE_ENGINEER: "Engenheiro!", ROLE_SMELTER: "Fundidor!",
+	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!", ROLE_ENGINEER: "Engenheiro!", ROLE_SMELTER: "Fundidor!", ROLE_SMITH: "Ferreiro!",
 }
 ## Bloco 26/28: outfit inteiro por função (derivado do `job`: nada novo no save).
 ## REGRA (Bloco 28): toda função nova nasce com outfit próprio no mesmo bloco —
@@ -131,6 +135,7 @@ const JOB_OUTFIT := {
 	ROLE_LUMBER: "lenhador", ROLE_GUARD: "guarda", ROLE_RESEARCH: "pesquisador",
 	ROLE_HUNTER: "cacador", ROLE_DOCTOR: "medico", ROLE_ENGINEER: "engenheiro",
 	ROLE_SMELTER: "fundidor",  # Bloco 86: PROVISÓRIO (pedido do jogador): a roupa do engenheiro + tom de fuligem
+	ROLE_SMITH: "ferreiro",  # Bloco 87: PROVISÓRIO: a roupa do engenheiro + tom de aço
 }
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
@@ -648,6 +653,8 @@ func get_state_label() -> String:
 		return "tratando %d internado%s" % [n, "s" if n > 1 else ""] if n > 0 else "de plantão, esperando pacientes"
 	if _ai_state == "building" and _obra != null and is_instance_valid(_obra):
 		var pct := roundi(_obra.obra_progress() * 100.0)
+		if is_smith():  # Bloco 87
+			return ("forjando: %s (%d%%)" if _obra_on_site else "indo pra forja: %s (%d%%)") % [_obra.obra_title(), pct]
 		return ("construindo: %s (%d%%)" if _obra_on_site else "indo pra obra: %s (%d%%)") % [_obra.obra_title(), pct]
 	if _ai_state == "idle" and is_engineer():
 		return "sem obras — esperando encomenda"
@@ -989,6 +996,9 @@ func _choose_state() -> String:
 	# no Centro da Vila. (Minério na mão já foi entregue pela regra de cima.)
 	if is_engineer():
 		return "building" if _pick_obra() != null else "idle"
+	# Bloco 87: ferreiro — a obra da Oficina e a forja do Arsenal (só com encomenda; sem: espera).
+	if is_smith():
+		return "building" if _pick_obra() != null else "idle"
 	# Guarda: à noite fica nos portões; de dia treina (até ficar pronto) e descansa.
 	# Bloco 35: desarmado vai ao Arsenal pegar outra arma (até de noite: sem arma no
 	# posto não adianta); de dia também troca por uma melhor que estiver no cavalete.
@@ -1162,7 +1172,7 @@ func _decide_next_action() -> void:
 	_set_state(desired)
 
 	if desired == "idle":
-		if has_no_job() or is_engineer() or work_area != null:  # Bloco 77: com área, espera nela
+		if has_no_job() or is_engineer() or is_smith() or work_area != null:  # Bloco 77: com área, espera nela
 			_idle_at_hub()
 			return
 		if not _moving and randf() < 0.35:
@@ -1814,13 +1824,15 @@ func is_engineer() -> bool:
 ## termina ela antes de trocar. Com vários engenheiros, cada um prefere uma obra que
 ## ninguém está tocando; se todas já têm alguém, ajuda na mais antiga (o trabalho soma).
 func _pick_obra() -> Node:
-	if _obra != null and is_instance_valid(_obra) and _obra.obra_pending():
+	if _obra != null and is_instance_valid(_obra) and _obra.obra_pending() and (_obra.get("oficio") == ROLE_SMITH) == is_smith():
 		return _obra
 	var oldest_free: Node = null
 	var oldest_any: Node = null
 	for site in get_tree().get_nodes_in_group("obras"):
 		if not site.has_method("obra_pending") or not site.obra_pending():
 			continue
+		if (site.get("oficio") == ROLE_SMITH) != is_smith():
+			continue  # Bloco 87: Oficina e Arsenal são do ferreiro; o resto, do engenheiro
 		var t: float = site.obra_ordered_at()
 		if oldest_any == null or t < oldest_any.obra_ordered_at():
 			oldest_any = site
@@ -3215,6 +3227,11 @@ func is_smelter() -> bool:
 	return job == ROLE_SMELTER
 
 
+## Bloco 87: o ferreiro (Oficina e Arsenal).
+func is_smith() -> bool:
+	return job == ROLE_SMITH
+
+
 ## A fornalha dele: a que tem as unidades que ele começou; senão a mais perto com ordem.
 func _fornalha_alvo() -> Node:
 	if _fornalha != null and is_instance_valid(_fornalha) and _fornalha.fila.tem_trabalho():
@@ -3547,7 +3564,7 @@ func _update_animation(delta: float) -> void:
 		if not lying:
 			_body.position.x = sin(Time.get_ticks_msec() * 0.07) * 0.5
 	else:
-		_body.modulate = FUNDIDOR_TOM if is_smelter() else Color.WHITE  # Bloco 86: fundidor provisório
+		_body.modulate = FUNDIDOR_TOM if is_smelter() else (FERREIRO_TOM if is_smith() else Color.WHITE)  # Blocos 86/87: provisórios
 
 
 func _update_hunger_label() -> void:

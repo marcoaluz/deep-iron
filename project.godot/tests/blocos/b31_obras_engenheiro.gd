@@ -67,6 +67,7 @@ func _process(delta: float) -> bool:
 		for k in arm.stock:
 			arm.stock[k] = 5000.0
 		arm.wood_stored = 5000.0
+		arm.itens["barra_ferro"] = 5000.0  # Bloco 87: no estágio 2 as peças da Escavadeira pedem barra
 		arm._recount()
 		workers_before = eco.max_workers
 		hub.level = 2  # a Escavadeira pede vila nível 2
@@ -106,7 +107,7 @@ func _process(delta: float) -> bool:
 		print("  8 s sem engenheiro: ", fmt(p))
 		check(p.casa == 0.0 and p.vila == 0.0 and p.oficina == 0.0 and p.escav == 0.0, "nada andou sem engenheiro")
 		check("esperando engenheiro" in casa._sleep_label.text, "casa mostra: %s" % casa._sleep_label.text.replace("\n", " "))
-		check("esperando engenheiro" in of._label.text, "oficina mostra: %s" % of._label.text.replace("\n", " "))
+		check("esperando ferreiro" in of._label.text, "oficina mostra (Bloco 87: a Oficina é do ferreiro): %s" % of._label.text.replace("\n", " "))
 		var hud = main.get_node("HUD")
 		hud._refresh()
 		check(hud._obras_label.visible and "esperando engenheiro" in hud._obras_label.text, "HUD: %s" % hud._obras_label.text.replace("\n", " | "))

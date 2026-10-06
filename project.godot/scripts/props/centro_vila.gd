@@ -694,12 +694,13 @@ func coletor_block_reason() -> String:
 		return "em obra (%s)" % c._obra.status(c.obra_progress())
 	var eco := _economy()
 	var cost := coletor_cost()
-	return eco.missing_text(cost.x, cost.y, "ferro") if eco else "sem recursos"
+	return eco.metal_falta(cost.x, cost.y, "ferro") if eco else "sem recursos"  # Bloco 87: barra
 
 
 func coletor_cost_text() -> String:
 	var c := coletor_cost()
-	return "%d cr + %d ferro" % [c.x, c.y]
+	var eco := _economy()
+	return eco.custo_metal_texto(c.x, c.y, "ferro") if eco else "%d cr + %d ferro" % [c.x, c.y]  # Bloco 87
 
 
 ## Escolher o lugar — só na clareira (onde estão as árvores). Bloco 81: só os EXTRAS (o primeiro é a
@@ -723,7 +724,7 @@ func _confirm_coletor(pos: Vector2) -> bool:
 		Audio.error()
 		return false
 	var cost := coletor_cost()
-	if not _economy().spend(cost.x, cost.y, "ferro"):
+	if not _economy().paga_metal(cost.x, cost.y, "ferro"):
 		return false
 	Canteiro.order(get_tree(), "coletor", pos, coletor_build_time)
 	Audio.click()
@@ -1140,12 +1141,13 @@ func coletor_minerio_block_reason() -> String:
 		return "em obra (%s)" % c._obra.status(c.obra_progress())
 	var eco := _economy()
 	var cost := coletor_minerio_cost()
-	return eco.missing_text(cost.x, cost.y, "ferro", cost.z, "ferro") if eco else "sem recursos"
+	return eco.metal_falta(cost.x, cost.y, "ferro", cost.z) if eco else "sem recursos"  # Bloco 87: barra
 
 
 func coletor_minerio_cost_text() -> String:
 	var c := coletor_minerio_cost()
-	return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+	var eco := _economy()
+	return eco.custo_metal_texto(c.x, c.y, "ferro", c.z) if eco else "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]  # Bloco 87
 
 
 ## Lugar bom: com uma jazida liberada no alcance da broca.
@@ -1179,7 +1181,7 @@ func _confirm_coletor_minerio(pos: Vector2) -> bool:
 		Audio.error()
 		return false
 	var cost := coletor_minerio_cost()
-	if not _economy().spend(cost.x, cost.y, "ferro", cost.z):
+	if not _economy().paga_metal(cost.x, cost.y, "ferro", cost.z):
 		return false
 	Canteiro.order(get_tree(), "coletor_minerio", pos, coletor_min_build_time)
 	var hud := get_tree().get_first_node_in_group("hud")

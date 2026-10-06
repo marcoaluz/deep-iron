@@ -44,6 +44,7 @@ const ITENS := {
 	"comida_crua": {"nome": "Comida crua", "cat": "comida", "icone": "materia_prima", "preco": 0.0, "onde": "materia_prima"},
 	# peças e materiais
 	"prego": {"nome": "Prego", "cat": "pecas", "icone": "it_prego", "preco": 1.0, "onde": "itens"},
+	"ferragem": {"nome": "Ferragem", "cat": "pecas", "icone": "it_ferragem", "preco": 12.0, "onde": "itens"},  # Bloco 87
 	"couro": {"nome": "Couro", "cat": "pecas", "icone": "it_couro", "preco": 0.0, "onde": "couro"},
 	"pecas_raras": {"nome": "Peças raras", "cat": "pecas", "icone": "it_pecas_raras", "preco": 0.0, "onde": "pecas_raras"},
 }
@@ -83,6 +84,15 @@ static func da_categoria(cat: String) -> Array:
 ## Ids guardados no dicionário `itens` dos armazéns (os processados).
 static func processados() -> Array:
 	return ITENS.keys().filter(func(k): return ITENS[k].onde == "itens")
+
+
+## Bloco 87: nome no plural pros custos ("20 barras de ferro").
+const PLURAL := {"barra_ferro": "barras de ferro", "barra_cobre": "barras de cobre", "barra_prata": "barras de prata",
+	"lingote_solar": "lingotes solares", "aco": "aço", "prego": "pregos", "ferragem": "ferragens"}
+
+
+static func plural(id: String) -> String:
+	return PLURAL.get(id, nome(id).to_lower())
 
 
 ## Nome da categoria pra mostrar.

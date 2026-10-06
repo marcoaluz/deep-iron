@@ -551,7 +551,7 @@ func weapon_block_reason(id: String) -> String:
 		return "precisa forjar antes: %s" % WEAPON_NAMES[prev]
 	var c := weapon_costs[i]
 	var eco := get_tree().get_first_node_in_group("economy")
-	return eco.missing_text(c.x, c.y, weapon_ore[i], c.z) if eco else "sem recursos"
+	return eco.metal_falta(c.x, c.y, weapon_ore[i], c.z) if eco else "sem recursos"  # Bloco 87: barra
 
 
 func repair_block_reason(id: String) -> String:
@@ -563,7 +563,7 @@ func repair_block_reason(id: String) -> String:
 		return "fila da forja cheia"
 	var c := repair_cost(id)
 	var eco := get_tree().get_first_node_in_group("economy")
-	return eco.missing_text(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z) if eco else "sem recursos"
+	return eco.metal_falta(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z) if eco else "sem recursos"
 
 
 ## Paga e põe na fila da forja (só anda com engenheiro no Arsenal).
@@ -573,7 +573,7 @@ func start_forge(id: String) -> bool:
 		return false
 	var i := WEAPON_IDS.find(id)
 	var c := weapon_costs[i]
-	if not get_tree().get_first_node_in_group("economy").spend(c.x, c.y, weapon_ore[i], c.z):
+	if not get_tree().get_first_node_in_group("economy").paga_metal(c.x, c.y, weapon_ore[i], c.z):
 		return false
 	_enqueue("forjar", id, weapon_time[i])
 	return true
@@ -585,7 +585,7 @@ func start_repair(id: String) -> bool:
 		Audio.error()
 		return false
 	var c := repair_cost(id)
-	if not get_tree().get_first_node_in_group("economy").spend(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z):
+	if not get_tree().get_first_node_in_group("economy").paga_metal(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z):
 		return false
 	_take_from(broken, id)
 	_enqueue("consertar", id, weapon_time[WEAPON_IDS.find(id)] * repair_time_mult)

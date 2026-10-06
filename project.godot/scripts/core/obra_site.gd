@@ -17,6 +17,9 @@ extends RefCounted
 ## Quando a obra foi encomendada (horário do sistema): define a ordem da fila.
 var ordered_at: float = 0.0
 var _workers: Array[Node] = []
+## Bloco 87: quem trabalha aqui e o verbo ("engenheiro"/"construindo"; Oficina e Arsenal: "ferreiro"/"forjando").
+var trabalhador := "engenheiro"
+var verbo := "construindo"
 
 
 ## (Prompt 28: o "fantasma que fica nítido" saiu; a obra aparece por estágios, ver
@@ -49,7 +52,7 @@ func has_engineer() -> bool:
 
 ## "40% — construindo" / "40% — esperando engenheiro"
 func status(progress: float) -> String:
-	return "%d%% — %s" % [roundi(progress * 100.0), "construindo" if has_engineer() else "esperando engenheiro"]
+	return "%d%% — %s" % [roundi(progress * 100.0), verbo if has_engineer() else "esperando " + trabalhador]
 
 
 ## Lado a lado quando mais de um engenheiro trabalha no mesmo lugar.

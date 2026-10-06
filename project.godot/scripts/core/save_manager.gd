@@ -89,6 +89,8 @@ extends Node
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
+##   Bloco 87: oficina.gd "encomendas" [fila de pregos/ferragens do ferreiro] (save antigo: nenhuma). Os custos
+##     em barra são só regra (Economy.metal): nada novo no save.
 ##   Bloco 86: centro_vila "fornalhas" [{position, fila [{receita, quantidade, feitas, comecadas, progresso,
 ##     ordered_at}]}] (production_queue.gd); ipezinho.gd "barras_mao" {item: qtd}. Save antigo: nenhuma.
 ##   Bloco 85: ipezinho.gd "animo_social" (ânimo de ter conversado na hora social; save antigo: 0). Os

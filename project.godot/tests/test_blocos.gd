@@ -358,5 +358,9 @@ func test_b86_fornalha() -> void:
 	run_bloco("b86_fornalha.gd")
 
 
+func test_b87_ferreiro_barras() -> void:
+	run_bloco("b87_ferreiro_barras.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

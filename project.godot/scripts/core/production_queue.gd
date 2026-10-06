@@ -108,7 +108,8 @@ func falta_para(eco: Node) -> String:
 		var tem: float = eco.quantidade(item)
 		var precisa := float(r.insumos[item])
 		if tem < precisa:
-			partes.append("%d %s" % [ceili(precisa - tem), Items.nome(item).to_lower()])
+			var n := ceili(precisa - tem)
+			partes.append("%d %s" % [n, Items.plural(item) if n > 1 else Items.nome(item).to_lower()])
 	return "" if partes.is_empty() else "falta " + ", ".join(partes)
 
 

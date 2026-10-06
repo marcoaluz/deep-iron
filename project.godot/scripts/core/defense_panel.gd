@@ -257,7 +257,11 @@ func refresh() -> void:
 		row.fix.disabled = fix_reason != ""
 
 
+## Bloco 87: o metal sai em barra a partir do estágio da fornalha (Economy.custo_metal_texto).
 func _cost_text(c: Vector3i, ore: String) -> String:
+	var eco := get_tree().get_first_node_in_group("economy")
+	if eco:
+		return eco.custo_metal_texto(c.x, c.y, ore, c.z)
 	var bits: Array[String] = []
 	if c.x > 0:
 		bits.append("%d cr" % c.x)

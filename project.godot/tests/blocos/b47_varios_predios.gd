@@ -92,6 +92,7 @@ func fill(eco, arm) -> void:
 	eco.credits = 99999.0
 	arm.stock["ferro"] = 5000.0
 	arm.wood_stored = 5000.0
+	arm.itens["barra_ferro"] = 5000.0  # Bloco 87: a partir do estágio da fornalha os custos migrados pedem barra
 	arm._recount()
 
 

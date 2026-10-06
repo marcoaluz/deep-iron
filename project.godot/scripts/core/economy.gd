@@ -40,6 +40,12 @@ signal worker_recruited(worker: Node2D, cost: int)
 ## {"barra_ferro": 10.0}. Vazio = o preço base do items.gd. Preço 0 = não se vende.
 @export var precos_itens: Dictionary = {}
 @export var starting_credits: float = 0.0
+
+@export_group("Metal: custos em barra (Bloco 87)")
+## Nos custos MIGRADOS pra barra (armas, ampliação das barricadas, peças da Escavadeira, reatores, coletores,
+## laboratório): quantos minérios valem UMA barra. Os campos de custo continuam em minério; a partir do
+## estágio da fornalha (centro_vila.fornalha_estagio) o jogo pede ceil(minério / isto) barras do tipo.
+@export var minerios_por_barra: float = 2.0
 ## Vende sozinho o que estiver no armazém a cada auto_sell_interval segundos.
 @export var auto_sell: bool = false
 @export var auto_sell_interval: float = 4.0
@@ -147,6 +153,87 @@ func sell(ore_type: String = "") -> float:
 	ore_sold.emit(sold, earned)
 	Audio.sell()
 	return earned
+
+
+# ------------------------------------------------------------ metal (Bloco 87)
+## A barra de cada minério ("" = minério qualquer: barra de ferro).
+const BARRA_DO_MINERIO := {"": "barra_ferro", "ferro": "barra_ferro", "cobre": "barra_cobre", "prata": "barra_prata",
+	"solarita": "lingote_solar"}
+
+
+## A partir do estágio da fornalha os custos migrados pedem BARRA; antes, minério bruto (não trava o começo).
+func pede_barras() -> bool:
+	var hub := get_tree().get_first_node_in_group("village_hub")
+	return hub != null and hub.get("fornalha_estagio") != null and int(hub.level) >= int(hub.fornalha_estagio)
+
+
+## O metal de verdade de um custo migrado: [item, quantidade] — barra a partir do estágio da fornalha;
+## senão o próprio minério. Quantidade 0 = sem metal.
+func metal(qtd_minerio: float, tipo: String) -> Array:
+	if qtd_minerio <= 0.0:
+		return ["", 0.0]
+	if pede_barras() and BARRA_DO_MINERIO.has(tipo):
+		return [BARRA_DO_MINERIO[tipo], ceilf(qtd_minerio / maxf(minerios_por_barra, 0.01))]
+	return [tipo, qtd_minerio]
+
+
+## "20 barras de ferro" / "40 ferro" / "40 minério" (vazio = sem metal).
+func metal_texto(qtd_minerio: float, tipo: String) -> String:
+	var m := metal(qtd_minerio, tipo)
+	if m[1] <= 0.0:
+		return ""
+	if Items.onde(m[0]) == "itens":
+		return "%d %s" % [int(m[1]), Items.plural(m[0])]
+	return "%d %s" % [int(m[1]), Ores.display_name(tipo).to_lower() if tipo != "" else "minério"]
+
+
+## Custo completo pra mostrar: "150 cr + 20 barras de ferro + 20 madeira".
+func custo_metal_texto(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.0) -> String:
+	var bits: Array[String] = []
+	if cr > 0.0:
+		bits.append("%d cr" % int(cr))
+	var mt := metal_texto(qtd_minerio, tipo)
+	if mt != "":
+		bits.append(mt)
+	if madeira > 0.0:
+		bits.append("%d madeira" % int(madeira))
+	return " + ".join(bits)
+
+
+## "" se dá pra pagar créditos + o metal + madeira; senão "falta ...".
+func metal_falta(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.0) -> String:
+	var m := metal(qtd_minerio, tipo)
+	if Items.onde(m[0]) != "itens":
+		return missing_text(cr, qtd_minerio, tipo, madeira)
+	var parts: Array[String] = []
+	if credits < cr:
+		parts.append("%d cr" % ceili(cr - credits))
+	var tem := quantidade(m[0])
+	if tem < m[1]:
+		parts.append("%d %s" % [ceili(m[1] - tem), Items.plural(m[0])])
+	var have_wood := stored_wood()
+	if have_wood < madeira:
+		parts.append("%d madeira" % ceili(madeira - have_wood))
+	return "" if parts.is_empty() else "falta " + ", ".join(parts)
+
+
+## Paga créditos + o metal (barra ou minério, pela regra de cima) + madeira. false = não deu (nada gasto).
+func paga_metal(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.0) -> bool:
+	var m := metal(qtd_minerio, tipo)
+	if Items.onde(m[0]) != "itens":
+		return spend(cr, qtd_minerio, tipo, madeira)
+	if metal_falta(cr, qtd_minerio, tipo, madeira) != "":
+		Audio.error()
+		return false
+	if cr > 0.0:
+		_add_credits(-cr)
+	var wood_left := madeira
+	for a in get_tree().get_nodes_in_group("armazens"):
+		if wood_left <= 0.0:
+			break
+		wood_left -= a.take_wood(wood_left)
+	take_item(m[0], m[1])
+	return true
 
 
 ## Bloco 82: vende um item processado (todas as unidades inteiras, de todos os armazéns).

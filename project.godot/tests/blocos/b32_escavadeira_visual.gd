@@ -79,6 +79,7 @@ func _process(delta: float) -> bool:
 		var arm = g("armazens")
 		for k in arm.stock:
 			arm.stock[k] = 9000.0
+		arm.itens["barra_ferro"] = 9000.0  # Bloco 87: as peças da Escavadeira pedem barra (estágio da fornalha)
 		arm._recount()
 		g("village_hub").level = 4
 		check(dig.start_part("estrutura"), "estrutura encomendada")

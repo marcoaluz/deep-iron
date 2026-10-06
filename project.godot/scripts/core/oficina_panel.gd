@@ -5,6 +5,7 @@ extends PanelContainer
 
 const Ores := preload("res://scripts/core/ores.gd")
 
+const Items := preload("res://scripts/core/items.gd")  # Bloco 87
 var _hud: CanvasLayer
 var _oficina: Node
 var _economy: Node
@@ -114,6 +115,102 @@ func _build() -> void:
 				refresh())
 			btns.add_child(fix)
 			_eq_rows[id] = {"status": st, "make": make, "fix": fix}
+	_monta_encomendas(vbox)
+
+
+# ------------------------------------------------------------ encomendas do ferreiro (Bloco 87)
+var _enc_status: Label
+var _enc_linhas: Dictionary = {}  # receita -> {qtd, botao, info}
+var _enc_fila: VBoxContainer
+var _enc_qtd: Dictionary = {}
+
+
+## Pregos e ferragens: receita, quantidade (+/-), Encomendar e a fila com Cancelar (só por ordem).
+func _monta_encomendas(vbox: VBoxContainer) -> void:
+	if _oficina.get("fila_ferreiro") == null:
+		return
+	vbox.add_child(HSeparator.new())
+	vbox.add_child(_hud._label("ENCOMENDAS DO FERREIRO", 14, _hud.COLOR_TITLE))
+	_enc_status = _hud._label("", 12, _hud.COLOR_DIM)
+	_enc_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(_enc_status)
+	for r in _oficina.receitas_ferreiro:
+		var id: String = r.id
+		_enc_qtd[id] = 5
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 4)
+		vbox.add_child(row)
+		var info: Label = _hud._label("", 12, _hud.COLOR_TEXT)
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.add_child(info)
+		for passo in [-5, -1]:
+			row.add_child(_botao_qtd(id, passo))
+		var q: Label = _hud._label("", 14, _hud.COLOR_TITLE)
+		q.custom_minimum_size.x = 28
+		q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		row.add_child(q)
+		for passo in [1, 5]:
+			row.add_child(_botao_qtd(id, passo))
+		var b: Button = _hud._button("Encomendar")
+		b.add_theme_font_size_override("font_size", 12)
+		b.pressed.connect(func():
+			_oficina.encomendar(id, int(_enc_qtd[id]))
+			refresh())
+		row.add_child(b)
+		_enc_linhas[id] = {"qtd": q, "botao": b, "info": info}
+	_enc_fila = VBoxContainer.new()
+	vbox.add_child(_enc_fila)
+
+
+func _botao_qtd(id: String, passo: int) -> Button:
+	var b: Button = _hud._button(("%+d" % passo) if absi(passo) > 1 else ("+" if passo > 0 else "−"))
+	b.add_theme_font_size_override("font_size", 12)
+	b.custom_minimum_size = Vector2(26, 0)
+	b.pressed.connect(func():
+		Audio.click()
+		_enc_qtd[id] = clampi(int(_enc_qtd.get(id, 5)) + passo, 1, _oficina.fila_ferreiro.max_quantidade)
+		refresh())
+	return b
+
+
+func _refresh_encomendas() -> void:
+	if _enc_status == null:
+		return
+	var fila = _oficina.fila_ferreiro
+	var smiths := get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return w.has_method("is_smith") and w.is_smith()).size()
+	var falta: String = _oficina.falta_encomenda()
+	_enc_status.text = "Pregos e ferragens só por ORDEM. O FERREIRO faz (ferreiros: %d%s). Os insumos saem do armazém quando cada unidade começa; o produto vai pro armazém.%s" % [
+		smiths, " — dê a função Ferreiro a alguém, tecla 7" if smiths == 0 else "", ("\nPAUSADA: " + falta) if falta != "" else ""]
+	var hub := get_tree().get_first_node_in_group("village_hub")
+	var lvl: int = int(hub.level) if hub else 1
+	for id in _enc_linhas:
+		var l: Dictionary = _enc_linhas[id]
+		var r: Dictionary = fila.receita(id)
+		var q := int(_enc_qtd.get(id, 5))
+		l.qtd.text = str(q)
+		var motivo: String = fila.motivo_encomenda(id, q, lvl)
+		var produto: String = ", ".join(r.produto.keys().map(func(k): return "%d %s" % [int(r.produto[k]), Items.plural(k)]))
+		l.info.text = "%s: %s -> %s (%ds)%s" % [r.get("nome", id), fila.texto_insumos(id), produto, int(r.get("segundos", 8)), ("  — " + motivo) if motivo != "" else ""]
+		l.botao.disabled = motivo != ""
+	for c in _enc_fila.get_children():
+		_enc_fila.remove_child(c)
+		c.queue_free()
+	for i in fila.fila.size():
+		var row := HBoxContainer.new()
+		_enc_fila.add_child(row)
+		var txt := "%d. %s" % [i + 1, fila.texto_ordem(i)]
+		if i == 0 and fila.comecadas() > 0:
+			txt += "  —  %d%% da unidade" % roundi(fila.progresso_unidade() * 100.0)
+		var lb: Label = _hud._label(txt, 12, _hud.COLOR_TEXT)
+		lb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(lb)
+		var cancel: Button = _hud._button("Cancelar")
+		cancel.add_theme_font_size_override("font_size", 11)
+		cancel.pressed.connect(func():
+			_oficina.cancelar(i)
+			refresh())
+		row.add_child(cancel)
 
 
 func _make_tool_row(parent: VBoxContainer, id: String) -> Dictionary:
@@ -241,6 +338,7 @@ func refresh() -> void:
 				button.text = "Fabricar"
 		button.disabled = reason != ""
 	_refresh_equipment()
+	_refresh_encomendas()  # Bloco 87
 
 
 func _refresh_equipment() -> void:
