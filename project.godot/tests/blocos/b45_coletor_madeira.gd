@@ -1,5 +1,7 @@
 extends SceneTree
 ## Bloco 45: coletor de madeira. RODAR SÓ COM APPDATA ISOLADO.
+## Bloco 81: o primeiro é a ruína da floresta (restaurada aqui de uma vez; as etapas estão no b81) —
+## o fluxo de construir/operar/salvar é testado com o SEGUNDO coletor (o construído).
 var main: Node
 var t := 0.0
 var step := 0
@@ -37,6 +39,14 @@ func ws() -> Array:
 	return get_nodes_in_group("ipezinhos")
 
 
+## O coletor construído (não a ruína da cena).
+func novo(hub) -> Node:
+	for c in hub.coletores():
+		if c != hub.coletor_fixo():
+			return c
+	return null
+
+
 func spot_in(rect: Rect2) -> Vector2:
 	var p = g("house_placer")
 	var c := rect.get_center()
@@ -71,10 +81,13 @@ func _process(delta: float) -> bool:
 		arm.wood_stored = 100.0
 		arm._recount()
 		var hud = main.get_node("HUD")
+		var fx = hub.coletor_fixo()
+		check(fx != null and not fx.restaurado() and hub.coletor_block_reason() != "", "Bloco 81: o primeiro é a ruína; construir outro fica travado")
+		fx.restaura_tudo()
 		hud.open_panel("coletor")
 		hud._panels["coletor"].refresh()
 		print("  botão: ", hud._panels["coletor"]._build_button.text)
-		check("250 cr + 60 ferro" in hud._panels["coletor"]._build_button.text, "coletor aparece como construção com custo")
+		check(hub.coletor_cost_text() in hud._panels["coletor"]._build_button.text, "coletor aparece como construção com custo")
 		check(hub.build_coletor(), "escolher lugar")
 		var placer = g("house_placer")
 		placer.move_to(hub.global_position)
@@ -85,10 +98,11 @@ func _process(delta: float) -> bool:
 		var c0: float = eco.credits
 		var f0: float = arm.stock["ferro"]
 		var w0: float = arm.wood_stored
+		var custo: Vector3i = hub.coletor_cost()
 		check(placer.try_confirm(), "coletor encomendado na clareira em %s" % q)
-		check(eco.credits == c0 - hub.coletor_credits and arm.stock["ferro"] == f0 - hub.coletor_ore and arm.wood_stored == w0,
-			"gastou %d cr + %d ferro (sem madeira)" % [hub.coletor_credits, hub.coletor_ore])
-		check(hub.coletor() == null and g("canteiros") != null, "ainda é canteiro")
+		check(eco.credits == c0 - custo.x and arm.stock["ferro"] == f0 - custo.y and arm.wood_stored == w0,
+			"gastou %d cr + %d ferro (sem madeira)" % [custo.x, custo.y])
+		check(novo(hub) == null and g("canteiros") != null, "ainda é canteiro")
 		set_meta("pos", q)
 		step = 1
 		t_mark = t
@@ -99,9 +113,9 @@ func _process(delta: float) -> bool:
 		step = 2
 		t_mark = t
 	elif step == 2:
-		if hub.coletor() != null:
+		if novo(hub) != null:
 			Engine.time_scale = 1.0
-			var c = hub.coletor()
+			var c = novo(hub)
 			check(c.global_position == get_meta("pos"), "engenheiro ergueu o coletor no lugar")
 			ws()[0].set_job("ocioso")
 			print("== operar")
@@ -121,7 +135,7 @@ func _process(delta: float) -> bool:
 			check(false, "coletor não ficou pronto")
 			step = 99
 	elif step == 3:
-		var c = hub.coletor()
+		var c = novo(hub)
 		if c._producing and not has_meta("prod_t"):
 			set_meta("prod_t", t)
 			set_meta("tot0", c.total_produced)
@@ -145,19 +159,19 @@ func _process(delta: float) -> bool:
 			check(false, "operador não começou (%s)" % ws()[1].get_state_label())
 			step = 99
 	elif step == 4 and t - t_mark > 1.0:
-		var c = hub.coletor()
+		var c = novo(hub)
 		set_meta("tot1", c.total_produced)
 		step = 5
 		t_mark = t
 	elif step == 5 and t - t_mark > 3.0:
-		var c = hub.coletor()
+		var c = novo(hub)
 		check(c.total_produced == get_meta("tot1") and not c._producing, "sem operador parou de produzir (sem erro)")
 		c.designate(ws()[2])
 		Engine.time_scale = 4.0
 		step = 6
 		t_mark = t
 	elif step == 6:
-		var c = hub.coletor()
+		var c = novo(hub)
 		if c._producing:
 			Engine.time_scale = 1.0
 			set_meta("snap", [c.global_position, c.total_produced, c.operator.display_name])
@@ -170,7 +184,7 @@ func _process(delta: float) -> bool:
 			check(false, "novo operador não começou")
 			step = 99
 	elif step == 7 and t - t_mark > 1.5:
-		var c = hub.coletor()
+		var c = novo(hub)
 		var snap: Array = get_meta("snap")
 		print("  depois do load: ", [c.global_position, c.total_produced, c.operator.display_name if c and c.operator else "-"])
 		check(c != null and c.global_position == snap[0] and absf(c.total_produced - snap[1]) < 2.0, "save/load: coletor no lugar, total mantido")

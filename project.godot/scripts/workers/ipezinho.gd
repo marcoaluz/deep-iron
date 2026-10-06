@@ -2328,6 +2328,8 @@ func _relink_coletor(at: Vector2 = Vector2.INF) -> void:
 	for k in get_tree().get_nodes_in_group("coletores"):
 		if k.get("operator") != null and k.operator != self:
 			continue  # já tem outro operador
+		if k.has_method("restaurado") and not k.restaurado():
+			continue  # Bloco 81: ruína não tem operador
 		if c == null or (at != Vector2.INF and k.global_position.distance_to(at) < c.global_position.distance_to(at)):
 			c = k
 	if c:

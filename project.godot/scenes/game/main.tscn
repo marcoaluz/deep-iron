@@ -59,6 +59,7 @@
 [ext_resource type="Script" path="res://scripts/core/sun.gd" id="55_sun"]
 [ext_resource type="Script" path="res://scripts/core/equipment.gd" id="56_equip"]
 [ext_resource type="Script" path="res://scripts/props/hazard_zone.gd" id="57_zone"]
+[ext_resource type="PackedScene" path="res://scenes/props/coletor_madeira.tscn" id="70_coletor"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
@@ -196,6 +197,11 @@ position = Vector2(-500, -170)
 
 [node name="Arvore6" parent="World" instance=ExtResource("39_arvore")]
 position = Vector2(-420, -420)
+
+[node name="ColetorMadeira" parent="World" instance=ExtResource("70_coletor")]
+position = Vector2(-420, 260)
+fixo = true
+etapa_inicial = 0
 
 [node name="Toca" parent="World" instance=ExtResource("90_toca")]
 position = Vector2(-640, 140)

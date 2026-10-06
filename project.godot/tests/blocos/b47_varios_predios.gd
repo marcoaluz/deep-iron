@@ -194,8 +194,10 @@ func _process(delta: float) -> bool:
 
 		print("== Coletor de madeira x2: cada um com o seu operador")
 		var area: Rect2 = env.clearing_rect.grow(-30.0)
-		var s1 := coletor_spot(hub, area)
-		check(s1.is_finite() and hub._confirm_coletor(s1) and finish_canteiro("coletor"), "1º coletor em %s" % s1)
+		# Bloco 81: o 1º é a ruína da floresta (restaurada); os extras só depois dela
+		var fx = hub.coletor_fixo()
+		check(fx != null and hub.coletor_block_reason() != "", "1º coletor é a ruína: outro só depois de restaurar ('%s')" % hub.coletor_block_reason())
+		fx.restaura_tudo()
 		check(hub.coletor_block_reason() == "", "2º coletor liberado ('%s')" % hub.coletor_block_reason())
 		var s2 := coletor_spot(hub, area)
 		check(s2.is_finite() and hub._confirm_coletor(s2) and finish_canteiro("coletor"), "2º coletor em %s" % s2)

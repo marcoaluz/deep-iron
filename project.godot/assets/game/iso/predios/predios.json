@@ -1029,7 +1029,23 @@
     -55.0,
     63.0,
     91.0
-   ]
+   ],
+   "camadas": {
+    "folhas": {
+     "img": "coletor_madeira/ruina_folhas.png",
+     "ancora": [
+      135.0,
+      200.0
+     ]
+    },
+    "entulho": {
+     "img": "coletor_madeira/ruina_entulho.png",
+     "ancora": [
+      135.0,
+      200.0
+     ]
+    }
+   }
   },
   "escudo": {
    "estados": {

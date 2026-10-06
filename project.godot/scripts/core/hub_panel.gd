@@ -210,9 +210,10 @@ func refresh() -> void:
 	_comedouro_button.text = ("Cozinha — escolher lugar  (%s)" % _hub.comedouro_cost_text()) if cr == "" else "Cozinha: " + cr
 	_comedouro_button.disabled = cr != ""
 	var colr: String = _hub.coletor_block_reason()
-	_coletor_button.text = ("Coletor de madeira — escolher lugar na clareira  (%s)" % _hub.coletor_cost_text()) if colr == "" \
-		else "Coletor de madeira: " + colr
+	_coletor_button.text = ("Outro coletor de madeira — escolher lugar na clareira  (%s)" % _hub.coletor_cost_text()) if colr == "" \
+		else "Outro coletor de madeira: " + colr
 	_coletor_button.disabled = colr != ""
+	_coletor_button.visible = _hub.coletor_restaurado()  # Bloco 81: o primeiro é a ruína da floresta
 	var why: String = _economy.recruit_block_reason() if _economy else "sem economia"
 	_recruit_button.text = ("Recrutar ipezinho  (%d cr, %d cama%s livre%s)" % [_economy.recruit_cost(), _economy.free_beds(),
 		"s" if _economy.free_beds() != 1 else "", "s" if _economy.free_beds() != 1 else ""]) if why == "" else "Recrutar: " + why

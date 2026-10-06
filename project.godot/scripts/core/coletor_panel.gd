@@ -3,6 +3,8 @@ extends PanelContainer
 ## Abre clicando na máquina ou pelo botão no painel do HUD.
 ## Bloco 47: pode ter vários coletores. A janela mostra o que foi CLICADO (pelo botão do HUD
 ## ou tecla: o primeiro); "Designar"/"Liberar" valem pra essa máquina.
+## Bloco 81: o primeiro é a RUÍNA da floresta — enquanto não está restaurado, a janela mostra as etapas
+## (feitas, a atual com custo/progresso/o que falta, as próximas) e o botão de pedir a etapa.
 
 var _hud: CanvasLayer
 var _hub: Node
@@ -12,6 +14,7 @@ var _status: Label
 var _build_button: Button
 var _designate_button: Button
 var _release_button: Button
+var _etapa_button: Button
 var _focus: Node = null
 
 
@@ -70,6 +73,13 @@ func _build() -> void:
 			c.release()
 		refresh())
 	vbox.add_child(_release_button)
+	_etapa_button = _hud._button("")
+	_etapa_button.pressed.connect(func():
+		var c: Node = _current()
+		if c and c.has_method("pedir_etapa"):
+			c.pedir_etapa()
+		refresh())
+	vbox.add_child(_etapa_button)
 	_build_button = _hud._button("")
 	_build_button.pressed.connect(func():
 		Audio.click()
@@ -123,11 +133,26 @@ func refresh() -> void:
 	var what := "Construir" if all.is_empty() else "Construir outro coletor"
 	_build_button.text = ("%s — escolher lugar na clareira  (%s)" % [what, _hub.coletor_cost_text()]) if reason == "" else "%s: %s" % [what, reason]
 	_build_button.disabled = reason != ""
-	_designate_button.visible = c != null
-	_release_button.visible = c != null and c.has_operator()
+	_build_button.visible = _hub.coletor_restaurado()  # Bloco 81: extras só depois da ruína restaurada
+	var ruina: bool = c != null and c.has_method("restaurado") and not c.restaurado()
+	_etapa_button.visible = ruina
+	_designate_button.visible = c != null and not ruina
+	_release_button.visible = c != null and not ruina and c.has_operator()
 	_title.text = "COLETOR DE MADEIRA" if all.size() <= 1 or c == null else "COLETOR DE MADEIRA %d de %d" % [all.find(c) + 1, all.size()]
 	if c == null:
 		_status.text = "Ainda não construído."
+		return
+	if ruina:
+		_title.text = "COLETOR DE MADEIRA (RUÍNA)"
+		_status.text = etapas_texto(c)
+		var r: String = c.etapa_block_reason()
+		var i: int = c.etapa_atual()
+		if c.pago:
+			_etapa_button.text = "%s: em obra — %d%% (%s)" % [c.etapa_nome(i), roundi(c.obra_progress() * 100.0),
+				"engenheiro trabalhando" if not c.obra_workers().is_empty() else "esperando engenheiro, tecla 4"]
+		else:
+			_etapa_button.text = ("Pedir: %s  (%s)" % [c.etapa_nome(i), c.custo_texto(i)]) if r == "" else "%s: %s" % [c.etapa_nome(i), r]
+		_etapa_button.disabled = r != ""
 		return
 	_status.text = "%s\nMadeira produzida no total: %d  •  %.1f madeira/s com operador" % [c.status_text(), int(c.total_produced), c.wood_per_sec]
 	if all.size() > 1:
@@ -138,8 +163,30 @@ func refresh() -> void:
 	_designate_button.disabled = cand == null
 
 
+## Bloco 81: a lista das etapas da restauração (feitas, a atual, as que faltam).
+func etapas_texto(c: Node) -> String:
+	var linhas: Array[String] = ["Uma serraria a vapor abandonada, enferrujada e coberta de folhas. Restaure por etapas: você pede (e paga) cada uma e o engenheiro faz."]
+	for i in range(1, c.ETAPA_PRONTA):
+		var nome: String = c.etapa_nome(i)
+		if c.etapa > i:
+			linhas.append("  [feito] %s" % nome)
+		elif c.etapa_atual() == i:
+			if c.pago:
+				linhas.append("  [agora] %s — %d%%" % [nome, roundi(c.obra_progress() * 100.0)])
+			else:
+				var falta: String = c.etapa_block_reason()
+				linhas.append("  [próxima] %s — %s%s" % [nome, c.custo_texto(i), (" • falta: " + falta) if falta != "" else ""])
+		else:
+			linhas.append("  [depois] %s — %s" % [nome, c.custo_texto(i)])
+	linhas.append("  [depois] %s: libera designar um lenhador pra operar" % c.etapa_nome(c.ETAPA_PRONTA))
+	return "\n".join(linhas)
+
+
 func button_text() -> String:
 	var all: Array = _hub.coletores()
+	var f: Node = _hub.coletor_fixo() if _hub.has_method("coletor_fixo") else null
+	if f != null and not f.restaurado():  # Bloco 81
+		return "Coletor (ruína): %s" % ("restaurando" if f.pago else "etapa %d de 4" % f.etapa)
 	if all.is_empty():
 		return "Coletor de madeira: construir"
 	if all.size() > 1:
@@ -149,4 +196,7 @@ func button_text() -> String:
 
 
 func has_available_action() -> bool:
+	var f: Node = _hub.coletor_fixo() if _hub.has_method("coletor_fixo") else null
+	if f != null and not f.restaurado():  # Bloco 81: dá pra pedir a próxima etapa?
+		return f.etapa_block_reason() == ""
 	return _hub.coletores().any(func(k): return not k.has_operator())

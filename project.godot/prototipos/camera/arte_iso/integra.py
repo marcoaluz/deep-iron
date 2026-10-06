@@ -206,6 +206,10 @@ def predios(so=None):
         saida["predios"][nome] = info
     if not so or "escavadeira" in so:
         pecas_escavadeira(saida)
+    if (not so or "coletor_madeira" in so) and "coletor_madeira" in saida["predios"]:
+        # Bloco 81: as camadas provisórias da ruína (folhas, entulho), geradas por coletor_ruina.py
+        from coletor_ruina import camadas_json
+        saida["predios"]["coletor_madeira"]["camadas"] = camadas_json()
     print("encaixando %d caixas..." % len(pendentes))
     with Pool() as pool:
         res = dict(pool.map(encaixa, [p[2] for p in pendentes]))

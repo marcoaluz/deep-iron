@@ -648,8 +648,21 @@ func _confirm_comedouro(pos: Vector2) -> bool:
 
 
 # ------------------------------------------------------------ coletor de madeira (Bloco 45)
+## O primeiro coletor (Bloco 81: a ruína da floresta, quando a cena tem uma).
 func coletor() -> Node:
-	return get_tree().get_first_node_in_group("coletores")
+	var f := coletor_fixo()
+	return f if f != null else get_tree().get_first_node_in_group("coletores")
+
+
+## Bloco 81: a ruína da cena (o primeiro coletor, restaurado por etapas). null = cena sem ruína.
+func coletor_fixo() -> Node:
+	return get_tree().get_first_node_in_group("coletor_fixo")
+
+
+## Bloco 81: o primeiro coletor já funciona? (sem ruína na cena: sim — vale o fluxo antigo)
+func coletor_restaurado() -> bool:
+	var f := coletor_fixo()
+	return f == null or f.restaurado()
 
 
 ## Bloco 47: pode ter vários — cada um com o SEU operador e a sua produção (independentes).
@@ -665,6 +678,8 @@ func coletor_cost() -> Vector3i:
 
 
 func coletor_block_reason() -> String:
+	if not coletor_restaurado():  # Bloco 81: os extras só depois de restaurar o da floresta
+		return "restaure primeiro o coletor em ruína da floresta (clique nele)"
 	var c := Canteiro.pending(get_tree(), "coletor")
 	if c:
 		return "em obra (%s)" % c._obra.status(c.obra_progress())
@@ -678,7 +693,8 @@ func coletor_cost_text() -> String:
 	return "%d cr + %d ferro" % [c.x, c.y]
 
 
-## Escolher o lugar — só na clareira (onde estão as árvores).
+## Escolher o lugar — só na clareira (onde estão as árvores). Bloco 81: só os EXTRAS (o primeiro é a
+## ruína da floresta, restaurada por etapas no próprio coletor).
 func build_coletor() -> bool:
 	if coletor_block_reason() != "":
 		Audio.error()
@@ -714,11 +730,50 @@ func spawn_coletor(pos: Vector2) -> Node2D:
 	c.name = "ColetorMadeira" if n == 0 else "ColetorMadeira%d" % (n + 1)
 	c.position = pos
 	get_parent().add_child(c)
+	_coletor_mudou()
+	return c
+
+
+## A navegação e a decoração por baixo acompanham um coletor novo ou que mudou de lugar.
+func _coletor_mudou() -> void:
 	var env := get_tree().get_first_node_in_group("environment")
 	if env:
 		env.clear_decor_under_extras()
 		env.rebuild_navigation()
-	return c
+
+
+## Bloco 45/47/81: os coletores de madeira do save (o operador se religa sozinho: ipezinho
+## "operates_coletor"). A ruína da cena (fixo) fica e recebe a etapa dela; os extras são refeitos.
+## Save antigo (sem "fixo" nas entradas): o primeiro coletor construído É o da floresta, já restaurado
+## (a ruína vai pro lugar dele); save antigo sem coletor: a ruína fica como está na cena (etapa 0).
+func _load_coletores(d: Dictionary) -> void:
+	var fixo := coletor_fixo()
+	for old in coletores():
+		if old == fixo:
+			continue
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	var list: Array = SaveUtil.array(d, "coletores")
+	if list.is_empty() and not SaveUtil.dict(d, "coletor").is_empty():
+		list = [SaveUtil.dict(d, "coletor")]  # Bloco 47: save antigo, um só
+	var antigo := not list.any(func(cd): return cd is Dictionary and cd.has("fixo"))
+	var usou_fixo := false
+	for cd in list:
+		if typeof(cd) != TYPE_DICTIONARY:
+			continue
+		var cpos := SaveUtil.vec2(cd, "position", Vector2.INF)
+		if cpos == Vector2.INF:
+			continue
+		if fixo != null and not usou_fixo and (SaveUtil.boolean(cd, "fixo", false) or antigo):
+			usou_fixo = true
+			if fixo.global_position.distance_to(cpos) > 1.0:
+				fixo.global_position = cpos
+				_coletor_mudou()
+			fixo.load_save_data(cd)  # sem "etapa" (save antigo) = restaurado
+			continue
+		spawn_coletor(cpos).load_save_data(cd)
+	if fixo != null and not usou_fixo:
+		fixo.volta_pra_ruina()
 
 
 # ------------------------------------------------------------ oficina (Bloco 58)
@@ -1412,7 +1467,7 @@ func get_save_data() -> Dictionary:
 	return {"level": level, "upgrades": upgrades.duplicate(), "pending_upgrade": pending_upgrade,
 		"upgrade_left": upgrade_left, "upgrade_total": upgrade_total, "obra": _obra.get_save_data(),
 		"founded": founded, "starter_houses_left": starter_houses_left,
-		"coletores": coletores().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position), "total": c.total_produced}),
+		"coletores": coletores().map(func(c): return c.get_save_data()),  # Bloco 81: + etapa da restauração e "fixo"
 		"coletores_minerio": coletores_minerio().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position),
 			"total": c.total_produced, "jazida": SaveUtil.vec2_to_array(c.chosen_pos) if c.chosen_pos != Vector2.INF else []}),  # Bloco 57
 		"vagonetes": vagonetes().map(func(v): return v.get_save_data()),  # Bloco 64
@@ -1437,20 +1492,7 @@ func load_save_data(d: Dictionary) -> void:
 	# Bloco 37 (save antigo: fundada, sem casas iniciais — ela já tinha as da cena)
 	founded = SaveUtil.boolean(d, "founded", true)
 	starter_houses_left = clampi(SaveUtil.integer(d, "starter_houses_left", 0), 0, starter_houses)
-	# Bloco 45: coletor de madeira (o operador se religa sozinho: ipezinho "operates_coletor")
-	for old in coletores():
-		old.get_parent().remove_child(old)
-		old.queue_free()
-	var list: Array = SaveUtil.array(d, "coletores")
-	if list.is_empty() and not SaveUtil.dict(d, "coletor").is_empty():
-		list = [SaveUtil.dict(d, "coletor")]  # Bloco 47: save antigo, um só
-	for cd in list:
-		if typeof(cd) != TYPE_DICTIONARY:
-			continue
-		var cpos := SaveUtil.vec2(cd, "position", Vector2.INF)
-		if cpos != Vector2.INF:
-			var col := spawn_coletor(cpos)
-			col.total_produced = maxf(SaveUtil.num(cd, "total", 0.0), 0.0)
+	_load_coletores(d)
 	# Bloco 57: coletores de minério (save antigo: nenhum; o operador se religa sozinho)
 	for old in coletores_minerio():
 		old.get_parent().remove_child(old)

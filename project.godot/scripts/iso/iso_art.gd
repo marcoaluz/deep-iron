@@ -155,6 +155,8 @@ static func layers(node: Node) -> Array:
 				out.append(l)
 		"escavadeira":
 			out = _escavadeira(node)
+		"coletor_madeira":
+			out = _coletor_madeira(node)  # Bloco 81: ruína restaurada por etapas
 		"elevador", "elevador_abismo":
 			# em cima: ruína até abrir (o do abismo, em conserto, sobe pelo corte); embaixo: a gaiola
 			# de chegada, desenhada no chão do andar de baixo (camada com "em" = ponto da lógica)
@@ -220,6 +222,52 @@ static func _escavadeira(node: Node) -> Array:
 		var prog: float = node.obra_progress() if node.has_method("obra_progress") else 0.0
 		# o reator novo é montado no chão ao lado da plataforma (à direita)
 		out.append({"tex": texture(c2.img), "ancora": Vector2(c2.ancora[0] - 210.0, c2.ancora[1] - 40.0), "peg": [], "h": 0.0, "obra": prog})
+	return out
+
+
+## Bloco 81: o coletor de madeira em restauração. Com desenhos "ruina_N" (N = etapas feitas) no predios.json,
+## eles entram no lugar; senão, o PROVISÓRIO: o quebrado com tom de ferrugem, folhas e entulho por cima, e
+## cada etapa tira uma camada — a que sai some aos poucos com o progresso do engenheiro e a que entra aparece
+## aos poucos (0: limpar tira folhas e entulho; 1: desenferrujar troca o quebrado pelo pronto apagado;
+## 2: consertar acende o pronto).
+const COLETOR_FERRUGEM := Color(0.95, 0.74, 0.6)
+const COLETOR_DESLIGADO := Color(0.68, 0.66, 0.64)
+
+
+static func _coletor_madeira(node: Node) -> Array:
+	if not node.has_method("restaurado") or node.restaurado():
+		return [state("coletor_madeira", "pronto")]
+	var feitas: int = node.etapas_feitas()
+	var prog: float = node.obra_progress()
+	var desenho := state("coletor_madeira", "ruina_%d" % feitas)
+	if not desenho.is_empty():
+		return [desenho]
+	var cam: Dictionary = entry("coletor_madeira").get("camadas", {})
+	var out: Array = []
+	var quebrado := state("coletor_madeira", "quebrado")
+	var pronto := state("coletor_madeira", "pronto")
+	for l in [quebrado, pronto]:
+		l.erase("luzes")
+		l.erase("janelas")
+	match feitas:
+		0:
+			quebrado["mod"] = COLETOR_FERRUGEM
+			out.append(quebrado)
+			for c in ["entulho", "folhas"]:
+				if cam.has(c):
+					out.append({"tex": texture(cam[c].img), "ancora": Vector2(cam[c].ancora[0], cam[c].ancora[1]), "peg": [], "h": 0.0,
+						"obra": -1.0, "mod": Color(1, 1, 1, 1.0 - prog)})
+		1:
+			quebrado["mod"] = COLETOR_FERRUGEM.lerp(Color.WHITE, prog)
+			out.append(quebrado)
+			if prog > 0.0:
+				var fantasma := pronto.duplicate()
+				fantasma["peg"] = []
+				fantasma["mod"] = Color(COLETOR_DESLIGADO, prog)
+				out.append(fantasma)
+		_:
+			pronto["mod"] = COLETOR_DESLIGADO.lerp(Color.WHITE, prog)
+			out.append(pronto)
 	return out
 
 

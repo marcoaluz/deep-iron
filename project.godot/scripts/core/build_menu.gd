@@ -226,7 +226,7 @@ func _defs(tab: String) -> Array:
 					"reason": func(): return "",
 					"act": func(): _hud.open_panel("oficina"), "label": "Abrir"})
 		"Coleta automática":
-			if hub:
+			if hub and hub.coletor_restaurado():  # Bloco 81: o primeiro é a ruína da floresta; extras só depois dela
 				out.append({"name": "Coletor de madeira", "tex": "coletor_madeira", "frames": 2, "many": true, "scales": true,
 					"desc": "Serraria na clareira: um lenhador opera e ela faz madeira sozinha. Cada uma tem o seu operador.",
 					"count": func(): return _count("coletores"),
