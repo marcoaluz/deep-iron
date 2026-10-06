@@ -338,5 +338,9 @@ func test_b81_coletor_ruina() -> void:
 	run_bloco("b81_coletor_ruina.gd")
 
 
+func test_b82_itens_armazem() -> void:
+	run_bloco("b82_itens_armazem.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

@@ -89,6 +89,8 @@ extends Node
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
+##   Bloco 82: armazem.gd "itens" {id: quantidade} — os itens processados do catálogo (items.gd: barras, aço,
+##     lingote, prego), fora do "stock" de minério. Save antigo: sem itens.
 ##   Bloco 81: centro_vila "coletores" ganha, em cada entrada, "fixo" (a ruína da cena), "etapa" (0 ruína ..
 ##     4 funcionando), "pago", "progresso" (s de engenheiro) e "obra". Save antigo (sem "fixo"): o primeiro
 ##     coletor construído vira o da floresta, restaurado (sem "etapa" = 4); sem coletor: a ruína (etapa 0).

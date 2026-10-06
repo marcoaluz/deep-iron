@@ -14,6 +14,7 @@ signal stored_changed(total: float)
 @export var deposit_sound_interval: float = 0.5
 
 const Ores := preload("res://scripts/core/ores.gd")
+const Items := preload("res://scripts/core/items.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 
 ## Soma de todos os tipos (a pilha e o texto usam isso).
@@ -29,6 +30,9 @@ var wood_stored: float = 0.0
 var raw_stored: float = 0.0
 ## Bloco 42: couro da caça (material do casaco de inverno e dos trajes). Não se vende.
 var leather_stored: float = 0.0
+## Bloco 82: itens PROCESSADOS (barras, aço, lingote, prego...: items.gd com onde = "itens") — id -> quantidade.
+## Fora do `stock` de propósito: não entram no total de minério (pilha, marcos, custo em minério qualquer).
+var itens: Dictionary = {}
 var _pending_popup: float = 0.0
 var _popup_timer: float = 0.0
 var _sound_timer: float = 0.0
@@ -145,6 +149,31 @@ func take(amount: float, ore_type: String) -> float:
 	return taken
 
 
+## Bloco 82: guarda um item processado (barra, prego...).
+func add_item(id: String, amount: float) -> void:
+	if amount <= 0.0:
+		return
+	itens[id] = itens.get(id, 0.0) + amount
+	_update_label()
+
+
+## Bloco 82: tira até `amount` de um item processado. Retorna quanto saiu.
+func take_item(id: String, amount: float) -> float:
+	var taken := minf(amount, itens.get(id, 0.0))
+	if taken <= 0.0:
+		return 0.0
+	itens[id] = itens.get(id, 0.0) - taken
+	if itens[id] <= 0.0001:
+		itens.erase(id)
+	_update_label()
+	return taken
+
+
+## Bloco 82: quanto tem de um item processado.
+func item_count(id: String) -> float:
+	return itens.get(id, 0.0)
+
+
 ## Cozinheiro indo buscar matéria-prima: só serve se tiver o que pegar.
 func accepts_worker(worker: Node) -> bool:
 	if worker.has_method("get_state") and worker.get_state() == "fetching":
@@ -176,6 +205,11 @@ func _update_label() -> void:
 		_label.text += "  •  matéria-prima %d" % int(raw_stored)
 	if leather_stored >= 1.0:
 		_label.text += "  •  couro %d" % int(leather_stored)
+	var proc := 0.0
+	for k in itens:
+		proc += itens[k]
+	if proc >= 1.0:
+		_label.text += "  •  itens %d" % int(proc)  # Bloco 82
 	var stage := 0
 	for t in pile_thresholds:
 		if total_stored >= t:
@@ -205,7 +239,7 @@ func show_popup(text: String, color: Color) -> void:
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	return {"stock": stock.duplicate(), "lifetime_stored": lifetime_stored, "wood_stored": wood_stored,
-		"raw_stored": raw_stored, "leather_stored": leather_stored}
+		"raw_stored": raw_stored, "leather_stored": leather_stored, "itens": itens.duplicate()}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -216,4 +250,11 @@ func load_save_data(d: Dictionary) -> void:
 	wood_stored = maxf(SaveUtil.num(d, "wood_stored", 0.0), 0.0)
 	raw_stored = maxf(SaveUtil.num(d, "raw_stored", 0.0), 0.0)  # save antigo: 0
 	leather_stored = maxf(SaveUtil.num(d, "leather_stored", 0.0), 0.0)  # Bloco 42
+	# Bloco 82: itens processados (save antigo: nenhum). Só os do catálogo guardados aqui.
+	itens.clear()
+	var salvos := SaveUtil.dict(d, "itens")
+	for id in Items.processados():
+		var n := maxf(SaveUtil.num(salvos, id, 0.0), 0.0)
+		if n > 0.0:
+			itens[id] = n
 	_recount()
