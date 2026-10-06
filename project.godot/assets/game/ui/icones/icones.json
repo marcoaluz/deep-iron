@@ -76,7 +76,10 @@
   "vel_pausa",
   "vel_1",
   "vel_2",
-  "vel_3"
+  "vel_3",
+  "fundidor",
+  "ferreiro",
+  "padre"
  ],
  "predios": [
   "casa",

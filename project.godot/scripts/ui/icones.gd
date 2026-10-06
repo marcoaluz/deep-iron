@@ -8,7 +8,8 @@ extends RefCounted
 const DIR := "res://assets/game/ui/icones/"
 ## função do jogo (ipezinho.job) -> ícone
 const FUNCAO := {"minerador": "minerador", "caçador": "cacador", "médico": "medico", "engenheiro": "engenheiro",
-	"cozinheiro": "cozinheiro", "lenhador": "lenhador", "guarda": "guarda", "pesquisador": "pesquisador"}
+	"cozinheiro": "cozinheiro", "lenhador": "lenhador", "guarda": "guarda", "pesquisador": "pesquisador",
+	"fundidor": "fundidor", "ferreiro": "ferreiro", "padre": "padre"}  # Bloco 92 (PixelLab, oficios92.py)
 ## estação (sun.season_index) -> ícone
 const ESTACAO := ["primavera", "verao", "outono", "inverno"]
 

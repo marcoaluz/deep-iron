@@ -1,0 +1,44 @@
+{
+ "igreja": {
+  "job": "910dffe8-476b-4a11-82ce-b09d142787b8",
+  "custo": 40,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\igreja\\pronto.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "igreja_obra": {
+  "job": "31ce94c6-a0e1-4056-b879-8e7fc0f9cc8f",
+  "custo": 40,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\igreja\\obra_2.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "lampiao": {
+  "job": "89f86375-87a2-4184-beae-d1397fa23587",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\decor92\\lampiao_grade.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "cerca": {
+  "job": "16d37d3f-49b3-4f30-a25b-8c1e97b293bd",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\decor92\\cerca_grade.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "canteiro_flores": {
+  "job": "490650a0-20bb-4caf-a08f-0b6dd83c03bd",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\decor92\\canteiro_flores_grade.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "bandeira": {
+  "job": "064aa01d-ad2c-47c7-b3b0-507ffc01ec7f",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\decor92\\bandeira_grade.png",
+  "ok": true,
+  "candidatos": 16
+ }
+}

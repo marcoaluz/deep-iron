@@ -91,7 +91,9 @@ func _process(delta: float) -> bool:
 		check(pd != null and pd.display_name == cal.padre_nome and pd.is_priest(), "estágio %d: %s chegou" % [cal.padre_estagio, pd.display_name if pd else "?"])
 		check(eco.worker_count() == n0, "o padre não conta no limite de recrutas")
 		pd.set_job("minerador")
-		check(pd.is_priest(), "ninguém troca a função do padre")
+		check(not pd.is_priest(), "Bloco 92: o padre pode trocar de função (padre virou função da barra)")
+		pd.set_job("padre")
+		check(pd.is_priest(), "e volta a ser o padre")
 		check(g("diary").unlocked.has("padre") if g("diary").get("unlocked") != null else true, "página do padre no diário")
 		print("== a igreja")
 		eco.credits = 9999.0

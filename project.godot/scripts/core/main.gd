@@ -197,6 +197,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				toggle_smelter()
 			"ferreiro":
 				toggle_smith()
+			"padre":
+				toggle_priest()
 			"pesquisador":
 				toggle_research()
 			"painel_lab":
@@ -556,6 +558,30 @@ func toggle_smelter() -> void:
 ## 7 / botão do HUD: ferreiro (ou tira, se todos já forem) — Bloco 87.
 func toggle_smith() -> void:
 	toggle_job(Worker.ROLE_SMITH, "Ferreiro", Color(0.62, 0.74, 1.0))
+
+
+## 8 / botão do HUD: padre — Bloco 92. Só UM ipezinho homem (o selecionado); a vila tem um padre só. Se o
+## selecionado já é o padre, tira a função dele.
+func toggle_priest() -> void:
+	_prune_selection()
+	if selection.size() != 1:
+		Audio.error()
+		_hud.show_toast("Selecione UM ipezinho homem pra virar padre", Color(1.0, 0.6, 0.45))
+		return
+	var w: Node = selection[0]
+	if w.is_priest():
+		w.set_job(Worker.ROLE_IDLE)
+		Audio.click()
+		_hud.show_toast("%s deixou de ser padre" % String(w.get("display_name")), Color(0.75, 0.75, 0.8))
+		return
+	var motivo: String = w.motivo_padre()
+	if motivo != "":
+		Audio.error()
+		_hud.show_toast(motivo, Color(1.0, 0.6, 0.45))
+		return
+	w.set_job(Worker.ROLE_PRIEST)
+	Audio.click()
+	_hud.show_toast("%s agora é o padre da vila" % String(w.get("display_name")), Color(0.78, 0.7, 0.95))
 
 
 ## 0 / botão do HUD: tira a função dos selecionados (voltam a ficar ociosos).

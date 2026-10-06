@@ -42,6 +42,8 @@ PREDIOS = {
     "coletor_madeira": ("coletor_madeira", {"pronto": "../%s/coletor_madeira_pronto.png" % MAQ,
                                             "quebrado": "../%s/coletor_madeira_quebrado.png" % MAQ}),
     "coletor_minerio": ("coletor_minerio", {"pronto": "../%s/coletor_minerio_pronto.png" % MAQ}),  # Bloco 57
+    "fornalha": ("fundicao", None),  # Bloco 92: a Fundição do Prompt 12 (nunca tinha entrado no jogo)
+    "igreja": ("igreja", None),  # Bloco 92 (predios92.py)
     "escudo": ("escudo", {"etapa_%d" % (k + 1): "../%s/escudo_%d_%s.png" % (MAQ, k + 1, n)
                           for k, n in enumerate(["fundacao", "bobinas", "nucleo", "emissor"])}),
     "escavadeira": ("escavadeira", {"estrutura": "../%s/escavadeira_1_estrutura.png" % MAQ,
@@ -271,7 +273,10 @@ FUNCOES = {"minerador": ("minerador", "mineradora", "minerar"), "guarda": ("guar
            "medico": ("medico", "medica", "atender"), "engenheiro": ("engenheiro", "engenheira", "construir"),
            "cacador": ("cacador", "cacadora", "cacar"), "pesquisador": ("pesquisador", "pesquisadora", "pesquisar"),
            "lenhador": ("lenhador", "lenhadora", "cortar"), "civil": ("civil", "civil_mulher", None),
-           "cozinheiro": ("cozinheiro", "cozinheira", "cozinhar")}
+           "cozinheiro": ("cozinheiro", "cozinheira", "cozinhar"),
+           # Bloco 92: os ofícios dos Blocos 86-88 com arte do PixelLab (oficios92.py); o padre é só homem
+           "fundidor": ("fundidor", "fundidora", "fundir"), "ferreiro": ("ferreiro", "ferreira", "forjar"),
+           "padre": ("padre", "padre", "pregar")}
 COMUNS = ["caminhada", "comer", "ferido", "deitar", "mancar_esq", "com_picareta"]
 # pendências dos Prompts 2 e 29: colher fruta (caçador sem arco), treinar no campo e o ataque com a
 # arma de verdade do guarda (lança / besta; a lança de prata usa a da lança)
@@ -633,6 +638,39 @@ def so_caminhadas(pastas):
     print("tiras refeitas:", len(jobs), "(+ 3 tons cada)")
 
 
+# ------------------------------------------------------------ só algumas funções (Bloco 92)
+def so_bonecos(funcoes):
+    """Exporta só as pastas dessas funções (base, mulher e casaco) — tiras, tons de pele, pé no chão — no
+    bonecos.json que já existe, sem regravar os PNGs do resto do elenco."""
+    f = os.path.join(BON, "bonecos.json")
+    out = json.load(open(f, encoding="utf-8"))
+    out["funcoes"] = {k: list(v) for k, v in FUNCOES.items()}
+    jobs = []
+    feitas = set()
+    for fn in funcoes:
+        h, m, trab = FUNCOES[fn]
+        for pasta in (h, m):
+            if pasta in feitas:
+                continue
+            feitas.add(pasta)
+            anims = COMUNS + ([trab] if trab else []) + EXTRA.get(pasta, [])
+            novas = {pasta: anims}
+            if os.path.isdir(os.path.join(AQUI, "casaco_" + pasta)):
+                novas["casaco_" + pasta] = ["caminhada"] + ([trab] if trab else [])
+            for pz, an in novas.items():
+                out["pastas"][pz] = _exporta_boneco(pz, an)
+                print("%-18s %s" % (pz, sorted(out["pastas"][pz]["anims"])))
+                for anim, dd in out["pastas"][pz]["anims"].items():
+                    for d, i in dd.items():
+                        jobs.append((os.path.join(BON, i["img"]), i["n"], i["quadro"][0]))
+    with Pool() as pool:
+        for _ in pool.imap_unordered(_tons_job, jobs, chunksize=4):
+            pass
+    pes_no_chao(out)
+    json.dump(out, open(f, "w", encoding="utf-8"), indent=1, ensure_ascii=False)
+    print("tiras:", len(jobs), "(+ 3 tons cada)")
+
+
 # ------------------------------------------------------------ pé no chão (Bloco 73)
 ## Animações de andar: os quadros vieram do PixelLab cada um numa altura (na caminhada o pé ficava
 ## em média 6 px, até 13 no robô, acima da linha da âncora) e o boneco subia e descia como se
@@ -775,6 +813,9 @@ for nome in ("cova", "explosivos", "antena", "cesto", "placa_greve"):
     PROPS[nome] = "efeitos/bases/%s.png" % nome
 # Bloco 76: a boca da escada em espiral na superfície (fundo76/espiral.py)
 PROPS["boca_espiral"] = "fundo76/boca_espiral.png"
+# Bloco 92: a decoração do jogador que faltava (predios92.py; banco, mesa e tocha já existiam)
+for nome in ("lampiao", "cerca", "canteiro_flores", "bandeira"):
+    PROPS["decor_" + nome] = "decor92/%s.png" % nome
 # Bloco 78: os marcos de cada andar (fundo78/marcos.py)
 for nome in ("fossil_gigante", "bica_vapor", "lampiao_cristal", "cabana_mina", "boca_tunel"):
     PROPS[nome] = "fundo78/%s.png" % nome
@@ -967,6 +1008,8 @@ if __name__ == "__main__":
     if sys.argv[1:2] == ["predios"]:
         predios(sys.argv[2:] or None)
         contorno()
+    elif sys.argv[1:2] == ["bonecos"] and len(sys.argv) > 2:  # Bloco 92: só essas funções
+        so_bonecos(sys.argv[2:])
     elif sys.argv[1:2] == ["bonecos"]:
         bonecos()
         contorno()

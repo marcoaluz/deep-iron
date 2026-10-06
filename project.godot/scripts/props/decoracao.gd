@@ -70,6 +70,15 @@ func take_hit(_amount: float, _attacker: Node) -> void:
 		acende(0.0)
 
 
+## Bloco 92: o desenho na vista iso (iso_art.prop_layers): a tocha acesa é a chama animada; apagada (de dia ou
+## comida por um Lumívoro), a tocha apagada.
+func iso_prop_nome() -> String:
+	var nome := String(Decor.info(id).get("iso", ""))
+	if nome == "tocha_chao" and not acesa():
+		return "tocha_apagada"
+	return nome
+
+
 func pegada_rect() -> Rect2:
 	return Decor.pegada_rect(id, global_position)
 

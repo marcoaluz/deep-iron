@@ -89,7 +89,11 @@ const ORDER_JOBS := [
 		"Opera a Fornalha: busca o minério no armazém, funde as barras encomendadas e leva pro armazém. Sem ordem, não faz nada."],
 	["ferreiro", "Ferreiro", "7", "res://assets/game/ui/icones/it_martelo.png", "toggle_smith", Color(0.62, 0.74, 1.0),
 		"Opera a Oficina e o Arsenal: ferramentas, armas, equipamentos, pregos e ferragens — só o que foi encomendado. (O engenheiro fica nas obras.)"],
+	["padre", "Padre", "8", "res://assets/game/ui/icones/padre.png", "toggle_priest", Color(0.78, 0.7, 0.95),
+		"Só UM, e só homem (selecione um ipezinho). Fica na igreja: missa de domingo, funeral e aconselha quem anda zangado. Abre com a Vila no estágio do padre."],
 ]
+## Bloco 92: largura do botão da barra de ordens (era 90; com o Padre são 14 botões na tela de 1280 px).
+const ORDER_BUTTON_W := 82.0
 const TOP_BAR_H := 40.0
 const SIDE_MARGIN := 10.0
 
@@ -359,7 +363,7 @@ func _build_order_bar() -> void:
 	_selection_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(_selection_caption)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
+	row.add_theme_constant_override("separation", 3)  # Bloco 92: 14 botões (com o Padre) cabem nos 1280 px
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_child(row)
 	# Bloco 46: CONSTRUIR abre o menu de construção por abas (também na barra de espaço)
@@ -390,7 +394,7 @@ func _build_order_bar() -> void:
 func _order_button(row: HBoxContainer, title: String, key: String, icon_tex: Texture2D, color: Color, tip: String) -> Dictionary:
 	var b := _button("")
 	b.toggle_mode = true
-	b.custom_minimum_size = Vector2(90, 62)
+	b.custom_minimum_size = Vector2(ORDER_BUTTON_W, 62)
 	if UiSkin.ok():
 		UiSkin.aplica_botao(b, true)  # Prompt 20: placa de ferro com rebites; aceso = borda âmbar
 	b.tooltip_text = "%s  (tecla %s)\n%s\nCom ipezinhos selecionados: aplica. Se todos já forem, tira." % [title, key, tip]
@@ -596,7 +600,7 @@ func _fill_hints() -> void:
 		"Ordens:  botão direito = mover / minerar a jazida clicada",
 		"Funções:  %s minerador  •  %s caçador  •  %s médico  •  %s engenheiro  •  %s cozinheiro  •  %s lenhador  •  %s guarda  •  %s pesquisador  •  %s sem função  •  %s turno extra" % [
 			k.call("minerador"), k.call("cacador"), k.call("medico"), k.call("engenheiro"), k.call("cozinheiro"), k.call("lenhador"),
-			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")] + "  •  %s fundidor  •  %s ferreiro" % [k.call("fundidor"), k.call("ferreiro")],
+			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")] + "  •  %s fundidor  •  %s ferreiro  •  %s padre (só um)" % [k.call("fundidor"), k.call("ferreiro"), k.call("padre")],
 		"Economia:  %s vender minério  •  %s recrutar" % [k.call("vender"), k.call("recrutar")],
 		"Trabalho:  %s = TRABALHADORES — marcar áreas (madeira, alimentos, mina) e quantos trabalham em cada uma (até 5)" % k.call("painel_trabalho"),
 		"Construir:  %s = menu de construção (casas, cozinha, lazer, pesquisa, defesa, coleta automática…)" % k.call("construir"),

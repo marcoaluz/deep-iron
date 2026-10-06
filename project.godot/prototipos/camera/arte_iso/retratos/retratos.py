@@ -23,6 +23,10 @@ EXPRESSOES = {
     "ferido": "same character, injured: a white bandage wrapped around the head and a small plaster on the cheek, pained expression; keep the face, hair, clothes, colors and framing identical",
 }
 CRIATURAS = ("lumivoro", "ferrugento")
+## Bloco 92: nota por personagem somada à frase padrão (a frase fala em "helmet/hat" e o modelo INVENTAVA chapéu
+## em quem não usa: o ferreiro careca ganhou capacete, o padre um solidéu)
+NOTA = {"ferreiro": " He is BALD: no hat, no helmet, no cap on his bald head.",
+        "padre": " He has short grey hair and round glasses: keep the glasses; no hat, no cap, no skullcap on his head."}
 
 
 def expressoes():
@@ -37,7 +41,7 @@ def expressoes():
             continue
         raw = open(os.path.join(BASE, f), "rb").read()
         for e, d in EXPRESSOES.items():
-            itens.append(("%s_%s" % (nome, e), "edit_image_pixen", {"image_base64": base64.b64encode(raw).decode(), "description": d},
+            itens.append(("%s_%s" % (nome, e), "edit_image_pixen", {"image_base64": base64.b64encode(raw).decode(), "description": d + NOTA.get(nome, "")},
                           os.path.join(EXPR, nome, e + ".png")))
     gen.lote(itens, registro=os.path.join(EXPR, "jobs.json"))
 
@@ -72,7 +76,8 @@ def recolor(a, rampa):
     return out
 
 
-def exporta():
+def exporta(so=None):
+    """so (Bloco 92): só esses retratos, juntados ao retratos.json que já existe (sem regravar os outros)."""
     os.makedirs(DEST, exist_ok=True)
     info = {"_obs": "Prompt 23 (retratos/retratos.py): pasta -> expressão -> arquivo por tom de pele (tons_de_pele.RAMPAS); criaturas sem tom",
             "tons": list(tp.RAMPAS.keys()), "expressoes": ["neutro"] + list(EXPRESSOES), "retratos": {}}
@@ -80,6 +85,8 @@ def exporta():
         if not f.endswith(".png"):
             continue
         nome = f[:-4]
+        if so and nome not in so:
+            continue
         os.makedirs(os.path.join(DEST, nome), exist_ok=True)
         fontes = {"neutro": os.path.join(BASE, f)}
         for e in EXPRESSOES:
@@ -97,9 +104,16 @@ def exporta():
                 Image.fromarray(recolor(a, rampa), "RGBA").save(os.path.join(DEST, nome, "%s__%s.png" % (e, tom)))
             d[e] = "%s/%s" % (nome, e)
         info["retratos"][nome] = d
+    if so and os.path.exists(os.path.join(DEST, "retratos.json")):
+        velho = json.load(open(os.path.join(DEST, "retratos.json"), encoding="utf-8"))
+        velho["retratos"].update(info["retratos"])
+        info = velho
     json.dump(info, open(os.path.join(DEST, "retratos.json"), "w", encoding="utf-8"), indent=1, ensure_ascii=False)
     print("retratos:", len(info["retratos"]))
 
 
 if __name__ == "__main__":
-    {"expressoes": expressoes, "exporta": exporta}[sys.argv[1]]()
+    if sys.argv[1] == "exporta" and len(sys.argv) > 2:
+        exporta(sys.argv[2:])
+    else:
+        {"expressoes": expressoes, "exporta": exporta}[sys.argv[1]]()

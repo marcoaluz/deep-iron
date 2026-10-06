@@ -26,6 +26,7 @@ const KIND_OF_SCENE := {
 	"vestiario": "vestiario", "coletor_madeira": "coletor_madeira", "coletor_minerio": "coletor_minerio", "escudo": "escudo",
 	"escavadeira": "escavadeira", "centro_vila": "centro", "barricada": "portao",
 	"elevador": "elevador", "elevador_abismo": "elevador_abismo",
+	"fornalha": "fornalha", "igreja": "igreja",  # Bloco 92: a Fundição do Prompt 12 e a igreja do PixelLab
 }
 ## canteiro (canteiro.gd KINDS) -> prédio que vai nascer
 const KIND_OF_CANTEIRO := {
@@ -33,6 +34,7 @@ const KIND_OF_CANTEIRO := {
 	"comedouro": "comedouro", "parque": "parque", "vestiario": "vestiario", "coletor": "coletor_madeira",
 	"coletor_minerio": "coletor_minerio", "oficina": "oficina",  # Bloco 58
 	"enfermaria": "enfermaria",
+	"fornalha": "fornalha", "igreja": "igreja",  # Bloco 92
 }
 const ESCAVADEIRA_PECAS := ["motor", "hidraulica", "cabine", "broca"]
 ## Folga entre a pegada e o ponto de trabalho/slot (px da lógica): o boneco fica fora da parede.
@@ -446,6 +448,14 @@ static func prop_layers(node: Node) -> Array:
 		return [IsoFx.fx_layer(String(node.get_meta("iso_fx")))].filter(func(l): return not l.is_empty())
 	if node.has_meta("iso_prop"):  # Prompt 30: decoração do mapa novo, desenhada pelo nome
 		return [prop(String(node.get_meta("iso_prop")))].filter(func(l): return not l.is_empty())
+	if node.has_method("iso_prop_nome"):  # Bloco 92: decoração do jogador (decor.gd "iso")
+		var nome: String = node.iso_prop_nome()
+		if nome == "tocha_chao":  # a tocha acesa: a chama animada do mapa
+			var l := prop("tocha_chao_f0")
+			if not l.is_empty():
+				l["anim"] = [0, 1, 2, 3].map(func(k): return prop("tocha_chao_f%d" % k).tex)
+			return [l].filter(func(x): return not x.is_empty())
+		return [prop(nome)].filter(func(l): return not l.is_empty())
 	if node.is_in_group("minerios") and node.get("ore_type") != null:
 		return _ore_layers(node, env)
 	var sp := _main_sprite(node)

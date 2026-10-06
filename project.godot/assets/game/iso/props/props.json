@@ -2775,6 +2775,66 @@
    ],
    "h": 80.0,
    "fora": 4
+  },
+  "decor_lampiao": {
+   "img": "decor_lampiao.png",
+   "ancora": [
+    11.0,
+    75.0
+   ],
+   "peg": [
+    -4.0,
+    -3.2,
+    8.0,
+    7.0
+   ],
+   "h": 72.0,
+   "fora": 1
+  },
+  "decor_cerca": {
+   "img": "decor_cerca.png",
+   "ancora": [
+    27.5,
+    44.0
+   ],
+   "peg": [
+    -9.625,
+    -7.7,
+    20.0,
+    18.0
+   ],
+   "h": 46.0,
+   "fora": 0
+  },
+  "decor_canteiro_flores": {
+   "img": "decor_canteiro_flores.png",
+   "ancora": [
+    24.0,
+    30.0
+   ],
+   "peg": [
+    -8.399999999999999,
+    -6.719999999999999,
+    17.0,
+    16.0
+   ],
+   "h": 26.0,
+   "fora": 4
+  },
+  "decor_bandeira": {
+   "img": "decor_bandeira.png",
+   "ancora": [
+    16.0,
+    61.0
+   ],
+   "peg": [
+    -5.6,
+    -4.4799999999999995,
+    11.0,
+    10.0
+   ],
+   "h": 60.0,
+   "fora": 2
   }
  }
 }

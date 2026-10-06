@@ -1,505 +1,465 @@
 {
  "cacador_contente": {
-  "job": "d8319d17-2da6-4438-a8bc-438f465b908f",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacador\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacador\\contente.png"
  },
  "cacador_cansado": {
-  "job": "7c114af5-2472-4d03-8092-e15bce3c704b",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacador\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacador\\cansado.png"
  },
  "cacador_bravo": {
-  "job": "f95ee145-2657-4fb3-846d-fb21b73edb04",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacador\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacador\\bravo.png"
  },
  "cacador_ferido": {
-  "job": "aa6335e1-1823-4bf2-aa80-31d477588886",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacador\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacador\\ferido.png"
  },
  "cacadora_contente": {
-  "job": "51a37723-46ff-4aa1-9032-f2796c7792d1",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacadora\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacadora\\contente.png"
  },
  "cacadora_cansado": {
-  "job": "1b90de79-c4e8-4127-a46f-1f319b949096",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacadora\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacadora\\cansado.png"
  },
  "cacadora_bravo": {
-  "job": "f2a5c679-0f28-4e02-a34c-68eded693026",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacadora\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacadora\\bravo.png"
  },
  "cacadora_ferido": {
-  "job": "9732a82b-b4e0-4945-bc23-f8808cc21e02",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacadora\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cacadora\\ferido.png"
  },
  "civil_contente": {
-  "job": "b79f9655-9c77-49aa-9028-97f54e2a0e14",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil\\contente.png"
  },
  "civil_cansado": {
-  "job": "4dc7840d-111d-4238-8379-f8453d577526",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil\\cansado.png"
  },
  "civil_bravo": {
-  "job": "cce747cf-6c03-4894-aa97-951c746d28e6",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil\\bravo.png"
  },
  "civil_ferido": {
-  "job": "600c0351-4747-4584-a6e2-8b2433f0cc68",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil\\ferido.png"
  },
  "civil_mulher_contente": {
-  "job": "c9d34e49-e3ef-464d-8a41-423e70e6c41c",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil_mulher\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil_mulher\\contente.png"
  },
  "civil_mulher_cansado": {
-  "job": "429ecb2d-ae70-484b-a402-1a7fce1a8293",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil_mulher\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil_mulher\\cansado.png"
  },
  "civil_mulher_bravo": {
-  "job": "ed6d9388-0cfb-4339-a213-b77a466d7a4b",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil_mulher\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil_mulher\\bravo.png"
  },
  "civil_mulher_ferido": {
-  "job": "fc5926c5-c7d4-412f-94bb-6597cc706cf3",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil_mulher\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\civil_mulher\\ferido.png"
  },
  "cozinheira_contente": {
-  "job": "3d02f808-42d6-4013-ad30-4da5dd783cfa",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheira\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheira\\contente.png"
  },
  "cozinheira_cansado": {
-  "job": "17209c22-1975-4ac7-abcf-503c55b3b0ea",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheira\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheira\\cansado.png"
  },
  "cozinheira_bravo": {
-  "job": "f44869c3-c810-4195-b8fe-2316ca8b7ee0",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheira\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheira\\bravo.png"
  },
  "cozinheira_ferido": {
-  "job": "41ecbd58-f083-4f8a-b6ea-88daeaf993dc",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheira\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheira\\ferido.png"
  },
  "cozinheiro_contente": {
-  "job": "60b2981f-e0bc-467b-a158-766d1f51e580",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheiro\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheiro\\contente.png"
  },
  "cozinheiro_cansado": {
-  "job": "e9c60413-9c1a-4bca-87cc-d2bf50b1f893",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheiro\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheiro\\cansado.png"
  },
  "cozinheiro_bravo": {
-  "job": "5a539939-0b13-43d8-bb51-79ac0f8f65d8",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheiro\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheiro\\bravo.png"
  },
  "cozinheiro_ferido": {
-  "job": "01e148ff-94af-4573-beda-61119b815968",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheiro\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\cozinheiro\\ferido.png"
  },
  "engenheira_contente": {
-  "job": "15cc4db0-ad87-48b7-a279-405298a0bf1c",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheira\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheira\\contente.png"
  },
  "engenheira_cansado": {
-  "job": "4dc427bf-cc39-485c-a012-9c9afcd2d160",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheira\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheira\\cansado.png"
  },
  "engenheira_bravo": {
-  "job": "016af373-578d-4d54-902d-26a867d97828",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheira\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheira\\bravo.png"
  },
  "engenheira_ferido": {
-  "job": "e8a73e6c-d644-4518-8e84-b2e329e7c08e",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheira\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheira\\ferido.png"
  },
  "engenheiro_contente": {
-  "job": "9059d060-bdd2-4ea0-b78e-827dd62d2af6",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheiro\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheiro\\contente.png"
  },
  "engenheiro_cansado": {
-  "job": "0c60b640-fdcd-44b0-a53c-f05bbe9ddcf6",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheiro\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheiro\\cansado.png"
  },
  "engenheiro_bravo": {
-  "job": "2cbfec71-dcf0-41cf-87eb-d584a0a39318",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheiro\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheiro\\bravo.png"
  },
  "engenheiro_ferido": {
-  "job": "6b5a605f-a3e8-43dc-9959-c7771d2800e0",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheiro\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\engenheiro\\ferido.png"
  },
  "guarda_contente": {
-  "job": "11d4bb1c-ae33-4643-bd45-27f9e0be9b11",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda\\contente.png"
  },
  "guarda_cansado": {
-  "job": "d635ef00-b2a2-4968-acb4-aecc6b24a6df",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda\\cansado.png"
  },
  "guarda_bravo": {
-  "job": "c39445a8-9d13-47a7-b818-95ece1a4b842",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda\\bravo.png"
  },
  "guarda_ferido": {
-  "job": "c9e2e033-04db-4206-bb3a-b987d1a28d54",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda\\ferido.png"
  },
  "guarda_mulher_contente": {
-  "job": "11b5a4d7-7011-435e-817b-a6506c5c1dc6",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda_mulher\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda_mulher\\contente.png"
  },
  "guarda_mulher_cansado": {
-  "job": "241314bd-406d-48e7-a47d-2cf940be5f61",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda_mulher\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda_mulher\\cansado.png"
  },
  "guarda_mulher_bravo": {
-  "job": "3624a6c8-1a4c-4a38-bbb5-02ed693fd77f",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda_mulher\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda_mulher\\bravo.png"
  },
  "guarda_mulher_ferido": {
-  "job": "d0a0c27b-c712-44bd-b576-32afb8d6e4f3",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda_mulher\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\guarda_mulher\\ferido.png"
  },
  "lenhador_contente": {
-  "job": "fa46ebc7-d071-4631-a7ba-790d1726d5e6",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhador\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhador\\contente.png"
  },
  "lenhador_cansado": {
-  "job": "a465d39d-afc5-42ae-8258-fcc940dea751",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhador\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhador\\cansado.png"
  },
  "lenhador_bravo": {
-  "job": "18c77158-2f55-4351-9254-4ed120144583",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhador\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhador\\bravo.png"
  },
  "lenhador_ferido": {
-  "job": "729bc469-9f31-44d3-bbe4-a7c614276fe2",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhador\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhador\\ferido.png"
  },
  "lenhadora_contente": {
-  "job": "0394ee6a-748a-428d-ad35-746973a837eb",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhadora\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhadora\\contente.png"
  },
  "lenhadora_cansado": {
-  "job": "61c8840d-dffb-432f-a16a-03e4f46d49b6",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhadora\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhadora\\cansado.png"
  },
  "lenhadora_bravo": {
-  "job": "3c1dbd77-8fa9-454a-b716-d84c0a1fbf01",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhadora\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhadora\\bravo.png"
  },
  "lenhadora_ferido": {
-  "job": "cf4db3ba-e9c5-43eb-b1b1-86fcc533c286",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhadora\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\lenhadora\\ferido.png"
  },
  "medica_contente": {
-  "job": "62e476ff-0b87-45bc-b1a4-4ef332907bb7",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medica\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medica\\contente.png"
  },
  "medica_cansado": {
-  "job": "95bcccd8-5bd3-4517-8b1c-e4d4bc747811",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medica\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medica\\cansado.png"
  },
  "medica_bravo": {
-  "job": "6035a755-c42f-47b3-92d5-21e6e3dafcad",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medica\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medica\\bravo.png"
  },
  "medica_ferido": {
-  "job": "c78d3a3f-8aec-4de8-8f1c-1a27fd8b486a",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medica\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medica\\ferido.png"
  },
  "medico_contente": {
-  "job": "80ad1132-b226-4c59-8792-4d64def92c1c",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medico\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medico\\contente.png"
  },
  "medico_cansado": {
-  "job": "6c87534a-8e3e-4feb-aa6d-e93bbd97c128",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medico\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medico\\cansado.png"
  },
  "medico_bravo": {
-  "job": "7d072964-c0de-42c8-a05c-e8ea8ed887d3",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medico\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medico\\bravo.png"
  },
  "medico_ferido": {
-  "job": "d66e1b57-91d6-487d-9945-348106d1486d",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medico\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\medico\\ferido.png"
  },
  "minerador_contente": {
-  "job": "40fdad28-fea8-4ce2-8ae5-442e2fb1d2b9",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\minerador\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\minerador\\contente.png"
  },
  "minerador_cansado": {
-  "job": "9f5ff31c-7b42-4de6-b87b-251468a50094",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\minerador\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\minerador\\cansado.png"
  },
  "minerador_bravo": {
-  "job": "d8606912-79fe-4985-9e07-aa2f7d971e9a",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\minerador\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\minerador\\bravo.png"
  },
  "minerador_ferido": {
-  "job": "49024a32-c91b-4f4e-8476-36bc1a7bf15d",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\minerador\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\minerador\\ferido.png"
  },
  "mineradora_contente": {
-  "job": "5deaf6a0-86c6-4f13-a614-1def4d38bcd4",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mineradora\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mineradora\\contente.png"
  },
  "mineradora_cansado": {
-  "job": "e4a77c92-0847-4569-be47-d23257567c0e",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mineradora\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mineradora\\cansado.png"
  },
  "mineradora_bravo": {
-  "job": "ab2e659f-2aa6-443d-b38c-c4155540a487",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mineradora\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mineradora\\bravo.png"
  },
  "mineradora_ferido": {
-  "job": "ea588915-039c-4882-9acf-350b6b446edd",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mineradora\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mineradora\\ferido.png"
  },
  "pesquisador_contente": {
-  "job": "c4b98a91-7ed3-4cc0-a2c6-04cfa99e69aa",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisador\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisador\\contente.png"
  },
  "pesquisador_cansado": {
-  "job": "351f990e-0cfc-43f2-ba9a-14b94000c2bd",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisador\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisador\\cansado.png"
  },
  "pesquisador_bravo": {
-  "job": "ea352270-d5b3-470b-b329-22f36dfa2855",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisador\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisador\\bravo.png"
  },
  "pesquisador_ferido": {
-  "job": "a600470c-36a2-4dd9-8074-a144da63ce87",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisador\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisador\\ferido.png"
  },
  "pesquisadora_contente": {
-  "job": "147f5382-f9e7-40cf-a3c2-6b360fbc585b",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisadora\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisadora\\contente.png"
  },
  "pesquisadora_cansado": {
-  "job": "5ec7b0c5-4e6d-432d-aa81-c554ac4ea57f",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisadora\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisadora\\cansado.png"
  },
  "pesquisadora_bravo": {
-  "job": "bab9feb0-1e04-4f0c-86d1-42fad5ea9f9c",
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisadora\\bravo.png"
+ },
+ "pesquisadora_ferido": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisadora\\ferido.png"
+ },
+ "ferreira_contente": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\ferreira\\contente.png"
+ },
+ "ferreira_cansado": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\ferreira\\cansado.png"
+ },
+ "ferreira_bravo": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\ferreira\\bravo.png"
+ },
+ "ferreira_ferido": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\ferreira\\ferido.png"
+ },
+ "ferreiro_contente": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\ferreiro\\contente.png"
+ },
+ "ferreiro_cansado": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\ferreiro\\cansado.png"
+ },
+ "ferreiro_bravo": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\ferreiro\\bravo.png"
+ },
+ "ferreiro_ferido": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\ferreiro\\ferido.png"
+ },
+ "fundidor_contente": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\fundidor\\contente.png"
+ },
+ "fundidor_cansado": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\fundidor\\cansado.png"
+ },
+ "fundidor_bravo": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\fundidor\\bravo.png"
+ },
+ "fundidor_ferido": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\fundidor\\ferido.png"
+ },
+ "fundidora_contente": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\fundidora\\contente.png"
+ },
+ "fundidora_cansado": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\fundidora\\cansado.png"
+ },
+ "fundidora_bravo": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\fundidora\\bravo.png"
+ },
+ "fundidora_ferido": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\fundidora\\ferido.png"
+ },
+ "padre_contente": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\padre\\contente.png"
+ },
+ "padre_cansado": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\padre\\cansado.png"
+ },
+ "padre_bravo": {
+  "job": "c2ed9b0f-1ee7-423d-b311-46eb5accbfc6",
   "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisadora\\bravo.png",
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\padre\\bravo.png",
   "ok": true,
   "candidatos": 1
  },
- "pesquisadora_ferido": {
-  "job": "af7edca4-aaef-49d4-89dc-1555221690a9",
+ "padre_ferido": {
+  "job": "720c47e8-8568-488b-b6c0-1ec2b8370b1a",
   "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\pesquisadora\\ferido.png",
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\padre\\ferido.png",
   "ok": true,
   "candidatos": 1
  }

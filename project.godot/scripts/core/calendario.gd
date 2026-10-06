@@ -3,7 +3,8 @@ extends Node
 ## os eventos da semana e das estações.
 ##
 ## - PADRE: um só, não recrutável. Chega por evento quando a vila atinge padre_estagio (banner + diário). É um
-##   ipezinho com a função "padre" (ninguém troca), que fica na igreja aconselhando (sem igreja: na praça).
+##   ipezinho com a função "padre", que fica na igreja aconselhando (sem igreja: na praça). Bloco 92: padre é
+##   FUNÇÃO da barra (tecla 8): só homem, um por vila; trocar o padre = tirar a função do atual e dar a outro.
 ## - IGREJA (igreja.gd): construída pelo jogador (canteiro "igreja"); é ponto social (os bancos).
 ## - MISSA de domingo (missa_inicio..missa_fim, 09:00–11:00): com padre e igreja, todos que não estão em
 ##   emergência vão (a agenda vira "missa"; o médico segue de plantão). Quem foi ganha o fator "foi à missa".
@@ -149,6 +150,12 @@ func periodo_domingo(h: float) -> String:
 	if _entre(h, tarde_inicio, dn.hora_fim_expediente):
 		return "trabalho" if escolha_hoje() == "trabalhar" else "social"
 	return ""
+
+
+## Bloco 92: o padre está pregando agora (missa ou funeral)? A animação "pregar" dele.
+func pregando_agora() -> bool:
+	var dn := _dn()
+	return dn != null and igreja() != null and (periodo_domingo(dn.hora()) == "missa" or funeral_agora())
 
 
 ## Hoje é domingo e a tarde é de festival? (todos na praça)

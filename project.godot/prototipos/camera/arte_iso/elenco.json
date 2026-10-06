@@ -303,5 +303,68 @@
    80
   ]
  },
- "_custo": "elenco completo: 1427 -> 993 (434) + cacadora sem arco 27 = 461"
+ "_custo": "elenco completo: 1427 -> 993 (434) + cacadora sem arco 27 = 461",
+ "fundidor": {
+  "genero": "h",
+  "job": "72c33e68-0acb-4e0c-8f95-0a4e3b2c343f",
+  "escolhido": 4,
+  "char": "a7c94a03-7f86-4c38-bd13-5712c1a96b03",
+  "estado": "pronto",
+  "_obs": "Bloco 92",
+  "opcoes": {
+   "fundir": [
+    "estado=Idle",
+    "sem_brilho",
+    "troca=SE:0:7",
+    "soltos"
+   ]
+  }
+ },
+ "fundidora": {
+  "genero": "m",
+  "job": "8c8dc7e7-0fef-453e-b56c-89b2f3e19de8",
+  "escolhido": 4,
+  "char": "8bf61e92-32ed-4d74-bff9-f0b2179fc1b6",
+  "estado": "pronto",
+  "_obs": "Bloco 92",
+  "opcoes": {
+   "fundir": [
+    "estado=Idle",
+    "sem_brilho",
+    "troca=SE:0:1",
+    "soltos"
+   ]
+  }
+ },
+ "ferreiro": {
+  "genero": "h",
+  "job": "aae0a13a-2a0a-4e38-80c6-c7728a623d03",
+  "escolhido": 12,
+  "char": "84e534c3-5d05-4946-b472-a7df34433977",
+  "estado": "pronto",
+  "_obs": "Bloco 92"
+ },
+ "ferreira": {
+  "genero": "m",
+  "job": "c3015e13-5c18-4795-a22a-695fd246bdcd",
+  "escolhido": 10,
+  "char": "efdb8b2b-5eeb-48ec-a230-2ec8e9c11546",
+  "estado": "pronto",
+  "_obs": "Bloco 92",
+  "opcoes": {
+   "forjar": [
+    "estado=Idle",
+    "sem_brilho",
+    "soltos"
+   ]
+  }
+ },
+ "padre": {
+  "genero": "h",
+  "job": "5c371be7-bba2-48ce-935f-f3a4c750df70",
+  "escolhido": 9,
+  "char": "1a8ae85e-ca0d-402f-a27f-7344f19574d7",
+  "estado": "pronto",
+  "_obs": "Bloco 92"
+ }
 }

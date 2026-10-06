@@ -72,16 +72,12 @@ const OUTFIT_FILES := {
 	"pesquisador": "res://assets/game/ipezinho_pesquisador_%s%d.png",
 	"medico": "res://assets/game/ipezinho_medico_%s%d.png",  # Bloco 30
 	"engenheiro": "res://assets/game/ipezinho_engenheiro_%s%d.png",  # Bloco 31
-	"fundidor": "res://assets/game/ipezinho_engenheiro_%s%d.png",  # Bloco 86: provisório (tom: FUNDIDOR_TOM)
-	"ferreiro": "res://assets/game/ipezinho_engenheiro_%s%d.png",  # Bloco 87: provisório (tom: FERREIRO_TOM)
-	"padre": "res://assets/game/ipezinho_civil_%s%d.png",  # Bloco 88: provisório (tom: PADRE_TOM)
+	# Blocos 86-88: no mapa antigo (sem a vista iso) o desenho de outro ofício; na vista iso, a arte própria do
+	# PixelLab (Bloco 92: iso_bonecos.gd OUTFIT_FUNCAO -> fundidor / ferreiro / padre)
+	"fundidor": "res://assets/game/ipezinho_engenheiro_%s%d.png",
+	"ferreiro": "res://assets/game/ipezinho_engenheiro_%s%d.png",
+	"padre": "res://assets/game/ipezinho_civil_%s%d.png",
 }
-## Bloco 86: o tom do fundidor provisório (a roupa do engenheiro "suja de fuligem e calor").
-const FUNDIDOR_TOM := Color(1.0, 0.82, 0.7)
-## Bloco 87: o tom do ferreiro provisório (azulado, de aço).
-const FERREIRO_TOM := Color(0.8, 0.86, 1.0)
-## Bloco 88: o tom do padre provisório (a roupa escura de batina).
-const PADRE_TOM := Color(0.55, 0.52, 0.62)
 ## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
 const OUTFITS_WITH_LAMP := ["mineiro"]
 ## Chance (0..1) de cada camada de acessório aparecer (botas, remendo/bolso, lenço).
@@ -123,7 +119,7 @@ const ROLE_DOCTOR := "médico"  # Bloco 30: plantão na enfermaria (cura mais r�
 const ROLE_ENGINEER := "engenheiro"  # Bloco 31: sem ele nenhuma obra anda
 const ROLE_SMELTER := "fundidor"  # Bloco 86: opera a Fornalha (só por ordem)
 const ROLE_SMITH := "ferreiro"  # Bloco 87: opera a Oficina e o Arsenal (só por ordem)
-const ROLE_PRIEST := "padre"  # Bloco 88: o padre (um só, chega por evento; ninguém troca a função dele)
+const ROLE_PRIEST := "padre"  # Bloco 88: o padre (um só, chega por evento). Bloco 92: é FUNÇÃO — só homem, um por vez
 const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER, ROLE_SMITH, ROLE_PRIEST]
 ## Texto do popup ao receber a função.
 const JOB_LABELS := {
@@ -1117,6 +1113,8 @@ func _decide_next_action() -> void:
 		var dest: Vector2 = ig.altar_pos() if ig else (_village_hub().global_position + Vector2(0, 70) if _village_hub() else global_position)
 		if global_position.distance_to(dest) > 12.0 and (not _moving or _target.distance_to(dest) > 2.0):
 			_go_to(dest)
+		elif cal and cal.pregando_agora():
+			_work_timer = decision_interval * 1.2  # Bloco 92: na missa e no funeral ele prega (até a próxima decisão)
 		return
 
 	if desired == "social":  # Bloco 85
@@ -2309,8 +2307,8 @@ func has_no_job() -> bool:
 ## trabalho é seguro: o _choose_state() faz ele entregar primeiro o que estiver
 ## carregando (minério -> armazém, comida -> comedouro, madeira -> armazém).
 func set_job(new_job: String) -> void:
-	if is_priest() and new_job != ROLE_PRIEST:
-		return  # Bloco 88: o padre não troca de função (nem vira outra coisa)
+	if new_job == ROLE_PRIEST and motivo_padre() != "":
+		return  # Bloco 92: só homem vira padre, e a vila tem um só (main.gd avisa o motivo)
 	if not new_job in JOBS:
 		push_warning("Ipezinho: função desconhecida '%s'" % new_job)
 		return
@@ -3307,6 +3305,24 @@ func is_priest() -> bool:
 	return job == ROLE_PRIEST
 
 
+## Bloco 92: por que ESTE ipezinho não pode virar padre agora ("" = pode): só homem; um padre por vila; e a
+## função abre no estágio do padre (calendario.padre_estagio).
+func motivo_padre() -> String:
+	if is_priest():
+		return ""
+	if String(gender) != "menino":
+		return "Só homem pode ser padre"
+	var cal := get_tree().get_first_node_in_group("calendario") if is_inside_tree() else null
+	if cal:
+		var pd: Node = cal.padre()
+		if pd != null and pd != self:
+			return "A vila já tem padre (%s): tire a função dele primeiro" % String(pd.get("display_name"))
+		var hub := get_tree().get_first_node_in_group("village_hub")
+		if hub and int(hub.level) < int(cal.padre_estagio):
+			return "O padre só vem com a Vila no estágio %d" % int(cal.padre_estagio)
+	return ""
+
+
 ## A fornalha dele: a que tem as unidades que ele começou; senão a mais perto com ordem.
 func _fornalha_alvo() -> Node:
 	if _fornalha != null and is_instance_valid(_fornalha) and _fornalha.fila.tem_trabalho():
@@ -3639,7 +3655,7 @@ func _update_animation(delta: float) -> void:
 		if not lying:
 			_body.position.x = sin(Time.get_ticks_msec() * 0.07) * 0.5
 	else:
-		_body.modulate = FUNDIDOR_TOM if is_smelter() else (FERREIRO_TOM if is_smith() else (PADRE_TOM if is_priest() else Color.WHITE))  # Blocos 86-88: provisórios
+		_body.modulate = Color.WHITE
 
 
 func _update_hunger_label() -> void:

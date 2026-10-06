@@ -16,6 +16,7 @@ const PADRAO := {
 	"painel_trabalho": [KEY_5, KEY_KP_5],
 	"fundidor": [KEY_6, KEY_KP_6],  # Bloco 86
 	"ferreiro": [KEY_7, KEY_KP_7],  # Bloco 87
+	"padre": [KEY_8, KEY_KP_8],  # Bloco 92
 	"salvar": [KEY_F5], "carregar": [KEY_F9],
 	# fixas (não aparecem pra remapear): Esc, e as de teste/depuração
 	"voltar": [KEY_ESCAPE], "caixas": [KEY_F4], "pular_fase": [KEY_N], "machucar": [KEY_K],
@@ -28,6 +29,7 @@ const NOMES := [
 	["construir", "Menu de construção"], ["minerador", "Função: minerador"], ["cacador", "Função: caçador"],
 	["medico", "Função: médico"], ["engenheiro", "Função: engenheiro"], ["cozinheiro", "Função: cozinheiro"],
 	["lenhador", "Função: lenhador"], ["guarda", "Função: guarda"], ["pesquisador", "Função: pesquisador"],
+	["fundidor", "Função: fundidor"], ["ferreiro", "Função: ferreiro"], ["padre", "Função: padre (só um)"],
 	["sem_funcao", "Tirar a função"], ["turno_extra", "Turno extra"], ["vender", "Vender minério"], ["recrutar", "Recrutar"],
 	["proximo", "Próximo ipezinho"], ["seguir", "Câmera segue"], ["pausa", "Pausa"], ["dicas", "Atalhos (ajuda)"],
 	["musica", "Música liga/desliga"], ["painel_hub", "Centro da Vila"], ["painel_escavadeira", "Escavadeira"],

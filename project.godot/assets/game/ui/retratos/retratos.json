@@ -144,6 +144,41 @@
    "cansado": "pesquisadora/cansado",
    "bravo": "pesquisadora/bravo",
    "ferido": "pesquisadora/ferido"
+  },
+  "ferreira": {
+   "neutro": "ferreira/neutro",
+   "contente": "ferreira/contente",
+   "cansado": "ferreira/cansado",
+   "bravo": "ferreira/bravo",
+   "ferido": "ferreira/ferido"
+  },
+  "ferreiro": {
+   "neutro": "ferreiro/neutro",
+   "contente": "ferreiro/contente",
+   "cansado": "ferreiro/cansado",
+   "bravo": "ferreiro/bravo",
+   "ferido": "ferreiro/ferido"
+  },
+  "fundidor": {
+   "neutro": "fundidor/neutro",
+   "contente": "fundidor/contente",
+   "cansado": "fundidor/cansado",
+   "bravo": "fundidor/bravo",
+   "ferido": "fundidor/ferido"
+  },
+  "fundidora": {
+   "neutro": "fundidora/neutro",
+   "contente": "fundidora/contente",
+   "cansado": "fundidora/cansado",
+   "bravo": "fundidora/bravo",
+   "ferido": "fundidora/ferido"
+  },
+  "padre": {
+   "neutro": "padre/neutro",
+   "contente": "padre/contente",
+   "cansado": "padre/cansado",
+   "bravo": "padre/bravo",
+   "ferido": "padre/ferido"
   }
  }
 }
