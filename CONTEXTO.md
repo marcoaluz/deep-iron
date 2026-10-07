@@ -1,6 +1,7 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
 Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 94 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco). Push só com o OK dele.
+Ele disse "pode executar todos os prompts que depois eu valido".
 
 ## AGORA (2026-10-07): Bloco 94 — a cadeia de produção fechada
 
