@@ -16,7 +16,7 @@ com o OK do Marco. Ele disse "pode executar todos os prompts que depois eu valid
 - **Aço** na Picareta de aço nova, na lança de prata e nas bobinas.
 - **Couro** nas botas (a neve atrasa quem anda sem) e na mochila (+4 de carga do minerador).
 
-**Aprovação:** o Marco aprovou a tabela de custos antes, a lentidão na neve ("pode criar") e a picareta:
+**Aprovação:** o Marco aprovou a tabela de custos antes (e depois aceitou a mochila sem os 40 cr: 3 couro + 2 pregos), a lentidão na neve ("pode criar") e a picareta:
 - a de antes virou "Picareta temperada" (o id `picareta_aco` ficou);
 - a "Picareta de aço" é nova, no estágio 3.
 

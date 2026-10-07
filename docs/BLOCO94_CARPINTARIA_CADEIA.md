@@ -56,7 +56,7 @@ peça vira o ferro equivalente: 1 prego = 0,34 ferro e 1 ferragem = 6,7 ferro (`
 
 **Mudanças em relação à tabela aprovada:**
 - **A mochila ficou sem os 40 cr.** A fila de encomendas (`production_queue.gd`) só cobra itens. Para cobrar
-  crédito seria preciso um caminho só para ela, então ficou mais barata.
+  crédito seria preciso um caminho só para ela, então ficou mais barata. **O Marco aceitou assim (2026-10-07).**
 - **A ferrovia antes cobrava ferro bruto**, mesmo com fornalha. Agora segue a regra das barras do Bloco 87, como a
   tabela previa.
 
