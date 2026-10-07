@@ -163,8 +163,12 @@ func _process(delta: float) -> bool:
 				homem = w
 			elif w.gender == "menina" and mulher == null:
 				mulher = w
+		# o gênero dos ipezinhos do começo é sorteado: sem um dos dois, força num ipezinho diferente
+		if homem == null:
+			homem = ws()[0] if ws()[0] != mulher else ws()[1]
+			homem.gender = "menino"
 		if mulher == null:
-			mulher = ws()[1]
+			mulher = ws()[1] if ws()[1] != homem else ws()[0]
 			mulher.gender = "menina"
 		mulher.set_job("carpinteiro")
 		check(mulher.is_carpenter() and mulher.outfit() == "carpinteiro", "mulher vira carpinteira (roupa própria)")
