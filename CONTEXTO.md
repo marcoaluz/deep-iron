@@ -1,7 +1,6 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-07. Branch `isometrico`. Os commits dos **Blocos 80 a 94 ainda NÃO foram enviados**. Push só
-com o OK do Marco. Ele disse "pode executar todos os prompts que depois eu valido".
+Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 94 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco). Push só com o OK dele.
 
 ## AGORA (2026-10-07): Bloco 94 — a cadeia de produção fechada
 
@@ -27,7 +26,7 @@ com o OK do Marco. Ele disse "pode executar todos os prompts que depois eu valid
   corrigido em `5bd05115`. **Bateria inteira conferida em 2026-10-07, um teste por vez:** os 77 de `tests/blocos`
   (inclusive o b51, 353 s) com 0 falhas, e os GUT `test_iso` (6/6), `test_iso_arte` (3/3) e `test_iso_pele` (3/3).
   Cuidado: `gut_cmdln -gtest=...` sozinho varre `tests/` inteiro por causa do `.gutconfig.json`; use `-gconfig=`.
-- O commit `bloco-94` não foi enviado.
+- Enviado pro GitHub em 2026-10-07.
 
 ## Antes (2026-10-06): os ajustes do Marco depois dos Blocos 81–91
 
