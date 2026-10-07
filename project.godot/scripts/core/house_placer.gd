@@ -22,10 +22,13 @@ extends Node2D
 ##   start: Vector2     onde o fantasma aparece
 ##   area: Rect2        onde pode (em vez da área da mina) — Bloco 45: coletor na clareira
 ##   area_name: String  como chamar essa área no aviso ("fora da clareira")
+##   repeat: bool       Bloco 90: depois de confirmar, continua no modo (decoração: várias em sequência)
 
 signal finished(confirmed: bool)
 
 const CASA_TEXTURE := preload("res://assets/game/casa.png")
+const IsoArt := preload("res://scripts/iso/iso_art.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 ## Pegada da casa em volta do ponto clicado (o ponto é o pé da casa): do telhado
 ## (-54) até o degrau da porta, onde ficam as camas (+24).
 const FOOTPRINT := Rect2(-32, -54, 64, 78)
@@ -48,6 +51,11 @@ var _radius := 0.0
 var _radius_center := Vector2.ZERO
 var _area := Rect2()
 var _area_name := ""
+var _repeat := false
+## Prompt 29: o prédio da arte nova sendo posicionado ("" = sem arte nova): a pegada é a do desenho
+var art_name := ""
+## Bloco 76: o fantasma está encaixado num lote livre
+var no_lote := false
 
 
 func _ready() -> void:
@@ -70,7 +78,7 @@ func _ready() -> void:
 	# centraliza no espaço à direita do painel do HUD (que ocupa a esquerda da tela)
 	_hint.offset_left = 220.0
 	_hint.offset_right = 220.0
-	_hint.add_theme_font_size_override("font_size", 15)
+	_hint.add_theme_font_size_override("font_size", Tipo.TITULO)
 	_hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
 	_hint.add_theme_constant_override("outline_size", 5)
 	_hint_layer.add_child(_hint)
@@ -88,18 +96,24 @@ func begin(on_confirm: Callable, texture: Texture2D = CASA_TEXTURE, hframes: int
 	_ghost.offset = Vector2(0, -texture.get_height() * 0.5)
 	_what = what
 	_footprint = opts.get("footprint", FOOTPRINT)
+	art_name = IsoArt.name_for_texture(texture)
+	var af := IsoArt.placer_footprint(get_tree(), art_name)
+	if af.has_area():
+		_footprint = af  # o prédio novo tem fundo de verdade (a pegada antiga era o desenho de frente)
 	_ignore = opts.get("ignore", [])
 	_cancelable = opts.get("cancelable", true)
 	_radius = opts.get("radius", 0.0)
 	_radius_center = opts.get("radius_center", Vector2.ZERO)
 	_area = opts.get("area", Rect2())
 	_area_name = opts.get("area_name", "da área")
+	_extra_check = opts.get("check", Callable())  # Bloco 57: motivo extra ("" = pode)
+	_repeat = opts.get("repeat", false)  # Bloco 90
 	active = true
 	_collect_blockers()
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud and hud.has_method("close_panels"):
 		hud.close_panels()
-	_pos = opts.get("start", get_global_mouse_position())
+	_pos = opts.get("start", _to_world(get_viewport().get_mouse_position()))
 	_refresh()
 	_set_visible(true)
 
@@ -119,6 +133,7 @@ func _end(confirmed: bool) -> void:
 	_cancelable = true
 	_radius = 0.0
 	_area = Rect2()
+	_repeat = false
 	finished.emit(confirmed)
 
 
@@ -160,6 +175,11 @@ func try_confirm() -> bool:
 		flash.tween_property(_ghost, "scale", Vector2(2, 2), 0.15)
 		return false
 	if _on_confirm.is_valid() and _on_confirm.call(_pos):
+		Audio.place_sound()  # Bloco 55: estaca na terra
+		if _repeat:  # Bloco 90: põe outra (a peça nova já conta como obstáculo)
+			_collect_blockers()
+			_refresh()
+			return true
 		_end(true)
 		return true
 	return false
@@ -172,14 +192,27 @@ func move_to(world_pos: Vector2) -> void:
 
 
 ## "" se dá pra construir aqui; senão o motivo.
+var _extra_check := Callable()
+
+
 func check_spot(pos: Vector2) -> String:
 	var fp := Rect2(pos + _footprint.position, _footprint.size)
 	var env := get_tree().get_first_node_in_group("environment")
 	if _area.has_area():
 		if not _area.encloses(fp):
 			return "fora %s" % _area_name
+	elif env and env.has_method("in_forest") and env.in_forest(fp):
+		return "fora da vila (além da paliçada é a floresta)"  # Prompt 29 / Bloco 74: a floresta é mata
 	elif env and not env.walkable_rect().encloses(fp):
 		return "fora da área da mina"
+	if env and env.has_method("footprint_reason"):
+		var why: String = env.footprint_reason(fp)  # Prompt 29: terraços (chão plano)
+		if why != "":
+			return why
+	if _extra_check.is_valid():
+		var extra: String = _extra_check.call(pos)
+		if extra != "":
+			return extra
 	if _radius > 0.0 and pos.distance_to(_radius_center) > _radius:
 		return "longe demais do Centro da Vila (a vila cresce e o raio aumenta)"
 	for b in _blockers:
@@ -190,12 +223,20 @@ func check_spot(pos: Vector2) -> String:
 
 func _refresh() -> void:
 	_pos = _pos.round()
+	# Bloco 76: perto de um lote livre (e cabendo nele), o prédio encaixa no meio do lote
+	no_lote = false
+	var env := get_tree().get_first_node_in_group("environment")
+	if env and env.has_method("lote_perto") and not _area.has_area():
+		var l: Vector2 = env.lote_perto(_pos)
+		if l != Vector2.INF and check_spot(l) == "":
+			_pos = l
+			no_lote = true
 	_reason = check_spot(_pos)
 	_ghost.position = _pos
 	_ghost.modulate = Color(COLOR_OK, 0.6) if _reason == "" else Color(COLOR_BAD, 0.6)
 	var cancel_txt := "  •  Esc ou botão direito cancela" if _cancelable else ""
 	if _reason == "":
-		_hint.text = "Onde fica %s?  Clique pra construir%s" % [_what, cancel_txt]
+		_hint.text = "Onde fica %s?  Clique pra construir%s%s" % [_what, "  •  no LOTE LIVRE" if no_lote else "", cancel_txt]
 		_hint.add_theme_color_override("font_color", Color(0.95, 0.9, 0.75))
 	else:
 		_hint.text = "Não dá pra construir aqui: %s%s" % [_reason, ("\n" + cancel_txt.trim_prefix("  •  ")) if _cancelable else ""]
@@ -230,6 +271,14 @@ func _collect_blockers() -> void:
 			if _ignore.has(node):
 				continue
 			var r := Rect2(node.global_position, Vector2.ZERO)
+			var art := IsoArt.blocker_rect(node)
+			if art.has_area():
+				# Prompt 29: a pegada do desenho novo + a faixa dos slots em volta (a porta/o acesso)
+				r = art
+				if int(node.get("slot_count") if node.get("slot_count") != null else 0) > 0:
+					r = art.grow(IsoArt.FRONT_GAP + 2.0)
+				_blockers.append({"rect": r.grow(6.0), "name": _display_name(node)})
+				continue
 			if node.has_method("get_obstacle_outline"):
 				var outline: PackedVector2Array = node.get_obstacle_outline()
 				if outline.size() >= 3:
@@ -252,6 +301,9 @@ func _collect_blockers() -> void:
 	if env:
 		for o in env.decoration_obstacles():
 			_blockers.append({"rect": _bbox(o).grow(4.0), "name": "uma pedra/decoração"})
+	for dec in get_tree().get_nodes_in_group("decoracoes"):  # Bloco 90: a decoração do jogador
+		if not _ignore.has(dec):
+			_blockers.append({"rect": dec.pegada_rect().grow(3.0), "name": "a decoração (%s)" % String(dec.get("id"))})
 
 
 func _display_name(node: Node) -> String:
@@ -270,4 +322,8 @@ func _bbox(points: PackedVector2Array) -> Rect2:
 
 
 func _to_world(screen_pos: Vector2) -> Vector2:
-	return get_viewport().get_canvas_transform().affine_inverse() * screen_pos
+	var canvas := get_viewport().get_canvas_transform().affine_inverse() * screen_pos
+	var iso := get_tree().get_first_node_in_group("iso_view")
+	if iso and iso.enabled:
+		return iso.ground_at(canvas)  # Prompt 28: o chão embaixo do mouse na vista iso
+	return canvas

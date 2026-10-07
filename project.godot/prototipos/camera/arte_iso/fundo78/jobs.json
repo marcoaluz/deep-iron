@@ -1,0 +1,37 @@
+{
+ "fossil_gigante": {
+  "job": "63034653-b386-4e65-a177-b47289d50f9d",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo78\\fossil_gigante.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "bica_vapor": {
+  "job": "6864db78-3e7f-446a-aa92-51df8a1210cb",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo78\\bica_vapor.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "lampiao_cristal": {
+  "job": "f14dfe3d-3991-4c11-89ad-e37963b23481",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo78\\lampiao_cristal.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "cabana_mina": {
+  "job": "4d74090e-3215-4ee5-87cf-b1a2427a4be7",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo78\\cabana_mina.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "boca_tunel": {
+  "job": "c55dafdf-8c3c-4240-bd82-37d9433711cd",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo78\\boca_tunel.png",
+  "ok": true,
+  "candidatos": 16
+ }
+}

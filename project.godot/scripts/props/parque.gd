@@ -6,12 +6,16 @@ extends Node2D
 ## Construído pelo engenheiro (canteiro "parque"), posicionado como as casas (no raio do
 ## Centro da Vila). Clicar abre a janela de Bem-estar. Pode ter mais de um.
 
+const SocialSpot := preload("res://scripts/props/social_spot.gd")  # Bloco 85
+const IsoArt := preload("res://scripts/iso/iso_art.gd")
+
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 var panel_id := "moral"
 
 
 func _ready() -> void:
 	add_to_group("parques")
+	add_child(SocialSpot.criar("parque", "Parque", false, 2, 3, Vector2(0, 10), 1.2))  # Bloco 85
 	add_to_group("clickable")
 	$Light.add_to_group("cullable_lights")
 	queue_redraw()
@@ -23,12 +27,16 @@ func contains_point(p: Vector2) -> bool:
 
 ## Só o tronco da árvore grande bloqueia: o resto do parque é de andar por dentro.
 func get_obstacle_outline() -> PackedVector2Array:
+	var art := IsoArt.base_rect(self)
+	if art.has_area():
+		return IsoArt.outline(art)  # Prompt 29: a pegada do desenho novo
 	var c := global_position + Vector2(-32, -8)
 	return PackedVector2Array([c + Vector2(-4, -3), c + Vector2(4, -3), c + Vector2(4, 3), c + Vector2(-4, 3)])
 
 
 func decor_clear_rect() -> Rect2:
-	return Rect2(global_position + Vector2(-50, -72), Vector2(100, 76))
+	var art := IsoArt.base_rect(self)
+	return Rect2(global_position + Vector2(-50, -72), Vector2(100, 76)).merge(art) if art.has_area() else Rect2(global_position + Vector2(-50, -72), Vector2(100, 76))
 
 
 func radius() -> float:

@@ -1,7 +1,7 @@
 extends Node2D
-## Barricada (grupo "barricadas"): o muro nos dois lugares por onde as criaturas entram.
-##   "tunel" — boca do túnel da clareira (Lumívoros);
-##   "poco"  — boca do poço do elevador (Ferrugentos, depois que o nível 2 abre).
+## Barricada (grupo "barricadas"): o muro no portão por onde as criaturas da floresta entram.
+##   "tunel" — o portão da floresta na paliçada (Lumívoros). É o ÚNICO portão: o do poço do elevador
+##             saiu no Bloco 80 (o que sobe do fundo entra direto; os guardas fazem posto lá).
 ## Níveis: 0 = só as estacas (não segura nada), 1 = paliçada de madeira, 2 = muro de
 ## pedra, 3 = portão de ferro. Tem vida: as criaturas param aqui e batem até quebrar.
 ## Os ipezinhos passam pelo portão normalmente. Conserto e ampliação: janela de Defesa (G).
@@ -12,14 +12,19 @@ signal repaired
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const LEVEL_NAMES := ["sem muro", "Paliçada de madeira", "Muro de pedra", "Portão de ferro"]
 
-@export_enum("tunel", "poco") var gate_id: String = "tunel"
+@export_enum("tunel") var gate_id: String = "tunel"
+## Bloco 74: o portão numa paliçada de norte a sul (a vila fica a leste): a arte vira de lado.
+@export var vertical := false
 @export var display_name: String = "Portão do túnel"
 ## Vida por nível (índice = nível).
 @export var hp_per_level: Array[float] = [0.0, 120.0, 260.0, 450.0]
 ## Ampliar pro nível i: x = créditos, y = minério, z = madeira. (índice 0 não usado)
-@export var upgrade_costs: Array[Vector3i] = [Vector3i.ZERO, Vector3i(80, 0, 60), Vector3i(250, 120, 40), Vector3i(500, 200, 30)]
+## Bloco 94: o nível 3 baixou de 200 pra 170 ferro (85 barras) e pede pregos e ferragens (upgrade_itens).
+@export var upgrade_costs: Array[Vector3i] = [Vector3i.ZERO, Vector3i(80, 0, 60), Vector3i(250, 120, 40), Vector3i(500, 170, 30)]
 ## Minério gasto em cada nível ("" = qualquer).
 @export var upgrade_ore: Array[String] = ["", "", "ferro", "ferro"]
+## Bloco 94: itens a mais de cada nível ({item: qtd}); antes da fornalha, pregos e ferragens viram ferro (Economy).
+@export var upgrade_itens: Array[Dictionary] = [{}, {}, {}, {"prego": 12, "ferragem": 4}]
 ## Madeira gasta por ponto de vida consertado.
 @export var repair_wood_per_hp: float = 0.25
 
@@ -39,11 +44,20 @@ func _ready() -> void:
 
 
 func contains_point(p: Vector2) -> bool:
+	if vertical:  # (a mesma caixa, de lado: a abertura corre de norte a sul)
+		return Rect2(global_position + Vector2(-36, -38), Vector2(42, 76)).has_point(p)
 	return Rect2(global_position + Vector2(-38, -36), Vector2(76, 42)).has_point(p)
+
+
+## Bloco 74: pra que lado fica a vila (os guardas ficam desse lado do portão).
+func inside_dir() -> Vector2:
+	return Vector2.RIGHT if vertical else Vector2.DOWN
 
 
 ## Área onde a decoração do mapa é escondida (environment.gd).
 func decor_clear_rect() -> Rect2:
+	if vertical:
+		return Rect2(global_position + Vector2(-30, -40), Vector2(36, 80))
 	return Rect2(global_position + Vector2(-40, -30), Vector2(80, 36))
 
 
@@ -71,12 +85,18 @@ func damage(amount: float) -> void:
 	_update_visual()
 
 
+## Bloco 94: os itens a mais do próximo nível.
+func upgrade_item_cost() -> Dictionary:
+	var i := level + 1
+	return upgrade_itens[i] if i < upgrade_itens.size() else {}
+
+
 func upgrade_block_reason() -> String:
 	if level >= hp_per_level.size() - 1:
 		return "nível máximo"
 	var c := upgrade_costs[level + 1]
 	var eco := get_tree().get_first_node_in_group("economy")
-	return eco.missing_text(c.x, c.y, upgrade_ore[level + 1], c.z) if eco else "sem recursos"
+	return eco.metal_falta(c.x, c.y, upgrade_ore[level + 1], c.z, upgrade_item_cost()) if eco else "sem recursos"  # Bloco 87: barra; 94: peças
 
 
 func upgrade() -> bool:
@@ -84,7 +104,7 @@ func upgrade() -> bool:
 		Audio.error()
 		return false
 	var c := upgrade_costs[level + 1]
-	if not get_tree().get_first_node_in_group("economy").spend(c.x, c.y, upgrade_ore[level + 1], c.z):
+	if not get_tree().get_first_node_in_group("economy").paga_metal(c.x, c.y, upgrade_ore[level + 1], c.z, upgrade_item_cost()):
 		return false
 	level += 1
 	hp = max_hp()  # muro novo, inteiro

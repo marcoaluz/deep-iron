@@ -89,6 +89,44 @@ extends Node
 ##   Bloco 14: deep_shaft.gd (elevador) unlocked; jazidas do nível 2 (prata etc.)
 ##     entram no grupo minerios normalmente; estoque de prata no armazém.
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
+##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
+##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 94: centro_vila "carpintarias" [{position, fila [...]}] (a mesma fila da fornalha); casa.gd
+##     "camas_boas" (camas de tábua montadas) e "camas_pedidas" (pagas, esperando o carpinteiro); ipezinho.gd
+##     "mochila" (bool) e "wearing" aceita "botas"; equipment.gd "pool"/"broken" ganham "botas"; os novos itens
+##     (tabua, cama_boa, mochila) vão no "itens" do armazém. Save antigo: nada disso (carrega com os padrões);
+##     a função "carpinteiro" é um job novo; o que já foi feito/pago (lança de prata, bobinas, casa e barricada
+##     nível 3, ferrovias, picareta) continua valendo — os custos novos só valem pro que for encomendado depois.
+##   Bloco 93: calendario.gd "calendario" + {cemiterios [{rect [x, y, w, h], total, feito, pronto, covas [{nome, dia,
+##     estacao, causa, tipo, variante, vaga}], obra}], corpos [{info {nome, dia, estacao, causa}, pos [x, y]}]} (o
+##     corpo que o padre carregava volta pro chão); funerais ganham "onde" ("igreja"/"cemiterio"); morale.gd
+##     "funeral_left". Save antigo: sem cemitério, sem corpos, funeral na igreja.
+##   Bloco 89: caminhos.gd "caminhos" {tamanho, terra [[x, y]], cascalho [...], pedra [...]} (células da grade;
+##     save antigo: sem caminhos).
+##   Bloco 88: calendario.gd "calendario" {padre_chegou, escolha, escolha_dia, funerais [{nome, dia}], avisou_dia,
+##     igreja [x, y]}; o padre é um ipezinho (job "padre", salvo com os outros); ipezinho.gd "animo_fe".
+##     Save antigo: sem padre (chega no estágio), sem igreja, nenhum funeral.
+##   Bloco 87: oficina.gd "encomendas" [fila de pregos/ferragens do ferreiro] (save antigo: nenhuma). Os custos
+##     em barra são só regra (Economy.metal): nada novo no save.
+##   Bloco 86: centro_vila "fornalhas" [{position, fila [{receita, quantidade, feitas, comecadas, progresso,
+##     ordered_at}]}] (production_queue.gd); ipezinho.gd "barras_mao" {item: qtd}. Save antigo: nenhuma.
+##   Bloco 85: ipezinho.gd "animo_social" (ânimo de ter conversado na hora social; save antigo: 0). Os
+##     pontos sociais e as vagas não vão pro save (refeitos ao carregar).
+##   Bloco 84: ipezinho.gd "refeicoes_hoje" [refeições feitas hoje: "cafe"/"almoco"/"jantar"] e
+##     "refeicoes_perdidas" (seguidas: rende menos). Save antigo: nenhuma feita, nenhuma perdida. A agenda
+##     (Schedule) não salva nada: é só horário.
+##   Bloco 83: day_night "relogio": 24 (relógio de 24 h; "time" continua = segundos reais desde o amanhecer,
+##     o dia inteiro = duracao_dia_real). Save antigo (sem "relogio"): o ciclo era 180 s de dia + 60 s de
+##     noite — o "time" vira a mesma fração do dia/noite novos. Estações: 14 dias (sun.semanas_por_estacao).
+##   Bloco 82: armazem.gd "itens" {id: quantidade} — os itens processados do catálogo (items.gd: barras, aço,
+##     lingote, prego), fora do "stock" de minério. Save antigo: sem itens.
+##   Bloco 81: centro_vila "coletores" ganha, em cada entrada, "fixo" (a ruína da cena), "etapa" (0 ruína ..
+##     4 funcionando), "pago", "progresso" (s de engenheiro) e "obra". Save antigo (sem "fixo"): o primeiro
+##     coletor construído vira o da floresta, restaurado (sem "etapa" = 4); sem coletor: a ruína (etapa 0).
+##   Bloco 80: o portão do poço saiu: "barricadas"."BarricadaPoco" de save antigo é ignorado (não há o
+##     nó) e ipezinho.gd downed_gate "poco" vira "" (sem brecha).
+##   Bloco 77: work_areas.gd "areas_trabalho" {proximo_id, areas [{id, tipo, rect, ativa, total}]} —
+##     carregado antes dos ipezinhos; ipezinho.gd area_id (religa na área; save antigo: sem área).
 ##   Bloco 31: obras. casa.gd build_left/build_total/obra (canteiro esperando engenheiro);
 ##     centro_vila.gd pending_upgrade/upgrade_left/upgrade_total/obra; oficina.gd e
 ##     escavadeira.gd ganham "obra" (ordered_at, a ordem da fila). Quem está trabalhando
@@ -143,6 +181,7 @@ signal saved(path: String)
 signal loaded
 signal save_failed(message: String)
 
+const Carregando := preload("res://scripts/ui/carregando.gd")
 const SAVE_PATH := "user://savegame.json"
 const TEMP_PATH := "user://savegame.tmp"
 ## Backups rotativos: "partida nova" com save existente (Novo Jogo no menu, ou main.tscn
@@ -190,6 +229,9 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().set_auto_accept_quit(false)  # quem fecha é o _notification abaixo
 	_adopt_legacy_backup()
+	print("DEEP IRON: SAVE_VERSION=%d" % SAVE_VERSION)  # Bloco 50: aparece no log do build
+	if "--smoke" in OS.get_cmdline_user_args():  # Bloco 50: teste de fumaça do executável
+		add_child(preload("res://scripts/core/smoke.gd").new())
 
 
 func _process(delta: float) -> void:
@@ -269,6 +311,7 @@ func start_new_game() -> void:
 	_backup_checked = true
 	pending_load = false
 	_pending_data = {}
+	Carregando.mostra(get_tree())  # Prompt 26: a tela de carregamento com dica
 	get_tree().change_scene_to_file(MAIN_SCENE)
 
 
@@ -305,6 +348,7 @@ func _start_loaded(data: Dictionary) -> void:
 	pending_load = true
 	_backup_checked = true
 	get_tree().paused = false
+	Carregando.mostra(get_tree())  # Prompt 26: a tela de carregamento com dica
 	get_tree().change_scene_to_file(MAIN_SCENE)
 
 
@@ -459,6 +503,11 @@ func _collect() -> Dictionary:
 		"research": "research",
 		"sun": "sun",
 		"equipment": "equipment",
+		"fundo": "fundo",  # Bloco 70: ventiladores e contadores
+		"areas_trabalho": "work_areas",  # Bloco 77: áreas de trabalho (os ipezinhos guardam o id da área)
+		"calendario": "calendario",  # Bloco 88: padre, igreja, escolha do domingo, funerais
+		"caminhos": "caminhos",  # Bloco 89: células de caminho por tipo
+		"decoracoes": "decoracoes_mgr",  # Bloco 90: as peças de decoração do jogador
 	}
 	for key in singles:
 		var node := tree.get_first_node_in_group(singles[key])
@@ -466,6 +515,12 @@ func _collect() -> Dictionary:
 			data[key] = node.get_save_data()
 	for key in ["casas", "armazens", "minerios", "comedouros", "coleta_comida", "arvores", "barricadas", "caca"]:
 		data[key] = _collect_group(key)
+	# Bloco 71: as plataformas dos níveis novos (S4, S5), pelo nome (a do abismo já vai em "abismo")
+	var ligacoes := {}
+	for e in tree.get_nodes_in_group("elevadores"):
+		if not e.is_in_group("elevador_abismo") and e.has_method("get_save_data"):
+			ligacoes[String(e.name)] = e.get_save_data()
+	data["ligacoes"] = ligacoes
 	# Bloco 31b: canteiros de obras encomendadas (taverna, laboratório, campo...)
 	var canteiros := []
 	for c in tree.get_nodes_in_group("canteiros"):
@@ -483,7 +538,7 @@ func _collect() -> Dictionary:
 	data["layout"] = _collect_layout(tree)
 	var cam: Node = _game.get_node_or_null("Camera2D")
 	if cam:
-		data["camera"] = {"position": SaveUtil.vec2_to_array(cam.get_screen_center_position()), "zoom": cam.zoom.x}
+		data["camera"] = {"position": SaveUtil.vec2_to_array(cam.ground_center() if cam.has_method("ground_center") else cam.get_screen_center_position()), "zoom": cam.zoom.x}  # Prompt 28: sempre o ponto do chão
 	data["summary"] = _summary()
 	return data
 
@@ -533,6 +588,10 @@ func apply_pending(main: Node) -> void:
 	_apply_single("research", SaveUtil.dict(data, "research"))  # recria o laboratório
 	_apply_single("sun", SaveUtil.dict(data, "sun"))  # ondas, vitória e o gerador do escudo
 	_apply_single("equipment", SaveUtil.dict(data, "equipment"))  # Bloco 42: vestiário e fila
+	_apply_single("fundo", SaveUtil.dict(data, "fundo"))  # Bloco 70: ventiladores (save antigo: nenhum)
+	_apply_single("calendario", SaveUtil.dict(data, "calendario"))  # Bloco 88: refaz a igreja (antes dos ipezinhos)
+	_apply_single("caminhos", SaveUtil.dict(data, "caminhos"))  # Bloco 89 (save antigo: sem caminhos)
+	_apply_single("decoracoes_mgr", SaveUtil.dict(data, "decoracoes"))  # Bloco 90 (save antigo: sem decoração)
 	for c in get_tree().get_nodes_in_group("canteiros"):  # (troca pelos do save)
 		c.remove_from_group("canteiros")
 		c.remove_from_group("obras")
@@ -554,6 +613,10 @@ func apply_pending(main: Node) -> void:
 	_apply_single("oficina", SaveUtil.dict(data, "oficina"))
 	_apply_single("elevador", SaveUtil.dict(data, "elevador"))  # antes das jazidas (fundo tranca)
 	_apply_single("elevador_abismo", SaveUtil.dict(data, "abismo"))
+	var lig := SaveUtil.dict(data, "ligacoes")  # Bloco 71 (save antigo: fechadas)
+	for e in get_tree().get_nodes_in_group("elevadores"):
+		if lig.has(String(e.name)) and typeof(lig[String(e.name)]) == TYPE_DICTIONARY:
+			e.load_save_data(lig[String(e.name)])
 	_apply_group("minerios", SaveUtil.dict(data, "minerios"))
 	_apply_group("comedouros", SaveUtil.dict(data, "comedouros"))
 	_apply_group("coleta_comida", SaveUtil.dict(data, "coleta_comida"))
@@ -568,13 +631,22 @@ func apply_pending(main: Node) -> void:
 	var shaft := get_tree().get_first_node_in_group("elevador")
 	if shaft:
 		shaft.sync_state()  # escavadeira pronta => descida aberta (save antigo sem "elevador")
+	_apply_single("work_areas", SaveUtil.dict(data, "areas_trabalho"))  # Bloco 77: antes dos ipezinhos
 	if data.has("workers") and typeof(data.workers) == TYPE_ARRAY:
 		_apply_workers(main, data.workers)
+	# Prompt 29: save de antes do mapa novo — o que caiu em penhasco, escada, paliçada ou paredão
+	# vai pro lugar válido mais perto (fica anotado em environment.migrated)
+	var map_env := get_tree().get_first_node_in_group("environment")
+	if map_env and map_env.has_method("migrate_positions") and map_env.migrate_positions() > 0:
+		map_env.rebuild_navigation()
 
 	var cam_data := SaveUtil.dict(data, "camera")
 	var cam: Node = main.get_node_or_null("Camera2D")
 	if cam and not cam_data.is_empty():
-		cam.focus_on(SaveUtil.vec2(cam_data, "position", cam.global_position))
+		var foco := SaveUtil.vec2(cam_data, "position", cam.global_position)
+		if map_env and map_env.has_method("posicao_nova"):
+			foco = map_env.posicao_nova(foco)  # Bloco 75: câmera salva num andar antigo -> a faixa
+		cam.focus_on(foco)
 		var z := clampf(SaveUtil.num(cam_data, "zoom", cam.zoom.x), cam.zoom_min, cam.zoom_max)
 		if cam.has_method("set_target_zoom"):
 			cam.set_target_zoom(z)  # Bloco 48: assenta na parada nítida mais perto
@@ -600,7 +672,7 @@ func _collect_layout(tree: SceneTree) -> Dictionary:
 		if not casa.placed_by_player:
 			scene_casas.append(String(casa.name))
 	return {"hub": SaveUtil.vec2_to_array(hub.global_position) if hub else [], "armazens": arms,
-		"comedouros": coms, "scene_casas": scene_casas}
+		"comedouros": coms, "scene_casas": scene_casas, "mapa": 74}  # Bloco 74: o mapa da maquete v3
 
 
 ## Save sem "layout" (antigo): não mexe em nada — fica o layout da cena.
@@ -622,7 +694,14 @@ func _apply_layout(layout: Dictionary) -> void:
 		c.queue_free()
 	hub.global_position = SaveUtil.vec2(layout, "hub", hub.global_position)
 	var arms := SaveUtil.dict(layout, "armazens")
+	# Bloco 74: no mapa da maquete v3 o armazém da cena é o da mina (na frente da boca, o vagonete
+	# descarrega nele); save de antes desse mapa: ele fica no lugar novo (os construídos depois, não)
+	var env74 := get_tree().get_first_node_in_group("environment")
+	var mapa_novo: bool = env74 != null and env74.has_method("vertical_palisade") and env74.vertical_palisade()
+	var save_antigo := SaveUtil.integer(layout, "mapa", 0) < 74
 	for a in get_tree().get_nodes_in_group("armazens"):
+		if mapa_novo and save_antigo and a.owner != null:
+			continue
 		a.global_position = SaveUtil.vec2(arms, String(a.name), a.global_position)
 	for cd in SaveUtil.array(layout, "comedouros"):
 		if typeof(cd) != TYPE_DICTIONARY:

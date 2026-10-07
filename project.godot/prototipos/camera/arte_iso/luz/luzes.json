@@ -1,0 +1,22 @@
+{
+ "_obs": "Prompt 19: ponto de luz e janelas por desenho (px do quadro do estado). 'ambar' = acha sozinho o vidro âmbar das janelas (janelas_util.vidro_ambar); 'janelas' = retângulos de janela de vidro ESCURO marcados à mão (acende o vidro: os pixels mais escuros que a mediana do retângulo); 'pontos' = luz por tipo (texturas em assets/game/iso/luz/). Sem 'pontos', a luz vai pro centro das janelas.",
+ "casa/pronto_0": {"ambar": true},
+ "casa/pronto_1": {"ambar": true},
+ "casa/pronto_2": {"janelas": [[65, 103, 77, 121], [172, 170, 187, 196]], "pontos": [{"tipo": "janela", "xy": [177, 185]}, {"tipo": "lampiao", "xy": [103, 207]}]},
+ "casa/pronto_3": {"ambar": true},
+ "taverna/pronto": {"ambar": true},
+ "taverna/nivel_2": {"ambar": true},
+ "oficina/pronto": {"janelas": [[70, 105, 87, 137]], "pontos": [{"tipo": "forja", "xy": [108, 205]}]},
+ "arsenal/pronto": {"pontos": [{"tipo": "forja", "xy": [225, 205]}]},
+ "armazem/pronto": {"pontos": [{"tipo": "lampiao", "xy": [80, 190]}]},
+ "enfermaria/pronto": {"pontos": [{"tipo": "janela", "xy": [67, 175]}]},
+ "enfermaria/nivel_2": {"pontos": [{"tipo": "janela", "xy": [67, 250]}]},
+ "laboratorio/pronto": {"janelas": [[58, 117, 70, 147], [82, 127, 97, 157], [112, 140, 127, 177], [162, 142, 175, 177], [200, 123, 210, 150], [80, 33, 117, 57]]},
+ "centro_1/pronto": {"pontos": [{"tipo": "fogueira", "xy": [98, 171]}]},
+ "centro_2/pronto": {"pontos": [{"tipo": "lampiao", "xy": [60, 175]}]},
+ "centro_3/pronto": {"pontos": [{"tipo": "lampiao", "xy": [167, 195]}, {"tipo": "lampiao", "xy": [207, 178]}]},
+ "centro_4/pronto": {"ambar": true, "janelas": [[170, 240, 190, 262], [205, 240, 225, 262], [115, 312, 130, 337]], "pontos": [{"tipo": "janela", "xy": [160, 280]}, {"tipo": "lampiao", "xy": [102, 86]}]},
+ "centro_5/pronto": {"janelas": [[80, 265, 115, 305], [220, 270, 235, 295], [295, 270, 310, 295]]},
+ "escavadeira/pronto": {"pontos": [{"tipo": "cabine", "xy": [65, 283]}, {"tipo": "reator", "xy": [95, 400]}, {"tipo": "giroflex", "xy": [65, 250]}]},
+ "escudo/etapa_4": {"pontos": [{"tipo": "reator", "xy": [155, 230]}]}
+}

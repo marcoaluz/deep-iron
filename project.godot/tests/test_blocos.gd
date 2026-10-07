@@ -192,3 +192,211 @@ func test_b47_varios_predios() -> void:
 
 func test_b48_janela_zoom() -> void:
 	run_bloco("b48_janela_zoom.gd")
+
+
+func test_p28_iso() -> void:
+	run_bloco("p28_iso.gd")
+
+
+func test_p28_save() -> void:
+	run_bloco("p28_save.gd")
+
+
+func test_p29_mapa() -> void:
+	run_bloco("p29_mapa.gd")
+
+
+func test_p29_predios() -> void:
+	run_bloco("p29_predios.gd")
+
+
+func test_p29_bonecos() -> void:
+	run_bloco("p29_bonecos.gd")
+
+
+func test_p29_natureza() -> void:
+	run_bloco("p29_natureza.gd")
+
+
+func test_p19_luz() -> void:
+	run_bloco("p19_luz.gd")
+
+
+func test_p17_criaturas() -> void:
+	run_bloco("p17_criaturas.gd")
+
+
+func test_p18_efeitos() -> void:
+	run_bloco("p18_efeitos.gd")
+
+
+func test_p20_interface() -> void:
+	run_bloco("p20_interface.gd")
+
+
+func test_p2_pendencias() -> void:
+	run_bloco("p2_pendencias.gd")
+
+
+func test_b51_engenheiro_estresse() -> void:
+	run_bloco("b51_engenheiro_estresse.gd")
+
+
+func test_b52_debug_telemetria() -> void:
+	run_bloco("b52_debug_telemetria.gd")
+
+
+func test_b54_configuracoes() -> void:
+	run_bloco("b54_configuracoes.gd")
+
+
+func test_b55_audio() -> void:
+	run_bloco("b55_audio.gd")
+
+
+func test_b56_casas() -> void:
+	run_bloco("b56_casas.gd")
+
+
+func test_b57_coletor_minerio() -> void:
+	run_bloco("b57_coletor_minerio.gd")
+
+
+func test_b60_dinamite_radio() -> void:
+	run_bloco("b60_dinamite_radio.gd")
+
+
+func test_b61_fauna() -> void:
+	run_bloco("b61_fauna.gd")
+
+
+func test_b62_tiers_chefe() -> void:
+	run_bloco("b62_tiers_chefe.gd")
+
+
+func test_b63_corte_mina() -> void:
+	run_bloco("b63_corte_mina.gd")
+
+
+func test_b64_vagonete() -> void:
+	run_bloco("b64_vagonete.gd")
+
+
+func test_b67_mapa_leste() -> void:
+	run_bloco("b67_mapa_leste.gd")
+
+
+func test_b68_niveis() -> void:
+	run_bloco("b68_niveis.gd")
+
+
+func test_b69_atmosfera() -> void:
+	run_bloco("b69_atmosfera.gd")
+
+
+func test_b70_fundo() -> void:
+	run_bloco("b70_fundo.gd")
+
+
+func test_b71_s4_s5() -> void:
+	run_bloco("b71_s4_s5.gd")
+
+
+func test_b72_coluna() -> void:
+	run_bloco("b72_coluna.gd")
+
+
+func test_b73_andar() -> void:
+	run_bloco("b73_andar.gd")
+
+
+func test_b74_superficie() -> void:
+	run_bloco("b74_superficie.gd")
+
+
+func test_b75_faixas() -> void:
+	run_bloco("b75_faixas.gd")
+
+
+func test_b76_faixas_lotes() -> void:
+	run_bloco("b76_faixas_lotes.gd")
+
+
+func test_b78_marcos() -> void:
+	run_bloco("b78_marcos.gd")
+
+
+func test_b79_ferrovia() -> void:
+	run_bloco("b79_ferrovia.gd")
+
+
+func test_b80_portao_unico_ferrugento() -> void:
+	run_bloco("b80_portao_unico_ferrugento.gd")
+
+
+func test_b81_coletor_ruina() -> void:
+	run_bloco("b81_coletor_ruina.gd")
+
+
+func test_b82_itens_armazem() -> void:
+	run_bloco("b82_itens_armazem.gd")
+
+
+func test_b83_relogio_24h() -> void:
+	run_bloco("b83_relogio_24h.gd")
+
+
+func test_b84_agenda() -> void:
+	run_bloco("b84_agenda.gd")
+
+
+func test_b85_hora_social() -> void:
+	run_bloco("b85_hora_social.gd")
+
+
+func test_b86_fornalha() -> void:
+	run_bloco("b86_fornalha.gd")
+
+
+func test_b87_ferreiro_barras() -> void:
+	run_bloco("b87_ferreiro_barras.gd")
+
+
+func test_b88_padre_igreja() -> void:
+	run_bloco("b88_padre_igreja.gd")
+
+
+func test_b89_caminhos() -> void:
+	run_bloco("b89_caminhos.gd")
+
+
+func test_b90_decoracao() -> void:
+	run_bloco("b90_decoracao.gd")
+
+
+func test_b91_criaturas_pixellab() -> void:
+	run_bloco("b91_criaturas_pixellab.gd")
+
+
+func test_b92_arte_oficios() -> void:
+	run_bloco("b92_arte_oficios.gd")
+
+
+func test_b93_cemiterio() -> void:
+	run_bloco("b93_cemiterio.gd")
+
+
+func test_b94_carpintaria() -> void:
+	run_bloco("b94_carpintaria.gd")
+
+
+func test_b95_layout_v2() -> void:
+	run_bloco("b95_layout_v2.gd")
+
+
+func test_b95b_construir_abas() -> void:
+	run_bloco("b95b_construir_abas.gd")
+
+
+func test_b77_areas() -> void:
+	run_bloco("b77_areas.gd")

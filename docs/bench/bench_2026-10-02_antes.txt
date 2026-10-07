@@ -1,0 +1,28 @@
+Deep Iron — bench_cena (2026-10-02T09:22:34)
+máquina: Intel(R) Core(TM) i3-8100 CPU @ 3.60GHz, 4 núcleos | GPU: Radeon RX 580 Series | 12_0 | janela (1920, 1061), vsync desligado
+
+cenário                                        ms méd   ms p99    FPS  process  physics    nós  draws
+A  início (3 ipezinhos, dia)                     7.81     8.33    128    13.97     0.42   4438    211
+B  vila média (15 ipezinhos, prédios)           12.03    16.67     83    23.60     1.12   5080    294
+C  vila cheia (40) + invasão + chuva + noite    25.82    51.94     39    56.84     2.22   6346    352
+
+Custo no cenário C (quadro médio sem aquilo; base medida antes de cada um):
+  script iso_view.gd                                12.32 ms  (1 nós)
+  script hud.gd                                      5.14 ms  (1 nós)
+  script ipezinho.gd                                 3.35 ms  (40 nós)
+  script weather.gd                                  2.85 ms  (1 nós)
+  script iso_fx.gd                                   2.63 ms  (1 nós)
+  script food_source.gd                              2.10 ms  (1 nós)
+  script comedouro.gd                                0.94 ms  (1 nós)
+  script defense.gd                                  0.80 ms  (1 nós)
+  script environment.gd                              0.62 ms  (1 nós)
+  script hunt_spot.gd                                0.47 ms  (2 nós)
+  script iso_sky.gd                                  0.38 ms  (1 nós)
+  script equipment.gd                                0.37 ms  (1 nós)
+  script mineral_node.gd                             0.36 ms  (27 nós)
+  script campo_treino.gd                             0.35 ms  (1 nós)
+  script enfermaria.gd                               0.23 ms  (1 nós)
+  script economy.gd                                  0.13 ms  (1 nós)
+  script oficina.gd                                  0.13 ms  (1 nós)
+  luzes 2D (PointLight2D)                            0.07 ms  (167 nós)
+  script morale.gd                                   0.06 ms  (1 nós)

@@ -94,14 +94,14 @@ func _process(delta: float) -> bool:
 		check(eq.order("casaco"), "casaco encomendado")
 		check(eco.credits == c0 - eq.coat_credits and arm.leather_stored == 50.0 - eq.coat_leather, "cobrou créditos + couro")
 		check(ofi.obra_pending() and "Casaco" in ofi.obra_title(), "fila da Oficina: %s" % ofi.obra_title())
-		ws()[0].set_job("engenheiro")
+		ws()[0].set_job("ferreiro")  # Bloco 87: a Oficina é do ferreiro
 		Engine.time_scale = 8.0
 		step = 1
 		t_mark = t
 	elif step == 1:
 		if eq.available("casaco") == eq.coat_batch:
 			Engine.time_scale = 1.0
-			check(true, "engenheiro fez %d casacos: no vestiário" % eq.coat_batch)
+			check(true, "ferreiro fez %d casacos: no vestiário" % eq.coat_batch)
 			ws()[0].set_job("ocioso")
 			for w in ws():
 				check(not w.wearing.has("casaco"), "%s sem casaco no verão" % w.display_name) if w == ws()[0] else null
@@ -164,7 +164,7 @@ func _process(delta: float) -> bool:
 		check(eq.order_block_reason("gas").begins_with("precisa pesquisar"), "traje precisa da pesquisa")
 		g("research").done.append("trajes")
 		check(eq.order("gas"), "máscara de gás encomendada (depois da pesquisa)")
-		ws()[0].set_job("engenheiro")
+		ws()[0].set_job("ferreiro")  # Bloco 87
 		ws()[0].auto_mode = true
 		Engine.time_scale = 8.0
 		step = 7

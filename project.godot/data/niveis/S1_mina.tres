@@ -1,0 +1,25 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/nivel_mina.gd" id="1_nivel"]
+
+[resource]
+script = ExtResource("1_nivel")
+id = "S1"
+nome = "S1 — MINA E VILA (pedreira, poeira)"
+profundidade = 1
+area = "mapa"
+perigo = "poeira"
+traje = ""
+pesquisa = ""
+ligacao = ""
+em_breve = false
+minerios = PackedStringArray("ferro", "cobre", "carvao")
+criaturas = PackedStringArray("lumivoro")
+cor_ambiente = Color(1, 0.96, 0.9, 1)
+cor_nevoa = Color(0.6, 0.55, 0.45, 0.05)
+particulas = "poeira"
+faixa = "faixa_mina"
+cor_faixa = Color(0.3, 0.24, 0.18, 1)
+descricao = "A pedreira com a vila e as primeiras galerias. Poeira e desabamento."
+decoracao = [["vagonete_velho", 640, 270], ["trilho_quebrado", 690, 300], ["andaime", 520, 280], ["escada_mao", 545, 255], ["caixas_metal", 670, 370], ["barril", 500, 360], ["tambor_oleo", 520, 380], ["placa_perigo", 610, 250], ["sucata", -270, 385], ["carcaca_maquina", 40, 390], ["pneus", 300, 385], ["palete", 60, 280]]
+mapa_regiao = Rect2(126, 34, 168, 78)

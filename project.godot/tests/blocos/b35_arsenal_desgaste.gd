@@ -117,9 +117,9 @@ func _process(delta: float) -> bool:
 			check(false, "Arsenal não ficou pronto")
 			step = 99
 	elif step == 3 and t - t_mark > 4.0:
-		check(def.forge_progress() == 0.0, "sem engenheiro a forja não anda (%d%%)" % roundi(def.forge_progress() * 100))
+		check(def.forge_progress() == 0.0, "sem ferreiro a forja não anda (%d%%)" % roundi(def.forge_progress() * 100))
 		print("  arsenal: ", def.arsenal()._label.text.replace("\n", " | "))
-		eng().set_job("engenheiro")
+		eng().set_job("ferreiro")  # Bloco 87: a forja é do ferreiro (o engenheiro só constrói)
 		Engine.time_scale = 8.0
 		step = 4
 		t_mark = t

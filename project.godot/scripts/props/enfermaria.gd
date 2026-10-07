@@ -16,6 +16,7 @@ signal patient_died(worker_name: String, cause: String)
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const GRAVE := preload("res://assets/game/grave.png")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 @export_group("Leitos e cura")
 @export var base_beds: int = 2
@@ -145,7 +146,7 @@ func _nearest_ward(worker: Node2D, wards: Array) -> Node:
 # ------------------------------------------------------------ médico (Bloco 30)
 ## Onde o médico entra (a porta, na frente da fachada).
 func doctor_spot() -> Vector2:
-	return global_position + Vector2(0, 26)
+	return IsoArt.front(self, Vector2(0, 26))
 
 
 func add_doctor(worker: Node) -> void:
@@ -226,7 +227,9 @@ func record_death(worker: Node2D) -> void:
 		"position": SaveUtil.vec2_to_array(pos),
 	}
 	memorial.append(entry)
-	_spawn_grave(pos, entry.name)
+	var cal := get_tree().get_first_node_in_group("calendario")
+	if not (cal and cal.has_method("tem_cemiterio") and cal.tem_cemiterio()):
+		_spawn_grave(pos, entry.name)  # Bloco 93: com cemitério, o padre leva o corpo e enterra lá
 	patient_died.emit(entry.name, entry.cause)
 
 
@@ -276,7 +279,7 @@ func _spawn_grave(pos: Vector2, who: String) -> void:
 	tag.scale = Vector2(0.5, 0.5)
 	tag.position = Vector2(-15, -GRAVE.get_height() - 8)
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	tag.add_theme_font_size_override("font_size", 10)
+	tag.add_theme_font_size_override("font_size", Tipo.MAPA)
 	tag.add_theme_color_override("font_color", Color(0.85, 0.82, 0.75, 0.8))
 	tag.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
 	tag.add_theme_constant_override("outline_size", 4)

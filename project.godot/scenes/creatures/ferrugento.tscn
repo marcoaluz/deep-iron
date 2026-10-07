@@ -1,9 +1,10 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/creatures/creature.gd" id="1_cr"]
-[ext_resource type="Texture2D" path="res://assets/game/ferrugento.png" id="2_sprite"]
+[ext_resource type="Texture2D" path="res://assets/game/ferrugento_robo.png" id="2_sprite"]
 [ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="3_light"]
 [ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="4_shadow"]
+[ext_resource type="Texture2D" path="res://assets/game/ore_chunk.png" id="5_carga"]
 
 [node name="Ferrugento" type="Node2D"]
 script = ExtResource("1_cr")
@@ -13,24 +14,35 @@ speed = 44.0
 damage = 7.0
 attack_interval = 1.4
 grave_chance = 0.4
+visual_textura = ExtResource("2_sprite")
+visual_quadro = Vector2i(90, 87)
+visual_anims = PackedStringArray("parado", "caminhada", "atacar", "dano", "morrer")
+visual_quadros = PackedInt32Array(4, 6, 6, 4, 6)
+visual_fps = 10.0
+visual_passada = 40.0
+visual_escala = 0.6667
+visual_pe = 6.0
+visual_carga = ExtResource("5_carga")
+visual_carga_pos = Vector2(-11, -30)
 
 [node name="Shadow" type="Sprite2D" parent="."]
 z_index = -4
-scale = Vector2(0.9, 0.6)
+scale = Vector2(0.55, 0.4)
 texture = ExtResource("4_shadow")
 
 [node name="Visual" type="Sprite2D" parent="."]
-scale = Vector2(2, 2)
 texture = ExtResource("2_sprite")
-hframes = 2
-offset = Vector2(0, -8)
+region_enabled = true
+scale = Vector2(0.6667, 0.6667)
+region_rect = Rect2(0, 0, 90, 87)
+offset = Vector2(0, -37.5)
 
 [node name="Light" type="PointLight2D" parent="."]
-position = Vector2(0, -16)
-color = Color(1, 0.3, 0.2, 1)
-energy = 0.5
+position = Vector2(6, -40)
+color = Color(1, 0.25, 0.15, 1)
+energy = 0.45
 texture = ExtResource("3_light")
-texture_scale = 0.3
+texture_scale = 0.2
 
 [node name="Agent" type="NavigationAgent2D" parent="."]
 path_desired_distance = 6.0

@@ -6,14 +6,18 @@ extends Node2D
 ## (interface de obra, ver obra_site.gd) e, quando termina, o sistema dono ergue o
 ## prédio de verdade (finish_build) e o canteiro some. Nenhum prédio precisou mudar.
 ##
-## Visual: as estacas do lote no chão + o "fantasma" do prédio, que vai ficando mais
-## nítido conforme a obra avança, barrinha de progresso e poeira enquanto trabalham.
+## Visual: as estacas do lote no chão + o prédio em OBRA POR ESTÁGIOS (Prompt 28:
+## fundação 0–33%, paredes 33–66%, prédio cru 66–100%; ver obra_estagio.gd), barrinha de
+## progresso e poeira enquanto trabalham.
 ## Vai pro save (SaveManager, lista "canteiros").
 
+const IsoArt := preload("res://scripts/iso/iso_art.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
+const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const SELF := "res://scripts/props/canteiro.gd"
 const LOT_TEXTURE := preload("res://assets/game/casa.png")  # quadro 2 = lote com estacas
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 ## kind -> [título, grupo do sistema dono, textura do prédio ("" = ampliação), hframes]
 const KINDS := {
 	"taverna": ["Taverna", "morale", "res://assets/game/taverna.png", 2],
@@ -21,11 +25,20 @@ const KINDS := {
 	"laboratorio": ["Laboratório", "research", "res://assets/game/laboratorio.png", 2],
 	"campo": ["Campo de treino", "defense", "res://assets/game/campo_treino.png", 1],
 	"arsenal": ["Arsenal", "defense", "res://assets/game/arsenal.png", 4],  # Bloco 35
-	"comedouro": ["Comedouro", "village_hub", "res://assets/game/comedouro.png", 3],  # Bloco 37
+	"comedouro": ["Cozinha", "village_hub", "res://assets/game/comedouro.png", 3],  # Bloco 37
 	"parque": ["Parque", "morale", "res://assets/game/parque.png", 1],  # Bloco 41
 	"vestiario": ["Vestiário", "equipment", "res://assets/game/vestiario.png", 1],  # Bloco 44
 	"coletor": ["Coletor de madeira", "village_hub", "res://assets/game/coletor_madeira.png", 2],  # Bloco 45
+	"coletor_minerio": ["Coletor de minério", "village_hub", "res://assets/game/coletor_minerio.png", 2],  # Bloco 57
+	"oficina": ["Oficina", "village_hub", "res://assets/game/oficina.png", 2],  # Bloco 58
+	"fornalha": ["Fornalha", "village_hub", "res://assets/game/fornalha.png", 2],  # Bloco 86
+	"carpintaria": ["Carpintaria", "village_hub", "res://assets/game/carpintaria.png", 2],  # Bloco 94
+	"igreja": ["Igreja", "village_hub", "res://assets/game/igreja.png", 1],  # Bloco 88
+	"vagonete": ["Trilho e vagonete", "village_hub", "res://assets/game/iso/props/vagonete_cheio_SE.png", 1],  # Bloco 64
+	"ferrovia": ["Ferrovia de carga", "village_hub", "res://assets/game/iso/props/vagonete_cheio_SE.png", 1],  # Bloco 79
+	"desbravar": ["Desbravar o leste", "village_hub", "", 1],  # Bloco 67
 	"enfermaria": ["Enfermaria", "village_hub", "res://assets/game/enfermaria.png", 2],  # Bloco 47 (extra)
+	"ventilador": ["Ventilador", "fundo", "res://assets/game/ventilador.png", 1],  # Bloco 70 (nível 2)
 }
 
 var kind: String = ""
@@ -116,7 +129,7 @@ func _ready() -> void:
 	_dust.color = Color(0.75, 0.66, 0.55, 0.55)
 	add_child(_dust)
 	_label = Label.new()
-	_label.add_theme_font_size_override("font_size", 12)
+	_label.add_theme_font_size_override("font_size", Tipo.MAPA)
 	_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_label.add_theme_constant_override("outline_size", 4)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -143,8 +156,8 @@ func _refresh() -> void:
 	var p := obra_progress()
 	var working := _obra.has_engineer()
 	if _ghost:
-		# o prédio "aparece" conforme a obra anda
-		_ghost.modulate = ObraSite.ghost_color(p)
+		# Prompt 28: o prédio sobe por estágios conforme a obra anda
+		ObraEstagio.apply(_ghost, p)
 	_dust.emitting = working
 	_label.text = "obra: %s\n%s" % [obra_title(), _obra.status(p)]
 	_label.modulate = Color(1.0, 0.8, 0.5) if working else Color(1.0, 0.62, 0.3)
@@ -161,6 +174,10 @@ func _draw() -> void:
 func get_obstacle_outline() -> PackedVector2Array:
 	if _ghost == null:
 		return PackedVector2Array()
+	var art := IsoArt.base_rect(self)
+	if art.has_area():
+		return IsoArt.outline(art)  # Prompt 29: a pegada do desenho novo
+
 	var w := _ghost.texture.get_width() / float(_ghost.hframes) * 2.0 * 0.8
 	var c := global_position + Vector2(0, -8)
 	return PackedVector2Array([c + Vector2(-w * 0.5, -10), c + Vector2(w * 0.5, -10), c + Vector2(w * 0.5, 8), c + Vector2(-w * 0.5, 8)])
@@ -180,7 +197,7 @@ func obra_progress() -> float:
 
 
 func obra_position(worker: Node) -> Vector2:
-	return global_position + Vector2(0, 26) + _obra.offset_for(worker)
+	return IsoArt.front(self, Vector2(0, 26)) + _obra.offset_for(worker)
 
 
 func obra_work(seconds: float) -> void:

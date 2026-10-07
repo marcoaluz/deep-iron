@@ -65,6 +65,11 @@ const GameOver := preload("res://scripts/ui/game_over.gd")
 ## Segundos pra um luto de grief_per_death sumir.
 @export var grief_time: float = 300.0
 
+@export_group("Funeral (Bloco 93)")
+## Ânimo a mais pra vila toda depois de um funeral digno (pesquisa "Ritos fúnebres"), e por quantos segundos.
+@export var funeral_bonus: float = 5.0
+@export var funeral_bonus_tempo: float = 240.0
+
 @export_group("Vila")
 ## Felicidade no alvo de todos por estágio da vila acima do 1.
 @export var stage_bonus: float = 3.0
@@ -102,6 +107,7 @@ var on_strike := false
 var strike_left := 0.0
 var grief := 0.0
 var festa_left := 0.0
+var funeral_left := 0.0  # Bloco 93: o "funeral digno" ainda vale por estes segundos
 var last_festa_day := -1
 var is_expelled := false
 ## Segundos seguidos com a média abaixo de strike_below (contagem pra greve).
@@ -165,6 +171,8 @@ func village_factors() -> Array:
 		f.append(["tem taverna", taverna_bonus[clampi(best_lvl, 1, taverna_bonus.size()) - 1]])
 	if festa_left > 0.0:
 		f.append(["festa recente", festa_bonus])
+	if funeral_left > 0.0:
+		f.append(["funeral digno", funeral_bonus])
 	var dig := get_tree().get_first_node_in_group("escavadeira")
 	if dig and dig.has_method("noise_penalty") and dig.noise_penalty() > 0.0:
 		f.append(["barulho do motor a diesel", -dig.noise_penalty()])
@@ -232,6 +240,7 @@ func _process(delta: float) -> void:
 	if grief > 0.0:
 		grief = maxf(grief - grief_per_death / grief_time * delta, 0.0)
 	festa_left = maxf(festa_left - delta, 0.0)
+	funeral_left = maxf(funeral_left - delta, 0.0)
 	var avg := average()
 	if avg < 0.0:
 		return
@@ -345,7 +354,9 @@ func festa_block_reason() -> String:
 	return "falta " + " + ".join(parts) if not parts.is_empty() else ""
 
 
-func throw_festa() -> bool:
+## Bloco 88: a festa é o FESTIVAL do domingo à tarde (calendario.gd chama). mult: o festival do dia de festa
+## da estação anima mais; titulo: o nome dele.
+func throw_festa(mult: float = 1.0, titulo: String = "") -> bool:
 	if festa_block_reason() != "":
 		Audio.error()
 		return false
@@ -364,12 +375,13 @@ func throw_festa() -> bool:
 	last_festa_day = dn.day if dn else 1
 	festa_left = festa_duration
 	for w in workers():
-		w.cheer(festa_boost)
+		w.cheer(festa_boost * mult)
 	var hud := _hud()
 	if hud:
-		hud.show_banner("FESTA NA VILA!", "+%d de ânimo pra todo mundo agora, e mais alegria pelos próximos %d minutos." % [
-			roundi(festa_boost), roundi(festa_duration / 60.0)])
-	Audio.fanfare()
+		hud.show_banner(("%s!" % titulo.to_upper()) if titulo != "" and titulo != "Festival" else "FESTIVAL NA VILA!",
+			"+%d de ânimo pra todo mundo agora, todos na praça, e mais alegria pelos próximos %d minutos." % [
+			roundi(festa_boost * mult), roundi(festa_duration / 60.0)])
+	Audio.party()  # Bloco 55
 	return true
 
 
@@ -588,6 +600,7 @@ func get_save_data() -> Dictionary:
 		"below_time": below_time,
 		"grief": grief,
 		"festa_left": festa_left,
+		"funeral_left": funeral_left,
 		"last_festa_day": last_festa_day,
 	}
 	d["tavernas"] = tavernas().map(func(t): return t.get_save_data())  # Bloco 47 (antes: "taverna", uma só)
@@ -604,6 +617,7 @@ func load_save_data(d: Dictionary) -> void:
 	below_time = clampf(SaveUtil.num(d, "below_time", 0.0), 0.0, strike_grace)
 	grief = clampf(SaveUtil.num(d, "grief", 0.0), 0.0, grief_max)
 	festa_left = clampf(SaveUtil.num(d, "festa_left", 0.0), 0.0, festa_duration)
+	funeral_left = clampf(SaveUtil.num(d, "funeral_left", 0.0), 0.0, funeral_bonus_tempo)
 	last_festa_day = SaveUtil.integer(d, "last_festa_day", -1)
 	_last_warned = false
 	if tavernas().is_empty():

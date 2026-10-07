@@ -1,0 +1,16 @@
+01_primavera_vila: 743 pares sobrepostos, 0 na ordem errada
+02_primavera_floresta: 745 pares sobrepostos, 0 na ordem errada
+03_primavera_pedreira: 748 pares sobrepostos, 0 na ordem errada
+04_obras: 765 pares sobrepostos, 0 na ordem errada
+05_verao_vila: 767 pares sobrepostos, 0 na ordem errada
+06_outono_floresta: 770 pares sobrepostos, 0 na ordem errada
+07_inverno_vila: 772 pares sobrepostos, 0 na ordem errada
+08_inverno_bonecos: 773 pares sobrepostos, 0 na ordem errada
+09_noite_vila: 766 pares sobrepostos, 0 na ordem errada
+10_noite_pedreira: 762 pares sobrepostos, 0 na ordem errada
+11_onda_solar: 759 pares sobrepostos, 0 na ordem errada
+12_invasao_portao: 764 pares sobrepostos, 0 na ordem errada
+13_invasao_poco: 762 pares sobrepostos, 0 na ordem errada
+14_nivel2: 761 pares sobrepostos, 0 na ordem errada
+15_abismo: 762 pares sobrepostos, 0 na ordem errada
+16_mapa_longe: 764 pares sobrepostos, 0 na ordem errada

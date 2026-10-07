@@ -2,6 +2,7 @@ extends PanelContainer
 ## Janela do Centro da Vila: progresso, expandir a vila e comprar melhorias.
 ## Criada pelo HUD (setup) e montada por código; usa os helpers de estilo do HUD.
 ## Abre clicando no prédio, pela tecla U ou pelo botão no painel do HUD.
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _hub: Node
@@ -45,7 +46,7 @@ func _build() -> void:
 
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("CENTRO DA VILA", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("CENTRO DA VILA", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.add_theme_color_override("font_outline_color", Color(0.25, 0.12, 0.03))
 	title.add_theme_constant_override("outline_size", 4)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -57,18 +58,18 @@ func _build() -> void:
 		visible = false)
 	header.add_child(close)
 
-	_stage_label = _hud._label("", 15, _hud.COLOR_TEXT)
+	_stage_label = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	vbox.add_child(_stage_label)
-	_stats_label = _hud._label("", 13, _hud.COLOR_DIM)
+	_stats_label = _hud._label("", Tipo.CORPO, _hud.COLOR_DIM)
 	vbox.add_child(_stats_label)
 
 	vbox.add_child(HSeparator.new())
-	_next_title = _hud._label("", 12, _hud.COLOR_DIM)
+	_next_title = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	vbox.add_child(_next_title)
 	_next_bar = _hud._bar(_hud.COLOR_TITLE)
 	_next_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_child(_next_bar)
-	_next_label = _hud._label("", 12, _hud.COLOR_DIM)
+	_next_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	_next_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_next_label)
 	_level_button = _hud._button("")
@@ -80,8 +81,8 @@ func _build() -> void:
 
 	# Bloco 37: construções da vila (casas iniciais da fundação e comedouro)
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("CONSTRUIR (o engenheiro ergue)", 12, _hud.COLOR_DIM))
-	_radius_label = _hud._label("", 12, _hud.COLOR_TEXT)
+	vbox.add_child(_hud._label("CONSTRUIR (o engenheiro ergue)", Tipo.DETALHE, _hud.COLOR_DIM))
+	_radius_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	_radius_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_radius_label)
 	_starter_button = _hud._button("")
@@ -112,10 +113,10 @@ func _build() -> void:
 	vbox.add_child(HSeparator.new())
 	var up_header := HBoxContainer.new()
 	vbox.add_child(up_header)
-	var up_title: Label = _hud._label("MELHORIAS", 12, _hud.COLOR_DIM)
+	var up_title: Label = _hud._label("MELHORIAS", Tipo.DETALHE, _hud.COLOR_DIM)
 	up_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	up_header.add_child(up_title)
-	up_header.add_child(_hud._label("cada uma vai até o nível da vila", 11, _hud.COLOR_DIM))
+	up_header.add_child(_hud._label("cada uma vai até o nível da vila", Tipo.DETALHE, _hud.COLOR_DIM))
 
 	for id in _hub.UPGRADE_IDS:
 		_rows[id] = _make_upgrade_row(vbox, id)
@@ -131,20 +132,20 @@ func _make_upgrade_row(parent: VBoxContainer, id: String) -> Dictionary:
 
 	var top := HBoxContainer.new()
 	v.add_child(top)
-	var name_label: Label = _hud._label(_hub.UPGRADE_NAMES[id], 14, _hud.COLOR_TEXT)
+	var name_label: Label = _hud._label(_hub.UPGRADE_NAMES[id], Tipo.TITULO, _hud.COLOR_TEXT)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_label)
-	var level_label: Label = _hud._label("", 12, _hud.COLOR_TITLE)
+	var level_label: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TITLE)
 	top.add_child(level_label)
 
-	var desc: Label = _hud._label(_hub.upgrade_description(id), 12, _hud.COLOR_DIM)
+	var desc: Label = _hud._label(_hub.upgrade_description(id), Tipo.DETALHE, _hud.COLOR_DIM)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(desc)
 
 	var bottom := HBoxContainer.new()
 	bottom.add_theme_constant_override("separation", 6)
 	v.add_child(bottom)
-	var effect: Label = _hud._label("", 12, _hud.COLOR_TEXT)
+	var effect: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	effect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom.add_child(effect)
 	var button: Button = _hud._button("")
@@ -207,12 +208,13 @@ func refresh() -> void:
 		if sr == "" else "Casa inicial: " + sr
 	_starter_button.disabled = sr != ""
 	var cr: String = _hub.comedouro_block_reason()
-	_comedouro_button.text = ("Comedouro — escolher lugar  (%s)" % _hub.comedouro_cost_text()) if cr == "" else "Comedouro: " + cr
+	_comedouro_button.text = ("Cozinha — escolher lugar  (%s)" % _hub.comedouro_cost_text()) if cr == "" else "Cozinha: " + cr
 	_comedouro_button.disabled = cr != ""
 	var colr: String = _hub.coletor_block_reason()
-	_coletor_button.text = ("Coletor de madeira — escolher lugar na clareira  (%s)" % _hub.coletor_cost_text()) if colr == "" \
-		else "Coletor de madeira: " + colr
+	_coletor_button.text = ("Outro coletor de madeira — escolher lugar na clareira  (%s)" % _hub.coletor_cost_text()) if colr == "" \
+		else "Outro coletor de madeira: " + colr
 	_coletor_button.disabled = colr != ""
+	_coletor_button.visible = _hub.coletor_restaurado()  # Bloco 81: o primeiro é a ruína da floresta
 	var why: String = _economy.recruit_block_reason() if _economy else "sem economia"
 	_recruit_button.text = ("Recrutar ipezinho  (%d cr, %d cama%s livre%s)" % [_economy.recruit_cost(), _economy.free_beds(),
 		"s" if _economy.free_beds() != 1 else "", "s" if _economy.free_beds() != 1 else ""]) if why == "" else "Recrutar: " + why

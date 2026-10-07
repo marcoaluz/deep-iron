@@ -1,0 +1,110 @@
+{
+ "A1_lumivoro_v1": {
+  "job": "4c75b716-5807-46cf-b445-ef905a79f2f5",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\A1_lumivoro_v1.png",
+  "ok": true
+ },
+ "A1_lumivoro_v2": {
+  "job": "32446c57-3897-4438-9fb9-cc4f4c8a8aa7",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\A1_lumivoro_v2.png",
+  "ok": true
+ },
+ "A2_lumivoro_bruto_v1": {
+  "job": "677dbe2f-93b0-409e-978a-096626c7c2cc",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\A2_lumivoro_bruto_v1.png",
+  "ok": true
+ },
+ "A2_lumivoro_bruto_v2": {
+  "job": "0ea9b185-4198-45b9-9b0f-f80254735e04",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\A2_lumivoro_bruto_v2.png",
+  "ok": true
+ },
+ "A3_lumivoro_matriarca_v1": {
+  "job": "7e15e01e-4c18-4bb1-98b6-50cd915456e2",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\A3_lumivoro_matriarca_v1.png",
+  "ok": true
+ },
+ "A3_lumivoro_matriarca_v2": {
+  "job": "c6b1609d-dbcf-429e-8a0d-057ddfa999b0",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\A3_lumivoro_matriarca_v2.png",
+  "ok": true
+ },
+ "B1_ferrugento_v1": {
+  "job": "d0f9c733-2ca4-49ef-a45f-686ea79ad274",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\B1_ferrugento_v1.png",
+  "ok": true
+ },
+ "B1_ferrugento_v2": {
+  "job": "19a1c47a-1920-4c59-a9b8-9d55e8494ebb",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\B1_ferrugento_v2.png",
+  "ok": true
+ },
+ "B2_ferrugento_carregador_v1": {
+  "job": "45fd5f7c-6233-45a9-a924-10686ff4944e",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\B2_ferrugento_carregador_v1.png",
+  "ok": true
+ },
+ "B2_ferrugento_carregador_v2": {
+  "job": "121b0d6e-73f2-4b60-9953-a72fa1e8a283",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\B2_ferrugento_carregador_v2.png",
+  "ok": true
+ },
+ "B3_ferrugento_colosso_v1": {
+  "job": "0137821a-6626-4cae-9d50-5c0a479f6b7b",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\B3_ferrugento_colosso_v1.png",
+  "ok": true
+ },
+ "B3_ferrugento_colosso_v2": {
+  "job": "27d4c52d-b396-43cc-af9d-cb924b4ac229",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\B3_ferrugento_colosso_v2.png",
+  "ok": true
+ },
+ "C1_saqueador_v1": {
+  "job": "338299ab-7945-43e9-9887-87bf5efb00d0",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\C1_saqueador_v1.png",
+  "ok": true
+ },
+ "C1_saqueador_v2": {
+  "job": "4a4f3c7e-c101-4563-9f57-64f74f41a5d5",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\C1_saqueador_v2.png",
+  "ok": true
+ },
+ "C2_saqueador_blindado_v1": {
+  "job": "b562c6b3-f94c-400a-8298-23fdbc5a2d3c",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\C2_saqueador_blindado_v1.png",
+  "ok": true
+ },
+ "C2_saqueador_blindado_v2": {
+  "job": "039f0ddb-8f88-4448-90c8-928b8d917f6b",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\C2_saqueador_blindado_v2.png",
+  "ok": true
+ },
+ "C3_chefe_saqueador_v1": {
+  "job": "57767c7c-9f24-4f7f-bf4a-269c6ca4bfc2",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\C3_chefe_saqueador_v1.png",
+  "ok": true
+ },
+ "C3_chefe_saqueador_v2": {
+  "job": "876d06c2-7302-4e9b-8c6b-9077f1cdf7f8",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/conceito\\C3_chefe_saqueador_v2.png",
+  "ok": true
+ }
+}

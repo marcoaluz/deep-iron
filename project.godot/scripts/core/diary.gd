@@ -14,10 +14,53 @@ const ENTRIES := {
 	},
 	"ferrugentos": {
 		"title": "Ferrugentos",
-		"text": "Máquinas de antes da explosão, cobertas de ferrugem. Passam o dia paradas, "
-			+ "acumulando restos de energia solar, e despertam à noite. Vivem no fundo da mina e "
-			+ "sobem pelo poço desde que abrimos o nível 2. Comem metal: vão direto no armazém. "
-			+ "Ao amanhecer, desligam.",
+		"text": "Robôs pequenos de antes da explosão: um esqueleto de metal comido pela ferrugem, "
+			+ "um crânio e dois olhos vermelhos. Passam o dia parados, acumulando restos de energia "
+			+ "solar, e despertam à noite. Vivem no fundo da mina e saem pela boca do poço do elevador "
+			+ "desde que abrimos o nível 2 — lá não tem muro, só os guardas. Comem metal: vão direto no "
+			+ "armazém. Ao amanhecer, desligam e desmontam.",
+	},
+	"gosmas": {
+		"title": "Gosmas ácidas",
+		"text": "No nível 2 o ácido das poças ganhou vida. As Gosmas sobem pelo poço à noite, "
+			+ "rápidas e moles: o golpe delas corrói o metal das armas e o ácido derrete as "
+			+ "barricadas. No armazém, dissolvem o ferro e o cobre. Às vezes deixam cristal verde.",
+	},
+	"magmantes": {
+		"title": "Magmantes",
+		"text": "Pedra viva do abismo, quente por dentro. Lentos e duros de derrubar, derretem a "
+			+ "barricada e, no armazém, comem o carvão. Quando caem, sobra cristal rubro no meio "
+			+ "da casca.",
+	},
+	"cristais": {
+		"title": "Cristais do fundo",
+		"text": "O cristal verde cresce nas galerias de ácido do nível 2; o rubro, em volta dos "
+			+ "poços de lava do abismo. Os dois valem mais que a prata e a broca da escavadeira "
+			+ "também acha. Pra chegar neles, máscara de gás e traje térmico: as poças queimam.",
+	},
+	"nivel_S4": {
+		"title": "A cachoeira do fundo",
+		"text": "Embaixo do abismo a água achou o caminho: uma cachoeira despenca do teto da caverna "
+			+ "sobre a rocha quente. O vapor não deixa ninguém ouvir nada, mas quem passa pela água "
+			+ "fica molhado e aguenta mais perto da lava. Tem cristal de todas as cores nas paredes.",
+	},
+	"nivel_S5": {
+		"title": "O lago azul",
+		"text": "O fundo de tudo. Um lago parado de água azul, gemas brilhando na beira e casinhas de "
+			+ "pedra vazias — alguém morou aqui antes da explosão, longe do sol. É o lugar mais quieto "
+			+ "que a gente já viu: quem trabalha aqui volta mais calmo.",
+	},
+	"padre": {  # Bloco 88
+		"title": "O padre",
+		"text": "Um padre chegou à vila, de batina gasta e botas de mina. Diz que veio porque soube que "
+			+ "aqui tinha gente cavando no escuro. Reza a missa no domingo, enterra quem se vai e escuta "
+			+ "quem anda zangado — a zanga sai mais leve da igreja.",
+	},
+	"matriarca": {
+		"title": "A Matriarca",
+		"text": "Os Lumívoros têm uma rainha. É duas vezes maior, coberta de cristais roxos, e "
+			+ "aparece uma vez por estação. Ela grita e chama os outros, e o golpe dela come o "
+			+ "metal das armas. Quando cai, os cristais dela são solarita pura.",
 	},
 	"robo": {
 		"title": "O robô antigo",

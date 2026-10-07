@@ -1,0 +1,107 @@
+{
+ "caminhos": {
+  "job": "cad0c032-7c54-4d47-9b37-2508abdb158e",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\caminhos.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "sem_ferramenta": {
+  "job": "eead34e9-8e1a-4f1b-bcd3-6e7e00441ef2",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\sem_ferramenta.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "escola": {
+  "job": "1c208c41-ef05-447f-86c0-5b4350217a63",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\escola.png",
+  "ok": true,
+  "candidatos": 4
+ },
+ "ferrovia": {
+  "job": "069a05b6-be6f-44c3-84f3-1f996d1411f6",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\ferrovia.png",
+  "ok": true,
+  "candidatos": 4
+ },
+ "cam_terra": {
+  "job": "e5f1b55b-042c-4875-8cfe-759fd0e7668f",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\cam_terra.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "cam_cascalho": {
+  "job": "3bd97a86-6ed2-4560-a13f-56339fecee49",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\cam_cascalho.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "cam_pedra": {
+  "job": "928f9900-ac8a-440a-9abd-44c5c1888b3c",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\cam_pedra.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "apagar_caminho": {
+  "job": "d955f9dc-0fd3-427b-bdbc-94b1ed4aa711",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\apagar_caminho.png",
+  "ok": true,
+  "candidatos": 4
+ },
+ "desbravar": {
+  "job": "2aea8260-3dbb-4117-87a9-7524bc8638ff",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\desbravar.png",
+  "ok": true,
+  "candidatos": 4
+ },
+ "trilhas": {
+  "job": "885a2a14-19f0-495c-affc-9db51a40b3f0",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\trilhas.png",
+  "ok": true,
+  "candidatos": 4
+ },
+ "remover_decor": {
+  "job": "0bca96ea-d284-41f0-878a-acdcb2442aeb",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\remover_decor.png",
+  "ok": true,
+  "candidatos": 4
+ },
+ "armazem_cheio": {
+  "job": "3b078d34-86bf-49c3-9103-ee0342632871",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\armazem_cheio.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "caminho_bloqueado": {
+  "job": "d4a9fdaa-4b19-43fa-bef4-9c40bca98c75",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\caminho_bloqueado.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "pessoas": {
+  "job": "a1d8a7ae-cd8e-48f7-b878-79acb8e26af4",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\pessoas.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "missoes": {
+  "job": "461fb066-6b07-4e8d-a9ed-e3f767658bc6",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui95\\_cand\\missoes.png",
+  "ok": true,
+  "candidatos": 64
+ }
+}

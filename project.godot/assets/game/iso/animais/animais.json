@@ -1,0 +1,217 @@
+{
+ "_obs": "Bloco 61: coelho e javali (Prompt 15), andar/fugir/abatido x SE/SO/NO/NE; âncora = pé (centro embaixo do desenho, px do quadro).",
+ "animais": {
+  "coelho": {
+   "anims": {
+    "andar": {
+     "SE": {
+      "n": 6,
+      "quadro": [
+       48,
+       48
+      ],
+      "pe": 40
+     },
+     "SO": {
+      "n": 6,
+      "quadro": [
+       48,
+       48
+      ],
+      "pe": 40
+     },
+     "NO": {
+      "n": 6,
+      "quadro": [
+       48,
+       48
+      ],
+      "pe": 39
+     },
+     "NE": {
+      "n": 6,
+      "quadro": [
+       48,
+       48
+      ],
+      "pe": 39
+     }
+    },
+    "fugir": {
+     "SE": {
+      "n": 6,
+      "quadro": [
+       48,
+       48
+      ],
+      "pe": 40
+     },
+     "SO": {
+      "n": 6,
+      "quadro": [
+       48,
+       48
+      ],
+      "pe": 40
+     },
+     "NO": {
+      "n": 6,
+      "quadro": [
+       48,
+       48
+      ],
+      "pe": 39
+     },
+     "NE": {
+      "n": 6,
+      "quadro": [
+       48,
+       48
+      ],
+      "pe": 39
+     }
+    },
+    "abatido": {
+     "SE": {
+      "n": 4,
+      "quadro": [
+       48,
+       48
+      ],
+      "pe": 40
+     },
+     "SO": {
+      "n": 4,
+      "quadro": [
+       48,
+       48
+      ],
+      "pe": 40
+     },
+     "NO": {
+      "n": 4,
+      "quadro": [
+       48,
+       48
+      ],
+      "pe": 39
+     },
+     "NE": {
+      "n": 4,
+      "quadro": [
+       48,
+       48
+      ],
+      "pe": 39
+     }
+    }
+   }
+  },
+  "javali": {
+   "anims": {
+    "andar": {
+     "SE": {
+      "n": 6,
+      "quadro": [
+       56,
+       56
+      ],
+      "pe": 46
+     },
+     "SO": {
+      "n": 6,
+      "quadro": [
+       56,
+       56
+      ],
+      "pe": 46
+     },
+     "NO": {
+      "n": 6,
+      "quadro": [
+       52,
+       52
+      ],
+      "pe": 44
+     },
+     "NE": {
+      "n": 6,
+      "quadro": [
+       52,
+       52
+      ],
+      "pe": 44
+     }
+    },
+    "fugir": {
+     "SE": {
+      "n": 6,
+      "quadro": [
+       56,
+       56
+      ],
+      "pe": 46
+     },
+     "SO": {
+      "n": 6,
+      "quadro": [
+       56,
+       56
+      ],
+      "pe": 46
+     },
+     "NO": {
+      "n": 6,
+      "quadro": [
+       52,
+       52
+      ],
+      "pe": 44
+     },
+     "NE": {
+      "n": 6,
+      "quadro": [
+       52,
+       52
+      ],
+      "pe": 44
+     }
+    },
+    "abatido": {
+     "SE": {
+      "n": 4,
+      "quadro": [
+       56,
+       56
+      ],
+      "pe": 46
+     },
+     "SO": {
+      "n": 4,
+      "quadro": [
+       56,
+       56
+      ],
+      "pe": 46
+     },
+     "NO": {
+      "n": 4,
+      "quadro": [
+       52,
+       52
+      ],
+      "pe": 44
+     },
+     "NE": {
+      "n": 4,
+      "quadro": [
+       52,
+       52
+      ],
+      "pe": 44
+     }
+    }
+   }
+  }
+ }
+}

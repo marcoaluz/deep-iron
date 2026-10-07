@@ -21,7 +21,8 @@ extends "res://scripts/props/station.gd"
 ##                       nova (4 camas) que o JOGADOR posiciona no mapa (HousePlacer).
 ##                       O custo só é pago quando ele confirma o lugar; Esc cancela.
 ##     Enfermaria:       +1 leito na Enfermaria e -recovery_cut_per_level no tempo de cura (por nível).
-##     Trilhas batidas:  +speed_bonus_per_level na velocidade de caminhada (por nível).
+##     Trilhas batidas:  Bloco 89 — aumenta o BÔNUS DOS CAMINHOS (+trilhas_bonus_por_nivel do bônus por nível);
+##                       não acelera mais todo mundo.
 ##
 ## Bloco 31: comprar uma melhoria (ou uma casa) paga na hora e ENCOMENDA a obra —
 ## ela só anda com um engenheiro trabalhando (melhoria: aqui na frente do Centro;
@@ -39,6 +40,7 @@ extends "res://scripts/props/station.gd"
 ##     de ipezinhos (o limite inicial, 8, já conta com elas — eram as 3 casas prontas da
 ##     cena). Depois delas, casa nova é a melhoria Moradias, como antes.
 ##   - Casa (inicial ou Moradias) só pode ser posicionada até house_radius() do Centro.
+##     (Prompt 29: raio desligado por padrão — casa em qualquer lugar da pedreira.)
 ##     ESCOLHA: o raio cresce a cada ESTÁGIO da vila (Expandir) — Moradias já é a própria
 ##     casa, e "a vila cresceu" é o que o estágio mede. O mapa continua do mesmo tamanho.
 ##     Casas que já existem (saves antigos) não são checadas: a regra é só pra posicionar.
@@ -55,8 +57,10 @@ extends "res://scripts/props/station.gd"
 signal level_changed(level: int)
 signal upgrade_bought(id: String, new_level: int)
 
+const SocialSpot := preload("res://scripts/props/social_spot.gd")  # Bloco 85
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
+const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 const Ores := preload("res://scripts/core/ores.gd")
 const STAGE_NAMES := ["Acampamento", "Vilarejo", "Vila", "Vila Mineira", "Cidade Mineira"]
 const UPGRADE_IDS := ["moradias", "enfermaria", "trilhas"]
@@ -77,10 +81,16 @@ const COMEDOURO_FOOTPRINT := Rect2(-44, -40, 88, 60)
 ## Bloco 45: coletor de madeira (serraria na clareira).
 const COLETOR_SCENE := preload("res://scenes/props/coletor_madeira.tscn")
 const COLETOR_TEXTURE := preload("res://assets/game/coletor_madeira.png")
+## Bloco 57: coletor de minério (broca perto de uma jazida).
+const COLETOR_MIN_SCENE := preload("res://scenes/props/coletor_minerio.tscn")
+const COLETOR_MIN_TEXTURE := preload("res://assets/game/coletor_minerio.png")
+## Bloco 64: ponto de carga do vagonete (trilho até o armazém).
+const VAGONETE_SCENE := preload("res://scenes/props/estacao_vagonete.tscn")
 const COLETOR_FOOTPRINT := Rect2(-52, -78, 104, 90)
 ## Bloco 47: enfermaria extra (a principal vem com a vila).
 const ENFERMARIA_SCENE := preload("res://scenes/props/enfermaria.tscn")
 const ENFERMARIA_TEXTURE := preload("res://assets/game/enfermaria.png")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const ENFERMARIA_FOOTPRINT := Rect2(-40, -64, 80, 84)
 const UPGRADE_NAMES := {
 	"moradias": "Moradias",
@@ -112,8 +122,10 @@ const UPGRADE_NAMES := {
 
 @export_group("Melhoria: Trilhas batidas")
 @export var trilhas_costs: Array[Vector2i] = [Vector2i(150, 25), Vector2i(375, 100), Vector2i(810, 250)]
-## Velocidade extra por nível (0.1 = +10% por nível).
+## (Antes do Bloco 89: velocidade extra pra todo mundo por nível. Não é mais usado; fica pro save/inspector.)
 @export var speed_bonus_per_level: float = 0.1
+## Bloco 89: quanto cada nível de Trilhas aumenta o bônus de velocidade dos CAMINHOS (0.5 = +50% do bônus).
+@export var trilhas_bonus_por_nivel: float = 0.5
 
 @export_group("Obras (Bloco 31)")
 ## Segundos de trabalho de engenheiro pra cada nível de cada melhoria.
@@ -143,6 +155,71 @@ const UPGRADE_NAMES := {
 @export var coletor_credits: int = 250
 @export var coletor_ore: int = 60
 @export var coletor_build_time: float = 40.0
+@export_group("Igreja (Bloco 88)")
+## Construir a igreja (uma por vila): créditos, pedra (ferro) e madeira; segundos de engenheiro.
+@export var igreja_credits: int = 220
+@export var igreja_ore: int = 40
+@export var igreja_wood: int = 80
+@export var igreja_build_time: float = 50.0
+## Estágio mínimo da vila pra construir.
+@export_range(1, 5) var igreja_estagio: int = 2
+@export_group("Cemitério (Bloco 93)")
+## O jogador marca o tamanho: o custo é por VAGA (túmulo) e por TRECHO de cerca (24 px); a obra também.
+@export var cemiterio_credits_base: int = 40
+@export var cemiterio_credits_por_vaga: int = 6
+@export var cemiterio_wood_por_trecho: int = 3
+@export var cemiterio_ore_por_trecho: int = 1
+@export var cemiterio_segundos_base: float = 12.0
+@export var cemiterio_segundos_por_trecho: float = 1.2
+## Tamanho em trechos de cerca (mínimo 3 x 2 sempre; máximo aqui).
+@export var cemiterio_max_trechos: Vector2i = Vector2i(10, 8)
+## Estágio mínimo da vila.
+@export_range(1, 5) var cemiterio_estagio: int = 2
+@export_group("Fornalha (Bloco 86)")
+## Construir a fornalha: SÓ créditos e minério (madeira nenhuma: não trava o começo); segundos de engenheiro.
+@export var fornalha_credits: int = 180
+@export var fornalha_ore: int = 50
+@export var fornalha_build_time: float = 35.0
+## Estágio da vila em que a fornalha libera (2 = Vilarejo).
+@export_range(1, 5) var fornalha_estagio: int = 2
+@export_group("Carpintaria (Bloco 94)")
+## Construir a carpintaria: créditos, ferro e madeira; segundos de engenheiro (obra em etapas).
+@export var carpintaria_credits: int = 220
+@export var carpintaria_ore: int = 40
+@export var carpintaria_wood: int = 90
+@export var carpintaria_build_time: float = 45.0
+## Estágio da vila em que a carpintaria libera (2 = Vilarejo: os pregos vêm do ferreiro, que vem com a fornalha).
+@export_range(1, 5) var carpintaria_estagio: int = 2
+@export_group("Oficina (Bloco 58)")
+@export var oficina_credits: int = 200
+@export var oficina_ore: int = 40
+@export var oficina_wood: int = 60
+@export var oficina_build_time: float = 40.0
+@export_group("Desbravar o leste (Bloco 67)")
+@export var leste_credits: int = 900
+@export var leste_ore: int = 120
+@export var leste_wood: int = 160
+@export var leste_build_time: float = 80.0
+@export var leste_min_stage: int = 2
+@export_group("Trilho e vagonete (Bloco 64)")
+@export var vagonete_credits: int = 260
+@export var vagonete_ore: int = 80
+@export var vagonete_wood: int = 80
+@export var vagonete_build_time: float = 50.0
+@export_group("Ferrovia de carga (Bloco 79)")
+## Custo da estação de cada andar: base + por andar de profundidade (créditos, ferro, madeira, segundos de obra).
+## Bloco 94: o ferro vira barra a partir do estágio da fornalha (Economy.metal) e a estação pede pregos e
+## ferragens (os dormentes e as talas dos trilhos): o ferro baixou pra compensar.
+@export var ferrovia_base := Vector4i(300, 40, 100, 60)
+@export var ferrovia_por_andar := Vector4i(150, 25, 20, 15)
+## Pregos e ferragens da estação: base + por andar de profundidade (x = pregos, y = ferragens).
+@export var ferrovia_pecas_base := Vector2i(18, 0)
+@export var ferrovia_pecas_por_andar := Vector2i(6, 1)
+@export_group("Coletor de minério (Bloco 57)")
+@export var coletor_min_credits: int = 280
+@export var coletor_min_ore: int = 40
+@export var coletor_min_wood: int = 60
+@export var coletor_min_build_time: float = 45.0
 
 @export_group("Enfermaria extra (Bloco 47)")
 ## Custo da 1ª enfermaria extra (a da vila é de graça); as seguintes crescem com
@@ -158,7 +235,9 @@ const UPGRADE_NAMES := {
 ## ...e o raio cresce isso a cada estágio da vila.
 @export var house_radius_per_stage: float = 70.0
 ## false = sem limite (casa em qualquer lugar livre da mina).
-@export var house_radius_enabled: bool = true
+## Prompt 29 (decisão do Marco, 2026-10-01): DESLIGADO — casa em qualquer lugar da pedreira (o
+## lado da vila da paliçada), não precisa ficar perto do Centro. O parque também (usa o mesmo raio).
+@export var house_radius_enabled: bool = false
 
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 var panel_id := "hub"
@@ -186,6 +265,7 @@ var _growing := false
 func _ready() -> void:
 	super()
 	add_to_group("village_hub")
+	add_child(SocialSpot.criar("praca", "Praça", false, 3, 3, Vector2(0, 34)))  # Bloco 85
 	add_to_group("obras")
 	add_to_group("clickable")
 	$WindowLight.add_to_group("cullable_lights")
@@ -219,8 +299,14 @@ func recovery_mult() -> float:
 	return maxf(0.1, 1.0 - recovery_cut_per_level * upgrades.enfermaria)
 
 
+## Bloco 89: a velocidade não sobe mais pra todo mundo (fica 1.0); quem acelera é o caminho (caminhos.gd).
 func speed_mult() -> float:
-	return 1.0 + speed_bonus_per_level * upgrades.trilhas
+	return 1.0
+
+
+## Bloco 89: o bônus dos caminhos é multiplicado por isto (Trilhas batidas).
+func trilhas_bonus_mult() -> float:
+	return 1.0 + trilhas_bonus_por_nivel * upgrades.trilhas
 
 
 # ------------------------------------------------------------ progresso
@@ -446,7 +532,7 @@ func obra_progress() -> float:
 
 
 func obra_position(worker: Node) -> Vector2:
-	return global_position + Vector2(0, 40) + _obra.offset_for(worker)
+	return IsoArt.front(self, Vector2(0, 40)) + _obra.offset_for(worker)
 
 
 ## O engenheiro trabalhou `seconds` na melhoria: só assim ela anda.
@@ -496,7 +582,7 @@ func upgrade_effect_text(id: String, lvl: int) -> String:
 			return "%d leitos, cura %ds/%ds" % [inf.base_beds + inf.beds_per_level * lvl,
 				roundi(inf.heal_time_leve * mult), roundi(inf.heal_time_grave * mult)]
 		"trilhas":
-			return "velocidade +%d%%" % roundi(speed_bonus_per_level * lvl * 100.0)
+			return "bônus dos caminhos +%d%%" % roundi(trilhas_bonus_por_nivel * lvl * 100.0)
 	return ""
 
 
@@ -507,7 +593,7 @@ func upgrade_description(id: String) -> String:
 		"enfermaria":
 			return "+1 leito na Enfermaria e cura %d%% mais rápida por nível. Machucado só se cura lá." % roundi(recovery_cut_per_level * 100.0)
 		"trilhas":
-			return "Todos os ipezinhos andam %d%% mais rápido por nível." % roundi(speed_bonus_per_level * 100.0)
+			return "Os CAMINHOS (menu Construir, aba Vila) aceleram %d%% mais por nível." % roundi(trilhas_bonus_por_nivel * 100.0)
 	return ""
 
 
@@ -595,7 +681,7 @@ func build_comedouro() -> bool:
 	var placer := get_tree().get_first_node_in_group("house_placer")
 	if placer == null:
 		return false
-	placer.begin(_confirm_comedouro, COMEDOURO_TEXTURE, 3, "o comedouro", {"footprint": COMEDOURO_FOOTPRINT})
+	placer.begin(_confirm_comedouro, COMEDOURO_TEXTURE, 3, "a cozinha", {"footprint": COMEDOURO_FOOTPRINT})
 	return true
 
 
@@ -609,13 +695,26 @@ func _confirm_comedouro(pos: Vector2) -> bool:
 	Audio.click()
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
-		hud.show_toast("Comedouro encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+		hud.show_toast("Cozinha encomendada — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
 	return true
 
 
 # ------------------------------------------------------------ coletor de madeira (Bloco 45)
+## O primeiro coletor (Bloco 81: a ruína da floresta, quando a cena tem uma).
 func coletor() -> Node:
-	return get_tree().get_first_node_in_group("coletores")
+	var f := coletor_fixo()
+	return f if f != null else get_tree().get_first_node_in_group("coletores")
+
+
+## Bloco 81: a ruína da cena (o primeiro coletor, restaurado por etapas). null = cena sem ruína.
+func coletor_fixo() -> Node:
+	return get_tree().get_first_node_in_group("coletor_fixo")
+
+
+## Bloco 81: o primeiro coletor já funciona? (sem ruína na cena: sim — vale o fluxo antigo)
+func coletor_restaurado() -> bool:
+	var f := coletor_fixo()
+	return f == null or f.restaurado()
 
 
 ## Bloco 47: pode ter vários — cada um com o SEU operador e a sua produção (independentes).
@@ -631,20 +730,24 @@ func coletor_cost() -> Vector3i:
 
 
 func coletor_block_reason() -> String:
+	if not coletor_restaurado():  # Bloco 81: os extras só depois de restaurar o da floresta
+		return "restaure primeiro o coletor em ruína da floresta (clique nele)"
 	var c := Canteiro.pending(get_tree(), "coletor")
 	if c:
 		return "em obra (%s)" % c._obra.status(c.obra_progress())
 	var eco := _economy()
 	var cost := coletor_cost()
-	return eco.missing_text(cost.x, cost.y, "ferro") if eco else "sem recursos"
+	return eco.metal_falta(cost.x, cost.y, "ferro") if eco else "sem recursos"  # Bloco 87: barra
 
 
 func coletor_cost_text() -> String:
 	var c := coletor_cost()
-	return "%d cr + %d ferro" % [c.x, c.y]
+	var eco := _economy()
+	return eco.custo_metal_texto(c.x, c.y, "ferro") if eco else "%d cr + %d ferro" % [c.x, c.y]  # Bloco 87
 
 
-## Escolher o lugar — só na clareira (onde estão as árvores).
+## Escolher o lugar — só na clareira (onde estão as árvores). Bloco 81: só os EXTRAS (o primeiro é a
+## ruína da floresta, restaurada por etapas no próprio coletor).
 func build_coletor() -> bool:
 	if coletor_block_reason() != "":
 		Audio.error()
@@ -664,7 +767,7 @@ func _confirm_coletor(pos: Vector2) -> bool:
 		Audio.error()
 		return false
 	var cost := coletor_cost()
-	if not _economy().spend(cost.x, cost.y, "ferro"):
+	if not _economy().paga_metal(cost.x, cost.y, "ferro"):
 		return false
 	Canteiro.order(get_tree(), "coletor", pos, coletor_build_time)
 	Audio.click()
@@ -678,6 +781,720 @@ func spawn_coletor(pos: Vector2) -> Node2D:
 	var c: Node2D = COLETOR_SCENE.instantiate()
 	var n := coletores().size()
 	c.name = "ColetorMadeira" if n == 0 else "ColetorMadeira%d" % (n + 1)
+	c.position = pos
+	get_parent().add_child(c)
+	_coletor_mudou()
+	return c
+
+
+## A navegação e a decoração por baixo acompanham um coletor novo ou que mudou de lugar.
+func _coletor_mudou() -> void:
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
+
+
+## Bloco 45/47/81: os coletores de madeira do save (o operador se religa sozinho: ipezinho
+## "operates_coletor"). A ruína da cena (fixo) fica e recebe a etapa dela; os extras são refeitos.
+## Save antigo (sem "fixo" nas entradas): o primeiro coletor construído É o da floresta, já restaurado
+## (a ruína vai pro lugar dele); save antigo sem coletor: a ruína fica como está na cena (etapa 0).
+func _load_coletores(d: Dictionary) -> void:
+	var fixo := coletor_fixo()
+	for old in coletores():
+		if old == fixo:
+			continue
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	var list: Array = SaveUtil.array(d, "coletores")
+	if list.is_empty() and not SaveUtil.dict(d, "coletor").is_empty():
+		list = [SaveUtil.dict(d, "coletor")]  # Bloco 47: save antigo, um só
+	var antigo := not list.any(func(cd): return cd is Dictionary and cd.has("fixo"))
+	var usou_fixo := false
+	for cd in list:
+		if typeof(cd) != TYPE_DICTIONARY:
+			continue
+		var cpos := SaveUtil.vec2(cd, "position", Vector2.INF)
+		if cpos == Vector2.INF:
+			continue
+		if fixo != null and not usou_fixo and (SaveUtil.boolean(cd, "fixo", false) or antigo):
+			usou_fixo = true
+			if fixo.global_position.distance_to(cpos) > 1.0:
+				fixo.global_position = cpos
+				_coletor_mudou()
+			fixo.load_save_data(cd)  # sem "etapa" (save antigo) = restaurado
+			continue
+		spawn_coletor(cpos).load_save_data(cd)
+	if fixo != null and not usou_fixo:
+		fixo.volta_pra_ruina()
+
+
+# ------------------------------------------------------------ igreja (Bloco 88)
+const IGREJA_SCENE := preload("res://scenes/props/igreja.tscn")
+const IGREJA_TEXTURE := preload("res://assets/game/igreja.png")
+
+
+func igreja() -> Node:
+	return get_tree().get_first_node_in_group("igrejas")
+
+
+func igreja_cost_text() -> String:
+	return "%d cr + %d ferro + %d madeira" % [igreja_credits, igreja_ore, igreja_wood]
+
+
+func igreja_block_reason() -> String:
+	if igreja() != null:
+		return "já construída (é uma só)"
+	if level < igreja_estagio:
+		return "precisa da vila no estágio %s" % STAGE_NAMES[clampi(igreja_estagio, 1, STAGE_NAMES.size()) - 1]
+	var c := Canteiro.pending(get_tree(), "igreja")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	return eco.missing_text(igreja_credits, igreja_ore, "ferro", igreja_wood, "ferro") if eco else "sem recursos"
+
+
+func build_igreja() -> bool:
+	if igreja_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_igreja, IGREJA_TEXTURE, 1, "a Igreja",
+		{"footprint": COLETOR_FOOTPRINT, "start": global_position + Vector2(-160, -40)})
+	return true
+
+
+func _confirm_igreja(pos: Vector2) -> bool:
+	if igreja_block_reason() != "":
+		Audio.error()
+		return false
+	if not _economy().spend(igreja_credits, igreja_ore, "ferro", igreja_wood):
+		return false
+	Canteiro.order(get_tree(), "igreja", pos, igreja_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Igreja encomendada — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_igreja(pos: Vector2) -> Node2D:
+	var ig: Node2D = IGREJA_SCENE.instantiate()
+	ig.name = "Igreja"
+	ig.position = pos
+	get_parent().add_child(ig)
+	_coletor_mudou()  # (navegação e decoração por baixo)
+	return ig
+
+
+# ------------------------------------------------------------ cemitério (Bloco 93)
+const CEMITERIO := preload("res://scripts/props/cemiterio.gd")
+
+
+func cemiterios() -> Array:
+	return get_tree().get_nodes_in_group("cemiterios")
+
+
+## Custo de um cemitério desse tamanho: (créditos, ferro, madeira) e os segundos de engenheiro em w.
+func cemiterio_custo(r: Rect2) -> Vector4:
+	var a := CEMITERIO.alinha(r)
+	var trechos := int(roundf(a.size.x / CEMITERIO.TRECHO) + roundf(a.size.y / CEMITERIO.TRECHO)) * 2
+	var tmp: Node2D = CEMITERIO.new()
+	tmp.rect = a
+	var vagas: int = tmp.vagas_total()
+	tmp.free()
+	return Vector4(cemiterio_credits_base + cemiterio_credits_por_vaga * vagas, cemiterio_ore_por_trecho * trechos,
+		cemiterio_wood_por_trecho * trechos, cemiterio_segundos_base + cemiterio_segundos_por_trecho * trechos)
+
+
+func cemiterio_custo_texto(r: Rect2) -> String:
+	var c := cemiterio_custo(r)
+	var a := CEMITERIO.alinha(r)
+	var tmp: Node2D = CEMITERIO.new()
+	tmp.rect = a
+	var vagas: int = tmp.vagas_total()
+	tmp.free()
+	return "%d vagas  •  %d cr + %d ferro + %d madeira" % [vagas, int(c.x), int(c.y), int(c.z)]
+
+
+func cemiterio_block_reason() -> String:
+	if level < cemiterio_estagio:
+		return "precisa da vila no estágio %s" % STAGE_NAMES[clampi(cemiterio_estagio, 1, STAGE_NAMES.size()) - 1]
+	return ""
+
+
+## Por que ESTE terreno não vale ("" = vale): tamanho, chão andável, nada construído por cima, recursos.
+func motivo_cemiterio(r: Rect2) -> String:
+	var b := cemiterio_block_reason()
+	if b != "":
+		return b
+	var a := CEMITERIO.alinha(r)
+	var nx := int(roundf(a.size.x / CEMITERIO.TRECHO))
+	var ny := int(roundf(a.size.y / CEMITERIO.TRECHO))
+	if nx > cemiterio_max_trechos.x or ny > cemiterio_max_trechos.y:
+		return "grande demais (até %d x %d trechos de cerca)" % [cemiterio_max_trechos.x, cemiterio_max_trechos.y]
+	var map := get_world_2d().navigation_map
+	var y := a.position.y
+	while y <= a.end.y:
+		var x := a.position.x
+		while x <= a.end.x:
+			if NavigationServer2D.map_get_closest_point(map, Vector2(x, y)).distance_to(Vector2(x, y)) > 3.0:
+				return "o terreno precisa ser chão livre (sem pedra, água ou parede)"
+			x += 12.0
+		y += 12.0
+	var env := get_tree().get_first_node_in_group("environment")
+	var grupos: Array = (env.STATION_GROUPS + env.NAV_EXTRA_GROUPS if env else []) + ["casas", "village_hub", "armazens", "comedouros", "cemiterios"]
+	grupos = grupos.filter(func(g): return g not in ["arvores", "coleta_comida", "canteiros"])  # (árvore e horta: a decoração sai)
+	for g in grupos:
+		for n in get_tree().get_nodes_in_group(g):
+			if n is Node2D and a.grow(6.0).intersects(_pegada(n)):
+				return "tem construção no terreno"
+	var c := cemiterio_custo(a)
+	var eco := _economy()
+	return eco.missing_text(int(c.x), int(c.y), "ferro", int(c.z), "ferro") if eco else "sem recursos"
+
+
+## A pegada de uma construção no chão (a do desenho da vista iso, ou o obstáculo; sem nenhum, um quadrado no pé).
+func _pegada(n: Node2D) -> Rect2:
+	if n.has_method("decor_clear_rect") and n.is_in_group("cemiterios"):
+		return n.decor_clear_rect()
+	var r := IsoArt.base_rect(n)
+	if n.has_method("get_obstacle_outline"):
+		var o: PackedVector2Array = n.get_obstacle_outline()
+		if o.size() >= 3:
+			var bb := Rect2(o[0], Vector2.ZERO)
+			for q in o:
+				bb = bb.expand(q)
+			r = bb if not r.has_area() else r.merge(bb)
+	return r if r.has_area() else Rect2(n.global_position - Vector2(16, 16), Vector2(32, 32))
+
+
+func build_cemiterio() -> bool:
+	if cemiterio_block_reason() != "":
+		Audio.error()
+		return false
+	var ap := get_tree().get_first_node_in_group("area_placer")
+	if ap == null:
+		return false
+	ap.begin_custom("o cemitério", motivo_cemiterio, _confirm_cemiterio, cemiterio_custo_texto)
+	return true
+
+
+func _confirm_cemiterio(r: Rect2) -> bool:
+	if motivo_cemiterio(r) != "":
+		return false
+	var c := cemiterio_custo(r)
+	if not _economy().spend(int(c.x), int(c.y), "ferro", int(c.z)):
+		return false
+	spawn_cemiterio(r, c.w)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Cemitério encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_cemiterio(r: Rect2, segundos: float) -> Node2D:
+	var cem: Node2D = CEMITERIO.new()
+	cem.configura(r, segundos)
+	var n := cemiterios().size()
+	cem.name = "Cemiterio" if n == 0 else "Cemiterio%d" % (n + 1)
+	get_parent().add_child(cem)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env and env.has_method("_limpa_decor"):
+		env._limpa_decor(cem.decor_clear_rect())  # (a decoração do mapa não fica dentro da cerca)
+	return cem
+
+
+# ------------------------------------------------------------ fornalha (Bloco 86)
+const FORNALHA_SCENE := preload("res://scenes/props/fornalha.tscn")
+const FORNALHA_TEXTURE := preload("res://assets/game/fornalha.png")
+
+
+func fornalhas() -> Array:
+	return get_tree().get_nodes_in_group("fornalhas")
+
+
+## Custo da PRÓXIMA (x cr, y ferro): cresce a cada uma que já existe (Bloco 47).
+func fornalha_cost() -> Vector3i:
+	var base := Vector3i(fornalha_credits, fornalha_ore, 0)
+	var eco := _economy()
+	return eco.scaled_cost(base, fornalhas().size()) if eco else base
+
+
+func fornalha_cost_text() -> String:
+	var c := fornalha_cost()
+	return "%d cr + %d ferro" % [c.x, c.y]
+
+
+func fornalha_block_reason() -> String:
+	if level < fornalha_estagio:
+		return "precisa da vila no estágio %s" % STAGE_NAMES[clampi(fornalha_estagio, 1, STAGE_NAMES.size()) - 1]
+	var c := Canteiro.pending(get_tree(), "fornalha")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	var cost := fornalha_cost()
+	return eco.missing_text(cost.x, cost.y, "ferro") if eco else "sem recursos"
+
+
+func build_fornalha() -> bool:
+	if fornalha_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_fornalha, FORNALHA_TEXTURE, 2, "a Fornalha",
+		{"footprint": COLETOR_FOOTPRINT, "start": global_position + Vector2(140, 60)})
+	return true
+
+
+func _confirm_fornalha(pos: Vector2) -> bool:
+	if fornalha_block_reason() != "":
+		Audio.error()
+		return false
+	var cost := fornalha_cost()
+	if not _economy().spend(cost.x, cost.y, "ferro"):
+		return false
+	Canteiro.order(get_tree(), "fornalha", pos, fornalha_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Fornalha encomendada — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_fornalha(pos: Vector2) -> Node2D:
+	var f: Node2D = FORNALHA_SCENE.instantiate()
+	var n := fornalhas().size()
+	f.name = "Fornalha" if n == 0 else "Fornalha%d" % (n + 1)
+	f.position = pos
+	get_parent().add_child(f)
+	_coletor_mudou()  # (navegação e decoração por baixo, como o coletor)
+	return f
+
+
+# ------------------------------------------------------------ carpintaria (Bloco 94)
+const CARPINTARIA_SCENE := preload("res://scenes/props/carpintaria.tscn")
+const CARPINTARIA_TEXTURE := preload("res://assets/game/carpintaria.png")
+
+
+func carpintarias() -> Array:
+	return get_tree().get_nodes_in_group("carpintarias")
+
+
+## Custo da PRÓXIMA (x cr, y ferro, z madeira): cresce a cada uma que já existe (Bloco 47).
+func carpintaria_cost() -> Vector3i:
+	var base := Vector3i(carpintaria_credits, carpintaria_ore, carpintaria_wood)
+	var eco := _economy()
+	return eco.scaled_cost(base, carpintarias().size()) if eco else base
+
+
+func carpintaria_cost_text() -> String:
+	var c := carpintaria_cost()
+	return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+
+
+func carpintaria_block_reason() -> String:
+	if level < carpintaria_estagio:
+		return "precisa da vila no estágio %s" % STAGE_NAMES[clampi(carpintaria_estagio, 1, STAGE_NAMES.size()) - 1]
+	var c := Canteiro.pending(get_tree(), "carpintaria")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	var cost := carpintaria_cost()
+	return eco.missing_text(cost.x, cost.y, "ferro", cost.z) if eco else "sem recursos"
+
+
+func build_carpintaria() -> bool:
+	if carpintaria_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_carpintaria, CARPINTARIA_TEXTURE, 2, "a Carpintaria",
+		{"footprint": COLETOR_FOOTPRINT, "start": global_position + Vector2(-150, 70)})
+	return true
+
+
+func _confirm_carpintaria(pos: Vector2) -> bool:
+	if carpintaria_block_reason() != "":
+		Audio.error()
+		return false
+	var cost := carpintaria_cost()
+	if not _economy().spend(cost.x, cost.y, "ferro", cost.z):
+		return false
+	Canteiro.order(get_tree(), "carpintaria", pos, carpintaria_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Carpintaria encomendada — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_carpintaria(pos: Vector2) -> Node2D:
+	var c: Node2D = CARPINTARIA_SCENE.instantiate()
+	var n := carpintarias().size()
+	c.name = "Carpintaria" if n == 0 else "Carpintaria%d" % (n + 1)
+	c.position = pos
+	get_parent().add_child(c)
+	_coletor_mudou()
+	return c
+
+
+# ------------------------------------------------------------ oficina (Bloco 58)
+func oficina() -> Node:
+	return get_tree().get_first_node_in_group("oficina")
+
+
+func oficina_block_reason() -> String:
+	var o := oficina()
+	if o == null:
+		return "sem Oficina no mapa"
+	if o.is_built():
+		return "já construída (é uma só)"
+	var c := Canteiro.pending(get_tree(), "oficina")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	return eco.missing_text(oficina_credits, oficina_ore, "ferro", oficina_wood, "ferro") if eco else "sem recursos"
+
+
+func oficina_cost_text() -> String:
+	return "%d cr + %d ferro + %d madeira" % [oficina_credits, oficina_ore, oficina_wood]
+
+
+func build_oficina() -> bool:
+	if oficina_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_oficina, preload("res://assets/game/oficina.png"), 2, "a Oficina",
+		{"footprint": COLETOR_FOOTPRINT, "start": global_position + Vector2(-140, 60)})
+	return true
+
+
+func _confirm_oficina(pos: Vector2) -> bool:
+	if oficina_block_reason() != "":
+		Audio.error()
+		return false
+	if not _economy().spend(oficina_credits, oficina_ore, "ferro", oficina_wood):
+		return false
+	Canteiro.order(get_tree(), "oficina", pos, oficina_build_time)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Oficina encomendada — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+# ------------------------------------------------------------ desbravar o leste (Bloco 67)
+func leste_block_reason() -> String:
+	var env := get_tree().get_first_node_in_group("environment")
+	if env == null or not env.has_method("has_leste") or not env.has_leste():
+		return "o mapa não tem leste"
+	if env.leste_aberto:
+		return "já desbravado"
+	var c := Canteiro.pending(get_tree(), "desbravar")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	if level < leste_min_stage:
+		return "precisa da vila no estágio %d" % leste_min_stage
+	var eco := _economy()
+	return eco.missing_text(leste_credits, leste_ore, "ferro", leste_wood, "ferro") if eco else "sem recursos"
+
+
+func leste_cost_text() -> String:
+	return "%d cr + %d ferro + %d madeira" % [leste_credits, leste_ore, leste_wood]
+
+
+## Encomenda: o engenheiro vai abrindo caminho na fronteira (na pedreira, logo antes da área nova).
+func desbravar_leste() -> bool:
+	if leste_block_reason() != "":
+		Audio.error()
+		return false
+	if not _economy().spend(leste_credits, leste_ore, "ferro", leste_wood):
+		return false
+	var env := get_tree().get_first_node_in_group("environment")
+	var p: Vector2 = env.nearest_ok(Vector2(env.leste_x() - 40.0, 160.0), 16.0)
+	Canteiro.order(get_tree(), "desbravar", p, leste_build_time)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Desbravar o leste: o engenheiro (tecla 4) abre caminho na fronteira.", Color(1.0, 0.8, 0.45))
+	return true
+
+
+# ------------------------------------------------------------ trilho e vagonete (Bloco 64)
+func vagonetes() -> Array:
+	# (Bloco 74: o da mina é fixo — não conta no custo nem vai na lista do save)
+	return get_tree().get_nodes_in_group("pontos_carga").filter(func(v): return not v.is_in_group("ponto_carga_fixo") and String(v.get("ferrovia")) == "")
+
+
+## Bloco 74: o ponto de carga fixo da boca da mina (null = mapa sem ele).
+func estacao_mina() -> Node2D:
+	return get_tree().get_first_node_in_group("ponto_carga_fixo")
+
+
+func vagonete_cost() -> Vector3i:
+	var base := Vector3i(vagonete_credits, vagonete_ore, vagonete_wood)
+	var eco := _economy()
+	return eco.scaled_cost(base, vagonetes().size()) if eco else base
+
+
+func vagonete_block_reason() -> String:
+	var c := Canteiro.pending(get_tree(), "vagonete")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	if get_tree().get_first_node_in_group("armazens") == null:
+		return "precisa de um armazém (o trilho vai até ele)"
+	var eco := _economy()
+	var cost := vagonete_cost()
+	return eco.missing_text(cost.x, cost.y, "ferro", cost.z, "ferro") if eco else "sem recursos"
+
+
+func vagonete_cost_text() -> String:
+	var c := vagonete_cost()
+	return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+
+
+## Lugar bom: perto de uma jazida liberada e longe o bastante do armazém (senão não vale o trilho).
+func vagonete_spot_reason(pos: Vector2) -> String:
+	var r := coletor_minerio_spot_reason(pos)
+	if r != "":
+		return "longe de uma jazida liberada (o ponto de carga fica perto delas)"
+	for a in get_tree().get_nodes_in_group("armazens"):
+		if a.global_position.distance_to(pos) < 180.0:
+			return "perto demais do armazém (aí nem precisa de trilho)"
+	return ""
+
+
+func build_vagonete() -> bool:
+	if vagonete_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	var start := global_position
+	var arm := get_tree().get_first_node_in_group("armazens") as Node2D
+	var best := INF
+	for j in get_tree().get_nodes_in_group("minerios"):
+		if j.is_unlocked() and not j.is_sealed() and arm and j.global_position.distance_to(arm.global_position) > 240.0:
+			var d: float = j.global_position.distance_to(arm.global_position)
+			if d < best:
+				best = d
+				start = j.global_position + Vector2(70, 50)
+	placer.begin(_confirm_vagonete, preload("res://assets/game/iso/props/vagonete_cheio_SE.png"), 1, "o ponto de carga do vagonete (perto das jazidas)",
+		{"footprint": Rect2(-30, -20, 60, 30), "check": vagonete_spot_reason, "start": start})
+	return true
+
+
+func _confirm_vagonete(pos: Vector2) -> bool:
+	if vagonete_block_reason() != "" or vagonete_spot_reason(pos) != "":
+		Audio.error()
+		return false
+	var cost := vagonete_cost()
+	if not _economy().spend(cost.x, cost.y, "ferro", cost.z):
+		return false
+	Canteiro.order(get_tree(), "vagonete", pos, vagonete_build_time)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Trilho e vagonete encomendados — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_vagonete(pos: Vector2) -> Node2D:
+	var c: Node2D = VAGONETE_SCENE.instantiate()
+	var n := vagonetes().size()
+	c.name = "EstacaoVagonete" if n == 0 else "EstacaoVagonete%d" % (n + 1)
+	c.position = pos
+	get_parent().add_child(c)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
+	return c
+
+
+# ------------------------------------------------------------ ferrovia de carga (Bloco 79)
+## Os andares que podem ter estação, de cima pra baixo.
+const FERROVIA_ANDARES := ["S2", "S3", "S4", "S5"]
+
+
+func ferrovias() -> Array:
+	return get_tree().get_nodes_in_group("ferrovias")
+
+
+func ferrovia_de(id: String) -> Node:
+	for f in ferrovias():
+		if String(f.ferrovia) == id:
+			return f
+	return null
+
+
+## O próximo andar sem estação (de cima pra baixo), ou "" (todos têm).
+func ferrovia_proximo() -> String:
+	for id in FERROVIA_ANDARES:
+		if ferrovia_de(id) == null:
+			return id
+	return ""
+
+
+func ferrovia_custo(id: String) -> Vector4i:
+	var n := preload("res://scripts/core/niveis.gd").por_id(id)
+	var p: int = n.profundidade if n else 3
+	return ferrovia_base + ferrovia_por_andar * p
+
+
+## Bloco 94: os pregos e as ferragens da estação desse andar ({prego, ferragem}).
+func ferrovia_pecas(id: String) -> Dictionary:
+	var n := preload("res://scripts/core/niveis.gd").por_id(id)
+	var p: int = n.profundidade if n else 3
+	var v := ferrovia_pecas_base + ferrovia_pecas_por_andar * p
+	return {"prego": v.x, "ferragem": v.y}
+
+
+func ferrovia_cost_text() -> String:
+	var id := ferrovia_proximo()
+	if id == "":
+		return "todos os andares têm"
+	var c := ferrovia_custo(id)
+	var eco := _economy()
+	if eco == null:
+		return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+	return eco.custo_metal_texto(c.x, c.y, "ferro", c.z, ferrovia_pecas(id))
+
+
+func ferrovia_block_reason() -> String:
+	var c := Canteiro.pending(get_tree(), "ferrovia")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var id := ferrovia_proximo()
+	if id == "":
+		return "todos os andares já têm estação"
+	var Niveis := preload("res://scripts/core/niveis.gd")
+	var n := Niveis.por_id(id)
+	var m: String = Niveis.motivo(get_tree(), n)
+	if m != "":
+		return "%s fechado: %s" % [id, m]
+	if get_tree().get_first_node_in_group("armazens") == null:
+		return "precisa de um armazém (a carga sobe até ele)"
+	var env := get_tree().get_first_node_in_group("environment")
+	if env == null or env.ponto_ferrovia(n) == Vector2.INF:
+		return "sem lugar pra estação no %s" % id
+	var cost := ferrovia_custo(id)
+	var eco := _economy()
+	return eco.metal_falta(cost.x, cost.y, "ferro", cost.z, ferrovia_pecas(id)) if eco else "sem recursos"  # Bloco 94
+
+
+## Encomenda a estação do próximo andar (lugar fixo: a ponta leste da faixa, perto do poço).
+func build_ferrovia() -> bool:
+	if ferrovia_block_reason() != "":
+		Audio.error()
+		return false
+	var id := ferrovia_proximo()
+	var n := preload("res://scripts/core/niveis.gd").por_id(id)
+	var pos: Vector2 = get_tree().get_first_node_in_group("environment").ponto_ferrovia(n)
+	var cost := ferrovia_custo(id)
+	if not _economy().paga_metal(cost.x, cost.y, "ferro", cost.z, ferrovia_pecas(id)):  # Bloco 94: barras + peças
+		return false
+	Canteiro.order(get_tree(), "ferrovia", pos, float(cost.w))
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Estação da ferrovia no %s encomendada — precisa de engenheiro (tecla 4)." % id, Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_ferrovia(id: String, pos: Vector2) -> Node2D:
+	var c: Node2D = VAGONETE_SCENE.instantiate()
+	c.ferrovia = id
+	c.name = "Ferrovia" + id
+	c.position = pos
+	c.buffer_capacity = 80.0
+	c.cart_capacity = 30.0
+	get_parent().add_child(c)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
+	return c
+
+
+# ------------------------------------------------------------ coletor de minério (Bloco 57)
+func coletores_minerio() -> Array:
+	return get_tree().get_nodes_in_group("coletores_minerio")
+
+
+## Custo do PRÓXIMO (x cr, y ferro, z madeira): cresce a cada um que já existe.
+func coletor_minerio_cost() -> Vector3i:
+	var base := Vector3i(coletor_min_credits, coletor_min_ore, coletor_min_wood)
+	var eco := _economy()
+	return eco.scaled_cost(base, coletores_minerio().size()) if eco else base
+
+
+func coletor_minerio_block_reason() -> String:
+	var c := Canteiro.pending(get_tree(), "coletor_minerio")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	var cost := coletor_minerio_cost()
+	return eco.metal_falta(cost.x, cost.y, "ferro", cost.z) if eco else "sem recursos"  # Bloco 87: barra
+
+
+func coletor_minerio_cost_text() -> String:
+	var c := coletor_minerio_cost()
+	var eco := _economy()
+	return eco.custo_metal_texto(c.x, c.y, "ferro", c.z) if eco else "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]  # Bloco 87
+
+
+## Lugar bom: com uma jazida liberada no alcance da broca.
+func coletor_minerio_spot_reason(pos: Vector2) -> String:
+	var reach: float = 230.0
+	for j in get_tree().get_nodes_in_group("minerios"):
+		if j.is_unlocked() and not j.is_sealed() and j.global_position.distance_to(pos) <= reach * 0.85:
+			return ""
+	return "longe de uma jazida liberada (a broca precisa de uma perto)"
+
+
+func build_coletor_minerio() -> bool:
+	if coletor_minerio_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	var start := global_position
+	for j in get_tree().get_nodes_in_group("minerios"):
+		if j.is_unlocked() and not j.is_sealed():
+			start = j.global_position + Vector2(90, 40)
+			break
+	placer.begin(_confirm_coletor_minerio, COLETOR_MIN_TEXTURE, 2, "o coletor de minério (perto de uma jazida)",
+		{"footprint": COLETOR_FOOTPRINT, "check": coletor_minerio_spot_reason, "start": start})
+	return true
+
+
+func _confirm_coletor_minerio(pos: Vector2) -> bool:
+	if coletor_minerio_block_reason() != "" or coletor_minerio_spot_reason(pos) != "":
+		Audio.error()
+		return false
+	var cost := coletor_minerio_cost()
+	if not _economy().paga_metal(cost.x, cost.y, "ferro", cost.z):
+		return false
+	Canteiro.order(get_tree(), "coletor_minerio", pos, coletor_min_build_time)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Coletor de minério encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_coletor_minerio(pos: Vector2) -> Node2D:
+	var c: Node2D = COLETOR_MIN_SCENE.instantiate()
+	var n := coletores_minerio().size()
+	c.name = "ColetorMinerio" if n == 0 else "ColetorMinerio%d" % (n + 1)
 	c.position = pos
 	get_parent().add_child(c)
 	var env := get_tree().get_first_node_in_group("environment")
@@ -763,6 +1580,78 @@ func finish_build(kind: String, pos: Vector2) -> void:
 		if hh:
 			hh.show_toast("Nova enfermaria pronta! Mais leitos pra quem se machuca (o médico vai pra que precisa).", Color(0.55, 1.0, 0.5))
 		return
+	if kind == "desbravar":  # Bloco 67
+		var env0 := get_tree().get_first_node_in_group("environment")
+		if env0:
+			env0.set_leste_aberto(true)
+		Audio.fanfare()
+		var hd := get_tree().get_first_node_in_group("hud")
+		if hd:
+			hd.show_banner("O LESTE ESTÁ ABERTO!", "Floresta nova, a encosta rochosa e outra pedreira com mais jazidas. Dá pra construir lá.")
+		var cam := get_viewport().get_camera_2d()
+		if cam and cam.has_method("focus_on") and env0:
+			cam.bounds = env0.world_rect()
+		return
+	if kind == "ferrovia":  # Bloco 79
+		var nv := preload("res://scripts/core/niveis.gd").do_ponto(get_tree().get_first_node_in_group("environment"), pos)
+		if nv:
+			spawn_ferrovia(String(nv.id), pos)
+		Audio.recruit()
+		var hf := get_tree().get_first_node_in_group("hud")
+		if hf:
+			hf.show_toast("Ferrovia pronta no %s! Os mineradores de lá entregam na estação e o carrinho sobe pro armazém." % (nv.id if nv else "?"), Color(0.55, 1.0, 0.5))
+		return
+	if kind == "vagonete":  # Bloco 64
+		spawn_vagonete(pos)
+		Audio.recruit()
+		var hv := get_tree().get_first_node_in_group("hud")
+		if hv:
+			hv.show_toast("Trilho pronto! Os mineradores perto dele entregam no ponto de carga; o vagonete leva pro armazém.", Color(0.55, 1.0, 0.5))
+		return
+	if kind == "igreja":  # Bloco 88
+		var ig := spawn_igreja(pos)
+		ig.pop_in()
+		Audio.recruit()
+		var hi := get_tree().get_first_node_in_group("hud")
+		if hi:
+			var cal := get_tree().get_first_node_in_group("calendario")
+			hi.show_toast("Igreja pronta! %s" % ("Missa no domingo às 09:00." if cal and cal.padre() != null else "Quando o padre chegar, tem missa no domingo."), Color(0.55, 1.0, 0.5))
+		return
+	if kind == "carpintaria":  # Bloco 94
+		var ca := spawn_carpintaria(pos)
+		ca.pop_in()
+		Audio.recruit()
+		var hc := get_tree().get_first_node_in_group("hud")
+		if hc:
+			hc.show_toast("Carpintaria pronta! Encomende tábuas e camas (clique nela) e dê a função CARPINTEIRO a alguém.", Color(0.55, 1.0, 0.5))
+		return
+	if kind == "fornalha":  # Bloco 86
+		var fo := spawn_fornalha(pos)
+		fo.pop_in()
+		Audio.recruit()
+		var hf := get_tree().get_first_node_in_group("hud")
+		if hf:
+			hf.show_toast("Fornalha pronta! Encomende barras (clique nela) e dê a função FUNDIDOR a alguém.", Color(0.55, 1.0, 0.5))
+		return
+	if kind == "oficina":  # Bloco 58
+		var o := oficina()
+		if o:
+			o.build_at(pos)
+			if o.has_method("pop_in"):
+				o.pop_in()
+		Audio.recruit()
+		var ho := get_tree().get_first_node_in_group("hud")
+		if ho:
+			ho.show_toast("Oficina pronta! Ferramentas novas liberam minérios (tecla O).", Color(0.55, 1.0, 0.5))
+		return
+	if kind == "coletor_minerio":  # Bloco 57
+		var cm := spawn_coletor_minerio(pos)
+		cm.pop_in()
+		Audio.recruit()
+		var hm := get_tree().get_first_node_in_group("hud")
+		if hm:
+			hm.show_toast("Coletor de minério pronto! Designe um minerador pra operar (clique nele).", Color(0.55, 1.0, 0.5))
+		return
 	if kind == "coletor":
 		var col := spawn_coletor(pos)
 		col.pop_in()
@@ -781,7 +1670,7 @@ func finish_build(kind: String, pos: Vector2) -> void:
 	Audio.recruit()
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
-		hud.show_toast("Comedouro pronto! O cozinheiro (tecla C) enche ele de comida.", Color(0.55, 1.0, 0.5))
+		hud.show_toast("Cozinha pronta! O cozinheiro (tecla C) enche ela de comida.", Color(0.55, 1.0, 0.5))
 
 
 ## Cria um comedouro (também ao carregar o save, com o mesmo nome).
@@ -884,13 +1773,13 @@ func _update_visual() -> void:
 	if not _growing:
 		_visual.frame = _stage_index()
 		_apply_stage_look(_stage_index())
-	# expansão em obra: o próximo estágio aparece como fantasma que fica nítido
+	# expansão em obra: o próximo estágio sobe por estágios de obra (Prompt 28)
 	var expanding := pending_upgrade == "expandir" and level < max_level()
 	if not _growing:
 		_next_stage.visible = expanding
 		if expanding:
 			_next_stage.frame = clampi(level, 0, 4)
-			_next_stage.modulate = ObraSite.ghost_color(obra_progress())
+			ObraEstagio.apply(_next_stage, obra_progress())
 	_name_label.text = "Centro da Vila\n%s" % stage_name()
 	if obra_pending():
 		_name_label.text += "\nobra: " + obra_status()
@@ -911,14 +1800,14 @@ func _apply_stage_look(i: int) -> void:
 	_shadow.scale = Vector2(5.2 * STAGE_HALF_W[i] / 58.0, 2.6)
 
 
-## Subiu de estágio: o fantasma do prédio novo fica sólido em ~0,6 s e só então vira o
-## quadro de verdade (sem troca seca), com poeira e um "assentar" de leve.
+## Subiu de estágio: a obra do prédio novo termina (a cor crua vira a de verdade em ~0,6 s) e
+## só então vira o quadro de verdade (sem troca seca), com poeira e um "assentar" de leve.
 func _grow_to_stage(i: int) -> void:
 	_growing = true
 	_next_stage.frame = i
 	_next_stage.visible = true
-	if not _next_stage.modulate.a > 0.0:
-		_next_stage.modulate = ObraSite.ghost_color(0.0)
+	ObraEstagio.clear(_next_stage)
+	_next_stage.modulate = ObraEstagio.TINT[2]
 	var tw := create_tween()
 	tw.tween_property(_next_stage, "modulate", Color.WHITE, 0.6)
 	tw.tween_callback(func():
@@ -959,7 +1848,7 @@ func _popup(text: String, color: Color) -> void:
 	popup.add_theme_color_override("font_color", color)
 	popup.add_theme_color_override("font_outline_color", Color(0.1, 0.06, 0.03))
 	popup.add_theme_constant_override("outline_size", 4)
-	popup.add_theme_font_size_override("font_size", 14)
+	popup.add_theme_font_size_override("font_size", Tipo.MAPA_POPUP)
 	# empilha se já houver outro aviso subindo (ex.: expandir + melhorar em seguida)
 	var stacked := get_children().filter(func(c): return c.has_meta("popup")).size()
 	popup.set_meta("popup", true)
@@ -984,7 +1873,15 @@ func get_save_data() -> Dictionary:
 	return {"level": level, "upgrades": upgrades.duplicate(), "pending_upgrade": pending_upgrade,
 		"upgrade_left": upgrade_left, "upgrade_total": upgrade_total, "obra": _obra.get_save_data(),
 		"founded": founded, "starter_houses_left": starter_houses_left,
-		"coletores": coletores().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position), "total": c.total_produced}),
+		"coletores": coletores().map(func(c): return c.get_save_data()),  # Bloco 81: + etapa da restauração e "fixo"
+		"fornalhas": fornalhas().map(func(f): return f.get_save_data()),  # Bloco 86: lugar + fila de ordens
+		"carpintarias": carpintarias().map(func(f): return f.get_save_data()),  # Bloco 94: lugar + fila de ordens
+		"coletores_minerio": coletores_minerio().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position),
+			"total": c.total_produced, "jazida": SaveUtil.vec2_to_array(c.chosen_pos) if c.chosen_pos != Vector2.INF else []}),  # Bloco 57
+		"vagonetes": vagonetes().map(func(v): return v.get_save_data()),  # Bloco 64
+		"ferrovias": ferrovias().map(func(v): return v.get_save_data()),  # Bloco 79
+		"estacao_mina": estacao_mina().get_save_data() if estacao_mina() else {},  # Bloco 74
+		"leste_aberto": get_tree().get_first_node_in_group("environment").leste_aberto if get_tree().get_first_node_in_group("environment") else false,  # Bloco 67
 		"enfermarias_extra": extra_enfermarias().map(func(w): return SaveUtil.vec2_to_array(w.global_position))}  # Bloco 47
 
 
@@ -1003,20 +1900,75 @@ func load_save_data(d: Dictionary) -> void:
 	# Bloco 37 (save antigo: fundada, sem casas iniciais — ela já tinha as da cena)
 	founded = SaveUtil.boolean(d, "founded", true)
 	starter_houses_left = clampi(SaveUtil.integer(d, "starter_houses_left", 0), 0, starter_houses)
-	# Bloco 45: coletor de madeira (o operador se religa sozinho: ipezinho "operates_coletor")
-	for old in coletores():
+	_load_coletores(d)
+	# Bloco 86: fornalhas (save antigo: nenhuma)
+	for old in fornalhas():
 		old.get_parent().remove_child(old)
 		old.queue_free()
-	var list: Array = SaveUtil.array(d, "coletores")
-	if list.is_empty() and not SaveUtil.dict(d, "coletor").is_empty():
-		list = [SaveUtil.dict(d, "coletor")]  # Bloco 47: save antigo, um só
-	for cd in list:
+	for fd in SaveUtil.array(d, "fornalhas"):
+		if typeof(fd) != TYPE_DICTIONARY:
+			continue
+		var fpos := SaveUtil.vec2(fd, "position", Vector2.INF)
+		if fpos != Vector2.INF:
+			spawn_fornalha(fpos).load_save_data(fd)
+	# Bloco 94: carpintarias (save antigo: nenhuma)
+	for old in carpintarias():
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	for cd in SaveUtil.array(d, "carpintarias"):
 		if typeof(cd) != TYPE_DICTIONARY:
 			continue
 		var cpos := SaveUtil.vec2(cd, "position", Vector2.INF)
 		if cpos != Vector2.INF:
-			var col := spawn_coletor(cpos)
-			col.total_produced = maxf(SaveUtil.num(cd, "total", 0.0), 0.0)
+			spawn_carpintaria(cpos).load_save_data(cd)
+	# Bloco 57: coletores de minério (save antigo: nenhum; o operador se religa sozinho)
+	for old in coletores_minerio():
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	for cd in SaveUtil.array(d, "coletores_minerio"):
+		if typeof(cd) != TYPE_DICTIONARY:
+			continue
+		var mpos := SaveUtil.vec2(cd, "position", Vector2.INF)
+		if mpos != Vector2.INF:
+			var cm := spawn_coletor_minerio(mpos)
+			cm.total_produced = maxf(SaveUtil.num(cd, "total", 0.0), 0.0)
+			cm.chosen_pos = SaveUtil.vec2(cd, "jazida", Vector2.INF)
+	# Bloco 67: o leste (save antigo: trancado)
+	var envl := get_tree().get_first_node_in_group("environment")
+	if envl and envl.has_method("set_leste_aberto"):
+		envl.set_leste_aberto(SaveUtil.boolean(d, "leste_aberto", false), false)
+	# Bloco 64: pontos de carga com o trilho e o vagonete (save antigo: nenhum)
+	for old in vagonetes():
+		if is_instance_valid(old.rail):
+			old.rail.queue_free()
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	for vd in SaveUtil.array(d, "vagonetes"):
+		if typeof(vd) != TYPE_DICTIONARY:
+			continue
+		var vpos := SaveUtil.vec2(vd, "position", Vector2.INF)
+		if vpos != Vector2.INF:
+			var v := spawn_vagonete(vpos)
+			v.load_save_data(vd)
+	# Bloco 79: as estações da ferrovia de carga (save antigo: nenhuma)
+	for old in ferrovias():
+		if is_instance_valid(old.rail):
+			old.rail.queue_free()
+		old.remove_from_group("ferrovias")
+		old.remove_from_group("pontos_carga")
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	for fd in SaveUtil.array(d, "ferrovias"):
+		if typeof(fd) != TYPE_DICTIONARY:
+			continue
+		var fpos := SaveUtil.vec2(fd, "position", Vector2.INF)
+		var fid := SaveUtil.text(fd, "ferrovia", "")
+		if fpos != Vector2.INF and fid in FERROVIA_ANDARES:
+			var f := spawn_ferrovia(fid, fpos)
+			f.load_save_data(fd)
+	var em := estacao_mina()  # Bloco 74 (save de antes: o da mina começa vazio)
+	if em and not SaveUtil.dict(d, "estacao_mina").is_empty():
+		em.load_save_data(SaveUtil.dict(d, "estacao_mina"))
 	# Bloco 47: enfermarias extras (save antigo: nenhuma)
 	for old in extra_enfermarias():
 		old.get_parent().remove_child(old)

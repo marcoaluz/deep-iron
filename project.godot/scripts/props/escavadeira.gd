@@ -25,6 +25,8 @@ signal completed
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
+const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const PART_IDS := ["estrutura", "motor", "hidraulica", "cabine", "broca"]
 const PART_NAMES := {
 	"estrutura": "Estrutura",
@@ -220,7 +222,7 @@ func obra_progress() -> float:
 
 
 func obra_position(worker: Node) -> Vector2:
-	return global_position + Vector2(0, 40) + _obra.offset_for(worker)
+	return IsoArt.front(self, Vector2(0, 40)) + _obra.offset_for(worker)
 
 
 ## O engenheiro trabalhou `seconds` aqui: só assim a peça anda.
@@ -315,7 +317,7 @@ func part_block_reason(id: String) -> String:
 	var eco := get_tree().get_first_node_in_group("economy")
 	if eco == null:
 		return "sem recursos"
-	var missing: String = eco.missing_text(cost.x, cost.y)
+	var missing: String = eco.metal_falta(cost.x, cost.y, "")  # Bloco 87: barra de ferro
 	if missing != "":
 		return missing
 	return ""
@@ -328,7 +330,7 @@ func start_part(id: String) -> bool:
 		Audio.error()
 		return false
 	var cost := part_cost(id)
-	if not get_tree().get_first_node_in_group("economy").spend(cost.x, cost.y):
+	if not get_tree().get_first_node_in_group("economy").paga_metal(cost.x, cost.y, ""):
 		return false
 	fabricating = id
 	fab_left = float(cost.z)
@@ -368,13 +370,14 @@ func _complete() -> void:
 
 
 # ------------------------------------------------------------ visual
-## Bloco 32: só aparece o que existe. Peça instalada = sólida; peça em montagem =
-## fantasma que fica nítido com o progresso; o resto não aparece (plataforma vazia).
+## Bloco 32: só aparece o que existe. Peça instalada = sólida; peça em montagem = obra
+## por estágios (Prompt 28, obra_estagio.gd); o resto não aparece (plataforma vazia).
 func _update_visual() -> void:
 	for id in PART_IDS:
 		var layer: Sprite2D = _layers[id]
 		layer.visible = installed[id] or id == fabricating
 		if installed[id]:
+			ObraEstagio.clear(layer)
 			layer.modulate = Color.WHITE
 	_layers.cabine.frame = 1 if complete else 0  # janelas acesas + giroflex
 	# reator instalado: embaixo do convés (só depois de pronta)
@@ -398,13 +401,13 @@ func _update_visual() -> void:
 	_update_label()
 
 
-## O fantasma do que está em obra acompanha o progresso (mesma cor do canteiro).
+## O que está em obra sobe por estágios com o progresso (a mesma regra do canteiro).
 func _update_obra_visual() -> void:
 	if fabricating != "":
 		var layer: Sprite2D = _layers[fabricating]
-		layer.modulate = ObraSite.ghost_color(fab_progress())
+		ObraEstagio.apply(layer, fab_progress())
 	if building_reactor != "":
-		_reactor_new.modulate = ObraSite.ghost_color(obra_progress())
+		ObraEstagio.apply(_reactor_new, obra_progress())
 
 
 func _update_label() -> void:
@@ -429,7 +432,7 @@ func _popup(text: String, color: Color) -> void:
 	popup.add_theme_color_override("font_color", color)
 	popup.add_theme_color_override("font_outline_color", Color(0.1, 0.06, 0.03))
 	popup.add_theme_constant_override("outline_size", 4)
-	popup.add_theme_font_size_override("font_size", 14)
+	popup.add_theme_font_size_override("font_size", Tipo.MAPA_POPUP)
 	popup.position = Vector2(-100, -240 - stacked * 20)
 	popup.size = Vector2(200, 20)
 	popup.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -463,7 +466,7 @@ func drill_status() -> String:
 		return "PANE! volta em %ds" % ceili(outage_left)
 	if no_fuel:
 		return "SEM CARVÃO"
-	return "perfurando  %.2f minério/s" % reactor_rate()
+	return "perfurando  %.2f minério/s" % (reactor_rate() * _fundo_mult())
 
 
 ## Multiplicador da chance de achado (reator Cristal).
@@ -502,7 +505,7 @@ func reactor_block_reason(id: String) -> String:
 		parts.append("%d peças raras" % (cost.z - finds.rare_parts))
 	var eco := get_tree().get_first_node_in_group("economy")
 	if eco:
-		var m: String = eco.missing_text(cost.x, cost.y, "ferro")
+		var m: String = eco.metal_falta(cost.x, cost.y, "ferro")  # Bloco 87
 		if m != "":
 			parts.append(m.trim_prefix("falta "))
 	return "falta " + ", ".join(parts) if not parts.is_empty() else ""
@@ -515,7 +518,7 @@ func build_reactor(id: String) -> bool:
 		return false
 	var cost := reactor_cost(id)
 	var eco := get_tree().get_first_node_in_group("economy")
-	if not eco.spend(cost.x, cost.y, "ferro"):
+	if not eco.paga_metal(cost.x, cost.y, "ferro"):
 		return false
 	get_tree().get_first_node_in_group("finds").spend_parts(cost.z)
 	# Bloco 31b: pagou -> vira obra; o reator só entra quando o engenheiro terminar
@@ -583,7 +586,7 @@ func _drill(delta: float) -> void:
 				no_fuel = true
 				_fuel_retry = 2.0
 				return
-	_drill_accum += reactor_rate() * delta
+	_drill_accum += reactor_rate() * delta * _fundo_mult()
 	while _drill_accum >= 1.0:
 		_drill_accum -= 1.0
 		_deliver_ore(_pick_ore())
@@ -604,7 +607,17 @@ func _take_coal(amount: float) -> bool:
 	return false
 
 
+## Bloco 70: com o abismo (S3) aberto a broca rende mais (Fundo.broca_s3_mult).
+func _fundo_mult() -> float:
+	var fundo := get_tree().get_first_node_in_group("fundo")
+	return fundo.broca_mult() if fundo else 1.0
+
+
 func _pick_ore() -> String:
+	var fundo := get_tree().get_first_node_in_group("fundo")
+	var cristal: String = fundo.cristal_da_broca() if fundo else ""
+	if cristal != "":
+		return cristal  # Bloco 70: no fundo aberto a broca também acha cristal
 	var mix: Dictionary = REACTOR_MIX.get(reactor, {"ferro": 1.0})
 	var r := randf()
 	for t in mix:

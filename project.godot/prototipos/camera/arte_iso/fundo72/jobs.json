@@ -1,0 +1,35 @@
+{
+ "faixa_s4_0": {
+  "job": "0e4bc948-a3a1-444f-a217-f03d8bb0dd6f",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo72\\faixa_s4_0.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "faixa_s4_1": {
+  "job": "6787696d-5f72-47c2-a117-533efef034b7",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo72\\faixa_s4_1.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "faixa_s5_0": {
+  "job": "4f690b9e-60b7-43f0-ba8e-10fb2499d6a3",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo72\\faixa_s5_0.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "faixa_s5_1": {
+  "job": "5b02e1f0-e285-4dcc-a1df-6b9b5e31cfed",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo72\\faixa_s5_1.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "rio_lava": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundo72\\rio_lava.png"
+ }
+}

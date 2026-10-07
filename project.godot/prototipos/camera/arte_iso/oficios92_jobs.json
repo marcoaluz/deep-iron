@@ -1,0 +1,114 @@
+{
+ "fundidor": {
+  "job": "72c33e68-0acb-4e0c-8f95-0a4e3b2c343f",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundidor\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "fundidora": {
+  "job": "8c8dc7e7-0fef-453e-b56c-89b2f3e19de8",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\fundidora\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "ferreiro": {
+  "job": "aae0a13a-2a0a-4e38-80c6-c7728a623d03",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ferreiro\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "ferreira": {
+  "job": "c3015e13-5c18-4795-a22a-695fd246bdcd",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ferreira\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "padre": {
+  "job": "5c371be7-bba2-48ce-935f-f3a4c750df70",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\padre\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "icone_fundidor": {
+  "job": "1adf6ca1-1a93-4604-bdbb-a68ed4740cea",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_fundidor.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_ferreiro": {
+  "job": "b09dd8aa-790f-40df-bd5d-381024cac8e8",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_ferreiro.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_padre": {
+  "job": "bbb44204-dd3a-49e2-b75a-dd1c287e0ef2",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_padre.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "carpinteiro": {
+  "job": "3035f260-618d-4e9b-afa4-7a1e4f1529b1",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\carpinteiro\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "carpinteira": {
+  "job": "bb27227b-cebe-4575-aac8-1dd93c322d01",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\carpinteira\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "icone_carpinteiro": {
+  "job": "9c311795-9335-4b0a-a5d4-5e8b44a0ddf0",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_carpinteiro.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_it_tabua": {
+  "job": "e88cd2d8-50d5-4045-9b4b-d1832372cf73",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_it_tabua.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_it_cama_boa": {
+  "job": "8c746446-622a-40bd-8b4e-0f1a5d751bcc",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_it_cama_boa.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_it_mochila": {
+  "job": "2a78c3d3-cc2b-43aa-ad40-a84fcae5fc1e",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_it_mochila.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_it_botas": {
+  "job": "f1b78a47-cb8c-4ee7-b33d-b5d32d4cefd8",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_it_botas.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_it_picareta_de_aco": {
+  "job": "c12d8437-b497-4845-a1d6-169607aafc5e",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_it_picareta_de_aco.png",
+  "ok": true,
+  "candidatos": 64
+ }
+}

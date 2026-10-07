@@ -1,0 +1,31 @@
+{
+ "umido": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\relevo\\umido\\candidatos.png"
+ },
+ "lago": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\relevo\\lago\\candidatos.png"
+ },
+ "zona_agua": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\relevo\\zona_agua\\candidatos.png"
+ },
+ "zona_acido": {
+  "job": "d13a6db5-bbb6-4da6-a397-bb57cbe83b26",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\relevo\\zona_acido\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "zona_borda": {
+  "job": "7215c267-c2e9-456e-a1ef-d3c8ca9ca135",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\relevo\\zona_borda\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ }
+}

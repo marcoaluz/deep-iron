@@ -18,7 +18,7 @@ signal replenished
 
 @export_group("Mineração")
 ## Tipo de minério desta jazida: "ferro", "cobre" ou "carvao".
-@export_enum("ferro", "cobre", "carvao", "prata", "solarita") var ore_type: String = "ferro"
+@export_enum("ferro", "cobre", "carvao", "prata", "solarita", "cristal_verde", "cristal_rubro", "gema_azul") var ore_type: String = "ferro"
 ## Minério tirado por segundo por ipezinho (ritmo: era 4.0).
 @export var MINE_RATE: float = 3.0
 @export var ore_total: float = 200.0
@@ -52,7 +52,11 @@ var _base_scale: Vector2
 var _unlocked: bool = true
 var _needs_descent: bool = false  # trancada porque o nível 2 ainda não abriu
 var _needs_village: bool = false  # Bloco 33: galeria lacrada até a vila crescer
+var _motivo_descida := ""  # Bloco 71: por que a descida até aqui está fechada (texto do nível)
 var _rubble: Sprite2D = null  # entulho com tábuas em X na frente da galeria lacrada
+## Bloco 60: o entulho foi explodido com dinamite (a galeria abriu antes da vila crescer).
+var blasted := false
+var panel_id := "galeria"
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _label: Label = $AmountLabel
@@ -129,10 +133,23 @@ func on_unlock_changed(animate: bool = true) -> void:
 	if env != null and env.has_method("is_abyss") and env.is_abyss(global_position):
 		var abyss := get_tree().get_first_node_in_group("elevador_abismo")
 		_needs_descent = _needs_descent or not (abyss != null and abyss.unlocked)
+	# Bloco 71: nos níveis novos (S4, S5), toda ligação do caminho até aqui aberta
+	if env != null and env.has_method("nivel_extra_em"):
+		var nx: Resource = env.nivel_extra_em(global_position)
+		if nx:
+			_needs_descent = _needs_descent or preload("res://scripts/core/niveis.gd").motivo(get_tree(), nx) != ""
 	# Bloco 33: galeria lacrada até a vila chegar no estágio
 	var hub := get_tree().get_first_node_in_group("village_hub")
-	_needs_village = hub != null and hub.level < min_village_level
+	_needs_village = hub != null and hub.level < min_village_level and not blasted
+	if _needs_village and not is_in_group("clickable"):
+		add_to_group("clickable")  # Bloco 60: clique no entulho abre a janela da galeria
+	elif not _needs_village and is_in_group("clickable"):
+		remove_from_group("clickable")
 	_unlocked = tool_ok and not _needs_descent and not _needs_village
+	_motivo_descida = ""
+	if _needs_descent and env != null:  # Bloco 71: o motivo do nível (pesquisa, plataforma...), não sempre "escavadeira"
+		var nv: Resource = preload("res://scripts/core/niveis.gd").do_ponto(env, global_position)
+		_motivo_descida = preload("res://scripts/core/niveis.gd").motivo(get_tree(), nv) if nv else ""
 	_update_rubble(was_sealed and animate)
 	if _unlocked and not was and animate:
 		var pop := create_tween()
@@ -158,6 +175,38 @@ func _update_rubble(animate: bool) -> void:
 	t.tween_property(_rubble, "scale", Vector2(2.6, 0.6), 0.5).set_ease(Tween.EASE_IN)
 	t.tween_property(_rubble, "modulate:a", 0.0, 0.5)
 	t.chain().tween_callback(func(): _rubble.visible = false)
+
+
+## Bloco 57: o coletor de minério tira `amount` daqui (0 se trancada/esgotada). Esgotou: entra no
+## descanso como na mineração manual.
+func extract(amount: float) -> float:
+	if not _unlocked or _cooldown > 0.0 or ore_remaining <= 0.0:
+		return 0.0
+	var taken := minf(amount, ore_remaining)
+	ore_remaining -= taken
+	if ore_remaining <= 0.0:
+		ore_remaining = 0.0
+		_cooldown = depleted_cooldown
+		depleted.emit()
+	_update_visual()
+	return taken
+
+
+## Bloco 71: a jazida fica num nível novo (S4, S5...)? Lá o motivo vem dos dados; no nível 2 e no
+## abismo o texto de sempre continua.
+func env_nivel_novo() -> bool:
+	var env := get_tree().get_first_node_in_group("environment")
+	return env != null and env.has_method("nivel_extra_em") and env.nivel_extra_em(global_position) != null
+
+
+## Bloco 60: dinamite no entulho.
+func blast_open() -> void:
+	blasted = true
+	on_unlock_changed(true)
+
+
+func contains_point(p: Vector2) -> bool:
+	return Rect2(global_position + Vector2(-40, -60), Vector2(80, 70)).has_point(p)
 
 
 func has_ore() -> bool:
@@ -209,6 +258,8 @@ func _update_visual() -> void:
 		if _needs_village:
 			var hub := get_tree().get_first_node_in_group("village_hub")
 			_label.text = "Galeria lacrada (%s)\nabre com a vila: %s" % [Ores.display_name(ore_type).to_lower(), hub.stage_name(min_village_level) if hub else "?"]
+		elif _needs_descent and _motivo_descida != "" and env_nivel_novo():
+			_label.text = "%s: %s" % [Ores.display_name(ore_type), _motivo_descida]
 		elif _needs_descent:
 			_label.text = "%s: fechado até a\nescavadeira ficar pronta" % Ores.display_name(ore_type)
 		else:
@@ -236,6 +287,7 @@ func get_save_data() -> Dictionary:
 		"cooldown": _cooldown,
 		"variant": textures.find(_visual.texture),
 		"flip": _visual.flip_h,
+		"blasted": blasted,
 	}
 
 
@@ -246,4 +298,5 @@ func load_save_data(d: Dictionary) -> void:
 	if variant >= 0 and variant < textures.size():
 		_visual.texture = textures[variant]
 	_visual.flip_h = SaveUtil.boolean(d, "flip", _visual.flip_h)
+	blasted = SaveUtil.boolean(d, "blasted", false)  # Bloco 60
 	on_unlock_changed(false)

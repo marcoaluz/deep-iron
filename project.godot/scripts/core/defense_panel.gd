@@ -3,11 +3,13 @@ extends PanelContainer
 ## próxima invasão, portões (ampliar/consertar), guardas, campo de treino e armas.
 ## Bloco 35: Arsenal (construir, cavalete, fila da forja), forjar/consertar cada arma e a
 ## arma + durabilidade de cada guarda (desarmado em destaque).
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _def: Node
 var _status: Label
 var _gate_rows: Dictionary = {}  # gate_id -> {label, up, fix}
+var _poco_label: Label
 var _guards_label: Label
 var _campo_button: Button
 var _weapon_rows: Dictionary = {}  # id -> {status, button, fix}
@@ -38,7 +40,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("DEFESA", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("DEFESA", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var close: Button = _hud._button("X")
@@ -46,21 +48,21 @@ func _build() -> void:
 		Audio.click()
 		visible = false)
 	header.add_child(close)
-	_status = _hud._label("", 14, _hud.COLOR_TEXT)
+	_status = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_status)
 
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("MURO (as criaturas precisam derrubar pra entrar)", 12, _hud.COLOR_DIM))
-	for id in ["tunel", "poco"]:
-		var l: Label = _hud._label("", 12, _hud.COLOR_TEXT)
+	vbox.add_child(_hud._label("MURO (o que vem da floresta precisa derrubar pra entrar)", Tipo.DETALHE, _hud.COLOR_DIM))
+	for id in ["tunel"]:  # Bloco 80: o único portão (o do poço saiu)
+		var l: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 		vbox.add_child(l)
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 4)
 		vbox.add_child(row)
 		var up: Button = _hud._button("")
 		up.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		up.add_theme_font_size_override("font_size", 12)
+		up.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		up.pressed.connect(func():
 			Audio.click()
 			var g: Node = _def.gate(id)
@@ -69,7 +71,7 @@ func _build() -> void:
 			refresh())
 		row.add_child(up)
 		var fix: Button = _hud._button("")
-		fix.add_theme_font_size_override("font_size", 12)
+		fix.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		fix.custom_minimum_size.x = 150
 		fix.pressed.connect(func():
 			Audio.click()
@@ -79,9 +81,12 @@ func _build() -> void:
 			refresh())
 		row.add_child(fix)
 		_gate_rows[id] = {"label": l, "up": up, "fix": fix}
+	_poco_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)  # Bloco 80: o poço não tem muro
+	_poco_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(_poco_label)
 
 	vbox.add_child(HSeparator.new())
-	_guards_label = _hud._label("", 12, _hud.COLOR_TEXT)
+	_guards_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	_guards_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_guards_label)
 	_campo_button = _hud._button("")
@@ -92,8 +97,8 @@ func _build() -> void:
 	vbox.add_child(_campo_button)
 
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("ARSENAL — armas se gastam na luta; quebrou, o guarda vem aqui buscar outra", 12, _hud.COLOR_DIM))
-	_arsenal_label = _hud._label("", 12, _hud.COLOR_TEXT)
+	vbox.add_child(_hud._label("ARSENAL — armas se gastam na luta; quebrou, o guarda vem aqui buscar outra", Tipo.DETALHE, _hud.COLOR_DIM))
+	_arsenal_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	_arsenal_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_arsenal_label)
 	_arsenal_button = _hud._button("")
@@ -102,7 +107,7 @@ func _build() -> void:
 		_def.build_arsenal()
 		refresh())
 	vbox.add_child(_arsenal_button)
-	_forge_label = _hud._label("", 12, _hud.COLOR_TEXT)
+	_forge_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	_forge_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_forge_label)
 	_forge_bar = _hud._bar(_hud.COLOR_TITLE)
@@ -122,8 +127,8 @@ func _build() -> void:
 		info.mouse_filter = Control.MOUSE_FILTER_PASS
 		info.add_child(_hud._label("%s — dano %d%s  •  aguenta %d golpes" % [_def.WEAPON_NAMES[id], roundi(_def.weapon_damage[i]),
 			(", de longe" if _def.weapon_range[i] > 40.0 else (", forte contra Ferrugentos" if _def.weapon_vs_ferrugento[i] > 1.0 else "")),
-			roundi(_def.weapon_max_durability(id))], 13, _hud.COLOR_TEXT))
-		var status: Label = _hud._label("", 11, _hud.COLOR_DIM)
+			roundi(_def.weapon_max_durability(id))], Tipo.CORPO, _hud.COLOR_TEXT))
+		var status: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 		status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		info.add_child(status)
 		var buttons := VBoxContainer.new()
@@ -131,7 +136,7 @@ func _build() -> void:
 		row.add_child(buttons)
 		var b: Button = _hud._button("Forjar")
 		b.custom_minimum_size.x = 150
-		b.add_theme_font_size_override("font_size", 12)
+		b.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		b.pressed.connect(func():
 			Audio.click()
 			_def.start_forge(id)
@@ -139,7 +144,7 @@ func _build() -> void:
 		buttons.add_child(b)
 		var fix: Button = _hud._button("Consertar")
 		fix.custom_minimum_size.x = 150
-		fix.add_theme_font_size_override("font_size", 12)
+		fix.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		fix.pressed.connect(func():
 			Audio.click()
 			_def.start_repair(id)
@@ -170,15 +175,13 @@ func refresh() -> void:
 			continue
 		var name_lvl: String = g.LEVEL_NAMES[g.level]
 		var hp_txt := "" if g.level == 0 else "  •  vida %d/%d" % [roundi(g.hp), roundi(g.max_hp())]
-		if id == "poco" and not _def.level2_open():
-			hp_txt += "  (Ferrugentos só depois do nível 2)"
 		row.label.text = "%s: %s%s" % [g.display_name, name_lvl, hp_txt]
 		var up_reason: String = g.upgrade_block_reason()
 		if up_reason == "nível máximo":
 			row.up.text = "Máximo"
 		elif up_reason == "":
 			var c: Vector3i = g.upgrade_costs[g.level + 1]
-			row.up.text = "Construir %s (%s)" % [g.LEVEL_NAMES[g.level + 1].split(" ")[0].to_lower(), _cost_text(c, g.upgrade_ore[g.level + 1])]
+			row.up.text = "Construir %s (%s)" % [g.LEVEL_NAMES[g.level + 1].split(" ")[0].to_lower(), _cost_text(c, g.upgrade_ore[g.level + 1], g.upgrade_item_cost())]
 		else:
 			row.up.text = "Ampliar: " + up_reason
 		row.up.disabled = up_reason != ""
@@ -187,10 +190,13 @@ func refresh() -> void:
 		row.fix.text = "Consertar (%d madeira)" % g.repair_cost() if fix_reason == "" else ("Inteiro" if fix_reason == "inteiro" else "Consertar: " + fix_reason)
 		row.fix.disabled = fix_reason != ""
 
+	_poco_label.text = ("Poço do elevador: SEM MURO — os Ferrugentos (robôs enferrujados) e o que mais vem do fundo "
+		+ "saem direto da boca do poço. Metade dos guardas faz posto lá.") if _def.level2_open() \
+		else "Poço do elevador: fechado (os Ferrugentos só saem dele depois que o nível 2 abre)."
 	var gs: Array = _def.guards()
 	var ready_n := gs.filter(func(w): return w.combat_skill >= 1.0).size()
 	var unarmed: Array = _def.unarmed_guards()
-	var lines: Array[String] = ["Guardas: %d (%d treinados)%s  •  X faz guarda. De dia treinam no campo; à noite vão pros portões." % [
+	var lines: Array[String] = ["Guardas: %d (%d treinados)%s  •  X faz guarda. De dia treinam no campo; à noite vão pro portão (e pro poço, com o nível 2 aberto)." % [
 		gs.size(), ready_n, ("  •  %d DESARMADO%s" % [unarmed.size(), "S" if unarmed.size() > 1 else ""]) if not unarmed.is_empty() else ""]]
 	for w in gs:
 		if w.downed:  # Bloco 36
@@ -245,14 +251,18 @@ func refresh() -> void:
 		if reason != "" and not reason.begins_with("falta"):
 			st += "  (" + reason + ")"
 		row.status.text = st
-		row.button.text = ("Forjar  (%s)" % _cost_text(_def.weapon_costs[i], _def.weapon_ore[i])) if not reason.begins_with("falta") else reason.substr(0, 1).to_upper() + reason.substr(1)
+		row.button.text = ("Forjar  (%s)" % _cost_text(_def.weapon_costs[i], _def.weapon_ore[i], _def.weapon_item_cost(id))) if not reason.begins_with("falta") else reason.substr(0, 1).to_upper() + reason.substr(1)
 		row.button.disabled = reason != ""
-		row.fix.text = "Consertar  (%s)" % _cost_text(_def.repair_cost(id), _def.weapon_ore[i]) if fix_reason == "" or fix_reason.begins_with("fila") \
+		row.fix.text = "Consertar  (%s)" % _cost_text(_def.repair_cost(id), _def.weapon_ore[i], _def.weapon_item_cost(id, true)) if fix_reason == "" or fix_reason.begins_with("fila") \
 			else ("Consertar: " + fix_reason)
 		row.fix.disabled = fix_reason != ""
 
 
-func _cost_text(c: Vector3i, ore: String) -> String:
+## Bloco 87: o metal sai em barra a partir do estágio da fornalha (Economy.custo_metal_texto).
+func _cost_text(c: Vector3i, ore: String, itens: Dictionary = {}) -> String:
+	var eco := get_tree().get_first_node_in_group("economy")
+	if eco:
+		return eco.custo_metal_texto(c.x, c.y, ore, c.z, itens)  # Bloco 94: + itens (o aço, os pregos)
 	var bits: Array[String] = []
 	if c.x > 0:
 		bits.append("%d cr" % c.x)

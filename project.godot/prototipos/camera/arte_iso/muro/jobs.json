@@ -12,5 +12,12 @@
  "portao_3": "15f4d50d-6fc4-4aa2-b084-ae14f6902d9f",
  "muro_2_v2": "0ba7d73e-7f7b-4652-9ccd-ec86f82500c9",
  "muro_3_v2": "df8e7dd3-4e48-4d6f-9314-902b474e5c4d",
- "_nota": "muro_2/3 v1 saíram de frente (não encaixam na diagonal); v2 com a paliçada n1 c0 como referência de orientação"
+ "_nota": "muro_2/3 v1 saíram de frente (não encaixam na diagonal); v2 com a paliçada n1 c0 como referência de orientação",
+ "portao_i": {
+  "_obs": "Prompt 29 parte 2 (2026-10-01): portão refeito no EIXO i (o de 2026-09 saiu no eixo j). create_image_pro 126x198 + guia_portao + portão antigo espelhado (estrutura) + reta do muro do nível + portao_i nivel_1 (orientação/luz). 20 gerações cada.",
+  "nivel_1": "42f0519c-d3d9-428b-a222-8878e8977462",
+  "quebrado": "d1fc6f0e-58a9-49de-9d2e-987a81f07514",
+  "nivel_2": "4c7d9065-8088-4f24-8113-8a715405e149",
+  "nivel_3": "010f03ee-f1c9-4921-b35c-aa70fbe2a150"
+ }
 }

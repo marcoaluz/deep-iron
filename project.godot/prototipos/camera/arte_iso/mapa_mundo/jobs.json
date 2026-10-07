@@ -1,0 +1,16 @@
+{
+ "coluna": {
+  "job": "cccbc475-655f-4f6e-94fe-9210cf91b8e4",
+  "custo": 40,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mapa_mundo\\coluna.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "quadrado": {
+  "job": "8738dce2-3301-4d4a-bce0-81b97b6915e8",
+  "custo": 40,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mapa_mundo\\quadrado.png",
+  "ok": true,
+  "candidatos": 1
+ }
+}

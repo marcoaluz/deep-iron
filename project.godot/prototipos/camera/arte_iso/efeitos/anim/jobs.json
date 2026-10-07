@@ -1,0 +1,30 @@
+{
+ "chama_p_anim": {
+  "job": "5a6f5e29-12ad-4322-9d64-28ba93b7f73b",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos\\anim\\chama_p.png",
+  "ok": true,
+  "candidatos": 9
+ },
+ "chama_g_anim": {
+  "job": "fa67d7e3-605c-4373-b74d-8b1bd49631de",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos\\anim\\chama_g.png",
+  "ok": true,
+  "candidatos": 9
+ },
+ "barril_fogo_anim": {
+  "job": "efda2bf6-fb24-4cce-8f36-e676c904ffe8",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos\\anim\\barril_fogo.png",
+  "ok": true,
+  "candidatos": 9
+ },
+ "bandeirinhas_anim": {
+  "job": "5fdea808-5263-4374-b16f-ddebd7f67105",
+  "custo": 1,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/efeitos\\anim\\bandeirinhas.png",
+  "ok": true,
+  "candidatos": 9
+ }
+}

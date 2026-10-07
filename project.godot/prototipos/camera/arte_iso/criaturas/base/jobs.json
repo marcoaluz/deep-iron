@@ -1,0 +1,26 @@
+{
+ "lumivoro": {
+  "job": "4c50f22a-e922-4f89-bdd6-c85f4685da63",
+  "custo": 25,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/base\\lumivoro_candidatos.png",
+  "ok": true
+ },
+ "lumivoro_bruto": {
+  "job": "4d5fd442-2c5a-4c24-be1c-f61ecd5fb4b0",
+  "custo": 25,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/base\\lumivoro_bruto_candidatos.png",
+  "ok": true
+ },
+ "ferrugento": {
+  "job": "fb2e698b-3094-4a37-b861-535e50cb2c85",
+  "custo": 25,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/base\\ferrugento_candidatos.png",
+  "ok": true
+ },
+ "ferrugento_carregador": {
+  "job": "d387487f-d4d4-4b80-bb4d-9daa0d8a2456",
+  "custo": 25,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/criaturas/base\\ferrugento_carregador_candidatos.png",
+  "ok": true
+ }
+}

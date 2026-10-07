@@ -1,0 +1,39 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/nivel_mina.gd" id="1_nivel"]
+
+[resource]
+script = ExtResource("1_nivel")
+id = "S4"
+nome = "S4 — CACHOEIRA E LAVA"
+profundidade = 4
+area = "s4"
+rect = Rect2(-700, 4400, 1400, 260)
+perigo = "calor"
+traje = "calor"
+pesquisa = "bombas"
+ligacao = "elevador_s4"
+em_breve = false
+minerios = PackedStringArray("cristal_rubro", "cristal_verde", "solarita")
+criaturas = PackedStringArray("magmante")
+cor_ambiente = Color(0.8, 0.88, 1, 1)
+cor_nevoa = Color(0.55, 0.7, 1, 0.1)
+particulas = "gotas"
+faixa = "faixa_s4"
+cor_faixa = Color(0.12, 0.18, 0.28, 1)
+descricao = "Uma cachoeira despenca do teto sobre o chão quente: vapor e poças d'água entre os poços de lava. Quem passa pela água fica molhado e a lava queima menos. Cristais de todas as cores."
+decoracao = [["fx:cachoeira", -78, 4426], ["passarela_0", 52.5, 4493, true], ["ponte_0", 25.5, 4531, true], ["cristal_violeta_0", -260.9, 4448], ["cristal_ciano_1", 155.9, 4440], ["cristal_lima_0", 496.4, 4546.5], ["cristal_brasa_1", -521.8, 4571], ["cristal_violeta_1", 25.5, 4620], ["bica_vapor", -560, 4491, true], ["bica_vapor", -210, 4530, true], ["bica_vapor", 280, 4600, true]]
+perigos = [["agua", -78, 4456, 60], ["agua", -25.5, 4505.5, 46], ["agua", 78, 4554.5, 44], ["lava", -391.4, 4538, 44], ["lava", 326.1, 4530, 46], ["lava", 195.7, 4604, 40], ["lava", -326.1, 4604, 42]]
+jazidas = [["cristal_rubro", -431.1, 4497, 80.0, 1.4, 0.15], ["cristal_rubro", 260.9, 4481, 80.0, 1.4, 0.15], ["cristal_verde", 391.4, 4587.5, 120.0, 2.0, 0.25], ["solarita", -155.9, 4604, 90.0, 1.6, 0.18]]
+ligacao_topo = Vector2(434.6, 4104)
+ligacao_fundo = Vector2(630.0, 4532.6)
+ligacao_acima = "elevador_abismo"
+conserto = Vector4i(2500, 14, 120, 150)
+conserto_minerio = "solarita"
+conserto_estagio = 5
+animo = -4.0
+animo_motivo = "o barulho e o vapor da cachoeira"
+titulo_abertura = "A CACHOEIRA DO FUNDO!"
+decoracao_sorteada = [[14, ["escora", "andaime", "escada_mao", "tabuas", "caixote_palha", "barril", "placa_perigo", "cano", "corda", "palete"]], [12, ["cristal_violeta_0", "cristal_ciano_0", "cristal_lima_1", "cristal_brasa_0", "cristal_violeta_1", "rocha_mina_2"]]]
+decalques = [["rio_lava_0", -365.9, 4567]]
+mapa_regiao = Rect2(13, 318, 150, 72)

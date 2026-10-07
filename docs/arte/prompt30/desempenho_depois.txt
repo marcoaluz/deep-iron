@@ -1,0 +1,5 @@
+vila de perto (1 px de arte = 2 px de tela): 74 fps em média (13.5 ms), 99% dos quadros até 15.6 ms, pior 124.3 ms
+parada longe (mapa quase inteiro): 75 fps em média (13.3 ms), 99% dos quadros até 13.3 ms, pior 13.3 ms
+parada longe + 20 ipezinhos a mais trabalhando: 73 fps em média (13.8 ms), 99% dos quadros até 26.7 ms, pior 63.6 ms
+mapa cheio: 40 ipezinhos, noite com luzes, invasão (parada longe): 47 fps em média (21.3 ms), 99% dos quadros até 37.9 ms, pior 77.6 ms
+mapa cheio, zoom de jogo (vila de perto): 59 fps em média (16.9 ms), 99% dos quadros até 33.8 ms, pior 34.7 ms

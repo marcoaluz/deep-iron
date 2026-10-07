@@ -9,6 +9,7 @@ extends Node2D
 ## e o aviso escrito. A zona é andável; quem não pode entrar é o ipezinho sem traje.
 
 const SIGN := preload("res://assets/game/placa_perigo.png")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const KINDS := ["gas", "calor", "radiacao"]
 const COLORS := {"gas": Color(0.45, 0.8, 0.35), "calor": Color(1.0, 0.45, 0.15), "radiacao": Color(0.75, 1.0, 0.3)}
 
@@ -56,7 +57,7 @@ func _ready() -> void:
 	s.z_index = 0
 	add_child(s)
 	_label = Label.new()
-	_label.add_theme_font_size_override("font_size", 11)
+	_label.add_theme_font_size_override("font_size", Tipo.MAPA)
 	_label.add_theme_color_override("font_color", c.lightened(0.3))
 	_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_label.add_theme_constant_override("outline_size", 4)

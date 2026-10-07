@@ -14,12 +14,13 @@ signal stored_changed(total: float)
 @export var deposit_sound_interval: float = 0.5
 
 const Ores := preload("res://scripts/core/ores.gd")
+const Items := preload("res://scripts/core/items.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 
 ## Soma de todos os tipos (a pilha e o texto usam isso).
 var total_stored: float = 0.0
 ## Estoque por tipo de minério ("ferro", "cobre", "carvao").
-var stock: Dictionary = {"ferro": 0.0, "cobre": 0.0, "carvao": 0.0, "prata": 0.0, "solarita": 0.0}
+var stock: Dictionary = {"ferro": 0.0, "cobre": 0.0, "carvao": 0.0, "prata": 0.0, "solarita": 0.0, "cristal_verde": 0.0, "cristal_rubro": 0.0, "gema_azul": 0.0}
 ## Tudo que já entrou neste armazém desde o começo (não diminui com venda/gasto).
 var lifetime_stored: float = 0.0
 ## Madeira (coluna separada: não é minério, não vende, não conta nos marcos da vila).
@@ -29,6 +30,9 @@ var wood_stored: float = 0.0
 var raw_stored: float = 0.0
 ## Bloco 42: couro da caça (material do casaco de inverno e dos trajes). Não se vende.
 var leather_stored: float = 0.0
+## Bloco 82: itens PROCESSADOS (barras, aço, lingote, prego...: items.gd com onde = "itens") — id -> quantidade.
+## Fora do `stock` de propósito: não entram no total de minério (pilha, marcos, custo em minério qualquer).
+var itens: Dictionary = {}
 var _pending_popup: float = 0.0
 var _popup_timer: float = 0.0
 var _sound_timer: float = 0.0
@@ -78,11 +82,16 @@ func _process(delta: float) -> void:
 			raw_stored += body.deliver_raw(DEPOSIT_RATE * delta)
 			raw_moved = true
 			continue
+		if body.has_method("na_armazem_fundidor") and body.get_state() == "buscando_insumo":
+			body.na_armazem_fundidor(self)  # Bloco 86: larga as barras e pega os insumos da próxima leva
+			continue
 		if body.has_method("receive_raw") and body.get_state() == "fetching":
 			raw_stored -= body.receive_raw(minf(DEPOSIT_RATE * delta, raw_stored))
 			raw_stored = maxf(raw_stored, 0.0)
 			raw_moved = true
 			continue
+		if body.has_method("pega_mochila") and body.get_state() == "storing":
+			body.pega_mochila(self)  # Bloco 94: o minerador sem mochila pega uma, se tiver
 		var got: float = body.deposit(DEPOSIT_RATE * delta)
 		if got > 0.0:
 			var t: String = body.cargo_type
@@ -145,6 +154,31 @@ func take(amount: float, ore_type: String) -> float:
 	return taken
 
 
+## Bloco 82: guarda um item processado (barra, prego...).
+func add_item(id: String, amount: float) -> void:
+	if amount <= 0.0:
+		return
+	itens[id] = itens.get(id, 0.0) + amount
+	_update_label()
+
+
+## Bloco 82: tira até `amount` de um item processado. Retorna quanto saiu.
+func take_item(id: String, amount: float) -> float:
+	var taken := minf(amount, itens.get(id, 0.0))
+	if taken <= 0.0:
+		return 0.0
+	itens[id] = itens.get(id, 0.0) - taken
+	if itens[id] <= 0.0001:
+		itens.erase(id)
+	_update_label()
+	return taken
+
+
+## Bloco 82: quanto tem de um item processado.
+func item_count(id: String) -> float:
+	return itens.get(id, 0.0)
+
+
 ## Cozinheiro indo buscar matéria-prima: só serve se tiver o que pegar.
 func accepts_worker(worker: Node) -> bool:
 	if worker.has_method("get_state") and worker.get_state() == "fetching":
@@ -176,6 +210,11 @@ func _update_label() -> void:
 		_label.text += "  •  matéria-prima %d" % int(raw_stored)
 	if leather_stored >= 1.0:
 		_label.text += "  •  couro %d" % int(leather_stored)
+	var proc := 0.0
+	for k in itens:
+		proc += itens[k]
+	if proc >= 1.0:
+		_label.text += "  •  itens %d" % int(proc)  # Bloco 82
 	var stage := 0
 	for t in pile_thresholds:
 		if total_stored >= t:
@@ -205,7 +244,7 @@ func show_popup(text: String, color: Color) -> void:
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	return {"stock": stock.duplicate(), "lifetime_stored": lifetime_stored, "wood_stored": wood_stored,
-		"raw_stored": raw_stored, "leather_stored": leather_stored}
+		"raw_stored": raw_stored, "leather_stored": leather_stored, "itens": itens.duplicate()}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -216,4 +255,11 @@ func load_save_data(d: Dictionary) -> void:
 	wood_stored = maxf(SaveUtil.num(d, "wood_stored", 0.0), 0.0)
 	raw_stored = maxf(SaveUtil.num(d, "raw_stored", 0.0), 0.0)  # save antigo: 0
 	leather_stored = maxf(SaveUtil.num(d, "leather_stored", 0.0), 0.0)  # Bloco 42
+	# Bloco 82: itens processados (save antigo: nenhum). Só os do catálogo guardados aqui.
+	itens.clear()
+	var salvos := SaveUtil.dict(d, "itens")
+	for id in Items.processados():
+		var n := maxf(SaveUtil.num(salvos, id, 0.0), 0.0)
+		if n > 0.0:
+			itens[id] = n
 	_recount()

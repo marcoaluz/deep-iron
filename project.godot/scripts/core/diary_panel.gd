@@ -1,5 +1,6 @@
 extends PanelContainer
 ## Janela do Diário (tecla J): páginas descobertas + memorial de quem morreu.
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _diary: Node
@@ -28,7 +29,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("DIÁRIO DA VILA", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("DIÁRIO DA VILA", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var close: Button = _hud._button("X")
@@ -58,19 +59,19 @@ func refresh() -> void:
 	for c in _box.get_children():
 		c.queue_free()
 	if _diary.pages.is_empty():
-		_box.add_child(_hud._label("Nada escrito ainda. As páginas aparecem conforme a vila descobre o mundo lá fora.", 12, _hud.COLOR_DIM))
+		_box.add_child(_hud._label("Nada escrito ainda. As páginas aparecem conforme a vila descobre o mundo lá fora.", Tipo.DETALHE, _hud.COLOR_DIM))
 	for p in _diary.pages:
 		var e: Dictionary = _diary.ENTRIES[p.id]
-		_box.add_child(_hud._label("%s   (dia %d)" % [e.title, p.day], 15, _hud.COLOR_TITLE))
-		var t: Label = _hud._label(e.text, 12, _hud.COLOR_TEXT)
+		_box.add_child(_hud._label("%s   (dia %d)" % [e.title, p.day], Tipo.TITULO, _hud.COLOR_TITLE))
+		var t: Label = _hud._label(e.text, Tipo.DETALHE, _hud.COLOR_TEXT)
 		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		t.custom_minimum_size.x = 460
 		_box.add_child(t)
 	if dead > 0:
 		_box.add_child(HSeparator.new())
-		_box.add_child(_hud._label("MEMORIAL", 13, _hud.COLOR_DIM))
+		_box.add_child(_hud._label("MEMORIAL", Tipo.CORPO, _hud.COLOR_DIM))
 		for m in inf.memorial:
-			_box.add_child(_hud._label("† %s — dia %d" % [str(m.get("name", "?")), int(m.get("day", 1))], 12, _hud.COLOR_DIM))
+			_box.add_child(_hud._label("† %s — dia %d" % [str(m.get("name", "?")), int(m.get("day", 1))], Tipo.DETALHE, _hud.COLOR_DIM))
 
 
 func button_text() -> String:

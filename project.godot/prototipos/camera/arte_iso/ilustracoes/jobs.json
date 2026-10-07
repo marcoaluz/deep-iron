@@ -1,0 +1,72 @@
+{
+ "robo_achado": {
+  "job": "cb59f7bd-a3cc-4f6d-b8c7-e2fd308a1e6f",
+  "custo": 20,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ilustracoes\\robo_achado.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "reator_achado": {
+  "job": "6fe7cb3b-f9ee-4a2f-ae7d-4875631608cc",
+  "custo": 20,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ilustracoes\\reator_achado.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "acidente_mina": {
+  "job": "38f75d92-20b7-476a-b6ca-02f22dc9c9dc",
+  "custo": 20,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ilustracoes\\acidente_mina.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "invasao": {
+  "job": "dd1886bf-6249-47fa-9e63-9ebf99347fcb",
+  "custo": 20,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ilustracoes\\invasao.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "greve": {
+  "job": "2524282d-f7eb-4088-8d70-11be107b6bd9",
+  "custo": 20,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ilustracoes\\greve.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "festa": {
+  "job": "721066c4-5b65-47cb-9190-e7d45299d609",
+  "custo": 20,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ilustracoes\\festa.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "onda_solar": {
+  "job": "61635454-5d2e-4dcd-ba00-50c320882ce2",
+  "custo": 20,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ilustracoes\\onda_solar.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "escudo_vitoria": {
+  "job": "271ca9ab-39d9-47b9-b987-2e9fe105b56d",
+  "custo": 20,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ilustracoes\\escudo_vitoria.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "expulso_derrota": {
+  "job": "f2ebbca8-cf51-4480-8c81-fad13e27de18",
+  "custo": 20,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ilustracoes\\expulso_derrota.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "abismo": {
+  "job": "21a8a481-f460-43cf-8ac1-05af04b940ab",
+  "custo": 20,
+  "destino": "D:/DEV/deep-iron/project.godot/prototipos/camera/arte_iso/ilustracoes\\abismo.png",
+  "ok": true,
+  "candidatos": 1
+ }
+}

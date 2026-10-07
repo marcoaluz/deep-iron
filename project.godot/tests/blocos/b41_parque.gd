@@ -82,8 +82,9 @@ func _process(delta: float) -> bool:
 		check("Construir parque" in hud._panels["moral"]._park_button.text and "100 cr" in hud._panels["moral"]._park_button.text, "parque aparece como construção, com custo")
 		check(mor.build_park(), "escolher lugar do parque")
 		var placer = g("house_placer")
-		check(placer._radius == hub.house_radius() and placer._radius_center == hub.global_position, "segue o raio das casas (%d px do Centro)" % placer._radius)
-		var q := spot_near(hub.global_position, 110.0, hub.house_radius() - 5.0)
+		# (Prompt 29: o raio das casas está desligado — parque em qualquer lugar da pedreira também)
+		check(placer._radius == hub.house_radius() and (placer._radius == 0.0 or placer._radius_center == hub.global_position), "segue o raio das casas (%d px do Centro; 0 = sem raio)" % placer._radius)
+		var q := spot_near(hub.global_position, 110.0, maxf(hub.house_radius(), 400.0) - 5.0)  # (Prompt 29: sem raio)
 		placer.move_to(q)
 		var c0: float = eco.credits
 		var f0: float = arm.stock["ferro"]
@@ -110,11 +111,17 @@ func _process(delta: float) -> bool:
 			var ws := get_nodes_in_group("ipezinhos")
 			freeze(ws[1], p.global_position + Vector2(40, 10))
 			freeze(ws[2], p.global_position + Vector2(mor.park_radius + 200.0, 0))
-			step = 3
-			t_mark = t
+			step = 25
 		elif t - t_mark > 300.0:
 			check(false, "parque não ficou pronto")
 			step = 99
+	elif step == 25:
+		# (Prompt 29) um quadro depois: o quadro em que o parque nasce é longo (refaz a navegação)
+		# e ainda corria a 8×; a medição começa limpa daqui
+		for w in get_nodes_in_group("ipezinhos").slice(1, 3):
+			w.happiness = 40.0
+		step = 3
+		t_mark = t
 	elif step == 3 and t - t_mark > 4.0:
 		var ws := get_nodes_in_group("ipezinhos")
 		var near: float = ws[1].happiness
@@ -134,7 +141,12 @@ func _process(delta: float) -> bool:
 		check(tav[0] == mor.taverna_credits and tav[1] == mor.taverna_wood and str(tav[2]) == str(mor.taverna_bonus) and tav[3] == mor.taverna_build_time, "taverna continua igual")
 		check(mor.taverna_block_reason() == "", "taverna segue construível como antes")
 		# segundo parque + save/load
-		var q2 := spot_near(hub.global_position + Vector2(0, 0), 150.0, hub.house_radius() - 5.0)
+		# (Prompt 29) o lugar sai do posicionador DO PARQUE aberto (pegada do desenho novo e os
+		# bloqueios de agora, com o 1º parque); antes usava a pegada e os bloqueios que tinham ficado
+		var plc = g("house_placer")
+		plc.begin(func(_q): return false, mor.PARQUE_TEXTURE, 1, "o parque", {})
+		var q2 := spot_near(hub.global_position + Vector2(0, 0), 150.0, maxf(hub.house_radius(), 400.0) - 5.0)
+		plc.cancel()
 		var p2 = mor.spawn_park(q2)
 		set_meta("both", [mor.parks()[0].global_position, p2.global_position])
 		root.get_node("SaveManager").save_game("teste")

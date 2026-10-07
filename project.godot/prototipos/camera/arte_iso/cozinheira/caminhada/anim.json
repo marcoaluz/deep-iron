@@ -1,0 +1,27 @@
+{
+ "SE": {
+  "ancora": [
+   66.8,
+   109.0
+  ]
+ },
+ "NE": {
+  "ancora": [
+   57.7,
+   99.0
+  ]
+ },
+ "SO": {
+  "ancora": [
+   60.2,
+   109.0
+  ]
+ },
+ "NO": {
+  "ancora": [
+   53.3,
+   99.0
+  ]
+ },
+ "_obs": "Bloco 76: caminhada de 8 quadros (walking-8-frames, skeleton-v3); a de 4 está em caminhada4/"
+}

@@ -15,6 +15,15 @@ const CAGE := preload("res://assets/game/elevador.png")
 @export var bottom_position: Vector2 = Vector2(-360, 1500)
 @export var link_travel_cost: float = 0.05
 
+@export_group("Andar (Bloco 71)")
+## A mesma plataforma serve de ligação pros níveis novos (montada pelo ambiente a partir do .tres):
+## grupo próprio, o nível que ela abre e a ligação de cima que tem que estar aberta antes.
+@export var grupo: String = "elevador_abismo"
+@export var nivel_id: String = "S3"
+@export var requer_grupo: String = "elevador"
+## Minério gasto no conserto (o do abismo é prata).
+@export var repair_ore: String = "prata"
+
 @export_group("Conserto")
 @export var repair_parts: int = 12
 @export var repair_credits: int = 1500
@@ -25,6 +34,30 @@ const CAGE := preload("res://assets/game/elevador.png")
 
 var panel_id := "abismo"
 var unlocked: bool = false
+
+@export_group("Viagem (Bloco 68)")
+## Segundos na gaiola por viagem e quantos cabem nela de uma vez (mais gente = espera a próxima).
+@export var travel_time: float = 1.6
+@export var capacity: int = 4
+var _riders: Array = []  # fim da viagem (s do relógio) de quem está na gaiola
+
+
+## Bloco 68: quanto tempo esse ipezinho fica na gaiola (a viagem + a fila, se lotou).
+func ride_wait() -> float:
+	var now := Time.get_ticks_msec() / 1000.0
+	_riders = _riders.filter(func(t): return t > now)
+	var fila := int(_riders.size() / maxi(capacity, 1))
+	var espera := travel_time * (1 + fila) / maxf(Engine.time_scale, 0.01)
+	_riders.append(now + espera)
+	return travel_time * (1 + fila)
+
+
+## Bloco 68: por que a plataforma ainda está fechada (o nível S3 lê daqui).
+func reason_locked() -> String:
+	if unlocked:
+		return ""
+	var r := repair_block_reason()
+	return "consertar a plataforma" + ((" (%s)" % r) if r != "" and r != "consertando" else (" (consertando)" if r == "consertando" else ""))
 var repairing: bool = false
 var repair_left: float = 0.0
 var _sound_timer := 0.0
@@ -39,7 +72,8 @@ var _sound_timer := 0.0
 
 
 func _ready() -> void:
-	add_to_group("elevador_abismo")
+	add_to_group(grupo)
+	add_to_group("elevadores")  # Bloco 71: toda ligação entre andares (o ipezinho entra na gaiola)
 	add_to_group("clickable")
 	_top_lamp.add_to_group("cullable_lights")
 	_bottom.position = bottom_position - global_position
@@ -56,8 +90,25 @@ func contains_point(p: Vector2) -> bool:
 
 
 func level2_open() -> bool:
-	var shaft := get_tree().get_first_node_in_group("elevador")
+	var shaft := get_tree().get_first_node_in_group(requer_grupo)
 	return shaft != null and shaft.unlocked
+
+
+## Bloco 71: o nível que esta ligação abre (dados) — nome e textos.
+func nivel() -> Resource:
+	return preload("res://scripts/core/niveis.gd").por_id(nivel_id)
+
+
+func _nome_nivel() -> String:
+	var n := nivel()
+	return n.nome if n else nivel_id
+
+
+func _nome_acima() -> String:
+	var acima := get_tree().get_first_node_in_group(requer_grupo)
+	if acima and acima.has_method("_nome_nivel"):
+		return acima._nome_nivel()
+	return "o nível 2"
 
 
 ## "" = pode consertar; "aberta" / "consertando"; senão o que falta.
@@ -67,7 +118,10 @@ func repair_block_reason() -> String:
 	if repairing:
 		return "consertando"
 	if not level2_open():
-		return "o nível 2 ainda está fechado"
+		return "%s ainda está fechado" % _nome_acima()
+	var pq := preload("res://scripts/core/niveis.gd").pesquisa_falta(get_tree(), nivel_id)  # Bloco 68: o nível pede pesquisa
+	if pq != "":
+		return pq
 	var hub := get_tree().get_first_node_in_group("village_hub")
 	if hub and hub.level < repair_min_stage:
 		return "requer vila nível %d" % repair_min_stage
@@ -77,7 +131,7 @@ func repair_block_reason() -> String:
 		parts.append("%d peças raras" % (repair_parts - finds.rare_parts))
 	var eco := get_tree().get_first_node_in_group("economy")
 	if eco:
-		var m: String = eco.missing_text(repair_credits, repair_silver, "prata")
+		var m: String = eco.missing_text(repair_credits, repair_silver, repair_ore)
 		if m != "":
 			parts.append(m.trim_prefix("falta "))
 	return "falta " + ", ".join(parts) if not parts.is_empty() else ""
@@ -88,7 +142,7 @@ func start_repair() -> bool:
 		Audio.error()
 		return false
 	var eco := get_tree().get_first_node_in_group("economy")
-	if not eco.spend(repair_credits, repair_silver, "prata"):
+	if not eco.spend(repair_credits, repair_silver, repair_ore):
 		return false
 	get_tree().get_first_node_in_group("finds").spend_parts(repair_parts)
 	repairing = true
@@ -115,10 +169,16 @@ func _process(delta: float) -> void:
 		unlocked = true
 		_apply(true)
 		var hud := get_tree().get_first_node_in_group("hud")
-		if hud:
+		var n := nivel()
+		if hud and n and n.titulo_abertura != "":
+			hud.show_banner(n.titulo_abertura, n.descricao)  # Bloco 71: os níveis novos (dados)
+		elif hud:
 			hud.show_banner("O ABISMO ABRIU!",
 				"A plataforma desce pro nível 3. Lá tem SOLARITA (precisa do Traje de chumbo), mas o calor e os acidentes são brutais.")
 		Audio.fanfare()
+		var diary := get_tree().get_first_node_in_group("diary")
+		if diary:
+			diary.unlock("nivel_" + nivel_id)  # Bloco 71 (S4, S5; o abismo não tem página própria)
 		opened.emit()
 
 
@@ -127,13 +187,17 @@ func _apply(animate: bool) -> void:
 	_top_lamp.enabled = unlocked
 	_link.enabled = unlocked
 	_sparks.emitting = repairing
+	var abismo := nivel_id == "S3"
 	if unlocked:
-		_top_label.text = "descida pro ABISMO (nível 3)"
+		_top_label.text = "descida pro ABISMO (nível 3)" if abismo else "descida pro %s" % _nome_nivel()
 		_top_label.modulate = Color(1.0, 0.65, 0.4)
 	elif not repairing:
 		_top_label.text = "Plataforma arruinada\nclique pra consertar"
 		_top_label.modulate = Color(0.8, 0.75, 0.7)
-	_bottom_label.text = "Nível 3 — o ABISMO" if unlocked else "Nível 3 — sem acesso (a plataforma lá em cima está arruinada)"
+	if unlocked:
+		_bottom_label.text = "Nível 3 — o ABISMO" if abismo else _nome_nivel()
+	else:
+		_bottom_label.text = "%s — sem acesso (a plataforma lá em cima está arruinada)" % ("Nível 3" if abismo else nivel_id)
 	_bottom_label.modulate = Color(1.0, 0.6, 0.4, 0.95) if unlocked else Color(1, 0.55, 0.45, 0.8)
 	if animate:
 		_top_sprite.scale = Vector2(2.6, 1.4)

@@ -1,0 +1,65 @@
+{
+ "cemiterio": {
+  "job": "5a0fad03-bece-46df-9419-af71f11156ac",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\cemiterio\\pronto.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "cemiterio_obra": {
+  "job": "875032f1-9d2f-41c6-8437-9d220b27d8ef",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\cemiterio\\obra_2.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "tumulo": {
+  "job": "f3ac1542-6c2f-43d2-a7d0-460f8c11e88d",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\cemiterio\\_cand_tumulo.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "corpo": {
+  "job": "d1431d1b-356a-43f2-b199-c9a826982a56",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\cemiterio\\_cand_corpo.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "corpo_costas": {
+  "job": "8593dfc8-27c6-4760-bb9c-eb8b2999805f",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\cemiterio\\_cand_corpo_costas.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "pq_ritos": {
+  "job": "b3c1ae41-c238-4b78-965a-e11287b52f61",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\cemiterio\\_cand_pq_ritos.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "cerca_cem": {
+  "job": "a4895102-6cec-4182-b7b1-8378fc1fb646",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\cemiterio\\_cand_cerca_cem.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "poste_cem": {
+  "job": "da07bf7a-6118-4ac6-a08a-abb8fcc955a6",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\cemiterio\\_cand_poste_cem.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "portao_cem": {
+  "job": "cf7b3b36-a504-46d3-8f9a-e27bf81db38f",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\cemiterio\\_cand_portao_cem.png",
+  "ok": true,
+  "candidatos": 16
+ }
+}

@@ -6,9 +6,11 @@ extends Node
 ## que a defesa começou nesta partida: jogo novo = dia 1; save de antes = o dia em que
 ## carregou, pra ninguém ser pego de surpresa), depois a cada
 ## invasion_every noites, cada onda mais forte. Um aviso aparece no fim da tarde.
-##   - Lumívoros nascem na clareira e descem pelo túnel (barricada "tunel").
-##   - Ferrugentos sobem pelo poço do elevador (barricada "poco") — só depois que
-##     o nível 2 abre (a escavação acordou eles).
+##   - Lumívoros nascem na floresta e entram pelo portão (barricada "tunel", o ÚNICO portão).
+##   - Ferrugentos (robôs pequenos e enferrujados) saem da boca do poço do elevador — só depois
+##     que o nível 2 abre (a escavação acordou eles). Bloco 80: o poço NÃO tem muro (o "portão do
+##     poço" saiu): eles e as criaturas do fundo entram direto, e os guardas fazem POSTO na boca
+##     do poço (guard_post) quando o nível 2 abre. Só o portão da floresta tem brecha (Bloco 36).
 ## Ao amanhecer os que sobraram vão embora (creature.gd -> leave_at_dawn).
 ##
 ## ARSENAL + DESGASTE (Bloco 35):
@@ -36,6 +38,8 @@ extends Node
 ##     invasor daquele portão que chegar num armazém leva raid_ore_percent do minério
 ##     guardado e raid_credit_percent dos créditos. Uma vez por portão por invasão. (O roubo
 ##     de sempre do Ferrugento — steal_amount por golpe — continua igual, à parte.)
+##     Bloco 80: só o portão da floresta abre brecha; guarda caído no posto do poço não abre
+##     (lá não tem portão: o que sobe do fundo já entra direto).
 
 signal invasion_started(wave: int)
 signal invasion_ended(killed: int)
@@ -43,6 +47,10 @@ signal invasion_ended(killed: int)
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const LUMIVORO := preload("res://scenes/creatures/lumivoro.tscn")
 const FERRUGENTO := preload("res://scenes/creatures/ferrugento.tscn")
+## Bloco 70: as criaturas do fundo (saem do poço como o Ferrugento).
+const GOSMA := preload("res://scenes/creatures/gosma.tscn")
+const MAGMANTE := preload("res://scenes/creatures/magmante.tscn")
+const CENA := {"lumivoro": LUMIVORO, "ferrugento": FERRUGENTO, "gosma": GOSMA, "magmante": MAGMANTE}
 const CAMPO_SCENE := preload("res://scenes/props/campo_treino.tscn")
 const CAMPO_TEXTURE := preload("res://assets/game/campo_treino.png")
 const Canteiro := preload("res://scripts/props/canteiro.gd")
@@ -68,8 +76,11 @@ const WEAPON_DESCRIPTIONS := {
 ## Multiplicador do dano contra Ferrugentos.
 @export var weapon_vs_ferrugento: Array[float] = [1.0, 1.0, 1.0, 1.6]
 ## x = créditos, y = minério, z = madeira.
-@export var weapon_costs: Array[Vector3i] = [Vector3i.ZERO, Vector3i(150, 40, 20), Vector3i(350, 40, 40), Vector3i(600, 60, 20)]
+## Bloco 94: a lança de prata baixou de 60 pra 48 prata (24 barras): o resto do metal é o aço da ponta.
+@export var weapon_costs: Array[Vector3i] = [Vector3i.ZERO, Vector3i(150, 40, 20), Vector3i(350, 40, 40), Vector3i(600, 48, 20)]
 @export var weapon_ore: Array[String] = ["", "ferro", "cobre", "prata"]
+## Bloco 94: itens a mais de cada arma ({item: qtd}); o conserto paga a fração repair_cost_mult (pra cima).
+@export var weapon_itens: Array[Dictionary] = [{}, {}, {}, {"aco": 6}]
 ## Segundos de ENGENHEIRO no Arsenal pra forjar cada arma (Bloco 35: só anda com engenheiro).
 @export var weapon_time: Array[float] = [0.0, 40.0, 60.0, 80.0]
 ## Bloco 35: golpes que cada arma aguenta antes de quebrar (cada ataque numa invasão gasta 1).
@@ -98,6 +109,8 @@ const WEAPON_DESCRIPTIONS := {
 @export var arsenal_build_time: float = 40.0
 ## Máximo de encomendas na fila da forja.
 @export var forge_queue_max: int = 4
+## Bloco 80: distância (px) da boca do poço até o posto dos guardas, pro lado da vila.
+@export var poco_post_dist: float = 40.0
 
 @export_group("Campo de treino")
 @export var campo_credits: int = 120
@@ -113,12 +126,54 @@ const WEAPON_DESCRIPTIONS := {
 @export var lumi_max: int = 10
 @export var ferr_per_wave: int = 1
 @export var ferr_max: int = 6
+## Bloco 70: Gosma ácida (com o S2 aberto) e Magmante (com o S3 aberto), a partir da onda indicada.
+@export var gosma_from_wave: int = 2
+@export var gosma_per_wave: int = 1
+@export var gosma_max: int = 4
+@export var magmante_from_wave: int = 3
+@export var magmante_per_wave: int = 1
+@export var magmante_max: int = 3
 ## Vida das criaturas cresce essa fração por onda.
 @export var hp_growth: float = 0.15
-## Aviso quando faltar isso (s) pro anoitecer numa noite de invasão.
-@export var warn_before: float = 40.0
-## As criaturas vão chegando ao longo desses segundos do começo da noite.
+## Bloco 83: numa noite de invasão o aviso toca a esta hora do relógio (o rádio adianta
+## research.radio_warning_bonus segundos)...
+@export_range(0.0, 24.0, 0.25) var hora_aviso_invasao: float = 21.0
+## ...e a invasão começa a esta hora (todo mundo já em casa, os guardas nos postos). Acaba no amanhecer.
+@export_range(0.0, 24.0, 0.25) var hora_invasao: float = 22.0
+## As criaturas vão chegando ao longo desses segundos do começo da invasão.
 @export var spawn_spread: float = 20.0
+## Prompt 17: a partir dessa onda, 1 a cada `strong_every` criaturas vem na forma FORTE (Lumívoro
+## bruto, Ferrugento carregador), com mais vida e dano. 0 = nunca.
+@export var strong_from_wave: int = 4
+@export var strong_every: int = 3
+@export var strong_hp_mult: float = 1.6
+@export var strong_damage_mult: float = 1.3
+
+@export_group("Tiers e chefe (Bloco 62)")
+## Tier da onda = 1 + onda / tier_every_waves + pesquisas feitas / tier_research_step.
+@export var tier_every_waves: int = 3
+@export var tier_research_step: int = 4
+## Por tier acima do 1: vida extra e o forte vem mais vezes (strong_every - 1 por tier, mínimo 2).
+@export var tier_hp_bonus: float = 0.12
+## A partir deste tier, os fortes viram ELITE (ancião/blindado): mais vida e dano.
+@export var elite_from_tier: int = 3
+@export var elite_hp_mult: float = 1.35
+@export var elite_damage_mult: float = 1.2
+## O CHEFE (Matriarca dos Lumívoros): uma vez por estação, a partir desta estação da partida
+## (0 = 1ª primavera, 1 = 1º verão...), na 1ª invasão dela.
+@export var boss_from_season: int = 1
+@export var boss_hp_mult: float = 10.0
+@export var boss_damage_mult: float = 2.0
+## Grito: a cada tantos segundos chama mais Lumívoros perto dela (até boss_call_max no total).
+@export var boss_call_every: float = 9.0
+@export var boss_call_count: int = 2
+@export var boss_call_max: int = 8
+## Golpe dela num guarda armado gasta a arma (pontos de durabilidade a mais).
+@export var boss_weapon_corrode: float = 4.0
+## Recompensa: solarita, peças raras e pontos na pesquisa em andamento.
+@export var boss_reward_solarita: int = 40
+@export var boss_reward_parts: int = 2
+@export var boss_reward_research: float = 80.0
 
 ## Armas que a vila já sabe fazer (forjou pelo menos uma vez; o porrete já vem).
 var weapons: Array = ["porrete"]
@@ -133,12 +188,23 @@ var wave: int = 0
 var start_day: int = -1
 var invasion_active: bool = false
 var killed_tonight: int = 0
+## Prompt 17: criaturas nascidas nesta noite (pra escolher a forma forte).
+var _spawned: int = 0
 var _warned_day: int = -1
 var _spawn_queue: Array = []  # [{kind, at}]
 ## Bloco 36: portões que já foram saqueados nesta invasão (brecha rouba uma vez só).
 var _raided_gates: Array = []
 var _night_time: float = 0.0
 var _sound_timer := 0.0
+## Bloco 62: chefe por estação da partida: {"<n>": "veio" | "derrotado" | "fugiu"}.
+var bosses := {}
+var _boss: Node = null
+## Bloco 83: `time` do relógio no quadro anterior (INF = ainda não sabe: depois de carregar não dispara).
+var _t_antes := INF
+var _boss_called := 0
+var _boss_call_t := 0.0
+## O que aconteceu com a última onda (telemetria): {onda, tier, total, derrubadas, chefe}.
+var last_result := {}
 
 
 func _ready() -> void:
@@ -189,6 +255,21 @@ func level2_open() -> bool:
 	return shaft != null and shaft.unlocked
 
 
+## Bloco 70: a plataforma do abismo (S3) está aberta?
+func abyss_open() -> bool:
+	var ab := get_tree().get_first_node_in_group("elevador_abismo")
+	return ab != null and ab.unlocked
+
+
+## Bloco 70: quantas criaturas do fundo vêm nesta onda.
+func fundo_count(kind: String, w: int = wave) -> int:
+	if kind == "gosma":
+		return clampi(gosma_per_wave * (w - gosma_from_wave + 1), 0, gosma_max) if level2_open() and w >= gosma_from_wave else 0
+	if kind == "magmante":
+		return clampi(magmante_per_wave * (w - magmante_from_wave + 1), 0, magmante_max) if abyss_open() and w >= magmante_from_wave else 0
+	return 0
+
+
 func first_day() -> int:
 	return maxi(start_day, 1) + first_invasion_day - 1
 
@@ -201,7 +282,7 @@ func is_invasion_night(day: int) -> bool:
 func next_invasion_day() -> int:
 	var dn := _dn()
 	var d: int = dn.day if dn else 1
-	if dn and dn.is_night():
+	if dn and dn.time >= tempo_invasao():
 		d += 1  # a de hoje já começou (ou não era hoje)
 	while not is_invasion_night(d):
 		d += 1
@@ -263,6 +344,8 @@ func downed_guards() -> Array:
 	return get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return w.get("downed"))
 
 
+## O portão de quem caiu nesse ponto: o portão mais perto — mas se o posto do poço (sem portão, Bloco 80)
+## estiver mais perto que qualquer portão, "" (cair lá não abre brecha).
 func nearest_gate_id(pos: Vector2) -> String:
 	var best := ""
 	var best_d := INF
@@ -271,11 +354,39 @@ func nearest_gate_id(pos: Vector2) -> String:
 		if d < best_d:
 			best_d = d
 			best = g.gate_id
+	var poco := posto_poco()
+	if poco != Vector2.INF and pos.distance_to(poco) < best_d:
+		return ""
 	return best
 
 
+## Bloco 80: a boca do poço do elevador (de onde sobe o que vem do fundo), ou Vector2.INF.
+func boca_poco() -> Vector2:
+	var shaft := get_tree().get_first_node_in_group("elevador") as Node2D
+	return shaft.global_position if shaft else Vector2.INF
+
+
+## Bloco 80: o lado da vila visto da boca do poço (pra onde os guardas do posto olham pra fora).
+func _poco_dentro() -> Vector2:
+	var b := boca_poco()
+	var alvo := get_tree().get_first_node_in_group("armazens") as Node2D
+	if alvo == null:
+		alvo = get_tree().get_first_node_in_group("village_hub") as Node2D
+	if b == Vector2.INF or alvo == null or alvo.global_position.distance_to(b) < 1.0:
+		return Vector2.DOWN
+	return (alvo.global_position - b).normalized()
+
+
+## Bloco 80: o POSTO dos guardas na boca do poço (o poço não tem muro) — só com o nível 2 aberto.
+func posto_poco() -> Vector2:
+	if not level2_open():
+		return Vector2.INF
+	var b := boca_poco()
+	return b + _poco_dentro() * poco_post_dist if b != Vector2.INF else Vector2.INF
+
+
 func gate_label(id: String) -> String:
-	return {"tunel": "portão do túnel", "poco": "portão do poço"}.get(id, "portão")
+	return {"tunel": "portão da floresta"}.get(id, "posto do poço" if id == "" else "portão")
 
 
 ## O portão está aberto pra saque? (guarda dele caído, numa invasão, e ainda não saquearam)
@@ -303,6 +414,8 @@ func raid(creature: Node, armazem: Node) -> void:
 		if cr_taken > 0:
 			eco.credits -= cr_taken
 			eco.credits_changed.emit(eco.credits)
+	if ore_taken > 0.0 and creature.get("looted") != null:
+		creature.looted = true  # Prompt 17: sai carregando o que levou
 	armazem.show_popup("ROUBO: -%d minério  -%d cr" % [roundi(ore_taken), cr_taken], Color(1.0, 0.35, 0.3))
 	Audio.alarm()
 	var who: Array = downed_guards().filter(func(w): return w.downed_gate == gid).map(func(w): return w.display_name)
@@ -313,25 +426,28 @@ func raid(creature: Node, armazem: Node) -> void:
 				", ".join(who) if not who.is_empty() else "o guarda", gate_label(gid), roundi(ore_taken), cr_taken])
 
 
-## Posto de cada guarda: metade no túnel, metade no poço (se o nível 2 abriu).
+## Posto de cada guarda: metade no portão da floresta, metade na boca do poço (Bloco 80: lá não tem
+## muro; o posto só existe com o nível 2 aberto). Os postos: [ponto, lado da vila].
 func guard_post(worker: Node) -> Vector2:
 	var list := guards()
 	var i := maxi(list.find(worker), 0)
-	var gates: Array = []
+	var postos: Array = []
 	var t := gate("tunel")
 	if t:
-		gates.append(t)
-	var p := gate("poco")
-	if p and level2_open():
-		gates.append(p)
-	var base: Vector2
-	if gates.is_empty():
+		var dt: Vector2 = t.inside_dir() if t.has_method("inside_dir") else Vector2.DOWN  # Bloco 74: o lado da vila
+		postos.append([t.global_position + dt * 30.0, dt])
+	var pp := posto_poco()
+	if pp != Vector2.INF:
+		postos.append([pp, _poco_dentro()])
+	if postos.is_empty():
 		var hub := get_tree().get_first_node_in_group("village_hub")
-		base = hub.global_position + Vector2(0, 60) if hub else Vector2.ZERO
-	else:
-		base = gates[i % gates.size()].global_position + Vector2(0, 30)
-	var slot := i / maxi(gates.size(), 1)
-	return base + Vector2(-24.0 + 16.0 * (slot % 4), 10.0 * floorf(slot / 4.0))
+		postos.append([hub.global_position + Vector2(0, 60) if hub else Vector2.ZERO, Vector2.DOWN])
+	var posto: Array = postos[i % postos.size()]
+	var base: Vector2 = posto[0]
+	var dentro: Vector2 = posto[1]
+	var slot := i / postos.size()
+	var lado := Vector2(dentro.y, -dentro.x)  # ao longo do portão (ou da boca do poço)
+	return base + lado * (-24.0 + 16.0 * (slot % 4)) + dentro * (10.0 * floorf(slot / 4.0))
 
 
 # ------------------------------------------------------------ armas / Arsenal (Bloco 35)
@@ -424,6 +540,17 @@ func repair_cost(id: String) -> Vector3i:
 	return Vector3i(ceili(c.x * repair_cost_mult), ceili(c.y * repair_cost_mult), ceili(c.z * repair_cost_mult))
 
 
+## Bloco 94: os itens a mais da arma (o aço da lança de prata); conserto = a fração do conserto.
+func weapon_item_cost(id: String, conserto := false) -> Dictionary:
+	var i := WEAPON_IDS.find(id)
+	if i < 0 or i >= weapon_itens.size():
+		return {}
+	var d := {}
+	for k in weapon_itens[i]:
+		d[k] = ceili(float(weapon_itens[i][k]) * (repair_cost_mult if conserto else 1.0))
+	return d
+
+
 ## "" se pode encomendar a forja; senão o motivo.
 func weapon_block_reason(id: String) -> String:
 	if id == "porrete":
@@ -438,7 +565,7 @@ func weapon_block_reason(id: String) -> String:
 		return "precisa forjar antes: %s" % WEAPON_NAMES[prev]
 	var c := weapon_costs[i]
 	var eco := get_tree().get_first_node_in_group("economy")
-	return eco.missing_text(c.x, c.y, weapon_ore[i], c.z) if eco else "sem recursos"
+	return eco.metal_falta(c.x, c.y, weapon_ore[i], c.z, weapon_item_cost(id)) if eco else "sem recursos"  # Bloco 87: barra; 94: + aço
 
 
 func repair_block_reason(id: String) -> String:
@@ -450,7 +577,7 @@ func repair_block_reason(id: String) -> String:
 		return "fila da forja cheia"
 	var c := repair_cost(id)
 	var eco := get_tree().get_first_node_in_group("economy")
-	return eco.missing_text(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z) if eco else "sem recursos"
+	return eco.metal_falta(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z, weapon_item_cost(id, true)) if eco else "sem recursos"
 
 
 ## Paga e põe na fila da forja (só anda com engenheiro no Arsenal).
@@ -460,7 +587,7 @@ func start_forge(id: String) -> bool:
 		return false
 	var i := WEAPON_IDS.find(id)
 	var c := weapon_costs[i]
-	if not get_tree().get_first_node_in_group("economy").spend(c.x, c.y, weapon_ore[i], c.z):
+	if not get_tree().get_first_node_in_group("economy").paga_metal(c.x, c.y, weapon_ore[i], c.z, weapon_item_cost(id)):
 		return false
 	_enqueue("forjar", id, weapon_time[i])
 	return true
@@ -472,7 +599,7 @@ func start_repair(id: String) -> bool:
 		Audio.error()
 		return false
 	var c := repair_cost(id)
-	if not get_tree().get_first_node_in_group("economy").spend(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z):
+	if not get_tree().get_first_node_in_group("economy").paga_metal(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z, weapon_item_cost(id, true)):
 		return false
 	_take_from(broken, id)
 	_enqueue("consertar", id, weapon_time[WEAPON_IDS.find(id)] * repair_time_mult)
@@ -670,29 +797,145 @@ func _process(delta: float) -> void:
 		return
 	if start_day < 0 and not SaveManager.pending_load:
 		start_day = dn.day  # jogo novo (dia 1) ou save de antes da defesa
-	# aviso no fim da tarde
-	if not dn.is_night() and is_invasion_night(dn.day) and _warned_day != dn.day \
-			and dn.time_left_in_phase() <= warn_before:
+	# Bloco 83: na noite de invasão, a invasão começa às hora_invasao (22:00) — quando o relógio PASSA
+	# por ela (carregar um save depois dela não começa de novo; as criaturas não vão pro save)
+	var t_inv := tempo_invasao()
+	var antes := _t_antes
+	_t_antes = dn.time
+	if antes != INF and antes < t_inv and dn.time >= t_inv and dn.time - antes < dn.cycle_length() * 0.5 \
+			and is_invasion_night(dn.day) and not invasion_active:
+		start_invasion()
+	# aviso à noite (hora_aviso_invasao, 21:00; com o rádio, antes)
+	if is_invasion_night(dn.day) and _warned_day != dn.day and not invasion_active \
+			and dn.time < t_inv and t_inv - dn.time <= warn_time():
 		_warned_day = dn.day
 		var hud := get_tree().get_first_node_in_group("hud")
 		if hud:
 			var ferr := " e os Ferrugentos se mexem no poço" if level2_open() else ""
+			var radio := "O rádio pegou o chiado deles bem antes: " if _has_radio() else ""
 			hud.show_banner("VEM AÍ UMA INVASÃO",
-				"Os Lumívoros se juntam na clareira%s. Esta noite eles atacam — guardas nos portões! (G: Defesa)" % ferr)
+				"%sOs Lumívoros se juntam na clareira%s. Às %s eles atacam — todo mundo em casa, guardas nos portões! (G: Defesa)" % [radio, ferr, dn.hora_texto(hora_invasao)])
 		Audio.alarm()
 	# criaturas chegando aos poucos
 	if invasion_active:
 		_night_time += delta
 		while not _spawn_queue.is_empty() and _spawn_queue[0].at <= _night_time:
-			_spawn(_spawn_queue.pop_front().kind)
+			var k: String = _spawn_queue.pop_front().kind
+			if k == "chefe":
+				_spawn_boss()
+			else:
+				_spawn(k)
+		_boss_tick(delta)
 
 
-func _on_phase_changed(night: bool) -> void:
+## Bloco 60: com o rádio, o aviso vem antes.
+func _has_radio() -> bool:
+	var res := get_tree().get_first_node_in_group("research")
+	return res != null and res.has("radio")
+
+
+## Segundos (reais) antes da invasão em que o aviso toca: de hora_aviso_invasao até hora_invasao, mais o
+## bônus do rádio.
+func warn_time() -> float:
+	var res := get_tree().get_first_node_in_group("research")
 	var dn := _dn()
-	if night and dn and is_invasion_night(dn.day) and not invasion_active:
-		start_invasion()
-	elif not night and invasion_active:
+	var sph: float = dn.segundos_por_hora() if dn else 22.5
+	var base := fposmod(hora_invasao - hora_aviso_invasao, 24.0) * sph
+	return base + (res.radio_warning_bonus if _has_radio() else 0.0)
+
+
+## Bloco 83: `time` do relógio (segundos desde o amanhecer) em que a invasão começa.
+func tempo_invasao() -> float:
+	var dn := _dn()
+	return dn.tempo_da_hora(hora_invasao) if dn else 0.0
+
+
+## No amanhecer a invasão acaba (Bloco 83: ela começa às hora_invasao, ver _process).
+func _on_phase_changed(night: bool) -> void:
+	if not night and invasion_active:
 		end_invasion()
+
+
+# ------------------------------------------------------------ tiers e chefe (Bloco 62)
+func tier() -> int:
+	var res := get_tree().get_first_node_in_group("research")
+	var pesq: int = (res.done as Array).size() if res else 0
+	return 1 + int(wave / maxi(tier_every_waves, 1)) + int(pesq / maxi(tier_research_step, 1))
+
+
+func _season_number() -> int:
+	var dn := _dn()
+	var sun := get_tree().get_first_node_in_group("sun")
+	var per: int = sun.days_per_season if sun else 4
+	return int((maxi(dn.day if dn else 1, 1) - 1) / maxi(per, 1))
+
+
+## Esta invasão traz o chefe? (uma vez por estação, a partir de boss_from_season)
+func boss_due() -> bool:
+	var n := _season_number()
+	return n >= boss_from_season and not bosses.has(str(n))
+
+
+func boss_alive() -> bool:
+	return _boss != null and is_instance_valid(_boss) and _boss.is_alive()
+
+
+func _spawn_boss() -> void:
+	var c := _spawn("lumivoro")
+	if c == null:
+		return
+	c.make_boss(boss_hp_mult, boss_damage_mult)
+	c.weapon_corrode = boss_weapon_corrode
+	_boss = c
+	_boss_called = 0
+	_boss_call_t = boss_call_every
+	bosses[str(_season_number())] = "veio"
+	c.died.connect(_on_boss_died)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_banner("A MATRIARCA DOS LUMÍVOROS!", "A rainha deles veio junto. Ela grita chamando mais Lumívoros e o golpe dela corrói as armas. Derrube-a antes do amanhecer.")
+	Audio.screech(c.global_position)
+	var diary := get_tree().get_first_node_in_group("diary")
+	if diary and diary.has_method("unlock"):
+		diary.unlock("matriarca")
+
+
+func _on_boss_died(killed: bool) -> void:
+	var key := str(_season_number())
+	if not killed:
+		return
+	bosses[key] = "derrotado"
+	var arm := get_tree().get_first_node_in_group("armazens")
+	if arm:
+		arm.add_ore(float(boss_reward_solarita), "solarita")
+	var finds := get_tree().get_first_node_in_group("finds")
+	if finds:
+		finds.rare_parts += boss_reward_parts
+	var res := get_tree().get_first_node_in_group("research")
+	if res and res.current != "":
+		res.progress += boss_reward_research
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_banner("A MATRIARCA CAIU!", "Dos cristais dela: +%d solarita, +%d peças raras%s." % [
+			boss_reward_solarita, boss_reward_parts, (" e a pesquisa avançou") if res and res.current != "" else ""])
+	Audio.fanfare()
+
+
+func _boss_tick(delta: float) -> void:
+	if not boss_alive() or not _boss.inside:
+		return
+	_boss_call_t -= delta
+	if _boss_call_t > 0.0 or _boss_called >= boss_call_max:
+		return
+	_boss_call_t = boss_call_every
+	for i in mini(boss_call_count, boss_call_max - _boss_called):
+		var c := _spawn("lumivoro")
+		if c:
+			c.global_position = _boss.global_position + Vector2(randf_range(-30, 30), randf_range(-20, 20))
+			c.inside = true
+			_boss_called += 1
+	Audio.screech(_boss.global_position)
+	_boss.shout()
 
 
 func start_invasion() -> void:
@@ -702,41 +945,67 @@ func start_invasion() -> void:
 	killed_tonight = 0
 	_night_time = 0.0
 	_spawn_queue = []
+	_spawned = 0
 	var lumi := mini(lumi_base + lumi_per_wave * (wave - 1), lumi_max)
 	var ferr := mini(ferr_per_wave * maxi(wave - 1, 1), ferr_max) if level2_open() else 0
 	for i in lumi:
 		_spawn_queue.append({"kind": "lumivoro", "at": randf_range(0.0, spawn_spread)})
 	for i in ferr:
 		_spawn_queue.append({"kind": "ferrugento", "at": randf_range(2.0, spawn_spread)})
+	var gosmas := fundo_count("gosma")
+	var magmantes := fundo_count("magmante")
+	for i in gosmas:
+		_spawn_queue.append({"kind": "gosma", "at": randf_range(3.0, spawn_spread)})
+	for i in magmantes:
+		_spawn_queue.append({"kind": "magmante", "at": randf_range(4.0, spawn_spread)})
+	var chefe := boss_due()
+	if chefe:
+		_spawn_queue.append({"kind": "chefe", "at": spawn_spread * 0.6})
 	_spawn_queue.sort_custom(func(a, b): return a.at < b.at)
+	last_result = {"onda": wave, "tier": tier(), "total": lumi + ferr + gosmas + magmantes + (1 if chefe else 0), "derrubadas": 0, "chefe": "veio" if chefe else ""}
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
-		hud.show_banner("INVASÃO! (onda %d)" % wave, "%d Lumívoros%s. Aguentem até o amanhecer." % [
-			lumi, (" e %d Ferrugentos" % ferr) if ferr > 0 else ""])
+		var outros := []
+		for par in [[ferr, "Ferrugento"], [gosmas, "Gosma ácida"], [magmantes, "Magmante"]]:
+			if par[0] > 0:
+				outros.append("%d %s%s" % [par[0], par[1], "s" if par[0] > 1 and par[1] != "Gosma ácida" else ""])
+		hud.show_banner("INVASÃO! (onda %d, tier %d)" % [wave, tier()], "%d Lumívoros%s. Aguentem até o amanhecer." % [
+			lumi, (", " + ", ".join(outros)) if not outros.is_empty() else ""])
 	Audio.alarm()
 	invasion_started.emit(wave)
 
 
-func _spawn(kind: String) -> void:
+func _spawn(kind: String) -> Node2D:
 	var env := get_tree().get_first_node_in_group("environment")
 	var world := get_tree().get_first_node_in_group("village_hub").get_parent()
-	var c: Node2D = (LUMIVORO if kind == "lumivoro" else FERRUGENTO).instantiate()
+	var c: Node2D = (CENA.get(kind, FERRUGENTO) as PackedScene).instantiate()
 	var pos: Vector2
 	var g: Node2D
 	if kind == "lumivoro":
 		var r: Rect2 = env.clearing_rect.grow(-60.0) if env else Rect2(-200, -850, 400, 300)
 		pos = Vector2(randf_range(r.position.x, r.end.x), randf_range(r.position.y, r.end.y - 60.0))
+		if env and env.has_method("vertical_palisade") and env.vertical_palisade():
+			# Bloco 74: saem do fundo da floresta do oeste (longe da paliçada)
+			pos = Vector2(randf_range(r.position.x, r.position.x + r.size.x * 0.55), randf_range(r.position.y, r.end.y))
 		g = gate("tunel")
 	else:
-		var shaft := get_tree().get_first_node_in_group("elevador")
-		pos = shaft.global_position + Vector2(randf_range(-10, 10), -4) if shaft else Vector2.ZERO
-		g = gate("poco")
+		# Bloco 80: sai da boca do poço do elevador, sem barricada no caminho (g = null: entra direto)
+		var b := boca_poco()
+		pos = b + Vector2(randf_range(-10, 10), -4) if b != Vector2.INF else Vector2.ZERO
+		g = null
 	if env:
 		pos = NavigationServer2D.map_get_closest_point(world.get_world_2d().navigation_map, pos)
 	c.position = pos
-	c.gate_id = "tunel" if kind == "lumivoro" else "poco"  # Bloco 36: de que portão ele vem
+	c.gate_id = "tunel" if kind == "lumivoro" else ""  # Bloco 36: de que portão ele vem ("" = do poço, sem portão)
 	world.add_child(c)
-	c.setup(g, 1.0 + hp_growth * (wave - 1))
+	var tr := tier()
+	c.setup(g, (1.0 + hp_growth * (wave - 1)) * (1.0 + tier_hp_bonus * (tr - 1)))
+	_spawned += 1
+	var every := maxi(strong_every - (tr - 1), 2) if strong_every > 0 else 0
+	if every > 0 and wave >= strong_from_wave and _spawned % every == 0:
+		c.make_strong(strong_hp_mult, strong_damage_mult)
+		if tr >= elite_from_tier:
+			c.make_elite(elite_hp_mult, elite_damage_mult)  # Bloco 62: ancião / blindado
 	var res := get_tree().get_first_node_in_group("research")
 	if res and kind == "lumivoro":
 		c.speed *= res.lumivoro_speed_mult()  # holofotes
@@ -745,13 +1014,21 @@ func _spawn(kind: String) -> void:
 			killed_tonight += 1)
 	var diary := get_tree().get_first_node_in_group("diary")
 	if diary:
-		diary.unlock("lumivoros" if kind == "lumivoro" else "ferrugentos")
+		diary.unlock({"lumivoro": "lumivoros", "ferrugento": "ferrugentos", "gosma": "gosmas", "magmante": "magmantes"}.get(kind, ""))
+	return c
 
 
 func end_invasion() -> void:
 	invasion_active = false
 	_spawn_queue = []
 	var left := creatures()
+	if boss_alive():
+		bosses[str(_season_number())] = "fugiu"  # amanheceu com ela de pé: só volta na próxima estação
+	if not last_result.is_empty():
+		last_result.derrubadas = killed_tonight
+		if last_result.chefe != "":
+			last_result.chefe = bosses.get(str(_season_number()), last_result.chefe)
+	_boss = null
 	for c in left:
 		c.leave_at_dawn()
 	var hud := get_tree().get_first_node_in_group("hud")
@@ -773,6 +1050,8 @@ func get_save_data() -> Dictionary:
 		"wave": wave,
 		"warned_day": _warned_day,
 		"start_day": start_day,
+		"bosses": bosses.duplicate(),  # Bloco 62
+		"last_result": last_result.duplicate(),
 	}
 	# Bloco 47: listas (antes: "campo" e "arsenal" com um só)
 	d["campos"] = campos().map(func(c): return SaveUtil.vec2_to_array(c.global_position))
@@ -805,6 +1084,13 @@ func load_save_data(d: Dictionary) -> void:
 	wave = maxi(SaveUtil.integer(d, "wave", 0), 0)
 	_warned_day = SaveUtil.integer(d, "warned_day", -1)
 	start_day = SaveUtil.integer(d, "start_day", -1)
+	bosses = {}
+	var b := SaveUtil.dict(d, "bosses")  # Bloco 62 (save antigo: nenhum chefe ainda)
+	for k in b:
+		if String(b[k]) in ["veio", "derrotado", "fugiu"]:
+			bosses[str(k)] = String(b[k]) if String(b[k]) != "veio" else "fugiu"  # carregou no meio da noite: conta como fugiu
+	last_result = SaveUtil.dict(d, "last_result")
+	_boss = null
 	invasion_active = false
 	if campos().is_empty():
 		for pos in SaveUtil.positions(d, "campos", "campo"):  # Bloco 47 (save antigo: um só)

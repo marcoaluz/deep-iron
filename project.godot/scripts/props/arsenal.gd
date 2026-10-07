@@ -17,6 +17,8 @@ const ObraSite := preload("res://scripts/core/obra_site.gd")
 @export var forge_sound_interval: float = 0.9
 
 ## Pro HUD saber qual janela abrir quando clicam aqui.
+## Bloco 87: a obra daqui (a forja) é do FERREIRO.
+var oficio := "ferreiro"
 var panel_id := "defesa"
 var _obra := ObraSite.new()
 var _sound_timer := 0.0
@@ -31,6 +33,8 @@ func _ready() -> void:
 	super()
 	add_to_group("arsenais")
 	add_to_group("obras")
+	_obra.trabalhador = "ferreiro"  # Bloco 87: a forja é do FERREIRO (o engenheiro só constrói)
+	_obra.verbo = "forjando"
 	add_to_group("clickable")
 	_light.add_to_group("cullable_lights")
 	refresh()
@@ -125,7 +129,7 @@ func obra_progress() -> float:
 
 
 func obra_position(worker: Node) -> Vector2:
-	return global_position + Vector2(-24, 30) + _obra.offset_for(worker)
+	return IsoArt.front(self, Vector2(-24, 30)) + _obra.offset_for(worker)
 
 
 func obra_work(seconds: float) -> void:

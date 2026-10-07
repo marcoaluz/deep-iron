@@ -2,6 +2,7 @@ extends PanelContainer
 ## Janela do Canteiro da Escavadeira: progresso da montagem e fabricação das peças.
 ## Criada pelo HUD (setup) e montada por código; usa os helpers de estilo do HUD.
 ## Abre clicando no canteiro, pela tecla E ou pelo botão no painel do HUD.
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _dig: Node
@@ -45,7 +46,7 @@ func _build() -> void:
 
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("ESCAVADEIRA", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("ESCAVADEIRA", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.add_theme_color_override("font_outline_color", Color(0.25, 0.12, 0.03))
 	title.add_theme_constant_override("outline_size", 4)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -59,25 +60,25 @@ func _build() -> void:
 
 	var intro: Label = _hud._label(
 		"Projeto de fim de jogo: fabrique as 5 peças aqui no canteiro. Uma por vez; "
-		+ "a Estrutura vem primeiro. O custo é pago ao começar a fabricar.", 12, _hud.COLOR_DIM)
+		+ "a Estrutura vem primeiro. O custo é pago ao começar a fabricar.", Tipo.DETALHE, _hud.COLOR_DIM)
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(intro)
 	_intro = intro
 
-	_progress_label = _hud._label("", 14, _hud.COLOR_TEXT)
+	_progress_label = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	vbox.add_child(_progress_label)
 	_progress_bar = _hud._bar(_hud.COLOR_TITLE)
 	_progress_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_child(_progress_bar)
 
-	_fab_label = _hud._label("", 12, _hud.COLOR_DIM)
+	_fab_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	vbox.add_child(_fab_label)
 	_fab_bar = _hud._bar(_hud.COLOR_CARGO)
 	_fab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_fab_bar.custom_minimum_size.y = 6
 	vbox.add_child(_fab_bar)
 
-	_done_label = _hud._label("PRONTA! A descida pro nível 2 está aberta ao lado dela.", 13, _hud.COLOR_TITLE)
+	_done_label = _hud._label("PRONTA! A descida pro nível 2 está aberta ao lado dela.", Tipo.CORPO, _hud.COLOR_TITLE)
 	_done_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_done_label)
 
@@ -85,7 +86,7 @@ func _build() -> void:
 	_parts_box.add_theme_constant_override("separation", 6)
 	vbox.add_child(_parts_box)
 	_parts_box.add_child(HSeparator.new())
-	_parts_box.add_child(_hud._label("PEÇAS", 12, _hud.COLOR_DIM))
+	_parts_box.add_child(_hud._label("PEÇAS", Tipo.DETALHE, _hud.COLOR_DIM))
 	for id in _dig.PART_IDS:
 		_rows[id] = _make_part_row(_parts_box, id)
 
@@ -96,7 +97,7 @@ func _build() -> void:
 	_reactor_box.add_child(HSeparator.new())
 	var drill_row := HBoxContainer.new()
 	_reactor_box.add_child(drill_row)
-	_drill_label = _hud._label("", 14, _hud.COLOR_TEXT)
+	_drill_label = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	_drill_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	drill_row.add_child(_drill_label)
 	_drill_button = _hud._button("Desligar")
@@ -105,10 +106,10 @@ func _build() -> void:
 		_dig.toggle_drill()
 		refresh())
 	drill_row.add_child(_drill_button)
-	_finds_label = _hud._label("", 12, _hud.COLOR_DIM)
+	_finds_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	_finds_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_reactor_box.add_child(_finds_label)
-	_reactor_box.add_child(_hud._label("REATORES  (um por vez; a broca manda minério direto pro armazém)", 12, _hud.COLOR_DIM))
+	_reactor_box.add_child(_hud._label("REATORES  (um por vez; a broca manda minério direto pro armazém)", Tipo.DETALHE, _hud.COLOR_DIM))
 	for id in _dig.REACTOR_IDS:
 		_reactor_rows[id] = _make_reactor_row(_reactor_box, id)
 
@@ -123,13 +124,13 @@ func _make_part_row(parent: VBoxContainer, id: String) -> Dictionary:
 
 	var top := HBoxContainer.new()
 	v.add_child(top)
-	var name_label: Label = _hud._label(_dig.PART_NAMES[id], 14, _hud.COLOR_TEXT)
+	var name_label: Label = _hud._label(_dig.PART_NAMES[id], Tipo.TITULO, _hud.COLOR_TEXT)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_label)
-	var status: Label = _hud._label("", 12, _hud.COLOR_DIM)
+	var status: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	top.add_child(status)
 
-	var desc: Label = _hud._label(_dig.PART_DESCRIPTIONS[id], 12, _hud.COLOR_DIM)
+	var desc: Label = _hud._label(_dig.PART_DESCRIPTIONS[id], Tipo.DETALHE, _hud.COLOR_DIM)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(desc)
 
@@ -137,7 +138,7 @@ func _make_part_row(parent: VBoxContainer, id: String) -> Dictionary:
 	bottom.add_theme_constant_override("separation", 6)
 	v.add_child(bottom)
 	var cost: Vector3i = _dig.part_cost(id)
-	var cost_label: Label = _hud._label("%d cr + %d minério  •  %ds  •  vila nível %d" % [cost.x, cost.y, cost.z, _dig.part_stage(id)], 12, _hud.COLOR_TEXT)
+	var cost_label: Label = _hud._label(_texto_peca(id), Tipo.DETALHE, _hud.COLOR_TEXT)
 	cost_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom.add_child(cost_label)
 	var button: Button = _hud._button("Fabricar")
@@ -147,7 +148,14 @@ func _make_part_row(parent: VBoxContainer, id: String) -> Dictionary:
 		_dig.start_part(id)
 		refresh())
 	bottom.add_child(button)
-	return {"status": status, "button": button}
+	return {"status": status, "button": button, "cost": cost_label}
+
+
+## Bloco 87: o custo da peça (o metal em barra a partir do estágio da fornalha).
+func _texto_peca(id: String) -> String:
+	var cost: Vector3i = _dig.part_cost(id)
+	var metal: String = _economy.custo_metal_texto(cost.x, cost.y, "") if _economy else "%d cr + %d minério" % [cost.x, cost.y]
+	return "%s  •  %ds  •  vila nível %d" % [metal, cost.z, _dig.part_stage(id)]
 
 
 func _make_reactor_row(parent: VBoxContainer, id: String) -> Dictionary:
@@ -159,7 +167,7 @@ func _make_reactor_row(parent: VBoxContainer, id: String) -> Dictionary:
 	panel.add_child(v)
 	var top := HBoxContainer.new()
 	v.add_child(top)
-	var name_label: Label = _hud._label("%s  —  %.2f/s" % [_dig.REACTOR_NAMES[id], _dig.reactor_rate(id)], 13, _hud.COLOR_TEXT)
+	var name_label: Label = _hud._label("%s  —  %.2f/s" % [_dig.REACTOR_NAMES[id], _dig.reactor_rate(id)], Tipo.CORPO, _hud.COLOR_TEXT)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_label)
 	var button: Button = _hud._button("")
@@ -172,10 +180,10 @@ func _make_reactor_row(parent: VBoxContainer, id: String) -> Dictionary:
 			_dig.build_reactor(id)
 		refresh())
 	top.add_child(button)
-	var desc: Label = _hud._label(_dig.REACTOR_DESCRIPTIONS[id], 11, _hud.COLOR_DIM)
+	var desc: Label = _hud._label(_dig.REACTOR_DESCRIPTIONS[id], Tipo.DETALHE, _hud.COLOR_DIM)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(desc)
-	var status: Label = _hud._label("", 11, _hud.COLOR_DIM)
+	var status: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(status)
 	return {"status": status, "button": button}
@@ -204,7 +212,7 @@ func _refresh_reactors() -> void:
 		if cost.x > 0:
 			bits.append("%d cr" % cost.x)
 		if cost.y > 0:
-			bits.append("%d ferro" % cost.y)
+			bits.append(_economy.metal_texto(cost.y, "ferro") if _economy else "%d ferro" % cost.y)  # Bloco 87
 		var cost_text := "vem com a escavadeira" if id == "vapor" else " + ".join(bits)
 		match reason:
 			"instalado":
@@ -261,6 +269,8 @@ func refresh() -> void:
 
 	for id in _rows:
 		var row: Dictionary = _rows[id]
+		if row.has("cost"):
+			row.cost.text = _texto_peca(id)  # Bloco 87
 		var reason: String = _dig.part_block_reason(id)
 		var status: Label = row.status
 		var button: Button = row.button

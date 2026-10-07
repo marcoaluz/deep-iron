@@ -1,0 +1,123 @@
+{
+ "kit_a": "c93c3700-cc0d-4bba-ac4e-faaad4bcf1cc",
+ "pieces": [
+  {
+   "id": "janela",
+   "kind": "rounded_rect",
+   "x": 8,
+   "y": 8,
+   "w": 300,
+   "h": 220,
+   "radius": 4,
+   "label": "large window panel: dark weathered wood planks, rusty iron frame with rivets in the corners, a title bar strip on top"
+  },
+  {
+   "id": "dica",
+   "kind": "rounded_rect",
+   "x": 320,
+   "y": 8,
+   "w": 184,
+   "h": 90,
+   "radius": 4,
+   "label": "small tooltip panel: dark leather with thin iron border"
+  },
+  {
+   "id": "cartao",
+   "kind": "rounded_rect",
+   "x": 320,
+   "y": 110,
+   "w": 88,
+   "h": 118,
+   "radius": 3,
+   "label": "build menu card: wooden frame with iron corners"
+  },
+  {
+   "id": "cartao_bloq",
+   "kind": "rounded_rect",
+   "x": 416,
+   "y": 110,
+   "w": 88,
+   "h": 118,
+   "radius": 3,
+   "label": "locked build card: dark, chained, padlock"
+  },
+  {
+   "id": "barra",
+   "kind": "rounded_rect",
+   "x": 8,
+   "y": 240,
+   "w": 496,
+   "h": 44,
+   "radius": 3,
+   "label": "bottom toolbar: long iron-riveted wooden beam"
+  },
+  {
+   "id": "progresso",
+   "kind": "rounded_rect",
+   "x": 8,
+   "y": 296,
+   "w": 240,
+   "h": 18,
+   "radius": 2,
+   "label": "empty progress bar frame: iron rim, dark inside"
+  },
+  {
+   "id": "botao",
+   "kind": "rounded_rect",
+   "x": 260,
+   "y": 292,
+   "w": 112,
+   "h": 36,
+   "radius": 3,
+   "label": "button: worn wooden plank with iron edge"
+  },
+  {
+   "id": "botao_icone",
+   "kind": "rounded_rect",
+   "x": 384,
+   "y": 290,
+   "w": 40,
+   "h": 40,
+   "radius": 3,
+   "label": "square icon button: iron plate with rivets"
+  },
+  {
+   "id": "aba",
+   "kind": "rounded_rect",
+   "x": 434,
+   "y": 296,
+   "w": 70,
+   "h": 30,
+   "radius": 3,
+   "label": "menu tab: leather tab with iron trim"
+  },
+  {
+   "id": "caixa",
+   "kind": "rounded_rect",
+   "x": 8,
+   "y": 330,
+   "w": 28,
+   "h": 28,
+   "radius": 2,
+   "label": "checkbox: small iron square"
+  },
+  {
+   "id": "trilho",
+   "kind": "rounded_rect",
+   "x": 50,
+   "y": 338,
+   "w": 200,
+   "h": 12,
+   "radius": 2,
+   "label": "slider track: thin iron rail"
+  },
+  {
+   "id": "pino",
+   "kind": "circle",
+   "x": 150,
+   "y": 344,
+   "r": 10,
+   "label": "slider knob: brass rivet"
+  }
+ ]
+}

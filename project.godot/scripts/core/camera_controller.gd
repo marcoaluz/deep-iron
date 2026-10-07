@@ -23,6 +23,14 @@ extends Camera2D
 ## Pixels de MUNDO por pixel de ARTE. Hoje a arte é desenhada pequena e mostrada em escala 2;
 ## se a densidade da arte mudar (ver docs/escala_visual), é só trocar aqui.
 @export var art_pixel_world: float = 2.0
+## Prompt 29: na vista iso com a arte nova, 1 px de arte = 1 unidade da tela isométrica (a arte
+## nova é desenhada no tamanho real). As paradas usam essa densidade, e ganham uma parada "longe"
+## de meio pixel de tela por pixel de arte (o mapa novo tem ~6.000 px de largura: sem ela, não dá
+## pra ver a vila inteira). Abaixo de 1:1 o pixel não tem como ser inteiro: fica nítido (filtro
+## mais próximo), com algum serrilhado.
+@export var iso_art_pixel_world: float = 1.0
+@export var iso_overview_stop: float = 0.5  # px de tela por px de arte na parada "longe" (0 = sem)
+@export var iso_zoom_min: float = 0.3
 
 @export_group("Pan")
 @export var pan_speed: float = 650.0
@@ -30,12 +38,27 @@ extends Camera2D
 @export var edge_scroll: bool = false
 @export var edge_margin: float = 10.0
 
+## Bloco 54: multiplicadores das Configurações ([camera] pan_mult / zoom_mult, 0,5–2).
+static var pan_mult := -1.0
+static var zoom_mult := -1.0
+
+
+static func load_speeds() -> void:
+	var S := preload("res://scripts/core/settings.gd")
+	pan_mult = clampf(S.get_value("camera", "pan_mult", 1.0), 0.5, 2.0)
+	zoom_mult = clampf(S.get_value("camera", "zoom_mult", 1.0), 0.5, 2.0)
+
+
 @export_group("Limites")
 ## Área onde o centro da câmera pode ficar (normalmente o mapa). Tamanho zero = sem limite.
 @export var bounds: Rect2 = Rect2()
 @export var bounds_margin: float = 80.0
 
 var follow_target: Node2D = null
+## Prompt 28: vista isométrica ligada (iso_view.gd). A câmera passa a andar na TELA
+## isométrica, mas quem a usa continua falando em pontos do CHÃO (focus_on, follow_target,
+## bounds, save) — a conversão é aqui.
+var iso_view: Node = null
 
 var _target_zoom: float = 1.0
 var _target_pos: Vector2
@@ -76,9 +99,18 @@ func screen_scale() -> float:
 	return minf(size.x / base.x, size.y / base.y) * win.content_scale_factor
 
 
+## Pixels de mundo (da tela onde a câmera anda) por pixel de arte agora.
+func art_density() -> float:
+	return iso_art_pixel_world if _iso_new_art() else art_pixel_world
+
+
+func _iso_new_art() -> bool:
+	return iso_view != null and float(iso_view.get("S")) > 1.0
+
+
 ## Quantos pixels de tela 1 pixel de arte ocupa nesse zoom.
 func art_pixel_screen(z: float, win_scale: float = -1.0) -> float:
-	return art_pixel_world * z * (screen_scale() if win_scale <= 0.0 else win_scale)
+	return art_density() * z * (screen_scale() if win_scale <= 0.0 else win_scale)
 
 
 ## Os zooms nítidos entre zoom_min e zoom_max (1 px de arte = 1, 2, 3... px de tela).
@@ -88,6 +120,10 @@ func zoom_stops(win_scale: float = -1.0) -> Array[float]:
 	if unit <= 0.0:
 		return out
 	var n := maxi(ceili(zoom_min * unit - 0.001), 1)
+	if _iso_new_art():
+		if iso_overview_stop > 0.0 and iso_overview_stop / unit >= iso_zoom_min - 0.001:
+			out.append(iso_overview_stop / unit)  # parada "longe" (meio pixel de tela por px de arte)
+		n = 1
 	while n / unit <= zoom_max + 0.001:
 		out.append(n / unit)
 		n += 1
@@ -132,7 +168,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
 			KEY_HOME:
-				_target_pos = bounds.get_center() if bounds.has_area() else Vector2.ZERO
+				_target_pos = _to_cam(bounds.get_center()) if bounds.has_area() else Vector2.ZERO
 				follow_target = null
 
 
@@ -140,7 +176,7 @@ func _zoom_by(factor: float, screen_pos: Vector2) -> void:
 	_zoom_anchor_screen = screen_pos
 	var stops := zoom_stops() if crisp_zoom else ([] as Array[float])
 	if stops.is_empty():
-		_target_zoom = clampf(_target_zoom * factor, zoom_min, zoom_max)
+		_target_zoom = clampf(_target_zoom * factor, iso_zoom_min if _iso_new_art() else zoom_min, zoom_max)
 		return
 	# Bloco 48: próxima parada nítida pra dentro (factor > 1) ou pra fora
 	if factor > 1.0:
@@ -164,7 +200,9 @@ func _process(delta: float) -> void:
 		if follow_target != null:
 			screen_offset = Vector2.ZERO  # seguindo alguém: zoom no centro
 		var anchor_world := position + screen_offset / zoom.x
-		var z := lerpf(zoom.x, _target_zoom, 1.0 - exp(-zoom_smoothing * delta))
+		if zoom_mult < 0.0:
+			load_speeds()
+		var z := lerpf(zoom.x, _target_zoom, 1.0 - exp(-zoom_smoothing * zoom_mult * delta))
 		if absf(z - _target_zoom) < 0.001:
 			z = _target_zoom
 		zoom = Vector2(z, z)
@@ -174,8 +212,9 @@ func _process(delta: float) -> void:
 
 	# --- pan por teclado / borda
 	var dir := Vector2.ZERO
-	if Input.is_action_pressed("ui_right") or Input.is_physical_key_pressed(KEY_D): dir.x += 1.0
-	if Input.is_action_pressed("ui_left") or Input.is_physical_key_pressed(KEY_A):  dir.x -= 1.0
+	var setas := not _menu_usa_setas()  # Bloco 95: com o CONSTRUIR aberto, ←/→ trocam de aba (WASD continua)
+	if (setas and Input.is_action_pressed("ui_right")) or Input.is_physical_key_pressed(KEY_D): dir.x += 1.0
+	if (setas and Input.is_action_pressed("ui_left")) or Input.is_physical_key_pressed(KEY_A):  dir.x -= 1.0
 	if Input.is_action_pressed("ui_down") or Input.is_physical_key_pressed(KEY_S):  dir.y += 1.0
 	if Input.is_action_pressed("ui_up") or Input.is_physical_key_pressed(KEY_W):    dir.y -= 1.0
 	if edge_scroll and not _panning:
@@ -187,12 +226,14 @@ func _process(delta: float) -> void:
 		elif mouse.y > size.y - edge_margin: dir.y += 1.0
 	if dir != Vector2.ZERO:
 		follow_target = null
-		_target_pos += dir.normalized() * pan_speed * delta / zoom.x
+		if pan_mult < 0.0:
+			load_speeds()
+		_target_pos += dir.normalized() * pan_speed * pan_mult * delta / zoom.x
 
 	# --- seguir alvo
 	if follow_target != null:
 		if is_instance_valid(follow_target):
-			_target_pos = follow_target.global_position + Vector2(0, -16)
+			_target_pos = _to_cam(follow_target.global_position) + Vector2(0, -16)
 		else:
 			follow_target = null
 
@@ -205,8 +246,41 @@ func _clamp_to_bounds(p: Vector2) -> Vector2:
 	if not bounds.has_area():
 		return p
 	var r := bounds.grow(bounds_margin)
+	if iso_view:  # o losango do mapa na tela: o retângulo que contém os 4 cantos
+		var a: Vector2 = iso_view.to_screen(r.position)
+		var sr := Rect2(a, Vector2.ZERO)
+		for c in [Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]:
+			sr = sr.expand(iso_view.to_screen(c))
+		r = sr
 	return p.clamp(r.position, r.end)
 
 
+## Ponto do chão -> onde a câmera fica (na vista iso, a tela isométrica).
+func _to_cam(world_pos: Vector2) -> Vector2:
+	return iso_view.to_screen(world_pos) if iso_view else world_pos
+
+
+## O ponto do CHÃO no centro da tela (save, troca de vista).
+func ground_center() -> Vector2:
+	var c := get_screen_center_position()
+	return iso_view.ground_under(c) if iso_view else c  # Prompt 29: o raio acha o terraço
+
+
+## Prompt 28: trocou de vista — continua olhando o mesmo ponto do chão.
+func on_view_changed(ground: Vector2) -> void:
+	# a densidade da arte mudou (vista iso com a arte nova): o zoom assenta numa parada nítida dela
+	_target_zoom = snap_zoom(_target_zoom)
+	zoom = Vector2.ONE * _target_zoom
+	position = _to_cam(ground)
+	_target_pos = position
+	reset_smoothing()
+
+
 func focus_on(world_pos: Vector2) -> void:
-	_target_pos = _clamp_to_bounds(world_pos)
+	_target_pos = _clamp_to_bounds(_to_cam(world_pos))
+
+
+## Bloco 95: a janela CONSTRUIR está aberta (ela usa ←/→ pra trocar de aba)?
+func _menu_usa_setas() -> bool:
+	var m := get_tree().get_first_node_in_group("menu_construir") as CanvasItem
+	return m != null and m.is_visible_in_tree()

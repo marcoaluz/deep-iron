@@ -6,6 +6,15 @@ signal mood_changed(level: int)  # 0 calmo, 1 irritado, 2 furioso
 signal died(worker_name: String)
 
 const STATE_LABELS := {
+	"social": "hora social",  # Bloco 85
+	"padre": "na igreja",  # Bloco 88
+	"buscando_corpo": "buscando um corpo",  # Bloco 93
+	"levando_corpo": "levando ao cemitério",
+	"enterrando": "enterrando",
+	"buscando_insumo": "indo ao armazém (insumos)",  # Bloco 86
+	"fundindo": "fundindo",
+	"serrando": "serrando",  # Bloco 94
+	"montando_cama": "montando uma cama",
 	"idle": "ocioso",
 	"eating": "comendo",
 	"mining": "minerando",
@@ -34,11 +43,20 @@ const STATE_LABELS := {
 	"downed": "caído em combate",
 	"rescue": "resgatando",
 	"operating": "operando o coletor",
+	"operating_ore": "operando o coletor de minério",  # Bloco 57
 }
 ## Distância da porta/cama a partir da qual o ipezinho "chega" em casa.
 const REST_REACH := 12.0
 const Ores := preload("res://scripts/core/ores.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const Schedule := preload("res://scripts/core/schedule.gd")  # Bloco 84
+const Items := preload("res://scripts/core/items.gd")  # Bloco 86
+const Icones := preload("res://scripts/ui/icones.gd")  # Bloco 85: o balão da hora social
+const Settings := preload("res://scripts/core/settings.gd")  # Bloco 95: liga/desliga o balão de motivo
+const BALAO := preload("res://assets/game/ui/balao.png")
+## Bloco 95: onde fica o balão (conversa e motivo), px da lógica acima do pé. A vista iso sobe junto com a
+## altura da arte nova (iso_billboard: lift); -66 deixava o balão longe da cabeça.
+const BALAO_POS := Vector2(12, -50)
 const STEEL_PICKAXE := preload("res://assets/game/pickaxe_aco.png")
 const FOOD_BASKET := preload("res://assets/game/food_basket.png")
 ## Nomes sorteados (sem repetir enquanto houver nome livre).
@@ -63,6 +81,12 @@ const OUTFIT_FILES := {
 	"pesquisador": "res://assets/game/ipezinho_pesquisador_%s%d.png",
 	"medico": "res://assets/game/ipezinho_medico_%s%d.png",  # Bloco 30
 	"engenheiro": "res://assets/game/ipezinho_engenheiro_%s%d.png",  # Bloco 31
+	# Blocos 86-88: no mapa antigo (sem a vista iso) o desenho de outro ofício; na vista iso, a arte própria do
+	# PixelLab (Bloco 92: iso_bonecos.gd OUTFIT_FUNCAO -> fundidor / ferreiro / padre)
+	"fundidor": "res://assets/game/ipezinho_engenheiro_%s%d.png",
+	"ferreiro": "res://assets/game/ipezinho_engenheiro_%s%d.png",
+	"padre": "res://assets/game/ipezinho_civil_%s%d.png",
+	"carpinteiro": "res://assets/game/ipezinho_lenhador_%s%d.png",  # Bloco 94 (na vista iso: a arte do PixelLab)
 }
 ## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
 const OUTFITS_WITH_LAMP := ["mineiro"]
@@ -82,11 +106,15 @@ const STATE_GROUP := {
 	"chopping": "arvores",
 	"hauling": "armazens",
 	"operating": "coletores",  # Bloco 45: lenhador designado operando o coletor de madeira
+	"operating_ore": "coletores_minerio",  # Bloco 57: minerador designado operando a broca
 	"infirmary": "enfermarias",
 	"leisure": "tavernas",
 	"training": "campos",
 	"research": "laboratorios",
 	"rearming": "arsenais",  # Bloco 35: guarda buscando/trocando a arma
+	"buscando_insumo": "armazens",  # Bloco 86: fundidor largando barras / pegando insumos
+	"fundindo": "fornalhas",  # Bloco 86: fundidor na fornalha
+	"serrando": "carpintarias",  # Bloco 94: carpinteiro na carpintaria
 }
 ## Função (job) designada pelo jogador — Bloco 25: um campo só, com "ocioso" de padrão.
 ## Função nova (caçador, engenheiro...) = mais uma constante aqui + entrada em JOBS/JOB_LABELS
@@ -100,12 +128,17 @@ const ROLE_RESEARCH := "pesquisador"
 const ROLE_HUNTER := "caçador"  # Bloco 27: colhe fruta / caça (com arco) -> matéria-prima
 const ROLE_DOCTOR := "médico"  # Bloco 30: plantão na enfermaria (cura mais rápida)
 const ROLE_ENGINEER := "engenheiro"  # Bloco 31: sem ele nenhuma obra anda
-const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER]
+const ROLE_SMELTER := "fundidor"  # Bloco 86: opera a Fornalha (só por ordem)
+const ROLE_SMITH := "ferreiro"  # Bloco 87: opera a Oficina e o Arsenal (só por ordem)
+const ROLE_PRIEST := "padre"  # Bloco 88: o padre (um só, chega por evento). Bloco 92: é FUNÇÃO — só homem, um por vez
+const ROLE_CARPENTER := "carpinteiro"  # Bloco 94: opera a Carpintaria (só por ordem) e monta as camas novas
+const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER, ROLE_SMITH, ROLE_PRIEST, ROLE_CARPENTER]
 ## Texto do popup ao receber a função.
 const JOB_LABELS := {
 	ROLE_IDLE: "Sem função", ROLE_MINER: "Minerador!", ROLE_COOK: "Cozinheiro!",
 	ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!",
-	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!", ROLE_ENGINEER: "Engenheiro!",
+	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!", ROLE_ENGINEER: "Engenheiro!", ROLE_SMELTER: "Fundidor!", ROLE_SMITH: "Ferreiro!", ROLE_PRIEST: "Padre",
+	ROLE_CARPENTER: "Carpinteiro!",  # Bloco 94
 }
 ## Bloco 26/28: outfit inteiro por função (derivado do `job`: nada novo no save).
 ## REGRA (Bloco 28): toda função nova nasce com outfit próprio no mesmo bloco —
@@ -115,6 +148,10 @@ const JOB_OUTFIT := {
 	ROLE_IDLE: "civil", ROLE_MINER: "mineiro", ROLE_COOK: "cozinheiro",
 	ROLE_LUMBER: "lenhador", ROLE_GUARD: "guarda", ROLE_RESEARCH: "pesquisador",
 	ROLE_HUNTER: "cacador", ROLE_DOCTOR: "medico", ROLE_ENGINEER: "engenheiro",
+	ROLE_SMELTER: "fundidor",  # Bloco 86: PROVISÓRIO (pedido do jogador): a roupa do engenheiro + tom de fuligem
+	ROLE_SMITH: "ferreiro",  # Bloco 87: PROVISÓRIO: a roupa do engenheiro + tom de aço
+	ROLE_PRIEST: "padre",  # Bloco 88: PROVISÓRIO: a roupa de civil + tom de batina
+	ROLE_CARPENTER: "carpinteiro",  # Bloco 94: a arte do PixelLab (oficios94.py)
 }
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
@@ -138,6 +175,12 @@ const STUCK_REPATH_TIME := 1.5
 const STUCK_SNAP_TIME := 3.0
 const RAW_FOOD := preload("res://assets/game/raw_food.png")
 const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
+
+@export_group("Obras (Bloco 51)")
+## Vigia do engenheiro: indo pra obra sem chegar nem 16 px mais perto por esse tempo (s de jogo),
+## procura outro ponto de acesso alcançável (ou o chão andável mais perto da obra) e segue.
+@export var obra_watchdog_time: float = 12.0
 
 @export_group("Movimento")
 @export var speed: float = 120.0
@@ -154,9 +197,11 @@ const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 
 @export_group("Fome")
 @export var hunger_max: float = 100.0
-## Fome gasta por segundo (ritmo: era 0.7).
-@export var hunger_decay: float = 0.8
-@export var hunger_threshold: float = 30.0  # abaixo disso, prioridade vira comer
+## Fome gasta por segundo REAL. Bloco 84 (fome controlada): devagar — 0,2/s = 4,5 por hora de jogo; quem
+## enche são as 3 refeições da agenda (Schedule). (Era 0.8 com o comer contínuo.)
+@export var hunger_decay: float = 0.2
+## Abaixo disso come FORA da hora das refeições (fome braba: uma porção).
+@export var hunger_threshold: float = 30.0
 ## Come até atingir essa fração da fome máxima.
 @export_range(0.5, 1.0) var eat_until_ratio: float = 0.95
 
@@ -283,6 +328,8 @@ const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 @export_group("Carga")
 ## Minério por viagem (ritmo: era 20).
 @export var cargo_capacity: float = 16.0
+## Bloco 94: minério a mais por viagem com a MOCHILA de couro (o minerador pega uma no armazém).
+@export var mochila_carga: float = 4.0
 
 @export_group("IA")
 @export var auto_mode: bool = true  # true = IA decide sozinha; false = só controle manual por clique
@@ -294,7 +341,9 @@ const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 @export var idle_wander_radius: float = 50.0
 
 @export_group("Visual")
-@export var walk_anim_fps: float = 9.0
+## Bloco 73: 13 quadros/s na velocidade normal = o passo da vista iso (IsoBillboard.PASSO_CICLO:
+## 4 quadros a cada 56 px de arte = ~37 px daqui); o som do passo cai junto com o pé.
+@export var walk_anim_fps: float = 13.0
 @export var head_lamp_enabled: bool = true
 
 var hunger: float = 100.0
@@ -318,6 +367,10 @@ var _prev_swing: float = 0.0
 var _swing_rising: bool = false
 var _last_hunger_int: int = -1
 var _home: Node2D = null  # casa com a cama fixa deste ipezinho (null = sem teto)
+## Bloco 61: bichos que ele já abateu (caçador novato x experiente pro javali).
+var hunt_kills := 0
+## Bloco 68: segundos que ainda faltam na gaiola do elevador (0 = fora).
+var _cage_wait := 0.0
 var _home_slot: int = -1
 var _resting: bool = false  # chegou e está dormindo
 var _inside: bool = false  # dormindo DENTRO de casa (fica invisível)
@@ -329,6 +382,9 @@ var overtime: bool = false
 ## Função atual (um dos JOBS). Nasce ociosa: só trabalha depois que o jogador designa.
 ## (Save de antes do Bloco 25 sem função vira "minerador" — ver load_save_data / SaveManager.)
 var job: String = ROLE_IDLE
+## Bloco 77: a área de trabalho (work_areas.gd, WorkArea) onde ele foi posto pelo jogador, ou null. Com
+## área, a busca de trabalho da função fica presa ao retângulo dela (e ocioso ele espera lá dentro).
+var work_area = null
 ## Nome próprio mostrado no HUD (o nome do NÓ continua "IpezinhoN": é a chave do save).
 var display_name: String = ""
 ## "menino" ou "menina": sorteado ao nascer (jogo novo / recrutamento), fixo depois.
@@ -374,6 +430,12 @@ var _stuck_stage := 0
 var _ghost_left := 0.0  # segundos com o desvio desligado pra desencalhar
 var _obra: Node = null  # Bloco 31: obra que o engenheiro está tocando
 var _obra_on_site := false  # já chegou e está trabalhando nela
+## Bloco 51: vigia (distância mais curta até a obra e há quanto tempo não melhora) e o ponto de
+## acesso alternativo achado por ele (INF = o ponto normal da obra)
+var _obra_watch_best := INF
+var _obra_watch_t := 0.0
+var _obra_alt := Vector2.INF
+var _obra_alt_of: Node = null
 var _on_duty: Node = null  # Bloco 30: enfermaria onde o médico está de plantão (lá dentro)
 var _at_taverna: Node = null  # taverna onde está se divertindo (lá dentro, invisível)
 var _strike_spot: Variant = null  # onde fica parado protestando
@@ -403,9 +465,16 @@ var wearing: Dictionary = {}
 ## Couro da caça na mochila (vai pro armazém junto com a carne).
 var leather_carrying: float = 0.0
 var _hazard_cd := 0.0
+## Bloco 70: a poça de perigo (ácido/lava) em que está pisando SEM o traje (null = nenhuma) e há quanto
+## tempo (s) está exposto; passou de Fundo.exposicao, queima.
+var _na_poca: Node = null
+var _poca_expo := 0.0
+## Bloco 71: segundos que ainda está molhado (passou pela água do S4): a lava queima menos.
+var _molhado := 0.0
 ## Bloco 36: guarda que perdeu a luta — caído no lugar (grave), só o MÉDICO leva pra enfermaria.
 var downed: bool = false
-## Portão onde ele caiu ("tunel"/"poco"): enquanto ele está caído, é a brecha na defesa.
+## Portão onde ele caiu ("tunel"; "" = no posto do poço, sem portão — Bloco 80): enquanto ele está caído
+## no portão, é a brecha na defesa.
 var downed_gate: String = ""
 ## (caído) o médico que vem buscar / quem está carregando agora.
 var _rescuer: Node = null
@@ -415,6 +484,39 @@ var _rescue: Node = null
 var carrying_patient: Node = null
 var _broken_icon: Sprite2D
 var _hub_node: Node = null
+## Bloco 84 (agenda e refeições): as refeições que ele já fez hoje ("cafe", "almoco", "jantar"; zeram no
+## amanhecer) e as perdidas seguidas (estava com fome e a hora passou sem comer: rende menos até comer).
+var refeicoes_hoje: Dictionary = {}
+var refeicoes_perdidas: int = 0
+var _prato := 0.0  # fome que ainda falta comer do prato servido
+var _servido := false  # já pegou o prato nesta ida ao comedouro
+var _refeicao_alvo := ""  # a refeição que ele foi fazer ("" = fome braba fora de hora)
+var _periodo := ""  # período da agenda na última olhada
+var _agenda_t := 0.0
+var _sched: Node = null
+var _caminhos: Node = null  # Bloco 89
+## Bloco 85 (hora social): ânimo de ter conversado (fator do ânimo; some devagar), o ponto social e o lugar
+## reservados, quanto falta pra trocar de ponto, se já chegou na roda, o passeio (waypoints) e o balão.
+var animo_social := 0.0
+## Bloco 88: ânimo de ter ido à missa (fator "foi à missa"; some devagar).
+var animo_fe := 0.0
+var _spot: Node = null
+var _spot_i := -1
+var _social_t := 0.0
+var _conversando := false
+var _com_companhia := false
+var _passeio: Array[Vector2] = []
+var _balao_t := 0.0
+var _balao: Sprite2D = null
+var _balao_vida := 0.0
+## Bloco 95: o BALÃO DE MOTIVO (por que está parado). Liga/desliga nas configurações ([hud] baloes_motivo):
+## lido uma vez aqui (o settings.cfg é lido do disco a cada get_value) e trocado pela tela de configurações.
+static var baloes_motivo := true
+static var _baloes_lido := false
+var _motivo := ""
+var _motivo_t := 0.0
+var _motivo_cd := 0.0
+var _motivo_balao: Sprite2D = null
 ## Preenchido pelo SaveManager antes de entrar na árvore (ipezinho vindo do save).
 var pending_save_data: Dictionary = {}
 var _saved_home: String = ""  # nome da casa salva (a cama volta pro mesmo dono)
@@ -557,7 +659,17 @@ func get_state_label() -> String:
 		var sun := _sun()
 		if sun and sun.shelter_now() and not _is_night():
 			return "abrigado do sol" if _inside else "sem abrigo, no sol!"
+		if _periodo in ["social", "voltar"]:  # Bloco 84: ainda não é hora de dormir
+			return "descansando em casa" if _inside else "descansando ao relento"
 		return "dormindo" if _inside else "dormindo ao relento"
+	if _ai_state == "social":  # Bloco 85
+		if _spot == null or not is_instance_valid(_spot):
+			return "hora social"
+		if _conversando:
+			return ("conversando: %s" if _com_companhia else "esperando alguém: %s") % _spot.nome
+		return "passeando até: %s" % _spot.nome
+	if _ai_state == "eating" and _refeicao_alvo != "":  # Bloco 84
+		return "%s (%s)" % ["comendo" if _servido else "indo comer", Schedule.nome_refeicao(_refeicao_alvo)]
 	if _ai_state == "idle" and has_no_job():
 		return "sem função — esperando ordem"
 	if _ai_state == "idle" and is_cook():
@@ -571,6 +683,8 @@ func get_state_label() -> String:
 		return "tratando %d internado%s" % [n, "s" if n > 1 else ""] if n > 0 else "de plantão, esperando pacientes"
 	if _ai_state == "building" and _obra != null and is_instance_valid(_obra):
 		var pct := roundi(_obra.obra_progress() * 100.0)
+		if is_smith():  # Bloco 87
+			return ("forjando: %s (%d%%)" if _obra_on_site else "indo pra forja: %s (%d%%)") % [_obra.obra_title(), pct]
 		return ("construindo: %s (%d%%)" if _obra_on_site else "indo pra obra: %s (%d%%)") % [_obra.obra_title(), pct]
 	if _ai_state == "idle" and is_engineer():
 		return "sem obras — esperando encomenda"
@@ -595,6 +709,10 @@ func can_work_at(station: Node) -> bool:
 
 # ------------------------------------------------------------ movimento
 func _physics_process(delta: float) -> void:
+	if _cage_wait > 0.0:  # Bloco 68: na gaiola do elevador (viagem / fila)
+		_cage_wait -= delta
+		_apply_velocity(Vector2.ZERO)
+		return
 	_agent.max_speed = speed * _speed_bonus() * 1.2  # o desvio (RVO) limita a velocidade nisso
 	var desired := Vector2.ZERO
 	if _moving:
@@ -677,25 +795,29 @@ func _apply_velocity(v: Vector2) -> void:
 
 
 func _get_effective_speed() -> float:
-	var load_ratio := carrying / cargo_capacity
+	var load_ratio := carrying / capacidade_carga()
 	var penalty := 1.0 - (load_ratio * loaded_speed_penalty)
 	var s := speed * penalty
 	if hunger <= 0.0:
 		s *= starving_speed_mult
 	if injured:
 		s *= injured_speed_mult
+	if _na_poca != null and is_instance_valid(_na_poca):
+		s *= _na_poca.lentidao()  # Bloco 70: atolado no ácido/lava sem traje
 	if holding_robot != null:
 		s *= carry_robot_speed_mult
 	if carrying_patient != null:
 		s *= carry_patient_speed_mult
 	s *= [1.0, irritated_speed_mult, furious_speed_mult][_mood]  # zanga acumula com a lesão
+	s *= _neve_mult()  # Bloco 94: a neve atrasa quem anda sem botas
 	return s * _speed_bonus()
 
 
-## Bônus de velocidade das "Trilhas batidas" do Centro da Vila.
+## Bloco 89: bônus de velocidade do CAMINHO embaixo dele (a melhoria Trilhas aumenta o bônus dos caminhos).
 func _speed_bonus() -> float:
-	var hub := _village_hub()
-	return hub.speed_mult() if hub else 1.0
+	if _caminhos == null or not is_instance_valid(_caminhos):
+		_caminhos = get_tree().get_first_node_in_group("caminhos") if is_inside_tree() else null
+	return _caminhos.velocidade_em(global_position) if _caminhos else 1.0
 
 
 func _village_hub() -> Node:
@@ -714,6 +836,9 @@ func _process(delta: float) -> void:
 		_update_hunger_label()
 	if hunger <= 0.0 and not was_starving:
 		_on_starving()
+	_agenda_tick(delta)  # Bloco 84
+	_social_process(delta)  # Bloco 85
+	_motivo_tick(delta)  # Bloco 95
 
 	_work_timer = maxf(_work_timer - delta, 0.0)
 	_update_anger(delta)
@@ -785,16 +910,21 @@ func _process(delta: float) -> void:
 		elif not _obra_on_site:
 			# chegou: parou perto (a obra pode estar dentro de um obstáculo) ou já está
 			# colado no ponto mesmo com outro engenheiro esbarrando nele
-			var dist := global_position.distance_to(_obra.obra_position(self))
+			var dist := global_position.distance_to(_obra_goal())
 			if (not _moving and dist <= OBRA_REACH) or dist <= 24.0:
 				_moving = false
 				_obra_on_site = true
+				_obra_watch_best = INF
+				_obra_watch_t = 0.0
 				_obra.obra_join(self)
+			else:
+				_obra_watchdog_tick(delta, dist)
 		else:
 			_work_timer = 0.2  # martelada
 			_obra.obra_work(delta * work_mult())  # zanga/tristeza deixam mais lento
 			if not _obra.obra_pending():
 				_popup("Obra pronta!", Color(0.55, 1.0, 0.5))
+				Audio.build_done(global_position)  # Bloco 55
 				_obra_stop()
 				_decision_timer = 0.0
 	# médico chegou na porta da enfermaria: entra e fica de plantão
@@ -833,18 +963,24 @@ func _choose_state() -> String:
 		if _ai_state == "mining" and _station_ok_for("mining"):
 			return "mining"
 		return "idle"
-	# Prioridade 0: de noite o turno acabou — todo mundo pra casa, mesmo com fome ou carga.
-	# Exceção: quem está em TURNO EXTRA continua trabalhando (e ficando zangado).
-	if _is_night() and not overtime and not is_guard():
-		return "home"
+	# Bloco 84: invasão em andamento — quem não é guarda fica em casa (o médico, no plantão).
+	var def_inv := _defense()
+	if def_inv and def_inv.invasion_active and not is_guard():
+		return "doctor" if is_doctor() and _has_infirmary() else "home"
 	# Sem enfermaria na cena (fallback antigo): machucado descansa em casa.
 	if injured:
 		return "home"
-	# Prioridade 1: comer. Quem já está comendo só sai quando estiver quase cheio.
-	# Sem comida no comedouro não adianta esperar lá: segue trabalhando (com fome).
+	# Bloco 84: comendo (pegou o prato, ou indo pegar com comida lá): fica até acabar.
 	var food_ok := _food_available()
-	if _ai_state == "eating" and hunger < hunger_max * eat_until_ratio and food_ok:
+	if _ai_state == "eating" and ((not _servido and food_ok) or _prato > 0.0):
 		return "eating"
+	# Bloco 84: a AGENDA (Schedule): dormir, refeições, voltar, hora social, plantão, vigília. "" = horário
+	# de trabalho (ou sem relógio): segue a lógica de sempre aqui embaixo.
+	var ag := _agenda_estado(food_ok)
+	if ag != "":
+		return ag
+	# Prioridade 1: comer FORA de hora só com fome braba (uma porção).
+	# Sem comida no comedouro não adianta esperar lá: segue trabalhando (com fome).
 	if hunger < hunger_threshold and food_ok:
 		return "eating"
 	# Lazer: triste vai pra taverna (se existir) e fica até se animar.
@@ -892,6 +1028,9 @@ func _choose_state() -> String:
 	# Engenheiro (Bloco 31): vai tocar a obra mais antiga encomendada; sem obra, espera
 	# no Centro da Vila. (Minério na mão já foi entregue pela regra de cima.)
 	if is_engineer():
+		return "building" if _pick_obra() != null else "idle"
+	# Bloco 87: ferreiro — a obra da Oficina e a forja do Arsenal (só com encomenda; sem: espera).
+	if is_smith():
 		return "building" if _pick_obra() != null else "idle"
 	# Guarda: à noite fica nos portões; de dia treina (até ficar pronto) e descansa.
 	# Bloco 35: desarmado vai ao Arsenal pegar outra arma (até de noite: sem arma no
@@ -950,13 +1089,24 @@ func _choose_state() -> String:
 		if _has_usable_station("coleta_comida"):
 			return "foraging"
 		return "idle"
+	# Bloco 86: fundidor — só trabalha com ORDEM na fornalha (sem ordem: não pega nada).
+	if is_smelter():
+		return _estado_fundidor()
+	# Bloco 94: carpinteiro — primeiro monta a cama que o jogador mandou trocar; senão, as ordens da carpintaria.
+	if is_carpenter():
+		if barras_mao.is_empty() and _casa_pra_cama() != null:
+			return "montando_cama"
+		return _estado_fundidor()
 	# Bloco 25: sem função não trabalha sozinho — espera no Centro da Vila até o
 	# jogador designar. (Comer, dormir, se tratar, taverna e greve vêm antes e seguem iguais.)
 	if has_no_job():
 		return "idle"
+	# Bloco 57: o minerador designado pro coletor de minério entrega o que tem e fica operando.
+	if is_miner() and _my_coletor_minerio() != null:
+		return "storing" if carrying > 0.0 else "operating_ore"
 	# Daqui pra baixo: minerador (e pesquisador sem laboratório, como antes).
 	# Prioridade 2: depositar carga cheia (e não desistir no meio do caminho).
-	if carrying >= cargo_capacity - 0.01:
+	if carrying >= capacidade_carga() - 0.01:
 		return "storing"
 	if _ai_state == "storing" and carrying > 0.0:
 		return "storing"
@@ -973,6 +1123,8 @@ func _choose_state() -> String:
 
 func _decide_next_action() -> void:
 	var desired := _choose_state()
+	if not carregando_corpo.is_empty() and desired != "padre":
+		_larga_corpo()  # Bloco 93: emergência no meio do caminho: o corpo volta pro chão (ele busca depois)
 
 	if desired == "home":
 		_release_station()
@@ -984,6 +1136,35 @@ func _decide_next_action() -> void:
 		_release_station()
 		_set_state("strike")
 		_go_protest()
+		return
+
+	if desired == "montando_cama":  # Bloco 94
+		_montar_cama()
+		return
+
+	if desired == "padre":  # Bloco 88: o padre fica na porta da igreja (sem igreja: na praça)
+		var cal := get_tree().get_first_node_in_group("calendario")
+		if cal and _padre_enterro(cal):
+			return  # Bloco 93: buscando, levando ou enterrando alguém
+		if _ai_state != "padre":
+			_release_station()
+			_set_state("padre")
+		var ig: Node = cal.igreja() if cal else null
+		var dest: Vector2 = ig.altar_pos() if ig else (_village_hub().global_position + Vector2(0, 70) if _village_hub() else global_position)
+		var fl: Node = cal.funeral_lugar_agora() if cal else null
+		if fl != null and fl.has_method("portao_pos"):
+			dest = fl.portao_pos()  # Bloco 93: o funeral é no cemitério
+		if global_position.distance_to(dest) > 12.0 and (not _moving or _target.distance_to(dest) > 2.0):
+			_go_to(dest)
+		elif cal and cal.pregando_agora():
+			_work_timer = decision_interval * 1.2  # Bloco 92: na missa e no funeral ele prega (até a próxima decisão)
+		return
+
+	if desired == "social":  # Bloco 85
+		if _ai_state != "social":
+			_release_station()
+			_set_state("social")
+			_social_vai()
 		return
 
 	if desired == "guard":
@@ -1017,7 +1198,7 @@ func _decide_next_action() -> void:
 			_release_station()
 			_set_state("building")
 		if not _obra_on_site:
-			var pos: Vector2 = _obra.obra_position(self)
+			var pos: Vector2 = _obra_goal()
 			if not _moving or _target.distance_to(pos) > 2.0:
 				_go_to(pos)
 		return
@@ -1053,7 +1234,7 @@ func _decide_next_action() -> void:
 	_set_state(desired)
 
 	if desired == "idle":
-		if has_no_job() or is_engineer():
+		if has_no_job() or is_engineer() or is_smith() or work_area != null:  # Bloco 77: com área, espera nela
 			_idle_at_hub()
 			return
 		if not _moving and randf() < 0.35:
@@ -1063,6 +1244,10 @@ func _decide_next_action() -> void:
 
 	var group: String = STATE_GROUP[desired]
 	var station := _find_best_station(group)
+	if desired == "storing" and carrying > 0.0:  # Bloco 64: ponto de carga do vagonete mais perto?
+		var pc := _find_best_station("pontos_carga")
+		if pc and (station == null or global_position.distance_to(pc.global_position) < global_position.distance_to(station.global_position)):
+			station = pc
 	if station:
 		_station = station
 		_slot = station.reserve_slot(self)
@@ -1082,6 +1267,11 @@ func _idle_at_hub() -> void:
 	var sun := _sun()
 	if sun and sun.shelter_now():
 		return  # onda solar: quem está lá embaixo fica protegido onde está
+	if work_area != null:  # Bloco 77: sem trabalho na área (sem árvore, mina desligada): espera nela
+		var r: Rect2 = work_area.rect
+		if not r.has_point(global_position) or randf() < 0.2:
+			_go_to(r.position + Vector2(randf_range(0.2, 0.8) * r.size.x, randf_range(0.2, 0.8) * r.size.y))
+		return
 	var hub := _village_hub()
 	if hub == null or not (hub is Node2D):
 		if randf() < 0.35:
@@ -1098,8 +1288,10 @@ func _idle_at_hub() -> void:
 func _station_ok_for(state: String) -> bool:
 	if _station == null or not is_instance_valid(_station) or _slot < 0:
 		return false
+	if state in ["mining", "chopping", "foraging", "hunting"] and not _area_permite(_station, STATE_GROUP[state]):
+		return false  # Bloco 77: a área mudou (desligaram a mina, tiraram ele da área)
 	if state == "mining":
-		return _station.has_ore() and carrying < cargo_capacity
+		return _station.has_ore() and carrying < capacidade_carga()
 	if state == "gathering":
 		return _station.has_food() and food_carrying < cook_carry - 0.01
 	if state == "foraging":
@@ -1118,6 +1310,8 @@ func _station_ok_for(state: String) -> bool:
 		return _station.has_food()
 	if state == "operating":
 		return is_lumber() and _station.get("operator") == self
+	if state == "operating_ore":
+		return is_miner() and _station.get("operator") == self
 	if state == "chopping":
 		return _station.has_wood() and wood_carrying < lumber_carry - 0.01
 	if state == "hauling":
@@ -1133,13 +1327,18 @@ func _station_ok_for(state: String) -> bool:
 func _on_link_reached(details: Dictionary) -> void:
 	var link = details.get("owner")
 	if not (link is Node) or not link.get_parent() \
-			or not (link.get_parent().is_in_group("elevador") or link.get_parent().is_in_group("elevador_abismo")):
+			or not (link.get_parent().is_in_group("elevador") or link.get_parent().is_in_group("elevadores")):
 		return
 	var exit: Vector2 = details.get("link_exit_position", global_position)
 	global_position = exit
 	Audio.elevator(exit)  # corrente + "clanc" da gaiola
+	# Bloco 68: a viagem leva tempo e a gaiola tem lugar limitado (lotou: espera a próxima)
+	var shaft: Node = link.get_parent()
+	_cage_wait = shaft.ride_wait() if shaft.has_method("ride_wait") else 0.0
 	_body.modulate.a = 0.0
-	create_tween().tween_property(_body, "modulate:a", 1.0, 0.35)
+	var tw := create_tween()
+	tw.tween_interval(_cage_wait)
+	tw.tween_property(_body, "modulate:a", 1.0, 0.35)
 
 
 ## Multiplicador de acidente pela profundidade (nível 2 = mais perigoso).
@@ -1152,9 +1351,14 @@ func depth_danger() -> float:
 ## _find_best_station, não aceita a estação atual só por ser a atual: árvore que
 ## virou toco ou horta colhida não contam — aí o lenhador/cozinheiro vai descarregar.)
 func _has_usable_station(group_name: String) -> bool:
+	var env := get_tree().get_first_node_in_group("environment")
 	for node in get_tree().get_nodes_in_group(group_name):
 		if node.has_method("is_usable") and not node.is_usable():
 			continue
+		if env and env.has_method("trancado") and env.trancado((node as Node2D).global_position):
+			continue  # Bloco 67
+		if not _area_permite(node, group_name):
+			continue  # Bloco 77: fora da área dele / dentro da área de outros
 		if node.has_method("has_free_slot_for") and not node.has_free_slot_for(self):
 			continue
 		return true
@@ -1165,9 +1369,14 @@ func _has_usable_station(group_name: String) -> bool:
 func _find_best_station(group_name: String) -> Node2D:
 	var best: Node2D = null
 	var best_score := INF
+	var env := get_tree().get_first_node_in_group("environment")
 	for node in get_tree().get_nodes_in_group(group_name):
 		if node.has_method("is_usable") and not node.is_usable() and node != _station:
 			continue
+		if env and env.has_method("trancado") and env.trancado((node as Node2D).global_position):
+			continue  # Bloco 67: o leste ainda não foi desbravado
+		if not _area_permite(node, group_name):
+			continue  # Bloco 77: fora da área dele / dentro da área de outros
 		if node.has_method("has_free_slot_for") and not node.has_free_slot_for(self):
 			continue
 		if node.has_method("accepts_worker") and not node.accepts_worker(self) and node != _station:
@@ -1226,6 +1435,12 @@ func _release_station() -> void:
 func _set_state(new_state: String) -> void:
 	if new_state == _ai_state:
 		return
+	if new_state == "buscando_insumo":  # Bloco 86: uma visita nova ao armazém
+		_visita_feita = false
+	if new_state == "eating":  # Bloco 84: indo comer — um prato novo, da refeição da hora (se for)
+		_servido = false
+		_prato = 0.0
+		_refeicao_alvo = _refeicao_da_hora()
 	if _ai_state == "home":
 		_stop_resting()
 	if _ai_state == "infirmary":
@@ -1244,6 +1459,8 @@ func _set_state(new_state: String) -> void:
 		_foe = null
 	if _ai_state == "rescue":
 		_drop_patient()
+	if _ai_state == "social":
+		_social_sai()  # Bloco 85: solta o lugar no ponto
 	_ai_state = new_state
 	state_changed.emit(new_state)
 
@@ -1289,6 +1506,15 @@ func _on_strike() -> bool:
 func happiness_factors() -> Array:
 	var f: Array = []
 	f.append(["tem cama", 8.0] if has_home() else ["sem cama", -15.0])
+	if has_home() and _home.has_method("comfort_bonus") and _home.comfort_bonus() > 0.0:
+		f.append(["casa nível %d" % _home.level, _home.comfort_bonus()])  # Bloco 56
+	if has_home() and _home.has_method("cama_boa") and _home.cama_boa(_home_slot):
+		f.append(["cama de tábua", _home.conforto_cama_boa])  # Bloco 94
+	if has_home():
+		var dec := get_tree().get_first_node_in_group("decoracoes_mgr")
+		var bel: float = dec.beleza_da_casa(_home) if dec else 0.0
+		if bel >= 0.5:
+			f.append(["casa enfeitada", bel])  # Bloco 90: decoração perto de casa
 	if hunger <= 0.0:
 		f.append(["passando fome", -30.0])
 	elif hunger < hunger_threshold:
@@ -1302,6 +1528,13 @@ func happiness_factors() -> Array:
 	var env := get_tree().get_first_node_in_group("environment")
 	if env and env.has_method("is_abyss") and env.is_abyss(global_position):
 		f.append(["calor do abismo", -8.0])
+	var nx: Resource = env.nivel_extra_em(global_position) if env and env.has_method("nivel_extra_em") else null
+	if nx and nx.animo != 0.0:  # Bloco 71: o nível novo pesa ou acalma (o lago azul)
+		f.append([nx.animo_motivo if nx.animo_motivo != "" else nx.nome, nx.animo])
+	if animo_social >= 0.5:
+		f.append(["conversou com os amigos", animo_social])  # Bloco 85
+	if animo_fe >= 0.5:
+		f.append(["foi à missa", animo_fe])  # Bloco 88
 	var m := _morale()
 	if m:
 		f.append_array(m.village_factors())
@@ -1520,8 +1753,9 @@ func _fall_in_combat(cause: String) -> void:
 	if hud:
 		var has_doc := get_tree().get_nodes_in_group("ipezinhos").any(func(w): return w.is_doctor() and not w.injured)
 		hud.show_banner("GUARDA CAÍDO: %s" % _display(),
-			"Caiu no %s e não levanta sozinho. Só um MÉDICO pode levar pra enfermaria%s. Enquanto isso o portão fica aberto pra roubo." % [
-				def.gate_label(downed_gate) if def else "portão", "" if has_doc else " — NÃO HÁ MÉDICO (tecla 3)"])
+			"Caiu no %s e não levanta sozinho. Só um MÉDICO pode levar pra enfermaria%s.%s" % [
+				def.gate_label(downed_gate) if def else "portão", "" if has_doc else " — NÃO HÁ MÉDICO (tecla 3)",
+				" Enquanto isso o portão fica aberto pra roubo." if downed_gate != "" else ""])
 	for w in get_tree().get_nodes_in_group("ipezinhos"):
 		if w.is_doctor():
 			w.wake_decision()
@@ -1661,13 +1895,15 @@ func is_engineer() -> bool:
 ## termina ela antes de trocar. Com vários engenheiros, cada um prefere uma obra que
 ## ninguém está tocando; se todas já têm alguém, ajuda na mais antiga (o trabalho soma).
 func _pick_obra() -> Node:
-	if _obra != null and is_instance_valid(_obra) and _obra.obra_pending():
+	if _obra != null and is_instance_valid(_obra) and _obra.obra_pending() and (_obra.get("oficio") == ROLE_SMITH) == is_smith():
 		return _obra
 	var oldest_free: Node = null
 	var oldest_any: Node = null
 	for site in get_tree().get_nodes_in_group("obras"):
 		if not site.has_method("obra_pending") or not site.obra_pending():
 			continue
+		if (site.get("oficio") == ROLE_SMITH) != is_smith():
+			continue  # Bloco 87: Oficina e Arsenal são do ferreiro; o resto, do engenheiro
 		var t: float = site.obra_ordered_at()
 		if oldest_any == null or t < oldest_any.obra_ordered_at():
 			oldest_any = site
@@ -1678,6 +1914,33 @@ func _pick_obra() -> Node:
 		if not taken and (oldest_free == null or t < oldest_free.obra_ordered_at()):
 			oldest_free = site
 	return oldest_free if oldest_free != null else oldest_any
+
+
+## Prompt 18: acidente na mina — pedrinhas caindo do teto em cima dele (só visual; a vista iso
+## troca o quadradinho pela pedra de pixel, iso_fx.gd papel "pedra").
+func _rockfall() -> void:
+	var p := CPUParticles2D.new()
+	p.name = "Rocks"
+	p.one_shot = true
+	p.explosiveness = 0.6
+	p.amount = 9
+	p.lifetime = 0.8
+	p.position = Vector2(0, -70)
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = Vector2(14, 4)
+	p.direction = Vector2(0, 1)
+	p.spread = 10.0
+	p.gravity = Vector2(0, 260)
+	p.initial_velocity_min = 10.0
+	p.initial_velocity_max = 30.0
+	p.scale_amount_min = 2.0
+	p.scale_amount_max = 3.0
+	p.color = Color(0.55, 0.5, 0.45)
+	p.z_index = 6
+	get_parent().add_child(p)
+	p.global_position = global_position + Vector2(0, -70)
+	p.emitting = true
+	get_tree().create_timer(1.6).timeout.connect(p.queue_free)
 
 
 ## Bloco 31b: nuvenzinha de poeira/lascas onde o martelo bate (fica no mundo, não
@@ -1703,10 +1966,70 @@ func _dust_puff() -> void:
 	p.finished.connect(p.queue_free)
 
 
+## Onde ir pra tocar a obra: o ponto dela ou o ponto de acesso que o vigia achou (Bloco 51).
+func _obra_goal() -> Vector2:
+	if _obra_alt != Vector2.INF and _obra_alt_of == _obra:
+		return _obra_alt
+	return _obra.obra_position(self)
+
+
+## Bloco 51: o engenheiro que fica "a caminho" sem se aproximar (depois de carregar o save, a malha
+## de navegação é refeita e o ponto da obra ou ele mesmo pode ficar sem caminho; o anti-travamento
+## desistia de andar e a IA mandava andar pro MESMO ponto de novo, pra sempre).
+func _obra_watchdog_tick(delta: float, dist: float) -> void:
+	if dist < _obra_watch_best - 16.0:
+		_obra_watch_best = dist
+		_obra_watch_t = 0.0
+		return
+	_obra_watch_t += delta
+	if _obra_watch_t < obra_watchdog_time:
+		return
+	_obra_watch_t = 0.0
+	_obra_watch_best = INF
+	var map := _agent.get_navigation_map()
+	var alvo: Vector2 = _obra.obra_position(self)
+	var centro: Vector2 = (_obra as Node2D).global_position if _obra is Node2D else alvo
+	# 1) um ponto de acesso em volta da obra que o caminho alcança de verdade
+	var melhor := Vector2.INF
+	var melhor_d := INF
+	for r in [40.0, 60.0, 85.0]:
+		for k in 12:
+			var p: Vector2 = centro + Vector2.RIGHT.rotated(TAU * k / 12.0) * r
+			var cp := NavigationServer2D.map_get_closest_point(map, p)
+			if cp.distance_to(p) > 10.0:
+				continue  # fora do chão andável
+			var path := NavigationServer2D.map_get_path(map, global_position, cp, true)
+			if path.is_empty() or path[path.size() - 1].distance_to(cp) > 8.0:
+				continue  # não chega lá
+			var dd := cp.distance_to(alvo)
+			if dd < melhor_d:
+				melhor_d = dd
+				melhor = cp
+		if melhor != Vector2.INF:
+			break
+	if melhor != Vector2.INF:
+		_obra_alt = melhor
+		_obra_alt_of = _obra
+		print("[vigia] %s sem avançar há %.0f s a caminho de %s: novo ponto de acesso %s (o normal era %s)" % [
+			_display(), obra_watchdog_time, _obra.obra_title(), melhor.round(), alvo.round()])
+		_go_to(melhor)
+		return
+	# 2) nenhum caminho: vai pro chão andável mais perto da obra (último recurso)
+	var perto := NavigationServer2D.map_get_closest_point(map, alvo)
+	print("[vigia] %s preso sem caminho até %s: puxado pro chão andável mais perto (%s)" % [_display(), _obra.obra_title(), perto.round()])
+	global_position = perto
+	_moving = false
+	_decision_timer = 0.0
+
+
 ## Sai da obra (pausa): o que já foi feito fica guardado nela.
 func _obra_stop() -> void:
 	if _obra != null and is_instance_valid(_obra) and _obra_on_site:
 		_obra.obra_leave(self)
+	_obra_alt = Vector2.INF
+	_obra_alt_of = null
+	_obra_watch_best = INF
+	_obra_watch_t = 0.0
 	_obra = null
 	_obra_on_site = false
 
@@ -1844,7 +2167,7 @@ func _stop_resting() -> void:
 
 
 # ------------------------------------------------------------ ferramentas (Oficina)
-## Chamado pela Oficina: a picareta de aço troca o visual da ferramenta.
+## Chamado pela Oficina: a picareta temperada (id picareta_aco) troca o visual da ferramenta.
 func on_tool_crafted(id: String) -> void:
 	if id == "picareta_aco":
 		_has_steel_pickaxe = true
@@ -2029,11 +2352,21 @@ func has_no_job() -> bool:
 ## trabalho é seguro: o _choose_state() faz ele entregar primeiro o que estiver
 ## carregando (minério -> armazém, comida -> comedouro, madeira -> armazém).
 func set_job(new_job: String) -> void:
+	if new_job == ROLE_PRIEST and motivo_padre() != "":
+		return  # Bloco 92: só homem vira padre, e a vila tem um só (main.gd avisa o motivo)
+	if new_job != ROLE_PRIEST and not carregando_corpo.is_empty():
+		_larga_corpo()  # Bloco 93: deixou de ser padre com um corpo nos ombros
 	if not new_job in JOBS:
 		push_warning("Ipezinho: função desconhecida '%s'" % new_job)
 		return
 	if job == new_job:
 		return
+	if work_area != null and new_job != work_area.job():
+		var wa := _work_areas()
+		if wa:
+			wa.sair(self)  # Bloco 77: trocou de função à mão: deixa o posto da área
+		else:
+			work_area = null
 	if job == ROLE_DOCTOR:
 		_end_duty()  # tirou do médico: o bônus da enfermaria para NA HORA (Bloco 30)
 	if job == ROLE_ENGINEER:
@@ -2042,6 +2375,8 @@ func set_job(new_job: String) -> void:
 		_drop_patient()  # Bloco 36: tirou do médico no meio do resgate: larga o caído ali
 	if job == ROLE_LUMBER and _my_coletor() != null:
 		_my_coletor().release()  # Bloco 45: deixou de ser lenhador: o coletor para
+	if job == ROLE_MINER and _my_coletor_minerio() != null:
+		_my_coletor_minerio().release()  # Bloco 57: deixou de ser minerador: a broca para
 	job = new_job
 	_popup(JOB_LABELS[job], Color(0.95, 0.9, 0.6) if job != ROLE_IDLE else Color(0.75, 0.75, 0.8))
 	# Bloco 35: o primeiro porrete vem de casa; depois disso, arma nova só no Arsenal
@@ -2053,6 +2388,36 @@ func set_job(new_job: String) -> void:
 	_refresh_tool_texture()
 	if auto_mode and _ai_state != "manual":
 		_decision_timer = randf_range(0.05, 0.4)  # troca de tarefa já
+
+
+# ------------------------------------------------------------ áreas de trabalho (Bloco 77)
+func _work_areas() -> Node:
+	return get_tree().get_first_node_in_group("work_areas") if is_inside_tree() else null
+
+
+## work_areas.gd chama (a lista da área é dela; aqui só o vínculo e a troca de tarefa já).
+func entrar_area(a) -> void:
+	work_area = a
+	_release_station()  # a estação de antes pode estar fora da área
+	if auto_mode and _ai_state != "manual":
+		_decision_timer = randf_range(0.05, 0.4)
+
+
+func sair_area() -> void:
+	work_area = null
+	if auto_mode and _ai_state != "manual":
+		_decision_timer = randf_range(0.05, 0.4)
+
+
+## A estação (do grupo) pode ser usada por ele? (a área dele / área de outros / mina desligada)
+func _area_permite(node: Node, group_name: String) -> bool:
+	var wa := _work_areas()
+	return wa == null or wa.areas.is_empty() or wa.pode_usar(self, (node as Node2D).global_position, group_name)
+
+
+func _area_registra(qtd: float) -> void:
+	if work_area != null and qtd > 0.0:
+		work_area.registra(qtd)
 
 
 # ------------------------------------------------------------ caçador / cozinha (Bloco 27)
@@ -2080,6 +2445,7 @@ func _gather_raw(amount: float, value: float, state: String) -> float:
 		return 0.0
 	_raw_units += taken
 	raw_carrying += taken * value
+	_area_registra(taken * value)  # Bloco 77
 	if state == "hunting":
 		leather_carrying += taken * leather_per_game  # Bloco 42: pele da caça
 	_work_timer = 0.2
@@ -2125,6 +2491,32 @@ func _relink_coletor(at: Vector2 = Vector2.INF) -> void:
 	for k in get_tree().get_nodes_in_group("coletores"):
 		if k.get("operator") != null and k.operator != self:
 			continue  # já tem outro operador
+		if k.has_method("restaurado") and not k.restaurado():
+			continue  # Bloco 81: ruína não tem operador
+		if c == null or (at != Vector2.INF and k.global_position.distance_to(at) < c.global_position.distance_to(at)):
+			c = k
+	if c:
+		c.designate(self)
+
+
+# ------------------------------------------------------------ coletor de minério (Bloco 57)
+func _my_coletor_minerio() -> Node:
+	if not is_inside_tree():
+		return null
+	for c in get_tree().get_nodes_in_group("coletores_minerio"):
+		if c.get("operator") == self:
+			return c
+	return null
+
+
+## Save carregado com ele operando a broca: volta pra ela (a mais perto de onde estava).
+func _relink_coletor_minerio(at: Vector2 = Vector2.INF) -> void:
+	if not is_inside_tree() or not is_miner():
+		return
+	var c: Node2D = null
+	for k in get_tree().get_nodes_in_group("coletores_minerio"):
+		if k.get("operator") != null and k.operator != self:
+			continue
 		if c == null or (at != Vector2.INF and k.global_position.distance_to(at) < c.global_position.distance_to(at)):
 			c = k
 	if c:
@@ -2212,6 +2604,7 @@ func chop(amount: float) -> float:
 	if wood_carrying >= lumber_carry - 0.01:
 		_decision_timer = 0.0  # carga cheia: vai pro armazém já
 	_roll_branch(taken)
+	_area_registra(taken)  # Bloco 77
 	return taken
 
 
@@ -2284,7 +2677,13 @@ func mood_label() -> String:
 
 ## Multiplicador da produção pela zanga e pela felicidade.
 func work_mult() -> float:
-	return [1.0, irritated_work_mult, furious_work_mult][_mood] * _happiness_work_mult() * _cold_mult()
+	return [1.0, irritated_work_mult, furious_work_mult][_mood] * _happiness_work_mult() * _cold_mult() * _mult_refeicoes()
+
+
+## Bloco 84: refeição perdida rende menos (Schedule.perda_por_refeicao cada, até perda_max).
+func _mult_refeicoes() -> float:
+	var s := _schedule()
+	return s.mult_refeicoes(refeicoes_perdidas) if s else 1.0
 
 
 # ------------------------------------------------------------ equipamento (Bloco 42)
@@ -2332,27 +2731,86 @@ func _equip_tick(delta: float) -> void:
 	elif wearing.has("casaco"):
 		eq.give_back("casaco", wearing.casaco)
 		wearing.erase("casaco")
+	# Bloco 94: botas — pega no inverno, devolve quando acaba; gasta só andando na neve
+	if eq.is_winter():
+		if not wearing.has("botas") and not downed:
+			var b: float = eq.take("botas")
+			if b > 0.0:
+				wearing["botas"] = b
+				_popup("Calçou as botas", Color(0.75, 0.88, 1.0))
+		if wearing.has("botas") and _moving and not _inside and eq.is_cold_at(global_position):
+			wearing.botas -= delta
+			if wearing.botas <= 0.0:
+				wearing.erase("botas")
+				eq.give_back("botas", 0.0)
+				_popup("A bota furou!", Color(1.0, 0.6, 0.45))
+	elif wearing.has("botas"):
+		eq.give_back("botas", wearing.botas)
+		wearing.erase("botas")
 	# trajes: veste na entrada da zona, devolve na saída, gasta só lá dentro
-	var z: String = eq.hazard_at(global_position)
+	var zona: String = eq.hazard_at(global_position)
+	# Bloco 70: fora das zonas, a poça de perigo (ácido/lava) também pede o traje dela
+	var fundo := _fundo()
+	var poca: Node = fundo.poca_at(global_position) if zona == "" and fundo and not _inside else null
+	var z: String = zona if zona != "" else (String(poca.traje()) if poca else "")
+	_na_poca = null
+	_molhado = maxf(_molhado - delta, 0.0)
+	if poca and poca.kind == "agua":  # Bloco 71: água não pede traje — atrasa e molha
+		_na_poca = poca
+		if _molhado <= 0.0 and _hazard_cd <= 0.0:
+			_hazard_cd = 4.0
+			_popup("Molhado: a lava queima menos", Color(0.6, 0.85, 1.0))
+		_molhado = fundo.agua_molhado if fundo else 20.0
 	for t in eq.SUITS:
 		if wearing.has(t) and t != z:
 			eq.give_back(t, wearing[t])
 			wearing.erase(t)
 	if z == "" or _carried_by != null:
+		_poca_expo = maxf(_poca_expo - delta * 0.5, 0.0)  # fora da poça o ardor passa
 		return
 	if not wearing.has(z):
 		var d: float = eq.take(z)
 		if d > 0.0:
 			wearing[z] = d
 			_popup("Vestiu: %s" % eq.NAMES[z].to_lower(), Color(0.8, 1.0, 0.7))
+		elif poca != null:
+			_poca_tick(poca, delta)  # sem traje no vestiário: passa pela poça e se arrisca
 		else:
 			_leave_hazard(eq, z, "sem %s no vestiário" % eq.NAMES[z].to_lower())
 		return
-	wearing[z] -= delta * eq.wear_rate(z)
+	var vent: float = fundo.ventilacao_mult(global_position) if fundo and z == "gas" else 1.0
+	wearing[z] -= delta * eq.wear_rate(z) * vent  # (Bloco 70: o ventilador poupa a máscara)
 	if wearing[z] <= 0.0:
 		wearing.erase(z)
 		eq.give_back(z, 0.0)
-		_leave_hazard(eq, z, "%s quebrou" % eq.NAMES[z].to_lower())
+		if poca == null:
+			_leave_hazard(eq, z, "%s quebrou" % eq.NAMES[z].to_lower())
+
+
+func _fundo() -> Node:
+	return get_tree().get_first_node_in_group("fundo")
+
+
+## Bloco 70: dentro da poça sem traje — devagar e, passou do tempo, queima (vai pra enfermaria como
+## qualquer machucado). O ventilador do S2 faz o ácido arder mais devagar.
+func _poca_tick(poca: Node, delta: float) -> void:
+	_na_poca = poca
+	var fundo := _fundo()
+	var k: float = fundo.ventilacao_mult(global_position) if fundo and poca.kind == "acido" else 1.0
+	if poca.kind == "lava" and _molhado > 0.0 and fundo:
+		k *= fundo.molhado_lava  # Bloco 71: molhado na água do S4, a lava queima menos
+	_poca_expo += delta * k
+	if _hazard_cd <= 0.0:
+		_hazard_cd = 4.0
+		_popup("%s! Sem %s" % [poca.nome(), _equipment().NAMES[poca.traje()].to_lower()], Color(1.0, 0.6, 0.4))
+	if _poca_expo < poca.exposicao() or injured:
+		return
+	_poca_expo = 0.0
+	var grave: bool = randf() < poca.grave_chance()
+	if fundo:
+		fundo.registra_queimadura(poca.kind)
+	hurt(poca.kind, "grave" if grave else "leve")
+	_toast("%s se queimou no %s (sem %s)." % [_display(), poca.nome().to_lower(), _equipment().NAMES[poca.traje()].to_lower()])
 
 
 ## Sem traje (ou ele quebrou) dentro da zona: sai na hora, sem travar nada.
@@ -2413,8 +2871,14 @@ func hurt(cause: String = "mina", severity: String = "") -> void:
 	_death_warned = false
 	_work_timer = 0.0
 	_decision_timer = 0.0  # larga a picareta e vai pra enfermaria já
+	if cause == "mina" and is_inside_tree():
+		_rockfall()
+		if injury_severity == "grave":  # Prompt 24: acidente feio ganha a faixa com a cena
+			var hud := get_tree().get_first_node_in_group("hud")
+			if hud and hud.has_method("show_banner"):
+				hud.show_banner("ACIDENTE NA MINA", "%s se machucou feio no desabamento. Precisa de leito na enfermaria." % _display())
 	var grave := injury_severity == "grave"
-	var text := "Ai! Um galho!" if cause == "galho" else "Ai!"
+	var text: String = {"galho": "Ai! Um galho!", "javali": "Ai! O javali!", "acido": "Ai! Ácido!", "lava": "Ai! Queimou!"}.get(cause, "Ai!")
 	_popup(text + (" (grave)" if grave else ""), Color(1.0, 0.25, 0.2) if grave else Color(1.0, 0.4, 0.35))
 	if grave and not downed:  # (caído em combate tem o aviso próprio)
 		_toast("%s se machucou feio! Precisa de leito na enfermaria." % _display())
@@ -2532,6 +2996,13 @@ func _die() -> void:
 	if inf:
 		inf.record_death(self)  # o HUD mostra a faixa pelo sinal patient_died
 	Audio.toll()
+	var cal := get_tree().get_first_node_in_group("calendario")
+	if not carregando_corpo.is_empty():
+		_larga_corpo()
+	if cal:
+		cal.on_morte(_display())  # Bloco 88: funeral na hora social seguinte
+		if cal.tem_cemiterio():
+			cal.novo_corpo(_display(), global_position, String(injury_cause))  # Bloco 93: o padre vem buscar
 	died.emit(_display())
 	var main := get_tree().get_first_node_in_group("game_main")
 	if main and main.is_selected(self):
@@ -2595,7 +3066,7 @@ func _popup(text: String, color: Color) -> void:
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_outline_color", Color(0.08, 0.04, 0.04))
 	label.add_theme_constant_override("outline_size", 4)
-	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_font_size_override("font_size", Tipo.MAPA)
 	label.position = Vector2(-18, -62)
 	label.z_index = 20
 	add_child(label)
@@ -2603,6 +3074,721 @@ func _popup(text: String, color: Color) -> void:
 	tween.tween_property(label, "position:y", label.position.y - 22.0, 1.0).set_ease(Tween.EASE_OUT)
 	tween.tween_property(label, "modulate:a", 0.0, 0.9).set_delay(0.4)
 	tween.chain().tween_callback(label.queue_free)
+
+
+# ------------------------------------------------------------ agenda e refeições (Bloco 84)
+func _schedule() -> Node:
+	if _sched == null or not is_instance_valid(_sched):
+		_sched = get_tree().get_first_node_in_group("schedule") if is_inside_tree() else null
+	return _sched
+
+
+## Período da agenda agora ("" = sem Schedule).
+func periodo_agenda() -> String:
+	var s := _schedule()
+	return s.periodo(self) if s else ""
+
+
+## A refeição desta hora que ele ainda não fez ("" = nenhuma).
+func _refeicao_da_hora() -> String:
+	var s := _schedule()
+	if s == null:
+		return ""
+	var m: String = s.refeicao_do(s.periodo(self))
+	return m if m != "" and not refeicoes_hoje.has(m) else ""
+
+
+## A camada da agenda no _choose_state. "" = deixa a lógica de sempre decidir (horário de trabalho, sem
+## relógio, ou o turno extra fora de hora).
+func _agenda_estado(food_ok: bool) -> String:
+	var s := _schedule()
+	if s == null:  # (cena sem Schedule: o de antes — de noite pra casa)
+		return "home" if _is_night() and not overtime and not is_guard() else ""
+	var p: String = s.periodo(self)
+	var m: String = s.refeicao_do(p)
+	if m != "" and not refeicoes_hoje.has(m) and food_ok and hunger < hunger_max * s.refeicao_dispensa:
+		return "eating"  # a refeição da hora (uma porção)
+	if is_doctor() and _has_infirmary():
+		return "doctor"  # sempre de plantão (come nos turnos dele, acima)
+	if is_priest():
+		return "padre"  # Bloco 88: na igreja (de noite também: dorme lá)
+	if p == "missa":
+		return "social"  # Bloco 88: missa de domingo — o ponto é a igreja (calendario.ponto_forcado)
+	# Bloco 84: fora do horário de trabalho, quem ainda tem carga termina a entrega antes de ir pra casa
+	# ("voltar" dura meia hora de jogo, ~11 s: nem sempre dá pra chegar no armazém dentro dela)
+	if p in ["voltar", "social", "dormir"] and not overtime:
+		var entrega := _entrega_pendente()
+		if entrega != "":
+			return entrega
+	match p:
+		"dormir":
+			if overtime or (is_guard() and _is_night() and s.de_vigia(self)):
+				return ""
+			return "home"
+		"vigilia":
+			return ""  # (o guarda de vigia: a lógica do guarda manda pro posto)
+		"social":
+			if overtime:
+				return ""
+			# depois do jantar: taverna se estiver pra baixo (Bloco 85: a hora social de verdade)
+			if (_ai_state == "leisure" and happiness < leisure_until and _station_ok_for("leisure")) \
+					or (happiness < leisure_below and _has_usable_station("tavernas")):
+				return "leisure"
+			# Bloco 85: hora social — um ponto social com lugar (com chuva, só coberto); senão, casa
+			if (_ai_state == "social" and _spot != null and is_instance_valid(_spot)) or _escolhe_spot(true) != null:
+				return "social"
+			return "home"
+		"voltar":
+			if overtime:
+				return ""
+			return "home"  # (a carga já foi entregue acima)
+	return ""
+
+
+# ------------------------------------------------------------ hora social (Bloco 85)
+## Chove ou tem onda solar agora? (aí só valem os pontos cobertos)
+func _precisa_coberto() -> bool:
+	var w := get_tree().get_first_node_in_group("weather")
+	var sun := _sun()
+	var chuva: bool = w != null and (w.get("forcar_chuva") == true or (w.has_method("is_raining") and w.is_raining()))
+	return chuva or (sun != null and sun.wave_active())
+
+
+## O melhor ponto social pra ele agora (null = nenhum com lugar). `so_ver` = só olhar, sem reservar.
+## Nota: perto ganha, ponto com gente (e lugar) ganha, um pouco de sorte pra não irem todos pro mesmo.
+func _escolhe_spot(so_ver := false) -> Node:
+	# Bloco 88: missa e funeral (igreja) e festival (praça): todo mundo pro mesmo ponto
+	var forcado := _ponto_forcado()
+	if forcado != null:
+		if forcado == _spot or forcado.livres() > 0:
+			return forcado
+	var coberto := _precisa_coberto()
+	var melhor: Node = null
+	var melhor_nota := -INF
+	for sp in get_tree().get_nodes_in_group("social_spots"):
+		if sp == _spot or (coberto and not sp.coberto) or sp.livres() <= 0:
+			continue
+		var d: float = global_position.distance_to(sp.centro())
+		var gente: int = sp.ocupantes().size()
+		var nota := -d / 40.0 + (6.0 if gente > 0 else 0.0) + randf() * 6.0
+		if nota > melhor_nota:
+			melhor_nota = nota
+			melhor = sp
+	if melhor == null and not so_ver and _spot != null and is_instance_valid(_spot):
+		return _spot  # (sem outro: fica onde está)
+	return melhor
+
+
+## Vai pra um ponto social: reserva o lugar e monta o passeio (passa por outro ponto se o desvio for curto).
+## Bloco 88: o ponto pra onde o calendário manda todo mundo agora (null = livre).
+func _ponto_forcado() -> Node:
+	var cal := get_tree().get_first_node_in_group("calendario")
+	return cal.ponto_forcado() if cal else null
+
+
+func _social_vai() -> void:
+	var novo := _escolhe_spot()
+	if novo == null:
+		_decision_timer = 0.0
+		return
+	if novo != _spot:
+		_social_solta()
+		_spot = novo
+	_spot_i = _spot.reservar(self)
+	if _spot_i < 0:
+		_spot = null
+		_decision_timer = 0.0
+		return
+	_conversando = false
+	_com_companhia = false
+	_social_t = 0.0
+	var destino: Vector2 = _spot.lugar(_spot_i)
+	_passeio = []
+	var s := _schedule()
+	var desvio_max: float = s.passeio_desvio if s else 160.0
+	var direto := global_position.distance_to(destino)
+	var via: Vector2 = Vector2.INF
+	var menor := desvio_max
+	for sp in get_tree().get_nodes_in_group("social_spots"):
+		if sp == _spot:
+			continue
+		var c: Vector2 = sp.centro()
+		var desvio := global_position.distance_to(c) + c.distance_to(destino) - direto
+		if desvio < menor and global_position.distance_to(c) > 40.0 and c.distance_to(destino) > 40.0:
+			menor = desvio
+			via = c
+	# Bloco 89: com caminho pintado entre ele e o ponto, o passeio segue o caminho
+	var cam := get_tree().get_first_node_in_group("caminhos")
+	var pelo_caminho: PackedVector2Array = cam.rota(global_position, destino) if cam else PackedVector2Array()
+	if not pelo_caminho.is_empty():
+		for q in pelo_caminho:
+			_passeio.append(q)
+	elif via != Vector2.INF:
+		_passeio.append(via)
+	_passeio.append(destino)
+	_go_to(_passeio[0])
+
+
+## Solta o lugar reservado (sem sair do estado).
+func _social_solta() -> void:
+	if _spot != null and is_instance_valid(_spot):
+		_spot.liberar(self)
+	_spot_i = -1
+	_conversando = false
+	_com_companhia = false
+
+
+## Saiu da hora social: solta tudo e esconde o balão.
+func _social_sai() -> void:
+	_social_solta()
+	_spot = null
+	_passeio.clear()
+	if _balao:
+		_balao.visible = false
+
+
+## O ponto social chama: está na roda conversando?
+func esta_conversando() -> bool:
+	return _ai_state == "social" and _conversando
+
+
+## A cada quadro, barato: o ânimo de conversar sumindo e, na hora social, chegar/conversar/trocar de ponto.
+func _social_process(delta: float) -> void:
+	if _balao and _balao.visible:
+		_balao_vida -= delta
+		if _balao_vida <= 0.0:
+			_balao.visible = false
+	var s := _schedule()
+	if animo_fe > 0.0:  # Bloco 88: o ânimo da missa some devagar
+		var calf := get_tree().get_first_node_in_group("calendario")
+		animo_fe = maxf(animo_fe - (calf.missa_decai if calf else 0.01) * delta, 0.0)
+	if _ai_state != "social":
+		if animo_social > 0.0 and s:
+			animo_social = maxf(animo_social - s.animo_decai * delta, 0.0)
+		return
+	if s == null or _spot == null or not is_instance_valid(_spot):
+		_decision_timer = 0.0
+		return
+	if not _conversando:
+		if _moving:
+			return
+		if _passeio.size() > 1:  # chegou no ponto do caminho: segue pro lugar
+			_passeio.pop_front()
+			_go_to(_passeio[0])
+			return
+		_conversando = true
+		_social_t = randf_range(s.conversa_min, maxf(s.conversa_max, s.conversa_min))
+		_balao_t = randf_range(0.3, s.balao_max)
+		return
+	var forcado := _ponto_forcado()
+	if forcado == null or forcado == _spot:
+		if forcado == null:
+			_social_t -= delta  # (no ponto forçado ele fica até acabar)
+	else:
+		_social_t = 0.0  # começou a missa/funeral/festival: vai pra lá
+	if _spot.tipo == "igreja":  # Bloco 88: aconselhamento (o padre lá dobra) e a missa
+		var cal := get_tree().get_first_node_in_group("calendario")
+		if cal:
+			var pd: Node = cal.padre()
+			var mult := 2.0 if pd != null and pd.get_state() == "padre" else 1.0
+			anger = maxf(anger - cal.aconselhamento_por_segundo * mult * delta, 0.0)
+			if periodo_agenda() == "missa":
+				animo_fe = maxf(animo_fe, cal.missa_animo)
+	_balao_t -= delta
+	if _balao_t <= 0.0:
+		_balao_t = randf_range(s.balao_min, maxf(s.balao_max, s.balao_min))
+		var comp: Array = _spot.companheiros(self)
+		_com_companhia = not comp.is_empty()
+		if _com_companhia:
+			var outro: Node2D = comp[randi() % comp.size()]
+			_facing = signf(outro.global_position.x - global_position.x) if absf(outro.global_position.x - global_position.x) > 1.0 else _facing
+			_mostra_balao(_assunto())
+		if _precisa_coberto() and not _spot.coberto:
+			_social_t = 0.0  # começou a chover: procura um lugar coberto
+	if _com_companhia:
+		animo_social = minf(animo_social + s.animo_por_segundo * _spot.animo_mult * delta, s.animo_max)
+	if _social_t <= 0.0:
+		_social_vai()  # troca de ponto (o passeio passa por outro no caminho)
+
+
+## O assunto do balão: o que pesa pra ele agora (fome, frio, a função, a estação...), com um pouco de sorte.
+func _assunto() -> String:
+	var temas: Array[String] = ["animo", "creditos", "minerio", "madeira"]
+	if hunger < hunger_max * 0.5:
+		temas.append("comida")
+	if is_cold():
+		temas.append("frio")
+	if anger >= anger_furious_at * 0.5:
+		temas.append("zanga")
+	var icone_funcao: String = Icones.FUNCAO.get(job, "")
+	if icone_funcao != "":
+		temas.append(icone_funcao)
+	var dn := get_tree().get_first_node_in_group("day_night")
+	if dn and dn.has_method("season_index") and dn.season_index() >= 0:
+		temas.append(Icones.ESTACAO[dn.season_index()])
+	return temas[randi() % temas.size()]
+
+
+## Balão de fala com um ícone em cima da cabeça (some sozinho).
+func _mostra_balao(icone: String) -> void:
+	if _balao == null:
+		_balao = Sprite2D.new()
+		_balao.name = "Balao"
+		_balao.texture = BALAO
+		_balao.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_balao.position = BALAO_POS
+		_balao.z_index = 21
+		var ic := Sprite2D.new()
+		ic.name = "Icone"
+		ic.scale = Vector2(0.34, 0.34)
+		ic.position = Vector2(0, -2)
+		ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_balao.add_child(ic)
+		add_child(_balao)
+	var tex := Icones.tex(icone)
+	(_balao.get_node("Icone") as Sprite2D).texture = tex
+	_balao.visible = tex != null
+	_balao_vida = 1.8
+
+
+# ------------------------------------------------------------ balão de motivo (Bloco 95)
+## Ícone de cada motivo (assets/game/ui/icones/) e o nome dele (dica, lista, teste).
+const MOTIVO_ICONE := {"sem_trabalho": "sem_funcao", "sem_ferramenta": "sem_ferramenta", "armazem_cheio": "armazem_cheio",
+	"caminho_bloqueado": "caminho_bloqueado", "sem_comida": "al_falta_comida"}
+const MOTIVO_NOME := {"sem_trabalho": "sem trabalho", "sem_ferramenta": "sem ferramenta", "armazem_cheio": "armazém cheio",
+	"caminho_bloqueado": "caminho bloqueado", "sem_comida": "sem comida"}
+## Segundos parado pelo MESMO motivo antes de o balão aparecer (não pisca a cada troca de tarefa).
+@export var motivo_espera: float = 2.0
+## A cada quantos segundos o motivo é conferido (barato: só olha o estado que a IA já decidiu).
+@export var motivo_intervalo: float = 0.5
+
+
+## Por que está parado? "" = não está (ou o motivo é a agenda: dormindo, comendo, na hora social...).
+##   sem_trabalho       sem função, ou com função e sem nada pra fazer (sem obra, sem jazida, sem árvore...)
+##   sem_ferramenta     guarda com a arma quebrada; caçador com toca e sem arco; minerador só com jazida trancada
+##   armazem_cheio      com a carga nas costas e nenhum armazém pra entregar (o armazém do jogo não tem limite:
+##                      é o caso de não ter onde guardar)
+##   caminho_bloqueado  andando e preso no mesmo lugar (o anti-travamento já começou a agir)
+##   sem_comida         com fome e a cozinha vazia
+func motivo_parado() -> String:
+	if downed or injured or _resting or holding_robot != null:
+		return ""
+	if _moving and _stuck_stage >= 1:
+		return "caminho_bloqueado"
+	if hunger < hunger_threshold:
+		var tem_comida := false
+		for c in get_tree().get_nodes_in_group("comedouros"):
+			if c.food_stock > 0.0:
+				tem_comida = true
+				break
+		if not tem_comida:
+			return "sem_comida"
+	if is_guard() and weapon == "" and _ai_state in ["guard", "training", "home", "idle"]:
+		var def := _defense()
+		if def == null or def.arsenal() == null:
+			return "sem_ferramenta"
+	if _ai_state == "storing" and not _moving and _station == null and carrying > 0.0:
+		return "armazem_cheio"
+	if _ai_state != "idle":
+		return ""
+	if is_hunter() and not _has_bow() and not get_tree().get_nodes_in_group("caca").is_empty() 			and not _has_usable_station("coleta_comida"):
+		return "sem_ferramenta"
+	if is_miner() and _find_best_station("minerios") == null:
+		for m in get_tree().get_nodes_in_group("minerios"):
+			if m.has_method("is_unlocked") and not m.is_unlocked() and m.ore_remaining > 0.0:
+				return "sem_ferramenta"  # só sobrou jazida que pede ferramenta nova (Oficina)
+	return "sem_trabalho"
+
+
+func _motivo_tick(delta: float) -> void:
+	_motivo_cd -= delta
+	if _motivo_cd > 0.0:
+		return
+	_motivo_cd = motivo_intervalo
+	if not _baloes_lido:
+		_baloes_lido = true
+		baloes_motivo = bool(Settings.get_value("hud", "baloes_motivo", true))
+	var m := motivo_parado() if baloes_motivo else ""
+	if m != _motivo:
+		_motivo = m
+		_motivo_t = 0.0
+	else:
+		_motivo_t += motivo_intervalo
+	var mostra := _motivo != "" and _motivo_t >= motivo_espera and not (_balao != null and _balao.visible)
+	if mostra and _motivo_balao == null:
+		_motivo_balao = Sprite2D.new()
+		_motivo_balao.name = "BalaoMotivo"
+		_motivo_balao.texture = BALAO
+		_motivo_balao.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_motivo_balao.position = BALAO_POS  # o mesmo lugar do balão da conversa (os dois nunca juntos)
+		_motivo_balao.z_index = 21
+		var ic := Sprite2D.new()
+		ic.name = "Icone"
+		ic.scale = Vector2(0.34, 0.34)
+		ic.position = Vector2(0, -2)
+		ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_motivo_balao.add_child(ic)
+		add_child(_motivo_balao)
+	if _motivo_balao:
+		if mostra:
+			(_motivo_balao.get_node("Icone") as Sprite2D).texture = Icones.tex(MOTIVO_ICONE.get(_motivo, ""))
+		if _motivo_balao.visible != mostra:
+			_motivo_balao.visible = mostra
+
+
+## O motivo que o balão está mostrando agora ("" = nenhum).
+func motivo_no_balao() -> String:
+	return _motivo if _motivo_balao != null and _motivo_balao.visible else ""
+
+
+# ------------------------------------------------------------ fundidor (Bloco 86)
+## Barras prontas que ele leva pro armazém ({item: qtd}).
+var barras_mao: Dictionary = {}
+## Bloco 93: o corpo que o padre leva nos ombros ({nome, dia, estacao, causa}; vazio = nada).
+var carregando_corpo: Dictionary = {}
+var _corpo_alvo: Node2D = null
+var _enterro_ini := -1.0
+var _fornalha: Node = null
+var _visita_feita := false
+
+
+func is_smelter() -> bool:
+	return job == ROLE_SMELTER
+
+
+## Bloco 87: o ferreiro (Oficina e Arsenal).
+func is_smith() -> bool:
+	return job == ROLE_SMITH
+
+
+## Bloco 88: o padre.
+func is_priest() -> bool:
+	return job == ROLE_PRIEST
+
+
+## Bloco 94: o carpinteiro / a carpinteira (Carpintaria e as camas novas).
+func is_carpenter() -> bool:
+	return job == ROLE_CARPENTER
+
+
+# ------------------------------------------------------------ carpinteiro, mochila, botas (Bloco 94)
+## Tem a mochila de couro (pegou uma no armazém): carrega mochila_carga a mais de minério.
+var tem_mochila := false
+var _casa_cama: Node = null
+var _monta_ini := -1.0
+
+
+## Minério que cabe numa viagem (com a mochila, mais).
+func capacidade_carga() -> float:
+	return cargo_capacity + (mochila_carga if tem_mochila else 0.0)
+
+
+## Armazém chama quando o minerador entrega: sem mochila e com uma no armazém, ele pega.
+func pega_mochila(arm: Node) -> void:
+	if tem_mochila or not is_miner():
+		return
+	var eco := get_tree().get_first_node_in_group("economy")
+	if eco == null or eco.quantidade("mochila") < 1.0:
+		return
+	if arm.take_item("mochila", 1.0) < 1.0 and eco.take_item("mochila", 1.0) < 1.0:
+		return
+	tem_mochila = true
+	_popup("Pegou uma mochila: +%d de carga" % roundi(mochila_carga), Color(0.55, 1.0, 0.5))
+
+
+## A neve (inverno, superfície) atrasa quem anda sem botas. 1.0 = sem efeito.
+func _neve_mult() -> float:
+	var eq := _equipment()
+	if eq == null or _inside or wearing.has("botas") or not eq.is_cold_at(global_position):
+		return 1.0
+	return eq.neve_speed_mult
+
+
+## A casa mais perto com cama de tábua esperando montagem (reservada pra ele), ou null.
+func _casa_pra_cama() -> Node:
+	if _casa_cama != null and is_instance_valid(_casa_cama) and _casa_cama.camas_a_montar() > 0:
+		return _casa_cama
+	_casa_cama = null
+	var d_min := INF
+	for c in get_tree().get_nodes_in_group("casas"):
+		if not c.has_method("camas_a_montar") or c.camas_a_montar() <= 0:
+			continue
+		var outro = c.get("montador")
+		if outro != null and outro != self and is_instance_valid(outro) and outro.is_carpenter():
+			continue  # outro carpinteiro já está nela
+		var d := global_position.distance_to(c.global_position)
+		if d < d_min:
+			d_min = d
+			_casa_cama = c
+	if _casa_cama:
+		_casa_cama.montador = self
+	return _casa_cama
+
+
+## Vai até a porta da casa e monta a cama de tábua (casa.cama_segundos, serrando/martelando); a cama entra na
+## primeira cama comum da casa (casa.instala_cama_boa).
+func _montar_cama() -> void:
+	var c := _casa_pra_cama()
+	if c == null:
+		_monta_ini = -1.0
+		_decision_timer = 0.0
+		return
+	var dest: Vector2 = c.porta_montagem()
+	if global_position.distance_to(dest) > 14.0:
+		if _ai_state != "montando_cama":
+			_release_station()
+			_set_state("montando_cama")
+		if not _moving or _target.distance_to(dest) > 2.0:
+			_go_to(dest)
+		_monta_ini = -1.0
+		return
+	if _ai_state != "montando_cama":
+		_set_state("montando_cama")
+	_moving = false
+	var agora := Time.get_ticks_msec() / 1000.0
+	if _monta_ini < 0.0:
+		_monta_ini = agora
+	_work_timer = decision_interval * 1.2  # serrando e martelando na porta
+	if (agora - _monta_ini) * Engine.time_scale >= float(c.cama_segundos) / maxf(work_mult(), 0.1):
+		_monta_ini = -1.0
+		if c.instala_cama_boa():
+			_popup("Cama nova montada!", Color(0.55, 1.0, 0.5))
+		c.montador = null
+		_casa_cama = null
+		_decision_timer = 0.0
+
+
+## Bloco 93: o padre e os mortos (com cemitério). De dia e fora da missa/funeral: vai até o corpo que espera (o
+## mais perto, reservado pra ele), pega (o corpo sai do chão e vai nos ombros: iso_bonecos "corpo"), leva até a
+## vaga do cemitério com lugar e enterra (enterro_tempo segundos, rezando: a animação "pregar"); a cruz ou a
+## lápide aparece (cemiterio.enterra) e, com os ritos, o funeral é marcado (calendario.on_enterro).
+## Devolve true enquanto está nisso.
+func _padre_enterro(cal: Node) -> bool:
+	if _is_night() or cal.pregando_agora():
+		return false
+	var dest_cem: Node = cal.cemiterio_com_vaga(global_position)
+	if not carregando_corpo.is_empty():
+		if dest_cem == null:
+			_larga_corpo()  # (o cemitério encheu ou sumiu)
+			return false
+		var vaga: Vector2 = dest_cem.vaga_pos()
+		if global_position.distance_to(vaga) > cal.enterro_alcance:
+			if _ai_state != "levando_corpo":
+				_release_station()
+				_set_state("levando_corpo")
+			if not _moving or _target.distance_to(vaga) > 2.0:
+				_go_to(vaga)
+			_enterro_ini = -1.0
+			return true
+		if _ai_state != "enterrando":
+			_set_state("enterrando")
+			_moving = false
+		if _enterro_ini < 0.0:
+			_enterro_ini = Time.get_ticks_msec() / 1000.0
+		_work_timer = decision_interval * 1.2  # rezando na cova
+		if Time.get_ticks_msec() / 1000.0 - _enterro_ini >= cal.enterro_tempo / maxf(Engine.time_scale, 0.01):
+			var info := carregando_corpo.duplicate()
+			carregando_corpo = {}
+			_enterro_ini = -1.0
+			dest_cem.enterra(info)
+			cal.on_enterro(String(info.get("nome", "?")))
+			_work_timer = 0.0
+			_decision_timer = 0.0
+		return true
+	if dest_cem == null:
+		return false
+	if _corpo_alvo == null or not is_instance_valid(_corpo_alvo) or not _corpo_alvo.livre_pra(self):
+		_corpo_alvo = null
+		for c in get_tree().get_nodes_in_group("corpos"):
+			if c.livre_pra(self) and (_corpo_alvo == null or c.global_position.distance_to(global_position) < _corpo_alvo.global_position.distance_to(global_position)):
+				_corpo_alvo = c
+	if _corpo_alvo == null:
+		return false
+	_corpo_alvo.reservado_por = self
+	if global_position.distance_to(_corpo_alvo.global_position) > cal.enterro_alcance:
+		if _ai_state != "buscando_corpo":
+			_release_station()
+			_set_state("buscando_corpo")
+		if not _moving or _target.distance_to(_corpo_alvo.global_position) > 2.0:
+			_go_to(_corpo_alvo.global_position)
+		return true
+	carregando_corpo = _corpo_alvo.info()  # pegou: vai nos ombros
+	_corpo_alvo.get_parent().remove_child(_corpo_alvo)
+	_corpo_alvo.queue_free()
+	_corpo_alvo = null
+	_popup("Levando %s" % String(carregando_corpo.get("nome", "")), Color(0.85, 0.82, 0.95))
+	_decision_timer = 0.0
+	return true
+
+
+## O corpo que ele carrega volta pro chão onde ele está (outra emergência, trocou de função, morreu).
+func _larga_corpo() -> void:
+	var cal := get_tree().get_first_node_in_group("calendario") if is_inside_tree() else null
+	if cal and not carregando_corpo.is_empty():
+		var c: Node2D = cal.CORPO.new()
+		c.monta(carregando_corpo)
+		c.position = global_position + Vector2(8, 4)
+		var hub := get_tree().get_first_node_in_group("village_hub")
+		(hub.get_parent() if hub else get_parent()).add_child(c)
+	carregando_corpo = {}
+	_enterro_ini = -1.0
+	_corpo_alvo = null
+
+
+## Bloco 92: por que ESTE ipezinho não pode virar padre agora ("" = pode): só homem; um padre por vila; e a
+## função abre no estágio do padre (calendario.padre_estagio).
+func motivo_padre() -> String:
+	if is_priest():
+		return ""
+	if String(gender) != "menino":
+		return "Só homem pode ser padre"
+	var cal := get_tree().get_first_node_in_group("calendario") if is_inside_tree() else null
+	if cal:
+		var pd: Node = cal.padre()
+		if pd != null and pd != self:
+			return "A vila já tem padre (%s): tire a função dele primeiro" % String(pd.get("display_name"))
+		var hub := get_tree().get_first_node_in_group("village_hub")
+		if hub and int(hub.level) < int(cal.padre_estagio):
+			return "O padre só vem com a Vila no estágio %d" % int(cal.padre_estagio)
+	return ""
+
+
+## A fornalha dele: a que tem as unidades que ele começou; senão a mais perto com ordem.
+func _fornalha_alvo() -> Node:
+	var grupo := "carpintarias" if is_carpenter() else "fornalhas"  # Bloco 94: a oficina de ordens da função
+	if _fornalha != null and is_instance_valid(_fornalha) and _fornalha.fila.tem_trabalho() and _fornalha.is_in_group(grupo):
+		return _fornalha
+	_fornalha = null
+	var d_min := INF
+	for f in get_tree().get_nodes_in_group(grupo):
+		if not f.fila.tem_trabalho():
+			continue
+		var d := global_position.distance_to(f.global_position)
+		if d < d_min:
+			d_min = d
+			_fornalha = f
+	return _fornalha
+
+
+## A decisão do fundidor (no horário de trabalho): fundir as unidades começadas; buscar insumos (e largar as
+## barras) no armazém; com a ordem pausada (falta insumo) ou sem ordem, espera.
+func _estado_fundidor() -> String:
+	var f := _fornalha_alvo()
+	var tem_barra := not barras_mao.is_empty()
+	if f == null:
+		return "buscando_insumo" if tem_barra else "idle"
+	if f.fila.comecadas() > 0:
+		return f.estado_trabalho  # "fundindo" / "serrando" (Bloco 94)
+	if tem_barra:
+		return "buscando_insumo"
+	if f.fila.a_comecar() > 0 and f.falta() == "":
+		return "buscando_insumo"
+	return "idle"  # pausada (falta insumo): espera; nada é gasto
+
+
+## Armazém chama quando ele chega pra "buscar insumo": larga as barras e, no horário de trabalho, COMEÇA a
+## próxima leva (os insumos saem do armazém só agora).
+func na_armazem_fundidor(arm: Node) -> void:
+	if _visita_feita:
+		return
+	_visita_feita = true
+	var eco := get_tree().get_first_node_in_group("economy")
+	for item in barras_mao:
+		arm.add_item(item, float(barras_mao[item]))
+	if not barras_mao.is_empty():
+		_popup("+%s" % ", ".join(barras_mao.keys().map(func(k): return "%d %s" % [int(barras_mao[k]), Items.nome(k).to_lower()])), Color(0.55, 1.0, 0.5))
+	barras_mao.clear()
+	var f := _fornalha_alvo()
+	if f and periodo_agenda() in ["trabalho", "", "cafe", "almoco"] and f.fila.comecadas() == 0:
+		var n: int = f.fila.comecar_unidades(f.lote, eco)
+		if n > 0:
+			_popup("Pegou insumos: %d x (%s)" % [n, f.fila.texto_insumos(f.fila.atual().receita)], Color(1.0, 0.85, 0.45))
+	_decision_timer = 0.0
+
+
+## Fornalha chama quando sai barra: ela vai pras mãos dele.
+func pega_barras(pronto: Dictionary) -> void:
+	for item in pronto:
+		barras_mao[item] = barras_mao.get(item, 0.0) + float(pronto[item])
+	if _fornalha_alvo() == null or (_fornalha != null and _fornalha.fila.comecadas() <= 0):
+		_decision_timer = 0.0  # acabou a leva: leva as barras e busca mais
+
+
+## Fornalha chama a cada quadro com ele fundindo (anima o martelo, como na obra).
+func fundir_tick() -> void:
+	_work_timer = 0.2
+
+
+## Bloco 84: a carga que ele ainda tem pra largar no armazém (o estado de entregar), "" = nada.
+func _entrega_pendente() -> String:
+	if wood_carrying > 0.0:
+		return "hauling"
+	if raw_carrying > 0.0 and not is_cook():
+		return "stocking"
+	if carrying > 0.0 and not is_researcher():
+		return "storing"
+	if not barras_mao.is_empty():
+		return "buscando_insumo"  # Bloco 86: o fundidor leva as barras (sem começar leva nova fora de hora)
+	return ""
+
+
+## Olha a agenda de tempos em tempos: virou o período? Decide já, e confere se perdeu a refeição.
+func _agenda_tick(delta: float) -> void:
+	_agenda_t -= delta
+	if _agenda_t > 0.0:
+		return
+	_agenda_t = 0.25
+	var p := periodo_agenda()
+	if p == _periodo:
+		return
+	_fim_de_periodo(_periodo)
+	_periodo = p
+	wake_decision()
+
+
+## Acabou um período de refeição: com fome e sem ter comido = perdeu (rende menos até comer).
+## (Quem está a caminho do prato não perde; ferido/caído não conta.)
+func _fim_de_periodo(antes: String) -> void:
+	var s := _schedule()
+	if s == null or antes == "":
+		return
+	var m: String = s.refeicao_do(antes)
+	if m == "" or refeicoes_hoje.has(m) or injured or downed:
+		return
+	if _ai_state == "eating" and _refeicao_alvo == m:
+		return
+	if hunger >= hunger_max * s.refeicao_dispensa:
+		return  # sem fome: pular não faz falta
+	refeicoes_perdidas += 1
+	_popup("Perdi o %s!" % s.nome_refeicao(m), Color(1.0, 0.6, 0.4))
+
+
+## Comedouro: ele chegou pra comer e ainda não pegou o prato?
+func quer_prato() -> bool:
+	return _ai_state == "eating" and not _servido
+
+
+## Comedouro serviu UMA porção (fome que ela restaura). Conta a refeição da hora.
+func recebe_prato(fome: float) -> void:
+	_servido = true
+	_prato = maxf(fome, 0.0)
+	if _refeicao_alvo != "":
+		refeicoes_hoje[_refeicao_alvo] = true
+		refeicoes_perdidas = 0
+
+
+## Comedouro chama a cada quadro: come até `maximo` do prato. Retorna quanto comeu.
+func come_prato(maximo: float) -> float:
+	if _prato <= 0.0:
+		return 0.0
+	var c := minf(maximo, _prato)
+	_prato -= c
+	feed(c)
+	if hunger >= hunger_max:
+		_prato = 0.0  # (cheio: o resto fica no prato)
+	if _prato <= 0.0:
+		_decision_timer = 0.0  # acabou: decide o próximo passo já
+	return c
 
 
 # ------------------------------------------------------------ interações (duck typing)
@@ -2630,19 +3816,23 @@ func mine(amount: float, ore_type: String = "ferro") -> float:
 	if carrying <= 0.0 and ore_type != cargo_type:
 		cargo_type = ore_type
 		_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
-	var space := cargo_capacity - carrying
+	var space := capacidade_carga() - carrying
 	var res := _research()
 	var boom: float = res.mining_speed_mult() if res else 1.0  # explosivos
+	var ofi := get_tree().get_first_node_in_group("oficina")
+	if ofi and ofi.has_method("mult_mineracao"):
+		boom *= ofi.mult_mineracao()  # Bloco 94: a picareta de aço
 	var taken: float = minf(amount * work_mult() * boom, space)  # zangado minera menos
-	if ore_type == "solarita" and taken > 0.0:
+	if ore_type in ["solarita", "cristal_verde", "cristal_rubro"] and taken > 0.0:
 		var diary := get_tree().get_first_node_in_group("diary")
 		if diary:
-			diary.unlock("solarita")
+			diary.unlock("solarita" if ore_type == "solarita" else "cristais")
 	carrying += taken
 	if taken > 0.0:
 		_work_timer = 0.2
 		_roll_injury(taken)
-	if carrying >= cargo_capacity - 0.01:
+		_area_registra(taken)  # Bloco 77
+	if carrying >= capacidade_carga() - 0.01:
 		_decision_timer = 0.0  # cheio: vai depositar sem esperar o próximo tick
 	_update_cargo_label()
 	return taken
@@ -2662,7 +3852,7 @@ func deposit(amount: float) -> float:
 func _update_animation(delta: float) -> void:
 	var spd := velocity.length()
 	if spd > 5.0:
-		_anim_time += delta * walk_anim_fps * clampf(spd / speed, 0.5, 1.3)
+		_anim_time += delta * walk_anim_fps * clampf(spd / speed, 0.0, 1.6)  # devagar = passo devagar
 		var new_frame := int(_anim_time) % _body.hframes
 		if new_frame != _body.frame and new_frame % 2 == 0:
 			Audio.step(global_position)  # pé tocando o chão (quadros 0 e 2)
@@ -2703,8 +3893,10 @@ func _update_animation(delta: float) -> void:
 		# impacto = ponto mais baixo do golpe (a curva para de subir)
 		var rising := swing > _prev_swing
 		if _swing_rising and not rising:
-			if item == _pickaxe() or item == HAMMER:  # picareta na pedra / martelo na obra
-				Audio.pick(global_position)
+			if item == HAMMER:
+				Audio.build_hit(global_position)  # Bloco 55: martelo na madeira da obra
+			elif item == _pickaxe():
+				Audio.pick(global_position)  # picareta na pedra
 			if item == HAMMER and _ai_state == "building":
 				_dust_puff()
 		_swing_rising = rising
@@ -2772,7 +3964,7 @@ func _update_animation(delta: float) -> void:
 	elif carrying > 0.0 and _carry_icon.texture in [FOOD_BASKET, WOOD_LOG, RAW_FOOD]:
 		_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
 	if _carry_icon.visible:
-		var r := carrying / cargo_capacity
+		var r := carrying / capacidade_carga()
 		if wood_carrying > 0.0:
 			r = wood_carrying / lumber_carry
 		elif food_carrying > 0.0:
@@ -2864,13 +4056,42 @@ func get_save_data() -> Dictionary:
 		"leather_carrying": leather_carrying,
 		"operates_coletor": _my_coletor() != null,
 		"coletor_pos": SaveUtil.vec2_to_array(_my_coletor().global_position) if _my_coletor() != null else [],  # Bloco 47
+		"coletor_minerio_pos": SaveUtil.vec2_to_array(_my_coletor_minerio().global_position) if _my_coletor_minerio() != null else [],  # Bloco 57
+		"hunt_kills": hunt_kills,  # Bloco 61
+		"area_id": work_area.id if work_area != null else 0,  # Bloco 77
+		"refeicoes_hoje": refeicoes_hoje.keys(),  # Bloco 84
+		"refeicoes_perdidas": refeicoes_perdidas,
+		"animo_social": animo_social,  # Bloco 85
+		"animo_fe": animo_fe,  # Bloco 88
+		"barras_mao": barras_mao.duplicate(),  # Bloco 86
+		"mochila": tem_mochila,  # Bloco 94
 	}
+
+
+func _religa_area(id: int) -> void:
+	var wa := _work_areas()
+	if wa:
+		wa.religar(self, id)
 
 
 ## Aplicado no _ready (via pending_save_data). A IA recomeça do zero e decide sozinha.
 func load_save_data(d: Dictionary) -> void:
 	hunger = clampf(SaveUtil.num(d, "hunger", hunger_max), 0.0, hunger_max)
-	carrying = clampf(SaveUtil.num(d, "carrying", 0.0), 0.0, cargo_capacity)
+	# Bloco 84 (save antigo: nenhuma refeição feita hoje, nenhuma perdida)
+	refeicoes_hoje = {}
+	for m in SaveUtil.array(d, "refeicoes_hoje"):
+		if m in ["cafe", "almoco", "jantar"]:
+			refeicoes_hoje[m] = true
+	refeicoes_perdidas = clampi(SaveUtil.integer(d, "refeicoes_perdidas", 0), 0, 10)
+	animo_social = clampf(SaveUtil.num(d, "animo_social", 0.0), 0.0, 50.0)  # Bloco 85 (save antigo: 0)
+	animo_fe = clampf(SaveUtil.num(d, "animo_fe", 0.0), 0.0, 50.0)  # Bloco 88 (save antigo: 0)
+	barras_mao = {}  # Bloco 86 (save antigo: nada na mão)
+	var bm := SaveUtil.dict(d, "barras_mao")
+	for k in bm:
+		if Items.onde(String(k)) == "itens" and float(bm[k]) > 0.0:
+			barras_mao[String(k)] = float(bm[k])
+	tem_mochila = SaveUtil.boolean(d, "mochila", false)  # Bloco 94 (save antigo: sem mochila)
+	carrying = clampf(SaveUtil.num(d, "carrying", 0.0), 0.0, capacidade_carga())
 	var t := SaveUtil.text(d, "cargo_type", "ferro")
 	cargo_type = t if Ores.NAMES.has(t) else "ferro"
 	_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
@@ -2919,13 +4140,22 @@ func load_save_data(d: Dictionary) -> void:
 	wearing = {}
 	var wd := SaveUtil.dict(d, "wearing")
 	for k in wd:
-		if k in ["casaco", "gas", "calor", "radiacao"] and (wd[k] is float or wd[k] is int) and float(wd[k]) > 0.0:
+		if k in ["casaco", "gas", "calor", "radiacao", "botas"] and (wd[k] is float or wd[k] is int) and float(wd[k]) > 0.0:
 			wearing[k] = float(wd[k])
 	leather_carrying = maxf(SaveUtil.num(d, "leather_carrying", 0.0), 0.0)
 	if SaveUtil.boolean(d, "operates_coletor", false):
 		_relink_coletor.call_deferred(SaveUtil.vec2(d, "coletor_pos", Vector2.INF))  # Bloco 45/47
+	hunt_kills = maxi(SaveUtil.integer(d, "hunt_kills", 0), 0)  # Bloco 61
+	var area_id := SaveUtil.integer(d, "area_id", 0)  # Bloco 77 (save antigo: sem área)
+	if area_id > 0:
+		_religa_area.call_deferred(area_id)
+	var cm_pos := SaveUtil.vec2(d, "coletor_minerio_pos", Vector2.INF)
+	if cm_pos != Vector2.INF:
+		_relink_coletor_minerio.call_deferred(cm_pos)  # Bloco 57
 	downed = injured and injury_severity == "grave" and SaveUtil.boolean(d, "downed", false)
 	downed_gate = SaveUtil.text(d, "downed_gate", "") if downed else ""
+	if downed_gate != "" and def != null and def.gate(downed_gate) == null:
+		downed_gate = ""  # Bloco 80: save antigo caído no portão do poço (que saiu): sem brecha
 	if downed:
 		_ai_state = "downed"
 		_agent.avoidance_enabled = false

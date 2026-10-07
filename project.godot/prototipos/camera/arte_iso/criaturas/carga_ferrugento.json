@@ -1,0 +1,24 @@
+{
+ "_obs": "Prompt 17: minério na caçamba do Ferrugento que roubou. Por direção: [x, y] do canto de cima-esquerdo (relativo ao pé) e o topo do desenho parado (a carga sobe e desce com ele).",
+ "img": "carga_minerio.png",
+ "SE": [
+  -9.9,
+  -66.0,
+  -55.0
+ ],
+ "SO": [
+  -9.1,
+  -66.0,
+  -55.0
+ ],
+ "NE": [
+  -20.8,
+  -66.0,
+  -55.0
+ ],
+ "NO": [
+  1.8,
+  -66.0,
+  -55.0
+ ]
+}

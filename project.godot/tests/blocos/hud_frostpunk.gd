@@ -14,6 +14,9 @@ func _initialize() -> void:
 	var sm = root.get_node("SaveManager")
 	sm.autosave_interval = 0.0
 	sm.save_on_quit = false
+	# (o toggle_hints do fim grava show_hints=true nas configurações: sem isto a rodada seguinte
+	# começava com os atalhos abertos e o teste alternava entre passar e falhar)
+	preload("res://scripts/core/settings.gd").set_value("hud", "show_hints", false)
 	root.size = Vector2i(1152, 648)
 	main = load("res://scenes/game/main.tscn").instantiate()
 	main.founding_on_new_game = false  # (Bloco 37) layout da cena, sem fundação
@@ -49,13 +52,13 @@ func _process(delta: float) -> bool:
 		var top: Rect2 = hud._chips.credits.box.get_parent().get_parent().get_global_rect()
 		var order: Rect2 = hud._order_bar.get_global_rect()
 		var left: Rect2 = hud._left_panel.get_global_rect()
-		var right: Rect2 = hud._buildings_box.get_parent().get_global_rect()
+		var right: Rect2 = hud._alertas.get_global_rect()  # Bloco 95: a coluna de alertas no lugar da de construções
 		print("topo ", top, "\nordens ", order, "\nesquerda ", left, "\ndireita ", right)
 		var row: Control = hud._chips.credits.box.get_parent()
 		check(row.get_combined_minimum_size().x <= vp.x - 24.0, "barra do topo cabe na largura (%d de %d)" % [row.get_combined_minimum_size().x, vp.x])
 		check(order.position.x >= 0 and order.end.x <= vp.x and order.end.y <= vp.y, "barra de ordens inteira dentro da tela")
 		check(left.end.y <= order.position.y, "painel esquerdo termina acima da barra de ordens (%d <= %d)" % [left.end.y, order.position.y])
-		check(right.end.y <= order.position.y or right.position.x >= order.end.x, "construções não cobrem a barra de ordens")
+		check(right.end.y <= order.position.y or right.position.x >= order.end.x, "alertas não cobrem a barra de ordens")
 		check(not hud._hint_panel.visible, "atalhos escondidos por padrão")
 		# clicar no botão da função aplica a função
 		var ws := get_nodes_in_group("ipezinhos")
@@ -75,6 +78,7 @@ func _process(delta: float) -> bool:
 		hud.toggle_hints()
 		check(hud._hint_panel.visible, "H/? abre os atalhos")
 		check(hud.close_panels() and not hud._hint_panel.visible, "Esc fecha os atalhos")
+		preload("res://scripts/core/settings.gd").set_value("hud", "show_hints", false)  # devolve o padrão
 		print("\nFALHAS: %d" % fails)
 		return true
 	return false

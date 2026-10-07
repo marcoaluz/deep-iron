@@ -1,0 +1,22 @@
+{
+ "lumivoro": {
+  "char": "7a9f9a80-402f-4b49-8903-f356154e715e",
+  "candidato": "c10",
+  "custo": null
+ },
+ "lumivoro_bruto": {
+  "char": "a873f19a-3796-4c4a-8735-15396d7a3019",
+  "candidato": "c05",
+  "custo": null
+ },
+ "ferrugento": {
+  "char": "915d26a2-56dc-42af-af41-f613df6ab2c5",
+  "candidato": "c13",
+  "custo": null
+ },
+ "ferrugento_carregador": {
+  "char": "e0a54d8a-1db6-40f2-901b-f2cf4d1ccad3",
+  "candidato": "c09",
+  "custo": null
+ }
+}

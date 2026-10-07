@@ -6,10 +6,16 @@ extends Node
 ## (sell). Recrutar exige CAMA LIVRE nas casas prontas (recruit_needs_bed) além do
 ## limite de ipezinhos e dos créditos; bloqueado, avisa o motivo e não gasta nada
 ## (recruit_block_reason). O recrutado chega na frente do Centro da Vila.
+##
+## Bloco 82: catálogo de itens (items.gd). quantidade(id) soma qualquer item em todos os armazéns (minério,
+## madeira, matéria-prima, couro, peças raras, processados); add_item/take_item guardam e tiram os
+## processados (barras, prego...); sell(id) vende qualquer item com preço (minério ou processado);
+## sell_categoria(cat) vende uma categoria inteira. "Vender tudo" (sell_all) continua sendo todo o MINÉRIO.
 
 signal credits_changed(credits: float)
 
 const Ores := preload("res://scripts/core/ores.gd")
+const Items := preload("res://scripts/core/items.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 signal ore_sold(amount: float, earned: float)
 signal worker_recruited(worker: Node2D, cost: int)
@@ -25,7 +31,29 @@ signal worker_recruited(worker: Node2D, cost: int)
 @export var silver_price: float = 8.0
 ## Créditos por unidade de solarita (nível 3, o abismo).
 @export var solarita_price: float = 14.0
+## Bloco 70: cristal verde (S2, galerias de ácido) e cristal rubro (S3, poços de lava).
+@export var cristal_verde_price: float = 10.0
+@export var cristal_rubro_price: float = 18.0
+## Bloco 71: gema azul (S5, a beira do lago).
+@export var gema_azul_price: float = 30.0
+## Bloco 82: troca o preço de venda (créditos por unidade) de itens do catálogo que não são minério, ex.:
+## {"barra_ferro": 10.0}. Vazio = o preço base do items.gd. Preço 0 = não se vende.
+@export var precos_itens: Dictionary = {}
 @export var starting_credits: float = 0.0
+
+@export_group("Metal: custos em barra (Bloco 87)")
+## Nos custos MIGRADOS pra barra (armas, ampliação das barricadas, peças da Escavadeira, reatores, coletores,
+## laboratório): quantos minérios valem UMA barra. Os campos de custo continuam em minério; a partir do
+## estágio da fornalha (centro_vila.fornalha_estagio) o jogo pede ceil(minério / isto) barras do tipo.
+@export var minerios_por_barra: float = 2.0
+
+@export_group("Peças nos custos (Bloco 94)")
+## Pregos e ferragens só entram nos custos A PARTIR do estágio da fornalha (é o ferreiro que faz). Antes, cada
+## peça vira o minério (ferro) que ela custaria — o custo fica como era e nada trava no começo.
+## Ferro por prego (1 barra = 2 ferro dá 6 pregos).
+@export var ferro_por_prego: float = 0.34
+## Ferro por ferragem (2 barras + 4 pregos).
+@export var ferro_por_ferragem: float = 6.7
 ## Vende sozinho o que estiver no armazém a cada auto_sell_interval segundos.
 @export var auto_sell: bool = false
 @export var auto_sell_interval: float = 4.0
@@ -82,6 +110,8 @@ func stored_ore(ore_type: String = "") -> float:
 
 
 func price_of(ore_type: String) -> float:
+	if not Ores.TYPES.has(ore_type) and Items.existe(ore_type):  # Bloco 82: itens do catálogo
+		return float(precos_itens.get(ore_type, Items.preco_base(ore_type)))
 	match ore_type:
 		"cobre":
 			return copper_price
@@ -91,6 +121,12 @@ func price_of(ore_type: String) -> float:
 			return silver_price
 		"solarita":
 			return solarita_price
+		"cristal_verde":
+			return cristal_verde_price
+		"cristal_rubro":
+			return cristal_rubro_price
+		"gema_azul":
+			return gema_azul_price
 	return ore_price
 
 
@@ -102,12 +138,17 @@ func sale_value() -> int:
 
 
 ## Bloco 39: vende um tipo só ("" = tudo). Retorna os créditos ganhos.
-func sell(ore_type: String = "") -> float:
+## Bloco 82: também qualquer item processado com preço (barra, prego...). `quantidade` (unidades inteiras)
+## vende só isso, tirando dos armazéns um atrás do outro; < 0 = tudo o que tem.
+func sell(ore_type: String = "", quantidade: float = -1.0) -> float:
 	if ore_type == "":
 		return sell_all()
+	if not Ores.TYPES.has(ore_type):
+		return _sell_item(ore_type, quantidade)
 	var sold := 0.0
+	var resta := floorf(quantidade) if quantidade >= 0.0 else INF
 	for a in get_tree().get_nodes_in_group("armazens"):
-		var amount := floorf(a.stock.get(ore_type, 0.0))
+		var amount := minf(floorf(a.stock.get(ore_type, 0.0)), resta - sold)
 		if amount < 1.0:
 			continue
 		var got: float = a.take(amount, ore_type)
@@ -122,6 +163,312 @@ func sell(ore_type: String = "") -> float:
 	ore_sold.emit(sold, earned)
 	Audio.sell()
 	return earned
+
+
+# ------------------------------------------------------------ metal (Bloco 87)
+## A barra de cada minério ("" = minério qualquer: barra de ferro).
+const BARRA_DO_MINERIO := {"": "barra_ferro", "ferro": "barra_ferro", "cobre": "barra_cobre", "prata": "barra_prata",
+	"solarita": "lingote_solar"}
+
+
+## A partir do estágio da fornalha os custos migrados pedem BARRA; antes, minério bruto (não trava o começo).
+func pede_barras() -> bool:
+	var hub := get_tree().get_first_node_in_group("village_hub")
+	return hub != null and hub.get("fornalha_estagio") != null and int(hub.level) >= int(hub.fornalha_estagio)
+
+
+## O metal de verdade de um custo migrado: [item, quantidade] — barra a partir do estágio da fornalha;
+## senão o próprio minério. Quantidade 0 = sem metal.
+func metal(qtd_minerio: float, tipo: String) -> Array:
+	if qtd_minerio <= 0.0:
+		return ["", 0.0]
+	if pede_barras() and BARRA_DO_MINERIO.has(tipo):
+		return [BARRA_DO_MINERIO[tipo], ceilf(qtd_minerio / maxf(minerios_por_barra, 0.01))]
+	return [tipo, qtd_minerio]
+
+
+## "20 barras de ferro" / "40 ferro" / "40 minério" (vazio = sem metal).
+func metal_texto(qtd_minerio: float, tipo: String) -> String:
+	var m := metal(qtd_minerio, tipo)
+	if m[1] <= 0.0:
+		return ""
+	if Items.onde(m[0]) == "itens":
+		return "%d %s" % [int(m[1]), Items.plural(m[0])]
+	return "%d %s" % [int(m[1]), Ores.display_name(tipo).to_lower() if tipo != "" else "minério"]
+
+
+## Custo completo pra mostrar: "150 cr + 20 barras de ferro + 20 madeira + 12 pregos".
+## Bloco 94: `itens` = peças e materiais a mais ({prego: 12, aco: 6}); antes da fornalha, pregos e ferragens
+## viram ferro (itens_efetivos).
+func custo_metal_texto(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.0, itens: Dictionary = {}) -> String:
+	var ef := itens_efetivos(itens)
+	qtd_minerio += float(ef.minerio)
+	var bits: Array[String] = []
+	if cr > 0.0:
+		bits.append("%d cr" % int(cr))
+	var mt := metal_texto(qtd_minerio, tipo)
+	if mt != "":
+		bits.append(mt)
+	if madeira > 0.0:
+		bits.append("%d madeira" % int(madeira))
+	var it := itens_texto(ef.itens)
+	if it != "":
+		bits.append(it)
+	return " + ".join(bits)
+
+
+## "" se dá pra pagar créditos + o metal + madeira (+ itens, Bloco 94); senão "falta ...".
+func metal_falta(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.0, itens: Dictionary = {}) -> String:
+	var ef := itens_efetivos(itens)
+	qtd_minerio += float(ef.minerio)
+	var m := metal(qtd_minerio, tipo)
+	if Items.onde(m[0]) != "itens":
+		return _junta_falta(missing_text(cr, qtd_minerio, tipo, madeira), itens_falta(ef.itens))
+	var parts: Array[String] = []
+	if credits < cr:
+		parts.append("%d cr" % ceili(cr - credits))
+	var tem := quantidade(m[0])
+	if tem < m[1]:
+		parts.append("%d %s" % [ceili(m[1] - tem), Items.plural(m[0])])
+	var have_wood := stored_wood()
+	if have_wood < madeira:
+		parts.append("%d madeira" % ceili(madeira - have_wood))
+	return _junta_falta("" if parts.is_empty() else "falta " + ", ".join(parts), itens_falta(ef.itens))
+
+
+## Paga créditos + o metal (barra ou minério, pela regra de cima) + madeira (+ itens, Bloco 94). false = não deu
+## (nada gasto).
+func paga_metal(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.0, itens: Dictionary = {}) -> bool:
+	if metal_falta(cr, qtd_minerio, tipo, madeira, itens) != "":
+		Audio.error()
+		return false
+	var ef := itens_efetivos(itens)
+	qtd_minerio += float(ef.minerio)
+	paga_itens(ef.itens)
+	var m := metal(qtd_minerio, tipo)
+	if Items.onde(m[0]) != "itens":
+		return spend(cr, qtd_minerio, tipo, madeira)
+	if cr > 0.0:
+		_add_credits(-cr)
+	var wood_left := madeira
+	for a in get_tree().get_nodes_in_group("armazens"):
+		if wood_left <= 0.0:
+			break
+		wood_left -= a.take_wood(wood_left)
+	take_item(m[0], m[1])
+	return true
+
+
+# ------------------------------------------------------------ itens nos custos (Bloco 94)
+## Os itens de um custo como o jogo cobra AGORA: {itens: {id: qtd}, minerio: ferro a mais}. A partir do estágio da
+## fornalha, os itens como estão; antes, pregos e ferragens viram o ferro equivalente (o resto continua).
+func itens_efetivos(itens: Dictionary) -> Dictionary:
+	if itens.is_empty() or pede_barras():
+		return {"itens": itens, "minerio": 0.0}
+	var resto := {}
+	var ferro := 0.0
+	for id in itens:
+		var n := float(itens[id])
+		if id == "prego":
+			ferro += n * ferro_por_prego
+		elif id == "ferragem":
+			ferro += n * ferro_por_ferragem
+		else:
+			resto[id] = n
+	return {"itens": resto, "minerio": ceilf(ferro)}
+
+
+## "12 pregos + 2 ferragens" (vazio = nada).
+func itens_texto(itens: Dictionary) -> String:
+	var bits: Array[String] = []
+	for id in itens:
+		var n := ceili(float(itens[id]))
+		if n > 0:
+			bits.append("%d %s" % [n, Items.plural(id) if n > 1 else Items.nome(id).to_lower()])
+	return " + ".join(bits)
+
+
+## "" se tem todos os itens; senão "falta 4 pregos, 1 ferragem".
+func itens_falta(itens: Dictionary) -> String:
+	var parts: Array[String] = []
+	for id in itens:
+		var precisa := float(itens[id])
+		var tem := quantidade(id)
+		if tem < precisa:
+			var n := ceili(precisa - tem)
+			parts.append("%d %s" % [n, Items.plural(id) if n > 1 else Items.nome(id).to_lower()])
+	return "" if parts.is_empty() else "falta " + ", ".join(parts)
+
+
+## Tira os itens do armazém (tudo ou nada). false = faltou (nada gasto).
+func paga_itens(itens: Dictionary) -> bool:
+	if itens_falta(itens) != "":
+		return false
+	for id in itens:
+		tira(id, float(itens[id]))
+	return true
+
+
+## Devolve itens ao armazém (cancelar uma encomenda paga).
+func devolve_itens(itens: Dictionary, perto: Vector2 = Vector2.INF) -> void:
+	for id in itens:
+		devolve(id, float(itens[id]), perto)
+
+
+## Tira `n` de QUALQUER item do catálogo, de onde ele fica guardado (processado, minério, madeira, couro).
+func tira(id: String, n: float) -> void:
+	match Items.onde(id):
+		"itens":
+			take_item(id, n)
+		"madeira":
+			var left := n
+			for a in get_tree().get_nodes_in_group("armazens"):
+				if left <= 0.0:
+					break
+				left -= a.take_wood(left)
+		"couro":
+			var left := n
+			for a in get_tree().get_nodes_in_group("armazens"):
+				var got := minf(left, float(a.leather_stored))
+				a.leather_stored -= got
+				left -= got
+		_:
+			if Ores.TYPES.has(id):
+				spend(0.0, n, id)
+
+
+## Devolve `n` de qualquer item do catálogo ao armazém (o mais perto de `perto`, nos processados).
+func devolve(id: String, n: float, perto: Vector2 = Vector2.INF) -> void:
+	if n <= 0.0:
+		return
+	if Items.onde(id) == "itens":
+		add_item(id, n, perto)
+		return
+	var arm := get_tree().get_first_node_in_group("armazens")
+	if arm == null:
+		return
+	match Items.onde(id):
+		"madeira":
+			arm.wood_stored += n
+		"couro":
+			arm.leather_stored += n
+		_:
+			if Ores.TYPES.has(id):
+				arm.add_ore(n, id)
+	if arm.has_method("_update_label"):
+		arm._update_label()
+
+
+func _junta_falta(a: String, b: String) -> String:
+	if b == "":
+		return a
+	if a == "":
+		return b
+	return a + ", " + b.trim_prefix("falta ")
+
+
+## Bloco 82: vende um item processado (as unidades inteiras pedidas; < 0 = todas), de todos os armazéns.
+func _sell_item(id: String, quantidade: float = -1.0) -> float:
+	if Items.onde(id) != "itens" or price_of(id) <= 0.0:
+		return 0.0
+	var sold := 0.0
+	var resta := floorf(quantidade) if quantidade >= 0.0 else INF
+	for a in get_tree().get_nodes_in_group("armazens"):
+		var amount := minf(floorf(a.item_count(id)), resta - sold)
+		if amount < 1.0:
+			continue
+		var got: float = a.take_item(id, amount)
+		sold += got
+		if got > 0.0:
+			a.show_popup("+%d cr" % int(got * price_of(id)), Color(0.55, 1.0, 0.5))
+	if sold <= 0.0:
+		return 0.0
+	var earned := sold * price_of(id)
+	_add_credits(earned)
+	total_earned += earned
+	ore_sold.emit(sold, earned)
+	Audio.sell()
+	return earned
+
+
+## Bloco 82: vende tudo o que tem preço numa categoria ("minerio" = sell_all). Retorna os créditos.
+func sell_categoria(cat: String) -> float:
+	if cat == "minerio":
+		return sell_all()
+	var earned := 0.0
+	for id in Items.da_categoria(cat):
+		if pode_vender(id):
+			earned += _sell_item(id)
+	return earned
+
+
+## Bloco 82: esse item se vende? (minério sempre; o resto, se for processado e tiver preço)
+func pode_vender(id: String) -> bool:
+	if Ores.TYPES.has(id):
+		return true
+	return Items.onde(id) == "itens" and price_of(id) > 0.0
+
+
+## Bloco 82: quanto valem as unidades inteiras de um item (0 se não se vende).
+func valor_de(id: String) -> int:
+	return int(floorf(quantidade(id)) * price_of(id)) if pode_vender(id) else 0
+
+
+## Bloco 82: quanto a vila tem de um item do catálogo (soma dos armazéns; peças raras: Finds).
+func quantidade(id: String) -> float:
+	match Items.onde(id):
+		"stock":
+			return stored_ore(id)
+		"madeira":
+			return stored_wood()
+		"materia_prima":
+			return _soma_armazens("raw_stored")
+		"couro":
+			return _soma_armazens("leather_stored")
+		"pecas_raras":
+			var finds := get_tree().get_first_node_in_group("finds")
+			return float(finds.rare_parts) if finds else 0.0
+		"itens":
+			var total := 0.0
+			for a in get_tree().get_nodes_in_group("armazens"):
+				total += a.item_count(id)
+			return total
+	return stored_ore(id) if Ores.TYPES.has(id) else 0.0
+
+
+func _soma_armazens(campo: String) -> float:
+	var total := 0.0
+	for a in get_tree().get_nodes_in_group("armazens"):
+		var v = a.get(campo)
+		total += float(v) if v != null else 0.0
+	return total
+
+
+## Bloco 82: guarda um item processado no armazém mais perto de `perto` (sem ponto: o primeiro).
+func add_item(id: String, amount: float, perto: Vector2 = Vector2.INF) -> bool:
+	if Items.onde(id) != "itens" or amount <= 0.0:
+		return false
+	var best: Node2D = null
+	var best_d := INF
+	for a in get_tree().get_nodes_in_group("armazens"):
+		var d: float = 0.0 if perto == Vector2.INF else perto.distance_to(a.global_position)
+		if best == null or d < best_d:
+			best = a
+			best_d = d
+	if best == null:
+		return false
+	best.add_item(id, amount)
+	return true
+
+
+## Bloco 82: tira até `amount` de um item processado, de todos os armazéns. Retorna quanto saiu.
+func take_item(id: String, amount: float) -> float:
+	var left := amount
+	for a in get_tree().get_nodes_in_group("armazens"):
+		if left <= 0.0:
+			break
+		left -= a.take_item(id, left)
+	return amount - left
 
 
 func sell_all() -> float:
@@ -229,7 +576,8 @@ func _add_credits(amount: float) -> void:
 
 # ------------------------------------------------------------ recrutamento
 func worker_count() -> int:
-	return get_tree().get_nodes_in_group("ipezinhos").size()
+	# Bloco 88: o padre não é recrutado (não conta no limite nem precisa de cama)
+	return get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return not (w.has_method("is_priest") and w.is_priest())).size()
 
 
 func recruit_cost() -> int:

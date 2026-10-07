@@ -1,0 +1,39 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/nivel_mina.gd" id="1_nivel"]
+
+[resource]
+script = ExtResource("1_nivel")
+id = "S5"
+nome = "S5 — LAGO AZUL"
+profundidade = 5
+area = "s5"
+rect = Rect2(-700, 4800, 1400, 260)
+perigo = ""
+traje = ""
+pesquisa = ""
+ligacao = "elevador_s5"
+em_breve = false
+minerios = PackedStringArray("gema_azul")
+criaturas = PackedStringArray()
+cor_ambiente = Color(0.75, 0.85, 1, 1)
+cor_nevoa = Color(0.3, 0.5, 1, 0.15)
+particulas = "bolhas"
+faixa = "faixa_s5"
+cor_faixa = Color(0.08, 0.14, 0.3, 1)
+descricao = "O fundo do mundo: um lago subterrâneo de água azul e quieta, gemas na beira e as casinhas de pedra de quem morou aqui antes da explosão. Quem trabalha aqui fica mais calmo."
+decoracao = [["passarela_1", -246.8, 4934.3, true], ["casa_pedra_0", -458.5, 4983.1], ["casa_pedra_1", 306.2, 5003.1], ["cristal_ciano_0", -330.8, 4867.7], ["cristal_violeta_0", 330.8, 4956.5], ["cristal_ciano_1", -171.5, 5018.8], ["cristal_violeta_1", 229.2, 4841.2], ["torre_0", -570, 4878, true], ["casa_pedra_1", -495, 4890, true], ["lampiao_cristal", -430, 4860, true], ["lampiao_cristal", -560, 4935, true], ["lampiao_cristal", -395, 4960, true], ["lampiao_cristal", 490, 4900, true]]
+perigos = []
+jazidas = [["gema_azul", -372.8, 4921.3, 60.0, 1.2, 0.1], ["gema_azul", 402.5, 4885.6, 60.0, 1.2, 0.1], ["gema_azul", 0, 5014.5, 60.0, 1.2, 0.1], ["gema_azul", 430.5, 4996.6, 60.0, 1.2, 0.1]]
+ligacao_topo = Vector2(475.7, 4491)
+ligacao_fundo = Vector2(630.0, 4932.6)
+ligacao_acima = "elevador_s4"
+conserto = Vector4i(3500, 18, 80, 180)
+conserto_minerio = "cristal_rubro"
+conserto_estagio = 5
+obstaculos = [[-315, 4874.8, 630, 119.2]]
+animo = 10.0
+animo_motivo = "a calma do lago azul"
+titulo_abertura = "O LAGO AZUL"
+decoracao_sorteada = [[10, ["casa_pedra_0", "casa_pedra_1", "varal", "banco", "mesa", "palete", "saco", "tabuas", "roda_carroca", "poste"]], [14, ["cristal_ciano_0", "cristal_ciano_1", "cristal_violeta_0", "cristal_violeta_1"]]]
+mapa_regiao = Rect2(40, 400, 180, 58)

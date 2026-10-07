@@ -1,9 +1,16 @@
 extends PanelContainer
 ## Janela da Plataforma do Abismo (clique na plataforma no fundo do nível 2, ou no
 ## botão do HUD, que aparece quando o nível 2 abre): consertar e abrir o nível 3.
+## Bloco 71: a mesma janela serve pras plataformas dos níveis novos (S4, S5): clicar numa delas troca
+## a plataforma da janela (focus); o título e o texto vêm do nível (dados).
+const Ores := preload("res://scripts/core/ores.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _shaft: Node
+var _abismo: Node  # a do botão do HUD (a primeira)
+var _title: Label
+var _lore: Label
 var _status: Label
 var _desc: Label
 var _bar: ProgressBar
@@ -13,6 +20,7 @@ var _button: Button
 func setup(hud: CanvasLayer, shaft: Node, _economy: Node) -> void:
 	_hud = hud
 	_shaft = shaft
+	_abismo = shaft
 	_build()
 	visible = false
 
@@ -31,9 +39,10 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("O ABISMO (NÍVEL 3)", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("O ABISMO (NÍVEL 3)", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
+	_title = title
 	var close: Button = _hud._button("X")
 	close.pressed.connect(func():
 		Audio.click()
@@ -41,12 +50,13 @@ func _build() -> void:
 	header.add_child(close)
 	var lore: Label = _hud._label(
 		"No fundo do nível 2 tem uma plataforma velha, arruinada, que desce ainda mais. "
-		+ "Lá embaixo a rocha guardou o calor da explosão solar: a SOLARITA.", 12, _hud.COLOR_DIM)
+		+ "Lá embaixo a rocha guardou o calor da explosão solar: a SOLARITA.", Tipo.DETALHE, _hud.COLOR_DIM)
 	lore.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(lore)
-	_status = _hud._label("", 15, _hud.COLOR_TEXT)
+	_lore = lore
+	_status = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	vbox.add_child(_status)
-	_desc = _hud._label("", 12, _hud.COLOR_DIM)
+	_desc = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_desc)
 	_bar = _hud._bar(_hud.COLOR_TITLE)
@@ -61,14 +71,31 @@ func _build() -> void:
 	vbox.add_child(_button)
 
 
+## Bloco 71: abriu pelo clique numa plataforma: ela vira a da janela (sem nó = a do abismo).
+func focus(node: Node) -> void:
+	_shaft = node if node != null and node.has_method("start_repair") else _abismo
+	var abismo := _shaft == _abismo
+	var n: Resource = _shaft.nivel() if _shaft.has_method("nivel") else null
+	_title.text = "O ABISMO (NÍVEL 3)" if abismo or n == null else n.nome
+	if abismo or n == null:
+		_lore.text = "No fundo do nível 2 tem uma plataforma velha, arruinada, que desce ainda mais. " \
+			+ "Lá embaixo a rocha guardou o calor da explosão solar: a SOLARITA."
+	else:
+		_lore.text = "Mais uma plataforma velha, arruinada, descendo pro escuro. Lá embaixo: " + n.descricao
+
+
 func refresh() -> void:
 	if not visible:
 		return
+	var abismo := _shaft == _abismo
 	var reason: String = _shaft.repair_block_reason()
 	_bar.visible = _shaft.repairing
 	_bar.value = _shaft.repair_progress()
 	_button.visible = not _shaft.unlocked and not _shaft.repairing
-	if _shaft.unlocked:
+	if _shaft.unlocked and not abismo:
+		_status.text = "Aberto: a plataforma desce pro %s" % _shaft.nivel_id
+		_desc.text = "Acidentes lá embaixo são tão comuns quanto no abismo."
+	elif _shaft.unlocked:
 		_status.text = "Aberto: a plataforma desce pro nível 3"
 		_desc.text = "Solarita: vale muito (e vai ser importante contra a radiação). Precisa do Traje de chumbo (Oficina). " \
 			+ "Acidentes lá são 4x mais comuns e mais graves, e o calor tira o ânimo de quem trabalha no abismo."
@@ -77,23 +104,24 @@ func refresh() -> void:
 		_desc.text = "A gaiola, as correntes e a polia estão sendo trocadas."
 	else:
 		_status.text = "Plataforma arruinada"
-		_desc.text = "Conserto: %d peças raras + %d cr + %d prata, %ds de trabalho (vila nível %d)." % [
-			_shaft.repair_parts, _shaft.repair_credits, _shaft.repair_silver, roundi(_shaft.repair_time), _shaft.repair_min_stage]
+		_desc.text = "Conserto: %d peças raras + %d cr + %d %s, %ds de trabalho (vila nível %d)." % [
+			_shaft.repair_parts, _shaft.repair_credits, _shaft.repair_silver, Ores.display_name(String(_shaft.repair_ore)).to_lower(),
+			roundi(_shaft.repair_time), _shaft.repair_min_stage]
 		_button.text = "Consertar a plataforma" if reason == "" else "Consertar: " + reason
 		_button.disabled = reason != ""
 
 
 func is_available() -> bool:
-	return _shaft.level2_open()
+	return _abismo.level2_open()
 
 
 func button_text() -> String:
-	if _shaft.unlocked:
+	if _abismo.unlocked:
 		return "Abismo aberto"
-	if _shaft.repairing:
-		return "Abismo %d%%" % roundi(_shaft.repair_progress() * 100.0)
+	if _abismo.repairing:
+		return "Abismo %d%%" % roundi(_abismo.repair_progress() * 100.0)
 	return "Abismo: consertar"
 
 
 func has_available_action() -> bool:
-	return _shaft.repair_block_reason() == ""
+	return _abismo.repair_block_reason() == ""

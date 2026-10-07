@@ -2,7 +2,9 @@ extends PanelContainer
 ## Janela do Laboratório (tecla Q, ou clique no laboratório): a árvore de pesquisa.
 ## Cada ramo em uma coluna; os pares do 2º nível são escolhas (pesquisar um tranca o outro).
 
-const BRANCHES := [["Mina", ["carrinhos", "explosivos", "escoramento", "trajes"]],
+const Icones := preload("res://scripts/ui/icones.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
+const BRANCHES := [["Mina", ["carrinhos", "explosivos", "escoramento", "trajes", "ventilacao", "bombas"]],
 	["Vila", ["medicina", "radio", "hidroponia"]],
 	["Sol", ["estudo_solar", "satelite", "holofotes", "escudo"]]]
 
@@ -35,7 +37,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("LABORATÓRIO — PESQUISA", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("LABORATÓRIO — PESQUISA", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var close: Button = _hud._button("X")
@@ -43,7 +45,7 @@ func _build() -> void:
 		Audio.click()
 		visible = false)
 	header.add_child(close)
-	_status = _hud._label("", 13, _hud.COLOR_TEXT)
+	_status = _hud._label("", Tipo.CORPO, _hud.COLOR_TEXT)
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_status)
 	_bar = _hud._bar(_hud.COLOR_HUNGER_OK)
@@ -66,7 +68,7 @@ func _build() -> void:
 		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		col.custom_minimum_size.x = 295
 		cols.add_child(col)
-		col.add_child(_hud._label("RAMO: %s" % b[0].to_upper(), 12, _hud.COLOR_DIM))
+		col.add_child(_hud._label("RAMO: %s" % b[0].to_upper(), Tipo.DETALHE, _hud.COLOR_DIM))
 		for id in b[1]:
 			_cards[id] = _make_card(col, id)
 
@@ -81,22 +83,30 @@ func _make_card(parent: VBoxContainer, id: String) -> Dictionary:
 	panel.add_child(v)
 	var top := HBoxContainer.new()
 	v.add_child(top)
+	var ic := Icones.tex("pq_" + id)
+	if ic:  # Prompt 21: o ícone da tecnologia
+		var tr := TextureRect.new()
+		tr.texture = ic
+		tr.custom_minimum_size = Vector2(32, 32)
+		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top.add_child(tr)
 	var excl: String = "  (escolha)" if t.excl != "" else ""
-	var name_label: Label = _hud._label(t.name + excl, 13, _hud.COLOR_TEXT)
+	var name_label: Label = _hud._label(t.name + excl, Tipo.CORPO, _hud.COLOR_TEXT)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_label)
 	var button: Button = _hud._button("Pesquisar")
-	button.add_theme_font_size_override("font_size", 11)
+	button.add_theme_font_size_override("font_size", Tipo.DETALHE)
 	button.pressed.connect(func():
 		Audio.click()
 		_res.start(id)
 		refresh())
 	top.add_child(button)
-	var desc: Label = _hud._label(t.desc, 11, _hud.COLOR_DIM)
+	var desc: Label = _hud._label(t.desc, Tipo.DETALHE, _hud.COLOR_DIM)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.custom_minimum_size.x = 280
 	v.add_child(desc)
-	var status: Label = _hud._label("", 11, _hud.COLOR_DIM)
+	var status: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	status.custom_minimum_size.x = 280
 	v.add_child(status)

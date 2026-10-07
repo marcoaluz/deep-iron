@@ -1,0 +1,25 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/nivel_mina.gd" id="1_nivel"]
+
+[resource]
+script = ExtResource("1_nivel")
+id = "S0"
+nome = "SUPERFÍCIE — clareira"
+profundidade = 0
+area = "clareira"
+perigo = ""
+traje = ""
+pesquisa = ""
+ligacao = ""
+em_breve = false
+minerios = PackedStringArray()
+criaturas = PackedStringArray("lumivoro")
+cor_ambiente = Color(1, 1, 1, 1)
+cor_nevoa = Color(0, 0, 0, 0)
+particulas = ""
+faixa = "faixa_superficie"
+cor_faixa = Color(0.25, 0.3, 0.2, 1)
+descricao = "A clareira: árvores, caça, horta. De lá descem os Lumívoros à noite."
+decoracao = []
+mapa_regiao = Rect2(8, 12, 108, 76)

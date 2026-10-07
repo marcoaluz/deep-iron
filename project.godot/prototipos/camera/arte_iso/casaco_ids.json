@@ -256,5 +256,99 @@
   "processado": [
    "caminhada"
   ]
+ },
+ "casaco_fundidor": {
+  "char": "bf0ce48a-f5a9-40f8-a5cb-f4b89f89f828",
+  "base": "fundidor",
+  "trabalho": "fundir",
+  "enviado": [
+   "caminhada",
+   "fundir"
+  ],
+  "processado": [
+   "caminhada"
+  ],
+  "_obs": "Bloco 92: o trabalho de casaco saiu ruim (picareta/fogo/casaco mudando de cor) e na fornalha/forja faz calor: trabalha SEM o casaco (o jogo usa a animação da base)"
+ },
+ "casaco_fundidora": {
+  "char": "98a151dc-e323-41c1-a26e-bf8cf98b0e4a",
+  "base": "fundidora",
+  "trabalho": "fundir",
+  "enviado": [
+   "caminhada",
+   "fundir"
+  ],
+  "processado": [
+   "caminhada"
+  ],
+  "_obs": "Bloco 92: o trabalho de casaco saiu ruim (picareta/fogo/casaco mudando de cor) e na fornalha/forja faz calor: trabalha SEM o casaco (o jogo usa a animação da base)"
+ },
+ "casaco_ferreiro": {
+  "char": "d67ccbea-559a-4cb1-87d8-803e2fae192c",
+  "base": "ferreiro",
+  "trabalho": "forjar",
+  "enviado": [
+   "caminhada",
+   "forjar"
+  ],
+  "processado": [
+   "caminhada"
+  ],
+  "_obs": "Bloco 92: o trabalho de casaco saiu ruim (picareta/fogo/casaco mudando de cor) e na fornalha/forja faz calor: trabalha SEM o casaco (o jogo usa a animação da base)"
+ },
+ "casaco_ferreira": {
+  "char": "fbd6b4d7-dc0e-4a9f-81fa-e8d1767dfa7b",
+  "base": "ferreira",
+  "trabalho": "forjar",
+  "enviado": [
+   "caminhada",
+   "forjar"
+  ],
+  "processado": [
+   "caminhada"
+  ],
+  "_obs": "Bloco 92: o trabalho de casaco saiu ruim (picareta/fogo/casaco mudando de cor) e na fornalha/forja faz calor: trabalha SEM o casaco (o jogo usa a animação da base)"
+ },
+ "casaco_padre": {
+  "char": "c818ea3e-b1fa-44bc-9238-a9da6d47eca9",
+  "base": "padre",
+  "trabalho": "pregar",
+  "enviado": [
+   "caminhada",
+   "pregar"
+  ],
+  "processado": [
+   "caminhada",
+   "pregar"
+  ],
+  "_obs": "Bloco 92"
+ },
+ "casaco_carpinteiro": {
+  "char": "5c1aa5ca-a8fb-429d-8070-881d7f4805f2",
+  "base": "carpinteiro",
+  "trabalho": "serrar",
+  "enviado": [
+   "caminhada",
+   "serrar"
+  ],
+  "processado": [
+   "caminhada",
+   "serrar"
+  ],
+  "_obs": "Bloco 92"
+ },
+ "casaco_carpinteira": {
+  "char": "38b61a11-8e3e-41f1-b00c-775fcb9ab466",
+  "base": "carpinteira",
+  "trabalho": "serrar",
+  "enviado": [
+   "caminhada",
+   "serrar"
+  ],
+  "processado": [
+   "caminhada",
+   "serrar"
+  ],
+  "_obs": "Bloco 92"
  }
 }

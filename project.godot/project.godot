@@ -17,8 +17,6 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-PhantomCameraManager="*uid://duq6jhf6unyis"
-DialogueManager="*uid://c3rodes2l3gxb"
 Audio="*res://scenes/core/audio_manager.tscn"
 SaveManager="*res://scenes/core/save_manager.tscn"
 WindowManager="*res://scripts/core/window_manager.gd"
@@ -32,7 +30,11 @@ window/stretch/aspect="expand"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/dialogue_manager/plugin.cfg", "res://addons/godot_state_charts/plugin.cfg", "res://addons/godotsteam/plugin.cfg", "res://addons/gut/plugin.cfg", "res://addons/phantom_camera/plugin.cfg")
+enabled=PackedStringArray("res://addons/gut/plugin.cfg")
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://translations/ui.en.translation", "res://translations/ui.pt_BR.translation")
 
 [physics]
 

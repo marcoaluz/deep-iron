@@ -8,8 +8,12 @@ extends "res://scripts/props/station.gd"
 ##   PREPARA aqui: a leva leva um tempo (prep_time_per_raw no ipezinho) e só no fim
 ##   vira comida pronta no estoque.
 ## - "delivering" ainda descarrega comida pronta (cesta de saves antigos).
+## - Bloco 84 (refeições): quem chega pra comer recebe UMA porção (Schedule.porcao unidades de comida, que
+##   restaura Schedule.refeicao_fome) e come o prato aos poucos (FEED_RATE). Sem porção inteira no estoque,
+##   serve o que tiver (o prato fica menor).
 ## - O sprite mostra cheio / pela metade / vazio.
 
+const SocialSpot := preload("res://scripts/props/social_spot.gd")  # Bloco 85
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 
 @export_group("Ritmo")
@@ -43,6 +47,7 @@ var is_cooking: bool = false
 func _ready() -> void:
 	super()
 	add_to_group("comedouros")
+	add_child(SocialSpot.criar("refeitorio", "Refeitório", true, 2, 4, Vector2(0, 26)))  # Bloco 85: as mesas
 	food_stock = clampf(start_food, 0.0, food_capacity)
 	_update_visual()
 
@@ -77,6 +82,17 @@ func _process(delta: float) -> void:
 			food_stock += body.cook_tick(delta, space_left())  # 0 até a leva ficar pronta
 			cooking = true
 			continue
+		if body.has_method("recebe_prato"):  # Bloco 84: uma porção por refeição
+			if body.quer_prato():
+				if food_stock <= 0.0:
+					continue
+				var porcao := _porcao()
+				var p := minf(porcao, food_stock)
+				food_stock -= p
+				body.recebe_prato(p / porcao * _fome_da_porcao())
+			if body.come_prato(FEED_RATE * delta) > 0.0:
+				eating = true
+			continue
 		if food_stock <= 0.0 or body.hunger >= body.hunger_max:
 			continue
 		var wanted := minf(FEED_RATE * delta, body.hunger_max - body.hunger)
@@ -93,12 +109,23 @@ func _process(delta: float) -> void:
 	_update_visual()
 
 
+## Bloco 84: a porção e quanto ela enche (do Schedule; sem ele, os padrões).
+func _porcao() -> float:
+	var s := get_tree().get_first_node_in_group("schedule")
+	return maxf(s.porcao, 0.01) if s else 8.0
+
+
+func _fome_da_porcao() -> float:
+	var s := get_tree().get_first_node_in_group("schedule")
+	return s.refeicao_fome if s else 45.0
+
+
 func _update_visual() -> void:
 	var ratio := food_stock / food_capacity if food_capacity > 0.0 else 0.0
 	# quadro 0 = cheio, 1 = pela metade, 2 = vazio
 	_visual.frame = 2 if food_stock <= 0.0 else (1 if ratio < 0.5 else 0)
 	var empty := food_stock <= 0.0
-	_name_label.text = "Comedouro\n%s" % ("SEM COMIDA" if empty else "%d / %d" % [int(food_stock), int(food_capacity)])
+	_name_label.text = "Cozinha\n%s" % ("SEM COMIDA" if empty else "%d / %d" % [int(food_stock), int(food_capacity)])
 	if is_cooking:
 		_name_label.text += "\npreparando..."
 	_name_label.modulate = Color(1.0, 0.45, 0.4) if empty else (Color(1.0, 0.8, 0.45) if ratio < 0.25 else Color.WHITE)

@@ -17,12 +17,13 @@ extends RefCounted
 ## Quando a obra foi encomendada (horário do sistema): define a ordem da fila.
 var ordered_at: float = 0.0
 var _workers: Array[Node] = []
+## Bloco 87: quem trabalha aqui e o verbo ("engenheiro"/"construindo"; Oficina e Arsenal: "ferreiro"/"forjando").
+var trabalhador := "engenheiro"
+var verbo := "construindo"
 
 
-## Cor do "fantasma" do que está sendo construído: fica nítido conforme a obra anda
-## (canteiro e peças/reatores da Escavadeira usam a mesma, pra obra parecer obra).
-static func ghost_color(progress: float) -> Color:
-	return Color(0.8, 0.7, 0.55, 0.18 + 0.6 * clampf(progress, 0.0, 1.0))
+## (Prompt 28: o "fantasma que fica nítido" saiu; a obra aparece por estágios, ver
+## obra_estagio.gd.)
 
 
 ## Obra nova encomendada agora.
@@ -51,7 +52,7 @@ func has_engineer() -> bool:
 
 ## "40% — construindo" / "40% — esperando engenheiro"
 func status(progress: float) -> String:
-	return "%d%% — %s" % [roundi(progress * 100.0), "construindo" if has_engineer() else "esperando engenheiro"]
+	return "%d%% — %s" % [roundi(progress * 100.0), verbo if has_engineer() else "esperando " + trabalhador]
 
 
 ## Lado a lado quando mais de um engenheiro trabalha no mesmo lugar.

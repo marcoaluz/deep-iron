@@ -12,6 +12,7 @@ extends Node2D
 
 signal selection_changed(unit: Node2D)
 
+const Teclas := preload("res://scripts/core/teclas.gd")
 const SELECT_RADIUS := 22.0
 const MARKER_TIME := 0.6
 ## Quanto (px de tela) o mouse precisa andar com o botão apertado pra virar arrasto.
@@ -22,6 +23,8 @@ const FORMATION_SPACING := 18.0
 const ORE_CLICK_RADIUS := 30.0
 ## Constantes de função (job) do ipezinho — Bloco 25.
 const Worker := preload("res://scripts/workers/ipezinho.gd")
+## Prompt 28: a vista isométrica.
+const IsoView := preload("res://scripts/iso/iso_view.gd")
 
 ## Bloco 37: partida nova começa com a FUNDAÇÃO (o jogador escolhe onde ficam o Centro da
 ## Vila e o Armazém; ver founding.gd). false = começa com o layout da cena (testes).
@@ -47,6 +50,11 @@ var _box_drawer: Node2D
 var _group_focus := 0  # Tab no modo grupo: qual deles a câmera mostra
 var _pause: CanvasLayer
 var _founding: Node
+## Prompt 28: vista isométrica. A lógica continua no chão cartesiano. (Prompt 29: o F3 saiu;
+## a vista de cima ficou só pro mapa antigo e pros testes.)
+var _iso: Node2D
+var _press_canvas := Vector2.ZERO  # ponto do clique no canvas (na vista iso = tela isométrica)
+var _drag_canvas := Vector2.ZERO
 
 @onready var _camera: Camera2D = $Camera2D
 @onready var _environment: Node2D = $World/Environment
@@ -64,8 +72,31 @@ func _ready() -> void:
 	_box_drawer.z_index = 50
 	_box_drawer.draw.connect(_draw_box)
 	add_child(_box_drawer)
+	# Prompt 28: a vista isométrica
+	_iso = IsoView.new()
+	add_child(_iso)
+	_iso.setup(self)
+	_box_drawer.visibility_layer = IsoView.LAYER_ISO  # o retângulo é da tela, fora da textura do chão
+	# Prompt 29: com o mapa novo a vista iso é A vista do jogo (o F3, que voltava pra de cima pra
+	# conferir, saiu no fim do Prompt 29). DEEP_IRON_ISO=0 começa na de cima (só testes); =1 força a iso.
+	var iso_env := OS.get_environment("DEEP_IRON_ISO")
+	if iso_env == "1" or (iso_env != "0" and _environment.has_method("has_iso_map") and _environment.has_iso_map()):
+		_iso.set_enabled.call_deferred(true)
+	# Bloco 77: as áreas de trabalho (antes do save: os ipezinhos religam nelas)
+	var areas := preload("res://scripts/core/work_areas.gd").new()
+	areas.name = "WorkAreas"
+	add_child(areas)
+	# Bloco 89: os caminhos pintados (antes do save)
+	var caminhos := preload("res://scripts/core/caminhos.gd").new()
+	caminhos.name = "Caminhos"
+	add_child(caminhos)
 	# modo de posicionar casa (último filho: recebe o input antes do main e o "consome")
 	add_child(preload("res://scripts/core/house_placer.gd").new())
+	add_child(preload("res://scripts/core/area_placer.gd").new())  # Bloco 77: marcar área (idem)
+	add_child(preload("res://scripts/core/caminho_placer.gd").new())  # Bloco 89: pintar caminhos (idem)
+	var decor := preload("res://scripts/core/decoracoes.gd").new()  # Bloco 90: decoração (modo remover: idem)
+	decor.name = "Decoracoes"
+	add_child(decor)
 	_pause = preload("res://scripts/ui/pause_menu.gd").new()
 	add_child(_pause)
 	_founding = preload("res://scripts/core/founding.gd").new()
@@ -75,6 +106,10 @@ func _ready() -> void:
 	var weather := preload("res://scripts/core/weather.gd").new()
 	weather.name = "Weather"
 	add_child(weather)
+	# Bloco 70: o conteúdo do S2/S3 (poças, ventiladores, cristais da broca)
+	var fundo := preload("res://scripts/core/fundo.gd").new()
+	fundo.name = "Fundo"
+	add_child(fundo)
 	SaveManager.register_game(self)
 	if SaveManager.pending_load:
 		# espera o ambiente montar (1 frame + navegação) e as estruturas entrarem nos grupos
@@ -84,6 +119,9 @@ func _ready() -> void:
 		if hub and not hub.founded:
 			_founding.start(false)  # salvo no meio da fundação: volta a escolher
 	elif founding_on_new_game:
+		var ofi := get_tree().get_first_node_in_group("oficina")
+		if ofi and ofi.has_method("set_built"):
+			ofi.set_built(false)  # Bloco 58: jogo novo — a Oficina é construída pelo engenheiro
 		await _environment.navigation_ready
 		_founding.start(true)
 
@@ -97,27 +135,39 @@ func _unhandled_input(event: InputEvent) -> void:
 				_press_screen = event.position
 				_press_world = _to_world(event.position)
 				_drag_world = _press_world
+				_press_canvas = _to_canvas(event.position)
+				_drag_canvas = _press_canvas
 				_additive = event.shift_pressed
 			elif _lmb_down:
 				_drag_world = _to_world(event.position)
+				_drag_canvas = _to_canvas(event.position)
 				_additive = _additive or event.shift_pressed
 				_finish_left_click()
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-			_give_order(_to_world(event.position))
+			var hit_ore: Node2D = null
+			if _iso.enabled:
+				var hit: Dictionary = _iso.pick(_to_canvas(event.position))
+				if hit.node and hit.node.is_in_group("minerios"):
+					hit_ore = hit.node
+			_give_order(_to_world(event.position), hit_ore)
 	elif event is InputEventMouseMotion and _lmb_down:
 		_drag_world = _to_world(event.position)
+		_drag_canvas = _to_canvas(event.position)
 		if not _dragging and event.position.distance_to(_press_screen) > DRAG_THRESHOLD:
 			_dragging = true
 		if _dragging:
 			_box_drawer.queue_redraw()
 	elif event is InputEventKey and event.pressed and not event.echo:
-		match event.physical_keycode:
-			KEY_TAB:
+		# Bloco 54: as teclas são remapeáveis (Configurações > Teclas): pergunta a AÇÃO da tecla
+		match Teclas.acao(event.physical_keycode):
+			"proximo":
 				_select_next()
-			KEY_F:
+			"pessoas":
+				_hud.toggle_pessoas()  # Bloco 95: a lista da força de trabalho (aba fina)
+			"seguir":
 				if selected:
 					_camera.follow_target = null if _camera.follow_target == selected else selected
-			KEY_ESCAPE:
+			"voltar":
 				# Esc fecha o que estiver aberto; sem nada pra fechar/soltar, pausa
 				if _hud.close_panels():
 					pass
@@ -125,68 +175,81 @@ func _unhandled_input(event: InputEvent) -> void:
 					select(null)
 				else:
 					_pause.open()
-			KEY_P:
+			"pausa":
 				_pause.open()
-			KEY_H:
+			"dicas":
 				_hud.toggle_hints()
-			KEY_U:
+			"painel_hub":
 				_hud.toggle_panel("hub")
-			KEY_E:
+			"painel_escavadeira":
 				_hud.toggle_panel("escavadeira")
-			KEY_O:
+			"painel_oficina":
 				_hud.toggle_panel("oficina")
-			KEY_I:
+			"painel_enfermaria":
 				_hud.toggle_panel("enfermaria")
-			KEY_B:
+			"painel_moral":
 				_hud.toggle_panel("moral")
-			KEY_G:
+			"painel_defesa":
 				_hud.toggle_panel("defesa")
-			KEY_J:
+			"painel_diario":
 				_hud.toggle_panel("diario")
-			KEY_X:
+			"guarda":
 				toggle_guard()
-			KEY_Z:
+			"fundidor":
+				toggle_smelter()
+			"ferreiro":
+				toggle_smith()
+			"padre":
+				toggle_priest()
+			"carpinteiro":
+				toggle_carpenter()
+			"pesquisador":
 				toggle_research()
-			KEY_Q:
+			"painel_lab":
 				_hud.toggle_panel("lab")
-			KEY_Y:
+			"painel_sol":
 				_hud.toggle_panel("sol")
-			KEY_V:
+			"painel_trabalho":
+				_hud.toggle_panel("trabalho")  # Bloco 77
+			"vender":
 				_economy.sell_all()
-			KEY_R:
+			"recrutar":
 				var worker: Node2D = _economy.recruit()
 				if worker:
 					_camera.focus_on(worker.global_position)
-			KEY_SPACE:
+			"construir":
 				_hud.toggle_build_menu()  # Bloco 46: menu de construção
-			KEY_M:
+			"musica":
 				Audio.toggle_music()
-			KEY_F5:
+			"caixas":
+				if _iso.enabled:
+					_iso.show_boxes = not _iso.show_boxes  # Prompt 28: mostra as caixas
+			"salvar":
 				SaveManager.save_game("manual")
-			KEY_F9:
+			"carregar":
 				if SaveManager.has_save():
 					SaveManager.load_game()
 				else:
 					Audio.error()
-			KEY_N:
+			"pular_fase":
 				_day_night.skip_phase()
-			KEY_T:
+			"turno_extra":
 				toggle_overtime()
-			KEY_C:
+			"cozinheiro":
 				toggle_cook()
-			KEY_L:
+			"lenhador":
 				toggle_lumber()
-			KEY_1, KEY_KP_1:
+			"minerador":
 				toggle_miner()
-			KEY_2, KEY_KP_2:
+			"cacador":
 				toggle_hunter()
-			KEY_3, KEY_KP_3:
+			"medico":
 				toggle_doctor()
-			KEY_4, KEY_KP_4:
+			"engenheiro":
 				toggle_engineer()
-			KEY_0, KEY_KP_0:
+			"sem_funcao":
 				clear_job()
-			KEY_K:
+			"machucar":
 				for unit in selection.duplicate():
 					if is_instance_valid(unit):
 						unit.hurt("mina", "grave" if event.shift_pressed else "")
@@ -202,6 +265,9 @@ func _finish_left_click() -> void:
 		_box_select(_selection_rect(), additive)
 		return
 
+	if _iso.enabled:
+		_finish_left_click_iso(additive)
+		return
 	var click_pos := _press_world
 	var clicked_unit := _find_ipezinho_at(click_pos)
 	if clicked_unit:
@@ -215,15 +281,75 @@ func _finish_left_click() -> void:
 			if building.contains_point(click_pos):
 				_hud.open_panel_for(building)
 				return
+		if selection.is_empty() and _open_area_at(click_pos):
+			return
 		select(null)  # chão vazio: solta todo mundo
 
 
+## Prompt 28: clique na vista iso = o RAIO DA CÂMERA (a 1ª coisa que ele acerta é a que se
+## vê). Ipezinho tem uma folga (SELECT_RADIUS na tela) porque a caixa dele é fina.
+func _finish_left_click_iso(additive: bool) -> void:
+	var hit: Dictionary = _iso.pick(_press_canvas)
+	var node: Node2D = hit.node
+	var clicked_unit: Node2D = node if node and node.is_in_group("ipezinhos") else _find_ipezinho_at_canvas(_press_canvas)
+	if clicked_unit:
+		if additive:
+			toggle_selected(clicked_unit)
+		else:
+			select(clicked_unit)
+		return
+	if not additive:
+		if node and node.is_in_group("clickable"):
+			_hud.open_panel_for(node)
+			return
+		if selection.is_empty() and _open_area_at(_press_world):
+			return
+		select(null)
+
+
+## Bloco 77: clique no chão de uma área de trabalho (sem ninguém selecionado) abre a janela nela.
+func _open_area_at(pos: Vector2) -> bool:
+	var wa := get_tree().get_first_node_in_group("work_areas")
+	var a = wa.area_em(pos) if wa else null
+	if a == null:
+		return false
+	_hud.open_panel("trabalho")
+	var panel = _hud._panels.get("trabalho")
+	if panel:
+		panel.focus_area(a)
+	return true
+
+
+func _find_ipezinho_at_canvas(canvas_pos: Vector2) -> Node2D:
+	var best: Node2D = null
+	var best_dist := SELECT_RADIUS
+	for ip in get_tree().get_nodes_in_group("ipezinhos"):
+		if not ip.visible:
+			continue
+		var d: float = (_iso.to_screen(ip.global_position) + Vector2(0, -14)).distance_to(canvas_pos)
+		if d <= best_dist:
+			best_dist = d
+			best = ip
+	return best
+
+
 func _selection_rect() -> Rect2:
+	if _iso.enabled:
+		return Rect2(_press_canvas, _drag_canvas - _press_canvas).abs()  # retângulo na TELA
 	return Rect2(_press_world, _drag_world - _press_world).abs()
 
 
 ## Posição de um evento de mouse (tela) -> mundo, levando em conta câmera e zoom.
+## Prompt 28: na vista iso, o ponto do CHÃO embaixo do mouse (raio da câmera).
 func _to_world(screen_pos: Vector2) -> Vector2:
+	var canvas := _to_canvas(screen_pos)
+	if _iso and _iso.enabled:
+		return _iso.ground_at(canvas)
+	return canvas
+
+
+## Tela -> canvas (com câmera e zoom). Na vista de cima é o próprio chão.
+func _to_canvas(screen_pos: Vector2) -> Vector2:
 	return get_viewport().get_canvas_transform().affine_inverse() * screen_pos
 
 
@@ -233,7 +359,8 @@ func _box_select(rect: Rect2, additive: bool) -> void:
 		picked.assign(selection)
 	for ip in get_tree().get_nodes_in_group("ipezinhos"):
 		# conta o meio do corpo (a origem fica no pé), igual ao clique
-		if rect.has_point(ip.global_position + Vector2(0, -14)) and not picked.has(ip):
+		var body: Vector2 = (_iso.to_screen(ip.global_position) if _iso.enabled else ip.global_position) + Vector2(0, -14)
+		if rect.has_point(body) and not picked.has(ip):
 			picked.append(ip)
 	set_selection(picked)
 
@@ -248,11 +375,11 @@ func _draw_box() -> void:
 
 
 # ------------------------------------------------------------ ordens (botão direito)
-func _give_order(pos: Vector2) -> void:
+func _give_order(pos: Vector2, ore_hint: Node2D = null) -> void:
 	_prune_selection()
 	if selection.is_empty():
 		return
-	var ore := _find_ore_at(pos)
+	var ore := ore_hint if ore_hint else _find_ore_at(pos)
 	if ore:
 		_order_mine(ore)
 	else:
@@ -427,6 +554,45 @@ func toggle_research() -> void:
 	toggle_job(Worker.ROLE_RESEARCH, "Pesquisador", Color(0.55, 0.95, 0.65))
 
 
+## 6 / botão do HUD: fundidor (ou tira, se todos já forem) — Bloco 86.
+func toggle_smelter() -> void:
+	toggle_job(Worker.ROLE_SMELTER, "Fundidor", Color(1.0, 0.62, 0.32))
+
+
+## 7 / botão do HUD: ferreiro (ou tira, se todos já forem) — Bloco 87.
+func toggle_smith() -> void:
+	toggle_job(Worker.ROLE_SMITH, "Ferreiro", Color(0.62, 0.74, 1.0))
+
+
+## 9 / botão do HUD: carpinteiro (homem ou mulher; ou tira, se todos já forem) — Bloco 94.
+func toggle_carpenter() -> void:
+	toggle_job(Worker.ROLE_CARPENTER, "Carpinteiro", Color(0.86, 0.7, 0.45))
+
+
+## 8 / botão do HUD: padre — Bloco 92. Só UM ipezinho homem (o selecionado); a vila tem um padre só. Se o
+## selecionado já é o padre, tira a função dele.
+func toggle_priest() -> void:
+	_prune_selection()
+	if selection.size() != 1:
+		Audio.error()
+		_hud.show_toast("Selecione UM ipezinho homem pra virar padre", Color(1.0, 0.6, 0.45))
+		return
+	var w: Node = selection[0]
+	if w.is_priest():
+		w.set_job(Worker.ROLE_IDLE)
+		Audio.click()
+		_hud.show_toast("%s deixou de ser padre" % String(w.get("display_name")), Color(0.75, 0.75, 0.8))
+		return
+	var motivo: String = w.motivo_padre()
+	if motivo != "":
+		Audio.error()
+		_hud.show_toast(motivo, Color(1.0, 0.6, 0.45))
+		return
+	w.set_job(Worker.ROLE_PRIEST)
+	Audio.click()
+	_hud.show_toast("%s agora é o padre da vila" % String(w.get("display_name")), Color(0.78, 0.7, 0.95))
+
+
 ## 0 / botão do HUD: tira a função dos selecionados (voltam a ficar ociosos).
 func clear_job() -> void:
 	_prune_selection()
@@ -480,8 +646,8 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	if _marker_timer <= 0.0:
-		return
+	if _marker_timer <= 0.0 or (_iso and _iso.enabled):
+		return  # na vista iso o marcador é desenhado achatado no chão (iso_view.gd)
 	var t := _marker_timer / MARKER_TIME
 	draw_set_transform(_marker_pos, 0.0, Vector2(1.0, 0.5))
 	draw_arc(Vector2.ZERO, lerpf(18.0, 6.0, t), 0.0, TAU, 24, Color(1.0, 0.84, 0.25, t), 2.0)

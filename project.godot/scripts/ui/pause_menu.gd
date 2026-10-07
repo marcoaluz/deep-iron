@@ -3,7 +3,9 @@ extends CanvasLayer
 ## Pausa o jogo; Continuar, Configurações, Salvar, Menu inicial e Sair.
 ## "Menu inicial" e "Sair" salvam antes (mesmo save do F5).
 
+const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const SettingsPanel := preload("res://scripts/ui/settings_panel.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const START_MENU := "res://scenes/ui/start_menu.tscn"
 const COLOR_TITLE := Color(1.0, 0.8, 0.35)
 const COLOR_PANEL := Color(0.09, 0.075, 0.07, 0.95)
@@ -15,6 +17,7 @@ var _panel: PanelContainer
 
 
 func _ready() -> void:
+	UiSkin.tema_na_camada(self)  # Bloco 95: o tema (escala e fonte) chega nos Controls da camada
 	layer = 20
 	process_mode = Node.PROCESS_MODE_ALWAYS  # funciona com o jogo pausado
 	add_to_group("pause_menu")
@@ -27,12 +30,15 @@ func _ready() -> void:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	_panel = PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = COLOR_PANEL
-	style.border_color = COLOR_BORDER
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	style.set_content_margin_all(18)
+	var style: StyleBox = UiSkin.painel(18)  # Prompt 20: a pele nova
+	if not UiSkin.ok():
+		var f := StyleBoxFlat.new()
+		f.bg_color = COLOR_PANEL
+		f.border_color = COLOR_BORDER
+		f.set_border_width_all(2)
+		f.set_corner_radius_all(4)
+		f.set_content_margin_all(18)
+		style = f
 	_panel.add_theme_stylebox_override("panel", style)
 	center.add_child(_panel)
 
@@ -43,7 +49,7 @@ func _ready() -> void:
 	var title := Label.new()
 	title.text = "PAUSADO"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 26)
+	title.add_theme_font_size_override("font_size", Tipo.FAIXA)
 	title.add_theme_color_override("font_color", COLOR_TITLE)
 	_main_page.add_child(title)
 	_button("Continuar  (Esc)", close)
@@ -84,7 +90,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
 	if event is InputEventKey and event.pressed and not event.echo \
-			and event.physical_keycode in [KEY_ESCAPE, KEY_P]:
+			and event.physical_keycode in [KEY_ESCAPE, preload("res://scripts/core/teclas.gd").tecla("pausa")]:
 		get_viewport().set_input_as_handled()
 		Audio.click()
 		if _settings_page.visible:
@@ -99,6 +105,8 @@ func _show_settings() -> void:
 
 
 func _show_main() -> void:
+	if _settings_page.has_method("reset_page"):
+		_settings_page.reset_page()  # Bloco 54: saiu da página de teclas também
 	_settings_page.visible = false
 	_main_page.visible = true
 
@@ -118,7 +126,7 @@ func _button(text: String, action: Callable) -> void:
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(0, 38)
-	b.add_theme_font_size_override("font_size", 15)
+	b.add_theme_font_size_override("font_size", Tipo.TITULO)
 	b.pressed.connect(func():
 		Audio.click()
 		action.call())

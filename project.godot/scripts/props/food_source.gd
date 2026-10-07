@@ -26,6 +26,7 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 var food_remaining: float = 0.0
 var _cooldown: float = 0.0
 var _hit_time: float = 0.0
+var _sound_cd := 0.0
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _label: Label = $AmountLabel
@@ -70,6 +71,11 @@ func _process(delta: float) -> void:
 				_cooldown = depleted_cooldown
 				break
 	_hit_time = _hit_time + delta if harvesting else 0.0
+	if harvesting:  # Bloco 55: farfalhar da colheita
+		_sound_cd -= delta
+		if _sound_cd <= 0.0:
+			_sound_cd = randf_range(0.7, 1.1)
+			Audio.harvest(global_position)
 	_update_visual()
 
 

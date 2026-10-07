@@ -1,6 +1,7 @@
 extends PanelContainer
 ## Janela de Bem-estar (tecla B, botão no HUD ou clique na taverna): ânimo da vila,
 ## o que está incomodando/ajudando, greve e ultimato, festa e taverna.
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _morale: Node
@@ -41,7 +42,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("BEM-ESTAR", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("BEM-ESTAR", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var close: Button = _hud._button("X")
@@ -52,27 +53,27 @@ func _build() -> void:
 
 	var intro: Label = _hud._label(
 		"Ânimo baixo derruba a produção. Se a média ficar muito baixa, eles entram em GREVE; "
-		+ "se a greve durar demais, eles te expulsam da vila.", 12, _hud.COLOR_DIM)
+		+ "se a greve durar demais, eles te expulsam da vila.", Tipo.DETALHE, _hud.COLOR_DIM)
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(intro)
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	vbox.add_child(row)
-	_avg_label = _hud._label("", 15, _hud.COLOR_TEXT)
+	_avg_label = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	row.add_child(_avg_label)
 	_avg_bar = _hud._bar(_hud.COLOR_HUNGER_OK)
 	_avg_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_avg_bar.custom_minimum_size.y = 12
 	row.add_child(_avg_bar)
-	_dist_label = _hud._label("", 12, _hud.COLOR_DIM)
+	_dist_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	vbox.add_child(_dist_label)
-	_strike_label = _hud._label("", 14, _hud.COLOR_HUNGER_BAD)
+	_strike_label = _hud._label("", Tipo.TITULO, _hud.COLOR_HUNGER_BAD)
 	_strike_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_strike_label)
 
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("O QUE PESA NO ÂNIMO", 12, _hud.COLOR_DIM))
+	vbox.add_child(_hud._label("O QUE PESA NO ÂNIMO", Tipo.DETALHE, _hud.COLOR_DIM))
 	_causes = VBoxContainer.new()
 	_causes.add_theme_constant_override("separation", 1)
 	vbox.add_child(_causes)
@@ -81,10 +82,10 @@ func _build() -> void:
 	_festa_button = _hud._button("")
 	_festa_button.pressed.connect(func():
 		Audio.click()
-		_morale.throw_festa()
+		_hud.open_panel("calendario")  # Bloco 88: a festa é o Festival do domingo à tarde
 		refresh())
 	vbox.add_child(_festa_button)
-	_taverna_label = _hud._label("", 12, _hud.COLOR_DIM)
+	_taverna_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	_taverna_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_taverna_label)
 	_taverna_button = _hud._button("")
@@ -99,7 +100,7 @@ func _build() -> void:
 		_morale.build_taverna()
 		refresh())
 	vbox.add_child(_taverna_new_button)
-	_park_label = _hud._label("", 12, _hud.COLOR_DIM)
+	_park_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	_park_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_park_label)
 	_park_button = _hud._button("")
@@ -168,9 +169,9 @@ func refresh() -> void:
 		var n: int = agg[key][1]
 		var who := "todos" if n == ws.size() and ws.size() > 1 else "%d ipezinho%s" % [n, "s" if n > 1 else ""]
 		var color: Color = _hud.COLOR_HUNGER_BAD if v < 0.0 else _hud.COLOR_HUNGER_OK
-		_causes.add_child(_hud._label("%s %d  —  %s  (%s)" % ["+" if v >= 0.0 else "", roundi(v), key, who], 12, color))
+		_causes.add_child(_hud._label("%s %d  —  %s  (%s)" % ["+" if v >= 0.0 else "", roundi(v), key, who], Tipo.DETALHE, color))
 	if order.is_empty():
-		_causes.add_child(_hud._label("—", 12, _hud.COLOR_DIM))
+		_causes.add_child(_hud._label("—", Tipo.DETALHE, _hud.COLOR_DIM))
 
 	var festa_reason: String = _morale.festa_block_reason()
 	if festa_reason == "":

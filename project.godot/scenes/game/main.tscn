@@ -59,6 +59,9 @@
 [ext_resource type="Script" path="res://scripts/core/sun.gd" id="55_sun"]
 [ext_resource type="Script" path="res://scripts/core/equipment.gd" id="56_equip"]
 [ext_resource type="Script" path="res://scripts/props/hazard_zone.gd" id="57_zone"]
+[ext_resource type="PackedScene" path="res://scenes/props/coletor_madeira.tscn" id="70_coletor"]
+[ext_resource type="Script" path="res://scripts/core/schedule.gd" id="71_agenda"]
+[ext_resource type="Script" path="res://scripts/core/calendario.gd" id="72_cal"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
@@ -68,6 +71,10 @@ color = Color(0.4, 0.42, 0.54, 1)
 
 [node name="DayNight" type="Node" parent="."]
 script = ExtResource("32_daynight")
+day_color = Color(1, 0.99, 0.96, 1)
+dusk_color = Color(1, 0.8, 0.62, 1)
+night_color = Color(0.34, 0.4, 0.62, 1)
+dawn_color = Color(1, 0.92, 0.84, 1)
 
 [node name="World" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -89,204 +96,209 @@ abyss_floor_texture = ExtResource("48_floor_abyss")
 support_texture = ExtResource("25_support")
 light_texture = ExtResource("26_light")
 shadow_texture = ExtResource("30_shadow")
+map_rect = Rect2(-700, -454, 1452, 884)
+clearing_rect = Rect2(-700, -1040, 1452, 570)
+iso_map_file = "res://assets/game/iso/mapa/mapa.json"
 
 [node name="Armazem" parent="World" unique_id=758176732 instance=ExtResource("6_g38uy")]
-position = Vector2(-30, 40)
+position = Vector2(800, 40)
 
 [node name="Comedouro" parent="World" unique_id=1804145103 instance=ExtResource("2_uaf1y")]
-position = Vector2(170, 70)
+position = Vector2(180, 80)
 
 [node name="MineralNode" parent="World" unique_id=1887962547 instance=ExtResource("5_j7lav")]
-position = Vector2(-360, -190)
+position = Vector2(650, 60)
 
 [node name="MineralNode2" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(-470, 170)
+position = Vector2(720, 160)
 
 [node name="MineralNode3" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(320, -220)
+position = Vector2(960, 60)
 
 [node name="MineralNode4" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(500, 200)
+position = Vector2(1050, 140)
 
 [node name="MineralNode5" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(-20, -310)
+position = Vector2(1160, 120)
 ore_total = 350.0
 
 [node name="MineralNode6" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(110, 320)
+position = Vector2(1000, -60)
 ore_total = 120.0
 
 [node name="Casa" parent="World" instance=ExtResource("31_casa")]
-position = Vector2(-310, 300)
+position = Vector2(-150, -330)
 
 [node name="Casa2" parent="World" instance=ExtResource("31_casa")]
-position = Vector2(-200, 340)
+position = Vector2(-200, -170)
 
 [node name="Casa3" parent="World" instance=ExtResource("31_casa")]
-position = Vector2(-420, 345)
+position = Vector2(260, -230)
 
 [node name="CentroVila" parent="World" instance=ExtResource("33_hub")]
-position = Vector2(-300, 190)
+position = Vector2(40, -190)
 
 [node name="Escavadeira" parent="World" instance=ExtResource("34_dig")]
-position = Vector2(560, -60)
+position = Vector2(-140, 320)
 
 [node name="Oficina" parent="World" instance=ExtResource("35_oficina")]
-position = Vector2(160, -120)
+position = Vector2(-160, 110)
 
 [node name="Enfermaria" parent="World" instance=ExtResource("45_enfermaria")]
-position = Vector2(-170, 160)
+position = Vector2(320, -420)
 
 [node name="JazidaCobre" parent="World" instance=ExtResource("36_cobre")]
-position = Vector2(-560, -300)
+position = Vector2(975, -130)
 
 [node name="JazidaCobre2" parent="World" instance=ExtResource("36_cobre")]
-position = Vector2(260, 360)
+position = Vector2(1130, 30)
 
 [node name="JazidaCarvao" parent="World" instance=ExtResource("37_carvao")]
-position = Vector2(-200, -380)
+position = Vector2(770, -125)
 
 [node name="JazidaCarvao2" parent="World" instance=ExtResource("37_carvao")]
-position = Vector2(390, -370)
+position = Vector2(620, -70)
 
 [node name="GaleriaOeste" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(-630, 30)
+position = Vector2(691, -160)
 ore_total = 300.0
 min_village_level = 2
 gallery_name = "oeste"
 
 [node name="GaleriaSudeste" parent="World" instance=ExtResource("36_cobre")]
-position = Vector2(620, 340)
+position = Vector2(1075, -182)
 min_village_level = 3
 gallery_name = "sudeste"
 
 [node name="GaleriaNorte" parent="World" instance=ExtResource("37_carvao")]
-position = Vector2(190, -350)
+position = Vector2(1139, -331)
 min_village_level = 4
 gallery_name = "norte"
 
 [node name="GaleriaNordeste" parent="World" instance=ExtResource("5_j7lav")]
-position = Vector2(630, -310)
+position = Vector2(861, -459)
 ore_total = 500.0
 regen_rate = 0.8
 min_village_level = 5
 gallery_name = "nordeste"
 
 [node name="Arvore" parent="World" instance=ExtResource("39_arvore")]
-position = Vector2(-190, -790)
+position = Vector2(-640, -700)
 
 [node name="Arvore2" parent="World" instance=ExtResource("39_arvore")]
-position = Vector2(-60, -730)
+position = Vector2(-520, -560)
 
 [node name="Arvore3" parent="World" instance=ExtResource("39_arvore")]
-position = Vector2(110, -800)
+position = Vector2(-440, -840)
 
 [node name="Arvore4" parent="World" instance=ExtResource("39_arvore")]
-position = Vector2(200, -660)
+position = Vector2(-610, -300)
 
 [node name="Arvore5" parent="World" instance=ExtResource("39_arvore")]
-position = Vector2(-200, -600)
+position = Vector2(-500, -170)
 
 [node name="Arvore6" parent="World" instance=ExtResource("39_arvore")]
-position = Vector2(60, -590)
+position = Vector2(-420, -420)
+
+[node name="ColetorMadeira" parent="World" instance=ExtResource("70_coletor")]
+position = Vector2(-420, 260)
+fixo = true
+etapa_inicial = 0
 
 [node name="Toca" parent="World" instance=ExtResource("90_toca")]
-position = Vector2(-120, -840)
+position = Vector2(-640, 140)
 
 [node name="Toca2" parent="World" instance=ExtResource("90_toca")]
-position = Vector2(230, -760)
+position = Vector2(-560, -900)
+animal = "javali"
 
 [node name="Elevador" parent="World" instance=ExtResource("42_elevador")]
-position = Vector2(500, 25)
-bottom_position = Vector2(440, 790)
+position = Vector2(580, 320)
+bottom_position = Vector2(630.0, 3732.6)
 
 [node name="JazidaPrata" parent="World" instance=ExtResource("43_prata")]
-position = Vector2(-380, 880)
+position = Vector2(-390, 3685.1)
 
 [node name="JazidaPrata2" parent="World" instance=ExtResource("43_prata")]
-position = Vector2(60, 1060)
+position = Vector2(61.2, 3747.2)
 
 [node name="JazidaPrata3" parent="World" instance=ExtResource("43_prata")]
-position = Vector2(330, 1180)
+position = Vector2(338.8, 3788.3)
 
 [node name="JazidaCobreFundo" parent="World" instance=ExtResource("36_cobre")]
-position = Vector2(-220, 1180)
+position = Vector2(-225, 3788.3)
 
 [node name="JazidaCarvaoFundo" parent="World" instance=ExtResource("37_carvao")]
-position = Vector2(200, 890)
+position = Vector2(205, 3688.9)
 
 [node name="BarricadaTunel" parent="World" instance=ExtResource("53_barricada")]
-position = Vector2(0, -372)
+position = Vector2(-300, -40)
 gate_id = "tunel"
-display_name = "Portão do túnel"
-
-[node name="BarricadaPoco" parent="World" instance=ExtResource("53_barricada")]
-position = Vector2(500, 66)
-gate_id = "poco"
-display_name = "Portão do poço"
+display_name = "Portão da floresta"
+vertical = true
 
 [node name="ElevadorAbismo" parent="World" instance=ExtResource("49_abismo")]
-position = Vector2(-440, 1240)
-bottom_position = Vector2(-360, 1500)
+position = Vector2(476.2, 3691)
+bottom_position = Vector2(630.0, 4132.6)
 
 [node name="JazidaSolarita" parent="World" instance=ExtResource("50_solarita")]
-position = Vector2(-120, 1620)
+position = Vector2(-142.9, 4099.4)
 
 [node name="JazidaSolarita2" parent="World" instance=ExtResource("50_solarita")]
-position = Vector2(210, 1760)
+position = Vector2(250.8, 4152.8)
 
 [node name="JazidaSolarita3" parent="World" instance=ExtResource("50_solarita")]
-position = Vector2(330, 1540)
+position = Vector2(395.2, 4069.2)
 
 [node name="JazidaPrataAbismo" parent="World" instance=ExtResource("43_prata")]
-position = Vector2(-280, 1840)
+position = Vector2(-335.4, 4183.4)
 
 [node name="ZonaGas" type="Node2D" parent="World"]
-position = Vector2(455, 1240)
+position = Vector2(466.2, 3809.3)
 script = ExtResource("57_zone")
 kind = "gas"
 radius = 85.0
 sign_offset = Vector2(-95, 10)
 
 [node name="JazidaGasCarvao" parent="World" instance=ExtResource("37_carvao")]
-position = Vector2(480, 1255)
+position = Vector2(492.5, 3814.3)
 ore_total = 450.0
 regen_rate = 0.8
 hazard = "gas"
 
 [node name="JazidaGasPrata" parent="World" instance=ExtResource("43_prata")]
-position = Vector2(422, 1226)
+position = Vector2(432.5, 3804.2)
 ore_total = 300.0
 hazard = "gas"
 
 [node name="ZonaRadiacao" type="Node2D" parent="World"]
-position = Vector2(-470, 770)
+position = Vector2(-481.2, 3647.4)
 script = ExtResource("57_zone")
 kind = "radiacao"
 radius = 80.0
 sign_offset = Vector2(95, 20)
 
 [node name="JazidaRadPrata" parent="World" instance=ExtResource("43_prata")]
-position = Vector2(-470, 776)
+position = Vector2(-481.2, 3649.5)
 ore_total = 500.0
 regen_rate = 0.9
 hazard = "radiacao"
 
 [node name="ZonaCalor" type="Node2D" parent="World"]
-position = Vector2(390, 1895)
+position = Vector2(466.7, 4204.3)
 script = ExtResource("57_zone")
 kind = "calor"
 radius = 80.0
 sign_offset = Vector2(-95, -10)
 
 [node name="JazidaCalorSolarita" parent="World" instance=ExtResource("50_solarita")]
-position = Vector2(398, 1900)
+position = Vector2(475.4, 4206.1)
 ore_total = 450.0
 regen_rate = 0.7
 hazard = "calor"
 
 [node name="Horta" parent="World" instance=ExtResource("38_horta")]
-position = Vector2(-100, -650)
+position = Vector2(-560, -420)
 
 [node name="Ipezinho" parent="World" unique_id=1756047734 instance=ExtResource("2_oekm8")]
 position = Vector2(0, -60)
@@ -321,6 +333,12 @@ script = ExtResource("54_research")
 
 [node name="Sun" type="Node" parent="."]
 script = ExtResource("55_sun")
+
+[node name="Schedule" type="Node" parent="."]
+script = ExtResource("71_agenda")
+
+[node name="Calendario" type="Node" parent="."]
+script = ExtResource("72_cal")
 
 [node name="Equipment" type="Node" parent="."]
 script = ExtResource("56_equip")

@@ -1,0 +1,66 @@
+{
+ "lumivoro/caminhada": {
+  "group": "93a4b32f-c0c4-48cf-8432-c78338f687a0",
+  "quadros": 6
+ },
+ "lumivoro/atacar": {
+  "group": "0836ad1b-4116-43fa-b7f4-402318f88c47",
+  "quadros": 6
+ },
+ "lumivoro/dano": {
+  "group": "63c91928-c6b0-4daf-ad3d-42e03978c59b",
+  "quadros": 4
+ },
+ "lumivoro/morrer": {
+  "group": "7ab78c69-4e4b-4e91-a716-27b1ca8db7a9",
+  "quadros": 6
+ },
+ "lumivoro_bruto/caminhada": {
+  "group": "170f84e0-5160-4f50-b7a9-79ca0f0b7772",
+  "quadros": 6
+ },
+ "lumivoro_bruto/atacar": {
+  "group": "a3374094-3384-4874-b051-bef5a98ac667",
+  "quadros": 6
+ },
+ "lumivoro_bruto/dano": {
+  "group": "0844c914-086a-4255-8dac-fa4b055fdd76",
+  "quadros": 4
+ },
+ "lumivoro_bruto/morrer": {
+  "group": "241d8428-258d-4d27-a01a-353db708863b",
+  "quadros": 6
+ },
+ "ferrugento/caminhada": {
+  "group": "7607ec9f-d893-46d8-b850-0dd3e398cc53",
+  "quadros": 6
+ },
+ "ferrugento/atacar": {
+  "group": "46fcfd92-7dfc-4f3a-b7da-cbe97ee54514",
+  "quadros": 6
+ },
+ "ferrugento/dano": {
+  "group": "fe9762cd-6760-4e0c-9735-eb2d4eedff78",
+  "quadros": 4
+ },
+ "ferrugento_carregador/caminhada": {
+  "group": "6d0e3c60-031b-4da6-b4f3-eaf24024f3fc",
+  "quadros": 6
+ },
+ "ferrugento_carregador/atacar": {
+  "group": "310064e0-c6e7-43fc-8b3e-ec150c0695dd",
+  "quadros": 6
+ },
+ "ferrugento/morrer": {
+  "group": "509ff1a3-1f2b-435f-a125-b348bdf76e74",
+  "quadros": 6
+ },
+ "ferrugento_carregador/dano": {
+  "group": "0649eef8-6a9c-4be0-9bf8-ceccd23cafc4",
+  "quadros": 4
+ },
+ "ferrugento_carregador/morrer": {
+  "group": "6f37c970-5cea-4768-a05b-1a8161660a92",
+  "quadros": 6
+ }
+}
