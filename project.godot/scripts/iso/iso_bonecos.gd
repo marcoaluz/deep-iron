@@ -20,7 +20,8 @@ const DIR_NAMES := ["SE", "SO", "NO", "NE"]
 ## outfit() do ipezinho -> função no bonecos.json
 const OUTFIT_FUNCAO := {"mineiro": "minerador", "civil": "civil", "cozinheiro": "cozinheiro", "lenhador": "lenhador",
 	"guarda": "guarda", "pesquisador": "pesquisador", "cacador": "cacador", "medico": "medico", "engenheiro": "engenheiro",
-	"fundidor": "fundidor", "ferreiro": "ferreiro", "padre": "padre"}  # Bloco 92: a arte própria (PixelLab, oficios92.py)
+	"fundidor": "fundidor", "ferreiro": "ferreiro", "padre": "padre",  # Bloco 92: a arte própria (PixelLab, oficios92.py)
+	"carpinteiro": "carpinteiro"}  # Bloco 94 (oficios94.py)
 ## desenho antigo da mão (assets/game/<nome>.png) -> ferramenta nova (Prompt 4)
 const ITEM_OF := {"pickaxe": "picareta", "pickaxe_aco": "picareta_aco", "axe": "machado", "hammer": "martelo",
 	"porrete": "porrete", "lanca": "lanca", "lanca_prata": "lanca_prata", "besta": "besta", "bow": "arco"}

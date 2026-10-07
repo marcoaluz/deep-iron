@@ -90,6 +90,8 @@ func _process(delta: float) -> void:
 			raw_stored = maxf(raw_stored, 0.0)
 			raw_moved = true
 			continue
+		if body.has_method("pega_mochila") and body.get_state() == "storing":
+			body.pega_mochila(self)  # Bloco 94: o minerador sem mochila pega uma, se tiver
 		var got: float = body.deposit(DEPOSIT_RATE * delta)
 		if got > 0.0:
 			var t: String = body.cargo_type

@@ -322,5 +322,33 @@
    "pregar"
   ],
   "_obs": "Bloco 92"
+ },
+ "casaco_carpinteiro": {
+  "char": "5c1aa5ca-a8fb-429d-8070-881d7f4805f2",
+  "base": "carpinteiro",
+  "trabalho": "serrar",
+  "enviado": [
+   "caminhada",
+   "serrar"
+  ],
+  "processado": [
+   "caminhada",
+   "serrar"
+  ],
+  "_obs": "Bloco 92"
+ },
+ "casaco_carpinteira": {
+  "char": "38b61a11-8e3e-41f1-b00c-775fcb9ab466",
+  "base": "carpinteira",
+  "trabalho": "serrar",
+  "enviado": [
+   "caminhada",
+   "serrar"
+  ],
+  "processado": [
+   "caminhada",
+   "serrar"
+  ],
+  "_obs": "Bloco 92"
  }
 }

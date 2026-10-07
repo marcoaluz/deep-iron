@@ -91,9 +91,12 @@ const ORDER_JOBS := [
 		"Opera a Oficina e o Arsenal: ferramentas, armas, equipamentos, pregos e ferragens — só o que foi encomendado. (O engenheiro fica nas obras.)"],
 	["padre", "Padre", "8", "res://assets/game/ui/icones/padre.png", "toggle_priest", Color(0.78, 0.7, 0.95),
 		"Só UM, e só homem (selecione um ipezinho). Fica na igreja: missa de domingo, funeral e aconselha quem anda zangado. Abre com a Vila no estágio do padre."],
+	["carpinteiro", "Carpinteiro", "9", "res://assets/game/ui/icones/carpinteiro.png", "toggle_carpenter", Color(0.86, 0.7, 0.45),
+		"Opera a Carpintaria: tábuas e camas de tábua, só o que foi encomendado. Monta as camas novas nas casas."],  # Bloco 94
 ]
 ## Bloco 92: largura do botão da barra de ordens (era 90; com o Padre são 14 botões na tela de 1280 px).
-const ORDER_BUTTON_W := 82.0
+## Bloco 94: com o Carpinteiro são 15: 78 px.
+const ORDER_BUTTON_W := 78.0
 const TOP_BAR_H := 40.0
 const SIDE_MARGIN := 10.0
 
@@ -518,6 +521,7 @@ func _build_buildings_column() -> void:
 		_add_panel("coletor", preload("res://scripts/core/coletor_panel.gd"), _hub)  # Bloco 45
 		_add_panel("coletor_minerio", preload("res://scripts/core/coletor_minerio_panel.gd"), _hub)  # Bloco 57
 		_add_panel("fornalha", preload("res://scripts/core/fornalha_panel.gd"), _hub)  # Bloco 86
+		_add_panel("carpintaria", preload("res://scripts/core/carpintaria_panel.gd"), _hub)  # Bloco 94
 	var cal := get_tree().get_first_node_in_group("calendario")
 	if cal:
 		_add_panel("calendario", preload("res://scripts/core/calendario_panel.gd"), cal)  # Bloco 88
@@ -600,7 +604,7 @@ func _fill_hints() -> void:
 		"Ordens:  botão direito = mover / minerar a jazida clicada",
 		"Funções:  %s minerador  •  %s caçador  •  %s médico  •  %s engenheiro  •  %s cozinheiro  •  %s lenhador  •  %s guarda  •  %s pesquisador  •  %s sem função  •  %s turno extra" % [
 			k.call("minerador"), k.call("cacador"), k.call("medico"), k.call("engenheiro"), k.call("cozinheiro"), k.call("lenhador"),
-			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")] + "  •  %s fundidor  •  %s ferreiro  •  %s padre (só um)" % [k.call("fundidor"), k.call("ferreiro"), k.call("padre")],
+			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")] + "  •  %s fundidor  •  %s ferreiro  •  %s padre (só um)  •  %s carpinteiro" % [k.call("fundidor"), k.call("ferreiro"), k.call("padre"), k.call("carpinteiro")],
 		"Economia:  %s vender minério  •  %s recrutar" % [k.call("vender"), k.call("recrutar")],
 		"Trabalho:  %s = TRABALHADORES — marcar áreas (madeira, alimentos, mina) e quantos trabalham em cada uma (até 5)" % k.call("painel_trabalho"),
 		"Construir:  %s = menu de construção (casas, cozinha, lazer, pesquisa, defesa, coleta automática…)" % k.call("construir"),

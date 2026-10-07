@@ -366,5 +366,21 @@
   "char": "1a8ae85e-ca0d-402f-a27f-7344f19574d7",
   "estado": "pronto",
   "_obs": "Bloco 92"
+ },
+ "carpinteiro": {
+  "genero": "h",
+  "job": "3035f260-618d-4e9b-afa4-7a1e4f1529b1",
+  "escolhido": 8,
+  "char": "2efee8c4-8a65-4e9a-bf5c-d2f2dfb6b8e5",
+  "estado": "pronto",
+  "_obs": "Bloco 94"
+ },
+ "carpinteira": {
+  "genero": "m",
+  "job": "bb27227b-cebe-4575-aac8-1dd93c322d01",
+  "escolhido": 4,
+  "char": "e7ad4941-8034-4c9e-87d1-02293c6b182a",
+  "estado": "pronto",
+  "_obs": "Bloco 94"
  }
 }

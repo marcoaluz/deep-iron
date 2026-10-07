@@ -184,31 +184,18 @@ func texto_insumos(id: String) -> String:
 	var r := receita(id)
 	var partes: Array[String] = []
 	for item in r.get("insumos", {}):
-		partes.append("%d %s" % [int(r.insumos[item]), Items.nome(item).to_lower()])
+		var n := int(r.insumos[item])
+		partes.append("%d %s" % [n, Items.plural(item) if n > 1 else Items.nome(item).to_lower()])  # Bloco 94: plural
 	return " + ".join(partes)
 
 
+## Bloco 94: a Economia tira/devolve qualquer item do catálogo (processado, minério, madeira, couro).
 func _tira(eco: Node, item: String, n: float) -> void:
-	if Items.onde(item) == "itens":
-		eco.take_item(item, n)
-	elif Items.onde(item) == "stock" or Ores.TYPES.has(item):
-		eco.spend(0.0, n, item)
-	elif Items.onde(item) == "madeira":
-		eco.spend(0.0, 0.0, "", n)
+	eco.tira(item, n)
 
 
 func _devolve(eco: Node, item: String, n: float, perto: Vector2) -> void:
-	if Items.onde(item) == "itens":
-		eco.add_item(item, n, perto)
-		return
-	var arm := eco.get_tree().get_first_node_in_group("armazens")
-	if arm == null:
-		return
-	if Items.onde(item) == "madeira":
-		arm.wood_stored += n
-		arm._update_label()
-	else:
-		arm.add_ore(n, item)
+	eco.devolve(item, n, perto)
 
 
 # ------------------------------------------------------------ save

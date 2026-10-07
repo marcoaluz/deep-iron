@@ -386,5 +386,9 @@ func test_b93_cemiterio() -> void:
 	run_bloco("b93_cemiterio.gd")
 
 
+func test_b94_carpintaria() -> void:
+	run_bloco("b94_carpintaria.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

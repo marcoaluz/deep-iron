@@ -1,0 +1,16 @@
+{
+ "carpintaria": {
+  "job": "9b997ff5-314d-47f6-b87c-2c538a7577f3",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\carpintaria\\pronto.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "carpintaria_obra": {
+  "job": "23b97870-a25f-40ae-8785-0f54e561f9a4",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\carpintaria\\obra_2.png",
+  "ok": true,
+  "candidatos": 1
+ }
+}

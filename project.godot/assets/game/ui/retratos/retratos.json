@@ -179,6 +179,20 @@
    "cansado": "padre/cansado",
    "bravo": "padre/bravo",
    "ferido": "padre/ferido"
+  },
+  "carpinteira": {
+   "neutro": "carpinteira/neutro",
+   "contente": "carpinteira/contente",
+   "cansado": "carpinteira/cansado",
+   "bravo": "carpinteira/bravo",
+   "ferido": "carpinteira/ferido"
+  },
+  "carpinteiro": {
+   "neutro": "carpinteiro/neutro",
+   "contente": "carpinteiro/contente",
+   "cansado": "carpinteiro/cansado",
+   "bravo": "carpinteiro/bravo",
+   "ferido": "carpinteiro/ferido"
   }
  }
 }

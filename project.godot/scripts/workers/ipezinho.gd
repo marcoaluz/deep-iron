@@ -13,6 +13,8 @@ const STATE_LABELS := {
 	"enterrando": "enterrando",
 	"buscando_insumo": "indo ao armazém (insumos)",  # Bloco 86
 	"fundindo": "fundindo",
+	"serrando": "serrando",  # Bloco 94
+	"montando_cama": "montando uma cama",
 	"idle": "ocioso",
 	"eating": "comendo",
 	"mining": "minerando",
@@ -80,6 +82,7 @@ const OUTFIT_FILES := {
 	"fundidor": "res://assets/game/ipezinho_engenheiro_%s%d.png",
 	"ferreiro": "res://assets/game/ipezinho_engenheiro_%s%d.png",
 	"padre": "res://assets/game/ipezinho_civil_%s%d.png",
+	"carpinteiro": "res://assets/game/ipezinho_lenhador_%s%d.png",  # Bloco 94 (na vista iso: a arte do PixelLab)
 }
 ## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
 const OUTFITS_WITH_LAMP := ["mineiro"]
@@ -107,6 +110,7 @@ const STATE_GROUP := {
 	"rearming": "arsenais",  # Bloco 35: guarda buscando/trocando a arma
 	"buscando_insumo": "armazens",  # Bloco 86: fundidor largando barras / pegando insumos
 	"fundindo": "fornalhas",  # Bloco 86: fundidor na fornalha
+	"serrando": "carpintarias",  # Bloco 94: carpinteiro na carpintaria
 }
 ## Função (job) designada pelo jogador — Bloco 25: um campo só, com "ocioso" de padrão.
 ## Função nova (caçador, engenheiro...) = mais uma constante aqui + entrada em JOBS/JOB_LABELS
@@ -123,12 +127,14 @@ const ROLE_ENGINEER := "engenheiro"  # Bloco 31: sem ele nenhuma obra anda
 const ROLE_SMELTER := "fundidor"  # Bloco 86: opera a Fornalha (só por ordem)
 const ROLE_SMITH := "ferreiro"  # Bloco 87: opera a Oficina e o Arsenal (só por ordem)
 const ROLE_PRIEST := "padre"  # Bloco 88: o padre (um só, chega por evento). Bloco 92: é FUNÇÃO — só homem, um por vez
-const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER, ROLE_SMITH, ROLE_PRIEST]
+const ROLE_CARPENTER := "carpinteiro"  # Bloco 94: opera a Carpintaria (só por ordem) e monta as camas novas
+const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER, ROLE_SMITH, ROLE_PRIEST, ROLE_CARPENTER]
 ## Texto do popup ao receber a função.
 const JOB_LABELS := {
 	ROLE_IDLE: "Sem função", ROLE_MINER: "Minerador!", ROLE_COOK: "Cozinheiro!",
 	ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!",
 	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!", ROLE_ENGINEER: "Engenheiro!", ROLE_SMELTER: "Fundidor!", ROLE_SMITH: "Ferreiro!", ROLE_PRIEST: "Padre",
+	ROLE_CARPENTER: "Carpinteiro!",  # Bloco 94
 }
 ## Bloco 26/28: outfit inteiro por função (derivado do `job`: nada novo no save).
 ## REGRA (Bloco 28): toda função nova nasce com outfit próprio no mesmo bloco —
@@ -141,6 +147,7 @@ const JOB_OUTFIT := {
 	ROLE_SMELTER: "fundidor",  # Bloco 86: PROVISÓRIO (pedido do jogador): a roupa do engenheiro + tom de fuligem
 	ROLE_SMITH: "ferreiro",  # Bloco 87: PROVISÓRIO: a roupa do engenheiro + tom de aço
 	ROLE_PRIEST: "padre",  # Bloco 88: PROVISÓRIO: a roupa de civil + tom de batina
+	ROLE_CARPENTER: "carpinteiro",  # Bloco 94: a arte do PixelLab (oficios94.py)
 }
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
@@ -316,6 +323,8 @@ const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
 @export_group("Carga")
 ## Minério por viagem (ritmo: era 20).
 @export var cargo_capacity: float = 16.0
+## Bloco 94: minério a mais por viagem com a MOCHILA de couro (o minerador pega uma no armazém).
+@export var mochila_carga: float = 4.0
 
 @export_group("IA")
 @export var auto_mode: bool = true  # true = IA decide sozinha; false = só controle manual por clique
@@ -773,7 +782,7 @@ func _apply_velocity(v: Vector2) -> void:
 
 
 func _get_effective_speed() -> float:
-	var load_ratio := carrying / cargo_capacity
+	var load_ratio := carrying / capacidade_carga()
 	var penalty := 1.0 - (load_ratio * loaded_speed_penalty)
 	var s := speed * penalty
 	if hunger <= 0.0:
@@ -787,6 +796,7 @@ func _get_effective_speed() -> float:
 	if carrying_patient != null:
 		s *= carry_patient_speed_mult
 	s *= [1.0, irritated_speed_mult, furious_speed_mult][_mood]  # zanga acumula com a lesão
+	s *= _neve_mult()  # Bloco 94: a neve atrasa quem anda sem botas
 	return s * _speed_bonus()
 
 
@@ -1068,6 +1078,11 @@ func _choose_state() -> String:
 	# Bloco 86: fundidor — só trabalha com ORDEM na fornalha (sem ordem: não pega nada).
 	if is_smelter():
 		return _estado_fundidor()
+	# Bloco 94: carpinteiro — primeiro monta a cama que o jogador mandou trocar; senão, as ordens da carpintaria.
+	if is_carpenter():
+		if barras_mao.is_empty() and _casa_pra_cama() != null:
+			return "montando_cama"
+		return _estado_fundidor()
 	# Bloco 25: sem função não trabalha sozinho — espera no Centro da Vila até o
 	# jogador designar. (Comer, dormir, se tratar, taverna e greve vêm antes e seguem iguais.)
 	if has_no_job():
@@ -1077,7 +1092,7 @@ func _choose_state() -> String:
 		return "storing" if carrying > 0.0 else "operating_ore"
 	# Daqui pra baixo: minerador (e pesquisador sem laboratório, como antes).
 	# Prioridade 2: depositar carga cheia (e não desistir no meio do caminho).
-	if carrying >= cargo_capacity - 0.01:
+	if carrying >= capacidade_carga() - 0.01:
 		return "storing"
 	if _ai_state == "storing" and carrying > 0.0:
 		return "storing"
@@ -1107,6 +1122,10 @@ func _decide_next_action() -> void:
 		_release_station()
 		_set_state("strike")
 		_go_protest()
+		return
+
+	if desired == "montando_cama":  # Bloco 94
+		_montar_cama()
 		return
 
 	if desired == "padre":  # Bloco 88: o padre fica na porta da igreja (sem igreja: na praça)
@@ -1258,7 +1277,7 @@ func _station_ok_for(state: String) -> bool:
 	if state in ["mining", "chopping", "foraging", "hunting"] and not _area_permite(_station, STATE_GROUP[state]):
 		return false  # Bloco 77: a área mudou (desligaram a mina, tiraram ele da área)
 	if state == "mining":
-		return _station.has_ore() and carrying < cargo_capacity
+		return _station.has_ore() and carrying < capacidade_carga()
 	if state == "gathering":
 		return _station.has_food() and food_carrying < cook_carry - 0.01
 	if state == "foraging":
@@ -1475,6 +1494,8 @@ func happiness_factors() -> Array:
 	f.append(["tem cama", 8.0] if has_home() else ["sem cama", -15.0])
 	if has_home() and _home.has_method("comfort_bonus") and _home.comfort_bonus() > 0.0:
 		f.append(["casa nível %d" % _home.level, _home.comfort_bonus()])  # Bloco 56
+	if has_home() and _home.has_method("cama_boa") and _home.cama_boa(_home_slot):
+		f.append(["cama de tábua", _home.conforto_cama_boa])  # Bloco 94
 	if has_home():
 		var dec := get_tree().get_first_node_in_group("decoracoes_mgr")
 		var bel: float = dec.beleza_da_casa(_home) if dec else 0.0
@@ -2132,7 +2153,7 @@ func _stop_resting() -> void:
 
 
 # ------------------------------------------------------------ ferramentas (Oficina)
-## Chamado pela Oficina: a picareta de aço troca o visual da ferramenta.
+## Chamado pela Oficina: a picareta temperada (id picareta_aco) troca o visual da ferramenta.
 func on_tool_crafted(id: String) -> void:
 	if id == "picareta_aco":
 		_has_steel_pickaxe = true
@@ -2696,6 +2717,22 @@ func _equip_tick(delta: float) -> void:
 	elif wearing.has("casaco"):
 		eq.give_back("casaco", wearing.casaco)
 		wearing.erase("casaco")
+	# Bloco 94: botas — pega no inverno, devolve quando acaba; gasta só andando na neve
+	if eq.is_winter():
+		if not wearing.has("botas") and not downed:
+			var b: float = eq.take("botas")
+			if b > 0.0:
+				wearing["botas"] = b
+				_popup("Calçou as botas", Color(0.75, 0.88, 1.0))
+		if wearing.has("botas") and _moving and not _inside and eq.is_cold_at(global_position):
+			wearing.botas -= delta
+			if wearing.botas <= 0.0:
+				wearing.erase("botas")
+				eq.give_back("botas", 0.0)
+				_popup("A bota furou!", Color(1.0, 0.6, 0.45))
+	elif wearing.has("botas"):
+		eq.give_back("botas", wearing.botas)
+		wearing.erase("botas")
 	# trajes: veste na entrada da zona, devolve na saída, gasta só lá dentro
 	var zona: String = eq.hazard_at(global_position)
 	# Bloco 70: fora das zonas, a poça de perigo (ácido/lava) também pede o traje dela
@@ -3325,6 +3362,98 @@ func is_priest() -> bool:
 	return job == ROLE_PRIEST
 
 
+## Bloco 94: o carpinteiro / a carpinteira (Carpintaria e as camas novas).
+func is_carpenter() -> bool:
+	return job == ROLE_CARPENTER
+
+
+# ------------------------------------------------------------ carpinteiro, mochila, botas (Bloco 94)
+## Tem a mochila de couro (pegou uma no armazém): carrega mochila_carga a mais de minério.
+var tem_mochila := false
+var _casa_cama: Node = null
+var _monta_ini := -1.0
+
+
+## Minério que cabe numa viagem (com a mochila, mais).
+func capacidade_carga() -> float:
+	return cargo_capacity + (mochila_carga if tem_mochila else 0.0)
+
+
+## Armazém chama quando o minerador entrega: sem mochila e com uma no armazém, ele pega.
+func pega_mochila(arm: Node) -> void:
+	if tem_mochila or not is_miner():
+		return
+	var eco := get_tree().get_first_node_in_group("economy")
+	if eco == null or eco.quantidade("mochila") < 1.0:
+		return
+	if arm.take_item("mochila", 1.0) < 1.0 and eco.take_item("mochila", 1.0) < 1.0:
+		return
+	tem_mochila = true
+	_popup("Pegou uma mochila: +%d de carga" % roundi(mochila_carga), Color(0.55, 1.0, 0.5))
+
+
+## A neve (inverno, superfície) atrasa quem anda sem botas. 1.0 = sem efeito.
+func _neve_mult() -> float:
+	var eq := _equipment()
+	if eq == null or _inside or wearing.has("botas") or not eq.is_cold_at(global_position):
+		return 1.0
+	return eq.neve_speed_mult
+
+
+## A casa mais perto com cama de tábua esperando montagem (reservada pra ele), ou null.
+func _casa_pra_cama() -> Node:
+	if _casa_cama != null and is_instance_valid(_casa_cama) and _casa_cama.camas_a_montar() > 0:
+		return _casa_cama
+	_casa_cama = null
+	var d_min := INF
+	for c in get_tree().get_nodes_in_group("casas"):
+		if not c.has_method("camas_a_montar") or c.camas_a_montar() <= 0:
+			continue
+		var outro = c.get("montador")
+		if outro != null and outro != self and is_instance_valid(outro) and outro.is_carpenter():
+			continue  # outro carpinteiro já está nela
+		var d := global_position.distance_to(c.global_position)
+		if d < d_min:
+			d_min = d
+			_casa_cama = c
+	if _casa_cama:
+		_casa_cama.montador = self
+	return _casa_cama
+
+
+## Vai até a porta da casa e monta a cama de tábua (casa.cama_segundos, serrando/martelando); a cama entra na
+## primeira cama comum da casa (casa.instala_cama_boa).
+func _montar_cama() -> void:
+	var c := _casa_pra_cama()
+	if c == null:
+		_monta_ini = -1.0
+		_decision_timer = 0.0
+		return
+	var dest: Vector2 = c.porta_montagem()
+	if global_position.distance_to(dest) > 14.0:
+		if _ai_state != "montando_cama":
+			_release_station()
+			_set_state("montando_cama")
+		if not _moving or _target.distance_to(dest) > 2.0:
+			_go_to(dest)
+		_monta_ini = -1.0
+		return
+	if _ai_state != "montando_cama":
+		_set_state("montando_cama")
+	_moving = false
+	var agora := Time.get_ticks_msec() / 1000.0
+	if _monta_ini < 0.0:
+		_monta_ini = agora
+	_work_timer = decision_interval * 1.2  # serrando e martelando na porta
+	if (agora - _monta_ini) * Engine.time_scale >= float(c.cama_segundos) / maxf(work_mult(), 0.1):
+		_monta_ini = -1.0
+		if c.instala_cama_boa():
+			_popup("Cama nova montada!", Color(0.55, 1.0, 0.5))
+		c.montador = null
+		_casa_cama = null
+		_decision_timer = 0.0
+
+
 ## Bloco 93: o padre e os mortos (com cemitério). De dia e fora da missa/funeral: vai até o corpo que espera (o
 ## mais perto, reservado pra ele), pega (o corpo sai do chão e vai nos ombros: iso_bonecos "corpo"), leva até a
 ## vaga do cemitério com lugar e enterra (enterro_tempo segundos, rezando: a animação "pregar"); a cruz ou a
@@ -3422,11 +3551,12 @@ func motivo_padre() -> String:
 
 ## A fornalha dele: a que tem as unidades que ele começou; senão a mais perto com ordem.
 func _fornalha_alvo() -> Node:
-	if _fornalha != null and is_instance_valid(_fornalha) and _fornalha.fila.tem_trabalho():
+	var grupo := "carpintarias" if is_carpenter() else "fornalhas"  # Bloco 94: a oficina de ordens da função
+	if _fornalha != null and is_instance_valid(_fornalha) and _fornalha.fila.tem_trabalho() and _fornalha.is_in_group(grupo):
 		return _fornalha
 	_fornalha = null
 	var d_min := INF
-	for f in get_tree().get_nodes_in_group("fornalhas"):
+	for f in get_tree().get_nodes_in_group(grupo):
 		if not f.fila.tem_trabalho():
 			continue
 		var d := global_position.distance_to(f.global_position)
@@ -3444,7 +3574,7 @@ func _estado_fundidor() -> String:
 	if f == null:
 		return "buscando_insumo" if tem_barra else "idle"
 	if f.fila.comecadas() > 0:
-		return "fundindo"
+		return f.estado_trabalho  # "fundindo" / "serrando" (Bloco 94)
 	if tem_barra:
 		return "buscando_insumo"
 	if f.fila.a_comecar() > 0 and f.falta() == "":
@@ -3582,9 +3712,12 @@ func mine(amount: float, ore_type: String = "ferro") -> float:
 	if carrying <= 0.0 and ore_type != cargo_type:
 		cargo_type = ore_type
 		_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
-	var space := cargo_capacity - carrying
+	var space := capacidade_carga() - carrying
 	var res := _research()
 	var boom: float = res.mining_speed_mult() if res else 1.0  # explosivos
+	var ofi := get_tree().get_first_node_in_group("oficina")
+	if ofi and ofi.has_method("mult_mineracao"):
+		boom *= ofi.mult_mineracao()  # Bloco 94: a picareta de aço
 	var taken: float = minf(amount * work_mult() * boom, space)  # zangado minera menos
 	if ore_type in ["solarita", "cristal_verde", "cristal_rubro"] and taken > 0.0:
 		var diary := get_tree().get_first_node_in_group("diary")
@@ -3595,7 +3728,7 @@ func mine(amount: float, ore_type: String = "ferro") -> float:
 		_work_timer = 0.2
 		_roll_injury(taken)
 		_area_registra(taken)  # Bloco 77
-	if carrying >= cargo_capacity - 0.01:
+	if carrying >= capacidade_carga() - 0.01:
 		_decision_timer = 0.0  # cheio: vai depositar sem esperar o próximo tick
 	_update_cargo_label()
 	return taken
@@ -3727,7 +3860,7 @@ func _update_animation(delta: float) -> void:
 	elif carrying > 0.0 and _carry_icon.texture in [FOOD_BASKET, WOOD_LOG, RAW_FOOD]:
 		_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
 	if _carry_icon.visible:
-		var r := carrying / cargo_capacity
+		var r := carrying / capacidade_carga()
 		if wood_carrying > 0.0:
 			r = wood_carrying / lumber_carry
 		elif food_carrying > 0.0:
@@ -3827,6 +3960,7 @@ func get_save_data() -> Dictionary:
 		"animo_social": animo_social,  # Bloco 85
 		"animo_fe": animo_fe,  # Bloco 88
 		"barras_mao": barras_mao.duplicate(),  # Bloco 86
+		"mochila": tem_mochila,  # Bloco 94
 	}
 
 
@@ -3852,7 +3986,8 @@ func load_save_data(d: Dictionary) -> void:
 	for k in bm:
 		if Items.onde(String(k)) == "itens" and float(bm[k]) > 0.0:
 			barras_mao[String(k)] = float(bm[k])
-	carrying = clampf(SaveUtil.num(d, "carrying", 0.0), 0.0, cargo_capacity)
+	tem_mochila = SaveUtil.boolean(d, "mochila", false)  # Bloco 94 (save antigo: sem mochila)
+	carrying = clampf(SaveUtil.num(d, "carrying", 0.0), 0.0, capacidade_carga())
 	var t := SaveUtil.text(d, "cargo_type", "ferro")
 	cargo_type = t if Ores.NAMES.has(t) else "ferro"
 	_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
@@ -3901,7 +4036,7 @@ func load_save_data(d: Dictionary) -> void:
 	wearing = {}
 	var wd := SaveUtil.dict(d, "wearing")
 	for k in wd:
-		if k in ["casaco", "gas", "calor", "radiacao"] and (wd[k] is float or wd[k] is int) and float(wd[k]) > 0.0:
+		if k in ["casaco", "gas", "calor", "radiacao", "botas"] and (wd[k] is float or wd[k] is int) and float(wd[k]) > 0.0:
 			wearing[k] = float(wd[k])
 	leather_carrying = maxf(SaveUtil.num(d, "leather_carrying", 0.0), 0.0)
 	if SaveUtil.boolean(d, "operates_coletor", false):

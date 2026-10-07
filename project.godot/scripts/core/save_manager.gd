@@ -91,6 +91,12 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 94: centro_vila "carpintarias" [{position, fila [...]}] (a mesma fila da fornalha); casa.gd
+##     "camas_boas" (camas de tábua montadas) e "camas_pedidas" (pagas, esperando o carpinteiro); ipezinho.gd
+##     "mochila" (bool) e "wearing" aceita "botas"; equipment.gd "pool"/"broken" ganham "botas"; os novos itens
+##     (tabua, cama_boa, mochila) vão no "itens" do armazém. Save antigo: nada disso (carrega com os padrões);
+##     a função "carpinteiro" é um job novo; o que já foi feito/pago (lança de prata, bobinas, casa e barricada
+##     nível 3, ferrovias, picareta) continua valendo — os custos novos só valem pro que for encomendado depois.
 ##   Bloco 93: calendario.gd "calendario" + {cemiterios [{rect [x, y, w, h], total, feito, pronto, covas [{nome, dia,
 ##     estacao, causa, tipo, variante, vaga}], obra}], corpos [{info {nome, dia, estacao, causa}, pos [x, y]}]} (o
 ##     corpo que o padre carregava volta pro chão); funerais ganham "onde" ("igreja"/"cemiterio"); morale.gd

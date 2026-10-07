@@ -450,17 +450,55 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\padre\\cansado.png"
  },
  "padre_bravo": {
-  "job": "c2ed9b0f-1ee7-423d-b311-46eb5accbfc6",
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\padre\\bravo.png"
+ },
+ "padre_ferido": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\padre\\ferido.png"
+ },
+ "carpinteira_contente": {
+  "job": "ef365149-6f8c-4814-b3c1-3edc75703d78",
   "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\padre\\bravo.png",
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carpinteira\\contente.png",
   "ok": true,
   "candidatos": 1
  },
- "padre_ferido": {
-  "job": "720c47e8-8568-488b-b6c0-1ec2b8370b1a",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\padre\\ferido.png",
+ "carpinteira_cansado": {
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carpinteira\\cansado.png"
+ },
+ "carpinteira_bravo": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carpinteira\\bravo.png"
+ },
+ "carpinteira_ferido": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carpinteira\\ferido.png"
+ },
+ "carpinteiro_contente": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carpinteiro\\contente.png"
+ },
+ "carpinteiro_cansado": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carpinteiro\\cansado.png"
+ },
+ "carpinteiro_bravo": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carpinteiro\\bravo.png"
+ },
+ "carpinteiro_ferido": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carpinteiro\\ferido.png"
  }
 }

@@ -20,15 +20,19 @@ extends Node
 ## (vem da caça, Bloco 42) + madeira + créditos.
 ## As zonas e as ferramentas antigas (lampião, traje de chumbo) são coisas separadas: a
 ## ferramenta continua liberando o minério pra todo mundo; o traje é o gate a mais da zona.
+## Bloco 94: BOTAS de couro (couro + pregos, feitas pelo ferreiro na mesma fila). No inverno, na superfície, a
+## neve atrasa quem anda sem botas (neve_speed_mult); com botas anda no ritmo de sempre. Pega e devolve como o
+## casaco; gasta só andando na neve.
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
-const TYPES := ["casaco", "gas", "calor", "radiacao"]
+const TYPES := ["casaco", "gas", "calor", "radiacao", "botas"]
 const SUITS := ["gas", "calor", "radiacao"]
 const NAMES := {
 	"casaco": "Casaco de inverno",
 	"gas": "Máscara de gás",
 	"calor": "Traje térmico",
 	"radiacao": "Traje antirradiação",
+	"botas": "Botas de couro",  # Bloco 94
 }
 const ZONE_NAMES := {"gas": "Bolsão de gás", "calor": "Fenda de calor", "radiacao": "Veio radioativo"}
 const VESTIARIO_SCENE := preload("res://scenes/props/vestiario.tscn")
@@ -48,6 +52,18 @@ const VESTIARIO_FOOTPRINT := Rect2(-42, -68, 84, 78)
 @export var coat_durability: float = 240.0
 ## Sem casaco, no inverno, no nível da mina/clareira: o trabalho rende isso (0.55 = 45% mais lento).
 @export_range(0.1, 1.0) var cold_work_mult: float = 0.55
+
+@export_group("Botas de couro (Bloco 94)")
+@export var botas_credits: int = 20
+@export var botas_leather: int = 2
+## Pregos da sola (vêm do ferreiro).
+@export var botas_pregos: int = 4
+## Segundos de ferreiro por par.
+@export var botas_time: float = 15.0
+## Segundos andando na neve até furar.
+@export var botas_durability: float = 300.0
+## Sem botas, no inverno, na superfície: anda nessa fração da velocidade (0.85 = 15% mais lento).
+@export_range(0.1, 1.0) var neve_speed_mult: float = 0.85
 
 @export_group("Trajes de perigo (gás, calor, radiação)")
 @export var suit_credits: Array[int] = [80, 90, 120]
@@ -95,6 +111,8 @@ func _ready() -> void:
 func max_durability(id: String) -> float:
 	if id == "casaco":
 		return coat_durability
+	if id == "botas":
+		return botas_durability
 	var i := SUITS.find(id)
 	return suit_durability[i] if i >= 0 else 0.0
 
@@ -216,7 +234,7 @@ func zone_of(pos: Vector2) -> Node:
 
 
 func recipe_unlocked(id: String) -> bool:
-	if id == "casaco" or suit_research == "":
+	if id in ["casaco", "botas"] or suit_research == "":
 		return true
 	var res := get_tree().get_first_node_in_group("research")
 	return res != null and res.has(suit_research)
@@ -254,10 +272,12 @@ func give_back(id: String, dur: float) -> void:
 
 
 # ------------------------------------------------------------ fabricar / consertar (Oficina)
-## x créditos, y minério, z madeira, w couro.
+## x créditos, y minério, z madeira, w couro. (Bloco 94: os pregos das botas em itens_extra)
 func cost(id: String) -> Vector4i:
 	if id == "casaco":
 		return Vector4i(coat_credits, 0, coat_wood, coat_leather)
+	if id == "botas":
+		return Vector4i(botas_credits, 0, 0, botas_leather)
 	var i := SUITS.find(id)
 	return Vector4i(suit_credits[i], suit_ore[i], 0, suit_leather[i])
 
@@ -272,9 +292,18 @@ func repair_cost(id: String) -> Vector4i:
 	return Vector4i(ceili(c.x * repair_cost_mult), ceili(c.y * repair_cost_mult), ceili(c.z * repair_cost_mult), ceili(c.w * repair_cost_mult))
 
 
+## Bloco 94: itens a mais da peça (as botas levam pregos). conserto = a fração do conserto.
+func itens_extra(id: String, conserto := false) -> Dictionary:
+	if id != "botas" or botas_pregos <= 0:
+		return {}
+	return {"prego": ceili(botas_pregos * (repair_cost_mult if conserto else 1.0))}
+
+
 func build_time(id: String) -> float:
 	if id == "casaco":
 		return coat_time
+	if id == "botas":
+		return botas_time
 	return suit_time[SUITS.find(id)]
 
 
@@ -288,6 +317,10 @@ func cost_text(c: Vector4i, id: String) -> String:
 		bits.append("%d madeira" % c.z)
 	if c.w > 0:
 		bits.append("%d couro" % c.w)
+	var eco := get_tree().get_first_node_in_group("economy")
+	var it: String = eco.itens_texto(itens_extra(id, c != cost(id))) if eco else ""
+	if it != "":
+		bits.append(it)
 	return " + ".join(bits)
 
 
@@ -306,14 +339,19 @@ func _missing(c: Vector4i, id: String) -> String:
 	if leather_stored() < c.w:
 		var lt := "%d couro (caçador com arco)" % ceili(c.w - leather_stored())
 		m = (m + ", " + lt) if m != "" else "falta " + lt
+	var it: String = eco.itens_falta(itens_extra(id, c != cost(id)))  # Bloco 94: os pregos das botas
+	if it != "":
+		m = (m + ", " + it.trim_prefix("falta ")) if m != "" else it
 	return m
 
 
 func _pay(c: Vector4i, id: String) -> bool:
 	if _missing(c, id) != "":
 		return false
-	if not get_tree().get_first_node_in_group("economy").spend(c.x, c.y, ore_type(id), c.z):
+	var eco := get_tree().get_first_node_in_group("economy")
+	if not eco.spend(c.x, c.y, ore_type(id), c.z):
 		return false
+	eco.paga_itens(itens_extra(id, c != cost(id)))  # Bloco 94
 	var left := float(c.w)
 	for a in get_tree().get_nodes_in_group("armazens"):
 		var got := minf(left, a.leather_stored)
@@ -368,7 +406,7 @@ func _enqueue(what: String, id: String, seconds: float) -> void:
 	Audio.click()
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
-		hud.show_toast("%s: %s — na fila da Oficina, precisa de engenheiro (tecla 4)." % [
+		hud.show_toast("%s: %s — na fila da Oficina, precisa de ferreiro (tecla 7)." % [
 			"Fazer" if what == "fazer" else "Consertar", NAMES[id]], Color(1.0, 0.8, 0.45))
 
 

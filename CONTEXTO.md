@@ -1,9 +1,33 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-06 (noite). Branch `isometrico`. Os commits dos **Blocos 80 a 93 ainda NÃO foram
-enviados** (16 commits à frente de `origin/isometrico`). Push só com o OK do Marco. Ele disse "pode executar todos os prompts que depois eu valido".
+Atualizado em 2026-10-07. Branch `isometrico`. Os commits dos **Blocos 80 a 94 ainda NÃO foram enviados**. Push só
+com o OK do Marco. Ele disse "pode executar todos os prompts que depois eu valido".
 
-## AGORA (2026-10-06): os ajustes do Marco depois dos Blocos 81–91
+## AGORA (2026-10-07): Bloco 94 — a cadeia de produção fechada
+
+**O pedido:** dar uso ao que se fabrica e só servia para vender.
+
+**O que foi feito:**
+- **Carpintaria** (obra 1-2-3-pronto do PixelLab) e a função **carpinteiro/carpinteira** (tecla 9), com a receita
+  completa do elenco.
+- **Tábuas e camas de tábua**, só por ordem. A cama vai pra casa pela janela da casa; o carpinteiro monta e quem
+  dorme nela ganha +3 de ânimo.
+- **Pregos e ferragens** na casa 3, na barricada 3 e na ferrovia.
+- **Aço** na Picareta de aço nova, na lança de prata e nas bobinas.
+- **Couro** nas botas (a neve atrasa quem anda sem) e na mochila (+4 de carga do minerador).
+
+**Aprovação:** o Marco aprovou a tabela de custos antes, a lentidão na neve ("pode criar") e a picareta:
+- a de antes virou "Picareta temperada" (o id `picareta_aco` ficou);
+- a "Picareta de aço" é nova, no estágio 3.
+
+**Detalhes:**
+- Tabela e relatório: `docs/BLOCO94_CARPINTARIA_CADEIA.md`.
+- PixelLab: 485 gerações. Saldo 7.237.
+- Testes: o b94 passa e mais 25 antigos passaram (lista no relatório). b54, b56 e b82 foram ajustados. A bateria
+  inteira não rodou.
+- O commit `bloco-94` não foi enviado.
+
+## Antes (2026-10-06): os ajustes do Marco depois dos Blocos 81–91
 
 O Marco viu o resumo dos Blocos 81–91 e pediu:
 1. vender a quantidade que quiser no armazém;

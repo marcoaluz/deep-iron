@@ -54,5 +54,61 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_padre.png",
   "ok": true,
   "candidatos": 64
+ },
+ "carpinteiro": {
+  "job": "3035f260-618d-4e9b-afa4-7a1e4f1529b1",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\carpinteiro\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "carpinteira": {
+  "job": "bb27227b-cebe-4575-aac8-1dd93c322d01",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\carpinteira\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "icone_carpinteiro": {
+  "job": "9c311795-9335-4b0a-a5d4-5e8b44a0ddf0",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_carpinteiro.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_it_tabua": {
+  "job": "e88cd2d8-50d5-4045-9b4b-d1832372cf73",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_it_tabua.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_it_cama_boa": {
+  "job": "8c746446-622a-40bd-8b4e-0f1a5d751bcc",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_it_cama_boa.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_it_mochila": {
+  "job": "2a78c3d3-cc2b-43aa-ad40-a84fcae5fc1e",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_it_mochila.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_it_botas": {
+  "job": "f1b78a47-cb8c-4ee7-b33d-b5d32d4cefd8",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_it_botas.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_it_picareta_de_aco": {
+  "job": "c12d8437-b497-4845-a1d6-169607aafc5e",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_it_picareta_de_aco.png",
+  "ok": true,
+  "candidatos": 64
  }
 }

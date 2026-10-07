@@ -181,6 +181,14 @@ const UPGRADE_NAMES := {
 @export var fornalha_build_time: float = 35.0
 ## Estágio da vila em que a fornalha libera (2 = Vilarejo).
 @export_range(1, 5) var fornalha_estagio: int = 2
+@export_group("Carpintaria (Bloco 94)")
+## Construir a carpintaria: créditos, ferro e madeira; segundos de engenheiro (obra em etapas).
+@export var carpintaria_credits: int = 220
+@export var carpintaria_ore: int = 40
+@export var carpintaria_wood: int = 90
+@export var carpintaria_build_time: float = 45.0
+## Estágio da vila em que a carpintaria libera (2 = Vilarejo: os pregos vêm do ferreiro, que vem com a fornalha).
+@export_range(1, 5) var carpintaria_estagio: int = 2
 @export_group("Oficina (Bloco 58)")
 @export var oficina_credits: int = 200
 @export var oficina_ore: int = 40
@@ -199,8 +207,13 @@ const UPGRADE_NAMES := {
 @export var vagonete_build_time: float = 50.0
 @export_group("Ferrovia de carga (Bloco 79)")
 ## Custo da estação de cada andar: base + por andar de profundidade (créditos, ferro, madeira, segundos de obra).
-@export var ferrovia_base := Vector4i(300, 60, 100, 60)
-@export var ferrovia_por_andar := Vector4i(150, 30, 20, 15)
+## Bloco 94: o ferro vira barra a partir do estágio da fornalha (Economy.metal) e a estação pede pregos e
+## ferragens (os dormentes e as talas dos trilhos): o ferro baixou pra compensar.
+@export var ferrovia_base := Vector4i(300, 40, 100, 60)
+@export var ferrovia_por_andar := Vector4i(150, 25, 20, 15)
+## Pregos e ferragens da estação: base + por andar de profundidade (x = pregos, y = ferragens).
+@export var ferrovia_pecas_base := Vector2i(18, 0)
+@export var ferrovia_pecas_por_andar := Vector2i(6, 1)
 @export_group("Coletor de minério (Bloco 57)")
 @export var coletor_min_credits: int = 280
 @export var coletor_min_ore: int = 40
@@ -1062,6 +1075,75 @@ func spawn_fornalha(pos: Vector2) -> Node2D:
 	return f
 
 
+# ------------------------------------------------------------ carpintaria (Bloco 94)
+const CARPINTARIA_SCENE := preload("res://scenes/props/carpintaria.tscn")
+const CARPINTARIA_TEXTURE := preload("res://assets/game/carpintaria.png")
+
+
+func carpintarias() -> Array:
+	return get_tree().get_nodes_in_group("carpintarias")
+
+
+## Custo da PRÓXIMA (x cr, y ferro, z madeira): cresce a cada uma que já existe (Bloco 47).
+func carpintaria_cost() -> Vector3i:
+	var base := Vector3i(carpintaria_credits, carpintaria_ore, carpintaria_wood)
+	var eco := _economy()
+	return eco.scaled_cost(base, carpintarias().size()) if eco else base
+
+
+func carpintaria_cost_text() -> String:
+	var c := carpintaria_cost()
+	return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+
+
+func carpintaria_block_reason() -> String:
+	if level < carpintaria_estagio:
+		return "precisa da vila no estágio %s" % STAGE_NAMES[clampi(carpintaria_estagio, 1, STAGE_NAMES.size()) - 1]
+	var c := Canteiro.pending(get_tree(), "carpintaria")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	var cost := carpintaria_cost()
+	return eco.missing_text(cost.x, cost.y, "ferro", cost.z) if eco else "sem recursos"
+
+
+func build_carpintaria() -> bool:
+	if carpintaria_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_carpintaria, CARPINTARIA_TEXTURE, 2, "a Carpintaria",
+		{"footprint": COLETOR_FOOTPRINT, "start": global_position + Vector2(-150, 70)})
+	return true
+
+
+func _confirm_carpintaria(pos: Vector2) -> bool:
+	if carpintaria_block_reason() != "":
+		Audio.error()
+		return false
+	var cost := carpintaria_cost()
+	if not _economy().spend(cost.x, cost.y, "ferro", cost.z):
+		return false
+	Canteiro.order(get_tree(), "carpintaria", pos, carpintaria_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Carpintaria encomendada — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_carpintaria(pos: Vector2) -> Node2D:
+	var c: Node2D = CARPINTARIA_SCENE.instantiate()
+	var n := carpintarias().size()
+	c.name = "Carpintaria" if n == 0 else "Carpintaria%d" % (n + 1)
+	c.position = pos
+	get_parent().add_child(c)
+	_coletor_mudou()
+	return c
+
+
 # ------------------------------------------------------------ oficina (Bloco 58)
 func oficina() -> Node:
 	return get_tree().get_first_node_in_group("oficina")
@@ -1267,12 +1349,23 @@ func ferrovia_custo(id: String) -> Vector4i:
 	return ferrovia_base + ferrovia_por_andar * p
 
 
+## Bloco 94: os pregos e as ferragens da estação desse andar ({prego, ferragem}).
+func ferrovia_pecas(id: String) -> Dictionary:
+	var n := preload("res://scripts/core/niveis.gd").por_id(id)
+	var p: int = n.profundidade if n else 3
+	var v := ferrovia_pecas_base + ferrovia_pecas_por_andar * p
+	return {"prego": v.x, "ferragem": v.y}
+
+
 func ferrovia_cost_text() -> String:
 	var id := ferrovia_proximo()
 	if id == "":
 		return "todos os andares têm"
 	var c := ferrovia_custo(id)
-	return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+	var eco := _economy()
+	if eco == null:
+		return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+	return eco.custo_metal_texto(c.x, c.y, "ferro", c.z, ferrovia_pecas(id))
 
 
 func ferrovia_block_reason() -> String:
@@ -1294,7 +1387,7 @@ func ferrovia_block_reason() -> String:
 		return "sem lugar pra estação no %s" % id
 	var cost := ferrovia_custo(id)
 	var eco := _economy()
-	return eco.missing_text(cost.x, cost.y, "ferro", cost.z, "ferro") if eco else "sem recursos"
+	return eco.metal_falta(cost.x, cost.y, "ferro", cost.z, ferrovia_pecas(id)) if eco else "sem recursos"  # Bloco 94
 
 
 ## Encomenda a estação do próximo andar (lugar fixo: a ponta leste da faixa, perto do poço).
@@ -1306,7 +1399,7 @@ func build_ferrovia() -> bool:
 	var n := preload("res://scripts/core/niveis.gd").por_id(id)
 	var pos: Vector2 = get_tree().get_first_node_in_group("environment").ponto_ferrovia(n)
 	var cost := ferrovia_custo(id)
-	if not _economy().spend(cost.x, cost.y, "ferro", cost.z):
+	if not _economy().paga_metal(cost.x, cost.y, "ferro", cost.z, ferrovia_pecas(id)):  # Bloco 94: barras + peças
 		return false
 	Canteiro.order(get_tree(), "ferrovia", pos, float(cost.w))
 	var hud := get_tree().get_first_node_in_group("hud")
@@ -1522,6 +1615,14 @@ func finish_build(kind: String, pos: Vector2) -> void:
 		if hi:
 			var cal := get_tree().get_first_node_in_group("calendario")
 			hi.show_toast("Igreja pronta! %s" % ("Missa no domingo às 09:00." if cal and cal.padre() != null else "Quando o padre chegar, tem missa no domingo."), Color(0.55, 1.0, 0.5))
+		return
+	if kind == "carpintaria":  # Bloco 94
+		var ca := spawn_carpintaria(pos)
+		ca.pop_in()
+		Audio.recruit()
+		var hc := get_tree().get_first_node_in_group("hud")
+		if hc:
+			hc.show_toast("Carpintaria pronta! Encomende tábuas e camas (clique nela) e dê a função CARPINTEIRO a alguém.", Color(0.55, 1.0, 0.5))
 		return
 	if kind == "fornalha":  # Bloco 86
 		var fo := spawn_fornalha(pos)
@@ -1773,6 +1874,7 @@ func get_save_data() -> Dictionary:
 		"founded": founded, "starter_houses_left": starter_houses_left,
 		"coletores": coletores().map(func(c): return c.get_save_data()),  # Bloco 81: + etapa da restauração e "fixo"
 		"fornalhas": fornalhas().map(func(f): return f.get_save_data()),  # Bloco 86: lugar + fila de ordens
+		"carpintarias": carpintarias().map(func(f): return f.get_save_data()),  # Bloco 94: lugar + fila de ordens
 		"coletores_minerio": coletores_minerio().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position),
 			"total": c.total_produced, "jazida": SaveUtil.vec2_to_array(c.chosen_pos) if c.chosen_pos != Vector2.INF else []}),  # Bloco 57
 		"vagonetes": vagonetes().map(func(v): return v.get_save_data()),  # Bloco 64
@@ -1808,6 +1910,16 @@ func load_save_data(d: Dictionary) -> void:
 		var fpos := SaveUtil.vec2(fd, "position", Vector2.INF)
 		if fpos != Vector2.INF:
 			spawn_fornalha(fpos).load_save_data(fd)
+	# Bloco 94: carpintarias (save antigo: nenhuma)
+	for old in carpintarias():
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	for cd in SaveUtil.array(d, "carpintarias"):
+		if typeof(cd) != TYPE_DICTIONARY:
+			continue
+		var cpos := SaveUtil.vec2(cd, "position", Vector2.INF)
+		if cpos != Vector2.INF:
+			spawn_carpintaria(cpos).load_save_data(cd)
 	# Bloco 57: coletores de minério (save antigo: nenhum; o operador se religa sozinho)
 	for old in coletores_minerio():
 		old.get_parent().remove_child(old)

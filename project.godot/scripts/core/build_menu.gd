@@ -261,6 +261,12 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return hub.fornalha_cost_text(),
 					"reason": func(): return hub.fornalha_block_reason(),
 					"act": func(): hub.build_fornalha()})
+				out.append({"name": "Carpintaria", "tex": "carpintaria", "frames": 2, "many": true, "scales": true,  # Bloco 94
+					"desc": "Madeira vira tábuas; tábuas e pregos viram camas de tábua (mais ânimo pra quem dorme nelas) — só por ordem, com quantidade. Opera: o CARPINTEIRO.",
+					"count": func(): return _count("carpintarias"),
+					"cost": func(): return hub.carpintaria_cost_text(),
+					"reason": func(): return hub.carpintaria_block_reason(),
+					"act": func(): hub.build_carpintaria()})
 		"Decoração":  # Bloco 90: peças instantâneas (sem engenheiro), várias em sequência
 			var dm := _g("decoracoes_mgr")
 			if dm:

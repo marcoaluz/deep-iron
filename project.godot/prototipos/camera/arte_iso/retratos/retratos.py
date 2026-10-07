@@ -26,7 +26,10 @@ CRIATURAS = ("lumivoro", "ferrugento")
 ## Bloco 92: nota por personagem somada à frase padrão (a frase fala em "helmet/hat" e o modelo INVENTAVA chapéu
 ## em quem não usa: o ferreiro careca ganhou capacete, o padre um solidéu)
 NOTA = {"ferreiro": " He is BALD: no hat, no helmet, no cap on his bald head.",
-        "padre": " He has short grey hair and round glasses: keep the glasses; no hat, no cap, no skullcap on his head."}
+        "padre": " He has short grey hair and round glasses: keep the glasses; no hat, no cap, no skullcap on his head.",
+        # Bloco 94
+        "carpinteiro": " He wears a flat brown cloth cap: keep exactly this flat cap; no helmet, no headlamp. He has a thick dark MOUSTACHE: keep the moustache exactly.",
+        "carpinteira": " She wears a pale grey-brown cloth kerchief over her hair: keep exactly this kerchief and its pale grey-brown color; no helmet, no hat, no scarf around the neck."}
 
 
 def expressoes():

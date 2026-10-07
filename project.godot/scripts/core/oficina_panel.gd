@@ -6,6 +6,10 @@ extends PanelContainer
 const Ores := preload("res://scripts/core/ores.gd")
 
 const Items := preload("res://scripts/core/items.gd")  # Bloco 87
+const Icones := preload("res://scripts/ui/icones.gd")  # Bloco 94: o ícone de cada ferramenta e equipamento
+## Bloco 94: equipamento -> ícone (assets/game/ui/icones/it_*.png)
+const ICONE_EQUIP := {"casaco": "it_casaco", "gas": "it_traje_gas", "calor": "it_traje_calor",
+	"radiacao": "it_traje_radiacao", "botas": "it_botas"}
 var _hud: CanvasLayer
 var _oficina: Node
 var _economy: Node
@@ -93,6 +97,9 @@ func _build() -> void:
 		for id in eq.TYPES:
 			var row := HBoxContainer.new()
 			vbox.add_child(row)
+			var ic := _icone(ICONE_EQUIP.get(id, ""))
+			if ic:
+				row.add_child(ic)
 			var st: Label = _hud._label("", 12, _hud.COLOR_TEXT)
 			st.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			st.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -223,6 +230,9 @@ func _make_tool_row(parent: VBoxContainer, id: String) -> Dictionary:
 
 	var top := HBoxContainer.new()
 	v.add_child(top)
+	var ic := _icone("it_" + id)
+	if ic:
+		top.add_child(ic)
 	var name_label: Label = _hud._label(_oficina.TOOL_NAMES[id], 14, _hud.COLOR_TEXT)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_label)
@@ -240,9 +250,8 @@ func _make_tool_row(parent: VBoxContainer, id: String) -> Dictionary:
 	bottom.add_theme_constant_override("separation", 6)
 	v.add_child(bottom)
 	var cost: Vector3i = _oficina.tool_cost(id)
-	var cost_label: Label = _hud._label("%d cr + %d %s + %d madeira  •  %ds  •  vila nível %d" % [
-		cost.x, cost.y, Ores.display_name(_oficina.tool_ore_type(id)).to_lower(), _oficina.tool_wood(id), cost.z, _oficina.tool_stage(id)],
-		12, _hud.COLOR_TEXT)
+	var cost_label: Label = _hud._label("%s  •  %ds  •  vila nível %d" % [_oficina.tool_cost_text(id), cost.z, _oficina.tool_stage(id)],
+		12, _hud.COLOR_TEXT)  # Bloco 94: tool_cost_text (a picareta de aço leva aço)
 	cost_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom.add_child(cost_label)
 	var button: Button = _hud._button("Fabricar")
@@ -253,6 +262,20 @@ func _make_tool_row(parent: VBoxContainer, id: String) -> Dictionary:
 		refresh())
 	bottom.add_child(button)
 	return {"status": status, "button": button}
+
+
+## Bloco 94: o ícone (28 px) de uma ferramenta/equipamento; null = sem ícone.
+func _icone(nome: String) -> TextureRect:
+	var tex: Texture2D = Icones.tex(nome) if nome != "" else null
+	if tex == null:
+		return null
+	var r := TextureRect.new()
+	r.texture = tex
+	r.custom_minimum_size = Vector2(28, 28)
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	return r
 
 
 ## Bloco 58: Oficina ainda não construída: a janela mostra só o construir.
@@ -364,6 +387,8 @@ func _refresh_equipment() -> void:
 		var extra := ""
 		if id == "casaco":
 			extra = "  •  faz %d por vez; sem casaco no inverno trabalha a %d%%" % [eq.coat_batch, roundi(eq.cold_work_mult * 100.0)]
+		elif id == "botas":  # Bloco 94
+			extra = "  •  sem botas, na neve, anda a %d%%" % roundi(eq.neve_speed_mult * 100.0)
 		else:
 			extra = "  •  pra entrar no %s" % eq.ZONE_NAMES[id].to_lower()
 		row.status.text = "%s: %d no vestiário, %d em uso, %d quebrado%s%s" % [eq.NAMES[id], eq.available(id), eq.in_use(id), eq.broken_count(id),

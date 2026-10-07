@@ -17,9 +17,10 @@ const STAGE_NAMES := {
 
 @export_group("Etapas (na ordem de STAGE_IDS)")
 ## x = créditos, y = minério, z = segundos de obra.
+## Bloco 94: as bobinas baixaram de 150 pra 110 cobre e levam aço da Fundição (stage_itens).
 @export var stage_costs: Array[Vector3i] = [
 	Vector3i(600, 200, 60),
-	Vector3i(900, 150, 80),
+	Vector3i(900, 110, 80),
 	Vector3i(1200, 150, 100),
 	Vector3i(2000, 100, 120),
 ]
@@ -29,6 +30,8 @@ const STAGE_NAMES := {
 @export var bobinas_silver: int = 80
 @export var nucleo_parts: int = 15
 @export var emissor_solarita: int = 100
+## Bloco 94: itens a mais de cada etapa ({item: qtd}), na ordem de STAGE_IDS.
+@export var stage_itens: Array[Dictionary] = [{}, {"aco": 20}, {}, {}]
 
 var panel_id := "sol"
 var built: int = 0  # etapas prontas
@@ -92,10 +95,18 @@ func stage_block_reason(id: String) -> String:
 			parts.append("%d prata" % ceili(bobinas_silver - eco.stored_ore("prata")))
 		if id == "emissor" and eco.stored_ore("solarita") < emissor_solarita:
 			parts.append("%d solarita" % ceili(emissor_solarita - eco.stored_ore("solarita")))
+		var it: String = eco.itens_falta(_itens_da_etapa(i))  # Bloco 94: o aço das bobinas
+		if it != "":
+			parts.append(it.trim_prefix("falta "))
 	var finds := get_tree().get_first_node_in_group("finds")
 	if id == "nucleo" and finds and finds.rare_parts < nucleo_parts:
 		parts.append("%d peças raras" % (nucleo_parts - finds.rare_parts))
 	return "falta " + ", ".join(parts) if not parts.is_empty() else ""
+
+
+## Bloco 94: os itens a mais da etapa i.
+func _itens_da_etapa(i: int) -> Dictionary:
+	return stage_itens[i] if i >= 0 and i < stage_itens.size() else {}
 
 
 func stage_cost_text(id: String) -> String:
@@ -110,6 +121,10 @@ func stage_cost_text(id: String) -> String:
 		bits.append("%d peças raras" % nucleo_parts)
 	if id == "emissor":
 		bits.append("%d solarita" % emissor_solarita)
+	var eco := get_tree().get_first_node_in_group("economy")
+	var it: String = eco.itens_texto(_itens_da_etapa(i)) if eco else ""
+	if it != "":
+		bits.append(it)
 	return " + ".join(bits) + "  •  %ds" % c.z
 
 
@@ -124,6 +139,7 @@ func start_stage(id: String) -> bool:
 		return false
 	if id == "bobinas":
 		eco.spend(0, bobinas_silver, "prata")
+	eco.paga_itens(_itens_da_etapa(i))  # Bloco 94 (conferido no stage_block_reason)
 	if id == "emissor":
 		eco.spend(0, emissor_solarita, "solarita")
 	if id == "nucleo":

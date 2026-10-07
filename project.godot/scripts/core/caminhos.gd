@@ -132,7 +132,7 @@ func _celula_livre(c: Vector2i) -> bool:
 # ------------------------------------------------------------ prédio por cima apaga
 const GRUPOS_PREDIOS := ["casas", "armazens", "comedouros", "village_hub", "escavadeira", "oficina", "enfermarias", "tavernas",
 	"campos", "laboratorios", "escudos", "arsenais", "parques", "vestiarios", "coletores", "coletores_minerio", "canteiros",
-	"fornalhas", "igrejas", "pontos_carga", "ferrovias"]
+	"fornalhas", "igrejas", "pontos_carga", "ferrovias", "carpintarias"]
 
 
 func _pegadas_de_predios() -> Array:

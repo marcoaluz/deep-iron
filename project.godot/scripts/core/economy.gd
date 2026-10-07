@@ -46,6 +46,14 @@ signal worker_recruited(worker: Node2D, cost: int)
 ## laboratório): quantos minérios valem UMA barra. Os campos de custo continuam em minério; a partir do
 ## estágio da fornalha (centro_vila.fornalha_estagio) o jogo pede ceil(minério / isto) barras do tipo.
 @export var minerios_por_barra: float = 2.0
+
+@export_group("Peças nos custos (Bloco 94)")
+## Pregos e ferragens só entram nos custos A PARTIR do estágio da fornalha (é o ferreiro que faz). Antes, cada
+## peça vira o minério (ferro) que ela custaria — o custo fica como era e nada trava no começo.
+## Ferro por prego (1 barra = 2 ferro dá 6 pregos).
+@export var ferro_por_prego: float = 0.34
+## Ferro por ferragem (2 barras + 4 pregos).
+@export var ferro_por_ferragem: float = 6.7
 ## Vende sozinho o que estiver no armazém a cada auto_sell_interval segundos.
 @export var auto_sell: bool = false
 @export var auto_sell_interval: float = 4.0
@@ -189,8 +197,12 @@ func metal_texto(qtd_minerio: float, tipo: String) -> String:
 	return "%d %s" % [int(m[1]), Ores.display_name(tipo).to_lower() if tipo != "" else "minério"]
 
 
-## Custo completo pra mostrar: "150 cr + 20 barras de ferro + 20 madeira".
-func custo_metal_texto(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.0) -> String:
+## Custo completo pra mostrar: "150 cr + 20 barras de ferro + 20 madeira + 12 pregos".
+## Bloco 94: `itens` = peças e materiais a mais ({prego: 12, aco: 6}); antes da fornalha, pregos e ferragens
+## viram ferro (itens_efetivos).
+func custo_metal_texto(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.0, itens: Dictionary = {}) -> String:
+	var ef := itens_efetivos(itens)
+	qtd_minerio += float(ef.minerio)
 	var bits: Array[String] = []
 	if cr > 0.0:
 		bits.append("%d cr" % int(cr))
@@ -199,14 +211,19 @@ func custo_metal_texto(cr: float, qtd_minerio: float, tipo: String, madeira: flo
 		bits.append(mt)
 	if madeira > 0.0:
 		bits.append("%d madeira" % int(madeira))
+	var it := itens_texto(ef.itens)
+	if it != "":
+		bits.append(it)
 	return " + ".join(bits)
 
 
-## "" se dá pra pagar créditos + o metal + madeira; senão "falta ...".
-func metal_falta(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.0) -> String:
+## "" se dá pra pagar créditos + o metal + madeira (+ itens, Bloco 94); senão "falta ...".
+func metal_falta(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.0, itens: Dictionary = {}) -> String:
+	var ef := itens_efetivos(itens)
+	qtd_minerio += float(ef.minerio)
 	var m := metal(qtd_minerio, tipo)
 	if Items.onde(m[0]) != "itens":
-		return missing_text(cr, qtd_minerio, tipo, madeira)
+		return _junta_falta(missing_text(cr, qtd_minerio, tipo, madeira), itens_falta(ef.itens))
 	var parts: Array[String] = []
 	if credits < cr:
 		parts.append("%d cr" % ceili(cr - credits))
@@ -216,17 +233,21 @@ func metal_falta(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0
 	var have_wood := stored_wood()
 	if have_wood < madeira:
 		parts.append("%d madeira" % ceili(madeira - have_wood))
-	return "" if parts.is_empty() else "falta " + ", ".join(parts)
+	return _junta_falta("" if parts.is_empty() else "falta " + ", ".join(parts), itens_falta(ef.itens))
 
 
-## Paga créditos + o metal (barra ou minério, pela regra de cima) + madeira. false = não deu (nada gasto).
-func paga_metal(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.0) -> bool:
+## Paga créditos + o metal (barra ou minério, pela regra de cima) + madeira (+ itens, Bloco 94). false = não deu
+## (nada gasto).
+func paga_metal(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.0, itens: Dictionary = {}) -> bool:
+	if metal_falta(cr, qtd_minerio, tipo, madeira, itens) != "":
+		Audio.error()
+		return false
+	var ef := itens_efetivos(itens)
+	qtd_minerio += float(ef.minerio)
+	paga_itens(ef.itens)
 	var m := metal(qtd_minerio, tipo)
 	if Items.onde(m[0]) != "itens":
 		return spend(cr, qtd_minerio, tipo, madeira)
-	if metal_falta(cr, qtd_minerio, tipo, madeira) != "":
-		Audio.error()
-		return false
 	if cr > 0.0:
 		_add_credits(-cr)
 	var wood_left := madeira
@@ -236,6 +257,114 @@ func paga_metal(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.
 		wood_left -= a.take_wood(wood_left)
 	take_item(m[0], m[1])
 	return true
+
+
+# ------------------------------------------------------------ itens nos custos (Bloco 94)
+## Os itens de um custo como o jogo cobra AGORA: {itens: {id: qtd}, minerio: ferro a mais}. A partir do estágio da
+## fornalha, os itens como estão; antes, pregos e ferragens viram o ferro equivalente (o resto continua).
+func itens_efetivos(itens: Dictionary) -> Dictionary:
+	if itens.is_empty() or pede_barras():
+		return {"itens": itens, "minerio": 0.0}
+	var resto := {}
+	var ferro := 0.0
+	for id in itens:
+		var n := float(itens[id])
+		if id == "prego":
+			ferro += n * ferro_por_prego
+		elif id == "ferragem":
+			ferro += n * ferro_por_ferragem
+		else:
+			resto[id] = n
+	return {"itens": resto, "minerio": ceilf(ferro)}
+
+
+## "12 pregos + 2 ferragens" (vazio = nada).
+func itens_texto(itens: Dictionary) -> String:
+	var bits: Array[String] = []
+	for id in itens:
+		var n := ceili(float(itens[id]))
+		if n > 0:
+			bits.append("%d %s" % [n, Items.plural(id) if n > 1 else Items.nome(id).to_lower()])
+	return " + ".join(bits)
+
+
+## "" se tem todos os itens; senão "falta 4 pregos, 1 ferragem".
+func itens_falta(itens: Dictionary) -> String:
+	var parts: Array[String] = []
+	for id in itens:
+		var precisa := float(itens[id])
+		var tem := quantidade(id)
+		if tem < precisa:
+			var n := ceili(precisa - tem)
+			parts.append("%d %s" % [n, Items.plural(id) if n > 1 else Items.nome(id).to_lower()])
+	return "" if parts.is_empty() else "falta " + ", ".join(parts)
+
+
+## Tira os itens do armazém (tudo ou nada). false = faltou (nada gasto).
+func paga_itens(itens: Dictionary) -> bool:
+	if itens_falta(itens) != "":
+		return false
+	for id in itens:
+		tira(id, float(itens[id]))
+	return true
+
+
+## Devolve itens ao armazém (cancelar uma encomenda paga).
+func devolve_itens(itens: Dictionary, perto: Vector2 = Vector2.INF) -> void:
+	for id in itens:
+		devolve(id, float(itens[id]), perto)
+
+
+## Tira `n` de QUALQUER item do catálogo, de onde ele fica guardado (processado, minério, madeira, couro).
+func tira(id: String, n: float) -> void:
+	match Items.onde(id):
+		"itens":
+			take_item(id, n)
+		"madeira":
+			var left := n
+			for a in get_tree().get_nodes_in_group("armazens"):
+				if left <= 0.0:
+					break
+				left -= a.take_wood(left)
+		"couro":
+			var left := n
+			for a in get_tree().get_nodes_in_group("armazens"):
+				var got := minf(left, float(a.leather_stored))
+				a.leather_stored -= got
+				left -= got
+		_:
+			if Ores.TYPES.has(id):
+				spend(0.0, n, id)
+
+
+## Devolve `n` de qualquer item do catálogo ao armazém (o mais perto de `perto`, nos processados).
+func devolve(id: String, n: float, perto: Vector2 = Vector2.INF) -> void:
+	if n <= 0.0:
+		return
+	if Items.onde(id) == "itens":
+		add_item(id, n, perto)
+		return
+	var arm := get_tree().get_first_node_in_group("armazens")
+	if arm == null:
+		return
+	match Items.onde(id):
+		"madeira":
+			arm.wood_stored += n
+		"couro":
+			arm.leather_stored += n
+		_:
+			if Ores.TYPES.has(id):
+				arm.add_ore(n, id)
+	if arm.has_method("_update_label"):
+		arm._update_label()
+
+
+func _junta_falta(a: String, b: String) -> String:
+	if b == "":
+		return a
+	if a == "":
+		return b
+	return a + ", " + b.trim_prefix("falta ")
 
 
 ## Bloco 82: vende um item processado (as unidades inteiras pedidas; < 0 = todas), de todos os armazéns.

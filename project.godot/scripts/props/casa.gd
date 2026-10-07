@@ -15,6 +15,10 @@ extends "res://scripts/props/station.gd"
 ## Bloco 56: NÍVEIS 2 e 3. Ampliar custa créditos + ferro + madeira, pede estágio da vila (e
 ## pesquisa, no 3) e é obra do engenheiro; a casa continua habitada durante a obra. Cada nível
 ## dá mais camas e CONFORTO (ânimo de quem mora nela). Clique na casa: janela da casa.
+##
+## Bloco 94: o nível 3 pede pregos e ferragens (do ferreiro). CAMAS DE TÁBUA (da Carpintaria): o jogador manda
+## trocar (janela da casa; a cama sai do armazém na hora) e o CARPINTEIRO vem montar; quem dorme numa cama de
+## tábua ganha conforto_cama_boa de ânimo. As camas de tábua são as primeiras da casa (índice < camas_boas).
 
 signal built_changed
 
@@ -38,9 +42,18 @@ const FRAME_LOT := 2
 @export var comfort_by_level: Array[float] = [0.0, 4.0, 8.0]
 ## Custo pra CHEGAR em cada nível [nível 1 (não usado), nível 2, nível 3]: créditos, ferro, madeira, segundos de engenheiro.
 @export var upgrade_credits: Array[int] = [0, 220, 420]
-@export var upgrade_ore: Array[int] = [0, 40, 90]
+## Bloco 94: o nível 3 baixou de 90 pra 70 ferro (o resto vai em pregos e ferragens: upgrade_pregos/upgrade_ferragens).
+@export var upgrade_ore: Array[int] = [0, 40, 70]
 @export var upgrade_wood: Array[int] = [0, 40, 70]
 @export var upgrade_seconds: Array[float] = [0.0, 40.0, 60.0]
+## Bloco 94: pregos e ferragens pra chegar em cada nível [1, 2, 3] (antes da fornalha viram ferro: Economy).
+@export var upgrade_pregos: Array[int] = [0, 0, 24]
+@export var upgrade_ferragens: Array[int] = [0, 0, 2]
+@export_group("Camas de tábua (Bloco 94)")
+## Ânimo de quem dorme numa cama de tábua (soma no conforto da casa).
+@export var conforto_cama_boa: float = 3.0
+## Segundos de carpinteiro pra montar uma cama na casa.
+@export var cama_segundos: float = 12.0
 ## Pré-requisitos de cada nível [nível 1, 2, 3]: estágio mínimo do Centro da Vila e pesquisa ("" = nenhuma).
 @export var level_min_stage: Array[int] = [0, 2, 3]
 @export var level_research: Array[String] = ["", "", "medicina"]
@@ -49,6 +62,11 @@ var panel_id := "casa"  # Bloco 56: clique abre a janela da casa
 var level := 1
 var upgrade_left := 0.0
 var upgrade_total := 0.0
+## Bloco 94: camas de tábua montadas e as que esperam o carpinteiro (já saíram do armazém).
+var camas_boas := 0
+var camas_pedidas := 0
+## O carpinteiro que está vindo montar (não vai pro save: ele escolhe de novo).
+var montador: Node = null
 
 var _inside: Array[Node] = []
 ## Obra (Bloco 31): segundos de engenheiro que faltam / total. build_total 0 = não é obra.
@@ -199,9 +217,29 @@ func _idx(arr: Array, lv: int):
 	return arr[clampi(lv - 1, 0, arr.size() - 1)]
 
 
+## Bloco 94: os pregos e as ferragens do nível de destino.
+func _itens_nivel(lv: int) -> Dictionary:
+	var d := {}
+	if int(_idx(upgrade_pregos, lv)) > 0:
+		d["prego"] = int(_idx(upgrade_pregos, lv))
+	if int(_idx(upgrade_ferragens, lv)) > 0:
+		d["ferragem"] = int(_idx(upgrade_ferragens, lv))
+	return d
+
+
+## [ferro, itens] do nível de destino como a Economia cobra agora (antes da fornalha as peças viram ferro).
+func _custo_nivel(lv: int) -> Array:
+	var eco := get_tree().get_first_node_in_group("economy") if is_inside_tree() else null
+	var ef: Dictionary = eco.itens_efetivos(_itens_nivel(lv)) if eco else {"itens": _itens_nivel(lv), "minerio": 0.0}
+	return [float(_idx(upgrade_ore, lv)) + float(ef.minerio), ef.itens]
+
+
 func upgrade_cost_text() -> String:
 	var lv := level + 1
-	return "%d cr + %d ferro + %d madeira" % [_idx(upgrade_credits, lv), _idx(upgrade_ore, lv), _idx(upgrade_wood, lv)]
+	var c := _custo_nivel(lv)
+	var eco := get_tree().get_first_node_in_group("economy") if is_inside_tree() else null
+	var it: String = eco.itens_texto(c[1]) if eco else ""
+	return "%d cr + %d ferro + %d madeira%s" % [_idx(upgrade_credits, lv), int(c[0]), _idx(upgrade_wood, lv), (" + " + it) if it != "" else ""]
 
 
 ## Por que não dá pra ampliar agora ("" = dá).
@@ -223,8 +261,12 @@ func upgrade_block_reason() -> String:
 		var nome: String = res.TECHS[pq].name if res.TECHS.has(pq) else pq
 		return "precisa da pesquisa %s" % nome
 	var eco := get_tree().get_first_node_in_group("economy")
-	if eco and not eco.can_afford(_idx(upgrade_credits, lv), _idx(upgrade_ore, lv), "ferro", _idx(upgrade_wood, lv)):
-		return "falta " + eco.missing_text(_idx(upgrade_credits, lv), _idx(upgrade_ore, lv), "ferro", _idx(upgrade_wood, lv), "ferro")
+	if eco:
+		var c := _custo_nivel(lv)
+		var m: String = eco._junta_falta(eco.missing_text(_idx(upgrade_credits, lv), c[0], "ferro", _idx(upgrade_wood, lv), "ferro"),
+			eco.itens_falta(c[1]))  # Bloco 94: + pregos e ferragens
+		if m != "":
+			return m
 	return ""
 
 
@@ -234,8 +276,10 @@ func start_upgrade() -> bool:
 		return false
 	var lv := level + 1
 	var eco := get_tree().get_first_node_in_group("economy")
-	if eco == null or not eco.spend(_idx(upgrade_credits, lv), _idx(upgrade_ore, lv), "ferro", _idx(upgrade_wood, lv)):
+	var c := _custo_nivel(lv)
+	if eco == null or not eco.spend(_idx(upgrade_credits, lv), c[0], "ferro", _idx(upgrade_wood, lv)):
 		return false
+	eco.paga_itens(c[1])  # Bloco 94 (já conferido no upgrade_block_reason)
 	upgrade_total = maxf(float(_idx(upgrade_seconds, lv)), 1.0)
 	upgrade_left = upgrade_total
 	_obra.start()
@@ -254,6 +298,58 @@ func _finish_upgrade() -> void:
 	if hud:
 		hud.show_toast("Casa ampliada pro nível %d: %d camas." % [level, slot_count], Color(0.55, 1.0, 0.5))
 	built_changed.emit()
+
+
+# ------------------------------------------------------------ camas de tábua (Bloco 94)
+## Camas que esperam o carpinteiro montar.
+func camas_a_montar() -> int:
+	return camas_pedidas if built else 0
+
+
+## A cama `i` da casa é de tábua?
+func cama_boa(i: int) -> bool:
+	return i >= 0 and i < camas_boas
+
+
+## Onde o carpinteiro monta: a porta da próxima cama a trocar.
+func porta_montagem() -> Vector2:
+	return get_slot_position(clampi(camas_boas, 0, slot_count - 1))
+
+
+## Por que não dá pra mandar trocar mais uma cama ("" = dá).
+func motivo_cama_boa() -> String:
+	if not built:
+		return "a casa ainda está em obra"
+	if camas_boas + camas_pedidas >= slot_count:
+		return "todas as camas já são de tábua"
+	var eco := get_tree().get_first_node_in_group("economy")
+	if eco == null or eco.quantidade("cama_boa") < 1.0:
+		return "sem cama de tábua no armazém (encomende na Carpintaria)"
+	return ""
+
+
+## O jogador mandou trocar uma cama: a cama de tábua sai do armazém agora e o carpinteiro vem montar.
+func pedir_cama_boa() -> bool:
+	if motivo_cama_boa() != "":
+		Audio.error()
+		return false
+	get_tree().get_first_node_in_group("economy").take_item("cama_boa", 1.0)
+	camas_pedidas += 1
+	Audio.click()
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		if w.has_method("is_carpenter") and w.is_carpenter():
+			w.wake_decision()
+	return true
+
+
+## O carpinteiro terminou de montar uma cama.
+func instala_cama_boa() -> bool:
+	if camas_pedidas <= 0:
+		return false
+	camas_pedidas -= 1
+	camas_boas = mini(camas_boas + 1, slot_count)
+	pop_in()
+	return true
 
 
 ## Camas = as do nível (o nível só sobe: ninguém perde a cama).
@@ -339,7 +435,8 @@ func _update_visual() -> void:
 func get_save_data() -> Dictionary:
 	return {"built": built, "build_left": build_left, "build_total": build_total,
 		"obra": _obra.get_save_data(), "starter_house": starter_house,
-		"level": level, "upgrade_left": upgrade_left, "upgrade_total": upgrade_total}
+		"level": level, "upgrade_left": upgrade_left, "upgrade_total": upgrade_total,
+		"camas_boas": camas_boas, "camas_pedidas": camas_pedidas}  # Bloco 94
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -354,4 +451,7 @@ func load_save_data(d: Dictionary) -> void:
 	upgrade_total = maxf(SaveUtil.num(d, "upgrade_total", 0.0), 0.0)
 	upgrade_left = clampf(SaveUtil.num(d, "upgrade_left", upgrade_total), 0.0, upgrade_total)
 	_apply_level_beds()
+	# Bloco 94 (save antigo: nenhuma cama de tábua)
+	camas_boas = clampi(SaveUtil.integer(d, "camas_boas", 0), 0, slot_count)
+	camas_pedidas = clampi(SaveUtil.integer(d, "camas_pedidas", 0), 0, slot_count - camas_boas)
 	_update_visual()

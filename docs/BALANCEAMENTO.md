@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **852 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (78)
 
@@ -279,7 +279,7 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `beleza_teto` | 6.0 |  | Teto do ânimo de "casa enfeitada". |
 | `nav_espera` | 0.6 |  | Segundos sem pôr/tirar peça grande até refazer a navegação (uma vez só pra várias). |
 
-## `scripts/core/defense.gd` (59)
+## `scripts/core/defense.gd` (60)
 
 **Armas (na ordem de WEAPON_IDS)**
 
@@ -288,8 +288,9 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `weapon_damage` | [3.0, 6.0, 7.0, 11.0] |  |  |
 | `weapon_range` | [18.0, 18.0, 110.0, 18.0] |  |  |
 | `weapon_vs_ferrugento` | [1.0, 1.0, 1.0, 1.6] |  | Multiplicador do dano contra Ferrugentos. |
-| `weapon_costs` | [Vector3i.ZERO, Vector3i(150, 40, 20), Vector3i(350, 40, 40), Vector3i(600, 60, 20)] |  | x = créditos, y = minério, z = madeira. |
+| `weapon_costs` | [Vector3i.ZERO, Vector3i(150, 40, 20), Vector3i(350, 40, 40), Vector3i(600, 48, 20)] |  | x = créditos, y = minério, z = madeira. Bloco 94: a lança de prata baixou de 60 pra 48 prata (24 barras): o resto do metal é o aço da ponta. |
 | `weapon_ore` | ["", "ferro", "cobre", "prata"] |  |  |
+| `weapon_itens` | [{}, {}, {}, {"aco": 6}] |  | Bloco 94: itens a mais de cada arma ({item: qtd}); o conserto paga a fração repair_cost_mult (pra cima). |
 | `weapon_time` | [0.0, 40.0, 60.0, 80.0] |  | Segundos de ENGENHEIRO no Arsenal pra forjar cada arma (Bloco 35: só anda com engenheiro). |
 | `weapon_durability` | [30, 45, 55, 70] |  | Bloco 35: golpes que cada arma aguenta antes de quebrar (cada ataque numa invasão gasta 1). |
 | `repair_cost_mult` | 0.4 |  | Consertar custa essa fração do custo de forjar (créditos, minério e madeira)... |
@@ -370,7 +371,7 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `boss_reward_parts` | 2 |  |  |
 | `boss_reward_research` | 80.0 |  |  |
 
-## `scripts/core/economy.gd` (20)
+## `scripts/core/economy.gd` (22)
 
 **Venda**
 
@@ -392,6 +393,13 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `minerios_por_barra` | 2.0 |  | Nos custos MIGRADOS pra barra (armas, ampliação das barricadas, peças da Escavadeira, reatores, coletores, laboratório): quantos minérios valem UMA barra. Os campos de custo continuam em minério; a partir do estágio da fornalha (centro_vila.fornalha_estagio) o jogo pede ceil(minério / isto) barras do tipo. |
+
+**Peças nos custos (Bloco 94)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `ferro_por_prego` | 0.34 |  | Pregos e ferragens só entram nos custos A PARTIR do estágio da fornalha (é o ferreiro que faz). Antes, cada peça vira o minério (ferro) que ela custaria — o custo fica como era e nada trava no começo. Ferro por prego (1 barra = 2 ferro dá 6 pregos). |
+| `ferro_por_ferragem` | 6.7 |  | Ferro por ferragem (2 barras + 4 pregos). |
 | `auto_sell` | false |  | Vende sozinho o que estiver no armazém a cada auto_sell_interval segundos. |
 | `auto_sell_interval` | 4.0 |  |  |
 
@@ -509,7 +517,7 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `gate_half_width` | 40.0 |  |  |
 | `cliff_thickness` | 6.0 |  | Espessura (px do mundo) da "parede" que a navegação vê na beira de um penhasco. |
 
-## `scripts/core/equipment.gd` (22)
+## `scripts/core/equipment.gd` (28)
 
 **Casaco de inverno**
 
@@ -522,6 +530,17 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `coat_time` | 15.0 |  | Segundos de engenheiro por encomenda. |
 | `coat_durability` | 240.0 |  | Segundos de uso no frio até rasgar. |
 | `cold_work_mult` | 0.55 |  | Sem casaco, no inverno, no nível da mina/clareira: o trabalho rende isso (0.55 = 45% mais lento). |
+
+**Botas de couro (Bloco 94)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `botas_credits` | 20 |  |  |
+| `botas_leather` | 2 |  |  |
+| `botas_pregos` | 4 |  | Pregos da sola (vêm do ferreiro). |
+| `botas_time` | 15.0 |  | Segundos de ferreiro por par. |
+| `botas_durability` | 300.0 |  | Segundos andando na neve até furar. |
+| `neve_speed_mult` | 0.85 |  | Sem botas, no inverno, na superfície: anda nessa fração da velocidade (0.85 = 15% mais lento). |
 
 **Trajes de perigo (gás, calor, radiação)**
 
@@ -918,7 +937,7 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `pollen_amount` | 18 |  |  |
 
-## `scripts/workers/ipezinho.gd` (69)
+## `scripts/workers/ipezinho.gd` (70)
 
 **Obras (Bloco 51)**
 
@@ -1067,6 +1086,7 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `cargo_capacity` | 16.0 |  | Minério por viagem (ritmo: era 20). |
+| `mochila_carga` | 4.0 |  | Bloco 94: minério a mais por viagem com a MOCHILA de couro (o minerador pega uma no armazém). |
 
 **IA**
 
@@ -1143,7 +1163,7 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `forge_sound_interval` | 0.9 |  | Intervalo entre as marteladas enquanto forja. |
 
-## `scripts/props/barricada.gd` (7)
+## `scripts/props/barricada.gd` (8)
 
 **(sem grupo)**
 
@@ -1153,8 +1173,9 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `vertical` | false |  | Bloco 74: o portão numa paliçada de norte a sul (a vila fica a leste): a arte vira de lado. |
 | `display_name` | "Portão do túnel" |  |  |
 | `hp_per_level` | [0.0, 120.0, 260.0, 450.0] |  | Vida por nível (índice = nível). |
-| `upgrade_costs` | [Vector3i.ZERO, Vector3i(80, 0, 60), Vector3i(250, 120, 40), Vector3i(500, 200, 30)] |  | Ampliar pro nível i: x = créditos, y = minério, z = madeira. (índice 0 não usado) |
+| `upgrade_costs` | [Vector3i.ZERO, Vector3i(80, 0, 60), Vector3i(250, 120, 40), Vector3i(500, 170, 30)] |  | Ampliar pro nível i: x = créditos, y = minério, z = madeira. (índice 0 não usado) Bloco 94: o nível 3 baixou de 200 pra 170 ferro (85 barras) e pede pregos e ferragens (upgrade_itens). |
 | `upgrade_ore` | ["", "", "ferro", "ferro"] |  | Minério gasto em cada nível ("" = qualquer). |
+| `upgrade_itens` | [{}, {}, {}, {"prego": 12, "ferragem": 4}] |  | Bloco 94: itens a mais de cada nível ({item: qtd}); antes da fornalha, pregos e ferragens viram ferro (Economy). |
 | `repair_wood_per_hp` | 0.25 |  | Madeira gasta por ponto de vida consertado. |
 
 ## `scripts/props/campo_treino.gd` (1)
@@ -1165,7 +1186,15 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `train_rate` | 0.009 |  | Habilidade ganha por segundo treinando (1.0 = 100%). 0.009 -> ~110 s pra ficar pronto. |
 
-## `scripts/props/casa.gd` (12)
+## `scripts/props/carpintaria.gd` (1)
+
+**Receitas da carpintaria (Bloco 94)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `receitas_carpintaria` | [ |  | {id, nome, insumos {item: qtd}, produto {item: qtd}, segundos (de carpinteiro por unidade), estagio}. |
+
+## `scripts/props/casa.gd` (16)
 
 **(sem grupo)**
 
@@ -1183,13 +1212,22 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `beds_by_level` | [4, 6, 8] |  | Camas e conforto (ânimo de quem mora) por nível: [nível 1, nível 2, nível 3]. |
 | `comfort_by_level` | [0.0, 4.0, 8.0] |  |  |
 | `upgrade_credits` | [0, 220, 420] |  | Custo pra CHEGAR em cada nível [nível 1 (não usado), nível 2, nível 3]: créditos, ferro, madeira, segundos de engenheiro. |
-| `upgrade_ore` | [0, 40, 90] |  |  |
+| `upgrade_ore` | [0, 40, 70] |  | Bloco 94: o nível 3 baixou de 90 pra 70 ferro (o resto vai em pregos e ferragens: upgrade_pregos/upgrade_ferragens). |
 | `upgrade_wood` | [0, 40, 70] |  |  |
 | `upgrade_seconds` | [0.0, 40.0, 60.0] |  |  |
+| `upgrade_pregos` | [0, 0, 24] |  | Bloco 94: pregos e ferragens pra chegar em cada nível [1, 2, 3] (antes da fornalha viram ferro: Economy). |
+| `upgrade_ferragens` | [0, 0, 2] |  |  |
+
+**Camas de tábua (Bloco 94)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `conforto_cama_boa` | 3.0 |  | Ânimo de quem dorme numa cama de tábua (soma no conforto da casa). |
+| `cama_segundos` | 12.0 |  | Segundos de carpinteiro pra montar uma cama na casa. |
 | `level_min_stage` | [0, 2, 3] |  | Pré-requisitos de cada nível [nível 1, 2, 3]: estágio mínimo do Centro da Vila e pesquisa ("" = nenhuma). |
 | `level_research` | ["", "", "medicina"] |  |  |
 
-## `scripts/props/centro_vila.gd` (69)
+## `scripts/props/centro_vila.gd` (76)
 
 **Estágios da vila**
 
@@ -1284,6 +1322,16 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `fornalha_build_time` | 35.0 |  |  |
 | `fornalha_estagio` | 2 |  | Estágio da vila em que a fornalha libera (2 = Vilarejo). |
 
+**Carpintaria (Bloco 94)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `carpintaria_credits` | 220 |  | Construir a carpintaria: créditos, ferro e madeira; segundos de engenheiro (obra em etapas). |
+| `carpintaria_ore` | 40 |  |  |
+| `carpintaria_wood` | 90 |  |  |
+| `carpintaria_build_time` | 45.0 |  |  |
+| `carpintaria_estagio` | 2 |  | Estágio da vila em que a carpintaria libera (2 = Vilarejo: os pregos vêm do ferreiro, que vem com a fornalha). |
+
 **Oficina (Bloco 58)**
 
 | valor | padrão | na cena | o quê |
@@ -1316,8 +1364,10 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `ferrovia_base` | Vector4i(300, 60, 100, 60) |  | Custo da estação de cada andar: base + por andar de profundidade (créditos, ferro, madeira, segundos de obra). |
-| `ferrovia_por_andar` | Vector4i(150, 30, 20, 15) |  |  |
+| `ferrovia_base` | Vector4i(300, 40, 100, 60) |  | Custo da estação de cada andar: base + por andar de profundidade (créditos, ferro, madeira, segundos de obra). Bloco 94: o ferro vira barra a partir do estágio da fornalha (Economy.metal) e a estação pede pregos e ferragens (os dormentes e as talas dos trilhos): o ferro baixou pra compensar. |
+| `ferrovia_por_andar` | Vector4i(150, 25, 20, 15) |  |  |
+| `ferrovia_pecas_base` | Vector2i(18, 0) |  | Pregos e ferragens da estação: base + por andar de profundidade (x = pregos, y = ferragens). |
+| `ferrovia_pecas_por_andar` | Vector2i(6, 1) |  |  |
 
 **Coletor de minério (Bloco 57)**
 
@@ -1463,18 +1513,19 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `forge_sound_interval` | 0.8 |  | Intervalo entre as marteladas enquanto fabrica. |
 | `drill_fps` | 8.0 |  | Velocidade da animação da broca quando pronta (quadros por segundo). |
 
-## `scripts/props/escudo.gd` (6)
+## `scripts/props/escudo.gd` (7)
 
 **Etapas (na ordem de STAGE_IDS)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `stage_costs` | [ |  | x = créditos, y = minério, z = segundos de obra. |
+| `stage_costs` | [ |  | x = créditos, y = minério, z = segundos de obra. Bloco 94: as bobinas baixaram de 150 pra 110 cobre e levam aço da Fundição (stage_itens). |
 | `stage_ore` | ["ferro", "cobre", "solarita", "prata"] |  |  |
 | `stage_wood` | [100, 0, 0, 0] |  | Extras: madeira (fundação), prata (bobinas), peças raras (núcleo), solarita (emissor). |
 | `bobinas_silver` | 80 |  |  |
 | `nucleo_parts` | 15 |  |  |
 | `emissor_solarita` | 100 |  |  |
+| `stage_itens` | [{}, {"aco": 20}, {}, {}] |  | Bloco 94: itens a mais de cada etapa ({item: qtd}), na ordem de STAGE_IDS. |
 
 ## `scripts/props/estacao_vagonete.gd` (8)
 
@@ -1593,16 +1644,18 @@ Total: **826 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `textures` | [] | **(recurso)** (mineral_node.tscn) | Variantes de sprite sorteadas no _ready (vazio = mantém a textura da cena). |
 | `min_visual_scale` | 0.6 |  |  |
 
-## `scripts/props/oficina.gd` (9)
+## `scripts/props/oficina.gd` (11)
 
 **Ferramentas (na ordem de TOOL_IDS)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `tool_costs` | [ |  | x = créditos, y = quantidade de minério, z = segundos na forja. |
-| `tool_ore_types` | ["ferro", "cobre", "carvao", "prata", "ferro"] |  | Tipo do minério gasto em cada ferramenta. |
-| `tool_wood_costs` | [30, 25, 40, 30, 35] |  | Madeira gasta em cada ferramenta (cabo/estrutura) — referência: 1 madeira pra 5 minério. |
-| `tool_min_stage` | [1, 2, 4, 4, 1] |  | Estágio mínimo da vila (Centro da Vila) pra fabricar cada ferramenta. |
+| `tool_ore_types` | ["ferro", "cobre", "carvao", "prata", "ferro", "ferro"] |  | Tipo do minério gasto em cada ferramenta. |
+| `tool_wood_costs` | [30, 25, 40, 30, 35, 20] |  | Madeira gasta em cada ferramenta (cabo/estrutura) — referência: 1 madeira pra 5 minério. |
+| `tool_min_stage` | [1, 2, 4, 4, 1, 3] |  | Estágio mínimo da vila (Centro da Vila) pra fabricar cada ferramenta. |
+| `tool_itens` | {"picareta_de_aco": {"aco": 12}} |  | Bloco 94: itens a mais de cada ferramenta (id -> {item: qtd}). A picareta de aço leva aço da Fundição. |
+| `picareta_aco_mult` | 1.25 |  | Bloco 94: minério por golpe com a picareta de aço (1.25 = +25%), pra todos os mineradores. |
 
 **Encomendas do ferreiro (Bloco 87)**
 

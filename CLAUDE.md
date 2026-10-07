@@ -85,7 +85,8 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 | `escudo.gd` | O projeto final. |
 | `coletor_madeira.gd` | Coletor de madeira; o primeiro é a ruína da floresta, restaurada por etapas (Bloco 81). |
 | `cemiterio.gd` + `corpo.gd` | Cemitério do tamanho que o jogador arrasta (Bloco 93): cerca modular, obra por etapas, túmulos com nome e dia; o corpo de quem morreu espera o padre. |
-| `fornalha.gd` | Fornalha: barras por ordem do jogador, operada pelo fundidor (Bloco 86). |
+| `fornalha.gd` | Fornalha: barras por ordem do jogador, operada pelo fundidor (Bloco 86). Base das oficinas de ordens (grupo, operador e estado viram variáveis). |
+| `carpintaria.gd` | Carpintaria (Bloco 94): a oficina de ordens da Fornalha com o carpinteiro — tábuas e camas de tábua; a cama vai pra casa pela janela da casa e o carpinteiro monta. |
 | `igreja.gd` | Igreja: ponto social com bancos, missa e funerais (Bloco 88). |
 | `social_spot.gd` | Ponto social (Bloco 85): componente com vagas em rodas (refeitório, praça, taverna, parque, igreja, banco, mesa). |
 | `decoracao.gd` | Uma peça de decoração do jogador (Bloco 90). |
@@ -97,7 +98,10 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
   médico, vigília dos guardas, padre) → **necessidades** (comer com fome braba, taverna) → **função**.
 - Funções: minerador, caçador, médico, engenheiro (só obras de construção), cozinheiro, lenhador, guarda,
   pesquisador, **fundidor** (Fornalha), **ferreiro** (Oficina e Arsenal; homem ou mulher) e o **padre** (função da
-  barra, tecla 8: só homem, um por vila; busca os mortos e enterra no cemitério; o Padre Bento chega por evento).
+  barra, tecla 8: só homem, um por vila; busca os mortos e enterra no cemitério; o Padre Bento chega por evento) e o
+  **carpinteiro** (Carpintaria e camas de tábua; tecla 9; homem ou mulher).
+- Bloco 94: a mochila (`tem_mochila`, `capacidade_carga()`) e a neve (`_neve_mult()`: sem botas, no inverno, na
+  superfície, anda mais devagar).
 - `_find_best_station(grupo)` escolhe a estação, filtrada por área de trabalho e por andar trancado.
 - `set_job()` troca a função com segurança: ele entrega o que carrega antes.
 - Tem também necessidades, ferimentos, humor e o save do ipezinho.
@@ -112,7 +116,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b93**; o próximo é o **b94**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b94**; o próximo é o **b95**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:
@@ -141,9 +145,11 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
    | Obra paga que espera engenheiro | `Canteiro` + `ObraSite` (`canteiro.gd` `KINDS`, `obra_site.gd`) |
    | Escolher lugar no mapa | `house_placer.gd` |
    | Cartão no menu CONSTRUIR | `build_menu.gd` |
-   | Fila de produção | `production_queue.gd` (Fornalha, encomendas da Oficina); a forja das armas é a fila do `defense.gd` (Arsenal) e a do equipamento é a do `equipment.gd` — todas feitas pelo ferreiro/fundidor |
+   | Fila de produção | `production_queue.gd` (Fornalha, Carpintaria, encomendas da Oficina); a forja das armas é a fila do `defense.gd` (Arsenal) e a do equipamento é a do `equipment.gd` — todas feitas pelo ferreiro/fundidor/carpinteiro |
+   | Oficina de ordens nova (prédio + função) | herdar de `fornalha.gd` e `fornalha_panel.gd`, como a `carpintaria.gd` (Bloco 94) |
    | Item, preço, onde guardar | `items.gd` + `Economy.quantidade/add_item/take_item` |
    | Custo em metal | `Economy.metal_falta` / `paga_metal` / `custo_metal_texto` (barra a partir do estágio da fornalha) |
+   | Custo com itens (pregos, ferragens, aço, couro…) | o parâmetro `itens` desses três, ou `Economy.itens_falta` / `paga_itens` / `itens_texto`; pregos e ferragens antes da fornalha viram ferro (`itens_efetivos`); `Economy.tira`/`devolve` pra qualquer item |
    | Horário e agenda | `DayNight.hora()` / `tempo_da_hora()` / sinal `marco`; `Schedule.periodo(ipezinho)` |
    | Lugar pra conversar | `social_spot.gd` (`SocialSpot.criar(...)` no `_ready` do prédio) |
    | Janela | `hud._add_panel` (padrão `setup` / `refresh` / `button_text` / `has_available_action`) |
@@ -202,7 +208,8 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 
 - Imagens (PNG / JPG / GIF / WAV) ficam no **Git LFS**.
 - `prototipos/.../integra.py` regrava PNGs: usar os subcomandos parciais (`integra.py props <nomes>`,
-  `integra.py caminhadas <pastas>`) quando der.
+  `integra.py caminhadas <pastas>`) quando der. Mesmo o `integra.py predios <nome>` roda o passo `contorno` no fim e
+  pode regravar bonecos de outras funções: conferir o `git status` e devolver o que não é do bloco (Bloco 94).
 - Arte nova vem do PixelLab (`tools/pixellab/`). Fazer um piloto antes de qualquer lote.
 - Push só com o OK do jogador / dono do projeto.
 - **Memória:** com o editor do Godot aberto, a bateria inteira de testes em segundo plano foi derrubada pelo

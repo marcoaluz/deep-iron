@@ -3,7 +3,8 @@ extends "res://scripts/props/station.gd"
 ##
 ## Fabrica ferramentas novas gastando créditos + minério de um tipo específico.
 ## Cada ferramenta libera um tipo de minério que antes não dava pra minerar:
-##   Picareta de aço temperado  -> cobre   (custa ferro)
+##   Picareta temperada         -> cobre   (custa ferro; Bloco 94: era "de aço temperado" — o id ficou)
+##   Picareta de aço (Bloco 94) -> +minério por golpe (custa AÇO da Fundição; estágio 3)
 ##   Lampião de segurança       -> carvão  (custa cobre: o carvão vem depois do cobre)
 ##   Arco e flecha (Bloco 27)   -> caça de animais pro caçador (não libera minério)
 ## Uma ferramenta por vez; o custo é pago ao começar e ela fica pronta depois de
@@ -20,23 +21,25 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
 const ProductionQueue := preload("res://scripts/core/production_queue.gd")  # Bloco 87
 const Items := preload("res://scripts/core/items.gd")
-const TOOL_IDS := ["picareta_aco", "lampiao", "broca", "traje", "arco"]
+const TOOL_IDS := ["picareta_aco", "lampiao", "broca", "traje", "arco", "picareta_de_aco"]
 const TOOL_NAMES := {
-	"picareta_aco": "Picareta de aço temperado",
+	"picareta_aco": "Picareta temperada",  # Bloco 94: o nome mudou (o id ficou: saves e testes)
 	"lampiao": "Lampião de segurança",
 	"broca": "Broca manual",
 	"traje": "Traje de chumbo",
 	"arco": "Arco e flecha",
+	"picareta_de_aco": "Picareta de aço",  # Bloco 94
 }
 const TOOL_DESCRIPTIONS := {
-	"picareta_aco": "Aço duro o bastante pra quebrar os veios de cobre.",
+	"picareta_aco": "Ferro temperado, duro o bastante pra quebrar os veios de cobre.",
 	"lampiao": "Avisa do gás dos veios de carvão. Sem ele, ninguém entra lá.",
 	"broca": "Fura a rocha dura do nível 2, onde a prata se esconde.",
 	"traje": "Protege do calor e da energia da solarita, lá no abismo (nível 3).",
 	"arco": "Deixa o caçador caçar os coelhos das tocas da clareira: rende mais que fruta por viagem.",
+	"picareta_de_aco": "Aço de verdade, da Fundição: cada golpe arranca mais minério (todos os mineradores).",
 }
 ## O que libera cada ferramenta que NÃO é de minério (texto do painel e do aviso de pronta).
-const TOOL_UNLOCK_LABELS := {"arco": "caça de animais"}
+const TOOL_UNLOCK_LABELS := {"arco": "caça de animais", "picareta_de_aco": "mais minério por golpe"}
 ## Tipo de minério que cada ferramenta libera (as que liberam outra coisa ficam de fora).
 const TOOL_UNLOCKS := {
 	"picareta_aco": "cobre",
@@ -56,13 +59,18 @@ const TOOL_UNLOCKS_EXTRA := {"cristal_verde": "broca", "cristal_rubro": "traje"}
 	Vector3i(800, 150, 60),  # broca manual
 	Vector3i(1400, 120, 75),  # traje de chumbo
 	Vector3i(180, 40, 25),  # arco e flecha (Bloco 27)
+	Vector3i(400, 0, 40),  # picareta de aço (Bloco 94: o metal é o aço, em tool_itens)
 ]
 ## Tipo do minério gasto em cada ferramenta.
-@export var tool_ore_types: Array[String] = ["ferro", "cobre", "carvao", "prata", "ferro"]
+@export var tool_ore_types: Array[String] = ["ferro", "cobre", "carvao", "prata", "ferro", "ferro"]
 ## Madeira gasta em cada ferramenta (cabo/estrutura) — referência: 1 madeira pra 5 minério.
-@export var tool_wood_costs: Array[int] = [30, 25, 40, 30, 35]
+@export var tool_wood_costs: Array[int] = [30, 25, 40, 30, 35, 20]
 ## Estágio mínimo da vila (Centro da Vila) pra fabricar cada ferramenta.
-@export var tool_min_stage: Array[int] = [1, 2, 4, 4, 1]
+@export var tool_min_stage: Array[int] = [1, 2, 4, 4, 1, 3]
+## Bloco 94: itens a mais de cada ferramenta (id -> {item: qtd}). A picareta de aço leva aço da Fundição.
+@export var tool_itens: Dictionary = {"picareta_de_aco": {"aco": 12}}
+## Bloco 94: minério por golpe com a picareta de aço (1.25 = +25%), pra todos os mineradores.
+@export var picareta_aco_mult: float = 1.25
 
 @export_group("Encomendas do ferreiro (Bloco 87)")
 ## Pregos e ferragens: só por ORDEM (quantidade do jogador), o FERREIRO faz aqui; os insumos saem do armazém
@@ -71,6 +79,9 @@ const TOOL_UNLOCKS_EXTRA := {"cristal_verde": "broca", "cristal_rubro": "traje"}
 @export var receitas_ferreiro: Array[Dictionary] = [
 	{"id": "prego", "nome": "Pregos (6)", "insumos": {"barra_ferro": 1}, "produto": {"prego": 6}, "segundos": 8.0, "estagio": 0},
 	{"id": "ferragem", "nome": "Ferragem", "insumos": {"barra_ferro": 2, "prego": 4}, "produto": {"ferragem": 1}, "segundos": 12.0, "estagio": 0},
+	# Bloco 94: o couro deixa de servir só pro casaco — a mochila do minerador (+carga); as botas são da fila de
+	# equipamento (vestiário), como o casaco
+	{"id": "mochila", "nome": "Mochila de couro", "insumos": {"couro": 3, "prego": 2}, "produto": {"mochila": 1}, "segundos": 14.0, "estagio": 0},
 ]
 ## Máximo de ordens na fila do ferreiro.
 @export var max_fila_ferreiro: int = 4
@@ -340,6 +351,32 @@ func tool_stage(id: String) -> int:
 	return tool_min_stage[TOOL_IDS.find(id)]
 
 
+## Bloco 94: os itens a mais da ferramenta ({aco: 12}).
+func tool_item_cost(id: String) -> Dictionary:
+	var d = tool_itens.get(id, {})
+	return d if d is Dictionary else {}
+
+
+## "310 cr + 150 ferro + 30 madeira" / "400 cr + 20 madeira + 12 aço".
+func tool_cost_text(id: String) -> String:
+	var c := tool_cost(id)
+	var bits: Array[String] = ["%d cr" % c.x]
+	if c.y > 0:
+		bits.append("%d %s" % [c.y, Ores.display_name(tool_ore_type(id)).to_lower()])
+	if tool_wood(id) > 0:
+		bits.append("%d madeira" % tool_wood(id))
+	var eco := get_tree().get_first_node_in_group("economy") if is_inside_tree() else null
+	var it: String = eco.itens_texto(tool_item_cost(id)) if eco else ""
+	if it != "":
+		bits.append(it)
+	return " + ".join(bits)
+
+
+## Bloco 94: multiplicador do minério por golpe (a picareta de aço).
+func mult_mineracao() -> float:
+	return picareta_aco_mult if has_tool("picareta_de_aco") else 1.0
+
+
 func craft_progress() -> float:
 	if crafting == "":
 		return 0.0
@@ -362,7 +399,8 @@ func tool_block_reason(id: String) -> String:
 	var eco := get_tree().get_first_node_in_group("economy")
 	if eco == null:
 		return "sem recursos"
-	var missing: String = eco.missing_text(cost.x, cost.y, tool_ore_type(id), tool_wood(id))
+	var missing: String = eco._junta_falta(eco.missing_text(cost.x, cost.y, tool_ore_type(id), tool_wood(id)),
+		eco.itens_falta(tool_item_cost(id)))  # Bloco 94: + o aço
 	if missing != "":
 		return missing
 	return ""
@@ -374,8 +412,10 @@ func start_tool(id: String) -> bool:
 		Audio.error()
 		return false
 	var cost := tool_cost(id)
-	if not get_tree().get_first_node_in_group("economy").spend(cost.x, cost.y, tool_ore_type(id), tool_wood(id)):
+	var eco := get_tree().get_first_node_in_group("economy")
+	if not eco.spend(cost.x, cost.y, tool_ore_type(id), tool_wood(id)):
 		return false
+	eco.paga_itens(tool_item_cost(id))  # Bloco 94 (já conferido no tool_block_reason)
 	crafting = id
 	craft_left = float(cost.z)
 	_obra.start()

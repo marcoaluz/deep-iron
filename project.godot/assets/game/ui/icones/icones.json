@@ -80,7 +80,13 @@
   "fundidor",
   "ferreiro",
   "padre",
-  "pq_ritos"
+  "pq_ritos",
+  "it_tabua",
+  "it_botas",
+  "it_picareta_de_aco",
+  "carpinteiro",
+  "it_cama_boa",
+  "it_mochila"
  ],
  "predios": [
   "casa",
@@ -100,6 +106,7 @@
   "escavadeira",
   "fornalha",
   "igreja",
-  "cemiterio"
+  "cemiterio",
+  "carpintaria"
  ]
 }

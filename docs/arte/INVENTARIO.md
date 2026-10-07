@@ -158,6 +158,9 @@ prompts 0–31).
 | **Casinhas de pedra** da vila antiga do lago — Bloco 71 | — | **integrado** | 25 (feito) |
 | **Vila antiga do leste: igreja, torre do relógio, 3 casas enxaimel** (itens de arte do documento de melhorias) | — | **integrado** (decoração ao desbravar) | 75 (feito) |
 | **Passarelas de madeira (2), ponte de corda, peças da rampa em espiral (3)** | — | **integrado** (decoração do S3–S5) | 75 (feito) |
+| **Carpintaria** (obra 1-2-3 + pronto, desenho do mapa antigo, cartão do CONSTRUIR) — Bloco 94 (`predios94.py`) | — | **integrado** | 40 (feito) |
+| **Carpinteiro e carpinteira** (personagem v3, caminhada 8, comer/ferido/deitar/mancar, serrar, casaco, retrato 5 expressões, ícone da barra) — Bloco 94 (`oficios94.py`) | — | **integrado** | ~400 (feito, com refações do serrar e das expressões) |
+| **Ícones de itens**: tábua, cama de tábua, mochila, botas, picareta de aço — Bloco 94 | — | **integrado** | ~45 (feito) |
 
 ## 10. Efeitos e luzes
 

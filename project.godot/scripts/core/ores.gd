@@ -2,7 +2,7 @@ extends RefCounted
 ## Catálogo dos tipos de minério (use com preload: const Ores := preload("res://scripts/core/ores.gd")).
 ##
 ##   ferro  — minério inicial, qualquer picareta minera.
-##   cobre  — precisa da "Picareta de aço temperado" (Oficina).
+##   cobre  — precisa da "Picareta temperada" (Oficina; id picareta_aco).
 ##   carvão — precisa do "Lampião de segurança" (Oficina).
 ##   prata  — só no NÍVEL 2 (descida pela escavadeira pronta) + "Broca manual" (Oficina).
 ##   solarita — só no NÍVEL 3, o abismo (plataforma consertada) + "Traje de chumbo" (Oficina).

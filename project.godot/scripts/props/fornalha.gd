@@ -10,6 +10,8 @@ extends "res://scripts/props/station.gd"
 ## - Faltou insumo: a ordem fica PAUSADA com o aviso do que falta (a janela e a placa mostram).
 ## - Receitas (@export): ferro + carvão = barra de ferro; cobre + carvão = barra de cobre; prata = barra de
 ##   prata; solarita = lingote solar; aço (barra de ferro + carvão) só com a vila no estágio 3 (a Fundição).
+## Bloco 94: a CARPINTARIA (carpintaria.gd) é a mesma oficina de ordens com outro ofício: grupo, operador, estado
+## de trabalho e nomes são variáveis daqui (o resto é igual).
 
 const ProductionQueue := preload("res://scripts/core/production_queue.gd")
 const Items := preload("res://scripts/core/items.gd")
@@ -31,6 +33,13 @@ const Items := preload("res://scripts/core/items.gd")
 
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 var panel_id := "fornalha"
+## Bloco 94: o que muda de uma oficina de ordens pra outra (a Carpintaria troca no _init).
+var grupo := "fornalhas"
+var nome_predio := "Fornalha"
+var nome_operador := "fundidor"
+## Estado do ipezinho trabalhando aqui (ipezinho.gd STATE_GROUP) e o verbo da placa.
+var estado_trabalho := "fundindo"
+var verbo := "fundindo"
 ## A fila de ordens (ProductionQueue).
 var fila
 var _acesa := false
@@ -44,7 +53,7 @@ var _sound_timer := 0.0
 
 func _ready() -> void:
 	super()
-	add_to_group("fornalhas")
+	add_to_group(grupo)
 	add_to_group("clickable")
 	_luz.add_to_group("cullable_lights")
 	fila = ProductionQueue.new(receitas, max_fila)
@@ -63,9 +72,18 @@ func _accepts(body: Node2D) -> bool:
 	return body.has_method("is_smelter")
 
 
-## Só o fundidor, e só com ordem pra trabalhar.
+## Este ipezinho é quem opera aqui? (o fundidor; na Carpintaria, o carpinteiro)
+func e_operador(worker: Node) -> bool:
+	return worker.has_method("is_smelter") and worker.is_smelter()
+
+
+## Só o operador, e só com ordem pra trabalhar.
 func accepts_worker(worker: Node) -> bool:
-	return worker.has_method("is_smelter") and worker.is_smelter() and fila.tem_trabalho()
+	return e_operador(worker) and fila.tem_trabalho()
+
+
+func _tem_operador() -> bool:
+	return get_tree().get_nodes_in_group("ipezinhos").any(e_operador)
 
 
 func is_usable() -> bool:
@@ -75,7 +93,7 @@ func is_usable() -> bool:
 func _process(delta: float) -> void:
 	_acesa = false
 	for body in _working_bodies():
-		if body.get_state() != "fundindo" or fila.comecadas() <= 0:
+		if body.get_state() != estado_trabalho or fila.comecadas() <= 0:
 			continue
 		_acesa = true
 		var pronto: Dictionary = fila.trabalhar(delta * body.work_mult())
@@ -83,11 +101,9 @@ func _process(delta: float) -> void:
 			body.fundir_tick()
 		if not pronto.is_empty():
 			body.pega_barras(pronto)
-			Audio.forge(global_position)
+			_som_pronto()
 			refresh()
-	_visual.frame = 1 if _acesa else 0
-	_smoke.emitting = _acesa
-	_luz.enabled = _acesa
+	_mostra_trabalho(_acesa)
 	if _acesa:
 		_sound_timer -= delta
 		if _sound_timer <= 0.0:
@@ -95,6 +111,18 @@ func _process(delta: float) -> void:
 			Audio.chop(global_position)  # (o fole/martelo: som provisório)
 	if Engine.get_process_frames() % 20 == 0:
 		refresh()
+
+
+## Saiu uma leva pronta.
+func _som_pronto() -> void:
+	Audio.forge(global_position)
+
+
+## Liga/desliga o visual de "trabalhando" (a fornalha acende, solta fumaça e luz).
+func _mostra_trabalho(ativo: bool) -> void:
+	_visual.frame = 1 if ativo else 0
+	_smoke.emitting = ativo
+	_luz.enabled = ativo
 
 
 func _economy() -> Node:
@@ -120,9 +148,9 @@ func encomendar(id: String, qtd: int) -> bool:
 	Audio.click()
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
-		var tem := get_tree().get_nodes_in_group("ipezinhos").any(func(w): return w.has_method("is_smelter") and w.is_smelter())
 		hud.show_toast("Encomendado: %d x %s.%s" % [qtd, fila.receita(id).get("nome", id),
-			" O fundidor busca os insumos no armazém." if tem else " Precisa de um FUNDIDOR (barra de funções)."], Color(1.0, 0.8, 0.45))
+			(" O %s busca os insumos no armazém." % nome_operador) if _tem_operador() else (" Precisa de um %s (barra de funções)." % nome_operador.to_upper())],
+			Color(1.0, 0.8, 0.45))
 	_acorda_fundidores()
 	refresh()
 	return true
@@ -140,7 +168,7 @@ func cancelar(i: int) -> bool:
 
 func _acorda_fundidores() -> void:
 	for w in get_tree().get_nodes_in_group("ipezinhos"):
-		if w.has_method("is_smelter") and w.is_smelter():
+		if e_operador(w):
 			w.wake_decision()
 
 
@@ -157,18 +185,17 @@ func status_text() -> String:
 	var f := falta()
 	if f != "":
 		return "PAUSADA: %s" % f
-	var tem := get_tree().get_nodes_in_group("ipezinhos").any(func(w): return w.has_method("is_smelter") and w.is_smelter())
-	if not tem:
-		return "esperando um fundidor (barra de funções)"
+	if not _tem_operador():
+		return "esperando um %s (barra de funções)" % nome_operador
 	if _acesa:
-		return "fundindo: %s (%d%%)" % [fila.texto_ordem(0), roundi(fila.progresso_unidade() * 100.0)]
-	return "%s — o fundidor está buscando os insumos" % fila.texto_ordem(0)
+		return "%s: %s (%d%%)" % [verbo, fila.texto_ordem(0), roundi(fila.progresso_unidade() * 100.0)]
+	return "%s — o %s está buscando os insumos" % [fila.texto_ordem(0), nome_operador]
 
 
 func refresh() -> void:
 	if not is_inside_tree():
 		return
-	_label.text = "Fornalha\n%s" % status_text()
+	_label.text = "%s\n%s" % [nome_predio, status_text()]
 	_label.modulate = Color(1.0, 0.6, 0.45) if falta() != "" else (Color(1.0, 0.85, 0.5) if _acesa else Color(0.9, 0.86, 0.8))
 
 

@@ -103,8 +103,8 @@ func _process(delta: float) -> bool:
 		var p = hud._panels["armazem"]
 		p.refresh()
 		check(Items.ITENS.keys().all(func(i): return p._rows.has(i)), "uma célula por item do catálogo")
-		check(p._secoes.has("minerio") and p._secoes.has("metal") and p._secoes.has("pecas") and not p._secoes.has("equipamento"),
-			"seções por categoria (equipamento só quando houver item)")
+		check(p._secoes.has("minerio") and p._secoes.has("metal") and p._secoes.has("pecas") and p._secoes.has("equipamento"),
+			"seções por categoria (Bloco 94: equipamento agora tem itens — cama de tábua, mochila)")
 		var cf: Dictionary = p._rows["barra_ferro"]
 		var cz: Dictionary = p._rows["aco"]
 		check(cf.label.text == "10" and cf.cell.modulate.a == 1.0 and not cf.button.disabled, "barra de ferro: 10, nítida, botão Vender ativo")

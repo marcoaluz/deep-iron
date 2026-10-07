@@ -27,6 +27,7 @@ const KIND_OF_SCENE := {
 	"escavadeira": "escavadeira", "centro_vila": "centro", "barricada": "portao",
 	"elevador": "elevador", "elevador_abismo": "elevador_abismo",
 	"fornalha": "fornalha", "igreja": "igreja",  # Bloco 92: a Fundição do Prompt 12 e a igreja do PixelLab
+	"carpintaria": "carpintaria",  # Bloco 94 (predios94.py)
 }
 ## canteiro (canteiro.gd KINDS) -> prédio que vai nascer
 const KIND_OF_CANTEIRO := {
@@ -35,6 +36,7 @@ const KIND_OF_CANTEIRO := {
 	"coletor_minerio": "coletor_minerio", "oficina": "oficina",  # Bloco 58
 	"enfermaria": "enfermaria",
 	"fornalha": "fornalha", "igreja": "igreja",  # Bloco 92
+	"carpintaria": "carpintaria",  # Bloco 94
 }
 const ESCAVADEIRA_PECAS := ["motor", "hidraulica", "cabine", "broca"]
 ## Folga entre a pegada e o ponto de trabalho/slot (px da lógica): o boneco fica fora da parede.

@@ -180,7 +180,7 @@ func refresh() -> void:
 			row.up.text = "Máximo"
 		elif up_reason == "":
 			var c: Vector3i = g.upgrade_costs[g.level + 1]
-			row.up.text = "Construir %s (%s)" % [g.LEVEL_NAMES[g.level + 1].split(" ")[0].to_lower(), _cost_text(c, g.upgrade_ore[g.level + 1])]
+			row.up.text = "Construir %s (%s)" % [g.LEVEL_NAMES[g.level + 1].split(" ")[0].to_lower(), _cost_text(c, g.upgrade_ore[g.level + 1], g.upgrade_item_cost())]
 		else:
 			row.up.text = "Ampliar: " + up_reason
 		row.up.disabled = up_reason != ""
@@ -250,18 +250,18 @@ func refresh() -> void:
 		if reason != "" and not reason.begins_with("falta"):
 			st += "  (" + reason + ")"
 		row.status.text = st
-		row.button.text = ("Forjar  (%s)" % _cost_text(_def.weapon_costs[i], _def.weapon_ore[i])) if not reason.begins_with("falta") else reason.substr(0, 1).to_upper() + reason.substr(1)
+		row.button.text = ("Forjar  (%s)" % _cost_text(_def.weapon_costs[i], _def.weapon_ore[i], _def.weapon_item_cost(id))) if not reason.begins_with("falta") else reason.substr(0, 1).to_upper() + reason.substr(1)
 		row.button.disabled = reason != ""
-		row.fix.text = "Consertar  (%s)" % _cost_text(_def.repair_cost(id), _def.weapon_ore[i]) if fix_reason == "" or fix_reason.begins_with("fila") \
+		row.fix.text = "Consertar  (%s)" % _cost_text(_def.repair_cost(id), _def.weapon_ore[i], _def.weapon_item_cost(id, true)) if fix_reason == "" or fix_reason.begins_with("fila") \
 			else ("Consertar: " + fix_reason)
 		row.fix.disabled = fix_reason != ""
 
 
 ## Bloco 87: o metal sai em barra a partir do estágio da fornalha (Economy.custo_metal_texto).
-func _cost_text(c: Vector3i, ore: String) -> String:
+func _cost_text(c: Vector3i, ore: String, itens: Dictionary = {}) -> String:
 	var eco := get_tree().get_first_node_in_group("economy")
 	if eco:
-		return eco.custo_metal_texto(c.x, c.y, ore, c.z)
+		return eco.custo_metal_texto(c.x, c.y, ore, c.z, itens)  # Bloco 94: + itens (o aço, os pregos)
 	var bits: Array[String] = []
 	if c.x > 0:
 		bits.append("%d cr" % c.x)

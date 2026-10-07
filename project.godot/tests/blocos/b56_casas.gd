@@ -83,6 +83,9 @@ func _dar_recursos() -> void:
 	arm.stock["ferro"] = 500.0
 	arm.wood_stored = 500.0
 	arm._recount()
+	# Bloco 94: o nível 3 pede pregos e ferragens (do ferreiro)
+	eco.add_item("prego", 50.0)
+	eco.add_item("ferragem", 5.0)
 
 
 func _bloqueios() -> void:

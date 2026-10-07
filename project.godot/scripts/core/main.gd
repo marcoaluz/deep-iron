@@ -199,6 +199,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				toggle_smith()
 			"padre":
 				toggle_priest()
+			"carpinteiro":
+				toggle_carpenter()
 			"pesquisador":
 				toggle_research()
 			"painel_lab":
@@ -558,6 +560,11 @@ func toggle_smelter() -> void:
 ## 7 / botão do HUD: ferreiro (ou tira, se todos já forem) — Bloco 87.
 func toggle_smith() -> void:
 	toggle_job(Worker.ROLE_SMITH, "Ferreiro", Color(0.62, 0.74, 1.0))
+
+
+## 9 / botão do HUD: carpinteiro (homem ou mulher; ou tira, se todos já forem) — Bloco 94.
+func toggle_carpenter() -> void:
+	toggle_job(Worker.ROLE_CARPENTER, "Carpinteiro", Color(0.86, 0.7, 0.45))
 
 
 ## 8 / botão do HUD: padre — Bloco 92. Só UM ipezinho homem (o selecionado); a vila tem um padre só. Se o

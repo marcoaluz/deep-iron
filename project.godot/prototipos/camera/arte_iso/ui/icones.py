@@ -115,7 +115,8 @@ MENU = {"casa": "casa/pronto_0", "comedouro": "comedouro/pronto", "enfermaria": 
         "parque": "parque/pronto", "laboratorio": "laboratorio/pronto", "arsenal": "arsenal/pronto", "campo_treino": "campo_treino/pronto",
         "vestiario": "vestiario/pronto", "oficina": "oficina/pronto", "coletor_madeira": "coletor_madeira/pronto",
         "centro_vila": "centro_3/pronto", "escudo": "escudo/etapa_4", "armazem": "armazem/pronto", "escavadeira": "escavadeira/pronto",
-        "fornalha": "fornalha/pronto", "igreja": "igreja/pronto"}  # Bloco 92 (o cemitério, Bloco 93: o desenho de referência)
+        "fornalha": "fornalha/pronto", "igreja": "igreja/pronto",  # Bloco 92 (o cemitério, Bloco 93: o desenho de referência)
+        "carpintaria": "carpintaria/pronto"}  # Bloco 94
 for nome, st in MENU.items():
     pr, e = st.split("/")
     info = pj.get(pr, {}).get("estados", {}).get(e)

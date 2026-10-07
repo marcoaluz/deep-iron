@@ -19,9 +19,12 @@ const LEVEL_NAMES := ["sem muro", "Paliçada de madeira", "Muro de pedra", "Port
 ## Vida por nível (índice = nível).
 @export var hp_per_level: Array[float] = [0.0, 120.0, 260.0, 450.0]
 ## Ampliar pro nível i: x = créditos, y = minério, z = madeira. (índice 0 não usado)
-@export var upgrade_costs: Array[Vector3i] = [Vector3i.ZERO, Vector3i(80, 0, 60), Vector3i(250, 120, 40), Vector3i(500, 200, 30)]
+## Bloco 94: o nível 3 baixou de 200 pra 170 ferro (85 barras) e pede pregos e ferragens (upgrade_itens).
+@export var upgrade_costs: Array[Vector3i] = [Vector3i.ZERO, Vector3i(80, 0, 60), Vector3i(250, 120, 40), Vector3i(500, 170, 30)]
 ## Minério gasto em cada nível ("" = qualquer).
 @export var upgrade_ore: Array[String] = ["", "", "ferro", "ferro"]
+## Bloco 94: itens a mais de cada nível ({item: qtd}); antes da fornalha, pregos e ferragens viram ferro (Economy).
+@export var upgrade_itens: Array[Dictionary] = [{}, {}, {}, {"prego": 12, "ferragem": 4}]
 ## Madeira gasta por ponto de vida consertado.
 @export var repair_wood_per_hp: float = 0.25
 
@@ -82,12 +85,18 @@ func damage(amount: float) -> void:
 	_update_visual()
 
 
+## Bloco 94: os itens a mais do próximo nível.
+func upgrade_item_cost() -> Dictionary:
+	var i := level + 1
+	return upgrade_itens[i] if i < upgrade_itens.size() else {}
+
+
 func upgrade_block_reason() -> String:
 	if level >= hp_per_level.size() - 1:
 		return "nível máximo"
 	var c := upgrade_costs[level + 1]
 	var eco := get_tree().get_first_node_in_group("economy")
-	return eco.metal_falta(c.x, c.y, upgrade_ore[level + 1], c.z) if eco else "sem recursos"  # Bloco 87: barra
+	return eco.metal_falta(c.x, c.y, upgrade_ore[level + 1], c.z, upgrade_item_cost()) if eco else "sem recursos"  # Bloco 87: barra; 94: peças
 
 
 func upgrade() -> bool:
@@ -95,7 +104,7 @@ func upgrade() -> bool:
 		Audio.error()
 		return false
 	var c := upgrade_costs[level + 1]
-	if not get_tree().get_first_node_in_group("economy").paga_metal(c.x, c.y, upgrade_ore[level + 1], c.z):
+	if not get_tree().get_first_node_in_group("economy").paga_metal(c.x, c.y, upgrade_ore[level + 1], c.z, upgrade_item_cost()):
 		return false
 	level += 1
 	hp = max_hp()  # muro novo, inteiro

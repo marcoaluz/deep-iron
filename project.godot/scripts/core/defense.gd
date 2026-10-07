@@ -76,8 +76,11 @@ const WEAPON_DESCRIPTIONS := {
 ## Multiplicador do dano contra Ferrugentos.
 @export var weapon_vs_ferrugento: Array[float] = [1.0, 1.0, 1.0, 1.6]
 ## x = créditos, y = minério, z = madeira.
-@export var weapon_costs: Array[Vector3i] = [Vector3i.ZERO, Vector3i(150, 40, 20), Vector3i(350, 40, 40), Vector3i(600, 60, 20)]
+## Bloco 94: a lança de prata baixou de 60 pra 48 prata (24 barras): o resto do metal é o aço da ponta.
+@export var weapon_costs: Array[Vector3i] = [Vector3i.ZERO, Vector3i(150, 40, 20), Vector3i(350, 40, 40), Vector3i(600, 48, 20)]
 @export var weapon_ore: Array[String] = ["", "ferro", "cobre", "prata"]
+## Bloco 94: itens a mais de cada arma ({item: qtd}); o conserto paga a fração repair_cost_mult (pra cima).
+@export var weapon_itens: Array[Dictionary] = [{}, {}, {}, {"aco": 6}]
 ## Segundos de ENGENHEIRO no Arsenal pra forjar cada arma (Bloco 35: só anda com engenheiro).
 @export var weapon_time: Array[float] = [0.0, 40.0, 60.0, 80.0]
 ## Bloco 35: golpes que cada arma aguenta antes de quebrar (cada ataque numa invasão gasta 1).
@@ -537,6 +540,17 @@ func repair_cost(id: String) -> Vector3i:
 	return Vector3i(ceili(c.x * repair_cost_mult), ceili(c.y * repair_cost_mult), ceili(c.z * repair_cost_mult))
 
 
+## Bloco 94: os itens a mais da arma (o aço da lança de prata); conserto = a fração do conserto.
+func weapon_item_cost(id: String, conserto := false) -> Dictionary:
+	var i := WEAPON_IDS.find(id)
+	if i < 0 or i >= weapon_itens.size():
+		return {}
+	var d := {}
+	for k in weapon_itens[i]:
+		d[k] = ceili(float(weapon_itens[i][k]) * (repair_cost_mult if conserto else 1.0))
+	return d
+
+
 ## "" se pode encomendar a forja; senão o motivo.
 func weapon_block_reason(id: String) -> String:
 	if id == "porrete":
@@ -551,7 +565,7 @@ func weapon_block_reason(id: String) -> String:
 		return "precisa forjar antes: %s" % WEAPON_NAMES[prev]
 	var c := weapon_costs[i]
 	var eco := get_tree().get_first_node_in_group("economy")
-	return eco.metal_falta(c.x, c.y, weapon_ore[i], c.z) if eco else "sem recursos"  # Bloco 87: barra
+	return eco.metal_falta(c.x, c.y, weapon_ore[i], c.z, weapon_item_cost(id)) if eco else "sem recursos"  # Bloco 87: barra; 94: + aço
 
 
 func repair_block_reason(id: String) -> String:
@@ -563,7 +577,7 @@ func repair_block_reason(id: String) -> String:
 		return "fila da forja cheia"
 	var c := repair_cost(id)
 	var eco := get_tree().get_first_node_in_group("economy")
-	return eco.metal_falta(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z) if eco else "sem recursos"
+	return eco.metal_falta(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z, weapon_item_cost(id, true)) if eco else "sem recursos"
 
 
 ## Paga e põe na fila da forja (só anda com engenheiro no Arsenal).
@@ -573,7 +587,7 @@ func start_forge(id: String) -> bool:
 		return false
 	var i := WEAPON_IDS.find(id)
 	var c := weapon_costs[i]
-	if not get_tree().get_first_node_in_group("economy").paga_metal(c.x, c.y, weapon_ore[i], c.z):
+	if not get_tree().get_first_node_in_group("economy").paga_metal(c.x, c.y, weapon_ore[i], c.z, weapon_item_cost(id)):
 		return false
 	_enqueue("forjar", id, weapon_time[i])
 	return true
@@ -585,7 +599,7 @@ func start_repair(id: String) -> bool:
 		Audio.error()
 		return false
 	var c := repair_cost(id)
-	if not get_tree().get_first_node_in_group("economy").paga_metal(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z):
+	if not get_tree().get_first_node_in_group("economy").paga_metal(c.x, c.y, weapon_ore[WEAPON_IDS.find(id)], c.z, weapon_item_cost(id, true)):
 		return false
 	_take_from(broken, id)
 	_enqueue("consertar", id, weapon_time[WEAPON_IDS.find(id)] * repair_time_mult)
