@@ -4,6 +4,7 @@ extends PanelContainer
 ## um ipezinho leva a carga até lá (minerador sabe mexer: risco baixo; outro: risco maior).
 ## Interface das janelas do HUD: setup(hud, alvo, economia), refresh(), focus(no), button_text(),
 ## has_available_action().
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: Node
 var _res: Node
@@ -28,7 +29,7 @@ func setup(hud: Node, _target: Node, _economy: Node) -> void:
 	add_child(v)
 	var head := HBoxContainer.new()
 	v.add_child(head)
-	_titulo = _hud._label("GALERIA LACRADA", 20, _hud.COLOR_TITLE)
+	_titulo = _hud._label("GALERIA LACRADA", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	_titulo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(_titulo)
 	var x: Button = _hud._button("X")
@@ -36,11 +37,11 @@ func setup(hud: Node, _target: Node, _economy: Node) -> void:
 		Audio.click()
 		visible = false)
 	head.add_child(x)
-	_info = _hud._label("", 13, _hud.COLOR_TEXT)
+	_info = _hud._label("", Tipo.CORPO, _hud.COLOR_TEXT)
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_info.custom_minimum_size.x = 360
 	v.add_child(_info)
-	_motivo = _hud._label("", 12, _hud.COLOR_HUNGER_BAD)
+	_motivo = _hud._label("", Tipo.DETALHE, _hud.COLOR_HUNGER_BAD)
 	_motivo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_motivo.custom_minimum_size.x = 360
 	v.add_child(_motivo)

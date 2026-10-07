@@ -5,6 +5,7 @@ extends CanvasLayer
 
 const Icones := preload("res://scripts/ui/icones.gd")
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const START_MENU := "res://scenes/ui/start_menu.tscn"
 const COLOR_TITLE := Color(1.0, 0.42, 0.32)
 const COLOR_TEXT := Color(0.92, 0.88, 0.8)
@@ -16,6 +17,7 @@ var _box: VBoxContainer
 
 
 func _ready() -> void:
+	UiSkin.tema_na_camada(self)  # Bloco 95: o tema (escala e fonte) chega nos Controls da camada
 	layer = 30
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("game_over")
@@ -55,14 +57,14 @@ func setup(stats: Dictionary) -> void:
 		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		img.custom_minimum_size = ilu.get_size() * 2.0
 		_box.add_child(img)
-	_label("EXPULSO DA VILA", 30, COLOR_TITLE)
+	_label("EXPULSO DA VILA", Tipo.TELA, COLOR_TITLE)
 	var text := _label(
 		"A greve passou do limite. Numa assembleia na praça, os ipezinhos votaram, "
-		+ "tiraram você do comando da vila e te puseram pra fora da mina.", 14, COLOR_TEXT)
+		+ "tiraram você do comando da vila e te puseram pra fora da mina.", Tipo.TITULO, COLOR_TEXT)
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label("Dia %d  •  %d ipezinhos  •  %s  •  %d de minério extraído" % [
 		int(stats.get("day", 1)), int(stats.get("workers", 0)), str(stats.get("stage", "")),
-		int(stats.get("ore", 0.0))], 12, COLOR_DIM)
+		int(stats.get("ore", 0.0))], Tipo.DETALHE, COLOR_DIM)
 	_box.add_child(HSeparator.new())
 	if SaveManager.has_save():
 		_button("Carregar último save", func(): SaveManager.load_game())
@@ -90,7 +92,7 @@ func _button(text: String, action: Callable) -> void:
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(0, 38)
-	b.add_theme_font_size_override("font_size", 15)
+	b.add_theme_font_size_override("font_size", Tipo.TITULO)
 	b.pressed.connect(func():
 		Audio.click()
 		action.call())

@@ -8,6 +8,7 @@ extends PanelContainer
 
 const Items := preload("res://scripts/core/items.gd")
 const Icones := preload("res://scripts/ui/icones.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 ## Quantidade inicial de uma ordem e o máximo.
 const QTD_PADRAO := 5
 
@@ -54,7 +55,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	_title = _hud._label(titulo, 20, _hud.COLOR_TITLE)
+	_title = _hud._label(titulo, Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_title)
 	var close: Button = _hud._button("X")
@@ -62,18 +63,18 @@ func _build() -> void:
 		Audio.click()
 		visible = false)
 	header.add_child(close)
-	var intro: Label = _hud._label(intro_texto, 12, _hud.COLOR_DIM)
+	var intro: Label = _hud._label(intro_texto, Tipo.DETALHE, _hud.COLOR_DIM)
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(intro)
-	_status = _hud._label("", 13, _hud.COLOR_TEXT)
+	_status = _hud._label("", Tipo.CORPO, _hud.COLOR_TEXT)
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_status)
-	vbox.add_child(_hud._label("RECEITAS", 14, _hud.COLOR_TITLE))
+	vbox.add_child(_hud._label("RECEITAS", Tipo.TITULO, _hud.COLOR_TITLE))
 	_receitas_box = VBoxContainer.new()
 	_receitas_box.add_theme_constant_override("separation", 4)
 	vbox.add_child(_receitas_box)
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("FILA DE ORDENS", 14, _hud.COLOR_TITLE))
+	vbox.add_child(_hud._label("FILA DE ORDENS", Tipo.TITULO, _hud.COLOR_TITLE))
 	_fila_box = VBoxContainer.new()
 	_fila_box.add_theme_constant_override("separation", 3)
 	vbox.add_child(_fila_box)
@@ -137,20 +138,20 @@ func _monta_receitas(f: Node) -> void:
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icon.texture = Icones.tex(Items.icone(r.produto.keys()[0])) if not r.produto.is_empty() else null
 		row.add_child(icon)
-		var info: Label = _hud._label("", 12, _hud.COLOR_TEXT)
+		var info: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.add_child(info)
 		for passo in [-5, -1]:
 			row.add_child(_botao_qtd(id, passo))
-		var qtd: Label = _hud._label("", 14, _hud.COLOR_TITLE)
+		var qtd: Label = _hud._label("", Tipo.TITULO, _hud.COLOR_TITLE)
 		qtd.custom_minimum_size.x = 30
 		qtd.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		row.add_child(qtd)
 		for passo in [1, 5]:
 			row.add_child(_botao_qtd(id, passo))
 		var b: Button = _hud._button("Encomendar")
-		b.add_theme_font_size_override("font_size", 12)
+		b.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		b.pressed.connect(func():
 			var ff := _current()
 			if ff:
@@ -162,7 +163,7 @@ func _monta_receitas(f: Node) -> void:
 
 func _botao_qtd(id: String, passo: int) -> Button:
 	var b: Button = _hud._button(("%+d" % passo) if absi(passo) > 1 else ("+" if passo > 0 else "−"))
-	b.add_theme_font_size_override("font_size", 12)
+	b.add_theme_font_size_override("font_size", Tipo.DETALHE)
 	b.custom_minimum_size = Vector2(28, 0)
 	b.pressed.connect(func():
 		Audio.click()
@@ -209,7 +210,7 @@ func refresh() -> void:
 		_fila_box.remove_child(c)
 		c.queue_free()
 	if f.fila.fila.is_empty():
-		_fila_box.add_child(_hud._label("Nenhuma ordem: a %s fica parada (o %s não pega nada)." % [nome_predio.to_lower(), nome_operador.to_lower()], 12, _hud.COLOR_DIM))
+		_fila_box.add_child(_hud._label("Nenhuma ordem: a %s fica parada (o %s não pega nada)." % [nome_predio.to_lower(), nome_operador.to_lower()], Tipo.DETALHE, _hud.COLOR_DIM))
 	for i in f.fila.fila.size():
 		var row := HBoxContainer.new()
 		_fila_box.add_child(row)
@@ -217,11 +218,11 @@ func refresh() -> void:
 		if i == 0:
 			var falta: String = f.falta()
 			txt += ("  —  PAUSADA: %s" % falta) if falta != "" else ("  —  %d%% da unidade" % roundi(f.fila.progresso_unidade() * 100.0) if f.fila.comecadas() > 0 else "  —  esperando o %s" % nome_operador.to_lower())
-		var l: Label = _hud._label(txt, 12, Color(1.0, 0.6, 0.45) if i == 0 and f.falta() != "" else _hud.COLOR_TEXT)
+		var l: Label = _hud._label(txt, Tipo.DETALHE, Color(1.0, 0.6, 0.45) if i == 0 and f.falta() != "" else _hud.COLOR_TEXT)
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(l)
 		var cancel: Button = _hud._button("Cancelar")
-		cancel.add_theme_font_size_override("font_size", 11)
+		cancel.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		cancel.pressed.connect(func():
 			var ff := _current()
 			if ff:

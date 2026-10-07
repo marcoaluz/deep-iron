@@ -390,5 +390,13 @@ func test_b94_carpintaria() -> void:
 	run_bloco("b94_carpintaria.gd")
 
 
+func test_b95_layout_v2() -> void:
+	run_bloco("b95_layout_v2.gd")
+
+
+func test_b95b_construir_abas() -> void:
+	run_bloco("b95b_construir_abas.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

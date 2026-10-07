@@ -212,8 +212,9 @@ func _process(delta: float) -> void:
 
 	# --- pan por teclado / borda
 	var dir := Vector2.ZERO
-	if Input.is_action_pressed("ui_right") or Input.is_physical_key_pressed(KEY_D): dir.x += 1.0
-	if Input.is_action_pressed("ui_left") or Input.is_physical_key_pressed(KEY_A):  dir.x -= 1.0
+	var setas := not _menu_usa_setas()  # Bloco 95: com o CONSTRUIR aberto, ←/→ trocam de aba (WASD continua)
+	if (setas and Input.is_action_pressed("ui_right")) or Input.is_physical_key_pressed(KEY_D): dir.x += 1.0
+	if (setas and Input.is_action_pressed("ui_left")) or Input.is_physical_key_pressed(KEY_A):  dir.x -= 1.0
 	if Input.is_action_pressed("ui_down") or Input.is_physical_key_pressed(KEY_S):  dir.y += 1.0
 	if Input.is_action_pressed("ui_up") or Input.is_physical_key_pressed(KEY_W):    dir.y -= 1.0
 	if edge_scroll and not _panning:
@@ -277,3 +278,9 @@ func on_view_changed(ground: Vector2) -> void:
 
 func focus_on(world_pos: Vector2) -> void:
 	_target_pos = _clamp_to_bounds(_to_cam(world_pos))
+
+
+## Bloco 95: a janela CONSTRUIR está aberta (ela usa ←/→ pra trocar de aba)?
+func _menu_usa_setas() -> bool:
+	var m := get_tree().get_first_node_in_group("menu_construir") as CanvasItem
+	return m != null and m.is_visible_in_tree()

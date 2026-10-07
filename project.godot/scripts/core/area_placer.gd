@@ -11,6 +11,7 @@ extends Node2D
 ## tamanho que o jogador quiser): valida(rect) -> motivo ("" = vale), confirma(rect) -> bool, custo(rect) -> texto.
 ## A roda do mouse e WASD continuam movendo a câmera enquanto isso. O desenho (verde/vermelho) é da vista
 ## iso (iso_view.gd: _draw_areas); na vista de cima (testes) é este nó que desenha.
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 signal finished(area)
 
@@ -39,7 +40,7 @@ func _ready() -> void:
 	_hint.offset_top = 58.0  # abaixo da barra de cima
 	_hint.offset_left = 220.0
 	_hint.offset_right = 220.0
-	_hint.add_theme_font_size_override("font_size", 15)
+	_hint.add_theme_font_size_override("font_size", Tipo.TITULO)
 	_hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
 	_hint.add_theme_constant_override("outline_size", 5)
 	_hint_layer.add_child(_hint)

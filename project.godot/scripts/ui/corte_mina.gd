@@ -24,6 +24,7 @@ const DIR := "res://assets/game/ui/corte/"
 ## Bloco 68: os andares vêm de res://data/niveis (Niveis.todos()): os jogáveis com a faixa deles e os
 ## "em breve" como uma faixa escura trancada embaixo.
 const Niveis := preload("res://scripts/core/niveis.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 var ANDARES: Array = []
 var EM_BREVE: Array = []
 ## Bloco 72: o mapa do mundo em 4/3 (no 1080p vira 2x exato: pixel nítido) e a lista ao lado.
@@ -49,6 +50,7 @@ const ORE_COR := {"ferro": Color(0.72, 0.62, 0.55), "cobre": Color(0.9, 0.5, 0.2
 
 func setup(main: Node) -> void:
 	_main = main
+	UiSkin.tema_na_camada(self)  # Bloco 95: o tema (escala e fonte) chega nos Controls da camada
 	ANDARES.clear()
 	EM_BREVE.clear()
 	for n in Niveis.todos():
@@ -84,13 +86,13 @@ func setup(main: Node) -> void:
 	var tit := Label.new()
 	tit.text = "CORTE DA MINA"
 	tit.add_theme_color_override("font_color", UiSkin.COLOR_TITLE)
-	tit.add_theme_font_size_override("font_size", 20)
-	UiSkin.usa_fonte(tit, "titulo", 32)
+	tit.add_theme_font_size_override("font_size", Tipo.TITULO_JANELA)
+	UiSkin.usa_fonte(tit, "titulo", Tipo.PIXEL_2)
 	tit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(tit)
 	var dica := Label.new()
 	dica.text = "clique num ipezinho pra ir até ele  •  clique no andar pra levar a câmera  •  F2/Esc fecha"
-	dica.add_theme_font_size_override("font_size", 11)
+	dica.add_theme_font_size_override("font_size", Tipo.DETALHE)
 	dica.add_theme_color_override("font_color", UiSkin.COLOR_DIM)
 	head.add_child(dica)
 	var x := Button.new()
@@ -218,7 +220,7 @@ func _desenha() -> void:
 	_rects.clear()
 	_pontos.clear()
 	_linhas.clear()
-	var f := ThemeDB.fallback_font
+	var f := Tipo.fonte_desenho()
 	var mapa := _tex(MAPA)
 	if mapa:
 		_area.draw_texture_rect(mapa, Rect2(MAPA_POS, _mapa_tam()), false)
@@ -227,7 +229,7 @@ func _desenha() -> void:
 		_rects.append(r)
 		if Niveis.motivo(get_tree(), ANDARES[i].nivel) != "":  # Bloco 68: nível fechado escurece (o motivo vai na lista)
 			_area.draw_rect(r, Color(0, 0, 0, 0.6))
-			_area.draw_string(f, r.get_center() + Vector2(-28, 4), "FECHADO", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1.0, 0.7, 0.5))
+			_area.draw_string(f, r.get_center() + Vector2(-28, 4), "FECHADO", HORIZONTAL_ALIGNMENT_LEFT, -1, Tipo.DETALHE, Color(1.0, 0.7, 0.5))
 	_perigos()
 	_jazidas()
 	_maquinas()
@@ -239,10 +241,10 @@ func _desenha() -> void:
 
 ## Bloco 72: a lista dos andares ao lado do mapa: nome, quem está, jazidas e se está aberto.
 func _lista() -> void:
-	var f := ThemeDB.fallback_font
+	var f := Tipo.fonte_desenho()
 	var x := _painel_x()
 	var y := 6.0
-	_area.draw_string(f, Vector2(x, y + 12), "ANDARES (clique pra ir até lá)", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, UiSkin.COLOR_TITLE)
+	_area.draw_string(f, Vector2(x, y + 12), "ANDARES (clique pra ir até lá)", HORIZONTAL_ALIGNMENT_LEFT, -1, Tipo.CORPO, UiSkin.COLOR_TITLE)
 	y += 24.0
 	var d := get_tree().get_first_node_in_group("escavadeira")
 	for i in ANDARES.size():
@@ -251,10 +253,10 @@ func _lista() -> void:
 		_linhas.append([linha, i])
 		_area.draw_rect(linha, Color(0, 0, 0, 0.35))
 		_area.draw_rect(Rect2(linha.position, Vector2(6, linha.size.y)), (a.cor as Color).lightened(0.35))
-		_area.draw_string(f, Vector2(x + 10, y + 14), a.nome, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W - 130, 13, UiSkin.COLOR_TITLE)
+		_area.draw_string(f, Vector2(x + 10, y + 14), a.nome, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W - 130, Tipo.CORPO, UiSkin.COLOR_TITLE)
 		var n := _gente_no_andar(i)
 		_area.draw_string(f, Vector2(x + PAINEL_W - 16, y + 14), "%d ipezinho%s" % [n, "s" if n != 1 else ""],
-			HORIZONTAL_ALIGNMENT_RIGHT, 110, 12, UiSkin.COLOR_TEXT)
+			HORIZONTAL_ALIGNMENT_RIGHT, 110, Tipo.DETALHE, UiSkin.COLOR_TEXT)
 		var motivo: String = Niveis.motivo(get_tree(), a.nivel)
 		var abertas := 0
 		var trancadas := 0
@@ -265,14 +267,14 @@ func _lista() -> void:
 				else:
 					trancadas += 1
 		var info := "aberto" if motivo == "" else "FECHADO — " + motivo
-		_area.draw_string(f, Vector2(x + 10, y + 32), info, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W - 24, 11,
+		_area.draw_string(f, Vector2(x + 10, y + 32), info, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W - 24, Tipo.DETALHE,
 			Color(0.7, 0.95, 0.6) if motivo == "" else Color(1.0, 0.7, 0.5))
 		var extra := "jazidas: %d abertas%s" % [abertas, (", %d trancadas" % trancadas) if trancadas > 0 else ""]
 		if String(a.perigo) != "":
 			extra += "  •  perigo: %s" % String(a.perigo)
 		if d != null and d.get("REACTOR_IDS") != null and _onde((d as Node2D).global_position)[0] == i:
 			extra += "  •  escavadeira: %s" % d.REACTOR_NAMES.get(d.reactor, "-")
-		_area.draw_string(f, Vector2(x + 10, y + 50), extra, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W - 24, 10, UiSkin.COLOR_DIM)
+		_area.draw_string(f, Vector2(x + 10, y + 50), extra, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W - 24, Tipo.DETALHE, UiSkin.COLOR_DIM)
 		y += 68.0
 
 
@@ -386,18 +388,18 @@ func _bichos() -> void:
 
 
 func _legenda() -> void:
-	var f := ThemeDB.fallback_font
+	var f := Tipo.fonte_desenho()
 	var x := _painel_x()
 	var y := 30.0 + ANDARES.size() * 68.0 + 10.0
 	for n in EM_BREVE:  # Bloco 68: os níveis declarados que ainda não existem
-		_area.draw_string(f, Vector2(x, y), "%s — em breve" % n.nome, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W, 11, Color(0.75, 0.8, 0.95))
+		_area.draw_string(f, Vector2(x, y), "%s — em breve" % n.nome, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W, Tipo.DETALHE, Color(0.75, 0.8, 0.95))
 		y += 16.0
 	var itens := [["●", Color(0.72, 0.62, 0.55), "jazida aberta (anel = quanto tem)"], ["✕", Color(0.85, 0.7, 0.45), "galeria lacrada"],
 		["▣", Color(0.9, 0.8, 0.4), "trancada (ferramenta/descida)"], ["■", Color(0.55, 0.85, 0.5), "coletor produzindo"],
 		["●", Color(0.42, 0.3, 0.24), "bicho da clareira"]]
 	var col := 0
 	for it in itens:
-		_area.draw_string(f, Vector2(x + col * 250.0, y), "%s %s" % [it[0], it[2]], HORIZONTAL_ALIGNMENT_LEFT, 245, 10, it[1])
+		_area.draw_string(f, Vector2(x + col * 250.0, y), "%s %s" % [it[0], it[2]], HORIZONTAL_ALIGNMENT_LEFT, 245, Tipo.DETALHE, it[1])
 		col += 1
 		if col == 2:
 			col = 0

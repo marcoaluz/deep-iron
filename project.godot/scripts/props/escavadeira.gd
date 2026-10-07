@@ -26,6 +26,7 @@ signal completed
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
 const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const PART_IDS := ["estrutura", "motor", "hidraulica", "cabine", "broca"]
 const PART_NAMES := {
 	"estrutura": "Estrutura",
@@ -431,7 +432,7 @@ func _popup(text: String, color: Color) -> void:
 	popup.add_theme_color_override("font_color", color)
 	popup.add_theme_color_override("font_outline_color", Color(0.1, 0.06, 0.03))
 	popup.add_theme_constant_override("outline_size", 4)
-	popup.add_theme_font_size_override("font_size", 14)
+	popup.add_theme_font_size_override("font_size", Tipo.MAPA_POPUP)
 	popup.position = Vector2(-100, -240 - stacked * 20)
 	popup.size = Vector2(200, 20)
 	popup.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -65,9 +65,9 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 | `fundo.gd` | Poças e ventiladores do S2 e do S3. |
 | `work_areas.gd` / `work_panel.gd` / `area_placer.gd` | Áreas de trabalho com postos (Bloco 77). |
 | `obra_site.gd` | O pedaço comum de toda obra feita por engenheiro. |
-| `build_menu.gd` | O menu CONSTRUIR (cartões). |
+| `build_menu.gd` | O menu CONSTRUIR: janela de tamanho fixo, grade de cartões com estrutura fixa e o campo `img` de cada cartão (Bloco 95). |
 | `house_placer.gd` | Posicionar prédio no mapa. |
-| `hud.gd` | HUD montado por código. |
+| `hud.gd` | HUD montado por código (layout v2, Bloco 95): recursos e hora grande em cima, aba fina à esquerda (Tab = pessoas; obras; missões), coluna de alertas à direita (`ui/alertas.gd`), barra de funções agrupada, cartão do selecionado, pilha de avisos (`ui/avisos.gd`), menu "Janelas". |
 | `*_panel.gd` | As janelas, registradas em `hud._add_panel`. |
 
 **`scripts/props`**
@@ -116,7 +116,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b94**; o próximo é o **b95**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b95**; o próximo é o **b96**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:
@@ -144,7 +144,9 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
    | Estação de trabalho | `station.gd` |
    | Obra paga que espera engenheiro | `Canteiro` + `ObraSite` (`canteiro.gd` `KINDS`, `obra_site.gd`) |
    | Escolher lugar no mapa | `house_placer.gd` |
-   | Cartão no menu CONSTRUIR | `build_menu.gd` |
+   | Cartão no menu CONSTRUIR | `build_menu.gd` (com o campo `img`: ver a regra 12) |
+   | Tamanho de letra | `scripts/ui/tipografia.gd` (`Tipo.CORPO`, `Tipo.DETALHE`…): nunca número solto (o teste b95 confere) |
+   | Aviso curto / alerta | `hud.show_toast(texto, cor, alvo)` (pilha no canto); alerta novo = uma linha em `alertas.gd` `TIPOS` + `_refresh_alertas` |
    | Fila de produção | `production_queue.gd` (Fornalha, Carpintaria, encomendas da Oficina); a forja das armas é a fila do `defense.gd` (Arsenal) e a do equipamento é a do `equipment.gd` — todas feitas pelo ferreiro/fundidor/carpinteiro |
    | Oficina de ordens nova (prédio + função) | herdar de `fornalha.gd` e `fornalha_panel.gd`, como a `carpintaria.gd` (Bloco 94) |
    | Item, preço, onde guardar | `items.gd` + `Economy.quantidade/add_item/take_item` |
@@ -152,7 +154,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
    | Custo com itens (pregos, ferragens, aço, couro…) | o parâmetro `itens` desses três, ou `Economy.itens_falta` / `paga_itens` / `itens_texto`; pregos e ferragens antes da fornalha viram ferro (`itens_efetivos`); `Economy.tira`/`devolve` pra qualquer item |
    | Horário e agenda | `DayNight.hora()` / `tempo_da_hora()` / sinal `marco`; `Schedule.periodo(ipezinho)` |
    | Lugar pra conversar | `social_spot.gd` (`SocialSpot.criar(...)` no `_ready` do prédio) |
-   | Janela | `hud._add_panel` (padrão `setup` / `refresh` / `button_text` / `has_available_action`) |
+   | Janela | `hud._add_panel` (padrão `setup` / `refresh` / `button_text` / `has_available_action`); ela entra sozinha no menu "Janelas" |
 
 7. **Rodar os testes** (ver `TESTING.md`).
    - **Sempre** com `APPDATA` / `LOCALAPPDATA` / `XDG_DATA_HOME` numa pasta com `fake_appdata` no caminho.
@@ -203,6 +205,12 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
       4. Obra 1 e 3: `obras.py`.
       5. `integra.py predios <nomes>`.
       - Estrutura de tamanho livre (o cemitério): peças modulares que montam cada etapa.
+12. **Todo cartão novo do menu CONSTRUIR precisa de IMAGEM** (pedido do Marco, Bloco 95; vale para a Escola, a
+    Carpintaria e tudo que vier depois). O item do `_defs` em `build_menu.gd` leva o campo `img`:
+    `_predio(nome)` (o prédio pronto reduzido, `assets/game/ui/icones/predios/`) ou `_cartao(nome)` (ilustração
+    própria, `assets/game/ui/icones/cartoes/`, 96x64). Primeiro reaproveitar um sprite do jogo
+    (`prototipos/camera/arte_iso/ui95/ui95.py reaproveita`); só o que não tem desenho vai pro PixelLab
+    (`ui95.py gera`, regra 11). Sem imagem o cartão mostra "?" e o teste `b95b_construir_abas` falha.
 
 ## Notas práticas
 

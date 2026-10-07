@@ -4,6 +4,7 @@ extends PanelContainer
 ## Bloco 94: as CAMAS DE TÁBUA (da Carpintaria): quantas tem, quantas esperam o carpinteiro e o botão de trocar.
 ## Interface das janelas do HUD: setup(hud, alvo, economia), refresh(), focus(no), button_text(),
 ## has_available_action().
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: Node
 var _eco: Node
@@ -31,7 +32,7 @@ func setup(hud: Node, _target: Node, economy: Node) -> void:
 	add_child(v)
 	var head := HBoxContainer.new()
 	v.add_child(head)
-	_titulo = _hud._label("CASA", 20, _hud.COLOR_TITLE)
+	_titulo = _hud._label("CASA", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	_titulo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(_titulo)
 	var x: Button = _hud._button("X")
@@ -39,12 +40,12 @@ func setup(hud: Node, _target: Node, economy: Node) -> void:
 		Audio.click()
 		visible = false)
 	head.add_child(x)
-	_info = _hud._label("", 13, _hud.COLOR_TEXT)
+	_info = _hud._label("", Tipo.CORPO, _hud.COLOR_TEXT)
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_info.custom_minimum_size.x = 340
 	v.add_child(_info)
 	# Bloco 94: camas de tábua
-	_camas = _hud._label("", 12, _hud.COLOR_TEXT)
+	_camas = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	_camas.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_camas.custom_minimum_size.x = 340
 	v.add_child(_camas)
@@ -52,11 +53,11 @@ func setup(hud: Node, _target: Node, economy: Node) -> void:
 	_cama_botao.pressed.connect(_trocar_cama)
 	v.add_child(_cama_botao)
 	v.add_child(HSeparator.new())
-	_custo = _hud._label("", 12, _hud.COLOR_TITLE)
+	_custo = _hud._label("", Tipo.DETALHE, _hud.COLOR_TITLE)
 	_custo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_custo.custom_minimum_size.x = 340
 	v.add_child(_custo)
-	_motivo = _hud._label("", 12, _hud.COLOR_HUNGER_BAD)
+	_motivo = _hud._label("", Tipo.DETALHE, _hud.COLOR_HUNGER_BAD)
 	_motivo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_motivo.custom_minimum_size.x = 340
 	v.add_child(_motivo)

@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **852 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **861 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (78)
 
@@ -120,6 +120,20 @@ Total: **852 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `max_voices` | 24 |  |  |
 | `max_steps_per_second` | 8.0 |  | Máximo de passos tocando por segundo somando todos os ipezinhos. |
 | `sfx_max_distance` | 900.0 |  | Distância (em pixels do mundo) além da qual efeitos posicionais não tocam. |
+
+## `scripts/core/build_menu.gd` (7)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `janela_tamanho` | Vector2(872, 560) |  | Tamanho MÁXIMO da janela (px lógicos). Ela usa o que couber entre a barra de cima e a de baixo (a 125% em 1280x720 a área é 1024x576), igual em todas as abas: só muda com a escala da interface ou a janela do jogo. |
+| `janela_folga` | 8.0 |  | Folga mínima entre a janela e as barras / as bordas (px lógicos). |
+| `cartao_tamanho` | Vector2(196, 238) |  | Tamanho de cada cartão (px lógicos). A altura cresce até caber a estrutura fixa na fonte de agora (_altura_cartao): todo cartão fica com a MESMA altura, e o botão no mesmo lugar. |
+| `colunas` | 4 |  | Cartões por linha da grade. |
+| `abas_por_linha` | 6 |  | Abas por linha (11 abas = 2 linhas). |
+| `desc_linhas` | 3 |  | Linhas da descrição no cartão (o resto vai na dica). |
+| `imagem_area` | Vector2(180, 70) |  | Área da imagem no topo do cartão (px lógicos; a imagem é 96x64 e fica 1:1 no meio). |
 
 ## `scripts/core/calendario.gd` (16)
 
@@ -937,7 +951,7 @@ Total: **852 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `pollen_amount` | 18 |  |  |
 
-## `scripts/workers/ipezinho.gd` (70)
+## `scripts/workers/ipezinho.gd` (72)
 
 **Obras (Bloco 51)**
 
@@ -1103,6 +1117,8 @@ Total: **852 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `walk_anim_fps` | 13.0 |  | Bloco 73: 13 quadros/s na velocidade normal = o passo da vista iso (IsoBillboard.PASSO_CICLO: 4 quadros a cada 56 px de arte = ~37 px daqui); o som do passo cai junto com o pé. |
 | `head_lamp_enabled` | true |  |  |
+| `motivo_espera` | 2.0 |  | Segundos parado pelo MESMO motivo antes de o balão aparecer (não pisca a cada troca de tarefa). |
+| `motivo_intervalo` | 0.5 |  | A cada quantos segundos o motivo é conferido (barato: só olha o estado que a IA já decidiu). |
 
 ## `scripts/props/abyss_shaft.gd` (13)
 

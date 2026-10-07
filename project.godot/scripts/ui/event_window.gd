@@ -7,6 +7,7 @@ extends CanvasLayer
 ## Uma por vez: se já tem uma aberta, a nova espera na fila.
 
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const COLOR_TITLE := Color(1.0, 0.8, 0.35)
 const COLOR_TEXT := Color(0.92, 0.88, 0.8)
 const LARGURA := 520.0
@@ -34,6 +35,7 @@ static func aberta() -> CanvasLayer:
 
 func _monta(p: Array) -> void:
 	_aberta = self
+	UiSkin.tema_na_camada(self)  # Bloco 95: o tema (escala e fonte) chega nos Controls da camada
 	layer = 20
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	var fundo := ColorRect.new()
@@ -57,8 +59,8 @@ func _monta(p: Array) -> void:
 	v.add_child(tit)
 	var tl := Label.new()
 	tl.text = p[0]
-	tl.add_theme_font_size_override("font_size", 18)
-	UiSkin.usa_fonte(tl, "titulo", 32)  # Prompt 22
+	tl.add_theme_font_size_override("font_size", Tipo.TITULO_JANELA)
+	UiSkin.usa_fonte(tl, "titulo", Tipo.PIXEL_2)  # Prompt 22
 	tl.add_theme_color_override("font_color", COLOR_TITLE)
 	tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tl.custom_minimum_size.x = 220
@@ -81,7 +83,7 @@ func _monta(p: Array) -> void:
 	txt.text = p[1]
 	txt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	txt.custom_minimum_size.x = LARGURA - 40.0
-	txt.add_theme_font_size_override("font_size", 14)
+	txt.add_theme_font_size_override("font_size", Tipo.TITULO)
 	txt.add_theme_color_override("font_color", COLOR_TEXT)
 	v.add_child(txt)
 	_botoes = HBoxContainer.new()

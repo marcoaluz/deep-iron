@@ -10,7 +10,7 @@ const PADRAO := {
 	"construir": [KEY_SPACE], "minerador": [KEY_1, KEY_KP_1], "cacador": [KEY_2, KEY_KP_2], "medico": [KEY_3, KEY_KP_3],
 	"engenheiro": [KEY_4, KEY_KP_4], "cozinheiro": [KEY_C], "lenhador": [KEY_L], "guarda": [KEY_X], "pesquisador": [KEY_Z],
 	"sem_funcao": [KEY_0, KEY_KP_0], "turno_extra": [KEY_T], "vender": [KEY_V], "recrutar": [KEY_R],
-	"proximo": [KEY_TAB], "seguir": [KEY_F], "pausa": [KEY_P], "dicas": [KEY_H], "musica": [KEY_M],
+	"proximo": [KEY_PERIOD], "seguir": [KEY_F], "pausa": [KEY_P], "dicas": [KEY_H], "musica": [KEY_M],
 	"painel_hub": [KEY_U], "painel_escavadeira": [KEY_E], "painel_oficina": [KEY_O], "painel_enfermaria": [KEY_I],
 	"painel_moral": [KEY_B], "painel_defesa": [KEY_G], "painel_diario": [KEY_J], "painel_lab": [KEY_Q], "painel_sol": [KEY_Y],
 	"painel_trabalho": [KEY_5, KEY_KP_5],
@@ -18,6 +18,7 @@ const PADRAO := {
 	"ferreiro": [KEY_7, KEY_KP_7],  # Bloco 87
 	"padre": [KEY_8, KEY_KP_8],  # Bloco 92
 	"carpinteiro": [KEY_9, KEY_KP_9],  # Bloco 94
+	"pessoas": [KEY_TAB],  # Bloco 95: a lista de pessoas (aba fina da esquerda); o "próximo" foi pro ponto
 	"salvar": [KEY_F5], "carregar": [KEY_F9],
 	# fixas (não aparecem pra remapear): Esc, e as de teste/depuração
 	"voltar": [KEY_ESCAPE], "caixas": [KEY_F4], "pular_fase": [KEY_N], "machucar": [KEY_K],
@@ -32,7 +33,7 @@ const NOMES := [
 	["lenhador", "Função: lenhador"], ["guarda", "Função: guarda"], ["pesquisador", "Função: pesquisador"],
 	["fundidor", "Função: fundidor"], ["ferreiro", "Função: ferreiro"], ["padre", "Função: padre (só um)"], ["carpinteiro", "Função: carpinteiro"],
 	["sem_funcao", "Tirar a função"], ["turno_extra", "Turno extra"], ["vender", "Vender minério"], ["recrutar", "Recrutar"],
-	["proximo", "Próximo ipezinho"], ["seguir", "Câmera segue"], ["pausa", "Pausa"], ["dicas", "Atalhos (ajuda)"],
+	["pessoas", "Lista de pessoas (abre/fecha)"], ["proximo", "Próximo ipezinho"], ["seguir", "Câmera segue"], ["pausa", "Pausa"], ["dicas", "Atalhos (ajuda)"],
 	["musica", "Música liga/desliga"], ["painel_hub", "Centro da Vila"], ["painel_escavadeira", "Escavadeira"],
 	["painel_oficina", "Oficina"], ["painel_enfermaria", "Enfermaria"], ["painel_moral", "Bem-estar"],
 	["painel_defesa", "Defesa"], ["painel_diario", "Diário"], ["painel_lab", "Laboratório"], ["painel_sol", "O Sol"],

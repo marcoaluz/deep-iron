@@ -12,6 +12,7 @@ const Settings := preload("res://scripts/core/settings.gd")
 const Teclas := preload("res://scripts/core/teclas.gd")
 const Efeitos := preload("res://scripts/core/efeitos.gd")
 const Camera := preload("res://scripts/core/camera_controller.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const COLOR_TITLE := Color(1.0, 0.8, 0.35)
 const COLOR_TEXT := Color(0.92, 0.88, 0.8)
 const COLOR_DIM := Color(0.7, 0.66, 0.6)
@@ -38,8 +39,8 @@ func _ready() -> void:
 
 
 func _build_main() -> void:
-	var title := _label("CONFIGURAÇÕES", 22, COLOR_TITLE)
-	UiSkin.usa_fonte(title, "titulo", 32)  # Prompt 22
+	var title := _label("CONFIGURAÇÕES", Tipo.TITULO_JANELA, COLOR_TITLE)
+	UiSkin.usa_fonte(title, "titulo", Tipo.PIXEL_2)  # Prompt 22
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_main_page.add_child(title)
 	var cols := HBoxContainer.new()
@@ -68,10 +69,28 @@ func _build_main() -> void:
 		WindowManager.set_fullscreen(on))
 	left.add_child(_fullscreen)
 	WindowManager.fullscreen_changed.connect(_on_fullscreen_changed)
-	# Bloco 54: escala da interface (limitada pra caber na janela)
-	_percent(left, "Escala da interface", WindowManager.ui_scale(), WindowManager.UI_SCALE_MIN, WindowManager.UI_SCALE_MAX, 0.1,
-		func(v: float): WindowManager.set_ui_scale(v))
-	_scale_note = _label("", 11, COLOR_DIM)
+	# Bloco 54: escala da interface (limitada pra caber na janela). Bloco 95: 3 opções (90 / 100 / 125%).
+	var esc_row := HBoxContainer.new()
+	esc_row.add_theme_constant_override("separation", 6)
+	esc_row.name = "Escala"
+	left.add_child(esc_row)
+	var el := _label("Escala da interface", Tipo.TITULO, COLOR_TEXT)
+	el.custom_minimum_size.x = 150
+	esc_row.add_child(el)
+	var grupo := ButtonGroup.new()
+	for op in WindowManager.UI_SCALES:
+		var b := Button.new()
+		b.text = "%d%%" % roundi(op * 100.0)
+		b.toggle_mode = true
+		b.button_group = grupo
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(56, 30)
+		b.button_pressed = is_equal_approx(op, WindowManager.ui_scale())
+		b.pressed.connect(func():
+			Audio.click()
+			WindowManager.set_ui_scale(op))
+		esc_row.add_child(b)
+	_scale_note = _label("", Tipo.DETALHE, COLOR_DIM)
 	left.add_child(_scale_note)
 	WindowManager.ui_scale_changed.connect(func(_f: float): _update_scale_note())
 	_update_scale_note()
@@ -101,11 +120,21 @@ func _build_main() -> void:
 		if hud and hud.has_method("set_hints_visible"):
 			hud.set_hints_visible(on))
 	right.add_child(hints)
+	var motivo := CheckBox.new()  # Bloco 95: o ícone sobre quem está parado (sem trabalho, sem ferramenta...)
+	motivo.text = "Balões de motivo (por que está parado)"
+	motivo.button_pressed = Settings.get_value("hud", "baloes_motivo", true)
+	motivo.toggled.connect(func(on: bool):
+		Audio.click()
+		Settings.set_value("hud", "baloes_motivo", on)
+		var Ipe: GDScript = load("res://scripts/workers/ipezinho.gd")
+		Ipe.baloes_motivo = on
+		Ipe._baloes_lido = true)
+	right.add_child(motivo)
 	# idioma
 	var lang_row := HBoxContainer.new()
 	lang_row.add_theme_constant_override("separation", 10)
 	right.add_child(lang_row)
-	var ll := _label("Idioma", 14, COLOR_TEXT)
+	var ll := _label("Idioma", Tipo.TITULO, COLOR_TEXT)
 	ll.custom_minimum_size.x = 150
 	lang_row.add_child(ll)
 	var lang := OptionButton.new()
@@ -120,7 +149,7 @@ func _build_main() -> void:
 		Audio.click()
 		WindowManager.set_language(String(lang.get_item_metadata(i))))
 	lang_row.add_child(lang)
-	right.add_child(_label("(inglês parcial: textos com números seguem em português)", 11, COLOR_DIM))
+	right.add_child(_label("(inglês parcial: textos com números seguem em português)", Tipo.DETALHE, COLOR_DIM))
 	var keys := Button.new()
 	keys.text = "Teclas..."
 	keys.custom_minimum_size = Vector2(0, 34)
@@ -143,7 +172,7 @@ func _column(parent: Container, titulo: String) -> VBoxContainer:
 	v.add_theme_constant_override("separation", 8)
 	v.custom_minimum_size.x = 340
 	parent.add_child(v)
-	v.add_child(_label(titulo, 13, COLOR_TITLE))
+	v.add_child(_label(titulo, Tipo.CORPO, COLOR_TITLE))
 	return v
 
 
@@ -174,7 +203,7 @@ func _percent(parent: Container, text: String, value: float, lo: float, hi: floa
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	parent.add_child(row)
-	var name_label := _label(text, 14, COLOR_TEXT)
+	var name_label := _label(text, Tipo.TITULO, COLOR_TEXT)
 	name_label.custom_minimum_size.x = 150
 	row.add_child(name_label)
 	var slider := HSlider.new()
@@ -186,7 +215,7 @@ func _percent(parent: Container, text: String, value: float, lo: float, hi: floa
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(slider)
-	var value_label := _label("%d%%" % slider.value, 13, COLOR_TEXT)
+	var value_label := _label("%d%%" % slider.value, Tipo.CORPO, COLOR_TEXT)
 	value_label.custom_minimum_size.x = 44
 	row.add_child(value_label)
 	slider.value_changed.connect(func(v: float):
@@ -198,11 +227,11 @@ func _percent(parent: Container, text: String, value: float, lo: float, hi: floa
 
 # ------------------------------------------------------------ teclas (Bloco 54)
 func _build_keys() -> void:
-	var title := _label("TECLAS", 22, COLOR_TITLE)
-	UiSkin.usa_fonte(title, "titulo", 32)
+	var title := _label("TECLAS", Tipo.TITULO_JANELA, COLOR_TITLE)
+	UiSkin.usa_fonte(title, "titulo", Tipo.PIXEL_2)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_keys_page.add_child(title)
-	_keys_page.add_child(_label("Clique numa ação e aperte a tecla nova (Esc cancela). Se outra ação usava a tecla, as duas trocam.", 12, COLOR_DIM))
+	_keys_page.add_child(_label("Clique numa ação e aperte a tecla nova (Esc cancela). Se outra ação usava a tecla, as duas trocam.", Tipo.DETALHE, COLOR_DIM))
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(700, 400)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -214,7 +243,7 @@ func _build_keys() -> void:
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(grid)
 	for par in Teclas.NOMES:
-		var l := _label(par[1], 13, COLOR_TEXT)
+		var l := _label(par[1], Tipo.CORPO, COLOR_TEXT)
 		l.custom_minimum_size.x = 190
 		grid.add_child(l)
 		var b := Button.new()

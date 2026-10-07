@@ -3,6 +3,7 @@ extends PanelContainer
 ## próxima invasão, portões (ampliar/consertar), guardas, campo de treino e armas.
 ## Bloco 35: Arsenal (construir, cavalete, fila da forja), forjar/consertar cada arma e a
 ## arma + durabilidade de cada guarda (desarmado em destaque).
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _def: Node
@@ -39,7 +40,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("DEFESA", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("DEFESA", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var close: Button = _hud._button("X")
@@ -47,21 +48,21 @@ func _build() -> void:
 		Audio.click()
 		visible = false)
 	header.add_child(close)
-	_status = _hud._label("", 14, _hud.COLOR_TEXT)
+	_status = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_status)
 
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("MURO (o que vem da floresta precisa derrubar pra entrar)", 12, _hud.COLOR_DIM))
+	vbox.add_child(_hud._label("MURO (o que vem da floresta precisa derrubar pra entrar)", Tipo.DETALHE, _hud.COLOR_DIM))
 	for id in ["tunel"]:  # Bloco 80: o único portão (o do poço saiu)
-		var l: Label = _hud._label("", 12, _hud.COLOR_TEXT)
+		var l: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 		vbox.add_child(l)
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 4)
 		vbox.add_child(row)
 		var up: Button = _hud._button("")
 		up.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		up.add_theme_font_size_override("font_size", 12)
+		up.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		up.pressed.connect(func():
 			Audio.click()
 			var g: Node = _def.gate(id)
@@ -70,7 +71,7 @@ func _build() -> void:
 			refresh())
 		row.add_child(up)
 		var fix: Button = _hud._button("")
-		fix.add_theme_font_size_override("font_size", 12)
+		fix.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		fix.custom_minimum_size.x = 150
 		fix.pressed.connect(func():
 			Audio.click()
@@ -80,12 +81,12 @@ func _build() -> void:
 			refresh())
 		row.add_child(fix)
 		_gate_rows[id] = {"label": l, "up": up, "fix": fix}
-	_poco_label = _hud._label("", 12, _hud.COLOR_DIM)  # Bloco 80: o poço não tem muro
+	_poco_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)  # Bloco 80: o poço não tem muro
 	_poco_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_poco_label)
 
 	vbox.add_child(HSeparator.new())
-	_guards_label = _hud._label("", 12, _hud.COLOR_TEXT)
+	_guards_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	_guards_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_guards_label)
 	_campo_button = _hud._button("")
@@ -96,8 +97,8 @@ func _build() -> void:
 	vbox.add_child(_campo_button)
 
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("ARSENAL — armas se gastam na luta; quebrou, o guarda vem aqui buscar outra", 12, _hud.COLOR_DIM))
-	_arsenal_label = _hud._label("", 12, _hud.COLOR_TEXT)
+	vbox.add_child(_hud._label("ARSENAL — armas se gastam na luta; quebrou, o guarda vem aqui buscar outra", Tipo.DETALHE, _hud.COLOR_DIM))
+	_arsenal_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	_arsenal_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_arsenal_label)
 	_arsenal_button = _hud._button("")
@@ -106,7 +107,7 @@ func _build() -> void:
 		_def.build_arsenal()
 		refresh())
 	vbox.add_child(_arsenal_button)
-	_forge_label = _hud._label("", 12, _hud.COLOR_TEXT)
+	_forge_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	_forge_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_forge_label)
 	_forge_bar = _hud._bar(_hud.COLOR_TITLE)
@@ -126,8 +127,8 @@ func _build() -> void:
 		info.mouse_filter = Control.MOUSE_FILTER_PASS
 		info.add_child(_hud._label("%s — dano %d%s  •  aguenta %d golpes" % [_def.WEAPON_NAMES[id], roundi(_def.weapon_damage[i]),
 			(", de longe" if _def.weapon_range[i] > 40.0 else (", forte contra Ferrugentos" if _def.weapon_vs_ferrugento[i] > 1.0 else "")),
-			roundi(_def.weapon_max_durability(id))], 13, _hud.COLOR_TEXT))
-		var status: Label = _hud._label("", 11, _hud.COLOR_DIM)
+			roundi(_def.weapon_max_durability(id))], Tipo.CORPO, _hud.COLOR_TEXT))
+		var status: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 		status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		info.add_child(status)
 		var buttons := VBoxContainer.new()
@@ -135,7 +136,7 @@ func _build() -> void:
 		row.add_child(buttons)
 		var b: Button = _hud._button("Forjar")
 		b.custom_minimum_size.x = 150
-		b.add_theme_font_size_override("font_size", 12)
+		b.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		b.pressed.connect(func():
 			Audio.click()
 			_def.start_forge(id)
@@ -143,7 +144,7 @@ func _build() -> void:
 		buttons.add_child(b)
 		var fix: Button = _hud._button("Consertar")
 		fix.custom_minimum_size.x = 150
-		fix.add_theme_font_size_override("font_size", 12)
+		fix.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		fix.pressed.connect(func():
 			Audio.click()
 			_def.start_repair(id)

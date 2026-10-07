@@ -25,6 +25,7 @@ const Ceu := preload("res://scripts/iso/iso_sky.gd")
 const IsoArt := preload("res://scripts/iso/iso_art.gd")
 const IsoLuz := preload("res://scripts/iso/iso_luz.gd")
 const IsoFx := preload("res://scripts/iso/iso_fx.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 const LAYER_DEFAULT := 1
 const LAYER_WORLD := 2
@@ -56,6 +57,10 @@ var enabled := false
 ## Prompt 30: no zoom "longe" (menos de 1 px de tela por px de arte) os rótulos somem: o texto
 ## fica pequeno demais e um cobre o outro.
 var labels_on := true
+## Bloco 95: o que está debaixo do mouse (o HUD atualiza) e o prédio da janela aberta: os dois mostram o rótulo
+## inteiro no mapa (os detalhes); os outros só o nome, pequeno.
+var hover: Node = null
+var foco: Node = null
 ## F4: mostra as caixas (contorno) por cima de tudo.
 var show_boxes := false
 
@@ -1693,7 +1698,7 @@ func _draw_areas_overlay() -> void:
 	var wa := _work_areas()
 	if wa == null:
 		return
-	var font := ThemeDB.fallback_font
+	var font := Tipo.fonte_desenho()
 	for a in wa.areas:
 		var borda := _area_borda(a.rect)
 		if a == _areas_sel:
@@ -1701,7 +1706,7 @@ func _draw_areas_overlay() -> void:
 		# o rótulo no MEIO da área (de onde se olha pra ela ele está na tela), numa plaquinha escura
 		var est: String = wa.estado(a)
 		var txt := "%s  %d/%d  ·  %s" % [a.nome(), a.quantos(), a.capacidade, est]
-		var tam := 15
+		var tam := Tipo.TITULO
 		var sz := font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, tam)
 		var c := to_screen(a.centro())
 		var placa := Rect2(c - Vector2(sz.x * 0.5 + 8.0, sz.y * 0.5 + 3.0), sz + Vector2(16.0, 6.0))

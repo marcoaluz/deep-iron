@@ -16,6 +16,7 @@ signal patient_died(worker_name: String, cause: String)
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const GRAVE := preload("res://assets/game/grave.png")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 @export_group("Leitos e cura")
 @export var base_beds: int = 2
@@ -278,7 +279,7 @@ func _spawn_grave(pos: Vector2, who: String) -> void:
 	tag.scale = Vector2(0.5, 0.5)
 	tag.position = Vector2(-15, -GRAVE.get_height() - 8)
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	tag.add_theme_font_size_override("font_size", 10)
+	tag.add_theme_font_size_override("font_size", Tipo.MAPA)
 	tag.add_theme_color_override("font_color", Color(0.85, 0.82, 0.75, 0.8))
 	tag.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
 	tag.add_theme_constant_override("outline_size", 4)

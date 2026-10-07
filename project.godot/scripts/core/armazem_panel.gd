@@ -1,6 +1,6 @@
 extends PanelContainer
-## Janela do Armazém (Bloco 39): quanto tem de cada coisa, quanto vale e vender. Abre clicando no
-## armazém ou pelo botão no painel do HUD. Os preços vêm do nó Economy (Inspector).
+## Janela do Armazém (Bloco 39): quanto tem de cada coisa, quanto vale e vender (Bloco 95: e o "auto", que saiu da
+## barra de cima). Abre clicando no armazém ou pelo menu "Janelas" do HUD. Os preços vêm do nó Economy (Inspector).
 ##
 ## Bloco 82: uma GRADE por categoria do catálogo de itens (items.gd: minério, metal, madeira, comida, peças e
 ## materiais, equipamento), cada célula com ícone, nome, quantidade e preço. Quantidade zero fica esmaecida.
@@ -12,6 +12,7 @@ extends PanelContainer
 const Ores := preload("res://scripts/core/ores.gd")
 const Items := preload("res://scripts/core/items.gd")
 const Icones := preload("res://scripts/ui/icones.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 ## Colunas da grade.
 const COLUNAS := 4
 ## Transparência de um item com quantidade zero.
@@ -27,6 +28,7 @@ var _rows: Dictionary = {}
 var _secoes: Dictionary = {}
 ## O "Vender tudo" (todo o minério) — o botão do título da categoria Minério.
 var _sell_all: Button
+var _auto_check: CheckBox  # Bloco 95: o "auto" que ficava na barra de cima
 var _other_label: Label
 ## Barra de venda: o item selecionado e a quantidade.
 var _sel_id := ""
@@ -60,7 +62,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("ARMAZÉM", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("ARMAZÉM", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var close: Button = _hud._button("X")
@@ -68,11 +70,23 @@ func _build() -> void:
 		Audio.click()
 		visible = false)
 	header.add_child(close)
-	var intro: Label = _hud._label("Tudo o que a vila guardou (soma dos armazéns). Minério e metal vendidos viram créditos; madeira, comida, couro e peças raras ficam pras obras, a cozinha e a Oficina.", 12, _hud.COLOR_DIM)
+	var intro: Label = _hud._label("Tudo o que a vila guardou (soma dos armazéns). Minério e metal vendidos viram créditos; madeira, comida, couro e peças raras ficam pras obras, a cozinha e a Oficina.", Tipo.DETALHE, _hud.COLOR_DIM)
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(intro)
-	_credits_label = _hud._label("", 15, _hud.COLOR_TEXT)
-	vbox.add_child(_credits_label)
+	var linha := HBoxContainer.new()  # Bloco 95: os créditos e o "auto" (saiu da barra de cima)
+	vbox.add_child(linha)
+	_credits_label = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
+	_credits_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	linha.add_child(_credits_label)
+	_auto_check = CheckBox.new()
+	_auto_check.text = "Vender sozinho (auto)"
+	_auto_check.focus_mode = Control.FOCUS_NONE
+	_auto_check.tooltip_text = "Vende sozinho o minério que chegar no armazém."
+	_auto_check.button_pressed = _economy.auto_sell
+	_auto_check.toggled.connect(func(on: bool):
+		Audio.click()
+		_economy.auto_sell = on)
+	linha.add_child(_auto_check)
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(0, 420)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -88,7 +102,7 @@ func _build() -> void:
 		_secao(corpo, cat, ids)
 	_monta_barra_venda(vbox)
 	vbox.add_child(HSeparator.new())
-	_other_label = _hud._label("", 12, _hud.COLOR_DIM)
+	_other_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	_other_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_other_label)
 
@@ -100,13 +114,13 @@ func _secao(pai: Control, cat: String, ids: Array) -> void:
 	pai.add_child(box)
 	var topo := HBoxContainer.new()
 	box.add_child(topo)
-	var nome: Label = _hud._label(Items.nome_categoria(cat).to_upper(), 14, _hud.COLOR_TITLE)
+	var nome: Label = _hud._label(Items.nome_categoria(cat).to_upper(), Tipo.TITULO, _hud.COLOR_TITLE)
 	nome.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	topo.add_child(nome)
 	var vende: Button = null
 	if ids.any(func(i): return _economy.pode_vender(i)):
 		vende = _hud._button("")
-		vende.add_theme_font_size_override("font_size", 12)
+		vende.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		vende.pressed.connect(func():
 			Audio.click()
 			_economy.sell_categoria(cat)
@@ -153,19 +167,19 @@ func _celula(grade: GridContainer, id: String) -> Dictionary:
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	icon.texture = _icone(id)
 	linha.add_child(icon)
-	var qtd: Label = _hud._label("0", 16, Ores.UI_COLORS.get(id, _hud.COLOR_TEXT))
+	var qtd: Label = _hud._label("0", Tipo.TITULO, Ores.UI_COLORS.get(id, _hud.COLOR_TEXT))
 	qtd.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	qtd.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	linha.add_child(qtd)
-	var nome: Label = _hud._label(Items.nome(id), 12, _hud.COLOR_TEXT)
+	var nome: Label = _hud._label(Items.nome(id), Tipo.DETALHE, _hud.COLOR_TEXT)
 	nome.clip_text = true
 	col.add_child(nome)
-	var preco: Label = _hud._label("", 10, _hud.COLOR_DIM)
+	var preco: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	col.add_child(preco)
 	var b: Button = null
 	if _economy.pode_vender(id):
 		b = _hud._button("Vender…")
-		b.add_theme_font_size_override("font_size", 11)
+		b.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		b.pressed.connect(func():
 			Audio.click()
 			seleciona(id))
@@ -179,27 +193,27 @@ func _monta_barra_venda(vbox: VBoxContainer) -> void:
 	_sel_box = HBoxContainer.new()
 	_sel_box.add_theme_constant_override("separation", 4)
 	vbox.add_child(_sel_box)
-	_sel_info = _hud._label("Escolha um item (Vender…) pra vender a quantidade que quiser.", 12, _hud.COLOR_DIM)
+	_sel_info = _hud._label("Escolha um item (Vender…) pra vender a quantidade que quiser.", Tipo.DETALHE, _hud.COLOR_DIM)
 	_sel_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_sel_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_sel_box.add_child(_sel_info)
 	for passo in [-10, -1]:
 		_sel_box.add_child(_botao_passo(passo))
-	_sel_qtd_label = _hud._label("", 15, _hud.COLOR_TITLE)
+	_sel_qtd_label = _hud._label("", Tipo.TITULO, _hud.COLOR_TITLE)
 	_sel_qtd_label.custom_minimum_size.x = 40
 	_sel_qtd_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_sel_box.add_child(_sel_qtd_label)
 	for passo in [1, 10]:
 		_sel_box.add_child(_botao_passo(passo))
 	_sel_tudo = _hud._button("Tudo")
-	_sel_tudo.add_theme_font_size_override("font_size", 12)
+	_sel_tudo.add_theme_font_size_override("font_size", Tipo.DETALHE)
 	_sel_tudo.pressed.connect(func():
 		Audio.click()
 		_sel_qtd = _tem(_sel_id)
 		refresh())
 	_sel_box.add_child(_sel_tudo)
 	_sel_vender = _hud._button("")
-	_sel_vender.add_theme_font_size_override("font_size", 12)
+	_sel_vender.add_theme_font_size_override("font_size", Tipo.DETALHE)
 	_sel_vender.pressed.connect(func():
 		Audio.click()
 		vender_selecionado())
@@ -208,7 +222,7 @@ func _monta_barra_venda(vbox: VBoxContainer) -> void:
 
 func _botao_passo(passo: int) -> Button:
 	var b: Button = _hud._button("%+d" % passo)
-	b.add_theme_font_size_override("font_size", 12)
+	b.add_theme_font_size_override("font_size", Tipo.DETALHE)
 	b.custom_minimum_size = Vector2(34, 0)
 	b.pressed.connect(func():
 		Audio.click()
@@ -275,6 +289,8 @@ func refresh() -> void:
 	if not visible or _economy == null:
 		return
 	_credits_label.text = "Créditos: %d" % int(_economy.credits)
+	if _auto_check.button_pressed != _economy.auto_sell:
+		_auto_check.set_pressed_no_signal(_economy.auto_sell)
 	var oficina := get_tree().get_first_node_in_group("oficina")
 	for id in _rows:
 		var r: Dictionary = _rows[id]

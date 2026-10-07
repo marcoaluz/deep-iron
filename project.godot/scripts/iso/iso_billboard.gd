@@ -22,6 +22,9 @@ const IsoLuz := preload("res://scripts/iso/iso_luz.gd")
 const IsoFx := preload("res://scripts/iso/iso_fx.gd")
 const Icones := preload("res://scripts/ui/icones.gd")
 const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
+## Bloco 95: os rótulos de prédio (nome + detalhes) que ficam compactos no mapa: só o nome, pequeno.
+const ROTULOS_COMPACTOS := ["NameLabel", "StatusLabel"]
 
 ## Tipos que não são desenho (física, navegação, som...): não espelha.
 const SKIP := ["CollisionShape2D", "CollisionPolygon2D", "Area2D", "StaticBody2D", "CharacterBody2D",
@@ -250,6 +253,8 @@ func _sync_props() -> void:
 		var list: Array = SYNC_BY_CLASS.get(s.get_class(), [])
 		if not list.is_empty():
 			_copy(s, d, list)
+		if s is Label and ROTULOS_COMPACTOS.has(String(s.name)):
+			_rotulo_compacto(s, d)  # Bloco 95
 		if _char != null and d is Sprite2D and d.texture != null:
 			_icone_novo(d)  # Prompt 21: ícone por cima da cabeça com o desenho novo
 	for pr in _pairs:
@@ -371,6 +376,23 @@ func _copy(s: Object, d: Object, props: Array) -> void:
 		var v = s.get(p)
 		if d.get(p) != v:
 			d.set(p, v)
+
+
+## Bloco 95: o rótulo do prédio no mapa mostra só o NOME, menor; o texto inteiro (quantidade, estágio, a obra)
+## aparece com o mouse em cima ou com a janela do prédio aberta. A linha da obra ("40% — esperando engenheiro")
+## vira a barrinha com o martelo (_draw_top).
+func _rotulo_compacto(s: Label, d: Label) -> void:
+	if not d.has_meta("_compacto"):
+		d.set_meta("_compacto", true)
+		d.add_theme_font_size_override("font_size", Tipo.MAPA)
+		d.add_theme_color_override("font_outline_color", Tipo.CONTORNO_MAPA)
+		d.add_theme_constant_override("outline_size", Tipo.CONTORNO_MAPA_PX)
+		d.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM  # (o nome fica embaixo, perto do prédio)
+	var cheio: bool = is_instance_valid(src) and (_view.hover == src or _view.foco == src)
+	var t: String = s.text if cheio else s.text.get_slice("
+", 0)
+	if d.text != t:
+		d.text = t
 
 
 ## Espelhado na horizontal (virou pro outro lado na tela): os rótulos voltam a ler direito.
@@ -522,7 +544,7 @@ func sync_static(view_rect: Rect2) -> bool:
 		return false
 	never_synced = false
 	_sync_props()
-	if src.is_in_group("canteiros") or src.is_in_group("parques"):
+	if src.is_in_group("canteiros") or src.is_in_group("parques") or src.is_in_group("obras"):
 		_top.queue_redraw()
 		queue_redraw()
 	var changed := _update_box()
@@ -876,22 +898,30 @@ func _icone_novo(d: Sprite2D) -> void:
 	d.scale = Vector2(1.0 / maxf(absf(gs.x), 0.01), 1.0 / maxf(absf(gs.y), 0.01))
 
 
-## Por cima da arte: barra de vida das criaturas e barrinha de progresso da obra (canteiro).
+## Por cima da arte: barra de vida das criaturas e barrinha de progresso da obra (canteiro e, no Bloco 95, toda
+## obra encomendada: melhoria do Centro, ampliação da casa, conserto...). O martelo do lado: colorido com gente
+## trabalhando, CINZA esperando engenheiro (ou ferreiro).
 func _draw_top() -> void:
 	if not is_instance_valid(src):
 		return
-	if src.is_in_group("canteiros") and src.has_method("obra_progress") and src.has_method("_top"):
-		var y: float = -(src._top() + 8.0)
+	var e_obra: bool = src.is_in_group("obras") and src.has_method("obra_pending") and src.obra_pending()
+	if (src.is_in_group("canteiros") and src.has_method("obra_progress") and src.has_method("_top")) or e_obra:
+		var y: float = -(src._top() + 8.0) if src.has_method("_top") else -48.0
 		if not _art_box.is_empty():
 			y = -(_art_box.h / _view.S + 8.0)  # em cima do desenho novo
-		var eng: bool = src._obra.has_engineer() if src.get("_obra") else false
-		_top.draw_rect(Rect2(-26, y, 52, 5), Color(0.05, 0.04, 0.03, 0.85))
-		_top.draw_rect(Rect2(-25, y + 1, 50 * src.obra_progress(), 3), Color(1.0, 0.6, 0.25) if eng else Color(0.7, 0.5, 0.3))
-		var parada := Icones.tex("al_obra_parada", true)
-		if not eng and parada:  # Prompt 21: obra parada (sem engenheiro)
-			_top.draw_set_transform(Vector2(30, y - 4), 0.0, Vector2(1.0 / absf(scale.x), 1.0 / absf(scale.y)))
-			_top.draw_texture(parada, Vector2(0, -12))
-			_top.draw_set_transform(Vector2.ZERO)
+		var eng: bool
+		if src.has_method("obra_workers"):
+			eng = not src.obra_workers().is_empty()
+		else:
+			eng = src._obra.has_engineer() if src.get("_obra") else false
+		var k := Vector2(1.0 / maxf(absf(scale.x), 0.01), 1.0 / maxf(absf(scale.y), 0.01))  # px de tela, não da arte
+		_top.draw_set_transform(Vector2(0, y), 0.0, k)
+		_top.draw_rect(Rect2(-26, -3, 52, 6), Color(0.05, 0.04, 0.03, 0.85))
+		_top.draw_rect(Rect2(-25, -2, 50 * clampf(src.obra_progress(), 0.0, 1.0), 4), Color(1.0, 0.6, 0.25) if eng else Color(0.62, 0.58, 0.54))
+		var martelo := Icones.tex("construir", true)
+		if martelo:
+			_top.draw_texture(martelo, Vector2(30, -12), Color.WHITE if eng else Color(0.5, 0.5, 0.5, 0.95))
+		_top.draw_set_transform(Vector2.ZERO)
 		return
 	if not src.is_in_group("criaturas"):
 		return

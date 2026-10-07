@@ -4,6 +4,7 @@ extends PanelContainer
 ## Bloco 71: a mesma janela serve pras plataformas dos níveis novos (S4, S5): clicar numa delas troca
 ## a plataforma da janela (focus); o título e o texto vêm do nível (dados).
 const Ores := preload("res://scripts/core/ores.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _shaft: Node
@@ -38,7 +39,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("O ABISMO (NÍVEL 3)", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("O ABISMO (NÍVEL 3)", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	_title = title
@@ -49,13 +50,13 @@ func _build() -> void:
 	header.add_child(close)
 	var lore: Label = _hud._label(
 		"No fundo do nível 2 tem uma plataforma velha, arruinada, que desce ainda mais. "
-		+ "Lá embaixo a rocha guardou o calor da explosão solar: a SOLARITA.", 12, _hud.COLOR_DIM)
+		+ "Lá embaixo a rocha guardou o calor da explosão solar: a SOLARITA.", Tipo.DETALHE, _hud.COLOR_DIM)
 	lore.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(lore)
 	_lore = lore
-	_status = _hud._label("", 15, _hud.COLOR_TEXT)
+	_status = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	vbox.add_child(_status)
-	_desc = _hud._label("", 12, _hud.COLOR_DIM)
+	_desc = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_desc)
 	_bar = _hud._bar(_hud.COLOR_TITLE)

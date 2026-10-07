@@ -12,6 +12,7 @@ const FILE := DIR + "ui.json"
 const COLOR_TEXT := Color(0.92, 0.88, 0.8)
 const COLOR_TITLE := Color(1.0, 0.8, 0.35)
 const COLOR_DIM := Color(0.65, 0.6, 0.55)
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 static var _data: Dictionary = {}
 static var _tex: Dictionary = {}
@@ -200,8 +201,28 @@ static func theme() -> Theme:
 	t.set_stylebox("hover", "OptionButton", b.hover)
 	t.set_stylebox("pressed", "OptionButton", b.pressed)
 	t.set_stylebox("focus", "OptionButton", StyleBoxEmpty.new())
+	Tipo.aplica_no_tema(t)  # Bloco 95: a escala tipográfica, a fonte do corpo e a sombra fina
 	_theme = t
 	return t
+
+
+## Bloco 95: o tema da janela raiz NÃO chega nos Controls de um CanvasLayer (o HUD, o corte, a pausa): cada
+## Control de cima da camada recebe o tema, agora e quando entrar depois (janela nova, aviso, faixa).
+static func tema_na_camada(camada: CanvasLayer) -> void:
+	var t := theme()
+	if t == null:
+		return
+	for c in camada.get_children():
+		if c is Control and (c as Control).theme == null:
+			(c as Control).theme = t
+	if not camada.has_meta("_tema_95"):
+		camada.set_meta("_tema_95", true)
+		camada.child_entered_tree.connect(func(n: Node): _tema_no_filho(n))
+
+
+static func _tema_no_filho(n: Node) -> void:
+	if n is Control and (n as Control).theme == null and n.get_parent() is CanvasLayer:
+		(n as Control).theme = theme()
 
 
 ## Cursor do mouse (assets/game/ui/cursor_<nome>.png, ponta no ui.json).

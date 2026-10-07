@@ -74,7 +74,8 @@ func _pele() -> void:
 	var card = bm._cards[0] if not bm._cards.is_empty() else null
 	check(card != null and card.panel.get_theme_stylebox("panel") is StyleBoxTexture, "cartão do menu de construção com moldura")
 	var trancado: bool = card != null and card.button.disabled
-	check(card == null or not trancado or card.lock.visible, "cartão trancado mostra o cadeado")
+	# Bloco 95: o cadeado é do bloqueado (estágio/pesquisa); o sem recurso mostra o que falta (com ícone)
+	check(card == null or not trancado or card.lock.visible or card.estado == "falta", "cartão trancado mostra o cadeado")
 	check(bm._tab_buttons[0].get_theme_stylebox("pressed") is StyleBoxTexture, "abas de couro")
 	check(UiSkin.tex("cursor_normal") != null and UiSkin.tex("cursor_proibido") != null, "cursores (5)")
 	bm.toggle()

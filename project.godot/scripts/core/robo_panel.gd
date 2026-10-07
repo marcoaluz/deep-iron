@@ -1,6 +1,7 @@
 extends PanelContainer
 ## Janela do Robô antigo (clique no robô ou botão no HUD, que só aparece depois
 ## que ele é achado): mandar buscar, consertar e o status do Guarda Ferrugento.
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _finds: Node
@@ -31,7 +32,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("ROBÔ ANTIGO", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("ROBÔ ANTIGO", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var close: Button = _hud._button("X")
@@ -41,12 +42,12 @@ func _build() -> void:
 	header.add_child(close)
 	var lore: Label = _hud._label(
 		"Um Ferrugento: robô de antes da explosão solar, desligado há décadas no fundo da mina. "
-		+ "Consertado, ele fica do nosso lado.", 12, _hud.COLOR_DIM)
+		+ "Consertado, ele fica do nosso lado.", Tipo.DETALHE, _hud.COLOR_DIM)
 	lore.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(lore)
-	_status = _hud._label("", 15, _hud.COLOR_TEXT)
+	_status = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	vbox.add_child(_status)
-	_desc = _hud._label("", 12, _hud.COLOR_DIM)
+	_desc = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_desc)
 	_bar = _hud._bar(_hud.COLOR_TITLE)

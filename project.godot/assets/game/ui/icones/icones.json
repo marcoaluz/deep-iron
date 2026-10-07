@@ -86,7 +86,12 @@
   "it_picareta_de_aco",
   "carpinteiro",
   "it_cama_boa",
-  "it_mochila"
+  "it_mochila",
+  "sem_ferramenta",
+  "armazem_cheio",
+  "caminho_bloqueado",
+  "pessoas",
+  "missoes"
  ],
  "predios": [
   "casa",

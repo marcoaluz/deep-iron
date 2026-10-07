@@ -162,6 +162,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		match Teclas.acao(event.physical_keycode):
 			"proximo":
 				_select_next()
+			"pessoas":
+				_hud.toggle_pessoas()  # Bloco 95: a lista da força de trabalho (aba fina)
 			"seguir":
 				if selected:
 					_camera.follow_target = null if _camera.follow_target == selected else selected

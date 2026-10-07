@@ -7,6 +7,7 @@ const Ores := preload("res://scripts/core/ores.gd")
 
 const Items := preload("res://scripts/core/items.gd")  # Bloco 87
 const Icones := preload("res://scripts/ui/icones.gd")  # Bloco 94: o ícone de cada ferramenta e equipamento
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 ## Bloco 94: equipamento -> ícone (assets/game/ui/icones/it_*.png)
 const ICONE_EQUIP := {"casaco": "it_casaco", "gas": "it_traje_gas", "calor": "it_traje_calor",
 	"radiacao": "it_traje_radiacao", "botas": "it_botas"}
@@ -46,7 +47,7 @@ func _build() -> void:
 
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("OFICINA", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("OFICINA", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.add_theme_color_override("font_outline_color", Color(0.25, 0.12, 0.03))
 	title.add_theme_constant_override("outline_size", 4)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -60,11 +61,11 @@ func _build() -> void:
 
 	var intro: Label = _hud._label(
 		"Ferramentas novas liberam minérios que antes não dava pra minerar. "
-		+ "Uma por vez na forja; o custo é pago ao começar.", 12, _hud.COLOR_DIM)
+		+ "Uma por vez na forja; o custo é pago ao começar.", Tipo.DETALHE, _hud.COLOR_DIM)
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(intro)
 
-	_craft_label = _hud._label("", 12, _hud.COLOR_DIM)
+	_craft_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	vbox.add_child(_craft_label)
 	_craft_bar = _hud._bar(_hud.COLOR_CARGO)
 	_craft_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -72,17 +73,17 @@ func _build() -> void:
 	vbox.add_child(_craft_bar)
 
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("FERRAMENTAS", 12, _hud.COLOR_DIM))
+	vbox.add_child(_hud._label("FERRAMENTAS", Tipo.DETALHE, _hud.COLOR_DIM))
 	for id in _oficina.TOOL_IDS:
 		_rows[id] = _make_tool_row(vbox, id)
 	# Bloco 42: equipamento (vestiário da vila)
 	var eq := get_tree().get_first_node_in_group("equipment") if _oficina.is_inside_tree() else null
 	if eq:
 		vbox.add_child(HSeparator.new())
-		var hint: Label = _hud._label("EQUIPAMENTO — o vestiário da vila: cada um pega e devolve sozinho. Casaco no inverno; traje na zona de perigo.", 12, _hud.COLOR_DIM)
+		var hint: Label = _hud._label("EQUIPAMENTO — o vestiário da vila: cada um pega e devolve sozinho. Casaco no inverno; traje na zona de perigo.", Tipo.DETALHE, _hud.COLOR_DIM)
 		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vbox.add_child(hint)
-		_vest_label = _hud._label("", 12, _hud.COLOR_TEXT)
+		_vest_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 		_vest_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vbox.add_child(_vest_label)
 		_vest_button = _hud._button("")
@@ -91,7 +92,7 @@ func _build() -> void:
 			eq.build_vestiario()
 			refresh())
 		vbox.add_child(_vest_button)
-		_eq_queue = _hud._label("", 12, _hud.COLOR_TEXT)
+		_eq_queue = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 		_eq_queue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vbox.add_child(_eq_queue)
 		for id in eq.TYPES:
@@ -100,14 +101,14 @@ func _build() -> void:
 			var ic := _icone(ICONE_EQUIP.get(id, ""))
 			if ic:
 				row.add_child(ic)
-			var st: Label = _hud._label("", 12, _hud.COLOR_TEXT)
+			var st: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 			st.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			st.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			row.add_child(st)
 			var btns := VBoxContainer.new()
 			row.add_child(btns)
 			var make: Button = _hud._button("")
-			make.add_theme_font_size_override("font_size", 11)
+			make.add_theme_font_size_override("font_size", Tipo.DETALHE)
 			make.custom_minimum_size.x = 190
 			make.pressed.connect(func():
 				Audio.click()
@@ -115,7 +116,7 @@ func _build() -> void:
 				refresh())
 			btns.add_child(make)
 			var fix: Button = _hud._button("")
-			fix.add_theme_font_size_override("font_size", 11)
+			fix.add_theme_font_size_override("font_size", Tipo.DETALHE)
 			fix.pressed.connect(func():
 				Audio.click()
 				eq.repair(id)
@@ -137,8 +138,8 @@ func _monta_encomendas(vbox: VBoxContainer) -> void:
 	if _oficina.get("fila_ferreiro") == null:
 		return
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("ENCOMENDAS DO FERREIRO", 14, _hud.COLOR_TITLE))
-	_enc_status = _hud._label("", 12, _hud.COLOR_DIM)
+	vbox.add_child(_hud._label("ENCOMENDAS DO FERREIRO", Tipo.TITULO, _hud.COLOR_TITLE))
+	_enc_status = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	_enc_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_enc_status)
 	for r in _oficina.receitas_ferreiro:
@@ -147,20 +148,20 @@ func _monta_encomendas(vbox: VBoxContainer) -> void:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 4)
 		vbox.add_child(row)
-		var info: Label = _hud._label("", 12, _hud.COLOR_TEXT)
+		var info: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.add_child(info)
 		for passo in [-5, -1]:
 			row.add_child(_botao_qtd(id, passo))
-		var q: Label = _hud._label("", 14, _hud.COLOR_TITLE)
+		var q: Label = _hud._label("", Tipo.TITULO, _hud.COLOR_TITLE)
 		q.custom_minimum_size.x = 28
 		q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		row.add_child(q)
 		for passo in [1, 5]:
 			row.add_child(_botao_qtd(id, passo))
 		var b: Button = _hud._button("Encomendar")
-		b.add_theme_font_size_override("font_size", 12)
+		b.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		b.pressed.connect(func():
 			_oficina.encomendar(id, int(_enc_qtd[id]))
 			refresh())
@@ -172,7 +173,7 @@ func _monta_encomendas(vbox: VBoxContainer) -> void:
 
 func _botao_qtd(id: String, passo: int) -> Button:
 	var b: Button = _hud._button(("%+d" % passo) if absi(passo) > 1 else ("+" if passo > 0 else "−"))
-	b.add_theme_font_size_override("font_size", 12)
+	b.add_theme_font_size_override("font_size", Tipo.DETALHE)
 	b.custom_minimum_size = Vector2(26, 0)
 	b.pressed.connect(func():
 		Audio.click()
@@ -209,11 +210,11 @@ func _refresh_encomendas() -> void:
 		var txt := "%d. %s" % [i + 1, fila.texto_ordem(i)]
 		if i == 0 and fila.comecadas() > 0:
 			txt += "  —  %d%% da unidade" % roundi(fila.progresso_unidade() * 100.0)
-		var lb: Label = _hud._label(txt, 12, _hud.COLOR_TEXT)
+		var lb: Label = _hud._label(txt, Tipo.DETALHE, _hud.COLOR_TEXT)
 		lb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(lb)
 		var cancel: Button = _hud._button("Cancelar")
-		cancel.add_theme_font_size_override("font_size", 11)
+		cancel.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		cancel.pressed.connect(func():
 			_oficina.cancelar(i)
 			refresh())
@@ -233,16 +234,16 @@ func _make_tool_row(parent: VBoxContainer, id: String) -> Dictionary:
 	var ic := _icone("it_" + id)
 	if ic:
 		top.add_child(ic)
-	var name_label: Label = _hud._label(_oficina.TOOL_NAMES[id], 14, _hud.COLOR_TEXT)
+	var name_label: Label = _hud._label(_oficina.TOOL_NAMES[id], Tipo.TITULO, _hud.COLOR_TEXT)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(name_label)
-	var status: Label = _hud._label("", 12, _hud.COLOR_DIM)
+	var status: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	top.add_child(status)
 
 	var ore: String = _oficina.TOOL_UNLOCKS.get(id, "")
-	var unlock: Label = _hud._label("Libera: %s" % _oficina.unlock_label(id), 12, Ores.UI_COLORS.get(ore, _hud.COLOR_TEXT))
+	var unlock: Label = _hud._label("Libera: %s" % _oficina.unlock_label(id), Tipo.DETALHE, Ores.UI_COLORS.get(ore, _hud.COLOR_TEXT))
 	v.add_child(unlock)
-	var desc: Label = _hud._label(_oficina.TOOL_DESCRIPTIONS[id], 12, _hud.COLOR_DIM)
+	var desc: Label = _hud._label(_oficina.TOOL_DESCRIPTIONS[id], Tipo.DETALHE, _hud.COLOR_DIM)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(desc)
 
@@ -251,7 +252,7 @@ func _make_tool_row(parent: VBoxContainer, id: String) -> Dictionary:
 	v.add_child(bottom)
 	var cost: Vector3i = _oficina.tool_cost(id)
 	var cost_label: Label = _hud._label("%s  •  %ds  •  vila nível %d" % [_oficina.tool_cost_text(id), cost.z, _oficina.tool_stage(id)],
-		12, _hud.COLOR_TEXT)  # Bloco 94: tool_cost_text (a picareta de aço leva aço)
+		Tipo.DETALHE, _hud.COLOR_TEXT)  # Bloco 94: tool_cost_text (a picareta de aço leva aço)
 	cost_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom.add_child(cost_label)
 	var button: Button = _hud._button("Fabricar")
@@ -294,7 +295,7 @@ func _ensure_build_box() -> void:
 	_build_box.add_theme_constant_override("separation", 6)
 	vbox.add_child(_build_box)
 	vbox.move_child(_build_box, 1)
-	_build_info = _hud._label("", 13, _hud.COLOR_TEXT)
+	_build_info = _hud._label("", Tipo.CORPO, _hud.COLOR_TEXT)
 	_build_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_build_box.add_child(_build_info)
 	_build_button = _hud._button("")

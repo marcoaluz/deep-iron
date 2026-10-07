@@ -11,14 +11,19 @@ extends Node
 ##   paradas de zoom contam com ela), então o mundo fica do mesmo tamanho. Ela é limitada pra área
 ##   lógica nunca ficar menor que UI_MIN_LOGICAL (as janelas foram feitas pra 1280×720): em
 ##   1280×720, até ~120%.
+## - Bloco 95: a escala vira 3 OPÇÕES (90 / 100 / 125%, UI_SCALES). A área mínima passou a 1024×576 (= 1280×720
+##   a 125%): a 125% a interface cabe numa janela de 720p. Valor antigo (80–150% do Bloco 54) vai pra opção
+##   mais perto; numa janela pequena demais vale a maior opção que cabe.
 
 signal fullscreen_changed(on: bool)
 signal ui_scale_changed(applied: float)
 
-const UI_SCALE_MIN := 0.8
-const UI_SCALE_MAX := 1.5
-## A menor área lógica (px da interface) em que as janelas cabem sem cortar.
-const UI_MIN_LOGICAL := Vector2(1060, 600)
+const UI_SCALE_MIN := 0.9
+const UI_SCALE_MAX := 1.25
+## Bloco 95: as opções da escala da interface (configurações).
+const UI_SCALES := [0.9, 1.0, 1.25]
+## A menor área lógica (px da interface) em que as janelas cabem sem cortar (Bloco 95: 1280×720 a 125%).
+const UI_MIN_LOGICAL := Vector2(1024, 576)
 const IDIOMAS := [["pt_BR", "Português (Brasil)"], ["en", "English"]]
 
 const Settings := preload("res://scripts/core/settings.gd")
@@ -82,7 +87,16 @@ func _apply(on: bool) -> void:
 # ------------------------------------------------------------ escala da interface (Bloco 54)
 ## A escala pedida (o que o jogador escolheu).
 func ui_scale() -> float:
-	return clampf(Settings.get_value("video", "ui_scale", 1.0), UI_SCALE_MIN, UI_SCALE_MAX)
+	return opcao_de_escala(float(Settings.get_value("video", "ui_scale", 1.0)))
+
+
+## Bloco 95: a opção de escala mais perto de v (o save das configurações pode ter 0,8, 1,1, 1,5...).
+static func opcao_de_escala(v: float) -> float:
+	var melhor: float = UI_SCALES[1]
+	for o in UI_SCALES:
+		if absf(o - v) < absf(melhor - v) - 0.0001:
+			melhor = o
+	return melhor
 
 
 ## A maior escala que cabe nesta janela (a área lógica não fica menor que UI_MIN_LOGICAL).
@@ -99,11 +113,16 @@ func max_ui_scale() -> float:
 
 ## A escala que está valendo (a pedida, limitada pela janela).
 func applied_ui_scale() -> float:
-	return minf(ui_scale(), max_ui_scale())
+	var limite := max_ui_scale() + 0.001
+	var out: float = UI_SCALES[0]
+	for o in UI_SCALES:  # Bloco 95: a maior opção que cabe, até a pedida
+		if o <= ui_scale() + 0.001 and o <= limite:
+			out = o
+	return out
 
 
 func set_ui_scale(v: float) -> void:
-	Settings.set_value("video", "ui_scale", clampf(v, UI_SCALE_MIN, UI_SCALE_MAX))
+	Settings.set_value("video", "ui_scale", opcao_de_escala(v))
 	_reapply_ui_scale()
 
 

@@ -5,6 +5,7 @@ extends PanelContainer
 ## ou tecla: o primeiro); "Designar"/"Liberar" valem pra essa máquina.
 ## Bloco 81: o primeiro é a RUÍNA da floresta — enquanto não está restaurado, a janela mostra as etapas
 ## (feitas, a atual com custo/progresso/o que falta, as próximas) e o botão de pedir a etapa.
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _hub: Node
@@ -40,7 +41,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	_title = _hud._label("COLETOR DE MADEIRA", 20, _hud.COLOR_TITLE)
+	_title = _hud._label("COLETOR DE MADEIRA", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_title)
 	var close: Button = _hud._button("X")
@@ -48,10 +49,10 @@ func _build() -> void:
 		Audio.click()
 		visible = false)
 	header.add_child(close)
-	var intro: Label = _hud._label("Serraria a vapor na clareira. Um LENHADOR opera e ela manda madeira sozinha pro armazém. O lenhador manual continua cortando árvore em paralelo.", 12, _hud.COLOR_DIM)
+	var intro: Label = _hud._label("Serraria a vapor na clareira. Um LENHADOR opera e ela manda madeira sozinha pro armazém. O lenhador manual continua cortando árvore em paralelo.", Tipo.DETALHE, _hud.COLOR_DIM)
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(intro)
-	_status = _hud._label("", 13, _hud.COLOR_TEXT)
+	_status = _hud._label("", Tipo.CORPO, _hud.COLOR_TEXT)
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_status)
 	_designate_button = _hud._button("")

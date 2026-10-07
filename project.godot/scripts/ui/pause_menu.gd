@@ -5,6 +5,7 @@ extends CanvasLayer
 
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const SettingsPanel := preload("res://scripts/ui/settings_panel.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const START_MENU := "res://scenes/ui/start_menu.tscn"
 const COLOR_TITLE := Color(1.0, 0.8, 0.35)
 const COLOR_PANEL := Color(0.09, 0.075, 0.07, 0.95)
@@ -16,6 +17,7 @@ var _panel: PanelContainer
 
 
 func _ready() -> void:
+	UiSkin.tema_na_camada(self)  # Bloco 95: o tema (escala e fonte) chega nos Controls da camada
 	layer = 20
 	process_mode = Node.PROCESS_MODE_ALWAYS  # funciona com o jogo pausado
 	add_to_group("pause_menu")
@@ -47,7 +49,7 @@ func _ready() -> void:
 	var title := Label.new()
 	title.text = "PAUSADO"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 26)
+	title.add_theme_font_size_override("font_size", Tipo.FAIXA)
 	title.add_theme_color_override("font_color", COLOR_TITLE)
 	_main_page.add_child(title)
 	_button("Continuar  (Esc)", close)
@@ -124,7 +126,7 @@ func _button(text: String, action: Callable) -> void:
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(0, 38)
-	b.add_theme_font_size_override("font_size", 15)
+	b.add_theme_font_size_override("font_size", Tipo.TITULO)
 	b.pressed.connect(func():
 		Audio.click()
 		action.call())

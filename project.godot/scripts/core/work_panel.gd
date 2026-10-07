@@ -10,6 +10,7 @@ extends PanelContainer
 ##
 ## Os botões respeitam os limites sozinhos (− no zero, + na área cheia ou sem ninguém disponível). A
 ## lógica é toda do work_areas.gd; aqui é só mostrar e chamar.
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _disp: Label
@@ -44,7 +45,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("TRABALHADORES", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("TRABALHADORES", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var close: Button = _hud._button("X")
@@ -53,9 +54,9 @@ func _build() -> void:
 		Audio.click()
 		visible = false)
 	header.add_child(close)
-	_disp = _hud._label("", 16, _hud.COLOR_TEXT)
+	_disp = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	vbox.add_child(_disp)
-	var intro: Label = _hud._label("Marque no mapa onde trabalhar e diga quantos vão pra lá (até 5 por área). Quem vai sai dos disponíveis (sem função) e só trabalha dentro da área; tirando, volta a ficar disponível.", 12, _hud.COLOR_DIM)
+	var intro: Label = _hud._label("Marque no mapa onde trabalhar e diga quantos vão pra lá (até 5 por área). Quem vai sai dos disponíveis (sem função) e só trabalha dentro da área; tirando, volta a ficar disponível.", Tipo.DETALHE, _hud.COLOR_DIM)
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(intro)
 	var novas := HBoxContainer.new()
@@ -73,7 +74,7 @@ func _build() -> void:
 				placer.begin(t))
 		novas.add_child(b)
 	vbox.add_child(HSeparator.new())
-	_vazio = _hud._label("Nenhuma área marcada ainda. Sem área, quem tem função (teclas 1, 2, L...) trabalha onde achar, como sempre.", 12, _hud.COLOR_DIM)
+	_vazio = _hud._label("Nenhuma área marcada ainda. Sem área, quem tem função (teclas 1, 2, L...) trabalha onde achar, como sempre.", Tipo.DETALHE, _hud.COLOR_DIM)
 	_vazio.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_vazio)
 	_lista = VBoxContainer.new()
@@ -104,7 +105,7 @@ func _card(a) -> Dictionary:
 	box.add_theme_constant_override("separation", 3)
 	var top := HBoxContainer.new()
 	box.add_child(top)
-	var titulo: Label = _hud._label("", 15, _hud.COLOR_TITLE)
+	var titulo: Label = _hud._label("", Tipo.TITULO, _hud.COLOR_TITLE)
 	titulo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(titulo)
 	var ver: Button = _hud._button("Ver")
@@ -142,7 +143,7 @@ func _card(a) -> Dictionary:
 			Audio.error()
 		refresh())
 	linha.add_child(menos)
-	var conta: Label = _hud._label("", 18, _hud.COLOR_TEXT)
+	var conta: Label = _hud._label("", Tipo.TITULO_JANELA, _hud.COLOR_TEXT)
 	conta.custom_minimum_size.x = 70
 	conta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	linha.add_child(conta)
@@ -158,11 +159,11 @@ func _card(a) -> Dictionary:
 				_hud.show_toast(why.left(1).to_upper() + why.substr(1), Color(1.0, 0.6, 0.45))
 		refresh())
 	linha.add_child(mais)
-	var quem: Label = _hud._label("", 12, _hud.COLOR_DIM)
+	var quem: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	quem.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	quem.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	linha.add_child(quem)
-	var status: Label = _hud._label("", 13, _hud.COLOR_TEXT)
+	var status: Label = _hud._label("", Tipo.CORPO, _hud.COLOR_TEXT)
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(status)
 	var ativar: Button = _hud._button("")

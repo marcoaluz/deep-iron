@@ -28,6 +28,7 @@ signal finished(confirmed: bool)
 
 const CASA_TEXTURE := preload("res://assets/game/casa.png")
 const IsoArt := preload("res://scripts/iso/iso_art.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 ## Pegada da casa em volta do ponto clicado (o ponto é o pé da casa): do telhado
 ## (-54) até o degrau da porta, onde ficam as camas (+24).
 const FOOTPRINT := Rect2(-32, -54, 64, 78)
@@ -77,7 +78,7 @@ func _ready() -> void:
 	# centraliza no espaço à direita do painel do HUD (que ocupa a esquerda da tela)
 	_hint.offset_left = 220.0
 	_hint.offset_right = 220.0
-	_hint.add_theme_font_size_override("font_size", 15)
+	_hint.add_theme_font_size_override("font_size", Tipo.TITULO)
 	_hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
 	_hint.add_theme_constant_override("outline_size", 5)
 	_hint_layer.add_child(_hint)

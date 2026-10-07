@@ -1,6 +1,7 @@
 extends PanelContainer
 ## Janela do Sol (tecla Y, ou clique no gerador do escudo): estação, previsão das
 ## ondas solares e a obra do escudo (a vitória).
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _sun: Node
@@ -33,7 +34,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("O SOL", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("O SOL", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var close: Button = _hud._button("X")
@@ -41,20 +42,20 @@ func _build() -> void:
 		Audio.click()
 		visible = false)
 	header.add_child(close)
-	_season = _hud._label("", 14, _hud.COLOR_TEXT)
+	_season = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	_season.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_season)
-	_forecast = _hud._label("", 13, _hud.COLOR_TEXT)
+	_forecast = _hud._label("", Tipo.CORPO, _hud.COLOR_TEXT)
 	_forecast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_forecast)
 	var info: Label = _hud._label(
 		"Nas ondas solares, quem está na mina ou na clareira fora de casa acumula radiação e se "
 		+ "machuca. No nível 2 e no abismo a rocha protege. O sol piora a cada dia: só o escudo resolve.",
-		11, _hud.COLOR_DIM)
+		Tipo.DETALHE, _hud.COLOR_DIM)
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(info)
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("ESCUDO SOLAR (vitória)", 13, _hud.COLOR_TITLE))
+	vbox.add_child(_hud._label("ESCUDO SOLAR (vitória)", Tipo.CORPO, _hud.COLOR_TITLE))
 	_place_button = _hud._button("")
 	_place_button.pressed.connect(func():
 		Audio.click()
@@ -75,8 +76,8 @@ func _build() -> void:
 		var info_box := VBoxContainer.new()
 		info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(info_box)
-		info_box.add_child(_hud._label(escudo_script.STAGE_NAMES[id], 13, _hud.COLOR_TEXT))
-		var status: Label = _hud._label("", 11, _hud.COLOR_DIM)
+		info_box.add_child(_hud._label(escudo_script.STAGE_NAMES[id], Tipo.CORPO, _hud.COLOR_TEXT))
+		var status: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 		status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		info_box.add_child(status)
 		var b: Button = _hud._button("Construir")

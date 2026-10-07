@@ -2,6 +2,7 @@ extends PanelContainer
 ## Bloco 88: janela do CALENDÁRIO — hoje, os próximos eventos (missa, funerais, domingo à tarde, o festival da
 ## estação), o padre e a igreja, e a ESCOLHA do domingo à tarde (Festival / Dia livre / Trabalhar). Abre
 ## sozinha no domingo ao meio-dia, clicando na igreja ou pelo botão da coluna do HUD.
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _cal: Node
@@ -36,7 +37,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	var title: Label = _hud._label("CALENDÁRIO", 20, _hud.COLOR_TITLE)
+	var title: Label = _hud._label("CALENDÁRIO", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var close: Button = _hud._button("X")
@@ -44,27 +45,27 @@ func _build() -> void:
 		Audio.click()
 		visible = false)
 	header.add_child(close)
-	_hoje = _hud._label("", 14, _hud.COLOR_TEXT)
+	_hoje = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	vbox.add_child(_hoje)
-	vbox.add_child(_hud._label("PRÓXIMOS EVENTOS", 14, _hud.COLOR_TITLE))
-	_eventos = _hud._label("", 12, _hud.COLOR_TEXT)
+	vbox.add_child(_hud._label("PRÓXIMOS EVENTOS", Tipo.TITULO, _hud.COLOR_TITLE))
+	_eventos = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	_eventos.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_eventos)
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("DOMINGO À TARDE", 14, _hud.COLOR_TITLE))
-	_escolha_info = _hud._label("", 12, _hud.COLOR_DIM)
+	vbox.add_child(_hud._label("DOMINGO À TARDE", Tipo.TITULO, _hud.COLOR_TITLE))
+	_escolha_info = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	_escolha_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_escolha_info)
 	for op in ["festival", "livre", "trabalhar"]:
 		var b: Button = _hud._button("")
-		b.add_theme_font_size_override("font_size", 12)
+		b.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		b.pressed.connect(func():
 			_cal.escolher(op)
 			refresh())
 		vbox.add_child(b)
 		_botoes[op] = b
 	vbox.add_child(HSeparator.new())
-	_padre = _hud._label("", 12, _hud.COLOR_TEXT)
+	_padre = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	_padre.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_padre)
 	_igreja_button = _hud._button("")

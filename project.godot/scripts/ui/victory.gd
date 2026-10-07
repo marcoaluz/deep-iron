@@ -4,6 +4,7 @@ extends CanvasLayer
 
 const Icones := preload("res://scripts/ui/icones.gd")
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const START_MENU := "res://scenes/ui/start_menu.tscn"
 const COLOR_TITLE := Color(0.6, 0.9, 1.0)
 const COLOR_TEXT := Color(0.92, 0.88, 0.8)
@@ -13,6 +14,7 @@ var _box: VBoxContainer
 
 
 func _ready() -> void:
+	UiSkin.tema_na_camada(self)  # Bloco 95: o tema (escala e fonte) chega nos Controls da camada
 	layer = 30
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("victory_screen")
@@ -52,13 +54,13 @@ func setup(stats: Dictionary) -> void:
 		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		img.custom_minimum_size = ilu.get_size() * 2.0
 		_box.add_child(img)
-	_label("A VILA ESTÁ A SALVO!", 30, COLOR_TITLE)
+	_label("A VILA ESTÁ A SALVO!", Tipo.TELA, COLOR_TITLE)
 	var text := _label(
 		"O escudo solar acendeu sobre a mina. Pela primeira vez desde a explosão, o sol "
-		+ "não é mais uma ameaça. Os ipezinhos saem das casas pra olhar o céu azulado.", 14, COLOR_TEXT)
+		+ "não é mais uma ameaça. Os ipezinhos saem das casas pra olhar o céu azulado.", Tipo.TITULO, COLOR_TEXT)
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label("Vitória no dia %d (%s)  •  %d ipezinhos" % [int(stats.get("day", 1)), str(stats.get("season", "")),
-		int(stats.get("workers", 0))], 12, COLOR_DIM)
+		int(stats.get("workers", 0))], Tipo.DETALHE, COLOR_DIM)
 	_box.add_child(HSeparator.new())
 	_button("Continuar jogando", func():
 		get_tree().paused = false
@@ -84,7 +86,7 @@ func _button(text: String, action: Callable) -> void:
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(0, 38)
-	b.add_theme_font_size_override("font_size", 15)
+	b.add_theme_font_size_override("font_size", Tipo.TITULO)
 	b.pressed.connect(func():
 		Audio.click()
 		action.call())

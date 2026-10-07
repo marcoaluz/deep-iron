@@ -52,7 +52,11 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 const Schedule := preload("res://scripts/core/schedule.gd")  # Bloco 84
 const Items := preload("res://scripts/core/items.gd")  # Bloco 86
 const Icones := preload("res://scripts/ui/icones.gd")  # Bloco 85: o balão da hora social
+const Settings := preload("res://scripts/core/settings.gd")  # Bloco 95: liga/desliga o balão de motivo
 const BALAO := preload("res://assets/game/ui/balao.png")
+## Bloco 95: onde fica o balão (conversa e motivo), px da lógica acima do pé. A vista iso sobe junto com a
+## altura da arte nova (iso_billboard: lift); -66 deixava o balão longe da cabeça.
+const BALAO_POS := Vector2(12, -50)
 const STEEL_PICKAXE := preload("res://assets/game/pickaxe_aco.png")
 const FOOD_BASKET := preload("res://assets/game/food_basket.png")
 ## Nomes sorteados (sem repetir enquanto houver nome livre).
@@ -171,6 +175,7 @@ const STUCK_REPATH_TIME := 1.5
 const STUCK_SNAP_TIME := 3.0
 const RAW_FOOD := preload("res://assets/game/raw_food.png")
 const STRIKE_SIGN := preload("res://assets/game/strike_sign.png")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 @export_group("Obras (Bloco 51)")
 ## Vigia do engenheiro: indo pra obra sem chegar nem 16 px mais perto por esse tempo (s de jogo),
@@ -504,6 +509,14 @@ var _passeio: Array[Vector2] = []
 var _balao_t := 0.0
 var _balao: Sprite2D = null
 var _balao_vida := 0.0
+## Bloco 95: o BALÃO DE MOTIVO (por que está parado). Liga/desliga nas configurações ([hud] baloes_motivo):
+## lido uma vez aqui (o settings.cfg é lido do disco a cada get_value) e trocado pela tela de configurações.
+static var baloes_motivo := true
+static var _baloes_lido := false
+var _motivo := ""
+var _motivo_t := 0.0
+var _motivo_cd := 0.0
+var _motivo_balao: Sprite2D = null
 ## Preenchido pelo SaveManager antes de entrar na árvore (ipezinho vindo do save).
 var pending_save_data: Dictionary = {}
 var _saved_home: String = ""  # nome da casa salva (a cama volta pro mesmo dono)
@@ -825,6 +838,7 @@ func _process(delta: float) -> void:
 		_on_starving()
 	_agenda_tick(delta)  # Bloco 84
 	_social_process(delta)  # Bloco 85
+	_motivo_tick(delta)  # Bloco 95
 
 	_work_timer = maxf(_work_timer - delta, 0.0)
 	_update_anger(delta)
@@ -3052,7 +3066,7 @@ func _popup(text: String, color: Color) -> void:
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_outline_color", Color(0.08, 0.04, 0.04))
 	label.add_theme_constant_override("outline_size", 4)
-	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_font_size_override("font_size", Tipo.MAPA)
 	label.position = Vector2(-18, -62)
 	label.z_index = 20
 	add_child(label)
@@ -3322,7 +3336,7 @@ func _mostra_balao(icone: String) -> void:
 		_balao.name = "Balao"
 		_balao.texture = BALAO
 		_balao.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		_balao.position = Vector2(12, -66)
+		_balao.position = BALAO_POS
 		_balao.z_index = 21
 		var ic := Sprite2D.new()
 		ic.name = "Icone"
@@ -3335,6 +3349,96 @@ func _mostra_balao(icone: String) -> void:
 	(_balao.get_node("Icone") as Sprite2D).texture = tex
 	_balao.visible = tex != null
 	_balao_vida = 1.8
+
+
+# ------------------------------------------------------------ balão de motivo (Bloco 95)
+## Ícone de cada motivo (assets/game/ui/icones/) e o nome dele (dica, lista, teste).
+const MOTIVO_ICONE := {"sem_trabalho": "sem_funcao", "sem_ferramenta": "sem_ferramenta", "armazem_cheio": "armazem_cheio",
+	"caminho_bloqueado": "caminho_bloqueado", "sem_comida": "al_falta_comida"}
+const MOTIVO_NOME := {"sem_trabalho": "sem trabalho", "sem_ferramenta": "sem ferramenta", "armazem_cheio": "armazém cheio",
+	"caminho_bloqueado": "caminho bloqueado", "sem_comida": "sem comida"}
+## Segundos parado pelo MESMO motivo antes de o balão aparecer (não pisca a cada troca de tarefa).
+@export var motivo_espera: float = 2.0
+## A cada quantos segundos o motivo é conferido (barato: só olha o estado que a IA já decidiu).
+@export var motivo_intervalo: float = 0.5
+
+
+## Por que está parado? "" = não está (ou o motivo é a agenda: dormindo, comendo, na hora social...).
+##   sem_trabalho       sem função, ou com função e sem nada pra fazer (sem obra, sem jazida, sem árvore...)
+##   sem_ferramenta     guarda com a arma quebrada; caçador com toca e sem arco; minerador só com jazida trancada
+##   armazem_cheio      com a carga nas costas e nenhum armazém pra entregar (o armazém do jogo não tem limite:
+##                      é o caso de não ter onde guardar)
+##   caminho_bloqueado  andando e preso no mesmo lugar (o anti-travamento já começou a agir)
+##   sem_comida         com fome e a cozinha vazia
+func motivo_parado() -> String:
+	if downed or injured or _resting or holding_robot != null:
+		return ""
+	if _moving and _stuck_stage >= 1:
+		return "caminho_bloqueado"
+	if hunger < hunger_threshold:
+		var tem_comida := false
+		for c in get_tree().get_nodes_in_group("comedouros"):
+			if c.food_stock > 0.0:
+				tem_comida = true
+				break
+		if not tem_comida:
+			return "sem_comida"
+	if is_guard() and weapon == "" and _ai_state in ["guard", "training", "home", "idle"]:
+		var def := _defense()
+		if def == null or def.arsenal() == null:
+			return "sem_ferramenta"
+	if _ai_state == "storing" and not _moving and _station == null and carrying > 0.0:
+		return "armazem_cheio"
+	if _ai_state != "idle":
+		return ""
+	if is_hunter() and not _has_bow() and not get_tree().get_nodes_in_group("caca").is_empty() 			and not _has_usable_station("coleta_comida"):
+		return "sem_ferramenta"
+	if is_miner() and _find_best_station("minerios") == null:
+		for m in get_tree().get_nodes_in_group("minerios"):
+			if m.has_method("is_unlocked") and not m.is_unlocked() and m.ore_remaining > 0.0:
+				return "sem_ferramenta"  # só sobrou jazida que pede ferramenta nova (Oficina)
+	return "sem_trabalho"
+
+
+func _motivo_tick(delta: float) -> void:
+	_motivo_cd -= delta
+	if _motivo_cd > 0.0:
+		return
+	_motivo_cd = motivo_intervalo
+	if not _baloes_lido:
+		_baloes_lido = true
+		baloes_motivo = bool(Settings.get_value("hud", "baloes_motivo", true))
+	var m := motivo_parado() if baloes_motivo else ""
+	if m != _motivo:
+		_motivo = m
+		_motivo_t = 0.0
+	else:
+		_motivo_t += motivo_intervalo
+	var mostra := _motivo != "" and _motivo_t >= motivo_espera and not (_balao != null and _balao.visible)
+	if mostra and _motivo_balao == null:
+		_motivo_balao = Sprite2D.new()
+		_motivo_balao.name = "BalaoMotivo"
+		_motivo_balao.texture = BALAO
+		_motivo_balao.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_motivo_balao.position = BALAO_POS  # o mesmo lugar do balão da conversa (os dois nunca juntos)
+		_motivo_balao.z_index = 21
+		var ic := Sprite2D.new()
+		ic.name = "Icone"
+		ic.scale = Vector2(0.34, 0.34)
+		ic.position = Vector2(0, -2)
+		ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_motivo_balao.add_child(ic)
+		add_child(_motivo_balao)
+	if _motivo_balao:
+		if mostra:
+			(_motivo_balao.get_node("Icone") as Sprite2D).texture = Icones.tex(MOTIVO_ICONE.get(_motivo, ""))
+		if _motivo_balao.visible != mostra:
+			_motivo_balao.visible = mostra
+
+
+## O motivo que o balão está mostrando agora ("" = nenhum).
+func motivo_no_balao() -> String:
+	return _motivo if _motivo_balao != null and _motivo_balao.visible else ""
 
 
 # ------------------------------------------------------------ fundidor (Bloco 86)

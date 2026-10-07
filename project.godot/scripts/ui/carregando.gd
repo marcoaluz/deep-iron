@@ -6,6 +6,7 @@ extends CanvasLayer
 
 const DIR := "res://assets/game/ui/titulo/"
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const DICAS := [
 	"Mineiros sem lampião não entram na galeria de carvão: a Oficina (O) faz um.",
 	"A noite de invasão começa no dia 3. Guardas (X) e muro no portão seguram os Lumívoros.",
@@ -31,6 +32,7 @@ static func mostra(tree: SceneTree) -> void:
 
 
 func _ready() -> void:
+	UiSkin.tema_na_camada(self)  # Bloco 95: o tema (escala e fonte) chega nos Controls da camada
 	layer = 100
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	var fundo := ColorRect.new()
@@ -68,14 +70,14 @@ func _ready() -> void:
 	t.text = "Carregando..."
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	t.add_theme_color_override("font_color", UiSkin.COLOR_TITLE)
-	UiSkin.usa_fonte(t, "texto", 16)
+	UiSkin.usa_fonte(t, "texto", Tipo.PIXEL_1)
 	v.add_child(t)
 	var d := Label.new()
 	d.text = "Dica: " + DICAS[randi() % DICAS.size()]
 	d.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	d.custom_minimum_size.x = 640
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	d.add_theme_font_size_override("font_size", 14)
+	d.add_theme_font_size_override("font_size", Tipo.TITULO)
 	d.add_theme_color_override("font_color", UiSkin.COLOR_TEXT)
 	v.add_child(d)
 	get_tree().scene_changed.connect(_some, CONNECT_ONE_SHOT)

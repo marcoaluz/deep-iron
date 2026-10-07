@@ -1,9 +1,52 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 94 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco). Push só com o OK dele.
+Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 94 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco); o Bloco 95 está só no commit local. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido".
 
-## AGORA (2026-10-07): Bloco 94 — a cadeia de produção fechada
+## AGORA (2026-10-07): Bloco 95 — layout v2 da interface (feito; ESPERANDO o Marco escolher a FONTE)
+
+**O pedido:** a seção 27 do guia (`docs/DEEP_IRON_Guia_completo_e_Analise.docx`) mais a janela CONSTRUIR
+padronizada, a tipografia e uma imagem em todo cartão (partes A, B, C e D). O plano e o ANTES estão em
+`docs/layout_v2/PLANO_BLOCO95.md`. O Marco aprovou: "pode continuar, aprovado".
+
+**Relatório:** `docs/BLOCO95_LAYOUT_V2.md`. Capturas em `docs/layout_v2/antes|depois/` e `antes_depois.jpg`.
+
+**O que foi feito:**
+- **HUD v2:**
+  - aba fina à esquerda: Tab abre a lista (o "próximo ipezinho" foi pro ".");
+  - alertas à direita, com clique que leva ao lugar;
+  - barra de funções agrupada, só com as liberadas;
+  - cartão do selecionado acima da barra;
+  - hora grande no meio;
+  - Vender e auto no Armazém;
+  - menu "Janelas";
+  - pilha de avisos;
+  - espaço do rastreador de missões;
+  - balões de motivo, com liga/desliga.
+- **CONSTRUIR:** janela de tamanho fixo, grade vertical e cartão de estrutura fixa, com o campo `img`.
+- **Escala tipográfica:** `scripts/ui/tipografia.gd`, sem número solto, e o tema chegando nos `CanvasLayer`.
+- **Escala da interface:** 90/100/125%; 125% cabe em 720p.
+- **Rótulos do mapa:** só o nome, com o texto inteiro ao passar o mouse; toda obra ganhou barrinha e martelo cinza.
+- **Arte (PixelLab):** 9 ilustrações de cartão e 5 ícones, **300 gerações**. **Saldo 6.937** (renova em 2026-11-02).
+  Os 8 cartões da decoração e do vagonete reaproveitam o sprite do jogo.
+- **Regra 12 nova no CLAUDE.md:** todo cartão novo do CONSTRUIR precisa de imagem.
+
+**Pendente:**
+- **A fonte do corpo.** A comparação está em `docs/layout_v2/fontes_comparativo.png`: Pixelify Sans, Barlow Semi
+  Condensed e Chakra Petch (OFL); a minha recomendação é a Chakra Petch.
+  - Ao escolher: baixar o `.ttf` do github.com/google/fonts (`ofl/<nome>/`) para `assets/fonts/` com o `OFL.txt`;
+  - `Tipo.FONTE_CORPO = "res://assets/fonts/<arquivo>.ttf"`;
+  - `--import`, `tests/capturas_bloco95.gd -- docs/layout_v2/depois` e os testes b95/b95b/hud_frostpunk.
+- O "armazém cheio" ficou como "sem armazém pra entregar" (o armazém não tem limite): perguntar ao Marco.
+
+**Testes:** a bateria inteira foi conferida um por vez em 2026-10-07: os 79 de `tests/blocos` com 0 falhas e os GUT
+iso. O b84 e o b85 têm falha rara por sorteio e passaram ao repetir. Os ajustados: hud_frostpunk, b28, p20, b54
+e b83. Push só com o OK do Marco.
+
+**Roteiro do guia (seção 28) andou um número:** o b96 é a tela de dificuldade e o b97 as missões (que usam o
+`rastreador_missoes.gd`).
+
+## Antes (2026-10-07): Bloco 94 — a cadeia de produção fechada
 
 **O pedido:** dar uso ao que se fabrica e só servia para vender.
 

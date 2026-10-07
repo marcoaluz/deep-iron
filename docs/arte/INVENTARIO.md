@@ -161,6 +161,7 @@ prompts 0–31).
 | **Carpintaria** (obra 1-2-3 + pronto, desenho do mapa antigo, cartão do CONSTRUIR) — Bloco 94 (`predios94.py`) | — | **integrado** | 40 (feito) |
 | **Carpinteiro e carpinteira** (personagem v3, caminhada 8, comer/ferido/deitar/mancar, serrar, casaco, retrato 5 expressões, ícone da barra) — Bloco 94 (`oficios94.py`) | — | **integrado** | ~400 (feito, com refações do serrar e das expressões) |
 | **Ícones de itens**: tábua, cama de tábua, mochila, botas, picareta de aço — Bloco 94 | — | **integrado** | ~45 (feito) |
+| **Cartões do CONSTRUIR sem desenho** (escola, estação da ferrovia de carga, caminho de terra/cascalho/pedra, pá de apagar caminho, mapa de desbravar, bota das trilhas, pé de cabra de remover decoração) + **ícones** (sem ferramenta, armazém cheio, caminho bloqueado, pessoas, missões) — Bloco 95 (`ui95/ui95.py`; os 8 cartões da decoração e do vagonete e o coletor de minério reaproveitam o sprite do jogo, sem gerar) | — | **integrado** | 300 (feito: 2 pilotos + 13 pedidos de 20; a picareta quebrada foi cortada à mão, `ui95/quebra_picareta.py`) |
 
 ## 10. Efeitos e luzes
 

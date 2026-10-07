@@ -4,6 +4,7 @@ extends PanelContainer
 ## Abre clicando na enfermaria, pela tecla I ou pelo botão no painel do HUD.
 ## Bloco 47: pode ter enfermarias extras. A janela mostra a CLICADA (tecla/botão: a principal);
 ## o memorial é sempre o da principal; o botão do HUD soma todas.
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _inf: Node
@@ -41,7 +42,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	_title = _hud._label("ENFERMARIA", 20, _hud.COLOR_TITLE)
+	_title = _hud._label("ENFERMARIA", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_title)
 	var close: Button = _hud._button("X")
@@ -52,10 +53,10 @@ func _build() -> void:
 
 	var intro: Label = _hud._label(
 		"Machucado só se cura aqui, deitado num leito. Sem leito, o tempo corre: "
-		+ "leve piora pra grave, grave pode morrer.", 12, _hud.COLOR_DIM)
+		+ "leve piora pra grave, grave pode morrer.", Tipo.DETALHE, _hud.COLOR_DIM)
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(intro)
-	_beds_label = _hud._label("", 14, _hud.COLOR_TEXT)
+	_beds_label = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	vbox.add_child(_beds_label)
 	_upgrade_button = _hud._button("")
 	_upgrade_button.pressed.connect(func():
@@ -75,12 +76,12 @@ func _build() -> void:
 	vbox.add_child(_new_button)
 
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("PACIENTES E ESPERA", 12, _hud.COLOR_DIM))
+	vbox.add_child(_hud._label("PACIENTES E ESPERA", Tipo.DETALHE, _hud.COLOR_DIM))
 	_list = VBoxContainer.new()
 	_list.add_theme_constant_override("separation", 2)
 	vbox.add_child(_list)
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("MEMORIAL", 12, _hud.COLOR_DIM))
+	vbox.add_child(_hud._label("MEMORIAL", Tipo.DETALHE, _hud.COLOR_DIM))
 	_memorial = VBoxContainer.new()
 	vbox.add_child(_memorial)
 
@@ -134,22 +135,22 @@ func refresh() -> void:
 	for w in _inf.patients():
 		any = true
 		_list.add_child(_hud._label("✚ %s — %s — cura em %ds" % [
-			_name(w), w.injury_severity, ceili(w._recovery_left)], 13, _hud.COLOR_HUNGER_OK))
+			_name(w), w.injury_severity, ceili(w._recovery_left)], Tipo.CORPO, _hud.COLOR_HUNGER_OK))
 	var no_bed: Array = _inf.without_bed()
 	for w in _inf.waiting():
 		any = true
 		var color: Color = _hud.COLOR_HUNGER_BAD if no_bed.has(w) or w.injury_severity == "grave" else _hud.COLOR_HUNGER_LOW
-		_list.add_child(_hud._label("! %s — %s" % [_name(w), w.get_state_label()], 13, color))
+		_list.add_child(_hud._label("! %s — %s" % [_name(w), w.get_state_label()], Tipo.CORPO, color))
 	if not any:
-		_list.add_child(_hud._label("ninguém machucado", 12, _hud.COLOR_DIM))
+		_list.add_child(_hud._label("ninguém machucado", Tipo.DETALHE, _hud.COLOR_DIM))
 
 	for c in _memorial.get_children():
 		c.queue_free()
 	if _main_inf.memorial.is_empty():
-		_memorial.add_child(_hud._label("ninguém morreu (ainda)", 12, _hud.COLOR_DIM))
+		_memorial.add_child(_hud._label("ninguém morreu (ainda)", Tipo.DETALHE, _hud.COLOR_DIM))
 	for e in _main_inf.memorial:
 		_memorial.add_child(_hud._label("† %s — dia %d — acidente %s (%s)" % [
-			str(e.get("name", "?")), int(e.get("day", 1)), str(e.get("severity", "?")), str(e.get("cause", "?"))], 12, _hud.COLOR_DIM))
+			str(e.get("name", "?")), int(e.get("day", 1)), str(e.get("severity", "?")), str(e.get("cause", "?"))], Tipo.DETALHE, _hud.COLOR_DIM))
 
 
 func _name(w: Node) -> String:

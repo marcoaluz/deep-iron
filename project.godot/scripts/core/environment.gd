@@ -13,6 +13,7 @@ signal navigation_ready
 
 ## Grupos de estruturas que bloqueiam a navegação e afastam a decoração.
 const IsoArt := preload("res://scripts/iso/iso_art.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const STATION_GROUPS := ["minerios", "comedouros", "armazens", "casas", "village_hub", "escavadeira", "oficina", "coleta_comida", "arvores"]
 ## Estruturas que bloqueiam a navegação mas NÃO entram no sorteio da decoração
 ## (pra não mudar as pedras/cristais da mina de saves antigos). A decoração que
@@ -1591,7 +1592,7 @@ func _build_clearing() -> void:
 	sign_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sign_label.position = Vector2(tunnel_x - 90.0, map_rect.position.y + 42.0)
 	sign_label.size = Vector2(180, 20)
-	sign_label.add_theme_font_size_override("font_size", 11)
+	sign_label.add_theme_font_size_override("font_size", Tipo.MAPA)
 	sign_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7, 0.8))
 	sign_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
 	sign_label.add_theme_constant_override("outline_size", 3)

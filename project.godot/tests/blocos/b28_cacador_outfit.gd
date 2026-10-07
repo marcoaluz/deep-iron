@@ -63,7 +63,8 @@ func _process(delta: float) -> bool:
 		print("== B) HUD em blocos")
 		var texts := root.find_children("*", "Label", true, false).map(func(l): return l.text)
 		# (Bloco 43) HUD estilo Frostpunk: as seções agora são estas duas colunas
-		for sec in ["FORÇA DE TRABALHO", "CONSTRUÇÕES"]:
+		# (Bloco 95) a coluna de construções virou a de alertas (só ícones); as gavetas da aba fina têm título
+		for sec in ["FORÇA DE TRABALHO", "OBRAS"]:
 			check(texts.has(sec), "seção '%s'" % sec)
 		hunter = ws[0]
 		hunter.set_job("caçador")

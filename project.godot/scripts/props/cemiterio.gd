@@ -16,6 +16,7 @@ const SocialSpot := preload("res://scripts/props/social_spot.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
 const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 ## Trecho da cerca (px da lógica): o desenho do PixelLab (36 px de arte) / a escala da vista (1,5).
 const TRECHO := 24.0
@@ -66,7 +67,7 @@ func _ready() -> void:
 	_label.position = Vector2(-110, -rect.size.y * 0.5 - 70.0)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	_label.add_theme_font_size_override("font_size", 12)
+	_label.add_theme_font_size_override("font_size", Tipo.MAPA)
 	_label.add_theme_color_override("font_outline_color", Color(0.03, 0.03, 0.03))
 	_label.add_theme_constant_override("outline_size", 4)
 	add_child(_label)
@@ -167,7 +168,7 @@ func _cria_tumulo(c: Dictionary, pos: Vector2) -> Node2D:
 	l.z_as_relative = false
 	l.z_index = 4000  # na frente da cerca e das outras lápides (a vista iso ordena por z; o overlay dela é 4090)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.add_theme_font_size_override("font_size", 8)
+	l.add_theme_font_size_override("font_size", Tipo.MAPA_MINI)
 	l.add_theme_color_override("font_color", Color(0.92, 0.88, 0.8, 0.95))
 	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
 	l.add_theme_constant_override("outline_size", 3)

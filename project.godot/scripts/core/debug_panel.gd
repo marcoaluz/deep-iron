@@ -8,6 +8,7 @@ extends CanvasLayer
 ## Nada aqui é salvo de um jeito especial: mexe nos mesmos números que o jogo usa.
 
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _main: Node
 var _painel: PanelContainer
@@ -17,6 +18,7 @@ var _info: Label
 func setup(main: Node) -> void:
 	_main = main
 	name = "DebugPanel"
+	UiSkin.tema_na_camada(self)  # Bloco 95: o tema (escala e fonte) chega nos Controls da camada
 	layer = 25
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_painel = PanelContainer.new()
@@ -42,7 +44,7 @@ func setup(main: Node) -> void:
 		["S3", func(): _vai(Vector2(-460, 4110))], ["S4", func(): _vai(Vector2(-340, 4530))], ["S5", func(): _vai(Vector2(-460, 4920))],
 		["ferrovia", _vai_ferrovia]])
 	_info = Label.new()
-	_info.add_theme_font_size_override("font_size", 11)
+	_info.add_theme_font_size_override("font_size", Tipo.DETALHE)
 	_info.add_theme_color_override("font_color", Color(0.75, 0.72, 0.68))
 	v.add_child(_info)
 
@@ -54,13 +56,13 @@ func _linha(v: VBoxContainer, rotulo: String, botoes: Array) -> void:
 	var l := Label.new()
 	l.text = rotulo
 	l.custom_minimum_size.x = 64
-	l.add_theme_font_size_override("font_size", 12)
+	l.add_theme_font_size_override("font_size", Tipo.DETALHE)
 	h.add_child(l)
 	for b in botoes:
 		var bt := Button.new()
 		bt.text = b[0]
 		bt.focus_mode = Control.FOCUS_NONE
-		bt.add_theme_font_size_override("font_size", 11)
+		bt.add_theme_font_size_override("font_size", Tipo.DETALHE)
 		if UiSkin.ok():
 			UiSkin.aplica_botao(bt)
 		var f: Callable = b[1]

@@ -17,6 +17,7 @@ extends Node2D
 
 const Decor := preload("res://scripts/props/decoracao.gd")
 const Catalogo := preload("res://scripts/core/decor.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 ## Fração do custo devolvida ao remover uma peça.
 @export_range(0.0, 1.0, 0.05) var reembolso: float = 0.5
@@ -50,7 +51,7 @@ func _ready() -> void:
 	_hint.offset_top = 58.0
 	_hint.offset_left = 240.0
 	_hint.offset_right = 240.0
-	_hint.add_theme_font_size_override("font_size", 15)
+	_hint.add_theme_font_size_override("font_size", Tipo.TITULO)
 	_hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
 	_hint.add_theme_constant_override("outline_size", 5)
 	_hint_layer.add_child(_hint)

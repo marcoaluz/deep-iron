@@ -2,6 +2,7 @@ extends PanelContainer
 ## Janela do Coletor de minério (Bloco 57): construir, quem opera, de qual jazida tira, quanto
 ## produziu. Abre clicando na máquina ou pelo botão da coluna. Pode ter vários: mostra o clicado (pelo
 ## botão: o primeiro); "Designar"/"Liberar"/"Trocar jazida" valem pra essa máquina.
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 
 var _hud: CanvasLayer
 var _hub: Node
@@ -37,7 +38,7 @@ func _build() -> void:
 	add_child(vbox)
 	var header := HBoxContainer.new()
 	vbox.add_child(header)
-	_title = _hud._label("COLETOR DE MINÉRIO", 20, _hud.COLOR_TITLE)
+	_title = _hud._label("COLETOR DE MINÉRIO", Tipo.TITULO_JANELA, _hud.COLOR_TITLE)
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_title)
 	var close: Button = _hud._button("X")
@@ -45,10 +46,10 @@ func _build() -> void:
 		Audio.click()
 		visible = false)
 	header.add_child(close)
-	var intro: Label = _hud._label("Broca a vapor em cima de uma jazida. Um MINERADOR opera e ela manda minério sozinha pro armazém, do tipo da jazida. Os mineradores manuais continuam tirando da mesma jazida.", 12, _hud.COLOR_DIM)
+	var intro: Label = _hud._label("Broca a vapor em cima de uma jazida. Um MINERADOR opera e ela manda minério sozinha pro armazém, do tipo da jazida. Os mineradores manuais continuam tirando da mesma jazida.", Tipo.DETALHE, _hud.COLOR_DIM)
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(intro)
-	_status = _hud._label("", 13, _hud.COLOR_TEXT)
+	_status = _hud._label("", Tipo.CORPO, _hud.COLOR_TEXT)
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_status)
 	_designate_button = _hud._button("")

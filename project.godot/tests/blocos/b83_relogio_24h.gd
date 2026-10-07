@@ -90,7 +90,8 @@ func _process(delta: float) -> bool:
 		dn.ir_para_hora(14.0)
 		hud._refresh_phase()
 		print("  HUD: '%s' / '%s'" % [hud._phase_label.text, hud._phase_time_label.text])
-		check(hud._phase_label.text == "14:00 " + dn.nome_dia(true), "HUD mostra hh:mm e o dia da semana")
+		# Bloco 95: a hora grande sozinha no meio da barra; o dia da semana do lado
+		check(hud._phase_label.text == "14:00" and hud._dia_semana_label.text == dn.nome_dia(true), "HUD mostra hh:mm e o dia da semana")
 		check(("dia %d" % dn.day) in hud._phase_time_label.text and "sem. 1" in hud._phase_time_label.text and "fim do turno às 18:00" in hud._phase_label.tooltip_text,
 			"HUD mostra o dia e a semana; o próximo marco na dica")
 		print("== estações em semanas")

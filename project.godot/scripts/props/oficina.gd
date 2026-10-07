@@ -21,6 +21,7 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
 const ProductionQueue := preload("res://scripts/core/production_queue.gd")  # Bloco 87
 const Items := preload("res://scripts/core/items.gd")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const TOOL_IDS := ["picareta_aco", "lampiao", "broca", "traje", "arco", "picareta_de_aco"]
 const TOOL_NAMES := {
 	"picareta_aco": "Picareta temperada",  # Bloco 94: o nome mudou (o id ficou: saves e testes)
@@ -471,7 +472,7 @@ func _popup(text: String, color: Color) -> void:
 	popup.add_theme_color_override("font_color", color)
 	popup.add_theme_color_override("font_outline_color", Color(0.1, 0.06, 0.03))
 	popup.add_theme_constant_override("outline_size", 4)
-	popup.add_theme_font_size_override("font_size", 14)
+	popup.add_theme_font_size_override("font_size", Tipo.MAPA_POPUP)
 	popup.position = Vector2(-130, -110 - stacked * 20)
 	popup.size = Vector2(260, 20)
 	popup.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

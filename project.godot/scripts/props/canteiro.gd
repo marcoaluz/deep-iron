@@ -17,6 +17,7 @@ const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const SELF := "res://scripts/props/canteiro.gd"
 const LOT_TEXTURE := preload("res://assets/game/casa.png")  # quadro 2 = lote com estacas
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 ## kind -> [título, grupo do sistema dono, textura do prédio ("" = ampliação), hframes]
 const KINDS := {
 	"taverna": ["Taverna", "morale", "res://assets/game/taverna.png", 2],
@@ -128,7 +129,7 @@ func _ready() -> void:
 	_dust.color = Color(0.75, 0.66, 0.55, 0.55)
 	add_child(_dust)
 	_label = Label.new()
-	_label.add_theme_font_size_override("font_size", 12)
+	_label.add_theme_font_size_override("font_size", Tipo.MAPA)
 	_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_label.add_theme_constant_override("outline_size", 4)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -90,6 +90,7 @@ const COLETOR_FOOTPRINT := Rect2(-52, -78, 104, 90)
 ## Bloco 47: enfermaria extra (a principal vem com a vila).
 const ENFERMARIA_SCENE := preload("res://scenes/props/enfermaria.tscn")
 const ENFERMARIA_TEXTURE := preload("res://assets/game/enfermaria.png")
+const Tipo := preload("res://scripts/ui/tipografia.gd")
 const ENFERMARIA_FOOTPRINT := Rect2(-40, -64, 80, 84)
 const UPGRADE_NAMES := {
 	"moradias": "Moradias",
@@ -1847,7 +1848,7 @@ func _popup(text: String, color: Color) -> void:
 	popup.add_theme_color_override("font_color", color)
 	popup.add_theme_color_override("font_outline_color", Color(0.1, 0.06, 0.03))
 	popup.add_theme_constant_override("outline_size", 4)
-	popup.add_theme_font_size_override("font_size", 14)
+	popup.add_theme_font_size_override("font_size", Tipo.MAPA_POPUP)
 	# empilha se já houver outro aviso subindo (ex.: expandir + melhorar em seguida)
 	var stacked := get_children().filter(func(c): return c.has_meta("popup")).size()
 	popup.set_meta("popup", true)
