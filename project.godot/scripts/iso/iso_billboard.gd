@@ -385,6 +385,8 @@ func _rotulo_compacto(s: Label, d: Label) -> void:
 	if not d.has_meta("_compacto"):
 		d.set_meta("_compacto", true)
 		d.add_theme_font_size_override("font_size", Tipo.MAPA)
+		if Tipo.fonte() != null:
+			d.add_theme_font_override("font", Tipo.fonte())  # (o tema não chega no mundo: a mesma letra da interface)
 		d.add_theme_color_override("font_outline_color", Tipo.CONTORNO_MAPA)
 		d.add_theme_constant_override("outline_size", Tipo.CONTORNO_MAPA_PX)
 		d.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM  # (o nome fica embaixo, perto do prédio)

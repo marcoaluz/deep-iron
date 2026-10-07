@@ -37,9 +37,9 @@ const SOMBRA_DESLOC := 1
 const CONTORNO_MAPA := Color(0.04, 0.03, 0.02, 0.95)
 const CONTORNO_MAPA_PX := 3
 
-## A fonte do CORPO (escolha do Marco entre as candidatas OFL em docs/layout_v2/fontes_comparativo.png).
-## Vazio = a fonte padrão do Godot (a de antes do Bloco 95).
-const FONTE_CORPO := ""
+## A fonte do CORPO: Chakra Petch Medium (OFL, assets/fonts/OFL_chakra_petch.txt), a escolhida pelo Marco entre as
+## candidatas de docs/layout_v2/fontes_comparativo.png. Vazio = a fonte padrão do Godot (a de antes do Bloco 95).
+const FONTE_CORPO := "res://assets/fonts/chakra_petch_medium.ttf"
 
 static var _fonte: Font = null
 static var _fonte_lida := false

@@ -1,9 +1,9 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 94 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco); o Bloco 95 está só no commit local. Push só com o OK dele.
+Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 94 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco); o Bloco 95 foi enviado em 2026-10-07 com o OK dele. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido".
 
-## AGORA (2026-10-07): Bloco 95 — layout v2 da interface (feito; ESPERANDO o Marco escolher a FONTE)
+## Bloco 95 — layout v2 da interface (feito, fonte Chakra Petch aplicada, enviado ao GitHub)
 
 **O pedido:** a seção 27 do guia (`docs/DEEP_IRON_Guia_completo_e_Analise.docx`) mais a janela CONSTRUIR
 padronizada, a tipografia e uma imagem em todo cartão (partes A, B, C e D). O plano e o ANTES estão em
@@ -31,13 +31,8 @@ padronizada, a tipografia e uma imagem em todo cartão (partes A, B, C e D). O p
   Os 8 cartões da decoração e do vagonete reaproveitam o sprite do jogo.
 - **Regra 12 nova no CLAUDE.md:** todo cartão novo do CONSTRUIR precisa de imagem.
 
-**Pendente:**
-- **A fonte do corpo.** A comparação está em `docs/layout_v2/fontes_comparativo.png`: Pixelify Sans, Barlow Semi
-  Condensed e Chakra Petch (OFL); a minha recomendação é a Chakra Petch.
-  - Ao escolher: baixar o `.ttf` do github.com/google/fonts (`ofl/<nome>/`) para `assets/fonts/` com o `OFL.txt`;
-  - `Tipo.FONTE_CORPO = "res://assets/fonts/<arquivo>.ttf"`;
-  - `--import`, `tests/capturas_bloco95.gd -- docs/layout_v2/depois` e os testes b95/b95b/hud_frostpunk.
-- O "armazém cheio" ficou como "sem armazém pra entregar" (o armazém não tem limite): perguntar ao Marco.
+**Decisões do Marco (2026-10-07):** fonte = Chakra Petch (aplicada); o armazém ganha LIMITE e sobe até o nível 3
+(vira o Bloco 97); push liberado.
 
 **Testes:** a bateria inteira foi conferida um por vez em 2026-10-07: os 79 de `tests/blocos` com 0 falhas e os GUT
 iso. O b84 e o b85 têm falha rara por sorteio e passaram ao repetir. Os ajustados: hud_frostpunk, b28, p20, b54

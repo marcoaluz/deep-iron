@@ -14,12 +14,10 @@ aprovado".
 **O número:** o último bloco era o 94, então este é o **95**. A seção 28 do guia previa o layout no b98 e a tela de
 dificuldade no b95. O roteiro anda: a dificuldade vira o b96, as missões o b97, e assim por diante.
 
-**Pendente com o Marco:** a **fonte do corpo**. A comparação está em `docs/layout_v2/fontes_comparativo.png` e
-**nenhuma fonte foi aplicada**, como foi pedido. A escala, a sombra e o tema já estão valendo com a fonte de hoje.
-Quando ele escolher, falta só:
-- copiar o `.ttf` (OFL) para `assets/fonts/`;
-- pôr o caminho em `Tipo.FONTE_CORPO` (`scripts/ui/tipografia.gd`);
-- refazer as capturas.
+**A fonte do corpo:** o Marco escolheu a **3, Chakra Petch** (comparação em `docs/layout_v2/fontes_comparativo.png`).
+Ela foi aplicada depois, num segundo commit: `assets/fonts/chakra_petch_medium.ttf` + `OFL_chakra_petch.txt`,
+`Tipo.FONTE_CORPO`, também nos rótulos do mapa. As capturas do DEPOIS são com ela. Depois da troca passaram os
+b95, b95b, hud_frostpunk, p20, b54, b46 e b28.
 
 **Skills usadas:**
 - `godot-ui-control` (Containers, tema, foco);
@@ -160,7 +158,8 @@ longe da arte nova.
   | Barlow Semi Condensed | Industrial e condensada. Cabe mais texto, mas a 12–13 px a letra fica pequena. |
   | Chakra Petch | Quadrada, "placa de máquina", e a mais legível a 12–13 px. **Minha recomendação** para o corpo, com o título de sempre (`deep_iron_titulo`). |
 
-  **Esperando a escolha do Marco.** Os arquivos ficaram fora do repositório.
+  **Escolhida: a 3 (Chakra Petch)**, aplicada no corpo e nos rótulos do mapa. As outras duas ficaram fora do
+  repositório.
 
 ## Parte D — imagem em todo cartão
 
@@ -286,7 +285,6 @@ Todos rodaram com o APPDATA isolado, **um por vez, em primeiro plano**.
 
 ## O que precisa do Marco
 
-1. **Escolher a fonte** do corpo: 1, 2, 3 ou ficar com a de hoje.
 2. Ver as capturas e dizer se:
    - o tamanho da hora agrada;
    - o cartão do selecionado está bom;
