@@ -23,8 +23,10 @@ com o OK do Marco. Ele disse "pode executar todos os prompts que depois eu valid
 **Detalhes:**
 - Tabela e relatório: `docs/BLOCO94_CARPINTARIA_CADEIA.md`.
 - PixelLab: 485 gerações. Saldo 7.237.
-- Testes: o b94 passa e mais 25 antigos passaram (lista no relatório). b54, b56 e b82 foram ajustados. A bateria
-  inteira não rodou.
+- Testes: b54, b56 e b82 foram ajustados. O b94 dependia do sorteio do gênero (sem homem no começo, 4 falhas):
+  corrigido em `5bd05115`. **Bateria inteira conferida em 2026-10-07, um teste por vez:** os 77 de `tests/blocos`
+  (inclusive o b51, 353 s) com 0 falhas, e os GUT `test_iso` (6/6), `test_iso_arte` (3/3) e `test_iso_pele` (3/3).
+  Cuidado: `gut_cmdln -gtest=...` sozinho varre `tests/` inteiro por causa do `.gutconfig.json`; use `-gconfig=`.
 - O commit `bloco-94` não foi enviado.
 
 ## Antes (2026-10-06): os ajustes do Marco depois dos Blocos 81–91

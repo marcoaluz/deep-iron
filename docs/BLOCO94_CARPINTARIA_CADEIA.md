@@ -204,4 +204,6 @@ expressões e dos ícones.
 **Passaram depois das mudanças:** b31, b31b, b35, b36, b39, b40, b42, b47, b54, b56, b57, b58, b64, b79, b82, b84,
 b86, b87, b88, b92, b93, p2, p29_bonecos, p29_predios e hud_frostpunk.
 
-**Não conferidos:** a bateria inteira (memória: um por vez) e o `b51` (longo).
+**Bateria inteira (2026-10-07, um teste por vez, APPDATA isolado):** os 77 testes de `tests/blocos`, inclusive o
+`b51` (353 s), com 0 falhas; GUT `test_iso` 6/6, `test_iso_arte` 3/3 e `test_iso_pele` 3/3. O `b94` falhava quando os
+ipezinhos do começo saíam todos mulheres (o gênero é sorteado): o teste agora força o gênero que faltar (`5bd05115`).
