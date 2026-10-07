@@ -26,3 +26,8 @@ export/
 # saves locais e saídas de teste que alguém copie pra dentro do repo
 savegame*.json
 fake_appdata*/
+
+# Chaves de API locais (ElevenLabs etc.): nunca no git
+.env
+.env.*
+!.env.example
