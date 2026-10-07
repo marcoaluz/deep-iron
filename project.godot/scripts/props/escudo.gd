@@ -196,6 +196,18 @@ func obra_workers() -> Array[Node]:
 	return _obra.workers()
 
 
+## Bloco 96: a etapa cancelada volta a "não encomendada"; as peças raras do núcleo voltam (ObraSite.cancelar
+## devolveu créditos e material).
+func obra_cancelar() -> void:
+	if building == "nucleo":
+		var finds := get_tree().get_first_node_in_group("finds")
+		if finds:
+			finds.rare_parts += nucleo_parts
+	building = ""
+	build_left = 0.0
+	_update_visual()
+
+
 func _finish_stage() -> void:
 	built += 1
 	building = ""

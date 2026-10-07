@@ -53,6 +53,7 @@ const Schedule := preload("res://scripts/core/schedule.gd")  # Bloco 84
 const Items := preload("res://scripts/core/items.gd")  # Bloco 86
 const Icones := preload("res://scripts/ui/icones.gd")  # Bloco 85: o balão da hora social
 const Settings := preload("res://scripts/core/settings.gd")  # Bloco 95: liga/desliga o balão de motivo
+const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 96: o material da obra
 const BALAO := preload("res://assets/game/ui/balao.png")
 ## Bloco 95: onde fica o balão (conversa e motivo), px da lógica acima do pé. A vista iso sobe junto com a
 ## altura da arte nova (iso_billboard: lift); -66 deixava o balão longe da cabeça.
@@ -681,6 +682,8 @@ func get_state_label() -> String:
 			return "indo pra enfermaria (plantão)"
 		var n: int = _on_duty.patients().size()
 		return "tratando %d internado%s" % [n, "s" if n > 1 else ""] if n > 0 else "de plantão, esperando pacientes"
+	if _ai_state == "building" and _obra != null and is_instance_valid(_obra) and _material_texto() != "":
+		return _material_texto()  # Bloco 96: buscando / levando / falta material
 	if _ai_state == "building" and _obra != null and is_instance_valid(_obra):
 		var pct := roundi(_obra.obra_progress() * 100.0)
 		if is_smith():  # Bloco 87
@@ -905,8 +908,12 @@ func _process(delta: float) -> void:
 	# engenheiro: chegou na obra -> trabalha nela (só assim o tempo da obra anda)
 	if _ai_state == "building" and _obra != null:
 		if not is_instance_valid(_obra) or not _obra.obra_pending():
+			if _material_obra == _obra:
+				solta_material(true)  # Bloco 96: a obra acabou/foi cancelada com material na mão: volta pro armazém
 			_obra_stop()
 			_decision_timer = 0.0  # acabou: próxima obra da fila
+		elif _material_tick():
+			pass  # Bloco 96: buscando ou levando material (as viagens andam sozinhas)
 		elif not _obra_on_site:
 			# chegou: parou perto (a obra pode estar dentro de um obstáculo) ou já está
 			# colado no ponto mesmo com outro engenheiro esbarrando nele
@@ -919,7 +926,7 @@ func _process(delta: float) -> void:
 				_obra.obra_join(self)
 			else:
 				_obra_watchdog_tick(delta, dist)
-		else:
+		elif _pode_construir():
 			_work_timer = 0.2  # martelada
 			_obra.obra_work(delta * work_mult())  # zanga/tristeza deixam mais lento
 			if not _obra.obra_pending():
@@ -1197,7 +1204,7 @@ func _decide_next_action() -> void:
 		if _ai_state != "building":
 			_release_station()
 			_set_state("building")
-		if not _obra_on_site:
+		if not _obra_on_site and material_pedido.is_empty() and material_mao.is_empty():  # (Bloco 96: viagem anda sozinha)
 			var pos: Vector2 = _obra_goal()
 			if not _moving or _target.distance_to(pos) > 2.0:
 				_go_to(pos)
@@ -1451,6 +1458,8 @@ func _set_state(new_state: String) -> void:
 		_end_duty()
 	if _ai_state == "building":
 		_obra_stop()  # pausa a obra onde estava (o progresso fica na obra)
+		material_pedido.clear()  # Bloco 96: ia buscar e foi fazer outra coisa (o que já pegou continua na mão)
+		_material_armazem = null
 	if _ai_state == "strike":
 		_strike_spot = null
 	if _ai_state == "robot":
@@ -1895,6 +1904,8 @@ func is_engineer() -> bool:
 ## termina ela antes de trocar. Com vários engenheiros, cada um prefere uma obra que
 ## ninguém está tocando; se todas já têm alguém, ajuda na mais antiga (o trabalho soma).
 func _pick_obra() -> Node:
+	if not material_mao.is_empty() and _material_obra != null and is_instance_valid(_material_obra) and _material_obra.obra_pending():
+		return _material_obra  # Bloco 96: primeiro entrega o que tem na mão
 	if _obra != null and is_instance_valid(_obra) and _obra.obra_pending() and (_obra.get("oficio") == ROLE_SMITH) == is_smith():
 		return _obra
 	var oldest_free: Node = null
@@ -2371,6 +2382,7 @@ func set_job(new_job: String) -> void:
 		_end_duty()  # tirou do médico: o bônus da enfermaria para NA HORA (Bloco 30)
 	if job == ROLE_ENGINEER:
 		_obra_stop()  # tirou do engenheiro: a obra pausa NA HORA, sem perder o feito (Bloco 31)
+		solta_material(true)  # Bloco 96: o material da mão volta pro armazém
 	if job == ROLE_DOCTOR:
 		_drop_patient()  # Bloco 36: tirou do médico no meio do resgate: larga o caído ali
 	if job == ROLE_LUMBER and _my_coletor() != null:
@@ -3441,6 +3453,186 @@ func motivo_no_balao() -> String:
 	return _motivo if _motivo_balao != null and _motivo_balao.visible else ""
 
 
+# ------------------------------------------------------------ material da obra (Bloco 96)
+## Quanto o engenheiro leva por viagem (unidades de material: madeira, minério, barras, tábuas, pregos...).
+@export var carga_material: float = 10.0
+## Distância (px) em que ele "chegou" no armazém pra pegar o material.
+@export var material_alcance: float = 40.0
+## O que está nas mãos, indo pra obra ({item: qtd}).
+var material_mao: Dictionary = {}
+## O que ele prometeu buscar e ainda vai pegar no armazém ({item: qtd}).
+var material_pedido: Dictionary = {}
+## A obra dessas viagens e o armazém onde vai buscar.
+var _material_obra: Node = null
+var _material_armazem: Node = null
+## Chegou na obra, a parte liberada está feita e não tem o material em armazém nenhum.
+var _material_falta := false
+
+
+func _material_qtd(d: Dictionary) -> float:
+	var n := 0.0
+	for k in d:
+		n += float(d[k])
+	return n
+
+
+## Pode martelar? Só até a fração do material que já chegou (obra sem material: sempre).
+func _pode_construir() -> bool:
+	var site = ObraSite.de(_obra)
+	if site == null or not site.tem_material() or site.tudo_entregue():
+		return true  # (tudo entregue: até o fim, sem trava — senão parava em 99,99%)
+	return _obra.obra_progress() < site.fracao() - 0.0001
+
+
+## As viagens do material. true = está indo buscar ou levando (este quadro é da viagem, não da obra).
+func _material_tick() -> bool:
+	var site = ObraSite.de(_obra)
+	if site == null or not site.tem_material():
+		return false
+	var eco := get_tree().get_first_node_in_group("economy")
+	# 1) com material na mão: leva pra obra e entrega
+	if not material_mao.is_empty() and _material_obra == _obra:
+		var alvo: Vector2 = _obra_goal()
+		var dist := global_position.distance_to(alvo)
+		if (not _moving and dist <= OBRA_REACH) or dist <= 24.0:
+			for k in material_mao:
+				site.entregar(k, float(material_mao[k]))
+			_popup("+" + ", ".join(material_mao.keys().map(func(k): return "%d %s" % [int(material_mao[k]), ObraSite._nome(k)])), Color(0.55, 1.0, 0.5))
+			material_mao.clear()
+			_material_obra = null
+			if eco:
+				eco.reserva_mudou()
+			_moving = false
+			return false  # chegou: daqui pra frente é a obra (entra e trabalha)
+		if _obra_on_site:
+			_obra.obra_leave(self)
+			_obra_on_site = false
+		if not _moving or _target.distance_to(alvo) > 2.0:
+			_go_to(alvo)
+		return true
+	# 2) indo buscar: chegou no armazém, pega
+	if not material_pedido.is_empty():
+		if _material_armazem == null or not is_instance_valid(_material_armazem) or eco == null:
+			material_pedido.clear()
+			return false
+		var pos: Vector2 = _material_armazem.get_wait_position(self) if _material_armazem.has_method("get_wait_position") else _material_armazem.global_position
+		var d := global_position.distance_to(pos)
+		if d <= material_alcance or (not _moving and d <= OBRA_REACH):
+			for k in material_pedido:
+				var got: float = eco.tira_do_armazem(_material_armazem, k, float(material_pedido[k]))
+				if got > 0.0:
+					material_mao[k] = float(material_mao.get(k, 0.0)) + got
+			material_pedido.clear()
+			_material_armazem = null
+			eco.reserva_mudou()
+			_moving = false
+			if material_mao.is_empty():
+				return false  # o armazém ficou sem (alguém pegou antes): decide de novo
+			_material_obra = _obra
+			return true
+		if not _moving or _target.distance_to(pos) > 2.0:
+			_go_to(pos)
+		return true
+	# 3) a parte liberada está feita? então vai buscar o que falta (do armazém mais perto que tem)
+	if site.tudo_entregue() or _obra.obra_progress() < site.fracao() - 0.0001:
+		_material_falta = false
+		return false  # ainda tem o que construir com o que já chegou
+	if eco == null:
+		return false
+	var cabe := carga_material
+	var escolhido: Node = null
+	for k in site.necessario:
+		var precisa: float = site.a_buscar(k)
+		if precisa < 0.5:
+			continue
+		var arms: Array = eco.armazens_com(k, global_position)
+		if arms.is_empty():
+			continue
+		if escolhido == null:
+			escolhido = arms[0]
+		if not arms.has(escolhido):
+			continue  # (outro armazém: fica pra próxima viagem)
+		var q := minf(minf(precisa, cabe), eco._no_armazem(escolhido, k))
+		if q >= 0.5:
+			material_pedido[k] = q
+			cabe -= q
+		if cabe < 0.5:
+			break
+	if material_pedido.is_empty():
+		var falta := false
+		for k in site.necessario:
+			if site.a_buscar(k) >= 0.5:
+				falta = true
+		_material_falta = falta  # nada no armazém (ou tudo já a caminho): espera na obra
+		return false
+	_material_falta = false
+	_material_obra = _obra
+	_material_armazem = escolhido
+	eco.reserva_mudou()
+	if _obra_on_site:
+		_obra.obra_leave(self)
+		_obra_on_site = false
+	_go_to(escolhido.get_wait_position(self) if escolhido.has_method("get_wait_position") else escolhido.global_position)
+	return true
+
+
+## Larga o material: devolve = o que está na mão volta pro armazém (cancelou, trocou de função, a obra sumiu).
+func solta_material(devolve: bool) -> void:
+	var eco := get_tree().get_first_node_in_group("economy") if is_inside_tree() else null
+	if devolve and eco:
+		for k in material_mao:
+			eco.devolve(k, float(material_mao[k]), global_position)
+	material_mao.clear()
+	material_pedido.clear()
+	_material_obra = null
+	_material_armazem = null
+	_material_falta = false
+	if eco:
+		eco.reserva_mudou()
+
+
+## Save: o material que estava na mão volta pro armazém (quando o mundo já está montado).
+func _devolve_material_salvo(mm: Dictionary) -> void:
+	var eco := get_tree().get_first_node_in_group("economy") if is_inside_tree() else null
+	if eco == null:
+		return
+	for k in mm:
+		var v = mm[k]
+		if (v is float or v is int) and float(v) > 0.0:
+			eco.devolve(String(k), float(v), global_position)
+
+
+## "buscando 10 madeira no armazém (Taverna)" / "levando 10 madeira pra Taverna (20/40)" / "esperando material".
+func _material_texto() -> String:
+	var site = ObraSite.de(_obra)
+	if site == null or not site.tem_material():
+		return ""
+	var titulo: String = _obra.obra_title()
+	if not material_mao.is_empty() and _material_obra == _obra:
+		return "levando %s pra %s (%d/%d)" % [_lista_material(material_mao), titulo, int(site.total_entregue() + _material_qtd(material_mao)), int(site.total_necessario())]
+	if not material_pedido.is_empty():
+		return "buscando %s no armazém (%s)" % [_lista_material(material_pedido), titulo]
+	if _material_falta and not _pode_construir():
+		return "esperando material no armazém (%s)" % titulo
+	return ""
+
+
+func _lista_material(d: Dictionary) -> String:
+	return ", ".join(d.keys().map(func(k): return "%d %s" % [roundi(float(d[k])), ObraSite._nome(k)]))
+
+
+## O ícone da carga: a tora pra madeira, a pedra do minério, o ícone do item (barra, tábua, prego...).
+func _icone_material() -> Texture2D:
+	_carry_icon.set_meta("_material", true)
+	var k: String = material_mao.keys()[0]
+	if k == "madeira":
+		return WOOD_LOG
+	if Ores.CHUNK_TEXTURES.has(k):
+		return Ores.CHUNK_TEXTURES[k]
+	var t := Icones.tex("it_" + k)
+	return t if t != null else WOOD_LOG
+
+
 # ------------------------------------------------------------ fundidor (Bloco 86)
 ## Barras prontas que ele leva pro armazém ({item: qtd}).
 var barras_mao: Dictionary = {}
@@ -3954,18 +4146,22 @@ func _update_animation(delta: float) -> void:
 
 	# pedrinha de minério em cima da cabeça, maior quanto mais carga
 	_cook_icon.visible = false  # Bloco 26: o chapéu agora faz parte do outfit do cozinheiro
-	_carry_icon.visible = (carrying > 0.0 or food_carrying > 0.0 or wood_carrying > 0.0 or raw_carrying > 0.0) and not _resting
-	if wood_carrying > 0.0:
+	_carry_icon.visible = (carrying > 0.0 or food_carrying > 0.0 or wood_carrying > 0.0 or raw_carrying > 0.0 or not material_mao.is_empty()) and not _resting
+	if not material_mao.is_empty():
+		_carry_icon.texture = _icone_material()  # Bloco 96: o material da obra (tora, pedra de minério, o item)
+	elif wood_carrying > 0.0:
 		_carry_icon.texture = WOOD_LOG
 	elif food_carrying > 0.0:
 		_carry_icon.texture = FOOD_BASKET
 	elif raw_carrying > 0.0:
 		_carry_icon.texture = RAW_FOOD
-	elif carrying > 0.0 and _carry_icon.texture in [FOOD_BASKET, WOOD_LOG, RAW_FOOD]:
+	elif carrying > 0.0 and (_carry_icon.texture in [FOOD_BASKET, WOOD_LOG, RAW_FOOD] or _carry_icon.has_meta("_material")):
 		_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
 	if _carry_icon.visible:
 		var r := carrying / capacidade_carga()
-		if wood_carrying > 0.0:
+		if not material_mao.is_empty():
+			r = minf(_material_qtd(material_mao) / maxf(carga_material, 1.0), 1.0)
+		elif wood_carrying > 0.0:
 			r = wood_carrying / lumber_carry
 		elif food_carrying > 0.0:
 			r = food_carrying / cook_carry
@@ -4064,6 +4260,7 @@ func get_save_data() -> Dictionary:
 		"animo_social": animo_social,  # Bloco 85
 		"animo_fe": animo_fe,  # Bloco 88
 		"barras_mao": barras_mao.duplicate(),  # Bloco 86
+		"material_mao": material_mao.duplicate(),  # Bloco 96 (volta pro armazém ao carregar)
 		"mochila": tem_mochila,  # Bloco 94
 	}
 
@@ -4091,6 +4288,14 @@ func load_save_data(d: Dictionary) -> void:
 		if Items.onde(String(k)) == "itens" and float(bm[k]) > 0.0:
 			barras_mao[String(k)] = float(bm[k])
 	tem_mochila = SaveUtil.boolean(d, "mochila", false)  # Bloco 94 (save antigo: sem mochila)
+	# Bloco 96: o material que estava na mão de um engenheiro volta pro armazém (a obra pede de novo): nada se
+	# perde nem duplica. Save antigo: nada na mão.
+	material_mao = {}
+	material_pedido = {}
+	_material_obra = null
+	var mm := SaveUtil.dict(d, "material_mao")
+	if not mm.is_empty():
+		_devolve_material_salvo.call_deferred(mm)
 	carrying = clampf(SaveUtil.num(d, "carrying", 0.0), 0.0, capacidade_carga())
 	var t := SaveUtil.text(d, "cargo_type", "ferro")
 	cargo_type = t if Ores.NAMES.has(t) else "ferro"

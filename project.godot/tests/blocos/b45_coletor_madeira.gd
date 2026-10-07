@@ -100,7 +100,8 @@ func _process(delta: float) -> bool:
 		var w0: float = arm.wood_stored
 		var custo: Vector3i = hub.coletor_cost()
 		check(placer.try_confirm(), "coletor encomendado na clareira em %s" % q)
-		check(eco.credits == c0 - custo.x and arm.stock["ferro"] == f0 - custo.y and arm.wood_stored == w0,
+		# Bloco 96: o ferro fica RESERVADO no armazém (o engenheiro leva): o livre cai, o estoque não
+		check(eco.credits == c0 - custo.x and is_equal_approx(eco.livre("ferro"), f0 - custo.y) and arm.wood_stored == w0,
 			"gastou %d cr + %d ferro (sem madeira)" % [custo.x, custo.y])
 		check(novo(hub) == null and g("canteiros") != null, "ainda é canteiro")
 		set_meta("pos", q)

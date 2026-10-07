@@ -105,7 +105,7 @@ func falta_para(eco: Node) -> String:
 	var r := receita(o.receita)
 	var partes: Array[String] = []
 	for item in r.insumos:
-		var tem: float = eco.quantidade(item)
+		var tem: float = eco.livre(item) if eco.has_method("livre") else eco.quantidade(item)  # Bloco 96: não o reservado
 		var precisa := float(r.insumos[item])
 		if tem < precisa:
 			var n := ceili(precisa - tem)

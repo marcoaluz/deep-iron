@@ -171,6 +171,28 @@ func obra_workers() -> Array[Node]:
 	return _obra.workers()
 
 
+## Bloco 96: cancelada. Ampliação: a casa fica como estava. Casa nova: some, e a Moradias (ou a casa inicial)
+## volta um passo (ObraSite.cancelar já devolveu créditos e material).
+func obra_cancelar() -> void:
+	if upgrade_pending():
+		upgrade_left = 0.0
+		upgrade_total = 0.0
+		_update_visual()
+		return
+	var hub := get_tree().get_first_node_in_group("village_hub")
+	if hub:
+		if starter_house:
+			hub.starter_houses_left += 1
+		elif hub.upgrades.get("moradias", 0) > 0:
+			hub.upgrades.moradias -= 1
+	remove_from_group("casas")
+	remove_from_group("obras")
+	var env := get_tree().get_first_node_in_group("environment")
+	queue_free()
+	if env and env.has_method("rebuild_navigation"):
+		env.rebuild_navigation.call_deferred()
+
+
 ## "Pulo" + poeira de quando a casa acaba de ser construída.
 func pop_in() -> void:
 	var pop := create_tween()

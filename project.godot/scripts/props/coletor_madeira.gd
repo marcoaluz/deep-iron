@@ -236,6 +236,13 @@ func obra_workers() -> Array[Node]:
 	return _obra.workers()
 
 
+## Bloco 96: a etapa cancelada volta a "não encomendada" (ObraSite.cancelar devolveu créditos e material).
+func obra_cancelar() -> void:
+	pago = false
+	progresso = 0.0
+	refresh()
+
+
 func get_save_data() -> Dictionary:
 	return {"position": [snappedf(global_position.x, 0.1), snappedf(global_position.y, 0.1)], "fixo": fixo, "etapa": etapa,
 		"pago": pago, "progresso": progresso, "total": total_produced, "obra": _obra.get_save_data()}

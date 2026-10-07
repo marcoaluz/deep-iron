@@ -14,6 +14,7 @@ extends Node
 
 signal credits_changed(credits: float)
 
+const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 96
 const Ores := preload("res://scripts/core/ores.gd")
 const Items := preload("res://scripts/core/items.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
@@ -76,10 +77,22 @@ signal worker_recruited(worker: Node2D, cost: int)
 ## e Enfermaria extra. (Casas, comedouros e parques seguem com o preço de sempre.)
 @export var extra_building_cost_growth: float = 1.5
 
+@export_group("Obras com material (Bloco 96)")
+## Liga as obras com material: na encomenda o material fica RESERVADO no armazém e o engenheiro leva (desligado =
+## como antes: tudo sai do armazém na hora). Serve também pra medir o antes e o depois (tests/bench_obras.gd).
+@export var obras_com_material: bool = true
+
 var credits: float = 0.0
 var recruited_count: int = 0
 var total_earned: float = 0.0
 var _auto_timer: float = 0.0
+## Bloco 96: o RECIBO dos pagamentos deste quadro: [armazém, item, qtd] tirados e os créditos. A obra que
+## nasce no mesmo quadro (ObraSite.start) pega o recibo: o material volta pro armazém como reserva dela.
+var _recibo: Array = []
+var _recibo_cr := 0.0
+var _recibo_quadro := -1
+var _reserva_cache := {}
+var _reserva_quadro := -1
 
 
 func _ready() -> void:
@@ -93,7 +106,7 @@ func _process(delta: float) -> void:
 	_auto_timer -= delta
 	if _auto_timer <= 0.0:
 		_auto_timer = auto_sell_interval
-		if stored_ore() >= 1.0:
+		if sale_value() > 0:  # Bloco 96: o reservado pras obras não vende
 			sell_all()
 
 
@@ -133,7 +146,7 @@ func price_of(ore_type: String) -> float:
 func sale_value() -> int:
 	var value := 0.0
 	for t in Ores.TYPES:
-		value += floorf(stored_ore(t)) * price_of(t)
+		value += floorf(livre(t)) * price_of(t)  # Bloco 96: sem o reservado pras obras
 	return int(value)
 
 
@@ -146,7 +159,7 @@ func sell(ore_type: String = "", quantidade: float = -1.0) -> float:
 	if not Ores.TYPES.has(ore_type):
 		return _sell_item(ore_type, quantidade)
 	var sold := 0.0
-	var resta := floorf(quantidade) if quantidade >= 0.0 else INF
+	var resta := minf(floorf(quantidade) if quantidade >= 0.0 else INF, floorf(livre(ore_type)))  # Bloco 96: não o reservado
 	for a in get_tree().get_nodes_in_group("armazens"):
 		var amount := minf(floorf(a.stock.get(ore_type, 0.0)), resta - sold)
 		if amount < 1.0:
@@ -227,10 +240,10 @@ func metal_falta(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0
 	var parts: Array[String] = []
 	if credits < cr:
 		parts.append("%d cr" % ceili(cr - credits))
-	var tem := quantidade(m[0])
+	var tem := livre(m[0])  # Bloco 96
 	if tem < m[1]:
 		parts.append("%d %s" % [ceili(m[1] - tem), Items.plural(m[0])])
-	var have_wood := stored_wood()
+	var have_wood := livre("madeira")
 	if have_wood < madeira:
 		parts.append("%d madeira" % ceili(madeira - have_wood))
 	return _junta_falta("" if parts.is_empty() else "falta " + ", ".join(parts), itens_falta(ef.itens))
@@ -254,7 +267,7 @@ func paga_metal(cr: float, qtd_minerio: float, tipo: String, madeira: float = 0.
 	for a in get_tree().get_nodes_in_group("armazens"):
 		if wood_left <= 0.0:
 			break
-		wood_left -= a.take_wood(wood_left)
+		wood_left -= _tira_de(a, "madeira", wood_left)
 	take_item(m[0], m[1])
 	return true
 
@@ -293,7 +306,7 @@ func itens_falta(itens: Dictionary) -> String:
 	var parts: Array[String] = []
 	for id in itens:
 		var precisa := float(itens[id])
-		var tem := quantidade(id)
+		var tem := livre(id)  # Bloco 96
 		if tem < precisa:
 			var n := ceili(precisa - tem)
 			parts.append("%d %s" % [n, Items.plural(id) if n > 1 else Items.nome(id).to_lower()])
@@ -325,13 +338,11 @@ func tira(id: String, n: float) -> void:
 			for a in get_tree().get_nodes_in_group("armazens"):
 				if left <= 0.0:
 					break
-				left -= a.take_wood(left)
+				left -= _tira_de(a, "madeira", left)
 		"couro":
 			var left := n
 			for a in get_tree().get_nodes_in_group("armazens"):
-				var got := minf(left, float(a.leather_stored))
-				a.leather_stored -= got
-				left -= got
+				left -= _tira_de(a, "couro", left)
 		_:
 			if Ores.TYPES.has(id):
 				spend(0.0, n, id)
@@ -372,7 +383,7 @@ func _sell_item(id: String, quantidade: float = -1.0) -> float:
 	if Items.onde(id) != "itens" or price_of(id) <= 0.0:
 		return 0.0
 	var sold := 0.0
-	var resta := floorf(quantidade) if quantidade >= 0.0 else INF
+	var resta := minf(floorf(quantidade) if quantidade >= 0.0 else INF, floorf(livre(id)))  # Bloco 96: não o reservado
 	for a in get_tree().get_nodes_in_group("armazens"):
 		var amount := minf(floorf(a.item_count(id)), resta - sold)
 		if amount < 1.0:
@@ -467,19 +478,27 @@ func take_item(id: String, amount: float) -> float:
 	for a in get_tree().get_nodes_in_group("armazens"):
 		if left <= 0.0:
 			break
-		left -= a.take_item(id, left)
+		left -= _tira_de(a, id, left)
 	return amount - left
 
 
 func sell_all() -> float:
 	var sold := 0.0
 	var earned := 0.0
+	# Bloco 96: vende só o LIVRE de cada tipo (o reservado pras obras fica), armazém por armazém
+	var pode := {}
+	for t in Ores.TYPES:
+		pode[t] = floorf(livre(t))
 	for a in get_tree().get_nodes_in_group("armazens"):
-		var taken: Dictionary = a.take_all()
 		var value := 0.0
-		for t in taken:
-			sold += taken[t]
-			value += taken[t] * price_of(t)
+		for t in Ores.TYPES:
+			var amount := minf(floorf(a.stock.get(t, 0.0)), float(pode[t]))
+			if amount < 1.0:
+				continue
+			var got: float = a.take(amount, t)
+			pode[t] -= got
+			sold += got
+			value += got * price_of(t)
 		if value > 0.0:
 			a.show_popup("+%d cr" % int(value), Color(0.55, 1.0, 0.5))
 		earned += value
@@ -503,7 +522,7 @@ func stored_wood() -> float:
 
 ## ore_type = "" aceita qualquer minério (custos genéricos do Centro da Vila e da escavadeira).
 func can_afford(cost_credits: float, cost_ore: float, ore_type: String = "", cost_wood: float = 0.0) -> bool:
-	return credits >= cost_credits and stored_ore(ore_type) >= cost_ore and stored_wood() >= cost_wood
+	return credits >= cost_credits and _livre_minerio(ore_type) >= cost_ore and livre("madeira") >= cost_wood  # Bloco 96
 
 
 ## "" se dá pra pagar; senão "falta 12 madeira, 30 ferro" (aviso pros botões).
@@ -512,13 +531,13 @@ func missing_text(cost_credits: float, cost_ore: float, ore_type: String = "", c
 	var parts: Array[String] = []
 	if credits < cost_credits:
 		parts.append("%d cr" % ceili(cost_credits - credits))
-	var have_ore := stored_ore(ore_type)
+	var have_ore := _livre_minerio(ore_type)  # Bloco 96: o reservado pras obras não conta
 	if have_ore < cost_ore:
 		var label := ore_label
 		if label == "":
 			label = "minério" if ore_type == "" else Ores.display_name(ore_type).to_lower()
 		parts.append("%d %s" % [ceili(cost_ore - have_ore), label])
-	var have_wood := stored_wood()
+	var have_wood := livre("madeira")
 	if have_wood < cost_wood:
 		parts.append("%d madeira" % ceili(cost_wood - have_wood))
 	return "" if parts.is_empty() else "falta " + ", ".join(parts)
@@ -536,17 +555,20 @@ func spend(cost_credits: float, cost_ore: float, ore_type: String = "", cost_woo
 	for a in get_tree().get_nodes_in_group("armazens"):
 		if wood_left <= 0.0:
 			break
-		wood_left -= a.take_wood(wood_left)
+		wood_left -= _tira_de(a, "madeira", wood_left)
 	var types: Array = [ore_type]
 	if ore_type == "":
 		types = Ores.TYPES.duplicate()
 		types.sort_custom(func(a, b): return price_of(a) < price_of(b))
 	var left := cost_ore
 	for t in types:
+		var teto := minf(left, livre(t)) if ore_type == "" else left  # Bloco 96: o reservado de outra obra fica
 		for a in get_tree().get_nodes_in_group("armazens"):
-			if left <= 0.0:
+			if left <= 0.0 or teto <= 0.0:
 				break
-			left -= a.take(left, t)
+			var got := _tira_de(a, t, minf(left, teto))
+			left -= got
+			teto -= got
 	return true
 
 
@@ -572,6 +594,149 @@ static func cost_text(c: Vector3i, ore_label: String = "minério") -> String:
 func _add_credits(amount: float) -> void:
 	credits += amount
 	credits_changed.emit(credits)
+	if amount < 0.0:
+		_novo_recibo()
+		_recibo_cr -= amount  # Bloco 96: o pagamento entra no recibo (devolvido se a obra for cancelada)
+
+
+# ------------------------------------------------------------ reserva das obras (Bloco 96)
+## O que está no armazém e NÃO está reservado pra uma obra (é o que conta pra pagar, vender e produzir).
+func livre(id: String) -> float:
+	return maxf(quantidade(id) - reservado(id), 0.0)
+
+
+## Minério livre de um tipo ("" = de todos os tipos somados).
+func _livre_minerio(ore_type: String) -> float:
+	if ore_type != "":
+		return livre(ore_type)
+	var t := 0.0
+	for o in Ores.TYPES:
+		t += livre(o)
+	return t
+
+
+## O que as obras encomendadas ainda têm reservado no armazém (falta chegar e não está nas mãos de ninguém).
+## (Guardado por quadro: os cartões do CONSTRUIR perguntam muitas vezes; reserva_mudou() limpa na hora.)
+func reservado(id: String) -> float:
+	var q := Engine.get_process_frames()
+	if q != _reserva_quadro:
+		_reserva_quadro = q
+		_reserva_cache = {}
+	if _reserva_cache.has(id):
+		return _reserva_cache[id]
+	var n := 0.0
+	for o in get_tree().get_nodes_in_group("obras"):
+		var site = ObraSite.de(o)
+		if site != null and site.tem_material() and o.has_method("obra_pending") and o.obra_pending():
+			n += site.reservado(id)
+	_reserva_cache[id] = n
+	return n
+
+
+## Alguém pegou/entregou/cancelou material: a reserva conta de novo.
+func reserva_mudou() -> void:
+	_reserva_quadro = -1
+
+
+## Algum armazém tem esse item de verdade (pra buscar agora)?
+func tem_no_armazem(id: String) -> bool:
+	return not armazens_com(id).is_empty()
+
+
+## Os armazéns que têm o item (pelo menos 1), do mais perto de `perto` pro mais longe.
+func armazens_com(id: String, perto: Vector2 = Vector2.INF) -> Array:
+	var out: Array = get_tree().get_nodes_in_group("armazens").filter(func(a): return _no_armazem(a, id) >= 1.0)
+	if perto != Vector2.INF:
+		out.sort_custom(func(a, b): return perto.distance_squared_to(a.global_position) < perto.distance_squared_to(b.global_position))
+	return out
+
+
+## Quanto de um item tem NESTE armazém.
+func _no_armazem(a: Node, id: String) -> float:
+	match Items.onde(id):
+		"madeira":
+			return float(a.wood_stored)
+		"couro":
+			return float(a.leather_stored)
+		"itens":
+			return float(a.item_count(id))
+	return float(a.stock.get(id, 0.0)) if Ores.TYPES.has(id) else 0.0
+
+
+## Tira `n` de um item DESTE armazém (o engenheiro pegando o material). Retorna quanto saiu.
+func tira_do_armazem(a: Node, id: String, n: float) -> float:
+	var got := 0.0
+	match Items.onde(id):
+		"madeira":
+			got = a.take_wood(n)
+		"couro":
+			got = minf(n, float(a.leather_stored))
+			a.leather_stored -= got
+		"itens":
+			got = a.take_item(id, n)
+		_:
+			if Ores.TYPES.has(id):
+				got = a.take(n, id)
+	if a.has_method("_update_label"):
+		a._update_label()
+	return got
+
+
+## Põe de volta NESTE armazém (o recibo da encomenda, o material que o engenheiro largou).
+func poe_no_armazem(a: Node, id: String, n: float) -> void:
+	if n <= 0.0:
+		return
+	match Items.onde(id):
+		"madeira":
+			a.wood_stored += n
+		"couro":
+			a.leather_stored += n
+		"itens":
+			a.add_item(id, n)
+		_:
+			if Ores.TYPES.has(id):
+				a.stock[id] = float(a.stock.get(id, 0.0)) + n
+				a._recount()
+	if a.has_method("_update_label"):
+		a._update_label()
+
+
+## Tira do armazém pelos pagamentos e anota no recibo.
+func _tira_de(a: Node, id: String, n: float) -> float:
+	var got := tira_do_armazem(a, id, n)
+	if got > 0.0:
+		_novo_recibo()
+		_recibo.append([a, id, got])
+	return got
+
+
+func _novo_recibo() -> void:
+	var q := Engine.get_process_frames()
+	if q != _recibo_quadro:
+		_recibo_quadro = q
+		_recibo = []
+		_recibo_cr = 0.0
+
+
+## A obra que acabou de ser encomendada (ObraSite.start, no MESMO quadro do pagamento) pega o recibo: o material
+## volta pro armazém de onde saiu e vira a lista da obra ({item: qtd}); os créditos ficam anotados (cancelar
+## devolve). Obras com material desligadas: o material fica gasto, como antes.
+func recibo_da_encomenda() -> Dictionary:
+	if _recibo_quadro != Engine.get_process_frames():
+		return {}
+	var mats := {}
+	for r in _recibo:
+		if not is_instance_valid(r[0]):
+			continue
+		if obras_com_material:
+			poe_no_armazem(r[0], r[1], r[2])
+			mats[r[1]] = float(mats.get(r[1], 0.0)) + float(r[2])
+	var out := {"materiais": mats, "creditos": _recibo_cr}
+	_reserva_quadro = -1  # a obra nova reserva: a conta do quadro vale de novo
+	_recibo = []
+	_recibo_cr = 0.0
+	_recibo_quadro = -1
+	return out
 
 
 # ------------------------------------------------------------ recrutamento

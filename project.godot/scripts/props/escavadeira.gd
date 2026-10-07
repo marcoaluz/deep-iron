@@ -261,6 +261,22 @@ func obra_workers() -> Array[Node]:
 	return _obra.workers()
 
 
+## Bloco 96: cancelada (peça ou reator): o que estava em obra para; as peças raras do reator voltam
+## (créditos e material: ObraSite.cancelar).
+func obra_cancelar() -> void:
+	if building_reactor != "":
+		var finds := get_tree().get_first_node_in_group("finds")
+		if finds:
+			finds.rare_parts += int(reactor_cost(building_reactor).z)
+		building_reactor = ""
+		reactor_left = 0.0
+		reactor_total = 0.0
+	else:
+		fabricating = ""
+		fab_left = 0.0
+	_update_visual()
+
+
 ## Área clicável (coordenadas globais).
 func contains_point(p: Vector2) -> bool:
 	return Rect2(global_position + Vector2(-80, -192), Vector2(160, 196)).has_point(p)

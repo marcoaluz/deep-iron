@@ -180,8 +180,11 @@ func _process(delta: float) -> bool:
 			var c3: Vector3i = bar.upgrade_costs[bar.level + 1]
 			var b1: float = eco.quantidade("barra_ferro")
 			var ok_bar: bool = bar.upgrade_block_reason() == "" and bar.upgrade()
-			print("  barricada: %s; barras %d -> %d" % [ok_bar, b1, eco.quantidade("barra_ferro")])
-			check(not ok_bar or eco.quantidade("barra_ferro") == b1 - ceilf(c3.y / eco.minerios_por_barra), "ampliar a barricada paga em barras")
+			# Bloco 96: subir a barricada é obra: as barras ficam reservadas no armazém (o livre cai)
+			print("  barricada: %s; barras livres %d -> %d" % [ok_bar, b1, eco.livre("barra_ferro")])
+			check(not ok_bar or eco.livre("barra_ferro") == b1 - ceilf(c3.y / eco.minerios_por_barra), "ampliar a barricada paga em barras")
+			if ok_bar:
+				preload("res://scripts/core/obra_site.gd").cancelar(bar)  # (o resto do teste não espera a obra)
 			arm.itens.clear()
 			arm._recount()
 			var falta_col: String = hub.coletor_minerio_block_reason()

@@ -3,6 +3,29 @@
 Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 94 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco); o Bloco 95 foi enviado em 2026-10-07 com o OK dele. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido".
 
+## AGORA (2026-10-07): Bloco 96 — obras com material levado pelo engenheiro (feito; commit local, push pendente)
+
+**O pedido:** o Prompt O (`Claude outputs/deep-iron-prompts-O-P-Q-M-S1-S2.md`). Plano e tabela em `docs/BLOCO96_PLANO.md`;
+relatório em `docs/BLOCO96_OBRAS_MATERIAL.md`.
+
+**Decisões do Marco:** 10 por viagem; cancelar devolve também os créditos e vale pra todas; os consertos grandes
+(barricada, plataforma do abismo, robô) viram obra com material.
+
+**Como funciona:** a Economy anota o RECIBO dos pagamentos do quadro e o `ObraSite.start()` da obra que nasce pega:
+o material volta pro armazém como RESERVA (`Economy.livre`). O engenheiro busca no armazém mais perto, até 10 por
+viagem, e a obra só anda até o entregue. Tem pilha ao lado, carga no corpo, "levando N/M" e o Cancelar na gaveta
+Obras. Save antigo = tudo entregue.
+
+**Medida** (`tests/bench_obras.gd`): as obras ficaram 1,5x a 2,7x mais demoradas; a escavadeira, ~15–20 min com 1
+engenheiro. As propostas (carga 15, carrinho de mão, carga maior pra escavadeira/escudo) estão no relatório, **NÃO
+aplicadas**: decisão do Marco.
+
+**Testes:** o b96 passa; a bateria dos 80 blocos e os GUT iso passaram um por vez. Foram ajustados b41, b44, b45,
+b56, b71, b81, b86, b87 e b94 (conferem o livre).
+
+**Próximo, pedido pelo Marco:** o ARMAZÉM COM LIMITE e níveis até 3 (vira o Bloco 97: o balão "armazém cheio"
+passa a fazer sentido).
+
 ## Bloco 95 — layout v2 da interface (feito, fonte Chakra Petch aplicada, enviado ao GitHub)
 
 **O pedido:** a seção 27 do guia (`docs/DEEP_IRON_Guia_completo_e_Analise.docx`) mais a janela CONSTRUIR

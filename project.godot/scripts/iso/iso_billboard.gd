@@ -23,6 +23,14 @@ const IsoFx := preload("res://scripts/iso/iso_fx.gd")
 const Icones := preload("res://scripts/ui/icones.gd")
 const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 const Tipo := preload("res://scripts/ui/tipografia.gd")
+const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 96: a pilha de material da obra
+## Bloco 96: a pilha do material entregue ao lado da obra (as pilhas que já existem no jogo): [pequena, média, grande].
+const PILHAS := {"madeira": ["tabuas", "tabuas", "tabuas"], "tabua": ["tabuas", "tabuas", "tabuas"],
+	"carvao": ["carvao_p", "carvao_m", "carvao_m"], "minerio": ["pedra_p", "pedra_m", "pedra_g"],
+	"barra": ["aco_p", "aco_m", "aco_m"], "outro": ["caixote", "caixote", "caixote"]}
+## Bloco 96: a partir de quantas unidades a pilha é média / grande.
+const PILHA_MEDIA := 15.0
+const PILHA_GRANDE := 40.0
 ## Bloco 95: os rótulos de prédio (nome + detalhes) que ficam compactos no mapa: só o nome, pequeno.
 const ROTULOS_COMPACTOS := ["NameLabel", "StatusLabel"]
 
@@ -900,6 +908,47 @@ func _icone_novo(d: Sprite2D) -> void:
 	d.scale = Vector2(1.0 / maxf(absf(gs.x), 0.01), 1.0 / maxf(absf(gs.y), 0.01))
 
 
+## Bloco 96: a pilha do material entregue e ainda não usado, no pé da obra, ao lado (diminui conforme a obra anda).
+var _pilha_tex := {}
+
+
+func _desenha_pilha(k: Vector2) -> void:
+	var site = ObraSite.de(src)
+	if site == null or not site.tem_material():
+		return
+	var pilha: Dictionary = site.pilha(src.obra_progress())
+	if pilha.is_empty():
+		return
+	var item := ""
+	var qtd := 0.0
+	for it in pilha:
+		if float(pilha[it]) > qtd:
+			qtd = float(pilha[it])
+			item = it
+	var tipo := "outro"
+	if item in ["madeira", "tabua"]:
+		tipo = item
+	elif item == "carvao":
+		tipo = "carvao"
+	elif item.begins_with("barra") or item in ["aco", "lingote_solar"]:
+		tipo = "barra"
+	elif item in ["ferro", "cobre", "prata", "solarita"] or item.begins_with("cristal"):
+		tipo = "minerio"
+	var nome: String = PILHAS[tipo][0 if qtd < PILHA_MEDIA else (1 if qtd < PILHA_GRANDE else 2)]
+	if not _pilha_tex.has(nome):
+		var path := "res://assets/game/iso/props/%s.png" % nome
+		_pilha_tex[nome] = load(path) if ResourceLoader.exists(path) else null
+	var tex: Texture2D = _pilha_tex[nome]
+	if tex == null:
+		return
+	var x := 40.0
+	if not _art_box.is_empty():
+		x = (_art_box.rect as Rect2).end.x - 6.0  # no canto da frente da obra
+	_top.draw_set_transform(Vector2.ZERO, 0.0, k)
+	_top.draw_texture(tex, Vector2(x - tex.get_width() * 0.5, -tex.get_height() + 4.0))
+	_top.draw_set_transform(Vector2.ZERO)
+
+
 ## Por cima da arte: barra de vida das criaturas e barrinha de progresso da obra (canteiro e, no Bloco 95, toda
 ## obra encomendada: melhoria do Centro, ampliação da casa, conserto...). O martelo do lado: colorido com gente
 ## trabalhando, CINZA esperando engenheiro (ou ferreiro).
@@ -924,6 +973,7 @@ func _draw_top() -> void:
 		if martelo:
 			_top.draw_texture(martelo, Vector2(30, -12), Color.WHITE if eng else Color(0.5, 0.5, 0.5, 0.95))
 		_top.draw_set_transform(Vector2.ZERO)
+		_desenha_pilha(k)
 		return
 	if not src.is_in_group("criaturas"):
 		return

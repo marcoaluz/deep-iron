@@ -42,6 +42,7 @@ const Teclas := preload("res://scripts/core/teclas.gd")
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const Icones := preload("res://scripts/ui/icones.gd")
 const Retratos := preload("res://scripts/ui/retratos.gd")
+const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 96
 const Tipo := preload("res://scripts/ui/tipografia.gd")
 const STATE_COLORS := {
 	"idle": Color(0.65, 0.6, 0.55),
@@ -2100,8 +2101,27 @@ func _refresh_obras() -> void:
 			v.add_child(nome)
 			var barra := _bar(COLOR_ENGINEER)
 			barra.name = "Barra"
-			barra.custom_minimum_size = Vector2(200, 6)
+			barra.custom_minimum_size = Vector2(170, 6)
 			v.add_child(barra)
+			var mat := _label("", Tipo.DETALHE, COLOR_DIM)  # Bloco 96: entregue/necessário por item
+			mat.name = "Material"
+			mat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			mat.custom_minimum_size.x = 170
+			v.add_child(mat)
+			var cancela := _button("Cancelar")  # Bloco 96: devolve créditos e material
+			cancela.name = "Cancelar"
+			cancela.add_theme_font_size_override("font_size", Tipo.DETALHE)
+			cancela.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			cancela.tooltip_text = "Cancelar a obra: os créditos voltam por inteiro e o material (o já entregue e o que estiver nas mãos) volta pro armazém."
+			cancela.pressed.connect(func():
+				var lista := get_tree().get_nodes_in_group("obras").filter(func(o): return o.has_method("obra_pending") and o.obra_pending())
+				if i < lista.size() and ObraSite.cancelar(lista[i]):
+					Audio.click()
+					show_toast("Obra cancelada: %s (créditos e material devolvidos)" % lista[i].obra_title(), COLOR_TITLE, null)
+					_refresh_obras.call_deferred()
+				else:
+					Audio.error())
+			h.add_child(cancela)
 			linha.gui_input.connect(func(ev: InputEvent):
 				var lista := get_tree().get_nodes_in_group("obras").filter(func(o): return o.has_method("obra_pending") and o.obra_pending())
 				if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT and i < lista.size():
@@ -2114,8 +2134,15 @@ func _refresh_obras() -> void:
 		var trabalhando: bool = not o.obra_workers().is_empty()
 		var pct := roundi(o.obra_progress() * 100.0)
 		var quem := "ferreiro" if o.get("oficio") == "ferreiro" else "engenheiro"
-		_set_text(linha.get_node("HBoxContainer/VBoxContainer/Nome") if linha.has_node("HBoxContainer/VBoxContainer/Nome") else linha.find_child("Nome", true, false),
-			"%s  %d%%  —  %s" % [o.obra_title(), pct, "trabalhando" if trabalhando else "esperando " + quem])
+		var site = ObraSite.de(o)
+		var estado: String = site.estado(o.obra_progress()) if site else ("trabalhando" if trabalhando else "esperando " + quem)
+		_set_text(linha.find_child("Nome", true, false), "%s  %d%%  —  %s" % [o.obra_title(), pct, estado])
+		var mat: Label = linha.find_child("Material", true, false)
+		var mt: String = site.material_texto() if site else ""
+		_set_text(mat, mt)
+		mat.visible = mt != ""
+		var cancela: Button = linha.find_child("Cancelar", true, false)
+		cancela.visible = o.has_method("obra_cancelar")
 		var barra: ProgressBar = linha.find_child("Barra", true, false)
 		barra.value = pct
 		_set_fill(barra, COLOR_ENGINEER if trabalhando else Color(0.55, 0.5, 0.45))

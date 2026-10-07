@@ -117,11 +117,14 @@ func _bloqueios() -> void:
 	painel._ampliar()
 	check(casa.upgrade_pending() and casa.obra_pending(), "ampliação encomendada: vira obra")
 	check(is_equal_approx(g("economy").credits, c0 - casa.upgrade_credits[1]), "cobrou %d créditos" % casa.upgrade_credits[1])
-	check(g("armazens").stock["ferro"] <= f0 - casa.upgrade_ore[1] + 0.01 and g("armazens").wood_stored <= m0 - casa.upgrade_wood[1] + 0.01, "cobrou ferro e madeira")
+	# Bloco 96: ferro e madeira ficam RESERVADOS no armazém (o engenheiro leva): o livre cai
+	check(g("economy").livre("ferro") <= f0 - casa.upgrade_ore[1] + 0.01 and g("economy").livre("madeira") <= m0 - casa.upgrade_wood[1] + 0.01, "cobrou ferro e madeira")
 	check(casa.level == 1 and casa.built, "durante a obra continua nível 1 e habitada")
 	hud.close_panels()
 	casa.upgrade_total = 6.0
 	casa.upgrade_left = 6.0
+	for k in casa._obra.necessario:  # Bloco 96: o material já na obra (as viagens são do b96)
+		casa._obra.entregar(k, float(casa._obra.necessario[k]))
 	var ws: Array = main.get_tree().get_nodes_in_group("ipezinhos")
 	ws[0].set_job("engenheiro")
 	Engine.time_scale = 3.0

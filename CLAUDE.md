@@ -64,7 +64,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 | `niveis.gd` / `nivel_mina.gd` | Os níveis da mina por dados. |
 | `fundo.gd` | Poças e ventiladores do S2 e do S3. |
 | `work_areas.gd` / `work_panel.gd` / `area_placer.gd` | Áreas de trabalho com postos (Bloco 77). |
-| `obra_site.gd` | O pedaço comum de toda obra feita por engenheiro. |
+| `obra_site.gd` | O pedaço comum de toda obra feita por engenheiro. Bloco 96: a lista de material (reservada no armazém, levada pelo engenheiro até `carga_material` por viagem), o progresso limitado ao entregue, o estado ("levando N/M"…) e o `cancelar` (devolve créditos e material). |
 | `build_menu.gd` | O menu CONSTRUIR: janela de tamanho fixo, grade de cartões com estrutura fixa e o campo `img` de cada cartão (Bloco 95). |
 | `house_placer.gd` | Posicionar prédio no mapa. |
 | `hud.gd` | HUD montado por código (layout v2, Bloco 95): recursos e hora grande em cima, aba fina à esquerda (Tab = pessoas; obras; missões), coluna de alertas à direita (`ui/alertas.gd`), barra de funções agrupada, cartão do selecionado, pilha de avisos (`ui/avisos.gd`), menu "Janelas". |
@@ -116,7 +116,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b95**; o próximo é o **b96**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b96**; o próximo é o **b97**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:
@@ -142,7 +142,8 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
    | Pra… | Usar |
    |---|---|
    | Estação de trabalho | `station.gd` |
-   | Obra paga que espera engenheiro | `Canteiro` + `ObraSite` (`canteiro.gd` `KINDS`, `obra_site.gd`) |
+   | Obra paga que espera engenheiro | `Canteiro` + `ObraSite` (`canteiro.gd` `KINDS`, `obra_site.gd`). Bloco 96: pague com `spend`/`paga_metal` e chame `_obra.start()` no MESMO quadro: o material vira a lista da obra sozinho (recibo da `Economy`). Dono novo de obra: guarde a ObraSite em `_obra` e implemente `obra_cancelar()` |
+   | Estoque que pode ser usado agora | `Economy.livre(item)` (o armazém menos o reservado pras obras); `quantidade` é o físico |
    | Escolher lugar no mapa | `house_placer.gd` |
    | Cartão no menu CONSTRUIR | `build_menu.gd` (com o campo `img`: ver a regra 12) |
    | Tamanho de letra | `scripts/ui/tipografia.gd` (`Tipo.CORPO`, `Tipo.DETALHE`…): nunca número solto (o teste b95 confere) |

@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **861 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **867 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (78)
 
@@ -385,7 +385,7 @@ Total: **861 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `boss_reward_parts` | 2 |  |  |
 | `boss_reward_research` | 80.0 |  |  |
 
-## `scripts/core/economy.gd` (22)
+## `scripts/core/economy.gd` (23)
 
 **Venda**
 
@@ -433,6 +433,12 @@ Total: **861 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `extra_building_cost_growth` | 1.5 |  | Cada unidade a mais do mesmo prédio custa isso vezes a anterior (1.5 = +50%; 1.0 = sempre o mesmo preço). Vale pra Laboratório, Arsenal, Campo de treino, Taverna, Coletor de madeira e Enfermaria extra. (Casas, comedouros e parques seguem com o preço de sempre.) |
+
+**Obras com material (Bloco 96)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `obras_com_material` | true |  | Liga as obras com material: na encomenda o material fica RESERVADO no armazém e o engenheiro leva (desligado = como antes: tudo sai do armazém na hora). Serve também pra medir o antes e o depois (tests/bench_obras.gd). |
 
 ## `scripts/core/environment.gd` (55)
 
@@ -951,7 +957,7 @@ Total: **861 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `pollen_amount` | 18 |  |  |
 
-## `scripts/workers/ipezinho.gd` (72)
+## `scripts/workers/ipezinho.gd` (74)
 
 **Obras (Bloco 51)**
 
@@ -1119,6 +1125,8 @@ Total: **861 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `head_lamp_enabled` | true |  |  |
 | `motivo_espera` | 2.0 |  | Segundos parado pelo MESMO motivo antes de o balão aparecer (não pisca a cada troca de tarefa). |
 | `motivo_intervalo` | 0.5 |  | A cada quantos segundos o motivo é conferido (barato: só olha o estado que a IA já decidiu). |
+| `carga_material` | 10.0 |  | Quanto o engenheiro leva por viagem (unidades de material: madeira, minério, barras, tábuas, pregos...). |
+| `material_alcance` | 40.0 |  | Distância (px) em que ele "chegou" no armazém pra pegar o material. |
 
 ## `scripts/props/abyss_shaft.gd` (13)
 
@@ -1179,7 +1187,7 @@ Total: **861 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `forge_sound_interval` | 0.9 |  | Intervalo entre as marteladas enquanto forja. |
 
-## `scripts/props/barricada.gd` (8)
+## `scripts/props/barricada.gd` (11)
 
 **(sem grupo)**
 
@@ -1193,6 +1201,9 @@ Total: **861 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `upgrade_ore` | ["", "", "ferro", "ferro"] |  | Minério gasto em cada nível ("" = qualquer). |
 | `upgrade_itens` | [{}, {}, {}, {"prego": 12, "ferragem": 4}] |  | Bloco 94: itens a mais de cada nível ({item: qtd}); antes da fornalha, pregos e ferragens viram ferro (Economy). |
 | `repair_wood_per_hp` | 0.25 |  | Madeira gasta por ponto de vida consertado. |
+| `upgrade_tempos` | [0.0, 30.0, 45.0, 60.0] |  | Bloco 96: segundos de engenheiro pra subir pro nível i (índice 0 não usado). |
+| `conserto_na_hora` | 10.0 |  | Bloco 96: conserto de até esta madeira é feito NA HORA (pequeno); acima, vira obra de engenheiro. |
+| `conserto_segundos_por_madeira` | 0.8 |  | Bloco 96: segundos de engenheiro por unidade de madeira do conserto grande. |
 
 ## `scripts/props/campo_treino.gd` (1)
 

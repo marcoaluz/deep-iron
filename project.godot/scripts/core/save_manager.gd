@@ -91,6 +91,13 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 96: obras com material. Todo "obra" (ObraSite: canteiros, casa, centro_vila, coletor, escavadeira,
+##     escudo, cemitério, e agora abyss_shaft, robo e barricada) ganha "necessario" {item: qtd}, "entregue"
+##     {item: qtd} e "creditos" (pagos, devolvidos se cancelar) — só quando a obra tem material. ipezinho.gd
+##     "material_mao" {item: qtd} (volta pro armazém ao carregar). abyss_shaft.gd e robo.gd ganham "obra";
+##     barricada.gd "obra_tipo" ("" / "nivel" / "conserto"), "obra_total", "obra_left" e "obra". Save antigo:
+##     obra sem "necessario" = sem material = tudo entregue (anda como antes); conserto do abismo/robô que estava
+##     em andamento continua, agora com o engenheiro; barricada sem obra.
 ##   Bloco 94: centro_vila "carpintarias" [{position, fila [...]}] (a mesma fila da fornalha); casa.gd
 ##     "camas_boas" (camas de tábua montadas) e "camas_pedidas" (pagas, esperando o carpinteiro); ipezinho.gd
 ##     "mochila" (bool) e "wearing" aceita "botas"; equipment.gd "pool"/"broken" ganham "botas"; os novos itens

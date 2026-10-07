@@ -113,7 +113,8 @@ func _process(delta: float) -> bool:
 		var q := spot_near(hub.global_position + Vector2(160, 80))
 		g("house_placer").cancel()
 		check(q.is_finite() and hub._confirm_fornalha(q), "fornalha encomendada (canteiro) em %s" % q)
-		check(eco.credits == c0 - hub.fornalha_credits and arm.stock["ferro"] == f0 - hub.fornalha_ore, "gastou %d cr + %d ferro" % [hub.fornalha_credits, hub.fornalha_ore])
+		# Bloco 96: o ferro fica reservado no armazém (o engenheiro leva): o livre cai
+		check(eco.credits == c0 - hub.fornalha_credits and is_equal_approx(eco.livre("ferro"), f0 - hub.fornalha_ore), "gastou %d cr + %d ferro" % [hub.fornalha_credits, hub.fornalha_ore])
 		check(finish_canteiro("fornalha") and get_nodes_in_group("fornalhas").size() == 1, "o engenheiro ergueu a fornalha")
 		var f = g("fornalhas")
 		print("== sem ordem: nada")

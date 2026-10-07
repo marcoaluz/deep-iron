@@ -56,8 +56,9 @@ func arte(c) -> Array:
 	return IsoArt.layers(c).map(func(l): return String(l.tex.resource_path).get_file())
 
 
+## Bloco 96: o LIVRE (o material encomendado fica reservado no armazém até o engenheiro levar).
 func estoque(arm, eco) -> Vector3:
-	return Vector3(eco.credits, arm.stock["ferro"], arm.wood_stored)
+	return Vector3(eco.credits, eco.livre("ferro"), eco.livre("madeira"))
 
 
 func _process(delta: float) -> bool:

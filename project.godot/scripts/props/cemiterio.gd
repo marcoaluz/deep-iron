@@ -300,6 +300,16 @@ func obra_workers() -> Array[Node]:
 	return _obra.workers()
 
 
+## Bloco 96: cancelado antes de ficar pronto: o terreno some (ObraSite.cancelar devolveu créditos e material).
+func obra_cancelar() -> void:
+	remove_from_group("obras")
+	remove_from_group("cemiterios")
+	var env := get_tree().get_first_node_in_group("environment")
+	queue_free()
+	if env and env.has_method("rebuild_navigation"):
+		env.rebuild_navigation.call_deferred()
+
+
 # ------------------------------------------------------------ save (calendario.gd guarda a lista)
 func get_save_data() -> Dictionary:
 	return {"rect": [rect.position.x, rect.position.y, rect.size.x, rect.size.y], "total": total, "feito": feito,

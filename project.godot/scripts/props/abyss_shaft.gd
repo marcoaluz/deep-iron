@@ -2,12 +2,15 @@ extends Node2D
 ## Plataforma do ABISMO (nível 3, grupo "elevador_abismo"): fica no fundo do nível 2,
 ## arruinada. O jogador conserta (peças raras + créditos + prata + tempo) e ela vira
 ## um elevador igual ao do nível 2 (NavigationLink2D, nos dois sentidos).
+## Bloco 96: o conserto é uma OBRA de engenheiro: a prata vai pro lugar nas costas dele (ObraSite) e o tempo só anda
+## com ele trabalhando (antes andava sozinho). Save antigo consertando: material todo entregue, falta o engenheiro.
 ## Lá embaixo: basalto em brasa, SOLARITA (precisa do Traje de chumbo da Oficina),
 ## acidentes bem mais comuns e mais graves, e o calor tira o ânimo de quem trabalha lá.
 
 signal opened
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 96
 const RUIN := preload("res://assets/game/elevador_ruina.png")
 const CAGE := preload("res://assets/game/elevador.png")
 
@@ -60,6 +63,7 @@ func reason_locked() -> String:
 	return "consertar a plataforma" + ((" (%s)" % r) if r != "" and r != "consertando" else (" (consertando)" if r == "consertando" else ""))
 var repairing: bool = false
 var repair_left: float = 0.0
+var _obra := ObraSite.new()  # Bloco 96
 var _sound_timer := 0.0
 
 @onready var _top_sprite: Sprite2D = $Top/Sprite
@@ -147,6 +151,8 @@ func start_repair() -> bool:
 	get_tree().get_first_node_in_group("finds").spend_parts(repair_parts)
 	repairing = true
 	repair_left = repair_time
+	_obra.start()  # Bloco 96: o material fica reservado; o engenheiro leva e conserta
+	add_to_group("obras")
 	_apply(false)
 	return true
 
@@ -158,28 +164,40 @@ func repair_progress() -> float:
 func _process(delta: float) -> void:
 	if not repairing:
 		return
-	repair_left -= delta
-	_sound_timer -= delta
-	if _sound_timer <= 0.0:
-		_sound_timer = 0.8 * randf_range(0.8, 1.2)
-		Audio.forge(global_position)
-	_top_label.text = "Consertando a plataforma  %d%%" % roundi(repair_progress() * 100.0)
+	if _obra.has_engineer():  # Bloco 96: o barulho e as faíscas só com o engenheiro trabalhando
+		_sound_timer -= delta
+		if _sound_timer <= 0.0:
+			_sound_timer = 0.8 * randf_range(0.8, 1.2)
+			Audio.forge(global_position)
+	_top_label.text = "Consertando a plataforma\n%s" % _obra.status(repair_progress())
+
+
+## Bloco 96: o engenheiro trabalhou `seconds` no conserto.
+func obra_work(seconds: float) -> void:
+	if not repairing:
+		return
+	repair_left -= seconds
 	if repair_left <= 0.0:
-		repairing = false
-		unlocked = true
-		_apply(true)
-		var hud := get_tree().get_first_node_in_group("hud")
-		var n := nivel()
-		if hud and n and n.titulo_abertura != "":
-			hud.show_banner(n.titulo_abertura, n.descricao)  # Bloco 71: os níveis novos (dados)
-		elif hud:
-			hud.show_banner("O ABISMO ABRIU!",
-				"A plataforma desce pro nível 3. Lá tem SOLARITA (precisa do Traje de chumbo), mas o calor e os acidentes são brutais.")
-		Audio.fanfare()
-		var diary := get_tree().get_first_node_in_group("diary")
-		if diary:
-			diary.unlock("nivel_" + nivel_id)  # Bloco 71 (S4, S5; o abismo não tem página própria)
-		opened.emit()
+		_termina_conserto()
+
+
+func _termina_conserto() -> void:
+	repairing = false
+	remove_from_group("obras")
+	unlocked = true
+	_apply(true)
+	var hud := get_tree().get_first_node_in_group("hud")
+	var n := nivel()
+	if hud and n and n.titulo_abertura != "":
+		hud.show_banner(n.titulo_abertura, n.descricao)  # Bloco 71: os níveis novos (dados)
+	elif hud:
+		hud.show_banner("O ABISMO ABRIU!",
+			"A plataforma desce pro nível 3. Lá tem SOLARITA (precisa do Traje de chumbo), mas o calor e os acidentes são brutais.")
+	Audio.fanfare()
+	var diary := get_tree().get_first_node_in_group("diary")
+	if diary:
+		diary.unlock("nivel_" + nivel_id)  # Bloco 71 (S4, S5; o abismo não tem página própria)
+	opened.emit()
 
 
 func _apply(animate: bool) -> void:
@@ -208,13 +226,62 @@ func _apply(animate: bool) -> void:
 			node.on_unlock_changed(animate)
 
 
+func obra_pending() -> bool:
+	return repairing
+
+
+func obra_title() -> String:
+	return "Plataforma do %s" % (nivel_id if nivel_id != "S3" else "abismo")
+
+
+func obra_progress() -> float:
+	return repair_progress()
+
+
+func obra_position(worker: Node) -> Vector2:
+	return global_position + Vector2(0, 34) + _obra.offset_for(worker)
+
+
+## Cancelado: a plataforma volta a arruinada; as peças raras voltam (créditos e prata: ObraSite.cancelar).
+func obra_cancelar() -> void:
+	repairing = false
+	repair_left = 0.0
+	remove_from_group("obras")
+	var finds := get_tree().get_first_node_in_group("finds")
+	if finds:
+		finds.rare_parts += repair_parts
+	_apply(false)
+
+
+# ------------------------------------------------------------ obra (Bloco 96: conserto por engenheiro, com material)
+func obra_ordered_at() -> float:
+	return _obra.ordered_at
+
+
+func obra_join(worker: Node) -> void:
+	_obra.join(worker)
+
+
+func obra_leave(worker: Node) -> void:
+	_obra.leave(worker)
+
+
+func obra_workers() -> Array[Node]:
+	return _obra.workers()
+
+
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
-	return {"unlocked": unlocked, "repairing": repairing, "repair_left": repair_left}
+	return {"unlocked": unlocked, "repairing": repairing, "repair_left": repair_left, "obra": _obra.get_save_data()}
 
 
 func load_save_data(d: Dictionary) -> void:
 	unlocked = SaveUtil.boolean(d, "unlocked", false)
 	repairing = SaveUtil.boolean(d, "repairing", false) and not unlocked
 	repair_left = clampf(SaveUtil.num(d, "repair_left", repair_time), 0.0, repair_time) if repairing else 0.0
+	_obra.load_save_data(SaveUtil.dict(d, "obra"))  # Bloco 96 (save antigo: sem material = tudo entregue)
+	if repairing:
+		add_to_group("obras")
+	elif is_in_group("obras"):
+		remove_from_group("obras")
 	_apply(false)

@@ -564,6 +564,14 @@ func obra_workers() -> Array[Node]:
 	return _obra.workers()
 
 
+## Bloco 96: cancelada (melhoria ou expansão): nada sobe (ObraSite.cancelar já devolveu créditos e material).
+func obra_cancelar() -> void:
+	pending_upgrade = ""
+	upgrade_left = 0.0
+	upgrade_total = 0.0
+	_update_visual()
+
+
 ## "Trilhas batidas 2: 40% — esperando engenheiro" (pra UI).
 func obra_status() -> String:
 	return "%s: %s" % [obra_title(), _obra.status(obra_progress())] if obra_pending() else ""

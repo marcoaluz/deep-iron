@@ -275,8 +275,14 @@ func _process(delta: float) -> bool:
 		eco.add_item("ferragem", 4.0)
 		arm.wood_stored = 30.0
 		arm._recount()
-		check(bar.upgrade() and bar.level == 3 and eco.quantidade("prego") == 0.0 and eco.quantidade("ferragem") == 0.0 and eco.quantidade("barra_ferro") == 0.0,
+		# Bloco 96: subir a barricada é obra de engenheiro: o material fica reservado e o nível sobe no fim da obra
+		check(bar.upgrade() and eco.livre("prego") == 0.0 and eco.livre("ferragem") == 0.0 and eco.livre("barra_ferro") == 0.0,
 			"barricada 3 paga: 85 barras + 12 pregos + 4 ferragens")
+		for k in bar._obra.necessario:
+			bar._obra.entregar(k, float(bar._obra.necessario[k]))
+			eco.tira(k, float(bar._obra.necessario[k]))  # (o engenheiro levou)
+		bar.obra_work(999.0)
+		check(bar.level == 3, "barricada nível 3 depois da obra")
 		var casa = get_meta("casa")
 		casa.level = 2
 		casa._apply_level_beds()

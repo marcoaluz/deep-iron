@@ -120,15 +120,17 @@ func _ligacoes() -> void:
 	var j4 = world().get_node_or_null("JazidaS4_1")
 	check(j4 != null and j4._needs_descent, "jazida do S4 trancada pela descida")
 	var sol0: float = arm.stock.solarita
-	check(e4.start_repair() and e4.repairing and arm.stock.solarita < sol0, "conserto começou (gasta solarita)")
+	# Bloco 96: o conserto é obra de engenheiro: a solarita fica reservada (o livre cai) e o tempo anda pelo obra_work
+	var eco96 = g("economy")
+	check(e4.start_repair() and e4.repairing and eco96.livre("solarita") < sol0, "conserto começou (gasta solarita)")
 	e4.repair_left = 0.01
-	e4._process(0.05)
+	e4.obra_work(0.05)
 	check(e4.unlocked and Niveis.motivo(tree, Niveis.por_id("S4")) == "", "S4 aberto")
 	check(g("diary").has_page("nivel_S4"), "página da cachoeira no diário")
 	check(not j4._needs_descent, "jazida do S4: a descida abriu (o cristal rubro ainda pede o traje de chumbo)")
 	check(e5.repair_block_reason() == "" and e5.start_repair(), "S5: conserto com cristal rubro")
 	e5.repair_left = 0.01
-	e5._process(0.05)
+	e5.obra_work(0.05)
 	check(e5.unlocked and Niveis.liberado(tree, Niveis.por_id("S5")) and world().get_node("JazidaS5_1").is_unlocked(), "S5 aberto, gema liberada")
 
 

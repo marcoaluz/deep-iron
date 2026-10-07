@@ -93,7 +93,8 @@ func _process(delta: float) -> bool:
 		var f0: float = arm.stock["ferro"]
 		var w0: float = arm.wood_stored
 		check(placer.try_confirm(), "Vestiário encomendado em %s" % q)
-		check(eco.credits == c0 - eq.vestiario_credits and arm.stock["ferro"] == f0 - eq.vestiario_ore and arm.wood_stored == w0 - eq.vestiario_wood,
+		# Bloco 96: ferro e madeira ficam reservados no armazém (o engenheiro leva): o livre cai
+		check(eco.credits == c0 - eq.vestiario_credits and is_equal_approx(eco.livre("ferro"), f0 - eq.vestiario_ore) and is_equal_approx(eco.livre("madeira"), w0 - eq.vestiario_wood),
 			"gastou %d cr + %d ferro + %d madeira" % [eq.vestiario_credits, eq.vestiario_ore, eq.vestiario_wood])
 		check(eq.vestiario() == null and g("canteiros") != null, "ainda é canteiro")
 		set_meta("pos", q)

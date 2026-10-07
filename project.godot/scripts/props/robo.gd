@@ -7,8 +7,12 @@ extends Node2D
 ## o GUARDA FERRUGENTO. De dia fica de guarda no Centro da Vila; à noite patrulha
 ## as casas. Com ele ativo, a vila fica mais tranquila (+ânimo, no morale.gd).
 ## (As invasões dos próximos blocos vão usar ele como defensor.)
+## Bloco 96: o conserto é uma OBRA de engenheiro: o ferro vai nas costas dele (ObraSite) e o tempo só anda com ele
+## trabalhando (antes andava sozinho). Save antigo consertando: material todo entregue, falta o engenheiro.
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 96
+var _obra := ObraSite.new()
 
 @export_group("Conserto")
 @export var repair_parts: int = 6
@@ -150,6 +154,8 @@ func start_repair() -> bool:
 	finds.spend_parts(repair_parts)
 	state = "repairing"
 	repair_left = repair_time
+	_obra.start()  # Bloco 96: o ferro fica reservado; o engenheiro leva e conserta
+	add_to_group("obras")
 	_update_visual()
 	return true
 
@@ -157,6 +163,7 @@ func start_repair() -> bool:
 func _activate() -> void:
 	state = "active"
 	repair_left = 0.0
+	remove_from_group("obras")
 	Audio.robot(global_position)
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
@@ -179,14 +186,12 @@ func _process(delta: float) -> void:
 			if carrier != null and not is_instance_valid(carrier):
 				carrier = null
 		"repairing":
-			repair_left -= delta
-			_sound_timer -= delta
-			if _sound_timer <= 0.0:
-				_sound_timer = 0.9 * randf_range(0.8, 1.2)
-				Audio.forge(global_position)
-			_visual.frame = 0 if fmod(repair_left, 1.0) > 0.15 else 1  # "pisca" enquanto conserta
-			if repair_left <= 0.0:
-				_activate()
+			if _obra.has_engineer():  # Bloco 96: só anda com o engenheiro (obra_work)
+				_sound_timer -= delta
+				if _sound_timer <= 0.0:
+					_sound_timer = 0.9 * randf_range(0.8, 1.2)
+					Audio.forge(global_position)
+				_visual.frame = 0 if fmod(repair_left, 1.0) > 0.15 else 1  # "pisca" enquanto conserta
 		"active":
 			_guard(delta)
 	_update_label()
@@ -331,8 +336,62 @@ func _update_label() -> void:
 
 
 # ------------------------------------------------------------ save/load (via finds.gd)
+func obra_pending() -> bool:
+	return state == "repairing"
+
+
+func obra_title() -> String:
+	return "Consertar o robô"
+
+
+func obra_progress() -> float:
+	return clampf(1.0 - repair_left / repair_time, 0.0, 1.0) if state == "repairing" and repair_time > 0.0 else 0.0
+
+
+func obra_position(worker: Node) -> Vector2:
+	return global_position + Vector2(0, 28) + _obra.offset_for(worker)
+
+
+## Bloco 96: o engenheiro trabalhou `seconds` no conserto.
+func obra_work(seconds: float) -> void:
+	if state != "repairing":
+		return
+	repair_left -= seconds
+	if repair_left <= 0.0:
+		_activate()
+
+
+## Cancelado: volta a esperar na Oficina; as peças raras voltam (créditos e ferro: ObraSite.cancelar).
+func obra_cancelar() -> void:
+	state = "base"
+	repair_left = 0.0
+	remove_from_group("obras")
+	var finds := get_tree().get_first_node_in_group("finds")
+	if finds:
+		finds.rare_parts += repair_parts
+	_update_visual()
+
+
+# ------------------------------------------------------------ obra (Bloco 96: conserto por engenheiro, com material)
+func obra_ordered_at() -> float:
+	return _obra.ordered_at
+
+
+func obra_join(worker: Node) -> void:
+	_obra.join(worker)
+
+
+func obra_leave(worker: Node) -> void:
+	_obra.leave(worker)
+
+
+func obra_workers() -> Array[Node]:
+	return _obra.workers()
+
+
 func get_save_data() -> Dictionary:
-	return {"state": state, "position": SaveUtil.vec2_to_array(global_position), "repair_left": repair_left}
+	return {"state": state, "position": SaveUtil.vec2_to_array(global_position), "repair_left": repair_left,
+		"obra": _obra.get_save_data()}
 
 
 ## Quem estava sendo carregado volta pro chão (é só mandar buscar de novo).
@@ -341,4 +400,9 @@ func load_save_data(d: Dictionary) -> void:
 	state = s if s in ["found", "base", "repairing", "active"] else "found"
 	global_position = SaveUtil.vec2(d, "position", global_position)
 	repair_left = clampf(SaveUtil.num(d, "repair_left", repair_time), 0.0, repair_time) if state == "repairing" else 0.0
+	_obra.load_save_data(SaveUtil.dict(d, "obra"))  # Bloco 96 (save antigo: sem material = tudo entregue)
+	if state == "repairing":
+		add_to_group("obras")
+	elif is_in_group("obras"):
+		remove_from_group("obras")
 	carrier = null

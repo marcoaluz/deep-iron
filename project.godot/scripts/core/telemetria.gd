@@ -7,10 +7,16 @@ extends Node
 const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre", "carvao", "prata", "solarita",
 	"madeira", "comida", "populacao", "feridos", "animo_medio", "mortes", "onda", "criaturas_derrubadas",
 	"invasao_ativa", "pesquisas", "greve", "estagio_vila", "tier", "ultima_onda_total", "ultima_onda_derrubadas", "chefe",
-	"cristal_verde", "cristal_rubro", "queimaduras_acido", "queimaduras_lava", "ventiladores", "gema_azul"]  # (Bloco 70: no fim)
+	"cristal_verde", "cristal_rubro", "queimaduras_acido", "queimaduras_lava", "ventiladores", "gema_azul",  # (Bloco 70: no fim)
+	"obras_prontas_dia", "obra_tempo_medio_s"]  # Bloco 96: obras terminadas no dia e o tempo médio (s de jogo) encomenda -> pronto
 
 var arquivo := ""
 var _t0 := 0
+## Bloco 96: as obras abertas (dono -> segundos de jogo na encomenda) e as que acabaram desde a última linha.
+var _obras_abertas := {}
+var _obras_tempos: Array[float] = []
+var _relogio := 0.0
+var _olha := 0.0
 
 
 func _ready() -> void:
@@ -31,6 +37,36 @@ func _ready() -> void:
 
 func _g(grupo: String) -> Node:
 	return get_tree().get_first_node_in_group(grupo)
+
+
+## Bloco 96: acompanha as obras (a cada meio segundo de jogo): quando nasce e quando acaba.
+func _process(delta: float) -> void:
+	_relogio += delta
+	_olha -= delta
+	if _olha > 0.0:
+		return
+	_olha = 0.5
+	var agora := {}
+	for o in get_tree().get_nodes_in_group("obras"):
+		if o.has_method("obra_pending") and o.obra_pending() and o.get("oficio") != "ferreiro":
+			agora[o.get_instance_id()] = true
+			if not _obras_abertas.has(o.get_instance_id()):
+				_obras_abertas[o.get_instance_id()] = _relogio
+	for id in _obras_abertas.keys():
+		if not agora.has(id):
+			_obras_tempos.append(_relogio - float(_obras_abertas[id]))
+			_obras_abertas.erase(id)
+
+
+## Obras terminadas desde a última linha e o tempo médio delas (s de jogo).
+func obras_do_dia() -> Array:
+	var n := _obras_tempos.size()
+	var media := 0.0
+	for x in _obras_tempos:
+		media += x
+	media = media / n if n > 0 else 0.0
+	_obras_tempos.clear()
+	return [n, snappedf(media, 0.1)]
 
 
 ## Uma linha com o estado da vila agora.
@@ -69,6 +105,7 @@ func registra() -> void:
 		int(stock.get("cristal_verde", 0)), int(stock.get("cristal_rubro", 0)),
 		int(fundo.queimaduras.get("acido", 0)) if fundo else 0, int(fundo.queimaduras.get("lava", 0)) if fundo else 0,
 		fundo.ventiladores().size() if fundo else 0, int(stock.get("gema_azul", 0))]
+	v.append_array(obras_do_dia())  # Bloco 96
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return

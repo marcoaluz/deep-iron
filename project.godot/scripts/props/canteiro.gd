@@ -129,6 +129,7 @@ func _ready() -> void:
 	_dust.color = Color(0.75, 0.66, 0.55, 0.55)
 	add_child(_dust)
 	_label = Label.new()
+	_label.name = "StatusLabel"  # Bloco 96: o rótulo compacto do mapa (Bloco 95) reconhece pelo nome
 	_label.add_theme_font_size_override("font_size", Tipo.MAPA)
 	_label.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_label.add_theme_constant_override("outline_size", 4)
@@ -223,6 +224,16 @@ func obra_leave(worker: Node) -> void:
 
 func obra_workers() -> Array[Node]:
 	return _obra.workers()
+
+
+## Bloco 96: cancelada (ObraSite.cancelar já devolveu créditos e material): o canteiro some e o chão volta.
+func obra_cancelar() -> void:
+	remove_from_group("canteiros")
+	remove_from_group("obras")
+	var env := get_tree().get_first_node_in_group("environment")
+	queue_free()
+	if env and env.has_method("rebuild_navigation"):
+		env.rebuild_navigation.call_deferred()
 
 
 func _finish() -> void:
