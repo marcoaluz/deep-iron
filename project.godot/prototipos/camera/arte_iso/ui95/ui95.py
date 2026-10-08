@@ -141,7 +141,8 @@ def escolhe(pares):
 REAPROVEITA = {"decor_tocha": "props/tocha_chao_f0.png", "decor_lampiao": "props/decor_lampiao.png",
                "decor_banco": "props/banco.png", "decor_mesa": "props/mesa.png", "decor_cerca": "props/decor_cerca.png",
                "decor_canteiro_flores": "props/decor_canteiro_flores.png", "decor_bandeira": "props/decor_bandeira.png",
-               "vagonete": "props/vagonete_cheio_SE.png"}
+               "vagonete": "props/vagonete_cheio_SE.png",
+               "armazem_ampliar": "predios/armazem/nivel_2.png"}  # Bloco 97
 
 
 ## Prédio pronto que não tinha o desenho reduzido do menu (icones/predios/, como o ui/icones.py faz).

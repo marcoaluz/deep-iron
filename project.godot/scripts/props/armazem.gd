@@ -1,10 +1,30 @@
 extends "res://scripts/props/station.gd"
+## Armazém: onde a vila guarda minério, madeira, matéria-prima, couro e itens processados.
+## Bloco 97: tem LIMITE (capacidade = total de unidades guardadas, de tudo junto) e sobe até o nível 3. A ampliação
+## é OBRA de engenheiro com material (ObraSite, Bloco 96). Cheio: quem vem ENTREGAR espera (balão "armazém cheio")
+## ou vai pra outro armazém com espaço; as máquinas param de mandar. Devolução, prêmio e fundação entram mesmo
+## cheio (nada do jogador some). Quem vem BUSCAR (cozinheiro, fundidor, engenheiro) é sempre atendido.
 
 signal stored_changed(total: float)
 
 @export_group("Ritmo")
 ## Minério descarregado por segundo por ipezinho (era 10.0).
 @export var DEPOSIT_RATE: float = 8.0
+@export_group("Capacidade e níveis (Bloco 97)")
+## Quanto cabe por nível (unidades, tudo junto: minério + madeira + matéria-prima + couro + itens). Índice 0 = nível 1.
+@export var capacidade_por_nivel: Array[float] = [400.0, 1000.0, 2000.0]
+## Ampliar PARA o nível do índice (0 = nível 1, não usado): créditos.
+@export var ampliar_creditos: Array[int] = [0, 250, 600]
+## Ampliar: ferro (a partir do estágio da fornalha vira barra: 100 de ferro = 50 barras).
+@export var ampliar_ferro: Array[int] = [0, 60, 100]
+## Ampliar: madeira.
+@export var ampliar_madeira: Array[int] = [0, 100, 150]
+## Ampliar: itens a mais ({item: qtd}).
+@export var ampliar_itens: Array[Dictionary] = [{}, {}, {"prego": 20}]
+## Ampliar: segundos de engenheiro.
+@export var ampliar_segundos: Array[float] = [0.0, 45.0, 70.0]
+## Ampliar: estágio mínimo da vila.
+@export var ampliar_estagio: Array[int] = [0, 2, 3]
 @export_group("Visual e som")
 ## Quantidade armazenada para cada estágio da pilha de minério (1, 2, 3).
 @export var pile_thresholds: Array[float] = [1.0, 60.0, 200.0]
@@ -16,6 +36,7 @@ signal stored_changed(total: float)
 const Ores := preload("res://scripts/core/ores.gd")
 const Items := preload("res://scripts/core/items.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 97: a ampliação é obra
 
 ## Soma de todos os tipos (a pilha e o texto usam isso).
 var total_stored: float = 0.0
@@ -36,6 +57,14 @@ var itens: Dictionary = {}
 var _pending_popup: float = 0.0
 var _popup_timer: float = 0.0
 var _sound_timer: float = 0.0
+## Bloco 97: o nível (1..3) e a ampliação em obra.
+var nivel: int = 1
+var ampliando := false
+var amp_total := 0.0
+var amp_left := 0.0
+var _obra := ObraSite.new()
+## Bloco 97: construído pelo jogador (o "Armazém novo"): o save recria.
+var construido := false
 
 @onready var _label: Label = $AmountLabel
 @onready var _visual: Sprite2D = $Visual
@@ -67,23 +96,32 @@ func _process(delta: float) -> void:
 	var received := 0.0
 	var wood_in := 0.0
 	var raw_moved := false
+	var cabe := espaco()  # Bloco 97: o que ainda cabe (quem entrega espera se não couber)
 	for body in _working_bodies():
 		# lenhador descarregando madeira
 		if body.has_method("deliver_wood") and body.get_state() == "hauling":
-			var w: float = body.deliver_wood(DEPOSIT_RATE * delta)
+			var w: float = body.deliver_wood(minf(DEPOSIT_RATE * delta, cabe))
 			wood_stored += w
 			wood_in += w
+			cabe -= w
 			continue
 		# Bloco 27: caçador descarregando / cozinheiro buscando matéria-prima
-		if body.get("leather_carrying") != null and body.leather_carrying > 0.0:
-			leather_stored += body.deliver_leather()  # Bloco 42: couro vai junto
+		if body.get("leather_carrying") != null and body.leather_carrying > 0.0 and cabe >= float(body.leather_carrying):
+			var c: float = body.deliver_leather()  # Bloco 42: couro vai junto
+			leather_stored += c
+			cabe -= c
 			raw_moved = true
 		if body.has_method("deliver_raw") and body.get_state() == "stocking":
-			raw_stored += body.deliver_raw(DEPOSIT_RATE * delta)
+			var r: float = body.deliver_raw(minf(DEPOSIT_RATE * delta, cabe))
+			raw_stored += r
+			cabe -= r
 			raw_moved = true
 			continue
 		if body.has_method("na_armazem_fundidor") and body.get_state() == "buscando_insumo":
-			body.na_armazem_fundidor(self)  # Bloco 86: larga as barras e pega os insumos da próxima leva
+			var barras: float = body._material_qtd(body.barras_mao) if body.has_method("_material_qtd") else 0.0
+			if barras <= cabe:  # Bloco 97: cheio, o fundidor espera com as barras
+				body.na_armazem_fundidor(self)  # Bloco 86: larga as barras e pega os insumos da próxima leva
+				cabe -= barras
 			continue
 		if body.has_method("receive_raw") and body.get_state() == "fetching":
 			raw_stored -= body.receive_raw(minf(DEPOSIT_RATE * delta, raw_stored))
@@ -92,11 +130,12 @@ func _process(delta: float) -> void:
 			continue
 		if body.has_method("pega_mochila") and body.get_state() == "storing":
 			body.pega_mochila(self)  # Bloco 94: o minerador sem mochila pega uma, se tiver
-		var got: float = body.deposit(DEPOSIT_RATE * delta)
+		var got: float = body.deposit(minf(DEPOSIT_RATE * delta, cabe)) if cabe > 0.0 else 0.0
 		if got > 0.0:
 			var t: String = body.cargo_type
 			stock[t] = stock.get(t, 0.0) + got
 			received += got
+			cabe -= got
 	_sound_timer -= delta
 	if raw_moved:
 		_update_label()
@@ -183,7 +222,141 @@ func item_count(id: String) -> float:
 func accepts_worker(worker: Node) -> bool:
 	if worker.has_method("get_state") and worker.get_state() == "fetching":
 		return raw_stored >= 0.5
+	if worker.has_method("get_state") and worker.get_state() in ["storing", "hauling", "stocking"] and cheio():
+		return false  # Bloco 97: cheio, quem vem entregar procura outro armazém (ou espera)
 	return true
+
+
+# ------------------------------------------------------------ capacidade e níveis (Bloco 97)
+## Desliga o limite (os testes antigos em que o limite não é o assunto; o jogo nunca liga isto).
+static var limite_desligado := false
+
+
+func capacidade() -> float:
+	if limite_desligado:
+		return INF
+	return capacidade_por_nivel[clampi(nivel - 1, 0, capacidade_por_nivel.size() - 1)]
+
+
+## Tudo guardado aqui, junto (minério + madeira + matéria-prima + couro + itens).
+func usado() -> float:
+	var n := wood_stored + raw_stored + leather_stored
+	for t in stock:
+		n += float(stock[t])
+	for k in itens:
+		n += float(itens[k])
+	return n
+
+
+func espaco() -> float:
+	return maxf(capacidade() - usado(), 0.0)
+
+
+func cheio() -> bool:
+	return espaco() < 1.0
+
+
+func nivel_maximo() -> int:
+	return capacidade_por_nivel.size()
+
+
+## "" = pode ampliar; senão o motivo.
+func ampliar_motivo() -> String:
+	if ampliando:
+		return "em obra (%s)" % _obra.status(obra_progress())
+	if nivel >= nivel_maximo():
+		return "nível máximo"
+	var i := nivel  # (índice = nível de destino - 1)
+	var hub := get_tree().get_first_node_in_group("village_hub")
+	if hub and int(hub.level) < ampliar_estagio[i]:
+		return "precisa da vila no estágio %d" % ampliar_estagio[i]
+	var eco := get_tree().get_first_node_in_group("economy")
+	return eco.metal_falta(ampliar_creditos[i], ampliar_ferro[i], "ferro", ampliar_madeira[i], ampliar_itens[i]) if eco else "sem recursos"
+
+
+func ampliar_custo_texto() -> String:
+	if nivel >= nivel_maximo():
+		return ""
+	var i := nivel
+	var eco := get_tree().get_first_node_in_group("economy")
+	return eco.custo_metal_texto(ampliar_creditos[i], ampliar_ferro[i], "ferro", ampliar_madeira[i], ampliar_itens[i]) if eco else ""
+
+
+## Encomenda a ampliação: paga os créditos, o material fica reservado e o engenheiro leva (Bloco 96).
+func ampliar() -> bool:
+	if ampliar_motivo() != "":
+		Audio.error()
+		return false
+	var i := nivel
+	if not get_tree().get_first_node_in_group("economy").paga_metal(ampliar_creditos[i], ampliar_ferro[i], "ferro", ampliar_madeira[i], ampliar_itens[i]):
+		return false
+	ampliando = true
+	amp_total = maxf(ampliar_segundos[i], 1.0)
+	amp_left = amp_total
+	_obra.start()
+	add_to_group("obras")
+	_update_label()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Armazém: ampliação pro nível %d encomendada — precisa de engenheiro (tecla 4)." % (nivel + 1), Color(1.0, 0.8, 0.45), self)
+	return true
+
+
+func obra_pending() -> bool:
+	return ampliando
+
+
+func obra_title() -> String:
+	return "Ampliar armazém (nível %d)" % (nivel + 1)
+
+
+func obra_progress() -> float:
+	return clampf(1.0 - amp_left / amp_total, 0.0, 1.0) if ampliando and amp_total > 0.0 else 0.0
+
+
+func obra_position(worker: Node) -> Vector2:
+	return global_position + Vector2(0, 40) + _obra.offset_for(worker)
+
+
+func obra_work(seconds: float) -> void:
+	if not ampliando:
+		return
+	amp_left -= seconds
+	if amp_left > 0.0:
+		return
+	ampliando = false
+	amp_left = 0.0
+	amp_total = 0.0
+	nivel = mini(nivel + 1, nivel_maximo())
+	remove_from_group("obras")
+	_update_label()
+	show_popup("Nível %d: cabe %d" % [nivel, int(capacidade())], Color(0.55, 1.0, 0.5))
+	Audio.build_done(global_position)
+
+
+## Cancelada: fica no nível de antes (créditos e material: ObraSite.cancelar).
+func obra_cancelar() -> void:
+	ampliando = false
+	amp_left = 0.0
+	amp_total = 0.0
+	remove_from_group("obras")
+	_update_label()
+
+
+func obra_ordered_at() -> float:
+	return _obra.ordered_at
+
+
+func obra_join(worker: Node) -> void:
+	_obra.join(worker)
+
+
+func obra_leave(worker: Node) -> void:
+	_obra.leave(worker)
+
+
+func obra_workers() -> Array[Node]:
+	return _obra.workers()
 
 
 ## Tira até `amount` de madeira (custos). Retorna quanto saiu.
@@ -215,6 +388,8 @@ func _update_label() -> void:
 		proc += itens[k]
 	if proc >= 1.0:
 		_label.text += "  •  itens %d" % int(proc)  # Bloco 82
+	if not limite_desligado:
+		_label.text += "\n%d/%d%s" % [int(usado()), int(capacidade()), "  CHEIO" if cheio() else ""]  # Bloco 97
 	var stage := 0
 	for t in pile_thresholds:
 		if total_stored >= t:
@@ -244,7 +419,8 @@ func show_popup(text: String, color: Color) -> void:
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	return {"stock": stock.duplicate(), "lifetime_stored": lifetime_stored, "wood_stored": wood_stored,
-		"raw_stored": raw_stored, "leather_stored": leather_stored, "itens": itens.duplicate()}
+		"raw_stored": raw_stored, "leather_stored": leather_stored, "itens": itens.duplicate(),
+		"nivel": nivel, "ampliando": ampliando, "amp_total": amp_total, "amp_left": amp_left, "obra": _obra.get_save_data()}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -262,4 +438,14 @@ func load_save_data(d: Dictionary) -> void:
 		var n := maxf(SaveUtil.num(salvos, id, 0.0), 0.0)
 		if n > 0.0:
 			itens[id] = n
+	# Bloco 97: o nível e a ampliação em obra (save antigo: nível 1, sem obra; o que já tem fica, mesmo passando)
+	nivel = clampi(SaveUtil.integer(d, "nivel", 1), 1, nivel_maximo())
+	ampliando = SaveUtil.boolean(d, "ampliando", false) and nivel < nivel_maximo()
+	amp_total = maxf(SaveUtil.num(d, "amp_total", 0.0), 1.0) if ampliando else 0.0
+	amp_left = clampf(SaveUtil.num(d, "amp_left", amp_total), 0.0, amp_total) if ampliando else 0.0
+	_obra.load_save_data(SaveUtil.dict(d, "obra"))
+	if ampliando:
+		add_to_group("obras")
+	elif is_in_group("obras"):
+		remove_from_group("obras")
 	_recount()

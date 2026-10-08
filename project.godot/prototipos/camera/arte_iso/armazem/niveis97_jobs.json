@@ -1,0 +1,16 @@
+{
+ "nivel_2": {
+  "job": "a15acf6d-cad8-440b-9d60-0446b2045a36",
+  "custo": 40,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\armazem\\_cand97\\nivel_2.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "nivel_3": {
+  "job": "4c851592-8b1c-4e95-99b4-9da1e8d9d083",
+  "custo": 40,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\armazem\\_cand97\\nivel_3.png",
+  "ok": true,
+  "candidatos": 1
+ }
+}

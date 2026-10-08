@@ -166,19 +166,21 @@ func _process(delta: float) -> void:
 
 
 func _deliver(amount: float, ore: String) -> void:
-	var best: Node2D = null
-	var best_d := INF
-	for a in get_tree().get_nodes_in_group("armazens"):
-		var d := global_position.distance_to(a.global_position)
-		if d < best_d:
-			best_d = d
-			best = a
+	var eco := get_tree().get_first_node_in_group("economy")
+	var best: Node2D = eco.armazem_com_espaco(global_position, amount) if eco else null  # Bloco 97: só onde cabe
+	_sem_espaco = best == null
 	if best:
 		best.add_ore(amount, ore)
 
 
 ## Texto da placa (e da janela).
+## Bloco 97: o armazém estava cheio na última entrega (a máquina para de mandar).
+var _sem_espaco := false
+
+
 func status_text() -> String:
+	if has_operator() and _sem_espaco:
+		return "parado — armazém cheio (venda, gaste ou amplie o armazém)"
 	if _producing and has_operator():
 		var j := jazida()
 		return "produzindo %.1f %s/s (%s)" % [ore_per_sec * operator.work_mult(), j.ore_type if j else "?", operator.display_name]

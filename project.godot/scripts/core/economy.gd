@@ -638,6 +638,25 @@ func reserva_mudou() -> void:
 	_reserva_quadro = -1
 
 
+## Bloco 97: o armazém mais perto de `perto` em que cabem `n` unidades (null = todos cheios).
+func armazem_com_espaco(perto: Vector2, n: float = 1.0) -> Node:
+	var melhor: Node = null
+	var melhor_d := INF
+	for a in get_tree().get_nodes_in_group("armazens"):
+		if not a.has_method("espaco") or a.espaco() < n:
+			continue
+		var d: float = perto.distance_squared_to(a.global_position)
+		if d < melhor_d:
+			melhor_d = d
+			melhor = a
+	return melhor
+
+
+## Bloco 97: todos os armazéns estão cheios?
+func armazens_cheios() -> bool:
+	return get_tree().get_nodes_in_group("armazens").all(func(a): return not a.has_method("cheio") or a.cheio())
+
+
 ## Algum armazém tem esse item de verdade (pra buscar agora)?
 func tem_no_armazem(id: String) -> bool:
 	return not armazens_com(id).is_empty()

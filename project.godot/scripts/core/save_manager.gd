@@ -91,6 +91,10 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 97: armazem.gd ganha "nivel" (1..3), "ampliando", "amp_total", "amp_left" e "obra" (a ampliação é obra
+##     com material); centro_vila "armazens_novos" [{name, position}] — os armazéns construídos pelo jogador,
+##     recriados pelo nome antes de "armazens" (o estoque de cada um entra pelo nome, como sempre). Save antigo:
+##     nível 1, sem armazém novo; o que já está guardado fica (mesmo passando do limite: só não recebe mais).
 ##   Bloco 96: obras com material. Todo "obra" (ObraSite: canteiros, casa, centro_vila, coletor, escavadeira,
 ##     escudo, cemitério, e agora abyss_shaft, robo e barricada) ganha "necessario" {item: qtd}, "entregue"
 ##     {item: qtd} e "creditos" (pagos, devolvidos se cancelar) — só quando a obra tem material. ipezinho.gd

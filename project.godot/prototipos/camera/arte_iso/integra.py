@@ -29,7 +29,7 @@ PREDIOS = {
     "casa": ("casa", {"pronto_0": "casa_v0.png", "pronto_1": "casa_v1.png", "pronto_2": "casa_v2.png",
                       "pronto_3": "casa_v3.png", "obra_1": "obra_1.png", "obra_2": "obra_2.png", "obra_3": "obra_3.png",
                       "nivel_2": "nivel_2.png", "nivel_3": "nivel_3.png"}),
-    "armazem": ("armazem", None),
+    "armazem": ("armazem", {"nivel_2": "nivel_2.png", "nivel_3": "nivel_3.png"}),  # Bloco 97 (armazem/niveis97.py)
     "oficina": ("oficina", None),
     "arsenal": ("arsenal", None),
     "taverna": ("taverna", {"nivel_2": "nivel_2.png"}),
@@ -58,7 +58,8 @@ for k in range(1, 6):
     PREDIOS["centro_%d" % k] = ("centro/estagio_%d" % k, {"pronto": "pronto.png"} if k == 1 else
                                 {"pronto": "pronto.png", "obra": "obra.png"})
 # níveis gerados num quadro mais alto (o prédio aprovado embaixo, sobra em cima): a âncora desce
-DESCE = {("casa", "nivel_2"): 72, ("casa", "nivel_3"): 72, ("taverna", "nivel_2"): 75, ("enfermaria", "nivel_2"): 75}
+DESCE = {("casa", "nivel_2"): 72, ("casa", "nivel_3"): 72, ("taverna", "nivel_2"): 75, ("enfermaria", "nivel_2"): 75,
+         ("armazem", "nivel_2"): 60, ("armazem", "nivel_3"): 60}  # Bloco 97
 # o padrão (None ou faltando): pronto + obra_1..3 da própria pasta
 PADRAO = {"pronto": "pronto.png", "obra_1": "obra_1.png", "obra_2": "obra_2.png", "obra_3": "obra_3.png"}
 

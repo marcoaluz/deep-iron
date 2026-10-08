@@ -342,20 +342,22 @@ func _process(delta: float) -> void:
 
 
 func _deliver(amount: float) -> void:
-	var best: Node2D = null
-	var best_d := INF
-	for a in get_tree().get_nodes_in_group("armazens"):
-		var d := global_position.distance_to(a.global_position)
-		if d < best_d:
-			best_d = d
-			best = a
+	var eco := get_tree().get_first_node_in_group("economy")
+	var best: Node2D = eco.armazem_com_espaco(global_position, amount) if eco else null  # Bloco 97: só onde cabe
+	_sem_espaco = best == null
 	if best:
 		best.wood_stored += amount
 		best._recount()
 
 
 ## Texto da placa (e da janela).
+## Bloco 97: o armazém estava cheio na última entrega (a máquina para de mandar).
+var _sem_espaco := false
+
+
 func status_text() -> String:
+	if restaurado() and has_operator() and _sem_espaco:
+		return "parado — armazém cheio (venda, gaste ou amplie o armazém)"
 	if not restaurado():  # Bloco 81
 		var i := etapa_atual()
 		if pago:

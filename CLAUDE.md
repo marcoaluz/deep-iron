@@ -76,7 +76,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 |---|---|
 | `station.gd` | **Base de toda estação de trabalho.** Slots reservados, `is_usable`, `accepts_worker`, obstáculo da navegação. |
 | `mineral_node.gd`, `tree_node.gd`, `food_source.gd`, `hunt_spot.gd` | Jazida, árvore, horta e toca: os recursos. |
-| `armazem.gd`, `comedouro.gd`, `casa.gd`, `enfermaria.gd`, `taverna.gd`, `laboratorio.gd`, `arsenal.gd`, `oficina.gd`, `vestiario.gd` | Os prédios. |
+| `armazem.gd`, `comedouro.gd`, `casa.gd`, `enfermaria.gd`, `taverna.gd`, `laboratorio.gd`, `arsenal.gd`, `oficina.gd`, `vestiario.gd` | Os prédios. Bloco 97: o armazém tem **limite** (tudo junto: 400 / 1.000 / 2.000 por nível), amplia até o nível 3 (obra com material) e o jogador constrói outros (`centro_vila.build_armazem`, estágio 2). Cheio: quem entrega espera, as máquinas param, devolução entra mesmo assim. |
 | `centro_vila.gd` | Hub de progressão: estágios, melhorias, e quem ergue as construções encomendadas (`finish_build`). |
 | `canteiro.gd` | Obra encomendada e já paga, esperando engenheiro. `KINDS` lista os tipos. |
 | `estacao_vagonete.gd` + `trilho.gd` + `vagonete.gd` | Transporte de carga (Bloco 64) e ferrovia por andar (Bloco 79). |
@@ -116,7 +116,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b96**; o próximo é o **b97**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b97**; o próximo é o **b98**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:
@@ -152,6 +152,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
    | Oficina de ordens nova (prédio + função) | herdar de `fornalha.gd` e `fornalha_panel.gd`, como a `carpintaria.gd` (Bloco 94) |
    | Item, preço, onde guardar | `items.gd` + `Economy.quantidade/add_item/take_item` |
    | Custo em metal | `Economy.metal_falta` / `paga_metal` / `custo_metal_texto` (barra a partir do estágio da fornalha) |
+   | Mandar coisa pro armazém (máquina, entrega nova) | `Economy.armazem_com_espaco(perto, n)` (null = todos cheios: pare e espere) e `armazem.espaco()`; devolução/prêmio usam `add_item`/`devolve` (entram mesmo cheio). Teste que enche o armazém pra outro assunto: `armazem.gd limite_desligado = true` no `_initialize` (Bloco 97) |
    | Custo com itens (pregos, ferragens, aço, couro…) | o parâmetro `itens` desses três, ou `Economy.itens_falta` / `paga_itens` / `itens_texto`; pregos e ferragens antes da fornalha viram ferro (`itens_efetivos`); `Economy.tira`/`devolve` pra qualquer item |
    | Horário e agenda | `DayNight.hora()` / `tempo_da_hora()` / sinal `marco`; `Schedule.periodo(ipezinho)` |
    | Lugar pra conversar | `social_spot.gd` (`SocialSpot.criar(...)` no `_ready` do prédio) |

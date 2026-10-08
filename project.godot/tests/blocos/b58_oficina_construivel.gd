@@ -29,6 +29,7 @@ func _initialize() -> void:
 	main.founding_on_new_game = false  # o teste monta a vila; a regra "jogo novo" é aplicada à mão abaixo
 	root.add_child(main)
 	current_scene = main
+	load("res://scripts/props/armazem.gd").limite_desligado = true  # Bloco 97: o limite do armazém não é o assunto deste teste
 
 
 func check(ok: bool, msg: String) -> void:

@@ -37,6 +37,7 @@ const KIND_OF_CANTEIRO := {
 	"enfermaria": "enfermaria",
 	"fornalha": "fornalha", "igreja": "igreja",  # Bloco 92
 	"carpintaria": "carpintaria",  # Bloco 94
+	"armazem": "armazem",  # Bloco 97: o armazém novo sobe pelos desenhos de obra do armazém
 }
 const ESCAVADEIRA_PECAS := ["motor", "hidraulica", "cabine", "broca"]
 ## Folga entre a pegada e o ponto de trabalho/slot (px da lógica): o boneco fica fora da parede.
@@ -143,6 +144,12 @@ static func layers(node: Node) -> Array:
 				out.append(state("centro_%d" % (lv + 1), "obra"))
 			else:
 				out.append(state("centro_%d" % lv, "pronto"))
+		"armazem":  # Bloco 97: o nível (1..3); ampliando, o andaime (obra_3) por cima do de agora
+			var na := clampi(int(node.get("nivel")) if node.get("nivel") != null else 1, 1, 3)
+			if node.get("ampliando") == true:
+				out.append(state("armazem", "obra_3"))
+			else:
+				out.append(state("armazem", "nivel_%d" % na if na > 1 else "pronto"))
 		"taverna":
 			out.append(state("taverna", "nivel_2" if int(node.get("level")) >= 2 else "pronto"))
 		"enfermaria":

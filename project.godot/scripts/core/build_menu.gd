@@ -437,6 +437,18 @@ func _defs(tab: String) -> Array:
 					"reason": func(): return "",
 					"act": func(): _g("caminho_placer").begin("apagar"), "label": "Apagar"})
 			if hub:
+				# Bloco 97: o armazém novo (construção) e a ampliação (até o nível 3)
+				out.append({"name": "Armazém novo", "img": _predio("armazem"), "many": true, "scales": true,
+					"desc": "Mais espaço pra guardar (o armazém tem limite) e mais perto de onde se trabalha: quem trabalha perto entrega nele e o engenheiro busca material nele. Você escolhe o lugar.",
+					"count": func(): return hub.armazens_novos().size(),
+					"cost": func(): return hub.armazem_cost_text(),
+					"reason": func(): return hub.armazem_block_reason(),
+					"act": func(): hub.build_armazem()})
+				out.append({"name": "Ampliar armazém", "img": _cartao("armazem_ampliar"), "tag": "melhoria (nível 2 e 3)",
+					"desc": "Cabe mais: nível 1 = 400, nível 2 = 1000, nível 3 = 2000 (tudo junto). Amplia o armazém de menor nível; é obra de engenheiro com material.",
+					"cost": func(): return _armazem_alvo().ampliar_custo_texto() if _armazem_alvo() else "",
+					"reason": func(): return _armazem_alvo().ampliar_motivo() if _armazem_alvo() else "todos no nível máximo",
+					"act": func(): _armazem_alvo().ampliar(), "label": "Ampliar"})
 				out.append({"name": "Expandir a vila", "img": _predio("centro_vila"),
 					"desc": "Próximo estágio (o Centro da Vila é um só). Abre galerias e aumenta o raio das casas.",
 					"cost": func(): return ("%d cr" % hub.next_level_cost()) if hub.level < hub.max_level() else "",
@@ -479,6 +491,17 @@ func _tag_text(d: Dictionary) -> String:
 	if d.get("scales", false) and eco and eco.extra_building_cost_growth != 1.0:
 		t += " • o próximo custa %+d%%" % roundi((eco.extra_building_cost_growth - 1.0) * 100.0)
 	return t
+
+
+## Bloco 97: o armazém que o cartão amplia (o de menor nível que ainda sobe).
+func _armazem_alvo() -> Node:
+	var melhor: Node = null
+	for a in get_tree().get_nodes_in_group("armazens"):
+		if not a.has_method("ampliar") or a.nivel >= a.nivel_maximo():
+			continue
+		if melhor == null or a.nivel < melhor.nivel:
+			melhor = a
+	return melhor
 
 
 ## Bloco 56: a casa que o cartão amplia (a de menor nível que ainda sobe).

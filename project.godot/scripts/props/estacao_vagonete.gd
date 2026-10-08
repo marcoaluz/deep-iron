@@ -214,7 +214,12 @@ func _process(delta: float) -> void:
 				_wait_t = 0.0
 		"indo":
 			cart_d = minf(cart_d + cart_speed * delta, _len)
-			if cart_d >= _len:
+			var arm_c := armazem()
+			var carga := 0.0
+			for k in cart_load:
+				carga += float(cart_load[k])
+			_sem_espaco = arm_c != null and arm_c.has_method("espaco") and arm_c.espaco() < carga
+			if cart_d >= _len and not _sem_espaco:  # Bloco 97: armazém cheio = o carrinho espera carregado
 				_unload_cart()
 				cart_state = "voltando"
 		"voltando":
@@ -249,6 +254,10 @@ func _load_cart() -> void:
 			break
 
 
+## Bloco 97: o carrinho chegou e o armazém não tem espaço pra carga.
+var _sem_espaco := false
+
+
 func _unload_cart() -> void:
 	var a := armazem()
 	for k in cart_load:
@@ -263,6 +272,8 @@ func _update_label() -> void:
 	if _label == null:
 		return
 	var st: String = "trilho QUEBRADO — engenheiro" if is_broken() else {"esperando": "esperando carga", "indo": "levando", "voltando": "voltando"}.get(cart_state, cart_state)
+	if _sem_espaco and cart_state == "indo":
+		st = "ARMAZÉM CHEIO — o carrinho espera"  # Bloco 97
 	if _parado_area and cart_state == "esperando" and not is_broken():
 		st = "parado — mina: %s" % _motivo_area  # Bloco 77
 	if ferrovia != "":  # Bloco 79

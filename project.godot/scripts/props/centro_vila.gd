@@ -190,6 +190,17 @@ const UPGRADE_NAMES := {
 @export var carpintaria_build_time: float = 45.0
 ## Estágio da vila em que a carpintaria libera (2 = Vilarejo: os pregos vêm do ferreiro, que vem com a fornalha).
 @export_range(1, 5) var carpintaria_estagio: int = 2
+## Bloco 97: o ARMAZÉM NOVO (construção nova; o jogador escolhe o lugar). Custo do primeiro, em créditos
+## (os próximos crescem, como as outras construções repetíveis).
+@export var armazem_credits: int = 300
+## Armazém novo: minério de ferro (unidades; como a Carpintaria).
+@export var armazem_ore: int = 80
+## Armazém novo: madeira (unidades).
+@export var armazem_wood: int = 120
+## Armazém novo: segundos de engenheiro na obra.
+@export var armazem_build_time: float = 50.0
+## Armazém novo: estágio da vila em que libera (o Marco: "só desbloqueia nível 2 da vila").
+@export_range(1, 5) var armazem_estagio: int = 2
 @export_group("Oficina (Bloco 58)")
 @export var oficina_credits: int = 200
 @export var oficina_ore: int = 40
@@ -1153,6 +1164,79 @@ func spawn_carpintaria(pos: Vector2) -> Node2D:
 	return c
 
 
+# ------------------------------------------------------------ armazém novo (Bloco 97)
+const ARMAZEM_SCENE := preload("res://scenes/props/armazem.tscn")
+const ARMAZEM_TEXTURE := preload("res://assets/game/armazem.png")
+
+
+## Os armazéns que o jogador construiu (o da mina vem com o mapa).
+func armazens_novos() -> Array:
+	return get_tree().get_nodes_in_group("armazens").filter(func(a): return a.get("construido") == true)
+
+
+## Custo do PRÓXIMO (x cr, y ferro, z madeira): cresce a cada um construído (Bloco 47).
+func armazem_cost() -> Vector3i:
+	var base := Vector3i(armazem_credits, armazem_ore, armazem_wood)
+	var eco := _economy()
+	return eco.scaled_cost(base, armazens_novos().size()) if eco else base
+
+
+func armazem_cost_text() -> String:
+	var c := armazem_cost()
+	return "%d cr + %d ferro + %d madeira" % [c.x, c.y, c.z]
+
+
+func armazem_block_reason() -> String:
+	if level < armazem_estagio:
+		return "precisa da vila no estágio %s" % STAGE_NAMES[clampi(armazem_estagio, 1, STAGE_NAMES.size()) - 1]
+	var c := Canteiro.pending(get_tree(), "armazem")
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	var cost := armazem_cost()
+	return eco.missing_text(cost.x, cost.y, "ferro", cost.z) if eco else "sem recursos"
+
+
+func build_armazem() -> bool:
+	if armazem_block_reason() != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	placer.begin(_confirm_armazem, ARMAZEM_TEXTURE, 1, "o Armazém novo",
+		{"footprint": COLETOR_FOOTPRINT, "start": global_position + Vector2(160, 90)})
+	return true
+
+
+func _confirm_armazem(pos: Vector2) -> bool:
+	if armazem_block_reason() != "":
+		Audio.error()
+		return false
+	var cost := armazem_cost()
+	if not _economy().spend(cost.x, cost.y, "ferro", cost.z):
+		return false
+	Canteiro.order(get_tree(), "armazem", pos, armazem_build_time)
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Armazém novo encomendado — precisa de engenheiro (tecla 4).", Color(1.0, 0.8, 0.45))
+	return true
+
+
+func spawn_armazem(pos: Vector2, nome: String = "") -> Node2D:
+	var a: Node2D = ARMAZEM_SCENE.instantiate()
+	a.construido = true
+	a.name = nome if nome != "" else "ArmazemNovo%d" % (armazens_novos().size() + 1)
+	a.position = pos
+	get_parent().add_child(a)
+	var env := get_tree().get_first_node_in_group("environment")
+	if env:
+		env.clear_decor_under_extras()
+		env.rebuild_navigation()
+	return a
+
+
 # ------------------------------------------------------------ oficina (Bloco 58)
 func oficina() -> Node:
 	return get_tree().get_first_node_in_group("oficina")
@@ -1625,6 +1709,15 @@ func finish_build(kind: String, pos: Vector2) -> void:
 			var cal := get_tree().get_first_node_in_group("calendario")
 			hi.show_toast("Igreja pronta! %s" % ("Missa no domingo às 09:00." if cal and cal.padre() != null else "Quando o padre chegar, tem missa no domingo."), Color(0.55, 1.0, 0.5))
 		return
+	if kind == "armazem":  # Bloco 97
+		var an := spawn_armazem(pos)
+		if an.has_method("show_popup"):
+			an.show_popup("Armazém novo!", Color(0.55, 1.0, 0.5))
+		Audio.recruit()
+		var han := get_tree().get_first_node_in_group("hud")
+		if han:
+			han.show_toast("Armazém novo pronto! Mais espaço, e quem trabalha perto entrega aqui (e o engenheiro busca aqui).", Color(0.55, 1.0, 0.5))
+		return
 	if kind == "carpintaria":  # Bloco 94
 		var ca := spawn_carpintaria(pos)
 		ca.pop_in()
@@ -1884,6 +1977,7 @@ func get_save_data() -> Dictionary:
 		"coletores": coletores().map(func(c): return c.get_save_data()),  # Bloco 81: + etapa da restauração e "fixo"
 		"fornalhas": fornalhas().map(func(f): return f.get_save_data()),  # Bloco 86: lugar + fila de ordens
 		"carpintarias": carpintarias().map(func(f): return f.get_save_data()),  # Bloco 94: lugar + fila de ordens
+		"armazens_novos": armazens_novos().map(func(a): return {"name": String(a.name), "position": SaveUtil.vec2_to_array(a.global_position)}),  # Bloco 97
 		"coletores_minerio": coletores_minerio().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position),
 			"total": c.total_produced, "jazida": SaveUtil.vec2_to_array(c.chosen_pos) if c.chosen_pos != Vector2.INF else []}),  # Bloco 57
 		"vagonetes": vagonetes().map(func(v): return v.get_save_data()),  # Bloco 64
@@ -1919,6 +2013,16 @@ func load_save_data(d: Dictionary) -> void:
 		var fpos := SaveUtil.vec2(fd, "position", Vector2.INF)
 		if fpos != Vector2.INF:
 			spawn_fornalha(fpos).load_save_data(fd)
+	# Bloco 97: armazéns construídos pelo jogador (o estoque de cada um vem depois, pelo nome: "armazens")
+	for old in armazens_novos():
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	for ad in SaveUtil.array(d, "armazens_novos"):
+		if typeof(ad) != TYPE_DICTIONARY:
+			continue
+		var apos := SaveUtil.vec2(ad, "position", Vector2.INF)
+		if apos != Vector2.INF:
+			spawn_armazem(apos, SaveUtil.text(ad, "name", ""))
 	# Bloco 94: carpintarias (save antigo: nenhuma)
 	for old in carpintarias():
 		old.get_parent().remove_child(old)

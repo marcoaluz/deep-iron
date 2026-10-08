@@ -644,13 +644,8 @@ func _pick_ore() -> String:
 
 
 func _deliver_ore(t: String) -> void:
-	var best: Node2D = null
-	var best_d := INF
-	for a in get_tree().get_nodes_in_group("armazens"):
-		var d := global_position.distance_to(a.global_position)
-		if d < best_d:
-			best_d = d
-			best = a
+	var eco := get_tree().get_first_node_in_group("economy")
+	var best: Node2D = eco.armazem_com_espaco(global_position, 1.0) if eco else null  # Bloco 97: só onde cabe
 	if best:
 		best.add_ore(1.0, t)
 

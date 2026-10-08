@@ -1,9 +1,42 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 94 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco); o Bloco 95 foi enviado em 2026-10-07 com o OK dele. Push só com o OK dele.
+Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 96 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco); o Bloco 97 está só no commit local. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido".
 
-## AGORA (2026-10-07): Bloco 96 — obras com material levado pelo engenheiro (feito; commit local, push pendente)
+## AGORA (2026-10-07): Bloco 97 — armazém com limite e níveis até 3 (feito; commit local, push pendente — pedir o OK)
+
+**O pedido:** "sim e o armazem pode ser upado ate nivel 3". Plano em `docs/BLOCO97_PLANO.md`; relatório em
+`docs/BLOCO97_ARMAZEM_NIVEIS.md`; arte de conferência em `docs/arte/bloco97/armazem_niveis.png`.
+
+**Decisões do Marco:**
+- 400 / 1.000 / 2.000 ("muito bom");
+- 10 por viagem continua;
+- armazém novo é construção nova, libera no estágio 2 e o jogador escolhe o lugar;
+- a arte pode ser feita já;
+- os saves dele "pode deletar": **NÃO apaguei** (save antigo = nível 1 com o que tem; apagar fica com ele).
+
+**Como funciona:**
+- `armazem.gd`: `capacidade()` / `usado()` / `espaco()` / `cheio()`. O depósito só entra até caber.
+- Cheio: `accepts_worker` recusa quem vem entregar (ele vai pra outro armazém ou espera com o balão
+  "armazem_cheio"). Os coletores, a broca e o vagonete param (`Economy.armazem_com_espaco`). Devolução e prêmio
+  entram mesmo cheio.
+- Fora do expediente, com todos os armazéns cheios, `_entrega_pendente` não prende: ele fica com a carga e vai pro
+  festival, o funeral ou a cama (o b88 achou).
+- `ampliar()` é obra com material (Bloco 96): o nível 2 pede o estágio 2, e o nível 3 pede o estágio 3.
+- O armazém novo: `centro_vila.build_armazem` → `Canteiro` "armazem" → `spawn_armazem` (`construido = true`), salvo
+  em `armazens_novos`.
+- Arte: `assets/game/iso/predios/armazem/nivel_2|3.png` (80 gerações; os candidatos estão em `_cand97/`, fora do
+  git) e o cartão `armazem_ampliar.png`.
+
+**Testes:**
+- b97 passa;
+- os 81 testes de bloco e os GUT iso passaram, um por vez;
+- os testes que enchem o armazém pra outro assunto (b45, b57, b58, b64, b79, b94) usam
+  `armazem.gd limite_desligado = true`;
+- intermitentes: b92 e p29_predios (passam ao repetir).
+
+
+## Bloco 96 — obras com material levado pelo engenheiro (feito, enviado ao GitHub com o OK do Marco)
 
 **O pedido:** o Prompt O (`Claude outputs/deep-iron-prompts-O-P-Q-M-S1-S2.md`). Plano e tabela em `docs/BLOCO96_PLANO.md`;
 relatório em `docs/BLOCO96_OBRAS_MATERIAL.md`.
@@ -23,8 +56,7 @@ aplicadas**: decisão do Marco.
 **Testes:** o b96 passa; a bateria dos 80 blocos e os GUT iso passaram um por vez. Foram ajustados b41, b44, b45,
 b56, b71, b81, b86, b87 e b94 (conferem o livre).
 
-**Próximo, pedido pelo Marco:** o ARMAZÉM COM LIMITE e níveis até 3 (vira o Bloco 97: o balão "armazém cheio"
-passa a fazer sentido).
+**Seguinte:** o armazém com limite virou o Bloco 97 (acima).
 
 ## Bloco 95 — layout v2 da interface (feito, fonte Chakra Petch aplicada, enviado ao GitHub)
 

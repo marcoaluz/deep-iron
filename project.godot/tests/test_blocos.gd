@@ -402,5 +402,9 @@ func test_b96_obras_material() -> void:
 	run_bloco("b96_obras_material.gd")
 
 
+func test_b97_armazem_nivel() -> void:
+	run_bloco("b97_armazem_nivel.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

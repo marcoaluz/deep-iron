@@ -2043,6 +2043,12 @@ func _refresh_alertas(workers: Array) -> void:
 		gv = 1
 		gv_dica = "Greve!" if _morale.on_strike else "O ânimo está baixo: greve em %ds se não melhorar (taverna, festa, comida, camas)." % ceili(_morale.strike_grace - _morale.below_time)
 	_alertas.poe("greve", gv, gv_dica, [_hub] if _hub else [])
+	# Bloco 97: armazém cheio (quem entrega espera; as máquinas param)
+	var cheios := get_tree().get_nodes_in_group("armazens").filter(func(a): return a.has_method("cheio") and a.cheio())
+	var esperando := workers.filter(func(w): return w.has_method("motivo_no_balao") and w.motivo_parado() == "armazem_cheio").size()
+	_alertas.poe("armazem_cheio", cheios.size(), "%d armazém%s cheio%s%s. Venda, gaste ou amplie (janela do Armazém); ou construa um Armazém novo." % [
+		cheios.size(), "" if cheios.size() == 1 else "s", "" if cheios.size() == 1 else "s",
+		(" — %d esperando pra entregar" % esperando) if esperando > 0 else ""], cheios)
 	# desarmados, sem casaco, sem cama
 	var unarmed: Array = _defense.unarmed_guards() if _defense else []
 	_alertas.poe("desarmados", unarmed.size(), _unarmed_label.text, unarmed)

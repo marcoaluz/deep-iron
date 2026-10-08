@@ -29,6 +29,11 @@ var _secoes: Dictionary = {}
 ## O "Vender tudo" (todo o minério) — o botão do título da categoria Minério.
 var _sell_all: Button
 var _auto_check: CheckBox  # Bloco 95: o "auto" que ficava na barra de cima
+## Bloco 97: o espaço (deste armazém e de todos) e a ampliação.
+var _espaco_label: Label
+var _espaco_barra: ProgressBar
+var _ampliar: Button
+var _ampliar_motivo: Label
 var _other_label: Label
 ## Barra de venda: o item selecionado e a quantidade.
 var _sel_id := ""
@@ -87,6 +92,29 @@ func _build() -> void:
 		Audio.click()
 		_economy.auto_sell = on)
 	linha.add_child(_auto_check)
+	# Bloco 97: o espaço e a ampliação (até o nível 3, obra de engenheiro com material)
+	var esp := HBoxContainer.new()
+	esp.add_theme_constant_override("separation", 8)
+	vbox.add_child(esp)
+	var ev := VBoxContainer.new()
+	ev.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	esp.add_child(ev)
+	_espaco_label = _hud._label("", Tipo.CORPO, _hud.COLOR_TEXT)
+	ev.add_child(_espaco_label)
+	_espaco_barra = _hud._bar(Color(0.75, 0.62, 0.35))
+	_espaco_barra.custom_minimum_size = Vector2(260, 8)
+	ev.add_child(_espaco_barra)
+	_ampliar_motivo = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
+	_ampliar_motivo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ev.add_child(_ampliar_motivo)
+	_ampliar = _hud._button("Ampliar")
+	_ampliar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_ampliar.pressed.connect(func():
+		Audio.click()
+		if _arm and is_instance_valid(_arm) and _arm.has_method("ampliar"):
+			_arm.ampliar()
+		refresh())
+	esp.add_child(_ampliar)
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(0, 420)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -289,6 +317,7 @@ func refresh() -> void:
 	if not visible or _economy == null:
 		return
 	_credits_label.text = "Créditos: %d" % int(_economy.credits)
+	_refresh_espaco()
 	if _auto_check.button_pressed != _economy.auto_sell:
 		_auto_check.set_pressed_no_signal(_economy.auto_sell)
 	var oficina := get_tree().get_first_node_in_group("oficina")
@@ -321,6 +350,37 @@ func refresh() -> void:
 		b.disabled = total <= 0
 	_other_label.text = "Os itens de metal saem da Fornalha (quando houver); minério bruto ainda serve pras obras do começo."
 	_refresh_barra_venda()
+
+
+## Bloco 97: clicou num armazém: a janela mostra o espaço e a ampliação DELE (os números de cima somam todos).
+func focus(n: Node) -> void:
+	if n != null and n.is_in_group("armazens"):
+		_arm = n
+
+
+func _refresh_espaco() -> void:
+	if _arm == null or not is_instance_valid(_arm) or not _arm.has_method("capacidade"):
+		_arm = get_tree().get_first_node_in_group("armazens")
+	if _arm == null or not _arm.has_method("capacidade"):
+		return
+	var arms := get_tree().get_nodes_in_group("armazens")
+	var u := 0.0
+	var c := 0.0
+	for a in arms:
+		u += a.usado()
+		c += a.capacidade()
+	_espaco_label.text = "Este armazém (nível %d): %d / %d%s" % [_arm.nivel, int(_arm.usado()), int(_arm.capacidade()), "  —  CHEIO" if _arm.cheio() else ""]
+	if arms.size() > 1:
+		_espaco_label.text += "   •   todos (%d): %d / %d" % [arms.size(), int(u), int(c)]
+	_espaco_barra.max_value = _arm.capacidade()
+	_espaco_barra.value = minf(_arm.usado(), _arm.capacidade())
+	var motivo: String = _arm.ampliar_motivo()
+	_ampliar.visible = _arm.nivel < _arm.nivel_maximo() or _arm.ampliando
+	_ampliar.disabled = motivo != ""
+	_ampliar.text = "Ampliar pro nível %d" % (_arm.nivel + 1)
+	_ampliar.tooltip_text = "Ampliar: cabe %d. Custo: %s (obra de engenheiro: ele leva o material)." % [
+		int(_arm.capacidade_por_nivel[mini(_arm.nivel, _arm.capacidade_por_nivel.size() - 1)]), _arm.ampliar_custo_texto()]
+	_ampliar_motivo.text = ("Ampliar: %s" % _arm.ampliar_custo_texto()) if motivo == "" else ("Ampliar: %s" % motivo)
 
 
 func button_text() -> String:

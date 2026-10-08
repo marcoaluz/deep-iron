@@ -3378,8 +3378,7 @@ const MOTIVO_NOME := {"sem_trabalho": "sem trabalho", "sem_ferramenta": "sem fer
 ## Por que está parado? "" = não está (ou o motivo é a agenda: dormindo, comendo, na hora social...).
 ##   sem_trabalho       sem função, ou com função e sem nada pra fazer (sem obra, sem jazida, sem árvore...)
 ##   sem_ferramenta     guarda com a arma quebrada; caçador com toca e sem arco; minerador só com jazida trancada
-##   armazem_cheio      com a carga nas costas e nenhum armazém pra entregar (o armazém do jogo não tem limite:
-##                      é o caso de não ter onde guardar)
+##   armazem_cheio      com a carga nas costas e o armazém cheio (Bloco 97: o armazém tem limite)
 ##   caminho_bloqueado  andando e preso no mesmo lugar (o anti-travamento já começou a agir)
 ##   sem_comida         com fome e a cozinha vazia
 func motivo_parado() -> String:
@@ -3399,8 +3398,13 @@ func motivo_parado() -> String:
 		var def := _defense()
 		if def == null or def.arsenal() == null:
 			return "sem_ferramenta"
-	if _ai_state == "storing" and not _moving and _station == null and carrying > 0.0:
-		return "armazem_cheio"
+	# Bloco 97: com carga pra entregar, parado, e o armazém dele (ou todos) cheio
+	var tem_carga := carrying > 0.0 or wood_carrying > 0.0 or raw_carrying > 0.0 or not barras_mao.is_empty()
+	if tem_carga and not _moving and _ai_state in ["storing", "hauling", "stocking", "buscando_insumo"]:
+		var eco := get_tree().get_first_node_in_group("economy")
+		var cheio_aqui: bool = _station != null and _station.has_method("cheio") and _station.cheio()
+		if cheio_aqui or (_station == null and eco != null and eco.has_method("armazens_cheios") and eco.armazens_cheios()):
+			return "armazem_cheio"
 	if _ai_state != "idle":
 		return ""
 	if is_hunter() and not _has_bow() and not get_tree().get_nodes_in_group("caca").is_empty() 			and not _has_usable_station("coleta_comida"):
@@ -3913,6 +3917,11 @@ func fundir_tick() -> void:
 
 ## Bloco 84: a carga que ele ainda tem pra largar no armazém (o estado de entregar), "" = nada.
 func _entrega_pendente() -> String:
+	# Bloco 97: todos os armazéns cheios = a entrega não acaba nunca; fica com a carga e segue a agenda
+	# (festival, funeral, dormir) — entrega amanhã no expediente, quando tiver espaço
+	var eco := get_tree().get_first_node_in_group("economy")
+	if eco != null and eco.has_method("armazens_cheios") and eco.armazens_cheios():
+		return ""
 	if wood_carrying > 0.0:
 		return "hauling"
 	if raw_carrying > 0.0 and not is_cook():

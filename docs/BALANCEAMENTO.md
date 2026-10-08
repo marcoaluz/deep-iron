@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **867 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **879 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (78)
 
@@ -1163,13 +1163,25 @@ Total: **867 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `travel_time` | 1.6 |  | Segundos na gaiola por viagem e quantos cabem nela de uma vez (mais gente = espera a próxima). |
 | `capacity` | 4 |  |  |
 
-## `scripts/props/armazem.gd` (4)
+## `scripts/props/armazem.gd` (11)
 
 **Ritmo**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `DEPOSIT_RATE` | 8.0 |  | Minério descarregado por segundo por ipezinho (era 10.0). |
+
+**Capacidade e níveis (Bloco 97)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `capacidade_por_nivel` | [400.0, 1000.0, 2000.0] |  | Quanto cabe por nível (unidades, tudo junto: minério + madeira + matéria-prima + couro + itens). Índice 0 = nível 1. |
+| `ampliar_creditos` | [0, 250, 600] |  | Ampliar PARA o nível do índice (0 = nível 1, não usado): créditos. |
+| `ampliar_ferro` | [0, 60, 100] |  | Ampliar: ferro (a partir do estágio da fornalha vira barra: 100 de ferro = 50 barras). |
+| `ampliar_madeira` | [0, 100, 150] |  | Ampliar: madeira. |
+| `ampliar_itens` | [{}, {}, {"prego": 20}] |  | Ampliar: itens a mais ({item: qtd}). |
+| `ampliar_segundos` | [0.0, 45.0, 70.0] |  | Ampliar: segundos de engenheiro. |
+| `ampliar_estagio` | [0, 2, 3] |  | Ampliar: estágio mínimo da vila. |
 
 **Visual e som**
 
@@ -1254,7 +1266,7 @@ Total: **867 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `level_min_stage` | [0, 2, 3] |  | Pré-requisitos de cada nível [nível 1, 2, 3]: estágio mínimo do Centro da Vila e pesquisa ("" = nenhuma). |
 | `level_research` | ["", "", "medicina"] |  |  |
 
-## `scripts/props/centro_vila.gd` (76)
+## `scripts/props/centro_vila.gd` (81)
 
 **Estágios da vila**
 
@@ -1358,6 +1370,11 @@ Total: **867 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `carpintaria_wood` | 90 |  |  |
 | `carpintaria_build_time` | 45.0 |  |  |
 | `carpintaria_estagio` | 2 |  | Estágio da vila em que a carpintaria libera (2 = Vilarejo: os pregos vêm do ferreiro, que vem com a fornalha). |
+| `armazem_credits` | 300 |  | Bloco 97: o ARMAZÉM NOVO (construção nova; o jogador escolhe o lugar). Custo do primeiro, em créditos (os próximos crescem, como as outras construções repetíveis). |
+| `armazem_ore` | 80 |  | Armazém novo: minério de ferro (unidades; como a Carpintaria). |
+| `armazem_wood` | 120 |  | Armazém novo: madeira (unidades). |
+| `armazem_build_time` | 50.0 |  | Armazém novo: segundos de engenheiro na obra. |
+| `armazem_estagio` | 2 |  | Armazém novo: estágio da vila em que libera (o Marco: "só desbloqueia nível 2 da vila"). |
 
 **Oficina (Bloco 58)**
 
