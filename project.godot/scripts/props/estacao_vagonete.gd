@@ -229,7 +229,7 @@ func _produz_dentro(delta: float) -> void:
 		var quer: float = taxa_dentro * delta / maxf(sph, 0.01) * float(w.mult_mineracao())
 		var taken: float = j.extract(minf(quer, buffer_capacity - buffered()))
 		if taken > 0.0:
-			var t: String = j.ore_type
+			var t: String = j.tipo_extraido()  # Bloco 102: pedra desconhecida dá "desconhecido"
 			stock[t] = stock.get(t, 0.0) + taken
 			w.minerou_dentro(taken, t)
 	_som_t -= delta

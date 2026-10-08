@@ -331,6 +331,9 @@ func tool_for_ore(ore_type: String) -> String:
 ## Texto do que a ferramenta libera ("Cobre", "caça de animais"...).
 func unlock_label(id: String) -> String:
 	if TOOL_UNLOCKS.has(id):
+		var cat := get_tree().get_first_node_in_group("catalogo")
+		if cat and not cat.minerio_conhecido(TOOL_UNLOCKS[id]):
+			return "um minério desconhecido"  # Bloco 102: o catálogo ainda não estudou
 		return Ores.display_name(TOOL_UNLOCKS[id])
 	return TOOL_UNLOCK_LABELS.get(id, "?")
 

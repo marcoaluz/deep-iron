@@ -91,6 +91,12 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 102: "catalogo" {estados {id: 1 avistado / 2 estudado} (o desconhecido não entra), bruto {tipo: minério
+##     desconhecido que era desse tipo}, amostras {criatura: n}, estudo_lab {id, pontos} (o plano B)}; "research" ganha
+##     "guardados" (pontos dos estudos sem pesquisa); o ipezinho ganha "nota_campo" (a entrada que a pesquisadora
+##     estudou e ainda vai entregar); o armazém pode ter "desconhecido" no stock (é um tipo do ores.gd). Save antigo
+##     (sem a chave): o estado inicial + Estudado tudo que o jogo já tinha liberado (minério no armazém ou com jazida
+##     destravada, tocas visíveis, andares abertos, criaturas com página no diário, o que as pesquisas feitas pediam).
 ##   Bloco 101: "migrantes" {proximo (s até o próximo grupo), esperando [{ipezinho (o save do ipezinho), name,
 ##     condicao, funcao, prazo}]}. Acabou o "Recrutar": "economy" ainda guarda max_workers e recruited_count (o save
 ##     antigo carrega), mas eles não mandam em nada — a capacidade são as camas. Save antigo: ninguém no portão, o
@@ -532,6 +538,7 @@ func _collect() -> Dictionary:
 		"caminhos": "caminhos",  # Bloco 89: células de caminho por tipo
 		"decoracoes": "decoracoes_mgr",  # Bloco 90: as peças de decoração do jogador
 		"migrantes": "migrantes",  # Bloco 101: quem espera no portão e o relógio do próximo grupo
+		"catalogo": "catalogo",  # Bloco 102: o que a vila avistou e estudou, o minério desconhecido, as amostras
 		"missoes": "missoes",  # Bloco 100: a campanha (capítulo liberado, missões cumpridas, objetivos, contadores)
 	}
 	for key in singles:
@@ -667,6 +674,12 @@ func apply_pending(main: Node) -> void:
 	var map_env := get_tree().get_first_node_in_group("environment")
 	if map_env and map_env.has_method("migrate_positions") and map_env.migrate_positions() > 0:
 		map_env.rebuild_navigation()
+
+	var cat := get_tree().get_first_node_in_group("catalogo")  # Bloco 102: depois do mundo (o save antigo confere o liberado)
+	if cat:
+		if data.has("catalogo"):
+			cat.load_save_data(SaveUtil.dict(data, "catalogo"))
+		cat.depois_de_carregar(data.has("catalogo"))
 
 	var missoes := get_tree().get_first_node_in_group("missoes")  # Bloco 100: depois de tudo (confere o que a vila já fez)
 	if missoes:

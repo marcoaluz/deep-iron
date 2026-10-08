@@ -1,0 +1,131 @@
+# CATÁLOGO — textos (Bloco 102). Edite à vontade: o jogo lê este arquivo quando abre.
+#
+# Como funciona (o mesmo formato dos capítulos das missões):
+#   [id]               começa a entrada (o id de data/catalogo/entradas.json)
+#   chave = valor      uma linha com um texto; as linhas seguintes (sem "chave =") continuam o texto
+#   # linha de comentário (não aparece no jogo)
+#
+# Chaves: nome, texto (o que a pesquisadora anotou), uso ("para que serve") e, nos bichos, rende / risco / epoca.
+# A ferramenta e a receita da fornalha de cada minério o jogo escreve sozinho.
+
+[ferro]
+nome = Ferro
+texto = Pedra avermelhada e pesada que a pedreira tem de sobra. Foi o primeiro minério da vila: qualquer picareta
+  tira, qualquer criança reconhece.
+uso = Casas, ferramentas, obras e a barra de ferro da fornalha (com carvão). Vende barato, mas tudo começa nele.
+
+[carvao]
+nome = Carvão
+texto = Veias pretas e foscas que sujam a mão. O pó pega fogo fácil: lá dentro só com o lampião de segurança, que
+  tem a chama presa na tela.
+uso = O fogo da fornalha (toda barra de metal pede carvão), a dinamite e o aço da Fundição.
+
+[cobre]
+nome = Cobre
+texto = Pedra esverdeada nas bordas, dura demais pra picareta comum: estala e entorta a ponta. A picareta temperada
+  aguenta.
+uso = A barra de cobre, os remédios da Medicina de campo, o Rádio, os Trajes e os Holofotes.
+
+[prata]
+nome = Prata
+texto = Brilho frio entre as galerias úmidas do S2. Mole pra trabalhar, dura pra arrancar: só com a broca manual.
+uso = A barra de prata, a lança de prata dos guardas, a Ventilação e o Satélite. Vende bem.
+
+[cristal_verde]
+nome = Cristal verde
+texto = Cresce nas paredes das galerias de ácido como se fosse planta. Quente ao toque e meio vivo: a broca solta
+  ele inteiro, a picareta quebra em pó.
+uso = Vale mais que a prata. O estudo dele mostra como segurar o gás: libera a pesquisa da Ventilação.
+
+[solarita]
+nome = Solarita
+texto = A rocha do abismo que guardou a energia da explosão solar. Brilha no escuro e queima quem chega sem o
+  traje de chumbo.
+uso = O lingote solar da fornalha e o PROJETO DO ESCUDO SOLAR: sem entender a solarita, não há escudo.
+
+[cristal_rubro]
+nome = Cristal rubro
+texto = Cristal vermelho que nasce em volta dos poços de lava do S3 e do S4. Pulsa devagar, como brasa.
+uso = O minério mais caro depois da gema. Os Magmantes carregam lascas dele dentro da casca.
+
+[gema_azul]
+nome = Gema azul
+texto = Pedras lisas de água parada na beira do lago azul do S5, o fundo de tudo. Não pedem ferramenta: o difícil é
+  chegar até elas.
+uso = A coisa mais valiosa da mina. Vende por muito.
+
+[coelho]
+nome = Coelho
+texto = Bichinho cinzento que sobreviveu à explosão comendo as raízes da clareira. Assusta com qualquer passo e
+  some na toca.
+uso = Carne pra cozinha, pelo caçador com arco e flecha.
+rende = 4 de carne por coelho (cada unidade vale 2,5 de matéria-prima). A toca tem até 4.
+risco = Nenhum: foge.
+epoca = Nasce o ano todo; no inverno nasce bem menos e a toca guarda a metade.
+
+[javali]
+nome = Javali
+texto = Porco do mato de couro duro, com as presas manchadas de cinza. Anda em dupla e não foge sempre: às vezes
+  avança.
+uso = Muita carne de uma vez, pelo caçador com arco e flecha.
+rende = 12 de carne por javali. A toca tem até 2, e eles demoram pra voltar.
+risco = Fere caçador novato (menos de 5 abates); o experiente quase nunca se machuca.
+epoca = No inverno nasce bem menos e a toca guarda a metade.
+
+[lumivoro]
+nome = Lumívoro
+texto = A amostra derrete em luz no vidro do laboratório: eles são feitos do calor que sobrou do sol. Por isso vêm
+  atrás das tochas e das janelas acesas.
+uso = Saber o que são ajuda a esperar por eles: vêm de noite, pela floresta, até o portão.
+
+[ferrugento]
+nome = Ferrugento
+texto = Debaixo da ferrugem há placas solares minúsculas: o Ferrugento passa o dia carregando e acorda de noite. Come
+  metal.
+uso = Sobem pelo poço do elevador e vão direto no armazém. Às vezes viram sucata com peça rara dentro.
+
+[gosma]
+nome = Gosma ácida
+texto = A amostra continua mexendo no frasco. É o ácido das poças do S2 que aprendeu a andar.
+uso = Corrói as armas dos guardas e derrete o ferro e o cobre do armazém. Às vezes deixa cristal verde.
+
+[magmante]
+nome = Magmante
+texto = Pedra viva, quente por dentro. A lasca da amostra ainda está morna dias depois.
+uso = Lentos e duros. Derretem a barricada e comem o carvão. Quando caem, sobra cristal rubro.
+
+[matriarca]
+nome = Matriarca
+texto = A rainha dos Lumívoros: duas vezes maior, coberta de cristais roxos. A amostra dela é solarita pura.
+uso = Aparece uma vez por estação e grita pra chamar os outros. O golpe dela come o metal das armas.
+
+[S2]
+nome = S2 — Galerias de ácido
+texto = Reconhecimento do nível 2: galerias úmidas, poças de ácido e um bolsão de gás no canto. O ar pesa e o ácido
+  come a sola da bota.
+uso = Entender o S2 mostra o que é preciso pra trabalhar no fundo: libera a pesquisa dos Trajes de proteção.
+
+[S3]
+nome = S3 — O abismo
+texto = Reconhecimento do abismo: poços de lava, fendas de calor e a solarita brilhando nas paredes. Ninguém fica muito
+  tempo sem o traje.
+uso = Medir a água que escorre pelas fendas mostra que dá pra segurar a cachoeira: libera a pesquisa das Bombas
+  d'água.
+
+[S4]
+nome = S4 — A cachoeira do fundo
+texto = Reconhecimento do S4: a água despenca sobre a rocha quente. Quem passa pela água fica molhado e aguenta mais
+  perto da lava.
+uso = Cristais de todas as cores nas paredes, e o caminho pro lago.
+
+[S5]
+nome = S5 — O lago azul
+texto = Reconhecimento do fundo de tudo: um lago parado, gemas na beira e casinhas de pedra vazias de antes da
+  explosão.
+uso = As gemas azuis. E o lugar mais calmo da mina.
+
+[leste]
+nome = O Leste — a vila antiga
+texto = Do outro lado da floresta, uma vila de antes da explosão: igreja, torre do relógio e casas de enxaimel, tudo
+  vazio. Tem ferro, cobre, carvão e prata no chão.
+uso = Mais jazidas e mais árvores, longe do portão.

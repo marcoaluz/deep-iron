@@ -13,6 +13,9 @@ extends Node
 ##     Vila:  Medicina de campo -> Rádio OU Hidroponia
 ##     Sol:   Estudo da explosão -> Satélite OU Holofotes;  Estudo -> Projeto do escudo
 ## Os efeitos são consultados pelos outros sistemas (cargo_mult, accident_mult...).
+## Bloco 102: o CATÁLOGO (catalogo.gd) pode travar uma pesquisa até uma entrada ser estudada (nos dados da entrada:
+## "libera": ["pesquisa:<id>"]), e cada estudo de campo dá uns pontos: vão pra pesquisa em andamento ou ficam
+## GUARDADOS e entram na próxima que começar (pontos_guardados).
 
 signal researched(id: String)
 
@@ -113,6 +116,8 @@ var _blast := {}  # trabalho em andamento: {galeria, quem, t, fase ("andando"/"p
 var done: Array = []
 var current: String = ""
 var progress: float = 0.0
+## Bloco 102: pontos dos estudos do catálogo sem pesquisa em andamento (entram na próxima).
+var pontos_guardados: float = 0.0
 
 
 func _ready() -> void:
@@ -233,6 +238,9 @@ func block_reason(id: String) -> String:
 		return "caminho fechado (escolheu %s)" % TECHS[t.excl].name
 	if t.req != "" and not has(t.req):
 		return "precisa: %s" % TECHS[t.req].name
+	var falta_estudo := estudo_que_falta(id)
+	if falta_estudo != "":
+		return "precisa estudar: %s" % falta_estudo  # Bloco 102 (Catálogo, tecla R)
 	if lab() == null:
 		return "sem laboratório"
 	if current != "":
@@ -252,9 +260,29 @@ func start(id: String) -> bool:
 		return false
 	current = id
 	progress = 0.0
+	if pontos_guardados > 0.0:  # Bloco 102: os pontos dos estudos de campo entram aqui
+		var usa := minf(pontos_guardados, float(t.points))
+		pontos_guardados -= usa
+		add_points(usa)
 	for w in researchers():
 		w.wake_decision()
 	return true
+
+
+## Bloco 102: o nome da entrada do catálogo que esta pesquisa ainda espera ser estudada ("" = nenhuma).
+func estudo_que_falta(id: String) -> String:
+	var cat := get_tree().get_first_node_in_group("catalogo")
+	return cat.falta_para_pesquisa(id) if cat else ""
+
+
+## Bloco 102: pontos de fora do laboratório (o estudo do catálogo): na pesquisa em andamento, ou guardados.
+func ganha_pontos(n: float) -> void:
+	if n <= 0.0:
+		return
+	if current != "":
+		add_points(n)
+	else:
+		pontos_guardados += n
 
 
 func current_progress() -> float:
@@ -466,7 +494,8 @@ func _explode(g: Node, w: Node) -> void:
 
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
-	var d := {"done": done.duplicate(), "current": current, "progress": progress, "dynamite": dynamite}
+	var d := {"done": done.duplicate(), "current": current, "progress": progress, "dynamite": dynamite,
+		"guardados": pontos_guardados}  # Bloco 102
 	var ls := []
 	for l in labs():
 		ls.append(SaveUtil.vec2_to_array(l.global_position))
@@ -484,6 +513,7 @@ func load_save_data(d: Dictionary) -> void:
 		current = ""
 	progress = maxf(SaveUtil.num(d, "progress", 0.0), 0.0) if current != "" else 0.0
 	dynamite = clampi(SaveUtil.integer(d, "dynamite", 0), 0, dynamite_max)  # Bloco 60 (save antigo: 0)
+	pontos_guardados = maxf(SaveUtil.num(d, "guardados", 0.0), 0.0)  # Bloco 102 (save antigo: 0)
 	_blast = {}
 	if labs().is_empty():
 		for pos in SaveUtil.positions(d, "labs", "lab"):  # Bloco 47 (save antigo: "lab", um só)

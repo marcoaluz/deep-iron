@@ -1,9 +1,24 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-08. Branch `isometrico`. Tudo até o Bloco 99 **foi enviado** pro GitHub em 2026-10-08 (push com o OK do Marco); os Blocos 100 e 101 estão só no commit local. Push só com o OK dele.
+Atualizado em 2026-10-08. Branch `isometrico`. Tudo até o Bloco 101 **foi enviado** pro GitHub em 2026-10-08 (push com o OK do Marco); o Bloco 102 está só no commit local. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido".
 
-## AGORA (2026-10-08): Bloco 101 — migrantes e população inicial (feito; commit local, push pendente — pedir o OK)
+## AGORA (2026-10-08): Bloco 102 — catálogo, minérios e animais (feito; commit local, push pendente — pedir o OK)
+
+Prompt S1. Plano `docs/BLOCO102_PLANO.md` (decisões: conhecimento inicial do plano; pesquisas travadas por estudo como na
+tabela; criaturas pela amostra do abate; locais S2-S5 + Leste "de momento"; tecla R). Relatório `docs/BLOCO102_CATALOGO.md`;
+fotos `docs/arte/bloco102/`.
+- `catalogo.gd` (nó Catalogo, grupo "catalogo") + `catalogo_panel.gd` (tecla R); dados `data/catalogo/entradas.json` +
+  `textos.txt`. Desconhecido -> Avistado -> Estudado.
+- A pesquisadora sem pesquisa sai pra catalogar (estado `catalogando`, `nota_campo` no save); 40 s anotando com a animação
+  `pesquisar`; +8 pontos (guardados se não há pesquisa: `research.pontos_guardados`).
+- Pedra desconhecida -> "minério desconhecido" (tipo novo do ores.gd, 1 cr); estudar troca no armazém. Toca não estudada
+  some pro caçador. Fornalha/Oficina sem o nome. Pesquisas: explosivos/carvão, trajes/S2, ventilação/cristal verde,
+  bombas/S3, escudo/solarita. Plano B: o laboratório sozinho (0,15 pt/s). Amostra no abate da criatura.
+- Testes antigos que mineram cobre/carvão, caçam ou pesquisam: `catalogo.gd tudo_estudado = true` no _initialize.
+- O export passou a levar `data/catalogo/*` e `data/missoes/*.txt` (os textos das missões do Bloco 100 ficavam de fora).
+
+## Bloco 101 — migrantes e população inicial (feito; enviado ao GitHub com o OK do Marco em 2026-10-08)
 
 Prompt M. Plano `docs/BLOCO101_PLANO.md` (decisões: os itens 1-6 ok; casas iniciais NÃO prontas — só o recurso pra
 construir, como já era; comida inicial 240 / cozinha 300; sem a dica de cozinheiro/caçadores; o satélite chama
@@ -14,7 +29,7 @@ migrantes). Relatório `docs/BLOCO101_MIGRANTES.md`; fotos `docs/arte/bloco101/`
   Prompt 11 é este sistema.
 - Comida com 10: com 1 cozinheiro + 2 caçadores segura (fome ~80); o gargalo é o cozinheiro (~230/dia), não a horta.
 
-## Bloco 100 — sistema de missões e Capítulo 1 "Cinzas" (feito; commit local, push pendente — pedir o OK)
+## Bloco 100 — sistema de missões e Capítulo 1 "Cinzas" (feito, enviado ao GitHub com o OK do Marco em 2026-10-08)
 
 Prompt 3 / seção 21 do guia. Relatório `docs/BLOCO100_MISSOES.md`; fotos `docs/arte/bloco100/`.
 - `missao.gd` (recurso) + `data/missoes/cap1_cinzas.tres`; textos em `data/missoes/capitulo_1.txt` (um arquivo por capítulo,

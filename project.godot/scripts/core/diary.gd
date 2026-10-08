@@ -105,13 +105,14 @@ func has_page(id: String) -> bool:
 	return false
 
 
-func unlock(id: String) -> void:
+## avisa = false: sem o aviso no canto (Bloco 102: o catálogo já avisou "Estudou: ...").
+func unlock(id: String, avisa := true) -> void:
 	if entrada(id).is_empty() or has_page(id):
 		return
 	var dn := get_tree().get_first_node_in_group("day_night")
 	pages.append({"id": id, "day": dn.day if dn else 1})
 	var hud := get_tree().get_first_node_in_group("hud")
-	if hud:
+	if hud and avisa:
 		hud.show_toast("Nova página no diário: %s  (J)" % entrada(id).title, Color(0.8, 0.75, 1.0))
 
 

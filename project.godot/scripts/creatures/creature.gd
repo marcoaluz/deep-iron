@@ -433,6 +433,10 @@ func die(killed: bool) -> void:
 	if killed:
 		Audio.creature_down(global_position)  # Bloco 55
 	died.emit(killed)
+	if killed:  # Bloco 102: o abate deixa uma AMOSTRA pro catálogo (a pesquisadora estuda no laboratório)
+		var cat := get_tree().get_first_node_in_group("catalogo")
+		if cat:
+			cat.amostra(kind, is_in_group("chefes"))
 	if killed and kind == "ferrugento" and randf() < 0.35:
 		var finds := get_tree().get_first_node_in_group("finds")
 		if finds:

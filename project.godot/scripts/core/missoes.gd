@@ -56,6 +56,9 @@ func _liga() -> void:
 	var res := get_tree().get_first_node_in_group("research")
 	if res and res.has_signal("researched"):
 		res.researched.connect(func(_id: String): confere())
+	var cat := get_tree().get_first_node_in_group("catalogo")
+	if cat and cat.has_signal("entrada_estudada"):  # Bloco 102: o objetivo "estudar"
+		cat.entrada_estudada.connect(func(_id: String, _categoria: String): confere())
 	var hub := get_tree().get_first_node_in_group("village_hub")
 	if hub:
 		if hub.has_signal("level_changed"):
@@ -280,6 +283,13 @@ func valor_do_objetivo(o: Array) -> float:
 			return float((contadores.obras as Dictionary).get(alvo, 0))
 		"mortes":
 			return float(contadores.mortes)
+		"estudar":  # Bloco 102: alvo = id da entrada (1 = estudada), uma categoria (quantas) ou "" (quantas no total)
+			var cat := get_tree().get_first_node_in_group("catalogo")
+			if cat == null:
+				return 0.0
+			if alvo == "" or alvo in cat.CATEGORIAS:
+				return float(cat.quantos_estudados(alvo))
+			return 1.0 if cat.estudado(alvo) else 0.0
 	return 0.0
 
 

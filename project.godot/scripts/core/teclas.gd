@@ -15,6 +15,7 @@ const PADRAO := {
 	"painel_moral": [KEY_B], "painel_defesa": [KEY_G], "painel_diario": [KEY_J], "painel_lab": [KEY_Q], "painel_sol": [KEY_Y],
 	"painel_trabalho": [KEY_5, KEY_KP_5],
 	"painel_missoes": [KEY_COMMA],  # Bloco 100
+	"painel_catalogo": [KEY_R],  # Bloco 102 (o R ficou livre no Bloco 101)
 	"fundidor": [KEY_6, KEY_KP_6],  # Bloco 86
 	"ferreiro": [KEY_7, KEY_KP_7],  # Bloco 87
 	"padre": [KEY_8, KEY_KP_8],  # Bloco 92
@@ -38,7 +39,7 @@ const NOMES := [
 	["musica", "Música liga/desliga"], ["painel_hub", "Centro da Vila"], ["painel_escavadeira", "Escavadeira"],
 	["painel_oficina", "Oficina"], ["painel_enfermaria", "Enfermaria"], ["painel_moral", "Bem-estar"],
 	["painel_defesa", "Defesa"], ["painel_diario", "Diário"], ["painel_lab", "Laboratório"], ["painel_sol", "O Sol"],
-	["painel_trabalho", "Trabalhadores (áreas de trabalho)"], ["painel_missoes", "Missões"],
+	["painel_trabalho", "Trabalhadores (áreas de trabalho)"], ["painel_missoes", "Missões"], ["painel_catalogo", "Catálogo"],
 	["salvar", "Salvar"], ["carregar", "Carregar"],
 ]
 

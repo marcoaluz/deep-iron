@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **943 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **950 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (79)
 
@@ -229,6 +229,29 @@ Total: **943 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `rota_entrada` | 140.0 |  | Rota do passeio: só usa caminho que comece/termine até esta distância (px) de quem sai e do destino. |
 | `rota_passo` | 3 |  | Rota do passeio: um waypoint a cada tantas células. |
 
+## `scripts/core/catalogo.gd` (6)
+
+**Avistar**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `alcance_avistar` | 160.0 |  | Distância (px da lógica) de um morador até a jazida/toca pra ela virar Avistada. |
+| `intervalo_confere` | 1.0 |  | Segundos (reais) entre uma conferência e outra (avistar, reservas, o plano B). |
+
+**Estudo de campo**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `segundos_estudo` | 40.0 |  | Segundos de jogo anotando no alvo (x o ritmo do pesquisador: zanga e tristeza deixam mais lento). |
+| `alcance_estudo` | 44.0 |  | Distância (px) do alvo em que a pesquisadora já começa a anotar. |
+| `pontos_por_estudo` | 8.0 |  | Pontos de pesquisa que cada estudo de campo dá (pra pesquisa em andamento, ou guardados pra próxima). |
+
+**Plano B: o laboratório sozinho**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `lab_pontos_sozinho` | 0.15 |  | Pontos por segundo que o laboratório gera sozinho num estudo do catálogo (o pesquisador gera 1/s numa pesquisa). |
+
 ## `scripts/core/day_night.gd` (22)
 
 **Relógio de 24 horas (Bloco 83)**
@@ -386,7 +409,7 @@ Total: **943 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `boss_reward_parts` | 2 |  |  |
 | `boss_reward_research` | 80.0 |  |  |
 
-## `scripts/core/economy.gd` (19)
+## `scripts/core/economy.gd` (20)
 
 **Venda**
 
@@ -400,6 +423,7 @@ Total: **943 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `cristal_verde_price` | 10.0 |  | Bloco 70: cristal verde (S2, galerias de ácido) e cristal rubro (S3, poços de lava). |
 | `cristal_rubro_price` | 18.0 |  |  |
 | `gema_azul_price` | 30.0 |  | Bloco 71: gema azul (S5, a beira do lago). |
+| `desconhecido_price` | 1.0 |  | Bloco 102: créditos por unidade de minério desconhecido (de jazida que o catálogo ainda não estudou). |
 | `precos_itens` | {} |  | Bloco 82: troca o preço de venda (créditos por unidade) de itens do catálogo que não são minério, ex.: {"barra_ferro": 10.0}. Vazio = o preço base do items.gd. Preço 0 = não se vende. |
 | `starting_credits` | 0.0 |  |  |
 

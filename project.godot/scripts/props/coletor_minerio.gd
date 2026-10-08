@@ -153,7 +153,7 @@ func _process(delta: float) -> void:
 		if got <= 0.0:
 			break
 		total_produced += got
-		_deliver(got, j.ore_type)
+		_deliver(got, j.tipo_extraido())  # Bloco 102
 	if _producing:
 		_sound_timer -= delta
 		if _sound_timer <= 0.0:
@@ -183,7 +183,7 @@ func status_text() -> String:
 		return "parado — armazém cheio (venda, gaste ou amplie o armazém)"
 	if _producing and has_operator():
 		var j := jazida()
-		return "produzindo %.1f %s/s (%s)" % [ore_per_sec * operator.work_mult(), j.ore_type if j else "?", operator.display_name]
+		return "produzindo %.1f %s/s (%s)" % [ore_per_sec * operator.work_mult(), j.nome_visivel().to_lower() if j else "?", operator.display_name]
 	return "parado — " + (_why if _why != "" else "sem operador (designe um minerador)")
 
 

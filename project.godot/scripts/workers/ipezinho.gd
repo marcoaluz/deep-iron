@@ -20,6 +20,7 @@ const STATE_LABELS := {
 	"mining": "minerando",
 	"storing": "armazenando",
 	"na_mina": "dentro da mina",  # Bloco 99
+	"catalogando": "catalogando",  # Bloco 102
 	"manual": "ordem manual",
 	"home": "indo pra casa",
 	"gathering": "colhendo comida",
@@ -533,6 +534,11 @@ var _saved_home_slot: int = -1
 @onready var _anger_icon: Sprite2D = $AngerIcon
 @onready var _cook_icon: Sprite2D = $CookIcon
 @onready var _lamp: PointLight2D = $HeadLamp
+## Bloco 102: a PESQUISADORA NATURALISTA (catalogo.gd). nota_campo = a entrada que ela já estudou no campo e ainda
+## vai entregar no laboratório (vai no save); _campo = a tarefa de agora {id, pos, fase (indo/anotando/voltando), t, lab}.
+var nota_campo := ""
+var _campo := {}
+
 ## Bloco 101: MIGRANTE esperando no portão (migrantes.gd): fora do grupo "ipezinhos" (não come, não ocupa cama, não conta)
 ## e sem IA nem necessidades — só anda até onde mandarem. Aceito: vira_morador().
 var visitante := false
@@ -720,6 +726,15 @@ func get_state_label() -> String:
 		return "passeando até: %s" % _spot.nome
 	if _ai_state == "eating" and _refeicao_alvo != "":  # Bloco 84
 		return "%s (%s)" % ["comendo" if _servido else "indo comer", Schedule.nome_refeicao(_refeicao_alvo)]
+	if _ai_state == "catalogando":  # Bloco 102
+		var cat := _catalogo()
+		var nm: String = "???" if cat == null or _campo.is_empty() else ("amostra de " + cat.nome(_campo.id) if _campo.get("lab", false) else "???")
+		match String(_campo.get("fase", "")):
+			"anotando":
+				return "estudando %s (%d%%)" % [nm, roundi(float(_campo.t) / maxf(cat.segundos_estudo, 1.0) * 100.0)] if cat else "estudando"
+			"voltando":
+				return "levando a anotação pro laboratório"
+		return "indo estudar uma descoberta"
 	if _ai_state == "idle" and has_no_job():
 		return "sem função — esperando ordem"
 	if _ai_state == "idle" and is_cook():
@@ -898,6 +913,8 @@ func _process(delta: float) -> void:
 	if hunger <= 0.0 and not was_starving:
 		_on_starving()
 	_agenda_tick(delta)  # Bloco 84
+	if _ai_state == "catalogando":
+		_campo_tick(delta)  # Bloco 102
 	_social_process(delta)  # Bloco 85
 	_motivo_tick(delta)  # Bloco 95
 
@@ -1109,9 +1126,16 @@ func _choose_state() -> String:
 			return "training"
 		return "home"
 	# Pesquisador: de dia no laboratório se tiver pesquisa em andamento; senão trabalha normal.
+	# Bloco 102: com uma anotação na mão, entrega primeiro; sem pesquisa, sai pra CATALOGAR o que a vila avistou
+	# (catalogo.gd); sem nada pra catalogar, minera como antes.
 	if is_researcher():
+		if nota_campo != "":
+			return "catalogando"
 		if (_ai_state == "research" and _station_ok_for("research")) or _has_usable_station("laboratorios"):
 			return "research"
+		var cat := _catalogo()
+		if cat and ((_ai_state == "catalogando" and not _campo.is_empty()) or cat.tem_alvo(self)):
+			return "storing" if carrying > 0.0 else "catalogando"  # (o minério na mão vai pro armazém antes)
 	# Lenhador: larga o minério que tiver e passa a só cortar e levar madeira.
 	# Bloco 45: o designado pro coletor de madeira fica operando a máquina.
 	if is_lumber():
@@ -1223,6 +1247,13 @@ func _decide_next_action() -> void:
 
 	if desired == "montando_cama":  # Bloco 94
 		_montar_cama()
+		return
+
+	if desired == "catalogando":  # Bloco 102: a tarefa de campo (anda sozinha no _campo_tick)
+		if _ai_state != "catalogando":
+			_release_station()
+			_set_state("catalogando")
+		_catalogar()
 		return
 
 	if desired == "padre":  # Bloco 88: o padre fica na porta da igreja (sem igreja: na praça)
@@ -1675,6 +1706,11 @@ func _set_state(new_state: String) -> void:
 		_social_sai()  # Bloco 85: solta o lugar no ponto
 	if _ai_state == "na_mina":
 		_sai_mina()  # Bloco 99: refeição, fim do expediente, emergência ou o vagonete parou: sai pela boca
+	if _ai_state == "catalogando":
+		_campo = {}  # Bloco 102: largou o campo (a anotação feita continua com ela: entrega depois)
+		var cat := _catalogo()
+		if cat:
+			cat.solta(self)
 	_ai_state = new_state
 	state_changed.emit(new_state)
 
@@ -2535,6 +2571,64 @@ func is_researcher() -> bool:
 	return job == ROLE_RESEARCH
 
 
+# ------------------------------------------------------------ o naturalista (Bloco 102)
+func _catalogo() -> Node:
+	return get_tree().get_first_node_in_group("catalogo") if is_inside_tree() else null
+
+
+## Decide o passo da tarefa de campo: pega o alvo (reservado no catálogo) ou vai entregar a anotação.
+func _catalogar() -> void:
+	var cat := _catalogo()
+	if cat == null:
+		return
+	if nota_campo != "" and String(_campo.get("fase", "")) != "voltando":
+		_campo = {"id": nota_campo, "pos": cat.entrega_pos(self), "fase": "voltando", "t": 0.0, "lab": false}
+	if _campo.is_empty():
+		var a: Dictionary = cat.reserva(self)
+		if a.is_empty():
+			_decision_timer = 0.0  # (nada pra estudar: decide de novo)
+			return
+		_campo = {"id": a.id, "pos": a.pos, "fase": "indo", "t": 0.0, "lab": a.lab}
+	if String(_campo.fase) in ["indo", "voltando"]:
+		var p: Vector2 = _campo.pos
+		if global_position.distance_to(p) > cat.alcance_estudo and (not _moving or _target.distance_to(p) > 2.0):
+			_go_to(p)
+
+
+## Cada quadro: chegou -> anota (com a animação de pesquisar) -> volta -> entrega.
+func _campo_tick(delta: float) -> void:
+	var cat := _catalogo()
+	if cat == null or _campo.is_empty():
+		return
+	var p: Vector2 = _campo.pos
+	var perto: bool = global_position.distance_to(p) <= cat.alcance_estudo or (not _moving and global_position.distance_to(p) <= cat.alcance_estudo * 2.0)
+	match String(_campo.fase):
+		"indo":
+			if cat.estado(_campo.id) != cat.AVISTADO:
+				_campo = {}  # outra estudou (ou o laboratório): escolhe outro
+				_decision_timer = 0.0
+			elif perto:
+				_moving = false
+				_campo.fase = "anotando"
+				_campo.t = 0.0
+				_popup("Hmm, o que é isso?", Color(0.75, 0.9, 1.0))
+		"anotando":
+			_campo.t = float(_campo.t) + delta * work_mult()
+			_work_timer = 0.2  # a animação de pesquisar (anotando)
+			if float(_campo.t) >= cat.segundos_estudo:
+				nota_campo = String(_campo.id)
+				_campo = {"id": nota_campo, "pos": cat.entrega_pos(self), "fase": "voltando", "t": 0.0, "lab": false}
+				if global_position.distance_to(_campo.pos) > cat.alcance_estudo:
+					_go_to(_campo.pos)
+		"voltando":
+			if perto:
+				var id := nota_campo
+				nota_campo = ""
+				_campo = {}
+				cat.entrega(id, self)
+				_decision_timer = 0.0
+
+
 func _research() -> Node:
 	return get_tree().get_first_node_in_group("research")
 
@@ -2590,6 +2684,11 @@ func set_job(new_job: String) -> void:
 		solta_material(true)  # Bloco 96: o material da mão volta pro armazém
 	if job == ROLE_DOCTOR:
 		_drop_patient()  # Bloco 36: tirou do médico no meio do resgate: larga o caído ali
+	if job == ROLE_RESEARCH and nota_campo != "":
+		var cat := _catalogo()  # Bloco 102: deixou de ser pesquisadora com a anotação na mão: ela entrega na hora
+		if cat:
+			cat.entrega(nota_campo, self)
+		nota_campo = ""
 	if job == ROLE_LUMBER and _my_coletor() != null:
 		_my_coletor().release()  # Bloco 45: deixou de ser lenhador: o coletor para
 	if job == ROLE_MINER and _my_coletor_minerio() != null:
@@ -4463,6 +4562,7 @@ func get_save_data() -> Dictionary:
 		"coletor_pos": SaveUtil.vec2_to_array(_my_coletor().global_position) if _my_coletor() != null else [],  # Bloco 47
 		"coletor_minerio_pos": SaveUtil.vec2_to_array(_my_coletor_minerio().global_position) if _my_coletor_minerio() != null else [],  # Bloco 57
 		"hunt_kills": hunt_kills,  # Bloco 61
+		"nota_campo": nota_campo,  # Bloco 102
 		"area_id": work_area.id if work_area != null else 0,  # Bloco 77
 		"refeicoes_hoje": refeicoes_hoje.keys(),  # Bloco 84
 		"refeicoes_perdidas": refeicoes_perdidas,
@@ -4560,6 +4660,7 @@ func load_save_data(d: Dictionary) -> void:
 	if SaveUtil.boolean(d, "operates_coletor", false):
 		_relink_coletor.call_deferred(SaveUtil.vec2(d, "coletor_pos", Vector2.INF))  # Bloco 45/47
 	hunt_kills = maxi(SaveUtil.integer(d, "hunt_kills", 0), 0)  # Bloco 61
+	nota_campo = SaveUtil.text(d, "nota_campo", "")  # Bloco 102 (save antigo: nenhuma)
 	var area_id := SaveUtil.integer(d, "area_id", 0)  # Bloco 77 (save antigo: sem área)
 	if area_id > 0:
 		_religa_area.call_deferred(area_id)

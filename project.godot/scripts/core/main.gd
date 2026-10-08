@@ -213,6 +213,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				_hud.toggle_panel("trabalho")  # Bloco 77
 			"painel_missoes":
 				_hud.toggle_panel("missoes")  # Bloco 100
+			"painel_catalogo":
+				_hud.toggle_panel("catalogo")  # Bloco 102
 			"vender":
 				_economy.sell_all()
 			"construir":

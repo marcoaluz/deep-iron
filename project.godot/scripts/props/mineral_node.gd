@@ -8,6 +8,10 @@ extends "res://scripts/props/station.gd"
 ## Bloco 33: GALERIAS LACRADAS. Uma jazida com min_village_level > 1 fica atrás de
 ## entulho, dentro da mina de sempre, até a vila chegar nesse estágio ("Expandir a
 ## vila" no Centro). O mapa não cresce: expandir só abre essas galerias.
+##
+## Bloco 102: o CATÁLOGO (catalogo.gd). Jazida de um tipo ainda não estudado é "pedra desconhecida": a placa não diz o
+## nome, a vista iso desenha a pedra cinza, e o que sai dela é "minério desconhecido" (o catálogo anota de que tipo era
+## e troca no armazém quando o tipo for estudado). A ferramenta continua valendo: sem ela, não minera.
 
 const Ores := preload("res://scripts/core/ores.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
@@ -57,6 +61,8 @@ var _rubble: Sprite2D = null  # entulho com tábuas em X na frente da galeria la
 ## Bloco 60: o entulho foi explodido com dinamite (a galeria abriu antes da vila crescer).
 var blasted := false
 var panel_id := "galeria"
+## Bloco 102: o catálogo já estudou este tipo? (guardado: o catálogo avisa quando muda — on_unlock_changed)
+var conhecido := true
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _label: Label = $AmountLabel
@@ -107,7 +113,34 @@ func is_sealed() -> bool:
 func accepts_worker(worker: Node) -> bool:
 	if hazard != "" and worker.has_method("can_enter_hazard") and not worker.can_enter_hazard(hazard):
 		return false  # Bloco 42: sem o traje (nem no vestiário), nem tenta
-	return worker.carrying <= 0.0 or worker.cargo_type == ore_type
+	return worker.carrying <= 0.0 or worker.cargo_type == tipo_extraido()
+
+
+## Bloco 102: o que sai daqui — o minério de verdade, ou "desconhecido" enquanto o catálogo não estudou o tipo.
+func tipo_extraido() -> String:
+	return ore_type if conhecido else Ores.DESCONHECIDO
+
+
+## Bloco 102: dá pra chegar aqui? (não lacrada, com a descida aberta e fora do leste trancado; a ferramenta não conta:
+## é o que a pesquisadora precisa pra estudar)
+func acessivel() -> bool:
+	if _needs_descent or _needs_village:
+		return false
+	var env := get_tree().get_first_node_in_group("environment")
+	return not (env and env.has_method("trancado") and env.trancado(global_position))
+
+
+func _catalogo() -> Node:
+	return get_tree().get_first_node_in_group("catalogo") if is_inside_tree() else null
+
+
+## Bloco 102: saiu minério desconhecido daqui — o catálogo anota de que tipo era.
+func _anota_bruto(qtd: float) -> void:
+	if conhecido or qtd <= 0.0:
+		return
+	var cat := _catalogo()
+	if cat:
+		cat.anota_bruto(ore_type, qtd)
 
 
 ## Quanto este minério vale em relação ao ferro (os ipezinhos preferem os mais valiosos).
@@ -115,7 +148,7 @@ func get_value_weight() -> float:
 	var eco := get_tree().get_first_node_in_group("economy")
 	if eco == null:
 		return 1.0
-	return eco.price_of(ore_type) / maxf(eco.price_of("ferro"), 0.01)
+	return eco.price_of(tipo_extraido()) / maxf(eco.price_of("ferro"), 0.01)  # Bloco 102: pedra desconhecida vale pouco
 
 
 ## Chamado pela Oficina quando uma ferramenta fica pronta (animate = false ao carregar save).
@@ -123,6 +156,9 @@ func on_unlock_changed(animate: bool = true) -> void:
 	var oficina := get_tree().get_first_node_in_group("oficina")
 	var was := _unlocked
 	var was_sealed := _needs_village
+	var cat := _catalogo()
+	var era_conhecido := conhecido
+	conhecido = cat == null or cat.minerio_conhecido(ore_type)  # Bloco 102
 	# sem Oficina no mapa, nada fica bloqueado
 	var tool_ok: bool = oficina == null or oficina.is_ore_unlocked(ore_type)
 	# no nível 2, também precisa da descida aberta (escavadeira pronta)
@@ -151,7 +187,7 @@ func on_unlock_changed(animate: bool = true) -> void:
 		var nv: Resource = preload("res://scripts/core/niveis.gd").do_ponto(env, global_position)
 		_motivo_descida = preload("res://scripts/core/niveis.gd").motivo(get_tree(), nv) if nv else ""
 	_update_rubble(was_sealed and animate)
-	if _unlocked and not was and animate:
+	if animate and ((_unlocked and not was) or (conhecido and not era_conhecido)):  # (Bloco 102: estudou o tipo)
 		var pop := create_tween()
 		_visual.scale = _base_scale * 1.25
 		pop.tween_property(_visual, "scale", _base_scale, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -184,12 +220,18 @@ func extract(amount: float) -> float:
 		return 0.0
 	var taken := minf(amount, ore_remaining)
 	ore_remaining -= taken
+	_anota_bruto(taken)  # Bloco 102
 	if ore_remaining <= 0.0:
 		ore_remaining = 0.0
 		_cooldown = depleted_cooldown
 		depleted.emit()
 	_update_visual()
 	return taken
+
+
+## Bloco 102: o nome na placa ("Pedra desconhecida" até o catálogo estudar o tipo).
+func nome_visivel() -> String:
+	return Ores.display_name(ore_type) if conhecido else "Pedra desconhecida"
 
 
 ## Bloco 71: a jazida fica num nível novo (S4, S5...)? Lá o motivo vem dos dados; no nível 2 e no
@@ -229,7 +271,8 @@ func _process(delta: float) -> void:
 	if ore_remaining > 0.0 and _unlocked:
 		for body in _working_bodies():
 			var amount: float = minf(MINE_RATE * delta, ore_remaining)
-			var taken: float = body.mine(amount, ore_type)
+			var taken: float = body.mine(amount, tipo_extraido())  # Bloco 102: pedra desconhecida dá "desconhecido"
+			_anota_bruto(taken)
 			if taken > 0.0:
 				mined_any = true
 			ore_remaining -= taken
@@ -255,15 +298,18 @@ func _update_visual() -> void:
 		_visual.modulate = Color(0.42, 0.42, 0.5)
 		var oficina := get_tree().get_first_node_in_group("oficina")
 		var tool: String = oficina.tool_for_ore(ore_type) if oficina else ""
+		var nome := nome_visivel()  # Bloco 102: sem estudo, "Pedra desconhecida"
 		if _needs_village:
 			var hub := get_tree().get_first_node_in_group("village_hub")
-			_label.text = "Galeria lacrada (%s)\nabre com a vila: %s" % [Ores.display_name(ore_type).to_lower(), hub.stage_name(min_village_level) if hub else "?"]
+			_label.text = "Galeria lacrada (%s)\nabre com a vila: %s" % [nome.to_lower(), hub.stage_name(min_village_level) if hub else "?"]
 		elif _needs_descent and _motivo_descida != "" and env_nivel_novo():
-			_label.text = "%s: %s" % [Ores.display_name(ore_type), _motivo_descida]
+			_label.text = "%s: %s" % [nome, _motivo_descida]
 		elif _needs_descent:
-			_label.text = "%s: fechado até a\nescavadeira ficar pronta" % Ores.display_name(ore_type)
+			_label.text = "%s: fechado até a\nescavadeira ficar pronta" % nome
+		elif not conhecido:
+			_label.text = "Pedra desconhecida:\ndura demais (estude)"
 		else:
-			_label.text = "%s: precisa de\n%s" % [Ores.display_name(ore_type), oficina.TOOL_NAMES[tool] if tool != "" else "?"]
+			_label.text = "%s: precisa de\n%s" % [nome, oficina.TOOL_NAMES[tool] if tool != "" else "?"]
 		_label.modulate = Color(0.75, 0.75, 0.85, 0.8)
 		_padlock.position.y = -16.0 + sin(Time.get_ticks_msec() * 0.003) * 1.5
 	elif _cooldown > 0.0:
@@ -272,7 +318,7 @@ func _update_visual() -> void:
 		_label.modulate = Color(1, 0.55, 0.45)
 	else:
 		_visual.modulate = Color.WHITE
-		_label.text = str(int(ore_remaining))
+		_label.text = str(int(ore_remaining)) if conhecido else "Pedra desconhecida  %d" % int(ore_remaining)
 		if hazard != "":  # Bloco 42: zona de perigo — sem traje no vestiário, ninguém vem
 			var eq := get_tree().get_first_node_in_group("equipment")
 			if eq and eq.usable(hazard) + eq.in_use(hazard) == 0:

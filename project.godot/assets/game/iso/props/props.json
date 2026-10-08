@@ -3045,6 +3045,51 @@
    "h": 56.0,
    "fora": 0,
    "img": "lanterna_boca.png"
+  },
+  "jazida_desconhecida_cheia": {
+   "img": "jazida_desconhecida_cheia.png",
+   "ancora": [
+    30.5,
+    58.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 52.0,
+   "fora": 0
+  },
+  "jazida_desconhecida_meia": {
+   "img": "jazida_desconhecida_meia.png",
+   "ancora": [
+    30.5,
+    62.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 54.0,
+   "fora": 0
+  },
+  "jazida_desconhecida_quase": {
+   "img": "jazida_desconhecida_quase.png",
+   "ancora": [
+    30.5,
+    50.0
+   ],
+   "peg": [
+    -10.674999999999999,
+    -8.54,
+    22.0,
+    20.0
+   ],
+   "h": 48.0,
+   "fora": 3
   }
  }
 }

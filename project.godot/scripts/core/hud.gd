@@ -729,6 +729,9 @@ func _build_janelas() -> void:
 		_add_panel("sol", preload("res://scripts/core/sun_panel.gd"), _sun)
 	if _diary:
 		_add_panel("diario", preload("res://scripts/core/diary_panel.gd"), _diary)
+	var cat := get_tree().get_first_node_in_group("catalogo")
+	if cat:  # Bloco 102: o catálogo de descobertas (tecla R)
+		_add_panel("catalogo", preload("res://scripts/core/catalogo_panel.gd"), cat)
 	# Bloco 56: janela da casa (fora do menu: clique na casa ou o cartão do menu)
 	var casa_panel: PanelContainer = preload("res://scripts/core/casa_panel.gd").new()
 	add_child(casa_panel)
@@ -785,9 +788,9 @@ func _fill_hints() -> void:
 		"Pessoas:  %s = a lista da força de trabalho (ou passe o mouse na aba da esquerda)  •  alertas à direita: clique pra ir até lá" % k.call("pessoas"),
 		"Trabalho:  %s = TRABALHADORES — marcar áreas (madeira, alimentos, mina) e quantos trabalham em cada uma (até 5)" % k.call("painel_trabalho"),
 		"Construir:  %s = menu de construção (casas, cozinha, lazer, pesquisa, defesa, coleta automática…)" % k.call("construir"),
-		"Prédios:  %s Centro da Vila  •  %s Escavadeira  •  %s Oficina  •  %s Enfermaria  •  %s Bem-estar  •  %s Defesa  •  %s Laboratório  •  %s Sol  •  %s Diário  (ou clique no prédio, ou o menu Janelas lá em cima)" % [
+		"Prédios:  %s Centro da Vila  •  %s Escavadeira  •  %s Oficina  •  %s Enfermaria  •  %s Bem-estar  •  %s Defesa  •  %s Laboratório  •  %s Sol  •  %s Diário  •  %s Catálogo  (ou clique no prédio, ou o menu Janelas lá em cima)" % [
 			k.call("painel_hub"), k.call("painel_escavadeira"), k.call("painel_oficina"), k.call("painel_enfermaria"), k.call("painel_moral"),
-			k.call("painel_defesa"), k.call("painel_lab"), k.call("painel_sol"), k.call("painel_diario")],
+			k.call("painel_defesa"), k.call("painel_lab"), k.call("painel_sol"), k.call("painel_diario"), k.call("painel_catalogo")],
 		"Câmera:  roda = zoom (paradas nítidas)  •  botão do meio / WASD / setas = mover  •  Home = centralizar  •  F11 / Alt+Enter = tela cheia",
 		"Jogo:  %s salvar  •  %s carregar  •  %s música  •  Esc/%s pausa  •  F2 corte da mina  •  N pular fase (teste)  •  K machucar (teste; Shift+K grave)" % [
 			k.call("salvar"), k.call("carregar"), k.call("musica"), k.call("pausa")],
@@ -812,7 +815,8 @@ func _add_panel(id: String, script: GDScript, target: Node) -> void:
 ## Bloco 95: tecla de cada janela no menu (a ação de teclas.gd).
 const TECLA_JANELA := {"hub": "painel_hub", "trabalho": "painel_trabalho", "escavadeira": "painel_escavadeira",
 	"oficina": "painel_oficina", "enfermaria": "painel_enfermaria", "moral": "painel_moral", "defesa": "painel_defesa",
-	"lab": "painel_lab", "sol": "painel_sol", "diario": "painel_diario", "missoes": "painel_missoes"}
+	"lab": "painel_lab", "sol": "painel_sol", "diario": "painel_diario", "missoes": "painel_missoes",
+	"catalogo": "painel_catalogo"}
 const ID_CORTE := 1000
 
 
@@ -1232,9 +1236,11 @@ func _refresh_top_bar(workers: Array) -> void:
 	for a in get_tree().get_nodes_in_group("armazens"):
 		total += a.total_stored
 	var parts: Array[String] = []
+	var cat_ores := get_tree().get_first_node_in_group("catalogo")
 	for t in Ores.TYPES:
 		var amount: float = _economy.stored_ore(t) if _economy else 0.0
-		var unlocked: bool = _oficina == null or _oficina.is_ore_unlocked(t)
+		var unlocked: bool = (_oficina == null or _oficina.is_ore_unlocked(t)) and t != Ores.DESCONHECIDO \
+			and (cat_ores == null or cat_ores.minerio_conhecido(t))  # Bloco 102: o que o catálogo não estudou não tem nome
 		if unlocked or amount > 0.0:
 			parts.append("%s %d" % [Ores.display_name(t).to_lower(), int(amount)])
 	var ore_left := 0.0

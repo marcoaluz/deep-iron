@@ -136,7 +136,22 @@ func estagio_vila() -> int:
 
 
 func motivo_encomenda(id: String, qtd: int) -> String:
+	if minerio_nao_estudado(id) != "":
+		return "precisa estudar o minério (Catálogo, R)"  # Bloco 102
 	return fila.motivo_encomenda(id, qtd, estagio_vila())
+
+
+## Bloco 102: o minério da receita que o catálogo ainda não estudou ("" = todos conhecidos). Receita de minério sem nome
+## não anda: a janela mostra "???".
+func minerio_nao_estudado(id: String) -> String:
+	var cat := get_tree().get_first_node_in_group("catalogo")
+	if cat == null:
+		return ""
+	var r: Dictionary = fila.receita(id)
+	for k in r.get("insumos", {}):
+		if Items.categoria(k) == "minerio" and not cat.minerio_conhecido(k):
+			return k
+	return ""
 
 
 ## O jogador encomendou `qtd` unidades da receita (nada é gasto agora: cada unidade paga quando começa).

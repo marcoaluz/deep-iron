@@ -33,6 +33,8 @@ const ITENS := {
 	"solarita": {"nome": "Solarita", "cat": "minerio", "icone": "solarita", "preco": 14.0, "onde": "stock"},
 	"cristal_rubro": {"nome": "Cristal rubro", "cat": "minerio", "icone": "it_cristal_rubro", "preco": 18.0, "onde": "stock"},
 	"gema_azul": {"nome": "Gema azul", "cat": "minerio", "icone": "it_gema_azul", "preco": 30.0, "onde": "stock"},
+	# Bloco 102: o minério de jazida ainda não estudada (catalogo.gd): vale pouco, não entra em receita
+	"desconhecido": {"nome": "Minério desconhecido", "cat": "minerio", "icone": "desconhecido", "preco": 1.0, "onde": "stock"},
 	# metal (Bloco 86: a Fornalha faz; o aço é da Fundição, estágio 3)
 	"barra_ferro": {"nome": "Barra de ferro", "cat": "metal", "icone": "it_barra_ferro", "preco": 8.0, "onde": "itens"},
 	"barra_cobre": {"nome": "Barra de cobre", "cat": "metal", "icone": "it_barra_cobre", "preco": 13.0, "onde": "itens"},

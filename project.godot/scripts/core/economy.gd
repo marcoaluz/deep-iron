@@ -37,6 +37,8 @@ signal ore_sold(amount: float, earned: float)
 @export var cristal_rubro_price: float = 18.0
 ## Bloco 71: gema azul (S5, a beira do lago).
 @export var gema_azul_price: float = 30.0
+## Bloco 102: créditos por unidade de minério desconhecido (de jazida que o catálogo ainda não estudou).
+@export var desconhecido_price: float = 1.0
 ## Bloco 82: troca o preço de venda (créditos por unidade) de itens do catálogo que não são minério, ex.:
 ## {"barra_ferro": 10.0}. Vazio = o preço base do items.gd. Preço 0 = não se vende.
 @export var precos_itens: Dictionary = {}
@@ -136,6 +138,8 @@ func price_of(ore_type: String) -> float:
 			return cristal_rubro_price
 		"gema_azul":
 			return gema_azul_price
+		"desconhecido":
+			return desconhecido_price  # Bloco 102
 	return ore_price
 
 
@@ -554,7 +558,7 @@ func spend(cost_credits: float, cost_ore: float, ore_type: String = "", cost_woo
 		wood_left -= _tira_de(a, "madeira", wood_left)
 	var types: Array = [ore_type]
 	if ore_type == "":
-		types = Ores.TYPES.duplicate()
+		types = Ores.TYPES.filter(func(t): return t != Ores.DESCONHECIDO)  # Bloco 102: o sem nome não paga custo
 		types.sort_custom(func(a, b): return price_of(a) < price_of(b))
 	var left := cost_ore
 	for t in types:
@@ -612,7 +616,8 @@ func _livre_minerio(ore_type: String) -> float:
 		return livre(ore_type)
 	var t := 0.0
 	for o in Ores.TYPES:
-		t += livre(o)
+		if o != Ores.DESCONHECIDO:  # Bloco 102: o minério sem nome não paga custo de "minério qualquer"
+			t += livre(o)
 	return t
 
 

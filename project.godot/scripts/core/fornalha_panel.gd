@@ -205,6 +205,8 @@ func refresh() -> void:
 			Items.plural(k) if int(r.produto[k]) > 1 else Items.nome(k).to_lower()]))  # Bloco 94: plural
 		l.info.text = "%s\n%s -> %s  (%ds cada)%s" % [r.get("nome", id), f.fila.texto_insumos(id), produto, int(r.get("segundos", 10)),
 			("\n" + motivo) if motivo != "" else ""]
+		if f.has_method("minerio_nao_estudado") and f.minerio_nao_estudado(id) != "":
+			l.info.text = "???\nreceita de um minério que a vila ainda não estudou\n%s" % motivo  # Bloco 102
 		l.botao.disabled = motivo != ""
 	for c in _fila_box.get_children():
 		_fila_box.remove_child(c)

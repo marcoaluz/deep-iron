@@ -10,13 +10,19 @@ extends RefCounted
 ##   cristal_verde — Bloco 70: cristal das galerias de ácido do S2 (nível 2) + "Broca manual".
 ##   cristal_rubro — Bloco 70: cristal dos poços de lava do S3 (abismo) + "Traje de chumbo".
 ##   gema_azul — Bloco 71: gema da beira do lago azul do S5 (o fundo de tudo). Sem ferramenta: o difícil é chegar.
+##   desconhecido — Bloco 102: o que sai de uma jazida que o catálogo ainda não estudou ("pedra desconhecida"). Vale
+##              pouco e não entra em receita nem em custo; quando o tipo é estudado, o catálogo troca no armazém o
+##              tanto que era dele pelo minério de verdade (catalogo.gd).
 ##
 ## Preços de venda ficam na Economia (Inspector); as ferramentas, na Oficina.
 
 ## Ordem de exibição (e de gasto: o mais barato primeiro, ver Economy.spend).
-const TYPES := ["ferro", "carvao", "cobre", "prata", "cristal_verde", "solarita", "cristal_rubro", "gema_azul"]
+const TYPES := ["ferro", "carvao", "cobre", "prata", "cristal_verde", "solarita", "cristal_rubro", "gema_azul", "desconhecido"]
+## Bloco 102: o minério sem nome (não paga custo de "minério qualquer" nem entra em receita).
+const DESCONHECIDO := "desconhecido"
 const NAMES := {"ferro": "Ferro", "cobre": "Cobre", "carvao": "Carvão", "prata": "Prata", "solarita": "Solarita",
-	"cristal_verde": "Cristal verde", "cristal_rubro": "Cristal rubro", "gema_azul": "Gema azul"}
+	"cristal_verde": "Cristal verde", "cristal_rubro": "Cristal rubro", "gema_azul": "Gema azul",
+	"desconhecido": "Minério desconhecido"}
 ## Cor das lascas que voam ao minerar.
 const CHIP_COLORS := {
 	"ferro": Color(0.62, 0.34, 0.22),
@@ -27,6 +33,7 @@ const CHIP_COLORS := {
 	"cristal_verde": Color(0.55, 1.0, 0.35),
 	"cristal_rubro": Color(1.0, 0.25, 0.2),
 	"gema_azul": Color(0.35, 0.6, 1.0),
+	"desconhecido": Color(0.62, 0.58, 0.5),
 }
 ## Cor da barra de carga no HUD e do texto do tipo.
 const UI_COLORS := {
@@ -38,6 +45,7 @@ const UI_COLORS := {
 	"cristal_verde": Color(0.6, 1.0, 0.4),
 	"cristal_rubro": Color(1.0, 0.4, 0.35),
 	"gema_azul": Color(0.45, 0.7, 1.0),
+	"desconhecido": Color(0.72, 0.68, 0.6),
 }
 ## Ícone do pedaço de minério (carga em cima da cabeça).
 const CHUNK_TEXTURES := {
@@ -49,6 +57,7 @@ const CHUNK_TEXTURES := {
 	"cristal_verde": preload("res://assets/game/chunk_cristal_verde.png"),
 	"cristal_rubro": preload("res://assets/game/chunk_cristal_rubro.png"),
 	"gema_azul": preload("res://assets/game/chunk_gema_azul.png"),
+	"desconhecido": preload("res://assets/game/chunk_desconhecido.png"),  # Bloco 102
 }
 
 

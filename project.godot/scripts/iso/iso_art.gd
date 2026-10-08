@@ -562,6 +562,8 @@ static func prop_layers(node: Node) -> Array:
 ## galeria lacrada por cima. O cinza de "travada" vem junto.
 static func _ore_layers(node: Node, env: Node) -> Array:
 	var ore: String = node.ore_type
+	if node.get("conhecido") == false:
+		ore = "desconhecida"  # Bloco 102: o catálogo ainda não estudou o tipo — a pedra desconhecida
 	var total: float = float(node.get("ore_total"))
 	var left: float = float(node.get("ore_remaining"))
 	var r := left / total if total > 0.0 else 0.0

@@ -11,6 +11,9 @@ extends "res://scripts/props/station.gd"
 ## caça pela toca como antes, mas cada caçada tira a carne de UM bicho, que cai abatido quando ela
 ## acaba. Javali rende muito mais, e pode ferir caçador NOVATO (poucos abates) — aí vai pra
 ## enfermaria e o médico cuida. A caça da toca = a carne dos bichos vivos.
+##
+## Bloco 102: o CATÁLOGO (catalogo.gd). Toca de bicho que a vila ainda não estudou não aparece pro caçador (a placa diz
+## "Toca ???"); estudada, libera a caça ali. Os bichos andam do mesmo jeito.
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 
@@ -123,6 +126,12 @@ func _accepts(body: Node2D) -> bool:
 	return body.has_method("hunt")
 
 
+## Bloco 102: o catálogo já estudou este bicho?
+func conhecida() -> bool:
+	var cat := get_tree().get_first_node_in_group("catalogo") if is_inside_tree() else null
+	return cat == null or cat.animal_conhecido(animal)
+
+
 ## O caçador já tem arco e flecha (a Oficina fabricou)?
 func bow_ready() -> bool:
 	var oficina := get_tree().get_first_node_in_group("oficina")
@@ -130,11 +139,11 @@ func bow_ready() -> bool:
 
 
 func is_usable() -> bool:
-	return bow_ready() and _cooldown <= 0.0 and not alive().is_empty()
+	return bow_ready() and conhecida() and _cooldown <= 0.0 and not alive().is_empty()
 
 
 func accepts_worker(_worker: Node) -> bool:
-	return bow_ready()
+	return bow_ready() and conhecida()  # Bloco 102: toca desconhecida não aparece pro caçador
 
 
 func has_game() -> bool:
@@ -209,7 +218,10 @@ func _update_visual() -> void:
 	# quadro 0 = bicho do lado de fora, 1 = só as orelhas, 2 = vazia
 	_visual.frame = 2 if (n == 0 or _cooldown > 0.0) else (1 if n * 2 < max_animals() else 0)
 	_visual.position.x = sin(_hit_time * 30.0) * 0.8 if _hit_time > 0.0 else 0.0
-	if not bow_ready():
+	if not conhecida():
+		_label.text = "Toca ???\n(estude no Catálogo)"  # Bloco 102
+		_label.modulate = Color(0.85, 0.8, 0.75, 0.75)
+	elif not bow_ready():
 		_label.text = "Toca de %s\n(precisa de arco)" % nome
 		_label.modulate = Color(0.85, 0.8, 0.75, 0.75)
 	elif _cooldown > 0.0:
