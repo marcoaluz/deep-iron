@@ -61,7 +61,9 @@ func refresh() -> void:
 	if _diary.pages.is_empty():
 		_box.add_child(_hud._label("Nada escrito ainda. As páginas aparecem conforme a vila descobre o mundo lá fora.", Tipo.DETALHE, _hud.COLOR_DIM))
 	for p in _diary.pages:
-		var e: Dictionary = _diary.ENTRIES[p.id]
+		var e: Dictionary = _diary.entrada(p.id)
+		if e.is_empty():
+			continue  # (página de missão sem o texto registrado ainda)
 		_box.add_child(_hud._label("%s   (dia %d)" % [e.title, p.day], Tipo.TITULO, _hud.COLOR_TITLE))
 		var t: Label = _hud._label(e.text, Tipo.DETALHE, _hud.COLOR_TEXT)
 		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

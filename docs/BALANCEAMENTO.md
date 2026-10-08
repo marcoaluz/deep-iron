@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **913 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **921 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (78)
 
@@ -674,6 +674,28 @@ Total: **913 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `founding_on_new_game` | true |  | Bloco 37: partida nova começa com a FUNDAÇÃO (o jogador escolhe onde ficam o Centro da Vila e o Armazém; ver founding.gd). false = começa com o layout da cena (testes). |
+
+## `scripts/core/missao.gd` (7)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `id` | "" |  | Identificador único (cap1_cinzas) — é o nome da seção no arquivo de texto e a chave do save. |
+| `titulo` | "" |  | Título e texto (os do arquivo do capítulo ganham destes). |
+| `capitulo` | 1 |  | Capítulo (1..6) e a ordem da missão dentro dele. |
+| `ordem` | 0 |  |  |
+| `objetivos` | [] |  | Objetivos: [tipo, alvo, quantidade]. Tipos (os que a Missoes sabe medir; ver missoes.gd `valor_do_objetivo`): "fundar_vila"      a vila foi fundada (alvo e quantidade ignorados) "casas"            casas construídas (quantidade) "construcao"       prédios de um grupo do jogo (alvo = grupo: "comedouros" = cozinha, "tavernas"...; quantidade) "minerio_armazem"  minério guardado nos armazéns (alvo = "" qualquer, ou o minério; quantidade) "item"             itens processados no armazém (alvo = id do item: barra_ferro...; quantidade) "invasoes"         invasões que acabaram (quantidade) "estagio"          estágio da vila (quantidade = o número do estágio) "pesquisa"         pesquisa pronta (alvo = id da pesquisa) "vendido"          minério vendido, no total (quantidade) "obras"            obras prontas de um tipo (alvo = tipo do canteiro: "taverna"...; quantidade) "mortes"           mortes na vila (quantidade) |
+| `recompensa` | {} |  | Recompensa: {"creditos": 150, "diario": "id da página", "libera_capitulo": 2, "itens": {id: qtd}}. |
+| `prerequisitos` | PackedStringArray() |  | Ids das missões que precisam estar cumpridas antes desta aparecer. |
+
+## `scripts/core/missoes.gd` (1)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `confere_a_cada` | 1.0 |  | De quanto em quanto tempo (s) confere os contadores. |
 
 ## `scripts/core/morale.gd` (36)
 

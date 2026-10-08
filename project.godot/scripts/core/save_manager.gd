@@ -91,6 +91,9 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 100: "missoes" {capitulo_liberado, cumpridas [ids], feitos {id: [índices dos objetivos]}, contadores
+##     {invasoes, vendido, mortes, obras {tipo: n}}}. Save antigo (sem a chave): a campanha começa no capítulo certo —
+##     refaz os contadores do estado (invasões que já passaram, mortes) e entrega o que a vila já tinha cumprido.
 ##   Bloco 99: "elevador" (deep_shaft.gd) ganha "etapa" (0 ruína .. 3 restaurado), "pago", "progresso", "obra" e
 ##     "cabine" {pos, viagens, total, quebrada, consertando, conserto_left} (cabine.gd); as plataformas (abismo e
 ##     "ligacoes") ganham "cabine". estacao_vagonete "rail_left" vira fração (desgaste por minério). Save antigo: o
@@ -524,6 +527,7 @@ func _collect() -> Dictionary:
 		"calendario": "calendario",  # Bloco 88: padre, igreja, escolha do domingo, funerais
 		"caminhos": "caminhos",  # Bloco 89: células de caminho por tipo
 		"decoracoes": "decoracoes_mgr",  # Bloco 90: as peças de decoração do jogador
+		"missoes": "missoes",  # Bloco 100: a campanha (capítulo liberado, missões cumpridas, objetivos, contadores)
 	}
 	for key in singles:
 		var node := tree.get_first_node_in_group(singles[key])
@@ -655,6 +659,12 @@ func apply_pending(main: Node) -> void:
 	var map_env := get_tree().get_first_node_in_group("environment")
 	if map_env and map_env.has_method("migrate_positions") and map_env.migrate_positions() > 0:
 		map_env.rebuild_navigation()
+
+	var missoes := get_tree().get_first_node_in_group("missoes")  # Bloco 100: depois de tudo (confere o que a vila já fez)
+	if missoes:
+		if data.has("missoes"):
+			missoes.load_save_data(SaveUtil.dict(data, "missoes"))
+		missoes.depois_de_carregar(data.has("missoes"))
 
 	var cam_data := SaveUtil.dict(data, "camera")
 	var cam: Node = main.get_node_or_null("Camera2D")

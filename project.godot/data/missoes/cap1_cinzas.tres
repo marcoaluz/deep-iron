@@ -1,0 +1,18 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/missao.gd" id="1_missao"]
+
+[resource]
+script = ExtResource("1_missao")
+id = "cap1_cinzas"
+titulo = "Cinzas"
+texto = "Fundar a vila e aguentar a primeira invasão."
+capitulo = 1
+ordem = 0
+objetivos = [["fundar_vila", "", 1], ["casas", "", 3], ["construcao", "comedouros", 1], ["minerio_armazem", "", 100], ["invasoes", "", 1]]
+recompensa = {
+"creditos": 150,
+"diario": "cap1_cinzas",
+"libera_capitulo": 2
+}
+prerequisitos = PackedStringArray()

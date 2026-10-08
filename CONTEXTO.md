@@ -1,9 +1,20 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 96 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco); os Blocos 97, 98 e 99 estão só no commit local. Push só com o OK dele.
+Atualizado em 2026-10-08. Branch `isometrico`. Tudo até o Bloco 99 **foi enviado** pro GitHub em 2026-10-08 (push com o OK do Marco); o Bloco 100 está só no commit local. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido".
 
-## AGORA (2026-10-08): Bloco 99 — entrada da mina, elevador, escadas e vagonete (feito; commit local, push pendente — pedir o OK)
+## AGORA (2026-10-08): Bloco 100 — sistema de missões e Capítulo 1 "Cinzas" (feito; commit local, push pendente — pedir o OK)
+
+Prompt 3 / seção 21 do guia. Relatório `docs/BLOCO100_MISSOES.md`; fotos `docs/arte/bloco100/`.
+- `missao.gd` (recurso) + `data/missoes/cap1_cinzas.tres`; textos em `data/missoes/capitulo_1.txt` (um arquivo por capítulo,
+  formato `chave = valor`); gerenciador `missoes.gd` (nó Missoes, grupo "missoes"); janela `missoes_panel.gd` (tecla vírgula);
+  rastreador do canto (o espaço do layout v2) ligado.
+- Capítulo 1: fundar a vila, 3 casas, cozinha, 100 de minério, 1ª invasão -> 150 cr + página do diário + libera o cap. 2
+  (ainda não escrito: a janela diz "em breve"). Sinal novo `centro_vila.obra_pronta(tipo)` (só avisa).
+- Save "missoes"; save antigo começa no capítulo certo (refaz os contadores e entrega o que já estava cumprido).
+- Capítulos 2 a 6 da seção 21.1 do guia ficam pros próximos pedidos (é só um .tres por missão + o arquivo de texto).
+
+## Bloco 99 — entrada da mina, elevador, escadas e vagonete (feito, enviado ao GitHub com o OK do Marco em 2026-10-08)
 
 Plano `docs/BLOCO99_PLANO.md` (aprovado: em paralelo, espiral sempre, escadas como achar melhor, rendimento igual,
 100/240/60 s, arte ~440). Relatório `docs/BLOCO99_MINA_ELEVADOR.md`; fotos `docs/arte/bloco99/` (auditoria e depois).
@@ -16,7 +27,7 @@ Plano `docs/BLOCO99_PLANO.md` (aprovado: em paralelo, espiral sempre, escadas co
 - Arte PixelLab: torre obra_1/obra_2, cabine vazia/cheia, vagonete com carga grande, lampião da boca (205 gerações).
 - Medição: renda parecida (galerias ~90–100/h com 5 lá dentro; antes ~105). Telemetria com o minério por dia.
 
-## Bloco 98 — portão da paliçada (abre/fecha) e tochas (feito; commit local, push pendente — pedir o OK)
+## Bloco 98 — portão da paliçada (abre/fecha) e tochas (feito, enviado ao GitHub com o OK do Marco em 2026-10-08)
 
 Relatório `docs/BLOCO98_PORTAO_TOCHAS.md`; fotos `docs/arte/bloco98/antes|depois/`.
 - Causa: a navegação já passava só pelo vão, mas o vão da cerca desenhada (99 px) não batia com o lógico (80) nem com o
@@ -29,7 +40,7 @@ Relatório `docs/BLOCO98_PORTAO_TOCHAS.md`; fotos `docs/arte/bloco98/antes|depoi
 - Testes: b98 passa; ajustados p29_predios e p29_natureza. Intermitentes: p29_predios (o vagonete contra a montanha) e
   b58 (timeout no passo 3, passou ao repetir).
 
-## Bloco 97 — armazém com limite e níveis até 3 (feito; commit local, push pendente — pedir o OK)
+## Bloco 97 — armazém com limite e níveis até 3 (feito, enviado ao GitHub com o OK do Marco em 2026-10-08)
 
 **O pedido:** "sim e o armazem pode ser upado ate nivel 3". Plano em `docs/BLOCO97_PLANO.md`; relatório em
 `docs/BLOCO97_ARMAZEM_NIVEIS.md`; arte de conferência em `docs/arte/bloco97/armazem_niveis.png`.

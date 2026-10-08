@@ -78,6 +78,20 @@ const ENTRIES := {
 
 ## Ids na ordem em que foram descobertos, com o dia: [{id, day}].
 var pages: Array = []
+## Bloco 100: páginas que vêm de fora do código (as missões, com o texto do arquivo do capítulo): {id: {title, text}}.
+var extras := {}
+
+
+## Bloco 100: registra (ou troca) o texto de uma página de fora do código.
+func registra(id: String, title: String, text: String) -> void:
+	extras[id] = {"title": title, "text": text}
+
+
+## A página de um id (as do código e as registradas), ou {} se não existe.
+func entrada(id: String) -> Dictionary:
+	if ENTRIES.has(id):
+		return ENTRIES[id]
+	return extras.get(id, {})
 
 
 func _ready() -> void:
@@ -92,13 +106,13 @@ func has_page(id: String) -> bool:
 
 
 func unlock(id: String) -> void:
-	if not ENTRIES.has(id) or has_page(id):
+	if entrada(id).is_empty() or has_page(id):
 		return
 	var dn := get_tree().get_first_node_in_group("day_night")
 	pages.append({"id": id, "day": dn.day if dn else 1})
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
-		hud.show_toast("Nova página no diário: %s  (J)" % ENTRIES[id].title, Color(0.8, 0.75, 1.0))
+		hud.show_toast("Nova página no diário: %s  (J)" % entrada(id).title, Color(0.8, 0.75, 1.0))
 
 
 # ------------------------------------------------------------ save/load (SaveManager)
@@ -109,5 +123,6 @@ func get_save_data() -> Dictionary:
 func load_save_data(d: Dictionary) -> void:
 	pages = []
 	for p in SaveUtil.array(d, "pages"):
-		if typeof(p) == TYPE_DICTIONARY and ENTRIES.has(str(p.get("id", ""))) and not has_page(str(p.id)):
+		# (Bloco 100: a página de missão volta pelo id; o texto vem quando a Missoes registra — o painel só mostra as que têm)
+		if typeof(p) == TYPE_DICTIONARY and str(p.get("id", "")) != "" and not has_page(str(p.id)):
 			pages.append({"id": str(p.id), "day": int(p.get("day", 1))})

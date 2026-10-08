@@ -414,5 +414,9 @@ func test_b99_mina_elevador() -> void:
 	run_bloco("b99_mina_elevador.gd")
 
 
+func test_b100_missoes() -> void:
+	run_bloco("b100_missoes.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

@@ -54,6 +54,9 @@ extends "res://scripts/props/station.gd"
 ## terminar ele "assenta" (fica sólido) e troca de quadro sem pulo. Carregar o save
 ## mostra direto o quadro do estágio salvo (e o fantasma, se a expansão estava em obra).
 
+## Bloco 100: uma obra do tipo `tipo` ficou pronta (o tipo do canteiro: "taverna", "comedouro"...; "casa" pras casas).
+## Só AVISA (as missões contam): não muda nada de ninguém.
+signal obra_pronta(tipo: String)
 signal level_changed(level: int)
 signal upgrade_bought(id: String, new_level: int)
 
@@ -1812,6 +1815,7 @@ func _confirm_house(pos: Vector2) -> bool:
 
 ## A casa terminou (chamado pela própria casa): agora sim entra o limite de ipezinhos.
 func on_house_built(casa: Node) -> void:
+	obra_pronta.emit("casa")  # Bloco 100
 	if casa.get("starter_house"):
 		# Bloco 37: casa inicial — o limite inicial de ipezinhos já conta com ela
 		_popup("Casa inicial pronta! (4 camas)", Color(0.55, 1.0, 0.5))

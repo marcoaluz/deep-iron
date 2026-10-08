@@ -591,6 +591,11 @@ static func cost_text(c: Vector3i, ore_label: String = "minério") -> String:
 	return " + ".join(parts)
 
 
+## Bloco 100: créditos ganhos de fora (recompensa de missão).
+func ganha_creditos(amount: float) -> void:
+	_add_credits(amount)
+
+
 func _add_credits(amount: float) -> void:
 	credits += amount
 	credits_changed.emit(credits)

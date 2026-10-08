@@ -65,6 +65,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 | `fundo.gd` | Poças e ventiladores do S2 e do S3. |
 | `work_areas.gd` / `work_panel.gd` / `area_placer.gd` | Áreas de trabalho com postos (Bloco 77). |
 | `obra_site.gd` | O pedaço comum de toda obra feita por engenheiro. Bloco 96: a lista de material (reservada no armazém, levada pelo engenheiro até `carga_material` por viagem), o progresso limitado ao entregue, o estado ("levando N/M"…) e o `cancelar` (devolve créditos e material). |
+| `missao.gd` + `missoes.gd` + `missoes_panel.gd` | As MISSÕES (Bloco 100, seção 21 do guia): recurso `missao.gd` (um `.tres` por missão em `data/missoes/`: objetivos [tipo, alvo, quantidade], recompensa, pré-requisitos), o gerenciador (nó `Missoes`, grupo "missoes": escuta os sinais do jogo, confere a cada segundo, objetivo cumprido não desfaz), a janela (tecla vírgula) e o rastreador do canto (`ui/rastreador_missoes.gd`). Os TEXTOS ficam em `data/missoes/capitulo_N.txt` (um por capítulo, editável). |
 | `build_menu.gd` | O menu CONSTRUIR: janela de tamanho fixo, grade de cartões com estrutura fixa e o campo `img` de cada cartão (Bloco 95). |
 | `house_placer.gd` | Posicionar prédio no mapa. |
 | `hud.gd` | HUD montado por código (layout v2, Bloco 95): recursos e hora grande em cima, aba fina à esquerda (Tab = pessoas; obras; missões), coluna de alertas à direita (`ui/alertas.gd`), barra de funções agrupada, cartão do selecionado, pilha de avisos (`ui/avisos.gd`), menu "Janelas". |
@@ -117,7 +118,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b99**; o próximo é o **b100**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b100**; o próximo é o **b101**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:
@@ -151,6 +152,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
    | Aviso curto / alerta | `hud.show_toast(texto, cor, alvo)` (pilha no canto); alerta novo = uma linha em `alertas.gd` `TIPOS` + `_refresh_alertas` |
    | Fila de produção | `production_queue.gd` (Fornalha, Carpintaria, encomendas da Oficina); a forja das armas é a fila do `defense.gd` (Arsenal) e a do equipamento é a do `equipment.gd` — todas feitas pelo ferreiro/fundidor/carpinteiro |
    | Oficina de ordens nova (prédio + função) | herdar de `fornalha.gd` e `fornalha_panel.gd`, como a `carpintaria.gd` (Bloco 94) |
+   | Missão / capítulo novo | um `.tres` em `data/missoes/` (`missao.gd`) + a seção dela em `data/missoes/capitulo_N.txt` (título, texto, `objetivo.N`, `[diario.<id>]`); tipo de objetivo novo = um `match` em `missoes.gd` `valor_do_objetivo` |
    | Item, preço, onde guardar | `items.gd` + `Economy.quantidade/add_item/take_item` |
    | Custo em metal | `Economy.metal_falta` / `paga_metal` / `custo_metal_texto` (barra a partir do estágio da fornalha) |
    | Mandar coisa pro armazém (máquina, entrega nova) | `Economy.armazem_com_espaco(perto, n)` (null = todos cheios: pare e espere) e `armazem.espaco()`; devolução/prêmio usam `add_item`/`devolve` (entram mesmo cheio). Teste que enche o armazém pra outro assunto: `armazem.gd limite_desligado = true` no `_initialize` (Bloco 97) |

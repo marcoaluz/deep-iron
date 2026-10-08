@@ -54,6 +54,7 @@
 [ext_resource type="PackedScene" path="res://scenes/props/jazida_solarita.tscn" id="50_solarita"]
 [ext_resource type="Script" path="res://scripts/core/defense.gd" id="51_defense"]
 [ext_resource type="Script" path="res://scripts/core/diary.gd" id="52_diary"]
+[ext_resource type="Script" path="res://scripts/core/missoes.gd" id="52_missoes"]
 [ext_resource type="PackedScene" path="res://scenes/props/barricada.tscn" id="53_barricada"]
 [ext_resource type="Script" path="res://scripts/core/research.gd" id="54_research"]
 [ext_resource type="Script" path="res://scripts/core/sun.gd" id="55_sun"]
@@ -327,6 +328,9 @@ script = ExtResource("51_defense")
 
 [node name="Diary" type="Node" parent="."]
 script = ExtResource("52_diary")
+
+[node name="Missoes" type="Node" parent="."]
+script = ExtResource("52_missoes")
 
 [node name="Research" type="Node" parent="."]
 script = ExtResource("54_research")

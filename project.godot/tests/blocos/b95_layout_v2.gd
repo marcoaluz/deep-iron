@@ -264,7 +264,9 @@ func _process(delta: float) -> bool:
 		check(is_equal_approx(wm.applied_ui_scale(), 1.25) and is_equal_approx(root.content_scale_factor, 1.25), "125% cabe em 1280x720 (%s)" % str(root.content_scale_factor))
 		wm.set_ui_scale(1.0)
 		var ms: Control = hud._missoes
-		check(ms != null and not ms.visible and ms.custom_minimum_size.x >= 240.0, "rastreador de missões reservado (escondido)")
+		# Bloco 100: com a missão do capítulo 1 valendo o rastreador já aparece; sem missão nenhuma, ele some
+		var mgr := get_first_node_in_group("missoes")
+		check(ms != null and ms.custom_minimum_size.x >= 240.0 and (ms.visible == (mgr != null and not mgr.ativas().is_empty())), "rastreador de missões: o espaço de 240 px, visível só com missão valendo (Bloco 100)")
 		ms.mostra("Cap. 2  Fogo e ferro", [["10 barras de ferro", false], ["igreja", true]])
 		check(ms.visible, "o rastreador aparece quando o sistema de missões pedir")
 		ms.esconde()

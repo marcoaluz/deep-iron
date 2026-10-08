@@ -1,0 +1,42 @@
+# CAPÍTULO 1 — textos. Edite à vontade: o jogo lê este arquivo quando abre.
+#
+# Como funciona:
+#   [secao]            começa uma seção (o nome é o id da missão em data/missoes/*.tres)
+#   chave = valor      uma linha com um texto; as linhas seguintes (sem "chave =") continuam o texto
+#   # linha de comentário (não aparece no jogo)
+#   {n} no texto de um objetivo vira a quantidade que precisa (3 casas, 100 de minério...). Quando precisa de mais de 1,
+#     o jogo acrescenta sozinho o "(tem/precisa)" no fim da linha.
+#
+# Os objetivos são os do .tres, na mesma ordem: objetivo.0 é o primeiro, objetivo.1 o segundo...
+
+[capitulo]
+numero = 1
+titulo = Cinzas
+subtitulo = Acampamento
+intro = O sol queimou tudo lá em cima e o que sobrou do mundo é cinza. Os ipezinhos acharam uma
+  pedreira velha e uma boca de mina: é aqui que a vila nasce. Primeiro um teto, depois comida,
+  depois ferro nas mãos, e só então a noite.
+
+[cap1_cinzas]
+titulo = Cinzas
+texto = Fundar a vila e aguentar a primeira noite com as criaturas da floresta batendo no portão.
+  Teto, comida e um estoque de minério são a diferença entre o primeiro dia e o último.
+objetivo.0 = Fundar a vila
+objetivo.1 = Construir {n} casas
+objetivo.2 = Construir a cozinha
+objetivo.3 = Ter {n} de minério no armazém
+objetivo.4 = Sobreviver à primeira invasão
+recompensa = 150 créditos, uma página do diário e o Capítulo 2
+
+# A página do diário que a missão abre.
+[diario.cap1_cinzas]
+titulo = Cap. 1 — Cinzas
+texto = Dia 1. Cinza por todo lado. Achamos uma pedreira, um poço velho e gente disposta a cavar.
+  Montamos o centro da vila, erguemos as casas e uma cozinha, e guardamos o primeiro minério.
+  Na terceira noite os Lumívoros vieram pelo portão da floresta. Seguramos. Amanheceu.
+
+# O que aparece quando o capítulo seguinte foi liberado mas ainda não existe.
+[proximo_capitulo]
+titulo = Capítulo 2 — Fogo e ferro
+texto = O Capítulo 2 ainda está sendo escrito. Quando chegar, a vila vai crescer pra Vilarejo, acender uma
+  fornalha e erguer uma igreja.

@@ -244,6 +244,9 @@ func _finish() -> void:
 	var sys := get_tree().get_first_node_in_group(KINDS[kind][1])
 	if sys and sys.has_method("finish_build"):
 		sys.finish_build(kind, global_position)
+	var hub := get_tree().get_first_node_in_group("village_hub")
+	if hub and hub.has_signal("obra_pronta"):
+		hub.obra_pronta.emit(kind)  # Bloco 100: as missões contam obras prontas (só avisa)
 	queue_free()
 
 

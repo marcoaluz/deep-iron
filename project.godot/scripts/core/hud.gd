@@ -182,6 +182,8 @@ var _obras_box: VBoxContainer
 var _alertas: Node
 var _avisos: Node
 var _missoes: Node
+var _missoes_mgr: Node  # Bloco 100: o gerenciador de missões (o _missoes acima é o rastreador do canto)
+var _tira_missoes: Button
 var _panels: Dictionary = {}  # id ("hub", "escavadeira", ...) -> janela
 var _panel_ordem: Array[String] = []  # Bloco 95: a ordem no menu "Janelas"
 # atalhos
@@ -519,8 +521,11 @@ func _build_workforce_panel() -> void:
 	_tira_obras.pressed.connect(func():
 		Audio.click()
 		toggle_obras())
-	var missoes := _tira_botao("missoes", "Missões: em breve")
-	missoes.disabled = true
+	_tira_missoes = _tira_botao("missoes", "Missões  (,)\nA campanha: o capítulo em andamento e o que falta.")
+	_tira_missoes.pressed.connect(func():
+		Audio.click()
+		_tira_missoes.set_pressed_no_signal(false)
+		toggle_panel("missoes"))
 
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", _panel_style())
@@ -708,6 +713,11 @@ func _build_janelas() -> void:
 		_add_panel("moral", preload("res://scripts/core/moral_panel.gd"), _morale)
 	if _finds:
 		_add_panel("robo", preload("res://scripts/core/robo_panel.gd"), _finds)
+	_missoes_mgr = get_tree().get_first_node_in_group("missoes")
+	if _missoes_mgr:  # Bloco 100: a janela e o rastreador do canto
+		_add_panel("missoes", preload("res://scripts/core/missoes_panel.gd"), _missoes_mgr)
+		_missoes_mgr.mudou.connect(_atualiza_rastreador)
+		_atualiza_rastreador.call_deferred()
 	var elev := get_tree().get_first_node_in_group("elevador")
 	if elev and elev.has_method("pedir_etapa"):
 		_add_panel("elevador", preload("res://scripts/core/elevador_panel.gd"), elev)  # Bloco 99
@@ -804,7 +814,7 @@ func _add_panel(id: String, script: GDScript, target: Node) -> void:
 ## Bloco 95: tecla de cada janela no menu (a ação de teclas.gd).
 const TECLA_JANELA := {"hub": "painel_hub", "trabalho": "painel_trabalho", "escavadeira": "painel_escavadeira",
 	"oficina": "painel_oficina", "enfermaria": "painel_enfermaria", "moral": "painel_moral", "defesa": "painel_defesa",
-	"lab": "painel_lab", "sol": "painel_sol", "diario": "painel_diario"}
+	"lab": "painel_lab", "sol": "painel_sol", "diario": "painel_diario", "missoes": "painel_missoes"}
 const ID_CORTE := 1000
 
 
@@ -986,6 +996,25 @@ func show_toast(text: String, color: Color = COLOR_TITLE, alvo: Node = null) -> 
 	if ic == "":
 		ic = "p_alerta" if color == COLOR_HUNGER_BAD or color.r > 0.9 and color.g < 0.5 else ""
 	_avisos.avisa(text, color, ic, alvo)
+
+
+## Bloco 100: o rastreador do canto: o capítulo e até 3 objetivos (os que faltam primeiro; sem missão valendo, some).
+func _atualiza_rastreador() -> void:
+	if _missoes == null or _missoes_mgr == null:
+		return
+	var ativas: Array = _missoes_mgr.ativas()
+	if ativas.is_empty():
+		_missoes.esconde()
+	else:
+		var cap: int = _missoes_mgr.capitulo_atual()
+		var pend: Array = []
+		var feitos: Array = []
+		for m in ativas:
+			for i in m.objetivos.size():
+				var par := [_missoes_mgr.objetivo_texto(m, i), _missoes_mgr.objetivo_feito(m, i)]
+				(feitos if par[1] else pend).append(par)
+		_missoes.mostra("Cap. %d  %s" % [cap, _missoes_mgr.capitulo_titulo(cap)], pend + feitos)
+	_reposiciona()
 
 
 ## Bloco 95: a pilha de avisos e o espaço do rastreador de missões (canto de baixo à direita).
