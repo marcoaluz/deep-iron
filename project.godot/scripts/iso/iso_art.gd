@@ -185,13 +185,35 @@ static func layers(node: Node) -> Array:
 		"portao":
 			var lvp := int(node.get("level"))
 			var standing: bool = node.is_standing() if node.has_method("is_standing") else lvp > 0
-			var pt := state("portao", "nivel_%d" % clampi(lvp, 1, 3) if standing and lvp > 0 else "quebrado")
+			var pt := _portao_estado(node, lvp, standing)
 			if node.get("vertical") == true and not pt.is_empty():
 				pt = _de_lado(pt)  # Bloco 74: portão na paliçada de norte a sul
 			out.append(pt)
 		_:
 			out.append(state(kind, "pronto"))
 	return out.filter(func(l): return not l.is_empty())
+
+
+## Bloco 98: o desenho do portão agora. Derrubado ou sem muro: a ruína com o vão aberto (quebrado_aberto). Em pé: as folhas
+## fechadas (nivel_N), a meio caminho (meio_N) ou abertas (aberto_N) pela `abertura` do barricada.gd (0 = fechado, 1 = aberto).
+## Sem o desenho novo de um estado, cai no fechado (nivel_N) / no quebrado de antes.
+const PORTAO_FECHADO_ATE := 0.15
+const PORTAO_ABERTO_DE := 0.85
+
+
+static func _portao_estado(node: Node, lvp: int, standing: bool) -> Dictionary:
+	if not standing or lvp <= 0:
+		var q := state("portao", "quebrado_aberto")
+		return q if not q.is_empty() else state("portao", "quebrado")
+	var n := clampi(lvp, 1, 3)
+	var ab := float(node.get("abertura")) if node.get("abertura") != null else 0.0
+	var quadro := "nivel_%d" % n
+	if ab >= PORTAO_ABERTO_DE:
+		quadro = "aberto_%d" % n
+	elif ab > PORTAO_FECHADO_ATE:
+		quadro = "meio_%d" % n
+	var d := state("portao", quadro)
+	return d if not d.is_empty() else state("portao", "nivel_%d" % n)
 
 
 ## Bloco 74: a peça virada de lado (espelhada): o que corria de leste a oeste passa a correr de norte a
@@ -488,16 +510,11 @@ static func prop_layers(node: Node) -> Array:
 		"horta":
 			out.append(prop(["horta_pronto", "horta_crescendo", "horta_colhido"][clampi(sp.frame, 0, 2)]))
 		"torch", "torch_unlit":
-			var lit := old == "torch"
-			for c in sp.get_children():
-				if c is Sprite2D and _old_name(c.texture) == "torch":
-					lit = c.modulate.a > 0.5  # a chama acende com o escuro (Environment)
-			if lit:
-				var l := prop("tocha_chao_f0")
-				l["anim"] = [0, 1, 2, 3].map(func(k): return prop("tocha_chao_f%d" % k).tex)
-				out.append(l)
-			else:
-				out.append(prop("tocha_apagada"))
+			# Bloco 98: UM desenho só, o aceso com a chama, de dia e de noite. O que muda com o dia é a LUZ (o torch_level do
+			# DayNight liga e desliga a PointLight2D) — o desenho não troca mais pela tocha apagada.
+			var l := prop("tocha_chao_f0")
+			l["anim"] = [0, 1, 2, 3].map(func(k): return prop("tocha_chao_f%d" % k).tex)
+			out.append(l)
 		"placa_perigo":
 			out.append(prop("placa_perigo"))
 		"support_beam":

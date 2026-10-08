@@ -154,7 +154,8 @@ func _process(delta: float) -> bool:
 		var lit := IsoArt.prop_layers(tocha)
 		check(tocha.iso_prop_nome() == "tocha_chao" and lit.size() == 1 and lit[0].has("anim"), "tocha acesa: a chama animada")
 		tocha.take_hit(1.0, null)
-		check(tocha.iso_prop_nome() == "tocha_apagada", "um Lumívoro apagou: a tocha apagada")
+		# Bloco 98: o desenho é um só (a chama); o Lumívoro apaga só a LUZ
+		check(tocha.iso_prop_nome() == "tocha_chao" and not tocha.acesa(), "um Lumívoro apagou: a luz some, o desenho da tocha continua (Bloco 98)")
 		tocha.queue_free()
 		print("== padre: função da barra (só homem, um só)")
 		hub.level = 1

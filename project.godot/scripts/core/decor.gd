@@ -4,8 +4,8 @@ extends RefCounted
 ## (px do chão, centrada no pé), custo (créditos, ferro, madeira), luz (energia, cor, alcance; energia 0 = não
 ## tem), vagas de sentar (vira ponto social: banco/mesa) e valor de beleza (ânimo de quem mora perto).
 ## Peça com pegada grande (area >= OBSTACULO_MIN_AREA) entra na navegação como obstáculo; as pequenas não.
-## Bloco 92: "iso" = o desenho do PixelLab na vista iso (props.json); a tocha troca entre a chama animada
-## ("tocha_chao") e a apagada ("tocha_apagada") — o "textura" fica pro ícone do cartão e pro mapa antigo.
+## Bloco 92: "iso" = o desenho do PixelLab na vista iso (props.json); a tocha tem um desenho só (Bloco 98: a chama animada
+## "tocha_chao", de dia e de noite; muda só a luz) — o "textura" fica pro ícone do cartão e pro mapa antigo.
 
 ## Pegada a partir da qual a peça bloqueia a navegação (px² do chão).
 const OBSTACULO_MIN_AREA := 300.0

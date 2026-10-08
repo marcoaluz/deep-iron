@@ -79,6 +79,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 | `armazem.gd`, `comedouro.gd`, `casa.gd`, `enfermaria.gd`, `taverna.gd`, `laboratorio.gd`, `arsenal.gd`, `oficina.gd`, `vestiario.gd` | Os prédios. Bloco 97: o armazém tem **limite** (tudo junto: 400 / 1.000 / 2.000 por nível), amplia até o nível 3 (obra com material) e o jogador constrói outros (`centro_vila.build_armazem`, estágio 2). Cheio: quem entrega espera, as máquinas param, devolução entra mesmo assim. |
 | `centro_vila.gd` | Hub de progressão: estágios, melhorias, e quem ergue as construções encomendadas (`finish_build`). |
 | `canteiro.gd` | Obra encomendada e já paga, esperando engenheiro. `KINDS` lista os tipos. |
+| `barricada.gd` | O portão da paliçada (o único). Bloco 98: abre de dia e fecha às 18:30 (abre 05:00), com a animação `nivel_N`/`meio_N`/`aberto_N`; fechado, desliga as FAIXAS de passagem (`NavigationLink2D`) — a paliçada inteira é parede na malha (`environment.portao_por_faixas`). Quem tem destino do outro lado espera encostado no portão (`ipezinho._ate_o_portao`); um guarda abre. |
 | `estacao_vagonete.gd` + `trilho.gd` + `vagonete.gd` | Transporte de carga (Bloco 64) e ferrovia por andar (Bloco 79). |
 | `deep_shaft.gd` / `abyss_shaft.gd` | Ligações entre andares (elevador e plataformas). |
 | `escavadeira.gd` | Montada peça por peça; abre o S2. |
@@ -116,7 +117,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b97**; o próximo é o **b98**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b98**; o próximo é o **b99**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:

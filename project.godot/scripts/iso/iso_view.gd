@@ -954,6 +954,11 @@ func efeitos_mudaram() -> void:
 	atmosfera_aplica()  # Bloco 69
 
 
+## Bloco 98: quanto a primeira peça da paliçada de norte a sul entra no portão (px do mundo; 0 = a caixa dela encosta na
+## borda do desenho do portão, sem fresta nem sobra).
+const PALICADA_ENCOSTO := 0.0
+
+
 func _build_palisade() -> void:
 	if IsoArt.entry("palicada").is_empty():
 		return
@@ -961,38 +966,57 @@ func _build_palisade() -> void:
 	var step := 32.0 / S  # 1 tile da arte
 	var y: float = _env.palisade_y
 	var gap: float = _env.gate_half_width + step * 0.5
-	var n := 0
-	var x := g.position.x + step * 0.5
 	# Bloco 74: a paliçada de norte a sul (a peça virada de lado), do alto do mapa até o corte da frente
 	var de_lado: bool = _env.has_method("vertical_palisade") and _env.vertical_palisade()
-	var fim := g.end.y if de_lado else g.end.x
+	# onde ficam as peças (a coordenada que corre ao longo da paliçada)
+	var posicoes: Array = []
 	if de_lado:
-		x = g.position.y + step * 0.5
-	while x < fim:
-		var fora_do_portao: bool = absf(x - _env.gate_y) > gap if de_lado else absf(x) > gap
-		if fora_do_portao:
-			var l := IsoArt.state("palicada", "danificada" if n % 7 == 3 else "reta")
-			if de_lado:
-				l = IsoArt._de_lado(l)
-			var ground := Vector2(_env.palisade_x, x) if de_lado else Vector2(x, y)
-			var z := height_at(ground)
-			var sp := Sprite2D.new()
-			sp.name = "Palicada%d" % n
-			sp.texture = l.tex
-			sp.centered = false
-			sp.offset = -l.ancora
-			if l.get("flip", false):
-				sp.flip_h = true
-				sp.offset.x = l.ancora.x - l.tex.get_width()
-			sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			sp.light_mask = 2
-			sp.position = Iso.iso(art(ground), z).round()
-			_terrain_node.add_child(sp)
-			var p: Array = l.peg
-			var b := Iso.Box.new(Rect2(art(ground) + Vector2(p[0], p[1]), Vector2(p[2] - p[0], p[3] - p[1])), z, z + l.h,
-				"predio", "palicada%d" % n, null)
-			_terrain.append([b, sp])
-		x += step
+		# Bloco 98: começa ONDE O PORTÃO ACABA (a borda do desenho dele, gate_half_width do centro) e vai pra fora, dos dois
+		# lados: sem fresta nem sobra entre o portão e a cerca.
+		# (a caixa da peça virada de lado não é centrada nela: conta da borda DELA que fica perto do portão)
+		var peg: Array = IsoArt._de_lado(IsoArt.state("palicada", "reta")).peg
+		var dentro_sul: float = _env.gate_half_width - PALICADA_ENCOSTO - float(peg[1]) / S  # a borda de cima da caixa encosta
+		var dentro_norte: float = _env.gate_half_width - PALICADA_ENCOSTO + float(peg[3]) / S  # a de baixo encosta
+		var k := 0
+		while _env.gate_y + dentro_sul + step * k < g.end.y:
+			posicoes.append(_env.gate_y + dentro_sul + step * k)
+			k += 1
+		k = 0
+		while _env.gate_y - dentro_norte - step * k > g.position.y:
+			posicoes.append(_env.gate_y - dentro_norte - step * k)
+			k += 1
+		posicoes.sort()
+	else:
+		var x := g.position.x + step * 0.5
+		while x < g.end.x:
+			if absf(x) > gap:
+				posicoes.append(x)
+			x += step
+	var n := 0
+	for x in posicoes:
+		# (a peça danificada nunca fica colada no portão: ali a cerca tem que parecer inteira)
+		var colada: bool = de_lado and absf(float(x) - _env.gate_y) < _env.gate_half_width + 30.0 + step * 2.0
+		var l := IsoArt.state("palicada", "danificada" if n % 7 == 3 and not colada else "reta")
+		if de_lado:
+			l = IsoArt._de_lado(l)
+		var ground := Vector2(_env.palisade_x, x) if de_lado else Vector2(x, y)
+		var z := height_at(ground)
+		var sp := Sprite2D.new()
+		sp.name = "Palicada%d" % n
+		sp.texture = l.tex
+		sp.centered = false
+		sp.offset = -l.ancora
+		if l.get("flip", false):
+			sp.flip_h = true
+			sp.offset.x = l.ancora.x - l.tex.get_width()
+		sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		sp.light_mask = 2
+		sp.position = Iso.iso(art(ground), z).round()
+		_terrain_node.add_child(sp)
+		var p: Array = l.peg
+		var b := Iso.Box.new(Rect2(art(ground) + Vector2(p[0], p[1]), Vector2(p[2] - p[0], p[3] - p[1])), z, z + l.h,
+			"predio", "palicada%d" % n, null)
+		_terrain.append([b, sp])
 		n += 1
 
 # ------------------------------------------------------------ quem é chão, quem fica em pé

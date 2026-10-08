@@ -1,0 +1,114 @@
+{
+ "aberto_1": {
+  "job": "f6001299-2c51-47e2-ba3d-072cdbf2acb9",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\aberto_1.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "aberto_2": {
+  "job": "9f8f9cf1-2d27-43c1-9d17-3d531407c8a1",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\aberto_2.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "aberto_3": {
+  "job": "25b56406-7412-4b5d-a48b-bba7f762386b",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\aberto_3.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "meio_1": {
+  "job": "84f7d3a3-ddff-491f-b103-bb42f4079e2e",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\meio_1.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "meio_2": {
+  "job": "4d1a7897-a71a-4f58-a6d0-726625a2fa00",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\meio_2.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "meio_3": {
+  "job": "767aebe5-c2f3-4357-8eaf-a216dde6efa3",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\meio_3.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "quebrado_aberto": {
+  "job": "ce93e2c7-817b-4a13-9abb-19fdefcc0d24",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\quebrado_aberto.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "aberto_1b": {
+  "job": "a42548d2-2d85-48ce-9656-12291ee45b5c",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\aberto_1b.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "meio_1b": {
+  "job": "0f54f40e-5449-4818-b692-a30f86324fe8",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\meio_1b.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "aberto_1c": {
+  "job": "e403156e-a8d2-4e7d-8238-68005485c280",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\aberto_1c.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "meio_1c": {
+  "job": "cb8157e8-1483-4df7-8bd7-83e003f66349",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\meio_1c.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "aberto_1d": {
+  "job": "ce0d0474-9a51-49bc-b794-4e51ad781927",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\aberto_1d.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "meio_1d": {
+  "job": "bb750bf2-923c-4055-96f6-4d5d9b6e96a4",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\meio_1d.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "quebrado_abertob": {
+  "job": "86d4ff11-1cad-4529-b210-3ab4eee00792",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\quebrado_abertob.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "quebrado_abertoc": {
+  "job": "86a145e2-8f85-49d3-ac95-90ced6a80052",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\quebrado_abertoc.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "quebrado_abertod": {
+  "job": "666e0b95-dd64-43af-8b9b-f69b97e6eef8",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\portao98\\_cand\\quebrado_abertod.png",
+  "ok": true,
+  "candidatos": 1
+ }
+}

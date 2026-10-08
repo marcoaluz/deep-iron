@@ -150,7 +150,8 @@ func _natureza() -> void:
 			var lit: Array = IsoArt.layers(torch)
 			flame.modulate.a = 0.0
 			var off: Array = IsoArt.layers(torch)
-			check(lit[0].has("anim") and lit[0].anim.size() == 4 and names(torch)[0] == "tocha_apagada", "tocha: acesa = chama animada (4 quadros), apagada = tocha apagada")
+			# Bloco 98: UM desenho só — com a chama "apagada" (de dia) o desenho continua a chama animada; só a luz muda
+			check(lit[0].has("anim") and lit[0].anim.size() == 4 and off.size() == 1 and off[0].has("anim") and off[0].anim.size() == 4, "tocha: a chama animada (4 quadros) com a chama acesa ou apagada (Bloco 98: o mesmo desenho)")
 	check(unk == 0, "nenhuma decoração em pé sem desenho novo (%d)" % unk)
 	# no jogo: o espelho de uma árvore desenha a peça nova com a caixa dela
 	var bb = iso().billboard_of(tr0)

@@ -532,6 +532,10 @@ var _saved_home_slot: int = -1
 @onready var _anger_icon: Sprite2D = $AngerIcon
 @onready var _cook_icon: Sprite2D = $CookIcon
 @onready var _lamp: PointLight2D = $HeadLamp
+## Bloco 98: o destino de verdade (o _target vira o lugar de espera no portão fechado) e se está esperando o portão.
+var _alvo_final := Vector2.ZERO
+var _esperando_portao := false
+
 @onready var _agent: NavigationAgent2D = $Agent
 ## Acessórios (Bloco 24): camadas filhas do Body, com os mesmos 4 quadros de caminhada.
 @onready var _accessories: Array[Sprite2D] = [$Body/Boots, $Body/Detail, $Body/Neck]
@@ -615,9 +619,31 @@ func move_to(pos: Vector2) -> void:
 
 
 func _go_to(pos: Vector2) -> void:
+	_alvo_final = pos
+	_esperando_portao = false
+	pos = _ate_o_portao(pos)
 	_target = pos
 	_moving = true
 	_agent.target_position = pos
+
+
+## Bloco 98: o portão da paliçada fechado (de noite) separa a floresta da vila: quem tem destino do outro lado vai
+## esperar encostado no portão, do lado dele (e não ao longo da cerca, que é o ponto mais perto do destino).
+func _ate_o_portao(pos: Vector2) -> Vector2:
+	var b := get_tree().get_first_node_in_group("barricadas")
+	if b == null or not b.has_method("separa") or not b.separa(global_position, pos):
+		return pos
+	_esperando_portao = true
+	return b.espera_pos(self, global_position)
+
+
+## Bloco 98: o portão abriu ou fechou (o Barricada avisa todo mundo). Quem esperava segue pro destino; quem andava
+## com o caminho cortado refaz o caminho (e vai esperar no portão).
+func portao_mudou() -> void:
+	if _esperando_portao:
+		_go_to(_alvo_final)
+	elif _moving:
+		_go_to(_target)
 
 
 func get_state() -> String:

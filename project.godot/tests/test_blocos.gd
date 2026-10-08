@@ -406,5 +406,9 @@ func test_b97_armazem_nivel() -> void:
 	run_bloco("b97_armazem_nivel.gd")
 
 
+func test_b98_portao_tochas() -> void:
+	run_bloco("b98_portao_tochas.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

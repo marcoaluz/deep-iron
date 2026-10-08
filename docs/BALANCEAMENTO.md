@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **879 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **891 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (78)
 
@@ -534,7 +534,7 @@ Total: **879 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `palisade_y` | -462.0 |  | Paliçada entre a floresta e a vila: y da linha e meia largura da abertura do portão. (Bloco 74: com o mapa da maquete v3 a paliçada corre de norte a sul — ver palisade_x; o y fica sendo a beira da floresta do leste.) |
-| `gate_half_width` | 40.0 |  |  |
+| `gate_half_width` | 34.0 |  | Meia largura do vão do portão (px do mundo). Bloco 98: é a largura do DESENHO do portão (68 px de ponta a ponta): a paliçada começa onde o portão acaba, sem fresta nem sobra. Quem passa vai pelas faixas do portão (barricada.gd). |
 | `cliff_thickness` | 6.0 |  | Espessura (px do mundo) da "parede" que a navegação vê na beira de um penhasco. |
 
 ## `scripts/core/equipment.gd` (28)
@@ -1199,7 +1199,7 @@ Total: **879 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `forge_sound_interval` | 0.9 |  | Intervalo entre as marteladas enquanto forja. |
 
-## `scripts/props/barricada.gd` (11)
+## `scripts/props/barricada.gd` (23)
 
 **(sem grupo)**
 
@@ -1216,6 +1216,23 @@ Total: **879 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `upgrade_tempos` | [0.0, 30.0, 45.0, 60.0] |  | Bloco 96: segundos de engenheiro pra subir pro nível i (índice 0 não usado). |
 | `conserto_na_hora` | 10.0 |  | Bloco 96: conserto de até esta madeira é feito NA HORA (pequeno); acima, vira obra de engenheiro. |
 | `conserto_segundos_por_madeira` | 0.8 |  | Bloco 96: segundos de engenheiro por unidade de madeira do conserto grande. |
+
+**Abrir e fechar (Bloco 98)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `hora_fecha` | 18.5 |  | Hora do relógio (0-24) em que o portão de pé FECHA: o anoitecer, depois da hora de voltar (18:00 a 18:30). |
+| `hora_abre` | 5.0 |  | Hora do relógio (0-24) em que ele ABRE de novo: o amanhecer. |
+| `anima_segundos` | 1.2 |  | Segundos reais da animação de abrir ou fechar as folhas. |
+| `janela_segundos` | 10.0 |  | Segundos que o portão fica aberto quando um guarda abre pra quem espera. |
+| `guarda_demora` | 3.0 |  | Segundos que quem espera junto do portão fechado aguarda até um GUARDA abrir. |
+| `sem_guarda_demora` | 20.0 |  | Segundos de espera até abrir quando NÃO tem guarda vivo na vila (alguém ouve a batida). |
+| `alcance_espera` | 90.0 |  | Raio (px) em volta do portão onde quem espera é contado. |
+| `alcance_criatura` | 150.0 |  | Criatura a menos que isso (px) do portão: não abre pra ninguém. |
+| `espera_afastamento` | 30.0 |  | Distância (px) da linha da paliçada onde quem espera fica, de cada lado. |
+| `espera_espaco` | 10.0 |  | Espaço (px) entre quem espera, ao longo da paliçada. |
+| `faixas` | 3 |  | Quantas faixas de passagem o portão tem (cada uma é um NavigationLink2D). |
+| `faixa_espaco` | 14.0 |  | Distância (px) entre as faixas. |
 
 ## `scripts/props/campo_treino.gd` (1)
 

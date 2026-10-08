@@ -117,7 +117,9 @@ const NAV_EXTRA_GROUPS := ["enfermarias", "tavernas", "campos", "laboratorios", 
 ## (Bloco 74: com o mapa da maquete v3 a paliçada corre de norte a sul — ver palisade_x; o y fica
 ## sendo a beira da floresta do leste.)
 @export var palisade_y: float = -462.0
-@export var gate_half_width: float = 40.0
+## Meia largura do vão do portão (px do mundo). Bloco 98: é a largura do DESENHO do portão (68 px de ponta a ponta): a
+## paliçada começa onde o portão acaba, sem fresta nem sobra. Quem passa vai pelas faixas do portão (barricada.gd).
+@export var gate_half_width: float = 34.0
 ## Espessura (px do mundo) da "parede" que a navegação vê na beira de um penhasco.
 @export var cliff_thickness: float = 6.0
 
@@ -141,7 +143,6 @@ var _rng := RandomNumberGenerator.new()
 var _placed: Array[Vector2] = []
 var _obstacles: Array[PackedVector2Array] = []
 var _torch_lights: Array[PointLight2D] = []
-var _torch_flames: Array[Sprite2D] = []
 var _sun: PointLight2D
 var _day_night: Node = null
 var _time: float = 0.0
@@ -581,8 +582,7 @@ func _process(delta: float) -> void:
 	var level := _torch_level()
 	if _sun and _day_night:
 		_sun.energy = sun_energy * (1.0 - _day_night.darkness())
-	for flame in _torch_flames:
-		flame.modulate.a = level
+	# (Bloco 98: a chama desenhada NÃO apaga mais de dia — o desenho da tocha é um só; só a luz liga e desliga)
 	for i in _torch_lights.size():
 		var light := _torch_lights[i]
 		light.enabled = level > 0.005
@@ -792,6 +792,26 @@ func vertical_palisade() -> bool:
 	return not is_nan(palisade_x)
 
 
+## Bloco 98: meia espessura da "parede" da paliçada na malha de navegação (px do mundo).
+const PALICADA_METADE := 4.0
+
+
+## Bloco 98: o portão passa pela malha por FAIXAS (NavigationLink2D do barricada.gd, ligadas e desligadas), em vez de
+## um vão assado nela? Sim quando a cena tem a barricada do portão: a paliçada vira parede inteira e abrir/fechar o
+## portão é só ligar/desligar as faixas (sem refazer a malha). Sem barricada (cena de teste), o vão continua aberto.
+func portao_por_faixas() -> bool:
+	if not vertical_palisade() or not is_inside_tree():
+		return false
+	var b := get_tree().get_first_node_in_group("barricadas")
+	return b != null and b.has_method("usa_faixas")
+
+
+## Bloco 98: o quanto a faixa do portão entra em cada lado a partir da linha da paliçada: meia espessura da parede + o
+## raio de quem anda (a malha começa aí) + uma folga de 3 px (a faixa se liga à malha a até 4 px).
+func portao_faixa_alcance() -> float:
+	return PALICADA_METADE + nav_agent_radius + 3.0
+
+
 ## Bloco 74: o ponto está em cima da paliçada (fora da abertura do portão), com folga `margin`.
 func on_palisade(pos: Vector2, margin: float = 0.0) -> bool:
 	if vertical_palisade():
@@ -995,6 +1015,9 @@ func _iso_blockers() -> Array[PackedVector2Array]:
 	# paliçada: da borda até o portão, dos dois lados
 	var g := iso_ground_rect()
 	if vertical_palisade():  # Bloco 74: de norte a sul, o portão no meio
+		if portao_por_faixas():  # Bloco 98: a paliçada INTEIRA; o vão é do portão (liga/desliga sem refazer a malha)
+			out.append(_rect_outline(Rect2(palisade_x - PALICADA_METADE, g.position.y, PALICADA_METADE * 2.0, g.size.y)))
+			return out
 		var y0 := gate_y - gate_half_width
 		var y1 := gate_y + gate_half_width
 		out.append(_rect_outline(Rect2(palisade_x - 4.0, g.position.y, 8.0, y0 - g.position.y)))
@@ -1889,7 +1912,7 @@ func _torch_level() -> float:
 
 
 func _add_torch(tex: Texture2D, p: Vector2) -> void:
-	# base = tocha apagada; a chama (sprite aceso inteiro) vai por cima e faz o fade
+	# base = tocha apagada; a chama (sprite aceso inteiro) vai por cima, SEMPRE (Bloco 98: um desenho só, dia e noite)
 	var s := _deco_sprite(torch_unlit_texture if torch_unlit_texture else tex, p)
 	s.add_to_group("tochas")
 	if torch_unlit_texture:
@@ -1897,7 +1920,6 @@ func _add_torch(tex: Texture2D, p: Vector2) -> void:
 		flame.texture = tex
 		flame.offset = s.offset
 		s.add_child(flame)
-		_torch_flames.append(flame)
 	_add_shadow(s, 1.4)
 	_add_obstacle(p + Vector2(0, -2), Vector2(5, 3))
 	if light_texture:

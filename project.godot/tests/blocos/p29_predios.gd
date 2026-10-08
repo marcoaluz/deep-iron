@@ -279,13 +279,21 @@ func _step_maquinas() -> void:
 	esc.fabricating = ""
 	for g in main.get_tree().get_nodes_in_group("barricadas"):
 		sync(g)
-		var want := "portao/quebrado.png" if not g.is_standing() or g.level == 0 else "portao/nivel_%d.png" % g.level
+		# Bloco 98: derrubado/sem muro = a ruína com o vão aberto; em pé de dia = as folhas abertas (aberto_N)
+		var want := "portao/quebrado_aberto.png" if not g.is_standing() or g.level == 0 else "portao/aberto_%d.png" % g.level
 		check(art_files(g) == [want], "%s: %s (%s)" % [g.name, want, art_files(g)])
 	var gate = main.get_tree().get_nodes_in_group("barricadas")[0]
 	gate.level = 2
 	gate.hp = 200.0
 	sync(gate)
-	check(art_files(gate) == ["portao/nivel_2.png"], "portão no nível 2: portao/nivel_2 (%s)" % [art_files(gate)])
+	check(art_files(gate) == ["portao/aberto_2.png"], "portão no nível 2, de dia: portao/aberto_2 (%s)" % [art_files(gate)])
+	gate.abertura = 0.0  # Bloco 98: fechado (nivel_N) e a meio caminho (meio_N)
+	sync(gate)
+	check(art_files(gate) == ["portao/nivel_2.png"], "portão fechado: portao/nivel_2 (%s)" % [art_files(gate)])
+	gate.abertura = 0.5
+	sync(gate)
+	check(art_files(gate) == ["portao/meio_2.png"], "portão a meio caminho: portao/meio_2 (%s)" % [art_files(gate)])
+	gate.abertura = 1.0
 
 
 # ------------------------------------------------------------ posicionador e migração

@@ -1,9 +1,27 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 96 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco); o Bloco 97 está só no commit local. Push só com o OK dele.
+Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 96 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco); os Blocos 97 e 98 estão só no commit local. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido".
 
-## AGORA (2026-10-07): Bloco 97 — armazém com limite e níveis até 3 (feito; commit local, push pendente — pedir o OK)
+## AGORA (2026-10-08): Bloco 99 — Prompt Q (entrada da mina, elevador, escadas e vagonete): PLANO, esperando o Marco
+
+`docs/BLOCO99_PLANO.md` (auditoria com fotos em `docs/arte/bloco99/auditoria/`, medição `tests/bench_minerio.gd`). Ainda
+sem código: o prompt manda auditar, mostrar o plano e esperar aprovação. As 6 decisões estão no fim do plano.
+
+## Bloco 98 — portão da paliçada (abre/fecha) e tochas (feito; commit local, push pendente — pedir o OK)
+
+Relatório `docs/BLOCO98_PORTAO_TOCHAS.md`; fotos `docs/arte/bloco98/antes|depois/`.
+- Causa: a navegação já passava só pelo vão, mas o vão da cerca desenhada (99 px) não batia com o lógico (80) nem com o
+  portão (68), o caminho roçava a ponta do vão e o desenho era sempre um portão fechado. O nível 3 estava espelhado.
+- Agora: `gate_half_width` 34 (= o desenho), a paliçada sai do portão pra fora, a malha leva a paliçada inteira e o portão
+  passa por 3 faixas (`NavigationLink2D`). Abre de dia e fecha às 18:30 (abre 05:00), com nivel_N/meio_N/aberto_N
+  (PixelLab, 340 gerações). Quem está fora espera encostado no portão; um guarda abre (3 s); sem guarda, 20 s; criatura
+  perto não abre. Derrubado ou sem muro: aberto.
+- Tochas: um desenho só (a chama), muda só a luz.
+- Testes: b98 passa; ajustados p29_predios e p29_natureza. Intermitentes: p29_predios (o vagonete contra a montanha) e
+  b58 (timeout no passo 3, passou ao repetir).
+
+## Bloco 97 — armazém com limite e níveis até 3 (feito; commit local, push pendente — pedir o OK)
 
 **O pedido:** "sim e o armazem pode ser upado ate nivel 3". Plano em `docs/BLOCO97_PLANO.md`; relatório em
 `docs/BLOCO97_ARMAZEM_NIVEIS.md`; arte de conferência em `docs/arte/bloco97/armazem_niveis.png`.
