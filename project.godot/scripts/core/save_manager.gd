@@ -91,6 +91,11 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 99: "elevador" (deep_shaft.gd) ganha "etapa" (0 ruína .. 3 restaurado), "pago", "progresso", "obra" e
+##     "cabine" {pos, viagens, total, quebrada, consertando, conserto_left} (cabine.gd); as plataformas (abismo e
+##     "ligacoes") ganham "cabine". estacao_vagonete "rail_left" vira fração (desgaste por minério). Save antigo: o
+##     elevador ABERTO vem restaurado e inteiro (etapa 3); fechado, ruína; a cabine nova, em cima. A escada em espiral
+##     e quem está dentro da mina não entram no save (o mineiro volta pela boca).
 ##   Bloco 97: armazem.gd ganha "nivel" (1..3), "ampliando", "amp_total", "amp_left" e "obra" (a ampliação é obra
 ##     com material); centro_vila "armazens_novos" [{name, position}] — os armazéns construídos pelo jogador,
 ##     recriados pelo nome antes de "armazens" (o estoque de cada um entra pelo nome, como sempre). Save antigo:

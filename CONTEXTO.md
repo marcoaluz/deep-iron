@@ -1,12 +1,20 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 96 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco); os Blocos 97 e 98 estão só no commit local. Push só com o OK dele.
+Atualizado em 2026-10-07. Branch `isometrico`. Tudo até o Bloco 96 **foi enviado** pro GitHub em 2026-10-07 (push com o OK do Marco); os Blocos 97, 98 e 99 estão só no commit local. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido".
 
-## AGORA (2026-10-08): Bloco 99 — Prompt Q (entrada da mina, elevador, escadas e vagonete): PLANO, esperando o Marco
+## AGORA (2026-10-08): Bloco 99 — entrada da mina, elevador, escadas e vagonete (feito; commit local, push pendente — pedir o OK)
 
-`docs/BLOCO99_PLANO.md` (auditoria com fotos em `docs/arte/bloco99/auditoria/`, medição `tests/bench_minerio.gd`). Ainda
-sem código: o prompt manda auditar, mostrar o plano e esperar aprovação. As 6 decisões estão no fim do plano.
+Plano `docs/BLOCO99_PLANO.md` (aprovado: em paralelo, espiral sempre, escadas como achar melhor, rendimento igual,
+100/240/60 s, arte ~440). Relatório `docs/BLOCO99_MINA_ELEVADOR.md`; fotos `docs/arte/bloco99/` (auditoria e depois).
+- Elevador do S2: ruína → 3 etapas (obra com material) em paralelo com a escavadeira; a cabine (`cabine.gd`) faz fila,
+  embarca 4, anda pelo poço (desenho a cada quadro em `iso_view._sync_cabines`), desembarca; o cabo arrebenta em 60
+  viagens e o conserto é pedido sozinho. O mesmo nas plataformas S3–S5.
+- Escada em espiral (`espiral.gd`): ligação lenta (20 s por andar) sempre aberta com o andar; o caminho prefere o elevador.
+- Mina: o mineiro da área de mina entra pela boca principal e trabalha dentro (21/h, sai na agenda); o vagonete leva 100,
+  guarda 240, espera 60 s; desgaste por minério. Saíram as escadas de mão do paredão e a do S1.
+- Arte PixelLab: torre obra_1/obra_2, cabine vazia/cheia, vagonete com carga grande, lampião da boca (205 gerações).
+- Medição: renda parecida (galerias ~90–100/h com 5 lá dentro; antes ~105). Telemetria com o minério por dia.
 
 ## Bloco 98 — portão da paliçada (abre/fecha) e tochas (feito; commit local, push pendente — pedir o OK)
 

@@ -410,5 +410,9 @@ func test_b98_portao_tochas() -> void:
 	run_bloco("b98_portao_tochas.gd")
 
 
+func test_b99_mina_elevador() -> void:
+	run_bloco("b99_mina_elevador.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

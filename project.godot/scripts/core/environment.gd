@@ -178,6 +178,71 @@ func _ready() -> void:
 	_build_estacao_mina()  # Bloco 74: o vagonete da boca da mina até o armazém
 	clear_decor_under_extras()
 	_build_navigation()
+	_build_espirais.call_deferred()  # Bloco 99: depois da malha (os patamares se ligam nela)
+
+
+# ------------------------------------------------------------ a escada em espiral (Bloco 99)
+const Espiral := preload("res://scripts/props/espiral.gd")
+## Onde fica o patamar da espiral em cada andar: a casinha da superfície ("boca_espiral" do MAP_DECOR_V3) e, nos andares,
+## ao lado da gaiola de chegada (a espiral fica do lado do poço, a leste).
+const ESPIRAL_SUPERFICIE := Vector2(744, 336)
+const ESPIRAL_DESLOCA := Vector2(40, 0)
+
+
+## Uma escada por ligação entre andares: superfície → S2 (o elevador), S2 → S3, S3 → S4, S4 → S5 (as plataformas).
+func _build_espirais() -> void:
+	if not has_iso_map() or not is_inside_tree():
+		return
+	var map := get_world_2d().navigation_map
+	for i in 120:  # (espera a malha chegar no servidor de navegação: antes disso o "ponto mais perto" é zero)
+		await get_tree().physics_frame
+		if map.is_valid() and NavigationServer2D.map_get_iteration_id(map) > 0:
+			break
+	var ligacoes: Array = []
+	var el := get_tree().get_first_node_in_group("elevador")
+	if el:
+		ligacoes.append(el)
+	var cadeia := {"elevador": el}
+	# as plataformas, na ordem: cada uma pede a de cima (requer_grupo)
+	var resto: Array = get_tree().get_nodes_in_group("elevadores")
+	var guarda := 0
+	while not resto.is_empty() and guarda < 10:
+		guarda += 1
+		for e in resto.duplicate():
+			if cadeia.has(String(e.get("requer_grupo"))):
+				ligacoes.append(e)
+				cadeia[String(e.get("grupo"))] = e
+				resto.erase(e)
+	var topo := ESPIRAL_SUPERFICIE
+	for lig in ligacoes:
+		if get_parent().has_node("Espiral_" + String(lig.name)):
+			topo = (get_parent().get_node("Espiral_" + String(lig.name)) as Node2D).get("fundo")
+			continue
+		var fundo: Vector2 = lig.bottom_position + ESPIRAL_DESLOCA
+		if map.is_valid() and NavigationServer2D.map_get_iteration_id(map) > 0:
+			topo = _no_chao(map, topo)
+			fundo = _no_chao(map, fundo)
+		var esp: Node2D = Espiral.new()
+		esp.name = "Espiral_" + String(lig.name)
+		esp.ligacao = lig
+		esp.topo = topo
+		esp.fundo = fundo
+		get_parent().add_child(esp)
+		topo = fundo  # o patamar de baixo é o de cima da próxima
+
+
+## O ponto andável mais perto (se estiver perto: senão fica onde está).
+func _no_chao(map: RID, p: Vector2) -> Vector2:
+	var q := NavigationServer2D.map_get_closest_point(map, p)
+	return q if q.distance_to(p) < 120.0 else p
+
+
+## A escada de um andar abre junto com ele (o elevador/plataforma chama quando muda).
+func espirais_sync() -> void:
+	if not is_inside_tree():
+		return
+	for e in get_tree().get_nodes_in_group("espirais"):
+		e.sync()
 
 
 # ------------------------------------------------------------ o leste (Bloco 67)
@@ -555,6 +620,7 @@ func _build_estacao_mina() -> void:
 	e.name = "EstacaoMina"
 	e.position = bocas[0] + Vector2(0, 34)
 	e.set("rota_fixa", true)
+	e.set("tem_interior", true)  # Bloco 99: a boca principal tem a galeria de dentro (o mineiro trabalha lá dentro)
 	e.add_to_group("ponto_carga_fixo")
 	get_parent().add_child(e)
 	var v := e.get_node_or_null("Visual") as CanvasItem
@@ -1659,7 +1725,8 @@ const MAP_DECOR_V3 := [
 	["horta_pronto", Vector2(-215, -500), false], ["horta_crescendo", Vector2(-170, -520), false],
 	["placa_direcao", Vector2(-255, -2), false], ["caixotes_2", Vector2(250, 70), false], ["barris_2", Vector2(-110, 210), false],
 	["arbusto_0", Vector2(-250, 330), false], ["arbusto_1", Vector2(420, -820), false], ["arbusto_2", Vector2(-200, -900), false],
-	["andaime", Vector2(700, -300), true], ["escada_mao", Vector2(1000, -158), false], ["escada_mao", Vector2(625, -150), false],
+	# (Bloco 99: saíram as 2 escadas de mão e o andaime encostados no paredão: pareciam caminho e não eram — quem sobe a
+	# montanha usa as rampas dos degraus, e quem desce pra mina usa o elevador ou a escada em espiral)
 	["guindaste_pedreira", Vector2(990, -420), true], ["casa_pedra_0", Vector2(1150, -270), true],
 	["vagonete_vazio_SE", Vector2(1098, -322), false], ["tabuas", Vector2(650, -60), false], ["tabuas", Vector2(1150, -120), false],
 	["rocha_mina_0", Vector2(940, -150), false], ["pedra_m", Vector2(1030, -160), false], ["pedra_p", Vector2(800, -150), false],

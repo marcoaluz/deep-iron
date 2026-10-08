@@ -8,7 +8,8 @@ const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre"
 	"madeira", "comida", "populacao", "feridos", "animo_medio", "mortes", "onda", "criaturas_derrubadas",
 	"invasao_ativa", "pesquisas", "greve", "estagio_vila", "tier", "ultima_onda_total", "ultima_onda_derrubadas", "chefe",
 	"cristal_verde", "cristal_rubro", "queimaduras_acido", "queimaduras_lava", "ventiladores", "gema_azul",  # (Bloco 70: no fim)
-	"obras_prontas_dia", "obra_tempo_medio_s"]  # Bloco 96: obras terminadas no dia e o tempo médio (s de jogo) encomenda -> pronto
+	"obras_prontas_dia", "obra_tempo_medio_s",  # Bloco 96: obras terminadas no dia e o tempo médio (s de jogo) encomenda -> pronto
+	"minerio_entrou_dia", "minerio_vagonete_dia", "mineiros_dentro"]  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
 
 var arquivo := ""
 var _t0 := 0
@@ -17,6 +18,9 @@ var _obras_abertas := {}
 var _obras_tempos: Array[float] = []
 var _relogio := 0.0
 var _olha := 0.0
+## Bloco 99: os contadores da linha anterior (minério que entrou nos armazéns e que o vagonete levou).
+var _entrou_ant := -1.0
+var _vagonete_ant := -1.0
 
 
 func _ready() -> void:
@@ -69,6 +73,24 @@ func obras_do_dia() -> Array:
 	return [n, snappedf(media, 0.1)]
 
 
+## Bloco 99: [minério que entrou nos armazéns desde a última linha, quanto disso veio de vagonete, mineiros dentro da mina].
+func minerio_do_dia() -> Array:
+	var entrou := 0.0
+	for a in get_tree().get_nodes_in_group("armazens"):
+		entrou += float(a.get("lifetime_stored")) if a.get("lifetime_stored") != null else 0.0
+	var vag := 0.0
+	var dentro := 0
+	for p in get_tree().get_nodes_in_group("vagonetes"):
+		if p.get("station") != null and is_instance_valid(p.station):
+			vag += float(p.station.total_moved)
+	for b in get_tree().get_nodes_in_group("bocas_mina"):
+		dentro += (b.dentro as Array).size()
+	var out := [int(entrou - _entrou_ant) if _entrou_ant >= 0.0 else 0, int(vag - _vagonete_ant) if _vagonete_ant >= 0.0 else 0, dentro]
+	_entrou_ant = entrou
+	_vagonete_ant = vag
+	return out
+
+
 ## Uma linha com o estado da vila agora.
 func registra() -> void:
 	var dn := _g("day_night")
@@ -106,6 +128,7 @@ func registra() -> void:
 		int(fundo.queimaduras.get("acido", 0)) if fundo else 0, int(fundo.queimaduras.get("lava", 0)) if fundo else 0,
 		fundo.ventiladores().size() if fundo else 0, int(stock.get("gema_azul", 0))]
 	v.append_array(obras_do_dia())  # Bloco 96
+	v.append_array(minerio_do_dia())  # Bloco 99
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return

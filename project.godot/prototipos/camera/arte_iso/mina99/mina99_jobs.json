@@ -1,0 +1,65 @@
+{
+ "elev_obra_1": {
+  "job": "d0a13822-7d9a-44b0-a2ea-ee6e4505c10d",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mina99\\_cand\\elev_obra_1.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "elev_obra_2": {
+  "job": "522945da-67b4-491c-8a3d-b592800acc61",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mina99\\_cand\\elev_obra_2.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "cabine_vazia": {
+  "job": "73737ef7-14c9-4045-a057-6db506dcb9d2",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mina99\\_cand\\cabine_vazia.png",
+  "ok": true,
+  "candidatos": 4
+ },
+ "cabine_cheia": {
+  "job": "f1af24c4-8e50-4154-bf2b-0e92158e3a9d",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mina99\\_cand\\cabine_cheia.png",
+  "ok": true,
+  "candidatos": 4
+ },
+ "vagonete_grande_SE": {
+  "job": "cea58966-af20-4f43-b713-c257ff59e0be",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mina99\\_cand\\vagonete_grande_SE.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "vagonete_grande_SO": {
+  "job": "80fc6f80-7ba5-4277-9326-a1d7e796c12e",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mina99\\_cand\\vagonete_grande_SO.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "lanterna_boca": {
+  "job": "9745b6f5-ee43-4231-8200-c4f56d551fe7",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mina99\\_cand\\lanterna_boca.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "elev_obra_2b": {
+  "job": "a299b13a-d52c-4e31-910d-d29ef448f4dc",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mina99\\_cand\\elev_obra_2b.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "cabine_cheiab": {
+  "job": "1e7b783c-7b51-430b-9097-2d3dfe211f08",
+  "custo": 20,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mina99\\_cand\\cabine_cheiab.png",
+  "ok": true,
+  "candidatos": 4
+ }
+}

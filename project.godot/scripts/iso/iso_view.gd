@@ -1202,10 +1202,53 @@ func _apply_static_z() -> void:
 		t[1].z_index = _order.z_of_static(t[0])
 
 
+# ------------------------------------------------------------ a cabine do elevador (Bloco 99)
+## A cabine que anda pelo poço (cabine.gd: pos 0 = em cima, 1 = embaixo), entre o ponto de cima e o de baixo na tela.
+## Parada, quem mostra é a torre (em cima) e a gaiola de chegada (embaixo); andando, ela aparece no poço, com gente
+## dentro ou vazia. Desenhada todo quadro (não entra no rodízio das peças fixas, que só atualiza o que está na tela).
+var _cabines := {}
+const CABINE_Z := 3500
+
+
+func _sync_cabines() -> void:
+	var donos: Array = get_tree().get_nodes_in_group("elevador") + get_tree().get_nodes_in_group("elevadores")
+	for dono in donos:
+		var cab = dono.get("cabine")
+		if cab == null or dono.get("bottom_position") == null:
+			continue
+		var sp: Sprite2D = _cabines.get(dono)
+		if sp == null or not is_instance_valid(sp):
+			sp = Sprite2D.new()
+			sp.name = "Cabine_" + String(dono.name)
+			sp.centered = false
+			sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			sp.light_mask = 2
+			sp.z_as_relative = false
+			sp.z_index = CABINE_Z
+			add_child(sp)
+			_cabines[dono] = sp
+		var t: float = float(cab.pos)
+		sp.visible = enabled and t > 0.02 and t < 0.98
+		if not sp.visible:
+			continue
+		var l := IsoArt.state("cabine", "vazia" if cab.a_bordo.is_empty() else "cheia")
+		if l.is_empty():
+			l = IsoArt.state("gaiola", "gaiola")
+		if l.is_empty():
+			continue
+		if sp.texture != l.tex:
+			sp.texture = l.tex
+		sp.offset = -l.ancora
+		var a := to_screen(dono.global_position)
+		var b := to_screen(dono.bottom_position)
+		sp.position = a.lerp(b, t).round()
+
+
 # ------------------------------------------------------------ a cada quadro
 func _process(_delta: float) -> void:
 	_frame += 1
 	_sync_blocos()
+	_sync_cabines()  # Bloco 99
 	var stops: Array = _camera.zoom_stops() if _camera.has_method("zoom_stops") else []
 	labels_on = stops.size() < 2 or _camera.zoom.x > float(stops[0]) + 0.001
 	if not _levels.is_empty() and _ground_sv and _frame % GROUND_REFRESH_EVERY == 0:

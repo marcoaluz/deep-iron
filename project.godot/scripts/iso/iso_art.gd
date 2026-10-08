@@ -172,11 +172,15 @@ static func layers(node: Node) -> Array:
 			# em cima: ruína até abrir (o do abismo, em conserto, sobe pelo corte); embaixo: a gaiola
 			# de chegada, desenhada no chão do andar de baixo (camada com "em" = ponto da lógica)
 			var open: bool = node.get("unlocked") == true
-			if not open and node.get("repairing") == true:
+			if node.has_method("restaurado"):  # Bloco 99: o elevador do S2 é restaurado por etapas
+				out.append(_elevador_etapa(kind, node))
+			elif not open and node.get("repairing") == true:
 				var tot: float = maxf(float(node.get("repair_time")), 0.001)
 				out.append(state(kind, "pronto", 1.0 - float(node.get("repair_left")) / tot))
 			else:
 				out.append(state(kind, "pronto" if open else "ruina"))
+			# a gaiola de chegada lá embaixo (a porta do andar). Bloco 99: a cabine que ANDA pelo poço é desenhada à parte
+			# pela vista (iso_view._sync_cabines), a cada quadro.
 			var g := state("gaiola", "gaiola")
 			if not g.is_empty() and node.get("bottom_position") != null:
 				g["peg"] = []
@@ -192,6 +196,23 @@ static func layers(node: Node) -> Array:
 		_:
 			out.append(state(kind, "pronto"))
 	return out.filter(func(l): return not l.is_empty())
+
+
+## Bloco 99: a torre do elevador do S2 pela etapa da restauração (ruína -> obra_1 -> obra_2 -> pronto); com a etapa
+## paga e o engenheiro trabalhando, o desenho da PRÓXIMA etapa sobe pelos estágios da obra. Sem os desenhos novos de
+## obra, fica a ruína até restaurar (o de antes).
+static func _elevador_etapa(kind: String, node: Node) -> Dictionary:
+	if node.restaurado():
+		return state(kind, "pronto")
+	var et := int(node.get("etapa"))
+	var feito := state(kind, "ruina" if et <= 0 else "obra_%d" % et)
+	if feito.is_empty():
+		feito = state(kind, "ruina")
+	if node.get("pago") == true:
+		var prox := state(kind, "pronto" if et + 1 >= 3 else "obra_%d" % (et + 1), clampf(float(node.obra_progress()), 0.0, 1.0))
+		if not prox.is_empty() and et + 1 < 3:
+			return prox
+	return feito
 
 
 ## Bloco 98: o desenho do portão agora. Derrubado ou sem muro: a ruína com o vão aberto (quebrado_aberto). Em pé: as folhas

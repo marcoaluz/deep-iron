@@ -206,7 +206,7 @@ func _vagonete_monta() -> void:
 	# carga esperando: o vagonete sai sozinho e descarrega no armazém
 	antes = float(arm.stock.get("cobre", 0.0))
 	est.stock = {"cobre": 30.0}
-	est._wait_t = 0.0
+	est._wait_t = est.cart_wait  # (Bloco 99: o carrinho espera até 60 s pra juntar carga; aqui já esperou)
 	Engine.time_scale = 4.0
 
 

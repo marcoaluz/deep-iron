@@ -189,6 +189,8 @@ func _abre_andares() -> void:
 	var sh := _g("elevador")
 	if sh and sh.has_method("unlock"):
 		sh.unlock(false)
+	if sh and sh.has_method("restaura_tudo"):
+		sh.restaura_tudo()  # Bloco 99: o elevador restaurado (a cabine anda)
 	for e in _main.get_tree().get_nodes_in_group("elevadores"):
 		if e.get("unlocked") == false and e.has_method("_apply"):
 			e.repairing = false

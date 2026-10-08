@@ -164,6 +164,7 @@ prompts 0–31).
 | **Cartões do CONSTRUIR sem desenho** (escola, estação da ferrovia de carga, caminho de terra/cascalho/pedra, pá de apagar caminho, mapa de desbravar, bota das trilhas, pé de cabra de remover decoração) + **ícones** (sem ferramenta, armazém cheio, caminho bloqueado, pessoas, missões) — Bloco 95 (`ui95/ui95.py`; os 8 cartões da decoração e do vagonete e o coletor de minério reaproveitam o sprite do jogo, sem gerar) | — | **integrado** | 300 (feito: 2 pilotos + 13 pedidos de 20; a picareta quebrada foi cortada à mão, `ui95/quebra_picareta.py`) |
 | **Armazém nível 2 e 3** (pronto; a obra da ampliação usa o `obra_3` por cima; armazém novo sobe pelos `obra_1-2-3` que já existiam) + **cartão "Ampliar armazém"** (do nível 2 reduzido) — Bloco 97 (`armazem/niveis97.py`) | — | **integrado** | 80 (feito) |
 | **Portão da paliçada aberto e a meio caminho** (aberto_1/2/3, meio_1/2/3) + **ruína com o vão aberto** (quebrado_aberto) — Bloco 98 (`portao98/portao98.py`); o nível 3 (nivel_3) foi espelhado pra correr como o 1 e o 2 | — | **integrado** | 340 (feito: 17 pedidos, 7 escolhidos) |
+| **Entrada da mina** — torre do elevador obra_1/obra_2 (restauração por etapas), cabine vazia/cheia (anda pelo poço), vagonete com carga grande (SE/SO) e o lampião da boca — Bloco 99 (`mina99/mina99.py`) | — | **integrado** | 205 (feito: piloto + 1 lote) |
 
 ## 10. Efeitos e luzes
 

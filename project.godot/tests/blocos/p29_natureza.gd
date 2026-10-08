@@ -165,7 +165,14 @@ func _elevadores() -> void:
 	var el = main.get_tree().get_first_node_in_group("elevador")
 	check(names(el) == ["ruina", "gaiola"], "elevador fechado: ruína em cima + gaiola embaixo (%s)" % [names(el)])
 	el.unlocked = true
-	check(names(el) == ["pronto", "gaiola"], "elevador aberto: pronto (%s)" % [names(el)])
+	# Bloco 99: o desenho segue a RESTAURAÇÃO (ruína -> obra_1 -> obra_2 -> pronto), não o "aberto"
+	check(names(el) == ["ruina", "gaiola"], "elevador aberto mas arruinado: ruína (%s)" % [names(el)])
+	el.etapa = 1
+	check(names(el) == ["obra_1", "gaiola"], "etapa 1 feita: obra_1 (%s)" % [names(el)])
+	el.etapa = 2
+	check(names(el) == ["obra_2", "gaiola"], "etapa 2 feita: obra_2 (%s)" % [names(el)])
+	el.restaura_tudo()
+	check(names(el) == ["pronto", "gaiola"], "restaurado: pronto (%s)" % [names(el)])
 	el.unlocked = false
 	var bb = iso().billboard_of(el)
 	bb.never_synced = true

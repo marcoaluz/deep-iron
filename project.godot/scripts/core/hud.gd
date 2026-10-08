@@ -708,6 +708,9 @@ func _build_janelas() -> void:
 		_add_panel("moral", preload("res://scripts/core/moral_panel.gd"), _morale)
 	if _finds:
 		_add_panel("robo", preload("res://scripts/core/robo_panel.gd"), _finds)
+	var elev := get_tree().get_first_node_in_group("elevador")
+	if elev and elev.has_method("pedir_etapa"):
+		_add_panel("elevador", preload("res://scripts/core/elevador_panel.gd"), elev)  # Bloco 99
 	if _abyss:
 		_add_panel("abismo", preload("res://scripts/core/abyss_panel.gd"), _abyss)
 	if _defense:

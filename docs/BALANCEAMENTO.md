@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **891 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **913 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (78)
 
@@ -1128,7 +1128,7 @@ Total: **891 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `carga_material` | 10.0 |  | Quanto o engenheiro leva por viagem (unidades de material: madeira, minério, barras, tábuas, pregos...). |
 | `material_alcance` | 40.0 |  | Distância (px) em que ele "chegou" no armazém pra pegar o material. |
 
-## `scripts/props/abyss_shaft.gd` (13)
+## `scripts/props/abyss_shaft.gd` (18)
 
 **(sem grupo)**
 
@@ -1156,12 +1156,22 @@ Total: **891 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `repair_time` | 120.0 |  |  |
 | `repair_min_stage` | 4 |  | Estágio mínimo da vila pra começar o conserto. |
 
-**Viagem (Bloco 68)**
+**Viagem (Blocos 68 e 99)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `travel_time` | 1.6 |  | Segundos na gaiola por viagem e quantos cabem nela de uma vez (mais gente = espera a próxima). |
-| `capacity` | 4 |  |  |
+| `capacity` | 4 |  | Quantos cabem na cabine de uma vez. |
+| `segundos_viagem` | 5.0 |  | Segundos (de jogo) da cabine de uma ponta à outra. |
+| `segundos_embarque` | 1.2 |  | Segundos de porta aberta pra embarcar. |
+| `viagens_ate_quebrar` | 60 |  | Viagens até o cabo gastar e arrebentar. |
+
+**Conserto do cabo (Bloco 99)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `conserto_custo` | Vector3i(60, 25, 10) |  | Material do conserto: x = créditos, y = ferro, z = madeira; e os segundos de engenheiro. |
+| `conserto_segundos` | 35.0 |  |  |
+| `conserto_tenta_cada` | 5.0 |  | De quantos em quantos segundos tenta pagar o conserto quando falta material. |
 
 ## `scripts/props/armazem.gd` (11)
 
@@ -1507,7 +1517,7 @@ Total: **891 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `eat_sound_interval` | 0.9 |  | Intervalo entre os sons de mastigar enquanto alguém come. |
 
-## `scripts/props/deep_shaft.gd` (4)
+## `scripts/props/deep_shaft.gd` (14)
 
 **(sem grupo)**
 
@@ -1516,12 +1526,32 @@ Total: **891 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `bottom_position` | Vector2(440, 790) |  | Onde fica a gaiola de chegada lá embaixo (coordenadas do mundo, dentro do nível 2). |
 | `link_travel_cost` | 0.05 |  | Custo de navegação da descida (baixo = os ipezinhos acham que "descer é perto"). |
 
-**Viagem (Bloco 68)**
+**Viagem (Blocos 68 e 99)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `travel_time` | 1.6 |  | Segundos na gaiola por viagem e quantos cabem nela de uma vez (mais gente = espera a próxima). |
-| `capacity` | 4 |  |  |
+| `capacity` | 4 |  | Quantos cabem na cabine de uma vez. |
+| `segundos_viagem` | 7.0 |  | Segundos (de jogo) da cabine de uma ponta à outra do poço. |
+| `segundos_embarque` | 1.2 |  | Segundos de porta aberta pra embarcar (cada um que entra renova). |
+| `viagens_ate_quebrar` | 60 |  | Viagens até o cabo gastar e arrebentar. |
+
+**Restauração (Bloco 99)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `etapa_nomes` | PackedStringArray(["Ruína", "Limpar o poço", "Guincho e cabos", "A cabine"]) |  | Nome de cada etapa (índice 1..3; 0 = a ruína). |
+| `etapa_custo` | [Vector3i.ZERO, Vector3i(0, 0, 40), Vector3i(120, 80, 0), Vector3i(200, 60, 40)] |  | Custo de cada etapa (índice 1..3): x = créditos, y = ferro (barras a partir da fornalha), z = madeira. |
+| `etapa_itens` | [{}, {}, {}, {"prego": 10}] |  | Itens a mais de cada etapa ({item: qtd}; antes da fornalha os pregos viram ferro). |
+| `etapa_segundos` | PackedFloat32Array([0.0, 30.0, 45.0, 50.0]) |  | Segundos de engenheiro de cada etapa. |
+| `etapa_estagio` | PackedInt32Array([0, 1, 2, 2]) |  | Estágio mínimo da vila pra pedir cada etapa. |
+
+**Conserto do cabo (Bloco 99)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `conserto_custo` | Vector3i(40, 20, 10) |  | Material do conserto: x = créditos, y = ferro, z = madeira; e os segundos de engenheiro. |
+| `conserto_segundos` | 30.0 |  |  |
+| `conserto_tenta_cada` | 5.0 |  | De quantos em quantos segundos tenta pagar o conserto quando falta material. |
 
 ## `scripts/props/enfermaria.gd` (7)
 
@@ -1588,18 +1618,37 @@ Total: **891 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `emissor_solarita` | 100 |  |  |
 | `stage_itens` | [{}, {"aco": 20}, {}, {}] |  | Bloco 94: itens a mais de cada etapa ({item: qtd}), na ordem de STAGE_IDS. |
 
-## `scripts/props/estacao_vagonete.gd` (8)
+## `scripts/props/espiral.gd` (2)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `segundos_por_andar` | 20.0 |  | Segundos (de jogo) pra subir ou descer um andar pela escada. |
+| `custo` | 1.0 |  | Custo de navegação por px (o elevador custa 0,05: alto aqui = só quando a cabine não serve). |
+
+## `scripts/props/estacao_vagonete.gd` (13)
 
 **Vagonete (Bloco 64)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `buffer_capacity` | 60.0 |  | Minério que o ponto guarda esperando o vagonete, e quanto o vagonete leva por viagem. |
-| `cart_capacity` | 25.0 |  |  |
-| `cart_speed` | 55.0 |  | Velocidade do vagonete (px da lógica / s) e quanto espera juntar carga antes de sair. |
-| `cart_wait` | 8.0 |  |  |
-| `rail_trips` | 25 |  | Viagens até o trilho quebrar e segundos de engenheiro pra consertar. |
+| `buffer_capacity` | 240.0 |  | Minério que o ponto guarda esperando o vagonete, e quanto o vagonete leva por viagem (Bloco 99: 60 -> 240, 25 -> 100). |
+| `cart_capacity` | 100.0 |  |  |
+| `cart_speed` | 55.0 |  | Velocidade do vagonete (px da lógica / s) e quanto espera juntar carga antes de sair (s; Bloco 99: 8 -> 60). |
+| `cart_wait` | 60.0 |  |  |
+| `rail_trips` | 25 |  | Desgaste do trilho até quebrar, em "viagens" de `desgaste_ref` minério cada (Bloco 99: gasta por minério levado, não por viagem), e segundos de engenheiro pra consertar. |
+| `desgaste_ref` | 25.0 |  | Minério que vale 1 viagem de desgaste (o carrinho de antes levava 25: 25 x 25 = 625 minério até quebrar). |
 | `repair_seconds` | 20.0 |  |  |
+
+**Dentro da mina (Bloco 99)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `tem_interior` | false |  | Esta é a boca da mina (tem galeria de dentro onde o mineiro trabalha escondido)? |
+| `vagas_dentro` | 5 |  | Quantos mineiros cabem lá dentro. |
+| `taxa_dentro` | 21.0 |  | Minério por mineiro por HORA DE JOGO lá dentro (o mesmo que eles tiram hoje nas galerias da montanha, contando a caminhada até o armazém: a renda fica igual; ver tests/bench_minerio.gd). |
+| `alcance_area` | 80.0 |  | A área de mina conta se a boca estiver dentro dela ou a até esta distância da borda (px). |
 | `rota_fixa` | false |  | Bloco 74: o da mina (fixo): o trilho sai do batente da boca, desce reto e vira pra porta do armazém (em vez do caminho da navegação). |
 | `ferrovia` | "" |  | Bloco 79: FERROVIA DE CARGA — o id do andar (S2..S5) onde fica a estação ("" = o vagonete comum). O trilho no chão é só o pedaço até a doca; o resto da viagem é a SUBIDA pelo cavalete até a superfície (a vista iso desenha o cavalete e o carrinho subindo), e a carga vai pro armazém. |
 

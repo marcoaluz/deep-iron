@@ -4,6 +4,8 @@ extends Node2D
 ## um elevador igual ao do nível 2 (NavigationLink2D, nos dois sentidos).
 ## Bloco 96: o conserto é uma OBRA de engenheiro: a prata vai pro lugar nas costas dele (ObraSite) e o tempo só anda
 ## com ele trabalhando (antes andava sozinho). Save antigo consertando: material todo entregue, falta o engenheiro.
+## Bloco 99: a viagem é de verdade (cabine.gd: fila, embarque, a cabine andando, quebra por uso). Arrebentou o cabo: a
+## ligação some (o caminho vai pela escada em espiral, espiral.gd) e o conserto vira obra com material, pedido sozinho.
 ## Lá embaixo: basalto em brasa, SOLARITA (precisa do Traje de chumbo da Oficina),
 ## acidentes bem mais comuns e mais graves, e o calor tira o ânimo de quem trabalha lá.
 
@@ -13,6 +15,7 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 96
 const RUIN := preload("res://assets/game/elevador_ruina.png")
 const CAGE := preload("res://assets/game/elevador.png")
+const Cabine := preload("res://scripts/props/cabine.gd")  # Bloco 99
 
 ## Onde fica a gaiola de chegada lá embaixo (coordenadas do mundo, dentro do abismo).
 @export var bottom_position: Vector2 = Vector2(-360, 1500)
@@ -38,21 +41,32 @@ const CAGE := preload("res://assets/game/elevador.png")
 var panel_id := "abismo"
 var unlocked: bool = false
 
-@export_group("Viagem (Bloco 68)")
-## Segundos na gaiola por viagem e quantos cabem nela de uma vez (mais gente = espera a próxima).
-@export var travel_time: float = 1.6
+@export_group("Viagem (Blocos 68 e 99)")
+## Quantos cabem na cabine de uma vez.
 @export var capacity: int = 4
-var _riders: Array = []  # fim da viagem (s do relógio) de quem está na gaiola
+## Segundos (de jogo) da cabine de uma ponta à outra.
+@export var segundos_viagem: float = 5.0
+## Segundos de porta aberta pra embarcar.
+@export var segundos_embarque: float = 1.2
+## Viagens até o cabo gastar e arrebentar.
+@export var viagens_ate_quebrar: int = 60
+
+@export_group("Conserto do cabo (Bloco 99)")
+## Material do conserto: x = créditos, y = ferro, z = madeira; e os segundos de engenheiro.
+@export var conserto_custo: Vector3i = Vector3i(60, 25, 10)
+@export var conserto_segundos: float = 35.0
+## De quantos em quantos segundos tenta pagar o conserto quando falta material.
+@export var conserto_tenta_cada: float = 5.0
+var cabine := Cabine.new(self)
+var _tenta_t := 0.0
 
 
-## Bloco 68: quanto tempo esse ipezinho fica na gaiola (a viagem + a fila, se lotou).
-func ride_wait() -> float:
-	var now := Time.get_ticks_msec() / 1000.0
-	_riders = _riders.filter(func(t): return t > now)
-	var fila := int(_riders.size() / maxi(capacity, 1))
-	var espera := travel_time * (1 + fila) / maxf(Engine.time_scale, 0.01)
-	_riders.append(now + espera)
-	return travel_time * (1 + fila)
+func usa_cabine() -> bool:
+	return true
+
+
+func funcionando() -> bool:
+	return unlocked and not cabine.quebrada
 
 
 ## Bloco 68: por que a plataforma ainda está fechada (o nível S3 lê daqui).
@@ -86,6 +100,11 @@ func _ready() -> void:
 	_link.bidirectional = true
 	_link.travel_cost = link_travel_cost
 	_link.enter_cost = 0.0
+	cabine.capacidade = capacity
+	cabine.segundos_viagem = segundos_viagem
+	cabine.embarque = segundos_embarque
+	cabine.viagens_ate_quebrar = viagens_ate_quebrar
+	cabine.conserto_segundos = conserto_segundos
 	_apply(false)
 
 
@@ -162,6 +181,15 @@ func repair_progress() -> float:
 
 
 func _process(delta: float) -> void:
+	if funcionando():
+		cabine.tick(delta)  # Bloco 99
+		if Engine.get_process_frames() % 20 == 0:
+			_top_label.text = ("descida pro ABISMO (nível 3)" if nivel_id == "S3" else "descida pro %s" % _nome_nivel()) + "\n" + cabine.estado_texto()
+	elif cabine.quebrada and not cabine.consertando and unlocked:
+		_tenta_t -= delta
+		if _tenta_t <= 0.0:
+			_tenta_t = conserto_tenta_cada
+			_pede_conserto()
 	if not repairing:
 		return
 	if _obra.has_engineer():  # Bloco 96: o barulho e as faíscas só com o engenheiro trabalhando
@@ -172,8 +200,14 @@ func _process(delta: float) -> void:
 	_top_label.text = "Consertando a plataforma\n%s" % _obra.status(repair_progress())
 
 
-## Bloco 96: o engenheiro trabalhou `seconds` no conserto.
+## Bloco 96: o engenheiro trabalhou `seconds` no conserto. Bloco 99: ou no conserto do cabo.
 func obra_work(seconds: float) -> void:
+	if cabine.consertando:
+		if cabine.trabalha(seconds):
+			Audio.build_done(global_position)
+			remove_from_group("obras")
+			_apply(false)
+		return
 	if not repairing:
 		return
 	repair_left -= seconds
@@ -203,7 +237,7 @@ func _termina_conserto() -> void:
 func _apply(animate: bool) -> void:
 	_top_sprite.texture = CAGE if unlocked else RUIN
 	_top_lamp.enabled = unlocked
-	_link.enabled = unlocked
+	_link.enabled = funcionando()
 	_sparks.emitting = repairing
 	var abismo := nivel_id == "S3"
 	if unlocked:
@@ -224,18 +258,53 @@ func _apply(animate: bool) -> void:
 	for node in get_tree().get_nodes_in_group("minerios"):
 		if node.has_method("on_unlock_changed"):
 			node.on_unlock_changed(animate)
+	var env := get_tree().get_first_node_in_group("environment") if is_inside_tree() else null
+	if env and env.has_method("espirais_sync"):
+		env.espirais_sync()  # Bloco 99: a escada em espiral deste andar abre junto
+
+
+# ------------------------------------------------------------ o cabo (Bloco 99)
+func _cabine_quebrou() -> void:
+	_link.enabled = false
+	Audio.gate_break(global_position)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("O cabo da plataforma do %s arrebentou! A passagem vai pela escada em espiral até o conserto." % nivel_id, Color(1.0, 0.55, 0.4), self)
+	_tenta_t = 0.0
+	_pede_conserto()
+	_apply(false)
+
+
+func _pede_conserto() -> void:
+	if not cabine.quebrada or cabine.consertando:
+		return
+	var eco := get_tree().get_first_node_in_group("economy")
+	if eco == null or eco.metal_falta(conserto_custo.x, conserto_custo.y, "ferro", conserto_custo.z) != "":
+		return
+	if not eco.paga_metal(conserto_custo.x, conserto_custo.y, "ferro", conserto_custo.z):
+		return
+	cabine.comeca_conserto()
+	_obra.start()
+	add_to_group("obras")
+
+
+func conserto_falta() -> String:
+	var eco := get_tree().get_first_node_in_group("economy")
+	return eco.metal_falta(conserto_custo.x, conserto_custo.y, "ferro", conserto_custo.z) if eco else ""
 
 
 func obra_pending() -> bool:
-	return repairing
+	return repairing or cabine.consertando
 
 
 func obra_title() -> String:
+	if cabine.consertando:
+		return "Plataforma do %s: conserto do cabo" % (nivel_id if nivel_id != "S3" else "abismo")
 	return "Plataforma do %s" % (nivel_id if nivel_id != "S3" else "abismo")
 
 
 func obra_progress() -> float:
-	return repair_progress()
+	return cabine.conserto_progresso() if cabine.consertando else repair_progress()
 
 
 func obra_position(worker: Node) -> Vector2:
@@ -244,6 +313,13 @@ func obra_position(worker: Node) -> Vector2:
 
 ## Cancelado: a plataforma volta a arruinada; as peças raras voltam (créditos e prata: ObraSite.cancelar).
 func obra_cancelar() -> void:
+	if cabine.consertando:  # Bloco 99: o conserto do cabo cancelado (não paga de novo na hora)
+		cabine.consertando = false
+		cabine.conserto_left = 0.0
+		_tenta_t = conserto_tenta_cada * 6.0
+		remove_from_group("obras")
+		_apply(false)
+		return
 	repairing = false
 	repair_left = 0.0
 	remove_from_group("obras")
@@ -272,7 +348,8 @@ func obra_workers() -> Array[Node]:
 
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
-	return {"unlocked": unlocked, "repairing": repairing, "repair_left": repair_left, "obra": _obra.get_save_data()}
+	return {"unlocked": unlocked, "repairing": repairing, "repair_left": repair_left, "obra": _obra.get_save_data(),
+		"cabine": cabine.get_save_data()}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -280,7 +357,8 @@ func load_save_data(d: Dictionary) -> void:
 	repairing = SaveUtil.boolean(d, "repairing", false) and not unlocked
 	repair_left = clampf(SaveUtil.num(d, "repair_left", repair_time), 0.0, repair_time) if repairing else 0.0
 	_obra.load_save_data(SaveUtil.dict(d, "obra"))  # Bloco 96 (save antigo: sem material = tudo entregue)
-	if repairing:
+	cabine.load_save_data(SaveUtil.dict(d, "cabine"))  # Bloco 99 (save antigo: a cabine nova, em cima)
+	if repairing or cabine.consertando:
 		add_to_group("obras")
 	elif is_in_group("obras"):
 		remove_from_group("obras")

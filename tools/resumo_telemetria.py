@@ -50,6 +50,11 @@ def resumo(path):
     greves = sum(1 for i in range(1, len(rows)) if num(rows[i], "greve") and not num(rows[i - 1], "greve"))
     print("  invasões até agora: %d   greves começadas: %d   pesquisas: %d   estágio da vila: %d" % (
         ondas, greves, num(rows[-1], "pesquisas"), num(rows[-1], "estagio_vila")))
+    if "minerio_entrou_dia" in rows[0]:  # Bloco 99: o minério que entrou por dia (e quanto de vagonete)
+        entrou = [num(r, "minerio_entrou_dia") for r in rows[1:]] or [0.0]
+        vag = sum(num(r, "minerio_vagonete_dia") for r in rows[1:])
+        print("  minério que entrou por dia: média %d  máx %d   %s   (de vagonete: %d%%)" % (
+            sum(entrou) / len(entrou), max(entrou), linha(entrou), 100.0 * vag / max(sum(entrou), 1.0)))
     print("  tempo real: %.1f min" % (num(rows[-1], "tempo_real_s") / 60.0))
 
 

@@ -3000,6 +3000,51 @@
    ],
    "h": 38.0,
    "fora": 3
+  },
+  "vagonete_grande_SE": {
+   "img": "vagonete_grande_SE.png",
+   "ancora": [
+    20.0,
+    38.0
+   ],
+   "peg": [
+    -7.0,
+    -5.6000000000000005,
+    14.0,
+    12.0
+   ],
+   "h": 36.0,
+   "fora": 4
+  },
+  "vagonete_grande_SO": {
+   "img": "vagonete_grande_SO.png",
+   "ancora": [
+    20.0,
+    38.0
+   ],
+   "peg": [
+    -7.0,
+    -5.6000000000000005,
+    13.0,
+    13.0
+   ],
+   "h": 36.0,
+   "fora": 3
+  },
+  "lanterna_boca": {
+   "ancora": [
+    20.0,
+    60.0
+   ],
+   "peg": [
+    -6.0,
+    -5.0,
+    8.0,
+    6.0
+   ],
+   "h": 56.0,
+   "fora": 0,
+   "img": "lanterna_boca.png"
   }
  }
 }

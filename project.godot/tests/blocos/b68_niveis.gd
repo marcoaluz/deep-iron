@@ -88,23 +88,22 @@ func _liberacao() -> void:
 
 
 func _gaiola() -> void:
-	print("== gaiola do elevador")
+	# Bloco 99: a gaiola virou a CABINE de verdade (cabine.gd): o ipezinho entra na fila em cima, espera parado, embarca,
+	# a cabine anda e ele desembarca lá embaixo. (O teste da viagem completa e da quebra fica no b99.)
+	print("== gaiola do elevador (a cabine do Bloco 99)")
 	var sh = g("elevador")
-	sh._riders.clear()
-	var esperas := []
-	for i in sh.capacity + 1:
-		esperas.append(sh.ride_wait())
-	check(is_equal_approx(esperas[0], sh.travel_time), "viagem leva %.1f s" % sh.travel_time)
-	check(esperas[sh.capacity] > esperas[0] + 0.01, "lotou (%d): o próximo espera a outra viagem (%.1f s)" % [sh.capacity, esperas[sh.capacity]])
+	sh.restaura_tudo()
+	sh.unlock(false)
 	var w = main.get_tree().get_nodes_in_group("ipezinhos")[0]
-	sh._riders.clear()
-	w._on_link_reached({"owner": sh.get_node("Link"), "link_exit_position": sh.bottom_position})
-	check(w._cage_wait > 0.0 and w.global_position.distance_to(sh.bottom_position) < 1.0, "ipezinho na gaiola: chega embaixo e espera a viagem (%.1f s)" % w._cage_wait)
+	w._on_link_reached({"owner": sh.get_node("Link"), "link_entry_position": sh.global_position, "link_exit_position": sh.bottom_position})
+	check(w.na_cabine() and sh.cabine.tem(w) and w.global_position.distance_to(sh.global_position) < 40.0, "ipezinho na gaiola: entra na fila em cima e espera a cabine")
 	var p0: Vector2 = w.global_position
 	w._moving = true
 	w._target = p0 + Vector2(100, 0)
 	w._physics_process(0.1)
-	check(w.global_position.distance_to(p0) < 0.5, "na gaiola não anda")
+	check(w.global_position.distance_to(p0) < 0.5, "na fila da cabine não anda")
+	check(sh.capacity == sh.cabine.capacidade and sh.cabine.capacidade >= 1, "cabem %d de cada vez" % sh.capacity)
+	w._sai_da_fila()
 
 
 func _corte() -> void:

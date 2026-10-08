@@ -19,6 +19,7 @@ const STATE_LABELS := {
 	"eating": "comendo",
 	"mining": "minerando",
 	"storing": "armazenando",
+	"na_mina": "dentro da mina",  # Bloco 99
 	"manual": "ordem manual",
 	"home": "indo pra casa",
 	"gathering": "colhendo comida",
@@ -532,6 +533,15 @@ var _saved_home_slot: int = -1
 @onready var _anger_icon: Sprite2D = $AngerIcon
 @onready var _cook_icon: Sprite2D = $CookIcon
 @onready var _lamp: PointLight2D = $HeadLamp
+## Bloco 99: a cabine do elevador em que ele está (na fila ou dentro), se já embarcou e há quanto tempo espera; e a
+## boca da mina onde ele trabalha DENTRO (estacao_vagonete.gd com interior).
+var _na_cabine: Node = null
+var _a_bordo := false
+var _fila_t := 0.0
+var _mina_dentro: Node = null
+## Bloco 99: na fila da cabine há mais que isso (s de jogo), desiste e procura outro caminho (a escada em espiral).
+const FILA_DESISTE := 120.0
+
 ## Bloco 98: o destino de verdade (o _target vira o lugar de espera no portão fechado) e se está esperando o portão.
 var _alvo_final := Vector2.ZERO
 var _esperando_portao := false
@@ -619,6 +629,10 @@ func move_to(pos: Vector2) -> void:
 
 
 func _go_to(pos: Vector2) -> void:
+	if _na_cabine != null and not _a_bordo:
+		if pos.distance_to(_alvo_final) <= 2.0:
+			return  # (o mesmo destino: continua na fila)
+		_sai_da_fila()  # Bloco 99: mudou de ideia esperando a cabine
 	_alvo_final = pos
 	_esperando_portao = false
 	pos = _ate_o_portao(pos)
@@ -738,6 +752,13 @@ func can_work_at(station: Node) -> bool:
 
 # ------------------------------------------------------------ movimento
 func _physics_process(delta: float) -> void:
+	if _na_cabine != null:  # Bloco 99: esperando a cabine (de pé na fila) ou viajando nela
+		_fila_t += delta
+		_apply_velocity(Vector2.ZERO)
+		if not _a_bordo and _fila_t > FILA_DESISTE:
+			_sai_da_fila()
+			_go_to(_alvo_final)
+		return
 	if _cage_wait > 0.0:  # Bloco 68: na gaiola do elevador (viagem / fila)
 		_cage_wait -= delta
 		_apply_velocity(Vector2.ZERO)
@@ -1138,6 +1159,10 @@ func _choose_state() -> String:
 	if is_miner() and _my_coletor_minerio() != null:
 		return "storing" if carrying > 0.0 else "operating_ore"
 	# Daqui pra baixo: minerador (e pesquisador sem laboratório, como antes).
+	# Bloco 99: com a área de mina, o trilho e o vagonete funcionando, o mineiro trabalha DENTRO da mina (entra pela boca;
+	# o minério vai pro vagonete). Com carga na mão, entrega antes (a regra de baixo).
+	if is_miner() and carrying <= 0.0 and _boca_da_mina() != null:
+		return "na_mina"
 	# Prioridade 2: depositar carga cheia (e não desistir no meio do caminho).
 	if carrying >= capacidade_carga() - 0.01:
 		return "storing"
@@ -1169,6 +1194,20 @@ func _decide_next_action() -> void:
 		_release_station()
 		_set_state("strike")
 		_go_protest()
+		return
+
+	if desired == "na_mina":  # Bloco 99: vai pra boca e entra (quem está dentro fica)
+		if _ai_state != "na_mina":
+			_release_station()
+			_set_state("na_mina")
+		if _mina_dentro == null:
+			var b := _boca_da_mina()
+			if b != null:
+				var porta: Vector2 = b.boca_pos()
+				if global_position.distance_to(porta) <= 16.0:
+					_entra_mina(b)
+				elif not _moving or _target.distance_to(porta) > 2.0:
+					_go_to(porta)
 		return
 
 	if desired == "montando_cama":  # Bloco 94
@@ -1360,18 +1399,130 @@ func _station_ok_for(state: String) -> bool:
 func _on_link_reached(details: Dictionary) -> void:
 	var link = details.get("owner")
 	if not (link is Node) or not link.get_parent() \
-			or not (link.get_parent().is_in_group("elevador") or link.get_parent().is_in_group("elevadores")):
+			or not (link.get_parent().is_in_group("elevador") or link.get_parent().is_in_group("elevadores") or link.get_parent().is_in_group("espirais")):
 		return
 	var exit: Vector2 = details.get("link_exit_position", global_position)
-	global_position = exit
-	Audio.elevator(exit)  # corrente + "clanc" da gaiola
-	# Bloco 68: a viagem leva tempo e a gaiola tem lugar limitado (lotou: espera a próxima)
 	var shaft: Node = link.get_parent()
+	if shaft.has_method("usa_cabine") and shaft.get("cabine") != null:
+		_entra_na_fila(shaft, details.get("link_entry_position", global_position), exit)  # Bloco 99
+		return
+	global_position = exit
+	if shaft.is_in_group("espirais"):
+		Audio.step(exit)  # Bloco 99: os passos na escada em espiral
+	else:
+		Audio.elevator(exit)  # corrente + "clanc" da gaiola
+	# Bloco 68: a viagem leva tempo (Bloco 99: a escada em espiral, espiral.gd, usa isto: some e aparece no outro andar)
 	_cage_wait = shaft.ride_wait() if shaft.has_method("ride_wait") else 0.0
 	_body.modulate.a = 0.0
 	var tw := create_tween()
 	tw.tween_interval(_cage_wait)
 	tw.tween_property(_body, "modulate:a", 1.0, 0.35)
+
+
+# ------------------------------------------------------------ a cabine (Bloco 99)
+## Chegou na gaiola: entra na fila do lado dele e espera de pé (os da fila ficam um atrás do outro).
+func _entra_na_fila(shaft: Node, entrada: Vector2, saida: Vector2) -> void:
+	var cima: bool = entrada.distance_to(shaft.global_position) <= entrada.distance_to(shaft.bottom_position)
+	var n: int = shaft.cabine.entra(self, cima, saida)
+	_na_cabine = shaft
+	_a_bordo = false
+	_fila_t = 0.0
+	var lado := Vector2(-11.0, 8.0) if cima else Vector2(-11.0, 10.0)
+	global_position = (shaft.global_position if cima else shaft.bottom_position) + lado + Vector2(-7.0, 4.0) * float(n)
+
+
+func _sai_da_fila() -> void:
+	if _na_cabine != null and is_instance_valid(_na_cabine):
+		_na_cabine.cabine.sai(self)
+	_na_cabine = null
+	_a_bordo = false
+	_body.modulate.a = 1.0
+
+
+## A cabine chama: entrou (some dentro dela).
+func embarca_cabine() -> void:
+	_a_bordo = true
+	_body.modulate.a = 0.0
+
+
+## A cabine chegou no outro andar: sai na gaiola de lá e segue o caminho.
+func desembarca_cabine(saida: Vector2) -> void:
+	_na_cabine = null
+	_a_bordo = false
+	global_position = saida
+	create_tween().tween_property(_body, "modulate:a", 1.0, 0.3)
+	_agent.target_position = _target  # (o caminho continua daqui)
+
+
+## O cabo arrebentou com ele na fila: procura outro caminho (a escada em espiral).
+func cabine_cancelada() -> void:
+	_na_cabine = null
+	_a_bordo = false
+	_body.modulate.a = 1.0
+	_go_to(_alvo_final)
+
+
+func na_cabine() -> bool:
+	return _na_cabine != null
+
+
+# ------------------------------------------------------------ dentro da mina (Bloco 99)
+## A boca da mina onde ele pode trabalhar DENTRO agora (mineiro da área de mina, com o trilho e o vagonete
+## funcionando): o ponto de carga com interior que aceita. null = minera como sempre (na mão).
+func _boca_da_mina() -> Node:
+	if _mina_dentro != null and is_instance_valid(_mina_dentro) and _mina_dentro.aceita_dentro(self):
+		return _mina_dentro
+	for b in get_tree().get_nodes_in_group("bocas_mina"):
+		if b.aceita_dentro(self):
+			return b
+	return null
+
+
+func _entra_mina(b: Node) -> void:
+	_mina_dentro = b
+	b.entra(self)
+	_moving = false
+	_inside = true  # (criatura não pega quem está lá dentro)
+	_agent.avoidance_enabled = false
+	visible = false
+	_popup("Pra dentro da mina!", Color(0.85, 0.8, 0.65))
+
+
+func _sai_mina() -> void:
+	if _mina_dentro == null:
+		return
+	var b := _mina_dentro
+	_mina_dentro = null
+	if is_instance_valid(b):
+		b.sai(self)
+		global_position = b.boca_pos()
+	_inside = false
+	visible = true
+	_agent.avoidance_enabled = avoidance_enabled
+
+
+func dentro_da_mina() -> bool:
+	return _mina_dentro != null
+
+
+## Multiplica a picareta: zanga/tristeza, explosivos (pesquisa) e a picareta de aço (Bloco 94). (mine() e a mina por dentro)
+func mult_mineracao() -> float:
+	var res := _research()
+	var boom: float = res.mining_speed_mult() if res else 1.0
+	var ofi := get_tree().get_first_node_in_group("oficina")
+	if ofi and ofi.has_method("mult_mineracao"):
+		boom *= ofi.mult_mineracao()
+	return work_mult() * boom
+
+
+## Lá dentro: minerou `taken` (o ponto de carga tirou da jazida). Acidente e achados sorteiam igual (por minério).
+func minerou_dentro(taken: float, tipo: String) -> void:
+	if taken <= 0.0:
+		return
+	cargo_type = tipo
+	_work_timer = 0.2
+	_roll_injury(taken)
+	_area_registra(taken)
 
 
 ## Multiplicador de acidente pela profundidade (nível 2 = mais perigoso).
@@ -1496,6 +1647,8 @@ func _set_state(new_state: String) -> void:
 		_drop_patient()
 	if _ai_state == "social":
 		_social_sai()  # Bloco 85: solta o lugar no ponto
+	if _ai_state == "na_mina":
+		_sai_mina()  # Bloco 99: refeição, fim do expediente, emergência ou o vagonete parou: sai pela boca
 	_ai_state = new_state
 	state_changed.emit(new_state)
 
@@ -4044,12 +4197,7 @@ func mine(amount: float, ore_type: String = "ferro") -> float:
 		cargo_type = ore_type
 		_carry_icon.texture = Ores.CHUNK_TEXTURES.get(cargo_type, _carry_icon.texture)
 	var space := capacidade_carga() - carrying
-	var res := _research()
-	var boom: float = res.mining_speed_mult() if res else 1.0  # explosivos
-	var ofi := get_tree().get_first_node_in_group("oficina")
-	if ofi and ofi.has_method("mult_mineracao"):
-		boom *= ofi.mult_mineracao()  # Bloco 94: a picareta de aço
-	var taken: float = minf(amount * work_mult() * boom, space)  # zangado minera menos
+	var taken: float = minf(amount * mult_mineracao(), space)  # zangado minera menos; explosivos e a picareta de aço
 	if ore_type in ["solarita", "cristal_verde", "cristal_rubro"] and taken > 0.0:
 		var diary := get_tree().get_first_node_in_group("diary")
 		if diary:

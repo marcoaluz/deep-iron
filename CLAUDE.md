@@ -80,8 +80,8 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 | `centro_vila.gd` | Hub de progressão: estágios, melhorias, e quem ergue as construções encomendadas (`finish_build`). |
 | `canteiro.gd` | Obra encomendada e já paga, esperando engenheiro. `KINDS` lista os tipos. |
 | `barricada.gd` | O portão da paliçada (o único). Bloco 98: abre de dia e fecha às 18:30 (abre 05:00), com a animação `nivel_N`/`meio_N`/`aberto_N`; fechado, desliga as FAIXAS de passagem (`NavigationLink2D`) — a paliçada inteira é parede na malha (`environment.portao_por_faixas`). Quem tem destino do outro lado espera encostado no portão (`ipezinho._ate_o_portao`); um guarda abre. |
-| `estacao_vagonete.gd` + `trilho.gd` + `vagonete.gd` | Transporte de carga (Bloco 64) e ferrovia por andar (Bloco 79). |
-| `deep_shaft.gd` / `abyss_shaft.gd` | Ligações entre andares (elevador e plataformas). |
+| `estacao_vagonete.gd` + `trilho.gd` + `vagonete.gd` | Transporte de carga (Bloco 64) e ferrovia por andar (Bloco 79). Bloco 99: cargas de 100 (ponto 240, espera 60 s), desgaste por minério; o ponto da BOCA (`tem_interior`, grupo "bocas_mina") tem a galeria de dentro onde o mineiro da área de mina trabalha escondido (`aceita_dentro`, `taxa_dentro`). |
+| `deep_shaft.gd` / `abyss_shaft.gd` + `cabine.gd` + `espiral.gd` | Ligações entre andares. Bloco 99: o elevador do S2 é restaurado por 3 etapas (em paralelo com a escavadeira; janela `elevador_panel.gd`); a CABINE (fila, embarque, viagem pelo poço, quebra por uso e conserto com material) vale pro elevador e pras plataformas; a ESCADA EM ESPIRAL é a rota lenta sempre aberta (o caminho prefere o elevador). |
 | `escavadeira.gd` | Montada peça por peça; abre o S2. |
 | `escudo.gd` | O projeto final. |
 | `coletor_madeira.gd` | Coletor de madeira; o primeiro é a ruína da floresta, restaurada por etapas (Bloco 81). |
@@ -117,7 +117,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b98**; o próximo é o **b99**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b99**; o próximo é o **b100**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:

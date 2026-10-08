@@ -6,19 +6,41 @@ extends "res://scripts/props/station.gd"
 ## O trilho gasta a cada viagem; quebrou, o vagonete para e o engenheiro conserta (obra). Parado ou
 ## cheio, o ponto não aceita mais carga e os mineradores voltam pro armazém: nada trava.
 ## Construído pelo engenheiro (canteiro "vagonete", dono: Centro da Vila).
+##
+## Bloco 99: CARGAS GRANDES (100 por viagem, o ponto guarda 240, espera até 60 s pra juntar) e o trilho gasta POR
+## MINÉRIO levado (`desgaste_ref` minério = 1 "viagem" de desgaste: o mesmo desgaste por minério de antes, com as viagens
+## mais espaçadas). O ponto da BOCA DA MINA (`tem_interior`, grupo "bocas_mina") tem a galeria de dentro: o mineiro da
+## área de mina em volta, com o trilho e o vagonete funcionando, ENTRA pela boca e trabalha lá dentro (some do mundo,
+## "dentro da mina N/5", lanterna acesa e o som da picareta na boca), tirando da jazida da área no ritmo `taxa_dentro`
+## (o mesmo de hoje nas galerias: a renda fica igual) direto pro ponto. Sem trilho, quebrado, ponto cheio ou armazém
+## cheio: não aceita e ele sai e minera na mão, como antes.
 
 const Iso := preload("res://scripts/iso/iso_core.gd")
 
 @export_group("Vagonete (Bloco 64)")
-## Minério que o ponto guarda esperando o vagonete, e quanto o vagonete leva por viagem.
-@export var buffer_capacity: float = 60.0
-@export var cart_capacity: float = 25.0
-## Velocidade do vagonete (px da lógica / s) e quanto espera juntar carga antes de sair.
+## Minério que o ponto guarda esperando o vagonete, e quanto o vagonete leva por viagem (Bloco 99: 60 -> 240, 25 -> 100).
+@export var buffer_capacity: float = 240.0
+@export var cart_capacity: float = 100.0
+## Velocidade do vagonete (px da lógica / s) e quanto espera juntar carga antes de sair (s; Bloco 99: 8 -> 60).
 @export var cart_speed: float = 55.0
-@export var cart_wait: float = 8.0
-## Viagens até o trilho quebrar e segundos de engenheiro pra consertar.
+@export var cart_wait: float = 60.0
+## Desgaste do trilho até quebrar, em "viagens" de `desgaste_ref` minério cada (Bloco 99: gasta por minério levado, não
+## por viagem), e segundos de engenheiro pra consertar.
 @export var rail_trips: int = 25
+## Minério que vale 1 viagem de desgaste (o carrinho de antes levava 25: 25 x 25 = 625 minério até quebrar).
+@export var desgaste_ref: float = 25.0
 @export var repair_seconds: float = 20.0
+
+@export_group("Dentro da mina (Bloco 99)")
+## Esta é a boca da mina (tem galeria de dentro onde o mineiro trabalha escondido)?
+@export var tem_interior := false
+## Quantos mineiros cabem lá dentro.
+@export var vagas_dentro: int = 5
+## Minério por mineiro por HORA DE JOGO lá dentro (o mesmo que eles tiram hoje nas galerias da montanha, contando a
+## caminhada até o armazém: a renda fica igual; ver tests/bench_minerio.gd).
+@export var taxa_dentro: float = 21.0
+## A área de mina conta se a boca estiver dentro dela ou a até esta distância da borda (px).
+@export var alcance_area: float = 80.0
 ## Bloco 74: o da mina (fixo): o trilho sai do batente da boca, desce reto e vira pra porta do armazém
 ## (em vez do caminho da navegação).
 @export var rota_fixa := false
@@ -33,7 +55,7 @@ var _len_chao := 0.0
 
 var stock := {}  # minério esperando o vagonete
 var rail: Node2D = null  # o trilho (Node2D "trilhos" com os pontos)
-var rail_left := 25  # viagens até quebrar
+var rail_left := 25.0  # viagens de desgaste até quebrar (Bloco 99: fração = minério / desgaste_ref)
 var repair_left := 0.0
 var total_moved := 0.0
 ## Vagonete: "esperando", "indo", "voltando"; posição no trilho (0..comprimento) e a carga.
@@ -48,6 +70,13 @@ var _obra := preload("res://scripts/core/obra_site.gd").new()
 ## fica parado no ponto e o ponto não recebe carga (work_areas.gd liga e desliga).
 var _parado_area := false
 var _motivo_area := ""
+## Bloco 99: quem está lá dentro, a carga desta viagem (pro desgaste), o som da picareta e a lanterna da boca.
+var dentro: Array = []
+var _carga_viagem := 0.0
+var _som_t := 0.0
+var _boca_cache := Vector2.INF
+var _lanterna: PointLight2D
+var _lampiao: Node2D  # o lampião no poste com as picaretas, na boca (só com gente dentro)
 
 @onready var _label: Label = $StatusLabel
 
@@ -63,7 +92,19 @@ func _ready() -> void:
 	var sc: float = env.iso_scale() if env and env.has_method("has_iso_map") and env.has_iso_map() else 0.5
 	v.scale = Vector2.ONE * (0.6 / maxf(sc, 0.01))
 	v.offset = Vector2(-v.texture.get_width() * 0.5, -v.texture.get_height() + 16.0)
-	rail_left = rail_trips
+	rail_left = float(rail_trips)
+	if tem_interior:
+		add_to_group("bocas_mina")
+		_lanterna = PointLight2D.new()
+		_lanterna.name = "Lamp"  # (a vista iso copia como lampião)
+		_lanterna.texture = load("res://assets/game/light_radial.tres")
+		_lanterna.color = Color(1.0, 0.72, 0.38)
+		_lanterna.energy = 0.0
+		_lanterna.texture_scale = 0.45
+		_lanterna.position = Vector2(0, -34)
+		_lanterna.enabled = false
+		add_child(_lanterna)
+		_poe_lampiao.call_deferred()
 	_make_cart()
 	_build_rail.call_deferred()
 
@@ -99,7 +140,102 @@ func buffered() -> float:
 
 
 func is_broken() -> bool:
-	return rail_left <= 0
+	return rail_left <= 0.0
+
+
+# ------------------------------------------------------------ dentro da mina (Bloco 99)
+## O ponto de pisar na frente da boca (onde o mineiro entra e sai).
+func boca_pos() -> Vector2:
+	if _boca_cache == Vector2.INF and is_inside_tree():
+		var alvo := global_position + Vector2(0, -24)
+		var map := get_world_2d().navigation_map
+		if map.is_valid() and NavigationServer2D.map_get_iteration_id(map) > 0:
+			_boca_cache = NavigationServer2D.map_get_closest_point(map, alvo)
+		else:
+			return alvo
+	return _boca_cache
+
+
+## O vagonete leva o que sai daqui agora? (trilho inteiro, área operando, ponto com espaço, armazém com espaço)
+func operando() -> bool:
+	return rail != null and is_instance_valid(rail) and not is_broken() and not _parado_area \
+		and buffered() < buffer_capacity - 1.0 and not _sem_espaco
+
+
+## A área de mina do mineiro em volta desta boca, ligada (null = não).
+func _area_de(w: Node) -> Variant:
+	var a = w.get("work_area")
+	if a == null or a.tipo != "mina" or not a.ativa:
+		return null
+	return a if a.rect.grow(alcance_area).has_point(global_position) else null
+
+
+## Uma jazida da área com minério (a mais valiosa) pra tirar lá de dentro.
+func _jazida(a) -> Node:
+	var melhor: Node = null
+	var melhor_v := -INF
+	var env := get_tree().get_first_node_in_group("environment")
+	for j in get_tree().get_nodes_in_group("minerios"):
+		if not a.contem(j.global_position) or not j.is_usable():
+			continue
+		if env and env.has_method("trancado") and env.trancado(j.global_position):
+			continue
+		if j.get("hazard") != "" and j.get("hazard") != null:
+			continue  # (zona de perigo: precisa do traje; lá dentro não tem vestiário)
+		var v: float = j.get_value_weight()
+		if v > melhor_v:
+			melhor_v = v
+			melhor = j
+	return melhor
+
+
+## Esse mineiro pode trabalhar (ou continuar) lá dentro agora?
+func aceita_dentro(w: Node) -> bool:
+	if not tem_interior or not operando():
+		return false
+	var a = _area_de(w)
+	if a == null or _jazida(a) == null:
+		return false
+	return dentro.has(w) or dentro.size() < vagas_dentro
+
+
+func entra(w: Node) -> void:
+	if not dentro.has(w):
+		dentro.append(w)
+	_update_label()
+
+
+func sai(w: Node) -> void:
+	dentro.erase(w)
+	_update_label()
+
+
+## A produção de quem está dentro (por quadro): tira da jazida da área e põe no ponto.
+func _produz_dentro(delta: float) -> void:
+	dentro = dentro.filter(func(w): return is_instance_valid(w) and w.has_method("dentro_da_mina") and w.dentro_da_mina())
+	if dentro.is_empty():
+		return
+	var dn := get_tree().get_first_node_in_group("day_night")
+	var sph: float = dn.segundos_por_hora() if dn and dn.has_method("segundos_por_hora") else 22.5
+	for w in dentro:
+		if not operando():
+			w.set("_decision_timer", 0.0)  # parou (cheio, trilho quebrado): ele sai e decide de novo
+			continue
+		var a = _area_de(w)
+		var j: Node = _jazida(a) if a != null else null
+		if j == null:
+			w.set("_decision_timer", 0.0)
+			continue
+		var quer: float = taxa_dentro * delta / maxf(sph, 0.01) * float(w.mult_mineracao())
+		var taken: float = j.extract(minf(quer, buffer_capacity - buffered()))
+		if taken > 0.0:
+			var t: String = j.ore_type
+			stock[t] = stock.get(t, 0.0) + taken
+			w.minerou_dentro(taken, t)
+	_som_t -= delta
+	if _som_t <= 0.0:
+		_som_t = randf_range(0.7, 1.3)
+		Audio.pick(boca_pos())  # a picareta lá dentro, ouvida na boca
 
 
 # ------------------------------------------------------------ trilho
@@ -171,6 +307,26 @@ func progresso_subida() -> float:
 	return clampf((cart_d - _len_chao) / maxf(_len - _len_chao, 1.0), 0.0, 1.0)
 
 
+## Bloco 99: quanto minério está no carrinho agora.
+func carga_no_carrinho() -> float:
+	var s := 0.0
+	for k in cart_load:
+		s += float(cart_load[k])
+	return s
+
+
+## Bloco 99: o lampião do poste (a peça "lanterna_boca" da vista iso), do lado da boca.
+func _poe_lampiao() -> void:
+	if not is_inside_tree() or _lampiao != null:
+		return
+	_lampiao = Node2D.new()
+	_lampiao.name = "LampiaoBoca_" + String(name)
+	_lampiao.set_meta("iso_prop", "lanterna_boca")
+	_lampiao.position = global_position + Vector2(26, -20)
+	_lampiao.visible = false
+	get_parent().add_child(_lampiao)
+
+
 func carrinho_cheio() -> bool:
 	return not cart_load.is_empty()
 
@@ -189,6 +345,13 @@ func _place_cart() -> void:
 
 # ------------------------------------------------------------ andamento
 func _process(delta: float) -> void:
+	if tem_interior:  # Bloco 99: quem está dentro da mina
+		_produz_dentro(delta)
+		if _lampiao:
+			_lampiao.visible = not dentro.is_empty()
+		if _lanterna:
+			_lanterna.enabled = not dentro.is_empty()
+			_lanterna.energy = 0.9 + 0.12 * sin(Time.get_ticks_msec() / 180.0) if _lanterna.enabled else 0.0
 	# recebe a carga dos mineradores
 	for body in _working_bodies():
 		if body.get_state() != "storing" or not is_usable():
@@ -210,6 +373,9 @@ func _process(delta: float) -> void:
 				_wait_t = 0.0  # Bloco 77: a mina não está operando: o carrinho não sai
 			elif buffered() >= cart_capacity or (buffered() > 0.0 and _wait_t >= cart_wait):
 				_load_cart()
+				_carga_viagem = 0.0
+				for k in cart_load:
+					_carga_viagem += float(cart_load[k])
 				cart_state = "indo"
 				_wait_t = 0.0
 		"indo":
@@ -226,7 +392,7 @@ func _process(delta: float) -> void:
 			cart_d = maxf(cart_d - cart_speed * delta, 0.0)
 			if cart_d <= 0.0:
 				cart_state = "esperando"
-				rail_left -= 1
+				rail_left -= maxf(_carga_viagem, 1.0) / maxf(desgaste_ref, 1.0)  # Bloco 99: o desgaste é por minério levado
 				if is_broken():
 					rail.broken = true
 					_obra.start()
@@ -276,12 +442,15 @@ func _update_label() -> void:
 		st = "ARMAZÉM CHEIO — o carrinho espera"  # Bloco 97
 	if _parado_area and cart_state == "esperando" and not is_broken():
 		st = "parado — mina: %s" % _motivo_area  # Bloco 77
+	var trilho := "  •  trilho %d%%" % roundi(100.0 * clampf(rail_left / maxf(float(rail_trips), 1.0), 0.0, 1.0)) if not is_broken() else ""
 	if ferrovia != "":  # Bloco 79
 		st = {"indo": "subindo pro armazém", "voltando": "descendo"}.get(cart_state, st)
 		_label.text = "Ferrovia de carga (%s)\n%s\ncarga: %d/%d  •  levou: %d" % [ferrovia, st, int(buffered()), int(buffer_capacity), int(total_moved)]
 		_label.modulate = Color(1.0, 0.6, 0.4) if is_broken() else Color(0.9, 0.86, 0.8)
 		return
-	_label.text = "Vagonete\n%s\ncarga: %d/%d  •  levou: %d" % [st, int(buffered()), int(buffer_capacity), int(total_moved)]
+	_label.text = "Vagonete\n%s\ncarga: %d/%d  •  levou: %d%s" % [st, int(buffered()), int(buffer_capacity), int(total_moved), trilho]
+	if tem_interior and not dentro.is_empty():
+		_label.text = "Mina — dentro: %d/%d\n" % [dentro.size(), vagas_dentro] + _label.text
 	_label.modulate = Color(1.0, 0.6, 0.4) if is_broken() else Color(0.9, 0.86, 0.8)
 
 
@@ -310,7 +479,7 @@ func obra_work(seconds: float) -> void:
 	repair_left -= seconds
 	if repair_left <= 0.0:
 		repair_left = 0.0
-		rail_left = rail_trips
+		rail_left = float(rail_trips)
 		rail.broken = false
 
 		Audio.build_done(global_position)
@@ -343,7 +512,7 @@ func load_save_data(d: Dictionary) -> void:
 	var s: Dictionary = d.get("stock", {}) if d.get("stock") is Dictionary else {}
 	for k in s:
 		stock[String(k)] = maxf(float(s[k]), 0.0)
-	rail_left = clampi(int(d.get("rail_left", rail_trips)), 0, rail_trips)
+	rail_left = clampf(float(d.get("rail_left", rail_trips)), 0.0, float(rail_trips))  # (Bloco 99: fração; save antigo: inteiro)
 	repair_left = maxf(float(d.get("repair_left", 0.0)), 0.0)
 	total_moved = maxf(float(d.get("total", 0.0)), 0.0)
 	cart_state = String(d.get("cart_state", "esperando")) if String(d.get("cart_state", "")) in ["esperando", "indo", "voltando"] else "esperando"

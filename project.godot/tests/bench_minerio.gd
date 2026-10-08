@@ -104,6 +104,14 @@ func _process(delta: float) -> bool:
 		fase = 2  # 15 min de jogo pra todo mundo chegar no trabalho
 		ini = {"arm": _minerio_armazem(), "cam": _no_caminho(), "h": dn.hora()}
 		return false
+	if fase == 2 and OS.get_environment("BENCH_DEBUG") != "" and Engine.get_process_frames() % 300 == 0:
+		var dentro := 0
+		for bm in get_nodes_in_group("bocas_mina"):
+			dentro += bm.dentro.size()
+		var estados := {}
+		for w in get_nodes_in_group("ipezinhos"):
+			estados[w.get_state()] = estados.get(w.get_state(), 0) + 1
+		print("  %s dentro=%d estados=%s mult=%s" % [dn.hora_texto(), dentro, estados, get_nodes_in_group("ipezinhos").map(func(w): return snappedf(w.mult_mineracao(), 0.01))])
 	if fase == 2 and dn.hora() >= float(ini.h) + horas:
 		var arm := _minerio_armazem() - float(ini.arm)
 		var cam := _no_caminho() - float(ini.cam)
