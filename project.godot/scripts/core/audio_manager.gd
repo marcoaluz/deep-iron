@@ -26,6 +26,8 @@ extends Node
 @export var eat_sounds: Array[AudioStream] = []
 @export var sell_sound: AudioStream
 @export var recruit_sound: AudioStream
+## Bloco 101: a chegada dos migrantes no portão (sem arquivo = mudo; o arquivo vem depois).
+@export var migrantes_sound: AudioStream
 @export var click_sound: AudioStream
 @export var error_sound: AudioStream
 @export var hurt_sound: AudioStream
@@ -491,6 +493,12 @@ func sell() -> void:
 
 func recruit() -> void:
 	play_ui(recruit_sound)
+
+
+## Bloco 101: migrantes chegando no portão.
+func migrantes(pos: Vector2) -> void:
+	if migrantes_sound:
+		play_at(&"migrantes", [migrantes_sound], pos, ui_db)
 
 
 func click() -> void:

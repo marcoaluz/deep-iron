@@ -46,7 +46,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 |---|---|
 | `main.gd` | Entrada do jogador: seleção, ordens, atalhos (via `teclas.gd`, remapeável). Cria `house_placer`, `area_placer`, `WorkAreas`, `founding` e `weather`. |
 | `environment.gd` | Monta o mapa: superfície, faixas dos andares, decoração, navegação, níveis por dados, lotes. |
-| `economy.gd` | Créditos, vender (minério e itens), recrutar; `quantidade(id)`, `add_item`/`take_item`; custos em metal (`metal_falta`, `paga_metal`, `custo_metal_texto`: barra a partir do estágio da fornalha, Bloco 87). |
+| `economy.gd` | Créditos, vender (minério e itens); Bloco 101: NÃO compra ipezinho (acabou o "Recrutar"), `novo_ipezinho()` é o nascimento interno e a capacidade da vila são as camas (`free_beds`); `quantidade(id)`, `add_item`/`take_item`; custos em metal (`metal_falta`, `paga_metal`, `custo_metal_texto`: barra a partir do estágio da fornalha, Bloco 87). |
 | `save_manager.gd` + `save_util.gd` | Save em JSON (`user://savegame.json`), backups, migração de versões, leitura tolerante. |
 | `day_night.gd` | Relógio de 24 h (Bloco 83): `hora()`, `hora_texto()`, semana (o 7º dia é domingo), marcos (amanhecer, fim do expediente, anoitecer, dormir), `is_night()`, "Pular dia". `time` = segundos reais desde o amanhecer. |
 | `schedule.gd` | A AGENDA dos ipezinhos (Bloco 84): `periodo(ipezinho)`, refeições (porção por refeição, refeição perdida), exceções (médico, guardas, cozinheiro), números da hora social (Bloco 85). |
@@ -65,6 +65,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 | `fundo.gd` | Poças e ventiladores do S2 e do S3. |
 | `work_areas.gd` / `work_panel.gd` / `area_placer.gd` | Áreas de trabalho com postos (Bloco 77). |
 | `obra_site.gd` | O pedaço comum de toda obra feita por engenheiro. Bloco 96: a lista de material (reservada no armazém, levada pelo engenheiro até `carga_material` por viagem), o progresso limitado ao entregue, o estado ("levando N/M"…) e o `cancelar` (devolve créditos e material). |
+| `migrantes.gd` + `migrantes_panel.gd` | MIGRANTES (Bloco 101): grupos vêm pela floresta e esperam do lado de fora do portão (ipezinhos com `visitante = true`, fora do grupo "ipezinhos"); cartão com Aceitar (precisa de cama) / Recusar / Esperar, prazo, ataque à noite; frequência pela atratividade + rede de segurança; o satélite chama um grupo. É também o evento "refugiados" do Prompt 11. |
 | `missao.gd` + `missoes.gd` + `missoes_panel.gd` | As MISSÕES (Bloco 100, seção 21 do guia): recurso `missao.gd` (um `.tres` por missão em `data/missoes/`: objetivos [tipo, alvo, quantidade], recompensa, pré-requisitos), o gerenciador (nó `Missoes`, grupo "missoes": escuta os sinais do jogo, confere a cada segundo, objetivo cumprido não desfaz), a janela (tecla vírgula) e o rastreador do canto (`ui/rastreador_missoes.gd`). Os TEXTOS ficam em `data/missoes/capitulo_N.txt` (um por capítulo, editável). |
 | `build_menu.gd` | O menu CONSTRUIR: janela de tamanho fixo, grade de cartões com estrutura fixa e o campo `img` de cada cartão (Bloco 95). |
 | `house_placer.gd` | Posicionar prédio no mapa. |
@@ -118,7 +119,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b100**; o próximo é o **b101**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b101**; o próximo é o **b102**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:
@@ -153,6 +154,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
    | Fila de produção | `production_queue.gd` (Fornalha, Carpintaria, encomendas da Oficina); a forja das armas é a fila do `defense.gd` (Arsenal) e a do equipamento é a do `equipment.gd` — todas feitas pelo ferreiro/fundidor/carpinteiro |
    | Oficina de ordens nova (prédio + função) | herdar de `fornalha.gd` e `fornalha_panel.gd`, como a `carpintaria.gd` (Bloco 94) |
    | Missão / capítulo novo | um `.tres` em `data/missoes/` (`missao.gd`) + a seção dela em `data/missoes/capitulo_N.txt` (título, texto, `objetivo.N`, `[diario.<id>]`); tipo de objetivo novo = um `match` em `missoes.gd` `valor_do_objetivo` |
+   | Gente nova na vila | `migrantes.gd` `chama_grupo(n, motivo)` (nunca "comprar"); nascimento interno (Fundação, testes): `Economy.novo_ipezinho(gender)`; quem cabe: `Economy.free_beds()` |
    | Item, preço, onde guardar | `items.gd` + `Economy.quantidade/add_item/take_item` |
    | Custo em metal | `Economy.metal_falta` / `paga_metal` / `custo_metal_texto` (barra a partir do estágio da fornalha) |
    | Mandar coisa pro armazém (máquina, entrega nova) | `Economy.armazem_com_espaco(perto, n)` (null = todos cheios: pare e espere) e `armazem.espaco()`; devolução/prêmio usam `add_item`/`devolve` (entram mesmo cheio). Teste que enche o armazém pra outro assunto: `armazem.gd limite_desligado = true` no `_initialize` (Bloco 97) |

@@ -22,6 +22,10 @@ const HUB_FOOTPRINT := Rect2(-90, -152, 180, 166)
 const ARMAZEM_FOOTPRINT := Rect2(-40, -70, 80, 86)
 
 var step := ""  # "hub" -> "armazem" -> "done"
+## Bloco 101: a partida nova começa com esta população (os da cena contam), metade homens e metade mulheres, todos sem
+## função. Acabou o "Recrutar": depois disso a vila cresce com os migrantes.
+@export var populacao_inicial: int = 10
+var _fresh := false
 
 
 func _ready() -> void:
@@ -47,6 +51,7 @@ func start(fresh: bool = true) -> void:
 	if hub == null or _placer() == null:
 		return
 	hub.founded = false
+	_fresh = fresh
 	if fresh:
 		for casa in get_tree().get_nodes_in_group("casas"):
 			if not casa.placed_by_player:
@@ -131,6 +136,34 @@ func _confirm_armazem(pos: Vector2) -> bool:
 	return true
 
 
+## Bloco 101: completa a população inicial (metade de cada), todos sem função, na frente do Centro da Vila.
+func completa_populacao() -> void:
+	var eco := get_tree().get_first_node_in_group("economy")
+	if eco == null:
+		return
+	var ws := get_tree().get_nodes_in_group("ipezinhos")
+	var homens := ws.filter(func(w): return w.get("gender") == "menino").size()
+	var mulheres := ws.size() - homens
+	var meta_mulheres := populacao_inicial / 2
+	var meta_homens := populacao_inicial - meta_mulheres
+	while ws.size() < populacao_inicial:
+		# alterna (o que tem menos vem primeiro) até cada lado chegar na metade
+		var falta_h := homens < meta_homens
+		var falta_m := mulheres < meta_mulheres
+		var g := "menino" if falta_h and (homens <= mulheres or not falta_m) else "menina"
+		var w: Node2D = eco.novo_ipezinho(g)
+		if w == null:
+			break
+		if g == "menino":
+			homens += 1
+		else:
+			mulheres += 1
+		ws.append(w)
+	for w in ws:
+		if w.has_method("set_job"):
+			w.set_job("ocioso")
+
+
 func _finish() -> void:
 	step = "done"
 	var hub := _hub()
@@ -144,6 +177,8 @@ func _finish() -> void:
 		arm.stock[hub.house_stone_ore] = arm.stock.get(hub.house_stone_ore, 0.0) + hub.founding_ore
 		arm.wood_stored += hub.founding_wood
 		arm._recount()
+	if _fresh:
+		completa_populacao()
 	for w in get_tree().get_nodes_in_group("ipezinhos"):
 		w.wake_decision()
 	var hud := get_tree().get_first_node_in_group("hud")

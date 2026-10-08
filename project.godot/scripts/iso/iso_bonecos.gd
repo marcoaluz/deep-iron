@@ -78,7 +78,7 @@ static func warm_folder(folder: String) -> void:
 
 ## Só com o mapa novo (a vista iso nova); sem ele, o boneco de sempre.
 static func enabled_for(w: Node) -> bool:
-	if not w.is_inside_tree() or not w.is_in_group("ipezinhos") or data().is_empty():
+	if not w.is_inside_tree() or not (w.is_in_group("ipezinhos") or w.is_in_group("migrantes_gente")) or data().is_empty():  # (Bloco 101: o migrante no portão também)
 		return false
 	var f := Engine.get_process_frames()
 	if f != _env_frame:  # uma consulta por quadro pra todos os bonecos

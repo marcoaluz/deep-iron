@@ -100,8 +100,7 @@ func _process(delta: float) -> bool:
 		arm.wood_stored = 999.0
 		arm._recount()
 		while get_nodes_in_group("ipezinhos").size() < 6:
-			eco.credits = 99999.0
-			eco.recruit()
+			eco.novo_ipezinho()  # (Bloco 101: acabou o "Recrutar")
 		print("== estágio e tamanho")
 		hub.level = 1
 		check(hub.cemiterio_block_reason() != "", "estágio 1: ainda não ('%s')" % hub.cemiterio_block_reason())

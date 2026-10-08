@@ -12,6 +12,7 @@ extends VBoxContainer
 ##   greve        greve ou ânimo baixo contando pra greve                       -> o Centro da Vila
 ##   sem_teto     ipezinho sem cama                                             -> uma casa
 ##   frio         sem casaco no inverno                                         -> quem está sem
+##   migrantes     migrantes esperando no portão (Bloco 101)                  -> o portão
 ##   armazem_cheio armazém cheio (Bloco 97)                                    -> o armazém
 ##   desarmados   guarda com a arma quebrada                                    -> o guarda
 
@@ -28,6 +29,7 @@ const TIPOS := [
 	["greve", "greve", "Greve"],
 	["obra_parada", "al_obra_parada", "Obra parada"],
 	["ociosos", "sem_funcao", "Parados"],
+	["migrantes", "pessoas", "Migrantes no portão"],  # Bloco 101
 	["armazem_cheio", "armazem_cheio", "Armazém cheio"],  # Bloco 97
 	["desarmados", "it_arma_quebrada", "Desarmados"],
 	["frio", "frio", "Sem casaco"],

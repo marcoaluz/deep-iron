@@ -418,5 +418,9 @@ func test_b100_missoes() -> void:
 	run_bloco("b100_missoes.gd")
 
 
+func test_b101_migrantes() -> void:
+	run_bloco("b101_migrantes.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

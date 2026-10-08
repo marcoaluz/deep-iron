@@ -106,11 +106,10 @@ func _process(delta: float) -> bool:
 		main.get_node("World").add_child(c2)
 		print("== 8) load direto de dado antigo (role \"\"): job=%s  %s" % [c2.job, "OK" if c2.job == "minerador" else "FALHOU"])
 		c2.queue_free()
-		# 9) recrutado nasce ocioso
+		# 9) quem chega nasce ocioso (Bloco 101: acabou o "Recrutar"; o nascimento interno é o novo_ipezinho)
 		var eco = main.get_node("Economy")
-		eco.credits = 99999
-		var r = eco.recruit()
-		print("== 9) recrutado: job=%s  %s" % [r.job, "OK" if r.job == "ocioso" else "FALHOU"])
+		var r = eco.novo_ipezinho()
+		print("== 9) recém-chegado: job=%s  %s" % [r.job, "OK" if r.job == "ocioso" else "FALHOU"])
 		step = 9
 		return true
 	return false

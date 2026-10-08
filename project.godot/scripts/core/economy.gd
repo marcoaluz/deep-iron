@@ -1,5 +1,6 @@
 extends Node
-## Economia do protótipo: vender minério armazenado por créditos e recrutar ipezinhos.
+## Economia do protótipo: vender minério armazenado por créditos. (Bloco 101: acabou o "Recrutar"; quem chega são os
+## migrantes, migrantes.gd, e a capacidade da vila são as camas livres: free_beds.)
 ## Fica no nó "Economy" da cena principal (grupo "economy") — ajuste os números no Inspector.
 ##
 ## Bloco 39: vender também pela janela do Armazém (clique nele), tudo ou um tipo só
@@ -19,7 +20,6 @@ const Ores := preload("res://scripts/core/ores.gd")
 const Items := preload("res://scripts/core/items.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 signal ore_sold(amount: float, earned: float)
-signal worker_recruited(worker: Node2D, cost: int)
 
 @export_group("Venda")
 ## Créditos por unidade de ferro.
@@ -59,17 +59,13 @@ signal worker_recruited(worker: Node2D, cost: int)
 @export var auto_sell: bool = false
 @export var auto_sell_interval: float = 4.0
 
-@export_group("Recrutamento")
+@export_group("Ipezinhos")
+## A cena do ipezinho (a Fundação e os migrantes nascem daqui).
 @export var worker_scene: PackedScene
-@export var recruit_base_cost: float = 150.0
-## Multiplica o custo a cada ipezinho recrutado (1.5 = +50%).
-@export var recruit_cost_growth: float = 1.5
-## Limite inicial; a melhoria "Moradias" do Centro da Vila aumenta.
-@export var max_workers: int = 8
+## Bloco 101: NÃO manda mais em nada (a capacidade são as camas); fica só pra o save antigo não estranhar.
+var max_workers: int = 8
 ## Nó onde os novos ipezinhos são criados (precisa ser o nó com y-sort).
 @export var spawn_parent: NodePath = ^"../World"
-## Bloco 39: só recruta se tiver cama livre numa casa pronta (sem cama = sem lugar pra morar).
-@export var recruit_needs_bed: bool = true
 
 @export_group("Prédios extras (Bloco 47)")
 ## Cada unidade a mais do mesmo prédio custa isso vezes a anterior (1.5 = +50%; 1.0 = sempre
@@ -769,10 +765,6 @@ func worker_count() -> int:
 	return get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return not (w.has_method("is_priest") and w.is_priest())).size()
 
 
-func recruit_cost() -> int:
-	return int(round(recruit_base_cost * pow(recruit_cost_growth, recruited_count)))
-
-
 ## Camas das casas PRONTAS que ninguém ocupa (cada ipezinho precisa de uma).
 func free_beds() -> int:
 	var total := 0
@@ -782,63 +774,31 @@ func free_beds() -> int:
 	return total - worker_count()
 
 
-## "" = pode recrutar; senão o motivo (limite, cama, créditos — nessa ordem).
-func recruit_block_reason() -> String:
+## Bloco 101: um ipezinho NOVO na vila, na frente do Centro (a população inicial da Fundação; os testes). Não é compra:
+## acabou o "Recrutar" — quem chega depois são os migrantes (migrantes.gd). gender "" = sorteado.
+func novo_ipezinho(gender: String = "") -> Node2D:
 	if worker_scene == null:
-		return "sem ipezinho pra recrutar"
-	if worker_count() >= max_workers:
-		return "limite de ipezinhos (Moradias aumenta)"
-	if recruit_needs_bed and free_beds() <= 0:
-		return "sem cama livre — construa uma casa"
-	if credits < recruit_cost():
-		return "falta %d cr" % ceili(recruit_cost() - credits)
-	return ""
-
-
-func can_recruit() -> bool:
-	return recruit_block_reason() == ""
-
-
-func recruit() -> Node2D:
-	var reason := recruit_block_reason()
-	if reason != "":
-		Audio.error()
-		var hud := get_tree().get_first_node_in_group("hud")
-		if hud:
-			hud.show_toast("Não dá pra recrutar: %s." % reason, Color(1.0, 0.55, 0.4))
 		return null
-	var cost := recruit_cost()
 	var parent := get_node_or_null(spawn_parent)
 	if parent == null:
-		push_warning("Economy: spawn_parent não encontrado")
 		return null
-
 	var worker := worker_scene.instantiate() as Node2D
 	worker.name = _next_worker_name()
 	worker.position = _spawn_position()
+	if gender != "":
+		worker.set("gender", gender)
 	parent.add_child(worker)
-
-	_add_credits(-cost)
-	recruited_count += 1
-	worker_recruited.emit(worker, cost)
-	Audio.recruit()
 	return worker
 
 
-## Colono que chega de graça (satélite de comunicação). Respeita o limite de ipezinhos
-## e não encarece o próximo recrutamento. Retorna null se não tiver vaga.
+## (o nome antigo, pros testes e medições de antes do Bloco 101)
 func recruit_free() -> Node2D:
-	if worker_scene == null or worker_count() >= max_workers:
-		return null
-	var parent := get_node_or_null(spawn_parent)
-	if parent == null:
-		return null
-	var worker := worker_scene.instantiate() as Node2D
-	worker.name = _next_worker_name()
-	worker.position = _spawn_position()
-	parent.add_child(worker)
-	Audio.recruit()
-	return worker
+	return novo_ipezinho()
+
+
+## Bloco 101: cabe mais um na vila? (a capacidade são as CAMAS livres das casas prontas)
+func tem_cama_livre() -> bool:
+	return free_beds() > 0
 
 
 ## Bloco 39: o recrutado chega na frente do Centro da Vila (sem Centro: perto do armazém).

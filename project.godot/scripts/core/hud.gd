@@ -158,7 +158,6 @@ var _downed_label: Label  # Bloco 36: guardas caídos esperando o médico
 var _cold_label: Label  # Bloco 42: sem casaco no inverno
 var _build_menu: PanelContainer  # Bloco 46: menu de construção (estilo Frostpunk)
 var _build_button: Button
-var _recruit_button: Button
 var _collapse_button: Button
 var _workers_title: Label
 var _rows_scroll: ScrollContainer
@@ -571,10 +570,6 @@ func _build_workforce_panel() -> void:
 	_cold_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_cold_label.visible = false
 	v.add_child(_cold_label)
-	if _economy:
-		_recruit_button = _button("Recrutar ipezinho")
-		_recruit_button.pressed.connect(_on_recruit_pressed)
-		v.add_child(_recruit_button)
 
 	_workers_title = _label("IPEZINHOS", Tipo.DETALHE, COLOR_DIM)
 	v.add_child(_workers_title)
@@ -713,6 +708,9 @@ func _build_janelas() -> void:
 		_add_panel("moral", preload("res://scripts/core/moral_panel.gd"), _morale)
 	if _finds:
 		_add_panel("robo", preload("res://scripts/core/robo_panel.gd"), _finds)
+	var migr := get_tree().get_first_node_in_group("migrantes")
+	if migr:  # Bloco 101: a janela dos migrantes que esperam no portão
+		_add_panel("migrantes", preload("res://scripts/core/migrantes_panel.gd"), migr)
 	_missoes_mgr = get_tree().get_first_node_in_group("missoes")
 	if _missoes_mgr:  # Bloco 100: a janela e o rastreador do canto
 		_add_panel("missoes", preload("res://scripts/core/missoes_panel.gd"), _missoes_mgr)
@@ -783,7 +781,7 @@ func _fill_hints() -> void:
 		"Funções:  %s minerador  •  %s caçador  •  %s médico  •  %s engenheiro  •  %s cozinheiro  •  %s lenhador  •  %s guarda  •  %s pesquisador  •  %s sem função  •  %s turno extra" % [
 			k.call("minerador"), k.call("cacador"), k.call("medico"), k.call("engenheiro"), k.call("cozinheiro"), k.call("lenhador"),
 			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")] + "  •  %s fundidor  •  %s ferreiro  •  %s padre (só um)  •  %s carpinteiro" % [k.call("fundidor"), k.call("ferreiro"), k.call("padre"), k.call("carpinteiro")],
-		"Economia:  %s vender todo o minério (ou na janela do Armazém, a quantidade que quiser)  •  %s recrutar" % [k.call("vender"), k.call("recrutar")],
+		"Economia:  %s vender todo o minério (ou na janela do Armazém, a quantidade que quiser)  •  gente nova: os migrantes chegam no portão (precisa de cama livre)" % k.call("vender"),
 		"Pessoas:  %s = a lista da força de trabalho (ou passe o mouse na aba da esquerda)  •  alertas à direita: clique pra ir até lá" % k.call("pessoas"),
 		"Trabalho:  %s = TRABALHADORES — marcar áreas (madeira, alimentos, mina) e quantos trabalham em cada uma (até 5)" % k.call("painel_trabalho"),
 		"Construir:  %s = menu de construção (casas, cozinha, lazer, pesquisa, defesa, coleta automática…)" % k.call("construir"),
@@ -1113,16 +1111,6 @@ func show_banner(title: String, subtitle: String, ilustracao: String = "") -> vo
 	tween.tween_callback(panel.queue_free)
 
 
-func _on_recruit_pressed() -> void:
-	Audio.click()
-	var worker: Node2D = _economy.recruit()
-	if worker:
-		var cam := _main.get_node_or_null("Camera2D")
-		if cam:
-			cam.focus_on(worker.global_position)
-	_refresh()
-
-
 func _make_row(worker: Node) -> Dictionary:
 	var row_panel := PanelContainer.new()
 	row_panel.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -1376,7 +1364,7 @@ func _refresh_top_bar(workers: Array) -> void:
 		_set_chip("sun", "", COLOR_DIM, "", false)
 
 
-## Força de trabalho: total, SEM FUNÇÃO em destaque e o botão de recrutar.
+## Força de trabalho: total (e as camas: a capacidade da vila) e os SEM FUNÇÃO em destaque.
 func _refresh_workforce(workers: Array) -> void:
 	var no_job := workers.filter(func(w): return w.has_method("has_no_job") and w.has_no_job()).size()
 	if no_job > 0:
@@ -1435,13 +1423,8 @@ func _refresh_workforce(workers: Array) -> void:
 		_downed_label.text = "CAÍDO%s EM COMBATE: %s — %s" % ["S" if downed.size() > 1 else "", ", ".join(parts),
 			"médico a caminho" if docs > 0 else "SEM MÉDICO! Designe um (tecla 3)"]
 	if _economy:
-		_workers_count_label.text = "%d / %d" % [workers.size(), _economy.max_workers]
-		var cost: int = _economy.recruit_cost()
-		var why: String = _economy.recruit_block_reason()
-		_recruit_button.text = "Recrutar ipezinho  (%d cr)" % cost if why == "" or why.begins_with("falta") \
-			else "Recrutar: " + why
-		_recruit_button.tooltip_text = why if why != "" else "Chega na frente do Centro da Vila e ganha uma cama."
-		_recruit_button.disabled = why != ""
+		# Bloco 101: a capacidade são as camas (quem chega são os migrantes, no portão)
+		_workers_count_label.text = "%d / %d camas" % [workers.size(), _economy.worker_count() + _economy.free_beds()]
 	else:
 		_workers_count_label.text = str(workers.size())
 
@@ -2081,6 +2064,11 @@ func _refresh_alertas(workers: Array) -> void:
 	_alertas.poe("armazem_cheio", cheios.size(), "%d armazém%s cheio%s%s. Venda, gaste ou amplie (janela do Armazém); ou construa um Armazém novo." % [
 		cheios.size(), "" if cheios.size() == 1 else "s", "" if cheios.size() == 1 else "s",
 		(" — %d esperando pra entregar" % esperando) if esperando > 0 else ""], cheios)
+	# Bloco 101: migrantes esperando no portão
+	var mig := get_tree().get_first_node_in_group("migrantes")
+	var esp: Array = mig.esperando.map(func(e): return e.w).filter(func(w): return is_instance_valid(w)) if mig else []
+	_alertas.poe("migrantes", esp.size(), "%d migrante%s esperando no portão. Aceitar precisa de cama livre (janela Migrantes)." % [
+		esp.size(), "s" if esp.size() != 1 else ""], esp)
 	# desarmados, sem casaco, sem cama
 	var unarmed: Array = _defense.unarmed_guards() if _defense else []
 	_alertas.poe("desarmados", unarmed.size(), _unarmed_label.text, unarmed)

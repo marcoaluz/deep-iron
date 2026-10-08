@@ -26,9 +26,9 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 
 @export_group("Estoque")
 ## Máximo de comida guardada.
-@export var food_capacity: float = 120.0
+@export var food_capacity: float = 300.0
 ## Comida no começo de um jogo novo.
-@export var start_food: float = 60.0
+@export var start_food: float = 240.0
 
 @export_group("Som")
 ## Intervalo entre os sons de mastigar enquanto alguém come.

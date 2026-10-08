@@ -9,9 +9,9 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **921 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **943 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
-## `scripts/core/audio_manager.gd` (78)
+## `scripts/core/audio_manager.gd` (79)
 
 **Volumes (0 a 1)**
 
@@ -41,6 +41,7 @@ Total: **921 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `eat_sounds` | [] | **(recurso)** (audio_manager.tscn) |  |
 | `sell_sound` | — | **(recurso)** (audio_manager.tscn) |  |
 | `recruit_sound` | — | **(recurso)** (audio_manager.tscn) |  |
+| `migrantes_sound` | — |  | Bloco 101: a chegada dos migrantes no portão (sem arquivo = mudo; o arquivo vem depois). |
 | `click_sound` | — | **(recurso)** (audio_manager.tscn) |  |
 | `error_sound` | — | **(recurso)** (audio_manager.tscn) |  |
 | `hurt_sound` | — | **(recurso)** (audio_manager.tscn) |  |
@@ -385,7 +386,7 @@ Total: **921 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `boss_reward_parts` | 2 |  |  |
 | `boss_reward_research` | 80.0 |  |  |
 
-## `scripts/core/economy.gd` (23)
+## `scripts/core/economy.gd` (19)
 
 **Venda**
 
@@ -417,16 +418,12 @@ Total: **921 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `auto_sell` | false |  | Vende sozinho o que estiver no armazém a cada auto_sell_interval segundos. |
 | `auto_sell_interval` | 4.0 |  |  |
 
-**Recrutamento**
+**Ipezinhos**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `worker_scene` | — | **(recurso)** (main.tscn) |  |
-| `recruit_base_cost` | 150.0 |  |  |
-| `recruit_cost_growth` | 1.5 |  | Multiplica o custo a cada ipezinho recrutado (1.5 = +50%). |
-| `max_workers` | 8 |  | Limite inicial; a melhoria "Moradias" do Centro da Vila aumenta. |
+| `worker_scene` | — | **(recurso)** (main.tscn) | A cena do ipezinho (a Fundação e os migrantes nascem daqui). |
 | `spawn_parent` | ^"../World" |  | Nó onde os novos ipezinhos são criados (precisa ser o nó com y-sort). |
-| `recruit_needs_bed` | true |  | Bloco 39: só recruta se tiver cama livre numa casa pronta (sem cama = sem lugar pra morar). |
 
 **Prédios extras (Bloco 47)**
 
@@ -607,6 +604,14 @@ Total: **921 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `robot_chance` | 0.1 |  |  |
 | `robot_guarantee_after` | 6 |  | Achados no fundo até o robô aparecer com certeza. |
 
+## `scripts/core/founding.gd` (1)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `populacao_inicial` | 10 |  | Bloco 101: a partida nova começa com esta população (os da cena contam), metade homens e metade mulheres, todos sem função. Acabou o "Recrutar": depois disso a vila cresce com os migrantes. |
+
 ## `scripts/core/fundo.gd` (22)
 
 **Poça de ácido (S2)**
@@ -674,6 +679,47 @@ Total: **921 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `founding_on_new_game` | true |  | Bloco 37: partida nova começa com a FUNDAÇÃO (o jogador escolhe onde ficam o Centro da Vila e o Armazém; ver founding.gd). false = começa com o layout da cena (testes). |
+
+## `scripts/core/migrantes.gd` (24)
+
+**Chegada (Bloco 101)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `grupo_min` | 1 |  | Pessoas por grupo (mínimo e máximo). |
+| `grupo_max` | 3 |  |  |
+| `intervalo_min_dias` | 1.5 |  | Intervalo entre grupos, em dias de jogo: com a vila muito atraente (min) e pouco atraente (max). |
+| `intervalo_max_dias` | 4.0 |  |  |
+| `sem_cama_mult` | 1.5 |  | Sem nenhuma cama livre, o intervalo é multiplicado por isto (vêm, mas menos). |
+| `primeiro_grupo_dias` | 2.0 |  | Dias até o primeiro grupo numa partida nova. |
+| `socorro_abaixo_de` | 4 |  | Rede de segurança: com menos ipezinhos que isto, chega ajuda em `socorro_dias` (2 a 3 pessoas). |
+| `socorro_dias` | 0.5 |  |  |
+| `chance_com_fome` | 0.25 |  | Chance (0..1) de cada condição: com fome, ferido, doente (o resto chega saudável). |
+| `chance_ferido` | 0.12 |  |  |
+| `chance_doente` | 0.08 |  |  |
+| `chance_mulher` | 0.5 |  | Chance (0..1) de ser mulher. |
+
+**Espera (Bloco 101)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `prazo_dias` | 1.0 |  | Dias de jogo que esperam no portão sem resposta até ir embora. |
+| `risco_ataque_hora` | 0.08 |  | Chance (0..1), por hora de noite com criatura no mapa, de cada um que espera ser atacado. |
+| `espera_distancia` | 46.0 |  | Distância (px) do portão, do lado de fora, onde esperam. |
+
+**Atratividade (Bloco 101)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `peso_estagio` | 1.0 |  | Pesos de cada parte (somam o que quiser: a conta divide pela soma). |
+| `peso_comida` | 1.0 |  |  |
+| `peso_animo` | 1.0 |  |  |
+| `peso_camas` | 1.0 |  |  |
+| `peso_beleza` | 0.5 |  |  |
+| `peso_missoes` | 0.5 |  |  |
+| `comida_boa_porcoes` | 3.0 |  | Comida estocada (porções por morador) que conta como "muita" (1,0). |
+| `camas_boas` | 4 |  | Camas livres que contam como "muitas" (1,0). |
+| `decoracao_boa` | 8 |  | Peças de decoração que contam como "vila bonita" (1,0). |
 
 ## `scripts/core/missao.gd` (7)
 
@@ -1530,8 +1576,8 @@ Total: **921 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `food_capacity` | 120.0 |  | Máximo de comida guardada. |
-| `start_food` | 60.0 |  | Comida no começo de um jogo novo. |
+| `food_capacity` | 300.0 |  | Máximo de comida guardada. |
+| `start_food` | 240.0 |  | Comida no começo de um jogo novo. |
 
 **Som**
 

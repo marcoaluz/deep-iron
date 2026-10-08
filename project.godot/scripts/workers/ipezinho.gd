@@ -533,6 +533,10 @@ var _saved_home_slot: int = -1
 @onready var _anger_icon: Sprite2D = $AngerIcon
 @onready var _cook_icon: Sprite2D = $CookIcon
 @onready var _lamp: PointLight2D = $HeadLamp
+## Bloco 101: MIGRANTE esperando no portão (migrantes.gd): fora do grupo "ipezinhos" (não come, não ocupa cama, não conta)
+## e sem IA nem necessidades — só anda até onde mandarem. Aceito: vira_morador().
+var visitante := false
+
 ## Bloco 99: a cabine do elevador em que ele está (na fila ou dentro), se já embarcou e há quanto tempo espera; e a
 ## boca da mina onde ele trabalha DENTRO (estacao_vagonete.gd com interior).
 var _na_cabine: Node = null
@@ -553,7 +557,11 @@ var _accessory_variant: Array[int] = [-1, -1, -1]
 
 
 func _ready() -> void:
-	add_to_group("ipezinhos")
+	if visitante:
+		add_to_group("migrantes_gente")  # Bloco 101: ainda não é da vila
+		auto_mode = false
+	else:
+		add_to_group("ipezinhos")
 	_target = global_position
 	hunger = hunger_max
 	_decision_timer = randf_range(0.1, decision_interval)  # dessincroniza os ipezinhos
@@ -586,7 +594,8 @@ func _ready() -> void:
 	_ensure_appearance()
 	_ensure_name()
 	_apply_accessories()
-	_claim_home.call_deferred()  # as casas precisam estar nos grupos
+	if not visitante:
+		_claim_home.call_deferred()  # as casas precisam estar nos grupos
 	_sync_tool_visual.call_deferred()  # recrutado depois da picareta de aço já nasce com ela
 	_apply_research.call_deferred()  # carrinhos de mina (capacidade de carga)
 	_update_hunger_label()
@@ -878,6 +887,8 @@ func _village_hub() -> Node:
 
 # ------------------------------------------------------------ fome / IA
 func _process(delta: float) -> void:
+	if visitante:
+		return  # Bloco 101: esperando no portão (sem fome, sem agenda, sem IA)
 	var was_starving := hunger <= 0.0
 	var sun := _sun()
 	var decay: float = hunger_decay * (sleep_hunger_mult if _resting else 1.0) * (sun.hunger_mult() if sun else 1.0)  # inverno: mais fome
@@ -1460,6 +1471,21 @@ func cabine_cancelada() -> void:
 	_a_bordo = false
 	_body.modulate.a = 1.0
 	_go_to(_alvo_final)
+
+
+## Bloco 101: o migrante aceito vira morador: entra no grupo da vila, sem função, e pega uma cama (a IA leva ele pra dentro;
+## de noite o portão abre pra ele como pra qualquer morador).
+func vira_morador() -> void:
+	if not visitante:
+		return
+	visitante = false
+	remove_from_group("migrantes_gente")
+	add_to_group("ipezinhos")
+	auto_mode = true
+	_manual_timer = 0.0
+	set_job(ROLE_IDLE)
+	_claim_home()
+	_decision_timer = 0.0
 
 
 func na_cabine() -> bool:

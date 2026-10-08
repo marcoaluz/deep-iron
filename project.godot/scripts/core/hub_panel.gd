@@ -17,7 +17,6 @@ var _rows: Dictionary = {}  # id -> {level, effect, button}
 var _starter_button: Button  # Bloco 37: casas iniciais
 var _comedouro_button: Button
 var _radius_label: Label
-var _recruit_button: Button  # Bloco 39
 var _coletor_button: Button  # Bloco 45
 
 
@@ -103,12 +102,6 @@ func _build() -> void:
 		_hub.build_coletor()
 		refresh())
 	vbox.add_child(_coletor_button)
-	_recruit_button = _hud._button("")
-	_recruit_button.pressed.connect(func():
-		Audio.click()
-		_economy.recruit()
-		refresh())
-	vbox.add_child(_recruit_button)
 
 	vbox.add_child(HSeparator.new())
 	var up_header := HBoxContainer.new()
@@ -170,8 +163,8 @@ func refresh() -> void:
 	for casa in get_tree().get_nodes_in_group("casas"):
 		beds += casa.beds_total()
 		taken += casa.beds_taken()
-	_stats_label.text = "População: %d / %d ipezinhos   •   camas: %d / %d\nMinério coletado (total): %d   •   créditos ganhos (total): %d" % [
-		workers, _economy.max_workers, taken, beds, int(_hub.lifetime_ore()), int(_economy.total_earned)]
+	_stats_label.text = "População: %d ipezinhos   •   camas: %d / %d (cabe quem tem cama: os migrantes chegam no portão)\nMinério coletado (total): %d   •   créditos ganhos (total): %d" % [
+		workers, taken, beds, int(_hub.lifetime_ore()), int(_economy.total_earned)]
 
 	if lvl >= _hub.max_level():
 		_next_title.text = "A VILA ESTÁ NO ESTÁGIO MÁXIMO"
@@ -215,10 +208,6 @@ func refresh() -> void:
 		else "Outro coletor de madeira: " + colr
 	_coletor_button.disabled = colr != ""
 	_coletor_button.visible = _hub.coletor_restaurado()  # Bloco 81: o primeiro é a ruína da floresta
-	var why: String = _economy.recruit_block_reason() if _economy else "sem economia"
-	_recruit_button.text = ("Recrutar ipezinho  (%d cr, %d cama%s livre%s)" % [_economy.recruit_cost(), _economy.free_beds(),
-		"s" if _economy.free_beds() != 1 else "", "s" if _economy.free_beds() != 1 else ""]) if why == "" else "Recrutar: " + why
-	_recruit_button.disabled = why != ""
 
 	for id in _rows:
 		var row: Dictionary = _rows[id]

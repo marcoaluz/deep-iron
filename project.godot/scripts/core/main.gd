@@ -215,10 +215,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				_hud.toggle_panel("missoes")  # Bloco 100
 			"vender":
 				_economy.sell_all()
-			"recrutar":
-				var worker: Node2D = _economy.recruit()
-				if worker:
-					_camera.focus_on(worker.global_position)
 			"construir":
 				_hud.toggle_build_menu()  # Bloco 46: menu de construção
 			"musica":

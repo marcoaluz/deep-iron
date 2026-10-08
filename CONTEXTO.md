@@ -1,9 +1,20 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-08. Branch `isometrico`. Tudo até o Bloco 99 **foi enviado** pro GitHub em 2026-10-08 (push com o OK do Marco); o Bloco 100 está só no commit local. Push só com o OK dele.
+Atualizado em 2026-10-08. Branch `isometrico`. Tudo até o Bloco 99 **foi enviado** pro GitHub em 2026-10-08 (push com o OK do Marco); os Blocos 100 e 101 estão só no commit local. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido".
 
-## AGORA (2026-10-08): Bloco 100 — sistema de missões e Capítulo 1 "Cinzas" (feito; commit local, push pendente — pedir o OK)
+## AGORA (2026-10-08): Bloco 101 — migrantes e população inicial (feito; commit local, push pendente — pedir o OK)
+
+Prompt M. Plano `docs/BLOCO101_PLANO.md` (decisões: os itens 1-6 ok; casas iniciais NÃO prontas — só o recurso pra
+construir, como já era; comida inicial 240 / cozinha 300; sem a dica de cozinheiro/caçadores; o satélite chama
+migrantes). Relatório `docs/BLOCO101_MIGRANTES.md`; fotos `docs/arte/bloco101/`; medição `tests/bench_comida.gd`.
+- Acabou o "Recrutar" (tecla R, botões, custo, ajuda). Partida nova: a Fundação completa 10 (5 e 5, sem função).
+- Capacidade = camas livres. Migrantes (`migrantes.gd`): grupo de 1-3 no portão, cartão Aceitar/Recusar/Esperar, prazo de 1
+  dia, ataque à noite, frequência pela atratividade (1,5 a 4 dias), rede de segurança (< 4 ipezinhos). O "refugiados" do
+  Prompt 11 é este sistema.
+- Comida com 10: com 1 cozinheiro + 2 caçadores segura (fome ~80); o gargalo é o cozinheiro (~230/dia), não a horta.
+
+## Bloco 100 — sistema de missões e Capítulo 1 "Cinzas" (feito; commit local, push pendente — pedir o OK)
 
 Prompt 3 / seção 21 do guia. Relatório `docs/BLOCO100_MISSOES.md`; fotos `docs/arte/bloco100/`.
 - `missao.gd` (recurso) + `data/missoes/cap1_cinzas.tres`; textos em `data/missoes/capitulo_1.txt` (um arquivo por capítulo,

@@ -42,7 +42,7 @@ func _process(delta: float) -> bool:
 		eco.credits = 99999
 		eco.max_workers = 12
 		for i in 9:
-			eco.recruit()
+			eco.novo_ipezinho()  # (Bloco 101: acabou o "Recrutar")
 		return false
 	if step == 1 and t > 3.5:
 		var hud = main.get_node("HUD")

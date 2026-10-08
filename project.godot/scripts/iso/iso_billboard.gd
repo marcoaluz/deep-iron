@@ -868,7 +868,7 @@ func _tool_rule(moving: bool) -> void:
 func _draw() -> void:
 	if not is_instance_valid(src):
 		return
-	if src.is_in_group("ipezinhos"):
+	if src.is_in_group("ipezinhos") or src.is_in_group("migrantes_gente"):  # (Bloco 101: a sombra do migrante também)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.5))
 		if not src.get("_inside"):
 			draw_circle(Vector2(1.5, 0.5), 12.0, Color(0.02, 0.02, 0.05, 0.5))

@@ -91,6 +91,10 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 101: "migrantes" {proximo (s até o próximo grupo), esperando [{ipezinho (o save do ipezinho), name,
+##     condicao, funcao, prazo}]}. Acabou o "Recrutar": "economy" ainda guarda max_workers e recruited_count (o save
+##     antigo carrega), mas eles não mandam em nada — a capacidade são as camas. Save antigo: ninguém no portão, o
+##     primeiro grupo no prazo de uma partida nova, a população que tinha.
 ##   Bloco 100: "missoes" {capitulo_liberado, cumpridas [ids], feitos {id: [índices dos objetivos]}, contadores
 ##     {invasoes, vendido, mortes, obras {tipo: n}}}. Save antigo (sem a chave): a campanha começa no capítulo certo —
 ##     refaz os contadores do estado (invasões que já passaram, mortes) e entrega o que a vila já tinha cumprido.
@@ -527,6 +531,7 @@ func _collect() -> Dictionary:
 		"calendario": "calendario",  # Bloco 88: padre, igreja, escolha do domingo, funerais
 		"caminhos": "caminhos",  # Bloco 89: células de caminho por tipo
 		"decoracoes": "decoracoes_mgr",  # Bloco 90: as peças de decoração do jogador
+		"migrantes": "migrantes",  # Bloco 101: quem espera no portão e o relógio do próximo grupo
 		"missoes": "missoes",  # Bloco 100: a campanha (capítulo liberado, missões cumpridas, objetivos, contadores)
 	}
 	for key in singles:
@@ -652,6 +657,9 @@ func apply_pending(main: Node) -> void:
 	if shaft:
 		shaft.sync_state()  # escavadeira pronta => descida aberta (save antigo sem "elevador")
 	_apply_single("work_areas", SaveUtil.dict(data, "areas_trabalho"))  # Bloco 77: antes dos ipezinhos
+	var migr := get_tree().get_first_node_in_group("migrantes")  # Bloco 101 (save antigo: ninguém esperando)
+	if migr:
+		migr.load_save_data(SaveUtil.dict(data, "migrantes"))
 	if data.has("workers") and typeof(data.workers) == TYPE_ARRAY:
 		_apply_workers(main, data.workers)
 	# Prompt 29: save de antes do mapa novo — o que caiu em penhasco, escada, paliçada ou paredão

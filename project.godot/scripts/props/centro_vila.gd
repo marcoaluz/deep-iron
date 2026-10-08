@@ -595,7 +595,7 @@ func obra_status() -> String:
 func upgrade_effect_text(id: String, lvl: int) -> String:
 	match id:
 		"moradias":
-			return "limite %d ipezinhos" % (_base_max_workers() + workers_per_moradia * lvl)
+			return "+%d camas por casa (%d casas)" % [workers_per_moradia, lvl]  # Bloco 101: a capacidade são as camas
 		"enfermaria":
 			var mult := maxf(0.1, 1.0 - recovery_cut_per_level * lvl)
 			var inf := get_tree().get_first_node_in_group("enfermarias")
@@ -1824,7 +1824,7 @@ func on_house_built(casa: Node) -> void:
 	var eco := _economy()
 	if eco:
 		eco.max_workers += workers_per_moradia
-	_popup("Casa pronta! +%d no limite de ipezinhos" % workers_per_moradia, Color(0.55, 1.0, 0.5))
+	_popup("Casa pronta! +%d camas" % casa.beds_total(), Color(0.55, 1.0, 0.5))  # Bloco 101: a capacidade são as camas
 	Audio.recruit()
 	upgrade_bought.emit("moradias", upgrades.moradias)
 

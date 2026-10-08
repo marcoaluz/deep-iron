@@ -349,16 +349,10 @@ func satellite_days() -> int:
 func _on_day_started(day: int) -> void:
 	if not has("satelite") or day % satellite_days() != 0:
 		return
-	var eco := get_tree().get_first_node_in_group("economy")
-	if eco == null:
-		return
-	var w: Node2D = eco.recruit_free()
-	var hud := get_tree().get_first_node_in_group("hud")
-	if hud:
-		if w:
-			hud.show_toast("O satélite trouxe um colono: %s chegou de outra colônia!" % w.get("display_name"), Color(0.55, 1.0, 0.5))
-		else:
-			hud.show_toast("O satélite achou um colono, mas não tem vaga na vila (Moradias).", Color(1.0, 0.7, 0.4))
+	# Bloco 101: o satélite acha gente de outra colônia: um grupo de migrantes vem pro portão (aceitar precisa de cama)
+	var mig := get_tree().get_first_node_in_group("migrantes")
+	if mig and mig.esperando.is_empty():
+		mig.chama_grupo(-1, "satelite")
 
 
 # ------------------------------------------------------------ dinamite (Bloco 60)

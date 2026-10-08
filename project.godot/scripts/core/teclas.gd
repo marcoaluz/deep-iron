@@ -9,7 +9,7 @@ const Settings := preload("res://scripts/core/settings.gd")
 const PADRAO := {
 	"construir": [KEY_SPACE], "minerador": [KEY_1, KEY_KP_1], "cacador": [KEY_2, KEY_KP_2], "medico": [KEY_3, KEY_KP_3],
 	"engenheiro": [KEY_4, KEY_KP_4], "cozinheiro": [KEY_C], "lenhador": [KEY_L], "guarda": [KEY_X], "pesquisador": [KEY_Z],
-	"sem_funcao": [KEY_0, KEY_KP_0], "turno_extra": [KEY_T], "vender": [KEY_V], "recrutar": [KEY_R],
+	"sem_funcao": [KEY_0, KEY_KP_0], "turno_extra": [KEY_T], "vender": [KEY_V],
 	"proximo": [KEY_PERIOD], "seguir": [KEY_F], "pausa": [KEY_P], "dicas": [KEY_H], "musica": [KEY_M],
 	"painel_hub": [KEY_U], "painel_escavadeira": [KEY_E], "painel_oficina": [KEY_O], "painel_enfermaria": [KEY_I],
 	"painel_moral": [KEY_B], "painel_defesa": [KEY_G], "painel_diario": [KEY_J], "painel_lab": [KEY_Q], "painel_sol": [KEY_Y],
@@ -33,7 +33,7 @@ const NOMES := [
 	["medico", "Função: médico"], ["engenheiro", "Função: engenheiro"], ["cozinheiro", "Função: cozinheiro"],
 	["lenhador", "Função: lenhador"], ["guarda", "Função: guarda"], ["pesquisador", "Função: pesquisador"],
 	["fundidor", "Função: fundidor"], ["ferreiro", "Função: ferreiro"], ["padre", "Função: padre (só um)"], ["carpinteiro", "Função: carpinteiro"],
-	["sem_funcao", "Tirar a função"], ["turno_extra", "Turno extra"], ["vender", "Vender minério"], ["recrutar", "Recrutar"],
+	["sem_funcao", "Tirar a função"], ["turno_extra", "Turno extra"], ["vender", "Vender minério"],
 	["pessoas", "Lista de pessoas (abre/fecha)"], ["proximo", "Próximo ipezinho"], ["seguir", "Câmera segue"], ["pausa", "Pausa"], ["dicas", "Atalhos (ajuda)"],
 	["musica", "Música liga/desliga"], ["painel_hub", "Centro da Vila"], ["painel_escavadeira", "Escavadeira"],
 	["painel_oficina", "Oficina"], ["painel_enfermaria", "Enfermaria"], ["painel_moral", "Bem-estar"],

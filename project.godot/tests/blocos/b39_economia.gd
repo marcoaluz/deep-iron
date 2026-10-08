@@ -63,42 +63,33 @@ func _process(delta: float) -> bool:
 		c0 = eco.credits
 		eco.sell_all()
 		check(is_equal_approx(eco.credits - c0, 10.0 * eco.copper_price) and arm.total_stored < 1.0, "vender tudo: +%d cr pelo cobre" % (eco.credits - c0))
-		print("== recrutar")
+		# Bloco 101: acabou a COMPRA de ipezinhos (quem chega são os migrantes, b101); a capacidade são as camas
+		print("== sem compra de ipezinhos; capacidade = camas")
 		var beds := 0
 		for c in get_nodes_in_group("casas"):
 			beds += c.beds_total()
-		print("  camas %d, ipezinhos %d, livres %d, limite %d" % [beds, eco.worker_count(), eco.free_beds(), eco.max_workers])
-		eco.credits = 0.0
-		var n0: int = eco.worker_count()
-		check(eco.recruit() == null and eco.worker_count() == n0, "sem créditos: bloqueado (%s)" % eco.recruit_block_reason())
-		check(eco.recruit_block_reason().begins_with("falta"), "motivo: falta créditos")
-		eco.credits = 10000.0
-		var cost: int = eco.recruit_cost()
-		var w = eco.recruit()
-		check(w != null and eco.credits == 10000.0 - cost, "recrutou por %d cr" % cost)
+		print("  camas %d, ipezinhos %d, livres %d" % [beds, eco.worker_count(), eco.free_beds()])
+		check(not eco.has_method("recruit") and not eco.has_method("recruit_cost"), "não tem mais 'recrutar' (nem custo)")
+		var c_antes: float = eco.credits
+		var w = eco.novo_ipezinho()
+		check(w != null and eco.credits == c_antes, "quem chega não custa crédito")
 		set_meta("new", w.name if w else "")
 		step = 1
 		t_mark = t
 	elif step == 1 and t - t_mark > 1.0:
 		var w = main.get_node_or_null("World/" + get_meta("new"))
 		var hub = g("village_hub")
-		check(w != null and w.has_home(), "recrutado tem casa/cama (%s)" % (w._home.name if w and w.has_home() else "sem casa"))
+		check(w != null and w.has_home(), "quem chega tem casa/cama (%s)" % (w._home.name if w and w.has_home() else "sem casa"))
 		check(w.global_position.distance_to(hub.global_position) < 120.0, "chegou perto do Centro da Vila")
-		# enche até não ter cama
-		eco.max_workers = 99
+		# enche até não ter cama: a vila está cheia (o migrante não pode ser aceito: b101)
 		var guard := 0
 		while eco.free_beds() > 0 and guard < 20:
-			eco.credits = 1.0e9
-			eco.recruit()
+			eco.novo_ipezinho()
 			guard += 1
-		var cr: float = eco.credits
-		var n: int = eco.worker_count()
-		print("  sem cama: ", eco.recruit_block_reason())
-		check(eco.recruit() == null and eco.credits == cr and eco.worker_count() == n, "sem cama livre: bloqueado e não gastou")
-		check(eco.recruit_block_reason().begins_with("sem cama"), "motivo: sem cama")
+		check(eco.free_beds() == 0 and not eco.tem_cama_livre(), "sem cama livre: a vila está cheia")
 		hud._refresh()
-		print("  botão do HUD: ", hud._recruit_button.text)
-		check(hud._recruit_button.disabled and "cama" in hud._recruit_button.text, "HUD avisa o motivo")
+		print("  HUD: ", hud._workers_count_label.text)
+		check("camas" in hud._workers_count_label.text and hud.get("_recruit_button") == null, "o HUD mostra 'N / camas' e não tem botão de recrutar")
 		print("== custos antigos seguem iguais")
 		var oficina = g("oficina")
 		eco.credits = 99999.0
