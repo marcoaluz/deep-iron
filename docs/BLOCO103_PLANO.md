@@ -158,3 +158,22 @@ Confere:
 4. **O "derrete a barricada"** do Magmante e da Gosma: corrigir os textos (proposta), ou fazer eles subirem pelo
    portão?
 5. **O desconforto dos corpos:** 1,5 por corpo, até 4,5, ok? (O pedido diz opcional.)
+
+## As decisões do Marco (2026-10-08)
+
+1. **Antes do reconhecimento:** "concordo". A IA não desce sozinha; a ordem à mão, a área de trabalho e a patrulha
+   pedem confirmação; confirmado, o acidente fica 2× até o reconhecimento.
+2. **Os drops:** "faça o que fizer mais sentido". Ficam **no corpo**, colhidos no estudo; o corpo não estudado (ou de
+   espécie já conhecida) manda pro armazém. O total não muda.
+3. **A Gosma corrói a arma:** "podemos implementar".
+4. **A barricada:** "estas novas criaturas só ficam na sessão deles, não sobe". Ele escolheu: **o andar deles, de dia e
+   de noite**.
+   - **Moradores do fundo:** a Gosma mora no S2 e o Magmante no S3 (nos dados do andar: `moradores`).
+     - Uns poucos vagam pelo andar o tempo todo, a partir de quando ele abre.
+     - Atacam quem está no MESMO andar (o mineiro, a pesquisadora no reconhecimento, o guarda) e nunca saem dele.
+     - Repõem devagar (um por dia, até o número do andar).
+   - **Saem das invasões da superfície:** a onda passa a ser os Lumívoros, os Ferrugentos e a Matriarca.
+   - **Os guardas descem pra caçar:** a ordem "caçar no S2" (quantos), na janela da Defesa. De dia, esses guardas vão
+     pro andar e lutam com o combate de sempre; de noite voltam pros postos. O corpo fica no andar.
+   - Os textos da barricada e do armazém saem; entram os de verdade.
+5. **O desconforto:** "pode ser" (1,5 por corpo, até 4,5).
