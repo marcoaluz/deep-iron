@@ -426,5 +426,9 @@ func test_b102_catalogo() -> void:
 	run_bloco("b102_catalogo.gd")
 
 
+func test_b103_bestiario() -> void:
+	run_bloco("b103_bestiario.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

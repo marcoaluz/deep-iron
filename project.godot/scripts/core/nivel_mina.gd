@@ -25,6 +25,9 @@ extends Resource
 ## Minérios e criaturas típicos (informativo + conteúdo do Bloco 70).
 @export var minerios: PackedStringArray = PackedStringArray()
 @export var criaturas: PackedStringArray = PackedStringArray()
+## Bloco 103: os MORADORES do andar — criaturas que vivem aqui de dia e de noite e nunca sobem: [[tipo, quantos], ...]
+## (defense.gd faz nascer quando o andar abre e repõe um por dia).
+@export var moradores: Array = []
 ## Atmosfera (Bloco 69): luz ambiente, cor da névoa, partículas ("", "poeira", "acido", "calor", "bolhas", "gotas").
 @export var cor_ambiente: Color = Color(1, 1, 1)
 @export var cor_nevoa: Color = Color(0, 0, 0, 0)

@@ -12,10 +12,24 @@ extends Node
 ##   da fornalha e a toca do caçador também esperam o estudo. A pesquisa pode exigir uma entrada estudada ("libera").
 ## - Sinais pras missões e pra janela: entrada_avistada / entrada_estudada (objetivo "estudar" em missoes.gd).
 ## Save: chave "catalogo". Save antigo (sem a chave): entra como Estudado tudo que o jogo já tinha liberado.
+##
+## Bloco 103: o BESTIÁRIO e o RECONHECIMENTO DOS ANDARES.
+## - A criatura abatida deixa um CORPO (corpo_criatura.gd) até o amanhecer seguinte + horas_corpo: a pesquisadora estuda
+##   a espécie NO CORPO (de dia; corpo lá fora só com o portão aberto) e colhe o que ele deixou. A ficha (comportamento,
+##   fraqueza, o que deixa, perigo, POR QUE VEIO + a dica, a história) vem do textos.txt; o perigo e o que deixa são lidos
+##   da cena da criatura. A descoberta vira um cartão (o banner) e a página do diário; quem descobriu fica realizada
+##   (ânimo e experiência: ipezinho.descobriu). Corpo na vila ou perto do portão tira um pouco do ânimo (morale.gd).
+## - Andar novo (S2-S5) que abriu e ainda não foi RECONHECIDO: a IA não manda ninguém trabalhar lá (a pesquisadora é a
+##   exceção, pra fazer o reconhecimento — com risco de ferimento); a ordem à mão, a área de trabalho e a patrulha dos
+##   guardas pedem confirmação (libera_descida) e aí os acidentes lá são x acidente_sem_reconhecimento até o
+##   reconhecimento. O reconhecimento revela os perigos, as criaturas e o equipamento do andar (as regras não mudam).
 
 signal mudou
 signal entrada_avistada(id: String)
 signal entrada_estudada(id: String, categoria: String)
+## Bloco 103: pras missões (e a janela da Defesa / o corte da mina).
+signal criatura_estudada(id: String)
+signal andar_reconhecido(id: String)
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const Ores := preload("res://scripts/core/ores.gd")
@@ -49,6 +63,24 @@ static var tudo_estudado := false
 ## Pontos de pesquisa que cada estudo de campo dá (pra pesquisa em andamento, ou guardados pra próxima).
 @export var pontos_por_estudo: float = 8.0
 
+@export_group("Corpos e bestiário (Bloco 103)")
+## Horas depois do amanhecer SEGUINTE à morte em que o corpo da criatura some (se ninguém estudou).
+@export var horas_corpo: float = 8.0
+## Ânimo que cada corpo de criatura dentro da paliçada (ou perto do portão) tira da vila, e o máximo somado.
+@export var desconforto_corpo: float = 1.5
+@export var desconforto_max: float = 4.5
+## Distância (px) do portão em que o corpo do lado de fora ainda incomoda.
+@export var desconforto_perto_portao: float = 120.0
+## A pesquisadora não escolhe alvo com um morador do fundo vivo a menos disto (px).
+@export var distancia_morador: float = 150.0
+
+@export_group("Reconhecimento dos andares (Bloco 103)")
+## Chance de ferimento no fim de um reconhecimento (o andar é perigoso); com o traje do andar no vestiário, x 0,25.
+@export_range(0.0, 1.0) var risco_reconhecimento: float = 0.15
+@export var risco_com_traje: float = 0.25
+## Acidentes na mina num andar liberado sem reconhecimento (o jogador confirmou descer) até o reconhecimento.
+@export var acidente_sem_reconhecimento: float = 2.0
+
 @export_group("Plano B: o laboratório sozinho")
 ## Pontos por segundo que o laboratório gera sozinho num estudo do catálogo (o pesquisador gera 1/s numa pesquisa).
 @export var lab_pontos_sozinho: float = 0.15
@@ -65,6 +97,10 @@ var bruto := {}
 var amostras := {}
 ## Plano B em andamento: {id, pontos} ({} = nenhum).
 var estudo_lab := {}
+## Bloco 103: andares que o jogador mandou descer sem reconhecimento: {id: true}.
+var descida_liberada := {}
+## Bloco 103: o ânimo que os corpos tiram da vila agora (o morale.gd lê; conferido a cada segundo).
+var desconforto := 0.0
 var _reservas := {}  # id -> ipezinho (a pesquisadora que vai estudar)
 var _t := 0.0
 
@@ -220,16 +256,47 @@ func estuda(id: String, quem: Node = null) -> bool:
 		var res := get_tree().get_first_node_in_group("research")
 		if res and res.has_method("ganha_pontos"):
 			res.ganha_pontos(pontos_por_estudo)
-		if quem.has_method("_popup"):
+		if quem.has_method("descobriu"):
+			quem.descobriu(id)  # Bloco 103: ânimo, experiência e o balão de comemoração
+		elif quem.has_method("_popup"):
 			quem._popup("Estudou: %s!" % nome(id), Color(0.75, 0.9, 1.0))
 	_aviso("Estudou: %s%s" % [nome(id), extra], Color(0.6, 1.0, 0.75), quem if quem is Node2D else null)
+	if cat in ["criatura", "local"]:
+		_cartao(id, quem)  # Bloco 103: o cartão narrativo curto
 	var au := get_node_or_null("/root/Audio")
 	if au:
 		au.find((quem as Node2D).global_position if quem is Node2D and is_instance_valid(quem) else Vector2.ZERO)
 	_avisa_mundo()
 	entrada_estudada.emit(id, cat)
+	if cat == "criatura":
+		criatura_estudada.emit(id)
+	elif cat == "local" and String(e.get("nivel", "")) != "":
+		andar_reconhecido.emit(id)
 	mudou.emit()
 	return true
+
+
+## Bloco 103: o cartão da descoberta (o banner da tela): o nome, duas linhas da história e a dica.
+func _cartao(id: String, quem: Node) -> void:
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud == null or not hud.has_method("show_banner"):
+		return
+	var cat := String(entrada(id).categoria)
+	var titulo := ("DESCOBERTA: %s" if cat == "criatura" else "RECONHECIMENTO: %s") % nome(id).to_upper()
+	var linhas: Array[String] = []
+	if quem != null and is_instance_valid(quem) and quem.get("display_name"):
+		linhas.append("%s %s." % [quem.display_name, "estudou o corpo" if cat == "criatura" else "voltou do reconhecimento"])
+	var hist := texto(id, "historia")
+	if hist != "":
+		linhas.append(hist)
+	if texto(id, "dica") != "":
+		linhas.append("Dica: " + texto(id, "dica"))
+	elif cat == "local":
+		var f := ficha_local(id)
+		for k in ["Perigos", "Equipamento"]:
+			if f.has(k):
+				linhas.append("%s: %s" % [k, f[k]])
+	hud.show_banner(titulo, "\n".join(linhas))
 
 
 ## Testes e o F3: tudo estudado de uma vez (sem aviso).
@@ -304,7 +371,7 @@ func amostra(kind: String, chefe := false) -> void:
 	var n := int(amostras.get(id, 0))
 	amostras[id] = n + 1
 	if n == 0 and not estudado(id):
-		_aviso("Amostra de %s guardada: a pesquisadora estuda no laboratório (Catálogo, R)" % nome(id), Color(0.75, 0.85, 1.0))
+		_aviso("Uma criatura desconhecida caiu: o corpo fica no chão até amanhã — a pesquisadora pode estudar (Catálogo, R)", Color(0.75, 0.85, 1.0))  # Bloco 103: o nome só depois do estudo
 	mudou.emit()
 
 
@@ -331,12 +398,14 @@ func _confere() -> void:
 			"criatura":
 				for c in get_tree().get_nodes_in_group("criaturas"):
 					if String(c.kind) == String(e.alvo) and c.is_in_group("chefes") == bool(e.get("chefe", false)) \
-							and c.has_method("is_alive") and c.is_alive():
-						avista(id, false)  # (a invasão já avisa)
+							and c.has_method("is_alive") and c.is_alive() \
+							and (String(c.get("morador")) == "" or _alguem_perto(c.global_position, gente)):
+						avista(id, false)  # (a invasão já avisa; o morador do fundo, só quando alguém chega perto)
 						break
 			"local":
 				if _local_aberto(e, env):
 					avista(id)
+	_confere_corpos()  # Bloco 103
 	# reservas de quem não está mais nessa (trocou de função, morreu, largou o campo sem anotação)
 	for id in _reservas.keys():
 		var w = _reservas[id]
@@ -364,8 +433,11 @@ func _local_aberto(e: Dictionary, env: Node) -> bool:
 		and not _trancado(env, Vector2(float(p[0]), float(p[1])))
 
 
-## Perigoso pra esta pesquisadora? (zona de gás/radiação/calor ou poça de ácido/lava sem o traje)
+## Perigoso pra esta pesquisadora? (zona de gás/radiação/calor ou poça de ácido/lava sem o traje; Bloco 103: um morador
+## do fundo vivo perto)
 func perigoso(pos: Vector2, w: Node) -> bool:
+	if morador_perto(pos):
+		return true
 	var eq := get_tree().get_first_node_in_group("equipment")
 	if eq and eq.has_method("hazard_at"):
 		var z: String = eq.hazard_at(pos)
@@ -409,14 +481,196 @@ func _alvo_de(id: String, w: Node) -> Dictionary:
 		"local":
 			var p: Array = e.get("pos", [])
 			if p.size() >= 2 and _local_aberto(e, env):
-				var pos := _chao(Vector2(float(p[0]), float(p[1])))
-				if not perigoso(pos, w):
-					return {"id": id, "pos": pos, "lab": false}
-		"criatura":
-			var lab := _lab_perto(de)
-			if lab and int(amostras.get(id, 0)) > 0:
-				return {"id": id, "pos": lab.global_position + Vector2(0, 40), "lab": true}
+				# Bloco 103: o ponto dos dados; com um morador do fundo perto, outro ponto do mesmo andar
+				for dx in [0.0, -300.0, 300.0, -550.0, 550.0]:
+					var pos := _chao(Vector2(float(p[0]) + dx, float(p[1])))
+					if not perigoso(pos, w) and (env == null or env.level_at(pos) == env.level_at(Vector2(float(p[0]), float(p[1])))):
+						return {"id": id, "pos": pos, "lab": false}
+		"criatura":  # Bloco 103: estuda NO CORPO (o mais perto), não mais a amostra no laboratório
+			var melhor: Node2D = null
+			for c in get_tree().get_nodes_in_group("corpos_criatura"):
+				if String(c.especie) != id or not is_instance_valid(c) or c.is_queued_for_deletion():
+					continue
+				if not _chega_no_corpo(c, w) or perigoso(c.global_position, w):
+					continue
+				if melhor == null or de.distance_to(c.global_position) < de.distance_to(melhor.global_position):
+					melhor = c
+			if melhor:
+				return {"id": id, "pos": melhor.global_position + Vector2(0, 14), "lab": false, "corpo": melhor}
 	return {}
+
+
+## Bloco 103: dá pra ir até o corpo agora? (lá fora da paliçada só com o portão aberto; o andar dele aberto)
+func _chega_no_corpo(c: Node2D, w: Node) -> bool:
+	var b := get_tree().get_first_node_in_group("barricadas")
+	if b and b.has_method("separa") and b.separa((w as Node2D).global_position, c.global_position) \
+			and b.has_method("fechado") and b.fechado():
+		return false
+	var nv: Resource = Niveis.por_id(String(c.andar))
+	return nv == null or String(c.andar) in ["S0", "S1"] or Niveis.liberado(get_tree(), nv)
+
+
+## Bloco 103: um morador do fundo vivo perto desse ponto? (a pesquisadora evita)
+func morador_perto(pos: Vector2) -> bool:
+	for c in get_tree().get_nodes_in_group("criaturas"):
+		if String(c.get("morador")) != "" and c.is_alive() and (c as Node2D).global_position.distance_to(pos) < distancia_morador:
+			return true
+	return false
+
+
+## Bloco 103: o alvo ainda vale? (o corpo pode ter sumido no prazo ou ter sido estudado)
+func alvo_valido(campo: Dictionary) -> bool:
+	if estado(String(campo.get("id", ""))) != AVISTADO:
+		return false
+	if campo.has("corpo"):
+		var c = campo.corpo
+		return c != null and is_instance_valid(c) and not c.is_queued_for_deletion()
+	return true
+
+
+## Bloco 103: a anotação acabou no alvo. O corpo: colhe o que ele deixou e some. O andar: o risco do reconhecimento.
+func fim_da_anotacao(campo: Dictionary, w: Node) -> void:
+	if campo.has("corpo"):
+		var c = campo.corpo
+		if c != null and is_instance_valid(c):
+			var txt: String = c.entrega_drop()
+			if txt != "" and w.has_method("_popup"):
+				w._popup("Colheu: %s" % txt, Color(1.0, 0.85, 0.45))
+				_aviso("%s colheu do corpo: %s (no armazém)" % [w.display_name, txt], Color(1.0, 0.85, 0.45))
+			c.queue_free()
+	elif String(entrada(String(campo.get("id", ""))).get("nivel", "")) != "":
+		var nv: Resource = Niveis.por_id(String(entrada(String(campo.id)).nivel))
+		var chance := risco_reconhecimento
+		var eq := get_tree().get_first_node_in_group("equipment")
+		if nv and String(nv.traje) != "" and eq and eq.has_method("usable") and (eq.usable(String(nv.traje)) + eq.in_use(String(nv.traje))) > 0:
+			chance *= risco_com_traje
+		if randf() < chance and w.has_method("hurt"):
+			w.hurt("mina", "leve")
+			_aviso("%s se machucou no reconhecimento do %s." % [w.display_name, String(campo.id)], Color(1.0, 0.5, 0.4))
+
+
+# ------------------------------------------------------------ andares não reconhecidos (Bloco 103)
+## O id do andar novo (S2..S5) num ponto ("" = a superfície, a vila e a mina de cima, ou fora de um andar do catálogo).
+func andar_de(pos: Vector2) -> String:
+	var env := get_tree().get_first_node_in_group("environment")
+	if env == null:
+		return ""
+	var nv: Resource = Niveis.do_ponto(env, pos)
+	if nv == null or String(nv.id) in ["S0", "S1"] or entrada(String(nv.id)).is_empty():
+		return ""
+	return String(nv.id)
+
+
+func reconhecido(andar: String) -> bool:
+	return andar == "" or estudado(andar)
+
+
+## A IA não manda ninguém trabalhar num andar que ninguém reconheceu (a pesquisadora pode ir; o jogador pode liberar).
+func andar_bloqueado(pos: Vector2, w: Node = null) -> bool:
+	var a := andar_de(pos)
+	if a == "" or reconhecido(a) or descida_liberada.has(a):
+		return false
+	return not (w != null and w.has_method("is_researcher") and w.is_researcher())
+
+
+## O andar que pede confirmação antes de mandar gente pra esse ponto ("" = nenhum).
+func precisa_confirmar(pos: Vector2) -> String:
+	var a := andar_de(pos)
+	return a if a != "" and not reconhecido(a) and not descida_liberada.has(a) else ""
+
+
+func libera_descida(andar: String) -> void:
+	if andar != "":
+		descida_liberada[andar] = true
+		for w in get_tree().get_nodes_in_group("ipezinhos"):
+			w.wake_decision()
+		mudou.emit()
+
+
+## Multiplica o acidente na mina: andar liberado sem reconhecimento = x acidente_sem_reconhecimento.
+func mult_acidente(pos: Vector2) -> float:
+	var a := andar_de(pos)
+	return acidente_sem_reconhecimento if a != "" and not reconhecido(a) and descida_liberada.has(a) else 1.0
+
+
+## O texto do aviso da confirmação.
+func texto_confirmar(andar: String) -> String:
+	return "O %s ainda não foi reconhecido: ninguém sabe que perigos tem lá. Descer mesmo assim?\n\nLá dentro os acidentes ficam %s mais comuns até uma pesquisadora fazer o reconhecimento (Catálogo, R)." % [
+		nome(andar), ("%.0fx" % acidente_sem_reconhecimento)]
+
+
+## A ficha de um andar reconhecido: {Perigos, Criaturas, Equipamento} (lidos do jogo: as zonas, as poças, os dados).
+func ficha_local(id: String) -> Dictionary:
+	var e := entrada(id)
+	var nv: Resource = Niveis.por_id(String(e.get("nivel", "")))
+	if nv == null:
+		return {}
+	var env := get_tree().get_first_node_in_group("environment")
+	var NOMES_PERIGO := {"gas": "gás", "calor": "calor", "radiacao": "radiação", "acido": "poças de ácido", "lava": "poços de lava",
+		"agua": "a água da cachoeira (molha: protege do calor)", "poeira": "poeira"}
+	var perigos: Array[String] = []
+	if String(nv.perigo) != "" and NOMES_PERIGO.has(String(nv.perigo)):
+		perigos.append(NOMES_PERIGO[String(nv.perigo)])
+	for z in get_tree().get_nodes_in_group("zonas_perigo"):
+		var nz: Resource = Niveis.do_ponto(env, (z as Node2D).global_position) if env else null
+		if nz and nz.id == nv.id and NOMES_PERIGO.has(String(z.kind)) and not perigos.has(NOMES_PERIGO[String(z.kind)]):
+			perigos.append(NOMES_PERIGO[String(z.kind)])
+	for p in nv.perigos:
+		if p is Array and p.size() > 0 and NOMES_PERIGO.has(String(p[0])) and not perigos.has(NOMES_PERIGO[String(p[0])]):
+			perigos.append(NOMES_PERIGO[String(p[0])])
+	var criaturas: Array[String] = []
+	var moradores: Array = nv.get("moradores") if nv.get("moradores") != null else []
+	var kinds_moradores := moradores.map(func(m): return String(m[0]) if m is Array and m.size() > 0 else "")
+	for c in nv.criaturas:
+		if not kinds_moradores.has(String(c)):  # (o morador entra embaixo, com o "mora aqui")
+			criaturas.append(nome(String(c)) if estudado(String(c)) else "???")
+	for m in moradores:
+		if m is Array and m.size() > 0:
+			var nm: String = (nome(String(m[0])) if estudado(String(m[0])) else "???") + " (mora aqui)"
+			if not criaturas.has(nm):
+				criaturas.append(nm)
+	var equip: Array[String] = []
+	var eq := get_tree().get_first_node_in_group("equipment")
+	if String(nv.traje) != "" and eq:
+		equip.append(String(eq.NAMES.get(String(nv.traje), nv.traje)))
+	var of := get_tree().get_first_node_in_group("oficina")
+	for mi in nv.minerios:
+		var t: String = of.tool_for_ore(String(mi)) if of else ""
+		if t != "" and not equip.has(String(of.TOOL_NAMES[t])):
+			equip.append(String(of.TOOL_NAMES[t]))
+	var out := {}
+	out["Perigos"] = ", ".join(perigos) if not perigos.is_empty() else "nenhum à vista"
+	if not criaturas.is_empty():
+		out["Criaturas"] = ", ".join(criaturas)
+	out["Equipamento"] = ", ".join(equip) if not equip.is_empty() else "nenhum"
+	return out
+
+
+# ------------------------------------------------------------ corpos (Bloco 103)
+## O prazo de um corpo que cai agora: [dia, segundos desde o amanhecer] — o amanhecer seguinte + horas_corpo.
+func prazo_corpo() -> Array:
+	var dn := get_tree().get_first_node_in_group("day_night")
+	if dn == null:
+		return [1, 0.0]
+	return [int(dn.day) + 1, horas_corpo * float(dn.segundos_por_hora())]
+
+
+## A cada segundo: os corpos que passaram do prazo somem (o drop vai pro armazém) e o desconforto da vila.
+func _confere_corpos() -> void:
+	var dn := get_tree().get_first_node_in_group("day_night")
+	var b := get_tree().get_first_node_in_group("barricadas")
+	var soma := 0.0
+	for c in get_tree().get_nodes_in_group("corpos_criatura"):
+		if c.is_queued_for_deletion():
+			continue
+		if dn and c.vencido(int(dn.day), float(dn.time)):
+			c.entrega_drop()
+			c.queue_free()
+			continue
+		if b and b.has_method("lado_de") and (b.lado_de(c.global_position) == 1
+				or c.global_position.distance_to(b.global_position) <= desconforto_perto_portao):
+			soma += desconforto_corpo
+	desconforto = minf(soma, desconforto_max)
 
 
 ## O ponto andável mais perto (o ponto do reconhecimento pode cair numa pedra).
@@ -625,6 +879,20 @@ func ficha(id: String) -> Array:
 			for k in [["rende", "Rende"], ["risco", "Risco"], ["epoca", "Época"]]:
 				if texto(id, k[0]) != "":
 					out.append([k[1], texto(id, k[0])])
+		"criatura":  # Bloco 103: o bestiário
+			for k in [["comportamento", "Comportamento"], ["fraqueza", "Fraqueza"]]:
+				if texto(id, k[0]) != "":
+					out.append([k[1], texto(id, k[0])])
+			out.append(["Deixa", deixa(id)])
+			out.append(["Perigo", "%s (%d de 5)" % ["●".repeat(perigo(id)) + "○".repeat(5 - perigo(id)), perigo(id)]])
+			if texto(id, "porque") != "":
+				out.append(["Por que veio", texto(id, "porque")])
+			if texto(id, "dica") != "":
+				out.append(["Dica", texto(id, "dica")])
+		"local":  # Bloco 103: o reconhecimento
+			var fl := ficha_local(id)
+			for k in fl:
+				out.append([k, fl[k]])
 	var lib: Array[String] = []
 	for l in e.get("libera", []):
 		if String(l).begins_with("pesquisa:"):
@@ -636,6 +904,58 @@ func ficha(id: String) -> Array:
 	return out
 
 
+## Bloco 103: as cenas das criaturas (o perigo e o que deixam são lidos delas).
+const CENAS_CRIATURA := {"lumivoro": "res://scenes/creatures/lumivoro.tscn", "ferrugento": "res://scenes/creatures/ferrugento.tscn",
+	"gosma": "res://scenes/creatures/gosma.tscn", "magmante": "res://scenes/creatures/magmante.tscn"}
+
+
+## Um valor @export da cena da criatura (o que a cena troca; senão o padrão do script).
+static func _da_cena(kind: String, prop: String, padrao: Variant) -> Variant:
+	if not CENAS_CRIATURA.has(kind) or not ResourceLoader.exists(CENAS_CRIATURA[kind]):
+		return padrao
+	var st: SceneState = (load(CENAS_CRIATURA[kind]) as PackedScene).get_state()
+	for i in st.get_node_property_count(0):
+		if st.get_node_property_name(0, i) == prop:
+			return st.get_node_property_value(0, i)
+	return padrao
+
+
+## O nível de perigo (1 a 5): a vida x o dano por segundo da criatura (a Matriarca: os multiplicadores do chefe).
+func perigo(id: String) -> int:
+	var e := entrada(id)
+	var kind := String(e.get("alvo", id))
+	var hp := float(_da_cena(kind, "max_hp", 18.0))
+	var dano := float(_da_cena(kind, "damage", 4.0)) / maxf(float(_da_cena(kind, "attack_interval", 1.0)), 0.1)
+	if bool(e.get("chefe", false)):
+		var def := get_tree().get_first_node_in_group("defense")
+		if def:
+			hp *= float(def.boss_hp_mult)
+			dano *= float(def.boss_damage_mult)
+	var v := hp * dano
+	var n := 1
+	for limite in [80.0, 150.0, 250.0, 500.0]:
+		if v > limite:
+			n += 1
+	return clampi(n, 1, 5)
+
+
+## O que a criatura deixa (as chances de verdade da cena e do código).
+func deixa(id: String) -> String:
+	var e := entrada(id)
+	var kind := String(e.get("alvo", id))
+	if bool(e.get("chefe", false)):
+		var def := get_tree().get_first_node_in_group("defense")
+		return "solarita (%d), %d peças raras e pontos de pesquisa" % [int(def.boss_reward_solarita), int(def.boss_reward_parts)] if def else "solarita"
+	var partes: Array[String] = []
+	if kind == "ferrugento":
+		partes.append("peça rara (35%)")
+	var ore := String(_da_cena(kind, "drop_ore", ""))
+	var ch := float(_da_cena(kind, "drop_chance", 0.0))
+	if ore != "" and ch > 0.0:
+		partes.append("%d %s (%d%%)" % [int(_da_cena(kind, "drop_amount", 0)), Ores.display_name(ore).to_lower(), roundi(ch * 100.0)])
+	return ", ".join(partes) if not partes.is_empty() else "nada"
+
+
 ## As receitas da fornalha antes de ter uma (os @export do script).
 static func _receitas_padrao(proto: Script) -> Array:
 	var v = proto.get_property_default_value("receitas")
@@ -645,7 +965,7 @@ static func _receitas_padrao(proto: Script) -> Array:
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	return {"estados": estados.duplicate(), "bruto": bruto.duplicate(), "amostras": amostras.duplicate(),
-		"estudo_lab": estudo_lab.duplicate()}
+		"estudo_lab": estudo_lab.duplicate(), "descida_liberada": descida_liberada.keys()}  # Bloco 103
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -669,6 +989,10 @@ func load_save_data(d: Dictionary) -> void:
 	estudo_lab = {}
 	if not entrada(SaveUtil.text(el, "id", "")).is_empty():
 		estudo_lab = {"id": SaveUtil.text(el, "id", ""), "pontos": maxf(SaveUtil.num(el, "pontos", 0.0), 0.0)}
+	descida_liberada.clear()  # Bloco 103 (save antigo: nenhuma)
+	for a in SaveUtil.array(d, "descida_liberada"):
+		if not entrada(String(a)).is_empty():
+			descida_liberada[String(a)] = true
 	_reservas.clear()
 	mudou.emit()
 

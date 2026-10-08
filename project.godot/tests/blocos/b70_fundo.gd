@@ -231,10 +231,10 @@ func _ventilador() -> void:
 func _criaturas() -> void:
 	print("== criaturas do fundo")
 	var def = g("defense")
-	check(def.fundo_count("gosma", 1) == 0 and def.fundo_count("gosma", 2) == 1 and def.fundo_count("gosma", 20) == def.gosma_max, "gosma: a partir da onda 2 com o S2 aberto (até %d)" % def.gosma_max)
-	check(def.fundo_count("magmante", 5) == 0, "magmante: só com o S3 aberto")
+	# Bloco 103: a Gosma e o Magmante MORAM no andar deles (os moradores do fundo, b103) e não vêm mais nas invasões
+	check(def.fundo_count("gosma", 2) == 0 and def.fundo_count("gosma", 20) == 0, "gosma: não sobe mais nas invasões (mora no S2: Bloco 103)")
 	g("elevador_abismo").unlocked = true
-	check(def.fundo_count("magmante", 3) == 1, "S3 aberto: magmante a partir da onda 3")
+	check(def.fundo_count("magmante", 3) == 0, "magmante: idem (mora no S3)")
 	var gos = def._spawn("gosma")
 	check(gos.kind == "gosma" and gos.gate_id == "" and gos.inside and gos.weapon_corrode > 1.0 and gos.barricade_mult > 1.0,
 		"Gosma: sai do poço (sem portão, Bloco 80: entra direto), corrói arma, derrete barricada")
@@ -251,10 +251,14 @@ func _criaturas() -> void:
 	check(mag.kind == "magmante" and mag.max_hp > gos.max_hp * 2.0 and mag.speed < gos.speed, "Magmante: duro e lento (%.0f hp)" % mag.max_hp)
 	mag.drop_chance = 1.0
 	var cr0: float = arm.stock.cristal_rubro
+	g("catalogo").avista("magmante", false)
+	g("catalogo").estuda("magmante")  # (Bloco 103: espécie estudada: o drop vai direto pro armazém; sem estudo, fica no corpo)
 	mag.take_hit(9999.0, null)
 	check(arm.stock.cristal_rubro >= cr0 + float(mag.drop_amount) - 0.01, "derrubado: deixa cristal rubro (+%d)" % mag.drop_amount)
 	gos.die(false)
-	check(g("diary").has_page("gosmas") and g("diary").has_page("magmantes"), "páginas no diário")
+	g("catalogo").avista("gosma", false)
+	g("catalogo").estuda("gosma")  # Bloco 103: a página do diário vem do estudo
+	check(g("diary").has_page("gosmas") and g("diary").has_page("magmantes"), "páginas no diário (pelo estudo)")
 
 
 func _escavadeira() -> void:

@@ -229,10 +229,14 @@ func _roda() -> void:
 	main.get_node("World").add_child(lum)
 	await process_frame
 	lum.die(true)
+	await process_frame
+	await process_frame
 	check(int(cat.amostras.get("lumivoro", 0)) == 1 and cat.estado("lumivoro") == cat.AVISTADO, "o lumívoro abatido deixou uma amostra (e conta como visto)")
 	p1.set_job("pesquisador")
 	var alvo_l: Dictionary = cat._alvo_de("lumivoro", p1)
-	check(not alvo_l.is_empty() and alvo_l.lab, "a amostra se estuda no laboratório")
+	# Bloco 103: a pesquisadora estuda a criatura NO CORPO (a amostra fica pro plano B do laboratório)
+	check(not alvo_l.is_empty() and alvo_l.has("corpo"), "a criatura se estuda no corpo (Bloco 103)")
+	check(cat.motivo_lab("lumivoro") == "", "com a amostra, o laboratório também pode estudar sozinho")
 	p1.set_job("ocioso")
 	cat.estuda("lumivoro")
 	check(cat.estudado("lumivoro") and int(cat.amostras.get("lumivoro", 0)) == 0 and g("diary").has_page("lumivoros"), "estudada a amostra: a página dos Lumívoros no diário")

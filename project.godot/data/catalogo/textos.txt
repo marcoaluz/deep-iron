@@ -7,6 +7,8 @@
 #
 # Chaves: nome, texto (o que a pesquisadora anotou), uso ("para que serve") e, nos bichos, rende / risco / epoca.
 # A ferramenta e a receita da fornalha de cada minério o jogo escreve sozinho.
+# Bloco 103, as CRIATURAS: comportamento, fraqueza, porque ("por que veio": só o que o jogo FAZ de verdade), dica (o que
+# o jogador pode fazer) e historia (o cartão da descoberta). O perigo e o que ela deixa o jogo lê da cena da criatura.
 
 [ferro]
 nome = Ferro
@@ -77,27 +79,69 @@ nome = Lumívoro
 texto = A amostra derrete em luz no vidro do laboratório: eles são feitos do calor que sobrou do sol. Por isso vêm
   atrás das tochas e das janelas acesas.
 uso = Saber o que são ajuda a esperar por eles: vêm de noite, pela floresta, até o portão.
+comportamento = Vem nas noites de invasão, da floresta, e precisa passar pelo portão. Vai atrás de quem está acordado lá
+  fora, das casas com gente dentro e das tochas acesas; nas casas, quem está dentro morre de medo (o ânimo cai). Foge da
+  luz do dia ao amanhecer.
+fraqueza = A luz forte: os Holofotes deixam eles 30% mais lentos e os guardas batem 30% mais forte.
+porque = A LUZ. Gente acordada lá fora (a lanterna do capacete), casas com gente, enfermaria e taverna ocupadas, e as
+  tochas e lampiões da decoração: uma tocha acesa puxa como uma casa duas vezes mais perto.
+dica = Tire as tochas da decoração do caminho entre o portão e as casas, ou ponha perto do posto dos guardas: elas
+  puxam os Lumívoros pra lá.
+historia = No vidro, a amostra ainda brilhava fraquinho, como brasa de fogueira. A pesquisadora apagou a vela pra
+  olhar melhor, e a luz do bicho se apagou junto.
 
 [ferrugento]
 nome = Ferrugento
 texto = Debaixo da ferrugem há placas solares minúsculas: o Ferrugento passa o dia carregando e acorda de noite. Come
   metal.
 uso = Sobem pelo poço do elevador e vão direto no armazém. Às vezes viram sucata com peça rara dentro.
+comportamento = Nas noites de invasão sai da boca do poço do elevador (desde que o S2 abriu). Ataca quem está perto;
+  sem ninguém, vai no armazém roubar minério. Ao amanhecer desliga e vira pó de ferrugem.
+fraqueza = A lança de prata bate 60% mais forte neles.
+porque = O POÇO. O poço do elevador não tem muro: desde que a vila abriu o S2, eles sobem por ali e vão atrás do metal
+  do armazém.
+dica = Ponha guardas no posto do poço (metade dos guardas vai pra lá de noite) e dê a lança de prata pra eles.
+historia = Abrindo a carcaça, ela achou engrenagens com o número de série de uma fábrica de antes da explosão. Alguém
+  fez esses robôs pra cavar. Agora cavam a gente.
 
 [gosma]
 nome = Gosma ácida
 texto = A amostra continua mexendo no frasco. É o ácido das poças do S2 que aprendeu a andar.
-uso = Corrói as armas dos guardas e derrete o ferro e o cobre do armazém. Às vezes deixa cristal verde.
+uso = Mora no S2: atrapalha quem trabalha lá. O ácido dela gasta as armas. Às vezes deixa cristal verde.
+comportamento = MORA no S2, de dia e de noite, perto de onde nasceu; nunca sobe. Ataca quem está no andar e chega
+  perto. O golpe num guarda armado corrói a arma (gasta a mais).
+fraqueza = Pouca vida: cai rápido na mão de dois guardas.
+porque = O S2 É A CASA DELA. Ela nasce nas galerias de ácido e fica lá: quem desce pra minerar entra no território dela.
+dica = Mande guardas caçar no S2 (Defesa, G: patrulha) antes de pôr os mineiros lá, e leve armas de reserva: o ácido
+  gasta as lanças.
+historia = O frasco esquentou na mão e a tampa começou a soltar fumaça. Ela guardou a amostra num pote de barro: o
+  vidro não aguentou nem uma hora.
 
 [magmante]
 nome = Magmante
 texto = Pedra viva, quente por dentro. A lasca da amostra ainda está morna dias depois.
-uso = Lentos e duros. Derretem a barricada e comem o carvão. Quando caem, sobra cristal rubro.
+uso = Mora no S3: lento e duro, bate muito forte. Quando cai, às vezes sobra cristal rubro.
+comportamento = MORA no S3 (o abismo), de dia e de noite, perto de onde nasceu; nunca sobe. Lento, mas cada golpe
+  machuca feio quem estiver no andar.
+fraqueza = A lentidão: os guardas alcançam e batem antes dele chegar.
+porque = O ABISMO É A CASA DELE. Nasce perto da lava e fica lá: quem desce pro S3 entra no caminho dele.
+dica = Mande os guardas mais fortes caçar no S3 (Defesa, G: patrulha) antes de descer os mineiros; o machucado dele
+  muitas vezes é grave: tenha médico na enfermaria.
+historia = A lasca derreteu a palha da cesta no caminho de volta. No laboratório, posta na pedra fria, ela ainda pulsou
+  três vezes antes de parar.
 
 [matriarca]
 nome = Matriarca
 texto = A rainha dos Lumívoros: duas vezes maior, coberta de cristais roxos. A amostra dela é solarita pura.
-uso = Aparece uma vez por estação e grita pra chamar os outros. O golpe dela come o metal das armas.
+uso = Aparece uma vez por estação junto da invasão. O golpe dela come o metal das armas.
+comportamento = Vem com a invasão uma vez por estação. Dentro da vila, grita de tempos em tempos e chama mais
+  Lumívoros. O golpe dela corrói a arma do guarda.
+fraqueza = A luz forte (os Holofotes) e o portão: lá fora ela não chama ninguém.
+porque = A ESTAÇÃO. Ela vem uma vez a cada estação, junto com a invasão, e só GRITA (chama mais Lumívoros) depois de
+  entrar na vila.
+dica = Segure ela no portão: barricada forte e os melhores guardas lá. Enquanto não entra, ela não chama ninguém.
+historia = Os cristais da coroa dela ainda zumbiam quando a pesquisadora chegou. Encostando o ouvido, dava pra ouvir os
+  outros Lumívoros respondendo, bem longe, na floresta.
 
 [S2]
 nome = S2 — Galerias de ácido

@@ -290,6 +290,15 @@ func valor_do_objetivo(o: Array) -> float:
 			if alvo == "" or alvo in cat.CATEGORIAS:
 				return float(cat.quantos_estudados(alvo))
 			return 1.0 if cat.estudado(alvo) else 0.0
+		"criatura", "reconhecer":  # Bloco 103: alvo = a espécie / o andar (1 = estudado), ou "" (quantos)
+			var cat2 := get_tree().get_first_node_in_group("catalogo")
+			if cat2 == null:
+				return 0.0
+			if alvo != "":
+				return 1.0 if cat2.estudado(alvo) else 0.0
+			if String(o[0]) == "criatura":
+				return float(cat2.quantos_estudados("criatura"))
+			return float(cat2.da_categoria("local").filter(func(e): return String(e.get("nivel", "")) != "" and cat2.estudado(String(e.id))).size())
 	return 0.0
 
 

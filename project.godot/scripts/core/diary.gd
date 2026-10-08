@@ -22,15 +22,15 @@ const ENTRIES := {
 	},
 	"gosmas": {
 		"title": "Gosmas ácidas",
-		"text": "No nível 2 o ácido das poças ganhou vida. As Gosmas sobem pelo poço à noite, "
-			+ "rápidas e moles: o golpe delas corrói o metal das armas e o ácido derrete as "
-			+ "barricadas. No armazém, dissolvem o ferro e o cobre. Às vezes deixam cristal verde.",
+		"text": "No nível 2 o ácido das poças ganhou vida. As Gosmas moram lá embaixo, de dia e de noite, "
+			+ "perto das galerias de ácido, e nunca sobem: quem desce pra minerar entra no território delas. "
+			+ "O golpe delas corrói o metal das armas dos guardas. Às vezes deixam cristal verde.",
 	},
 	"magmantes": {
 		"title": "Magmantes",
-		"text": "Pedra viva do abismo, quente por dentro. Lentos e duros de derrubar, derretem a "
-			+ "barricada e, no armazém, comem o carvão. Quando caem, sobra cristal rubro no meio "
-			+ "da casca.",
+		"text": "Pedra viva do abismo, quente por dentro. Moram no S3, perto da lava, e não sobem. Lentos e "
+			+ "duros de derrubar, cada golpe deles machuca feio quem estiver no andar. Quando caem, sobra "
+			+ "cristal rubro no meio da casca.",
 	},
 	"cristais": {
 		"title": "Cristais do fundo",

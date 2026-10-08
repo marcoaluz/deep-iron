@@ -746,7 +746,7 @@ func _sync_char() -> void:
 	var p: Dictionary
 	if src.is_in_group("robos"):
 		p = IsoBonecos.robo_pose(src, iso_dir, _clock, _moving_now, _passo * PASSO_CICLO)
-	elif src.is_in_group("criaturas"):
+	elif src.is_in_group("criaturas") or src.is_in_group("corpos_criatura"):  # Bloco 103: o corpo = o último quadro da morte
 		p = IsoBonecos.criatura_pose(src, iso_dir, _moving_now, _passo * PASSO_CICLO)  # Prompt 17 (Bloco 76: + distância)
 	else:
 		p = IsoBonecos.pose(src, iso_dir, _clock, _passo, _desloc > MEXENDO)

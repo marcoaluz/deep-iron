@@ -1059,6 +1059,42 @@ func _reposiciona() -> void:
 
 
 ## Faixa de conquista no topo da tela (some sozinha).
+## Bloco 103: uma pergunta de sim/não (descer pra um andar não reconhecido...). sim = o que fazer no "sim".
+var _confirma: ConfirmationDialog = null
+
+
+func confirma(titulo: String, texto: String, sim: Callable, botao_sim := "Sim", botao_nao := "Não") -> void:
+	if _confirma == null:
+		_confirma = ConfirmationDialog.new()
+		_confirma.name = "Confirma"
+		_confirma.exclusive = false
+		add_child(_confirma)
+	for c in _confirma.confirmed.get_connections():
+		_confirma.confirmed.disconnect(c.callable)
+	_confirma.title = titulo
+	_confirma.dialog_text = texto
+	_confirma.dialog_autowrap = true
+	_confirma.ok_button_text = botao_sim
+	_confirma.cancel_button_text = botao_nao
+	_confirma.min_size = Vector2i(460, 0)
+	_confirma.confirmed.connect(sim, CONNECT_ONE_SHOT)
+	_confirma.popup_centered()
+
+
+## Bloco 103: mandar gente pra esse ponto pede confirmação (andar não reconhecido)? Se pede, pergunta e, no "sim",
+## libera a descida e faz `depois`. Retorna true se perguntou (quem chamou não faz nada agora).
+func pergunta_descida(pos: Vector2, depois: Callable) -> bool:
+	var cat := get_tree().get_first_node_in_group("catalogo")
+	var andar: String = cat.precisa_confirmar(pos) if cat and cat.has_method("precisa_confirmar") else ""
+	if andar == "":
+		return false
+	var sim := func():
+		cat.libera_descida(andar)
+		depois.call()
+	confirma("Andar não reconhecido", cat.texto_confirmar(andar), sim, "Descer mesmo assim", "Esperar o reconhecimento")
+	return true
+
+
 func show_banner(title: String, subtitle: String, ilustracao: String = "") -> void:
 	var panel := PanelContainer.new()
 	var style: StyleBox = UiSkin.faixa() if UiSkin.ok() else _panel_style()

@@ -19,6 +19,8 @@ func _initialize() -> void:
 		print("ABORTADO: pasta de save não isolada")
 		quit()
 		return
+	preload("res://scripts/core/catalogo.gd").tudo_estudado = true  # Bloco 102: o teste é de antes do catálogo (tudo conhecido)
+	load("res://scripts/core/defense.gd").moradores_desligados = true  # Bloco 103: sem as Gosmas morando no S2 (load: a defesa carrega as criaturas, que usam o Audio)
 	var sm = root.get_node("SaveManager")
 	sm.autosave_interval = 0.0
 	sm.save_on_quit = false

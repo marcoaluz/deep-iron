@@ -65,4 +65,8 @@ func objetivo_padrao(i: int) -> String:
 			return "%d mortes" % q
 		"estudar":  # Bloco 102 (o catálogo)
 			return "Estudar: %s" % alvo if alvo != "" else "Estudar %d descobertas" % q
+		"criatura":  # Bloco 103 (o bestiário)
+			return "Estudar a criatura: %s" % alvo if alvo != "" else "Estudar %d criaturas" % q
+		"reconhecer":  # Bloco 103 (os andares)
+			return "Reconhecer o %s" % alvo if alvo != "" else "Reconhecer %d andares" % q
 	return String(o[0])

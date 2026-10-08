@@ -149,6 +149,14 @@ const WEAPON_DESCRIPTIONS := {
 @export var strong_hp_mult: float = 1.6
 @export var strong_damage_mult: float = 1.3
 
+@export_group("Moradores do fundo (Bloco 103)")
+## Quantos moradores nascem por dia (no amanhecer) num andar abaixo do número dele (nivel_mina.moradores).
+@export var moradores_por_dia: int = 1
+## Segundos entre uma conferência dos moradores e outra (nascer quando o andar abre).
+@export var moradores_confere: float = 3.0
+## Distância mínima (px) de quem está no andar pra um morador nascer.
+@export var moradores_longe: float = 180.0
+
 @export_group("Tiers e chefe (Bloco 62)")
 ## Tier da onda = 1 + onda / tier_every_waves + pesquisas feitas / tier_research_step.
 @export var tier_every_waves: int = 3
@@ -205,6 +213,12 @@ var _boss_called := 0
 var _boss_call_t := 0.0
 ## O que aconteceu com a última onda (telemetria): {onda, tier, total, derrubadas, chefe}.
 var last_result := {}
+## Bloco 103: os guardas mandados caçar os moradores de um andar: {andar: quantos} (vai no save).
+var patrulhas := {}
+## Testes de antes do Bloco 103 que descem ao S2/S3 com gente (a Gosma e o Magmante moradores atacariam): sem moradores.
+static var moradores_desligados := false
+var _moradores_t := 0.0
+var _moradores_dia := -1
 
 
 func _ready() -> void:
@@ -261,13 +275,18 @@ func abyss_open() -> bool:
 	return ab != null and ab.unlocked
 
 
-## Bloco 70: quantas criaturas do fundo vêm nesta onda.
-func fundo_count(kind: String, w: int = wave) -> int:
-	if kind == "gosma":
-		return clampi(gosma_per_wave * (w - gosma_from_wave + 1), 0, gosma_max) if level2_open() and w >= gosma_from_wave else 0
-	if kind == "magmante":
-		return clampi(magmante_per_wave * (w - magmante_from_wave + 1), 0, magmante_max) if abyss_open() and w >= magmante_from_wave else 0
+## Bloco 70: quantas criaturas do fundo vêm nesta onda. Bloco 103: NENHUMA — a Gosma e o Magmante moram no andar
+## deles e não sobem (os moradores; os @export antigos ficam pros saves e testes).
+func fundo_count(_kind: String, _w: int = wave) -> int:
 	return 0
+
+
+## Bloco 103: a composição de uma onda (a mesma conta do start_invasion): {lumivoro, ferrugento, chefe}. A janela da
+## Defesa mostra a da próxima (a PREVISÃO).
+func composicao(w: int) -> Dictionary:
+	return {"lumivoro": mini(lumi_base + lumi_per_wave * (w - 1), lumi_max),
+		"ferrugento": mini(ferr_per_wave * maxi(w - 1, 1), ferr_max) if level2_open() else 0,
+		"chefe": boss_due()}
 
 
 func first_day() -> int:
@@ -290,7 +309,12 @@ func next_invasion_day() -> int:
 
 
 func creatures() -> Array:
-	return get_tree().get_nodes_in_group("criaturas").filter(func(c): return c.is_alive())
+	return get_tree().get_nodes_in_group("criaturas").filter(func(c): return c.is_alive() and String(c.get("morador")) == "")
+
+
+## Bloco 103: os moradores do fundo vivos (de um andar, ou de todos com "").
+func moradores(andar := "") -> Array:
+	return get_tree().get_nodes_in_group("criaturas").filter(func(c): return c.is_alive() and String(c.get("morador")) != "" and (andar == "" or String(c.morador) == andar))
 
 
 ## Tem criatura dentro da vila (já passou a barricada)? Pro medo no ânimo.
@@ -826,6 +850,7 @@ func _process(delta: float) -> void:
 			else:
 				_spawn(k)
 		_boss_tick(delta)
+	_moradores_tick(delta)  # Bloco 103
 
 
 ## Bloco 60: com o rádio, o aviso vem antes.
@@ -895,9 +920,7 @@ func _spawn_boss() -> void:
 	if hud:
 		hud.show_banner("A MATRIARCA DOS LUMÍVOROS!", "A rainha deles veio junto. Ela grita chamando mais Lumívoros e o golpe dela corrói as armas. Derrube-a antes do amanhecer.")
 	Audio.screech(c.global_position)
-	var diary := get_tree().get_first_node_in_group("diary")
-	if diary and diary.has_method("unlock"):
-		diary.unlock("matriarca")
+	# (Bloco 103: a página do diário da Matriarca vem do estudo dela no catálogo)
 
 
 func _on_boss_died(killed: bool) -> void:
@@ -946,8 +969,9 @@ func start_invasion() -> void:
 	_night_time = 0.0
 	_spawn_queue = []
 	_spawned = 0
-	var lumi := mini(lumi_base + lumi_per_wave * (wave - 1), lumi_max)
-	var ferr := mini(ferr_per_wave * maxi(wave - 1, 1), ferr_max) if level2_open() else 0
+	var comp := composicao(wave)  # Bloco 103: a mesma conta da previsão
+	var lumi: int = comp.lumivoro
+	var ferr: int = comp.ferrugento
 	for i in lumi:
 		_spawn_queue.append({"kind": "lumivoro", "at": randf_range(0.0, spawn_spread)})
 	for i in ferr:
@@ -965,12 +989,7 @@ func start_invasion() -> void:
 	last_result = {"onda": wave, "tier": tier(), "total": lumi + ferr + gosmas + magmantes + (1 if chefe else 0), "derrubadas": 0, "chefe": "veio" if chefe else ""}
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
-		var outros := []
-		for par in [[ferr, "Ferrugento"], [gosmas, "Gosma ácida"], [magmantes, "Magmante"]]:
-			if par[0] > 0:
-				outros.append("%d %s%s" % [par[0], par[1], "s" if par[0] > 1 and par[1] != "Gosma ácida" else ""])
-		hud.show_banner("INVASÃO! (onda %d, tier %d)" % [wave, tier()], "%d Lumívoros%s. Aguentem até o amanhecer." % [
-			lumi, (", " + ", ".join(outros)) if not outros.is_empty() else ""])
+		hud.show_banner("INVASÃO! (onda %d, tier %d)" % [wave, tier()], "%s. Aguentem até o amanhecer." % texto_onda(comp))
 	Audio.alarm()
 	invasion_started.emit(wave)
 
@@ -1012,10 +1031,130 @@ func _spawn(kind: String) -> Node2D:
 	c.died.connect(func(killed: bool):
 		if killed:
 			killed_tonight += 1)
-	var diary := get_tree().get_first_node_in_group("diary")
-	if diary:
-		diary.unlock({"lumivoro": "lumivoros", "ferrugento": "ferrugentos", "gosma": "gosmas", "magmante": "magmantes"}.get(kind, ""))
+	# (Bloco 103: a página do diário da criatura vem do ESTUDO dela no catálogo, não mais de quando ela aparece)
 	return c
+
+
+## Bloco 103: "4 Lumívoros e 2 ???" — o nome só das espécies que o catálogo estudou.
+func texto_onda(comp: Dictionary) -> String:
+	var cat := get_tree().get_first_node_in_group("catalogo")
+	var partes: Array[String] = []
+	for k in [["lumivoro", "Lumívoro", "Lumívoros"], ["ferrugento", "Ferrugento", "Ferrugentos"]]:
+		var n := int(comp.get(k[0], 0))
+		if n > 0:
+			var conhece: bool = cat == null or cat.estudado(k[0])
+			partes.append("%d %s" % [n, (k[2] if n > 1 else k[1]) if conhece else "???"])
+	if comp.get("chefe", false):
+		partes.append("a Matriarca" if cat == null or cat.estudado("matriarca") else "algo grande (???)")
+	if partes.is_empty():
+		return "Nenhuma criatura"
+	return ", ".join(partes.slice(0, partes.size() - 1)) + (" e " if partes.size() > 1 else "") + partes[partes.size() - 1]
+
+
+# ------------------------------------------------------------ moradores do fundo (Bloco 103)
+## Nascem quando o andar abre (até o número dele) e repõem moradores_por_dia no amanhecer. Nunca sobem.
+func _moradores_tick(delta: float) -> void:
+	if moradores_desligados:
+		return
+	_moradores_t -= delta
+	if _moradores_t > 0.0:
+		return
+	_moradores_t = moradores_confere
+	var dn := _dn()
+	var dia: int = dn.day if dn else 1
+	var novo_dia := dia != _moradores_dia
+	_moradores_dia = dia
+	for nv in preload("res://scripts/core/niveis.gd").todos():
+		var lista: Array = nv.get("moradores") if nv.get("moradores") != null else []
+		if lista.is_empty() or nv.em_breve or not preload("res://scripts/core/niveis.gd").liberado(get_tree(), nv):
+			continue
+		for m in lista:
+			if not (m is Array) or m.size() < 2:
+				continue
+			var kind := String(m[0])
+			var quer := int(m[1])
+			var tem := moradores(String(nv.id)).filter(func(c): return c.kind == kind).size()
+			var ja_nasceu := bool(get_meta("morador_%s_%s" % [nv.id, kind], false))
+			var vagas := quer - tem
+			if ja_nasceu and not novo_dia:
+				continue  # (depois da primeira vez, só repõe no amanhecer)
+			if ja_nasceu:
+				vagas = mini(vagas, moradores_por_dia)
+			for i in vagas:
+				spawn_morador(nv, kind)
+			set_meta("morador_%s_%s" % [nv.id, kind], true)
+
+
+## Um morador nasce num ponto andável do andar, longe de quem está lá.
+func spawn_morador(nv: Resource, kind: String) -> Node2D:
+	var env := get_tree().get_first_node_in_group("environment")
+	var world := get_tree().get_first_node_in_group("village_hub").get_parent()
+	if env == null or not CENA.has(kind):
+		return null
+	var r: Rect2 = env.rect_do_nivel(nv).grow(-40.0)
+	var pos := r.get_center()
+	for tentativa in 12:
+		var p := Vector2(randf_range(r.position.x, r.end.x), randf_range(r.position.y, r.end.y))
+		p = NavigationServer2D.map_get_closest_point(world.get_world_2d().navigation_map, p)
+		var longe := true
+		for w in get_tree().get_nodes_in_group("ipezinhos"):
+			if (w as Node2D).global_position.distance_to(p) < moradores_longe:
+				longe = false
+				break
+		if longe and env.level_at(p) == env.level_at(r.get_center()):
+			pos = p
+			break
+	var c: Node2D = (CENA[kind] as PackedScene).instantiate()
+	c.position = pos
+	c.morador = String(nv.id)
+	c.casa = pos
+	world.add_child(c)
+	c.setup(null, 1.0)
+	return c
+
+
+# ------------------------------------------------------------ a patrulha dos guardas (Bloco 103)
+## O jogador manda `n` guardas caçar os moradores de um andar (de dia; de noite eles voltam pros postos).
+func pede_patrulha(andar: String, n: int) -> void:
+	if n <= 0:
+		patrulhas.erase(andar)
+	else:
+		patrulhas[andar] = n
+	for g in guards():
+		g.wake_decision()
+
+
+## Esse guarda está na patrulha de que andar? ("" = nenhum). Os primeiros N guardas armados (pela ordem do nome) de cada
+## patrulha; só com morador vivo lá.
+func patrulha_para(w: Node) -> String:
+	if patrulhas.is_empty():
+		return ""
+	var lista := guards().filter(func(g): return String(g.weapon) != "" and not g.injured and not g.get("downed"))
+	lista.sort_custom(func(a, b): return String(a.name) < String(b.name))
+	var i := 0
+	for andar in patrulhas:
+		var n := int(patrulhas[andar])
+		var grupo := lista.slice(i, i + n)
+		i += n
+		if grupo.has(w) and not moradores(String(andar)).is_empty():
+			return String(andar)
+	return ""
+
+
+## O morador vivo mais perto desse guarda no andar da patrulha.
+func alvo_patrulha(w: Node2D, andar: String) -> Node2D:
+	var melhor: Node2D = null
+	for c in moradores(andar):
+		if melhor == null or w.global_position.distance_to(c.global_position) < w.global_position.distance_to(melhor.global_position):
+			melhor = c
+	return melhor
+
+
+## Onde a patrulha espera no andar (o ponto do reconhecimento do catálogo).
+func ponto_patrulha(andar: String) -> Vector2:
+	var Cat := preload("res://scripts/core/catalogo.gd")
+	var p: Array = Cat.entrada(andar).get("pos", [])
+	return Vector2(float(p[0]), float(p[1])) if p.size() >= 2 else Vector2.ZERO
 
 
 func end_invasion() -> void:
@@ -1029,7 +1168,7 @@ func end_invasion() -> void:
 		if last_result.chefe != "":
 			last_result.chefe = bosses.get(str(_season_number()), last_result.chefe)
 	_boss = null
-	for c in left:
+	for c in left:  # (Bloco 103: creatures() já deixa os moradores do fundo de fora: eles ficam)
 		c.leave_at_dawn()
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
@@ -1052,6 +1191,7 @@ func get_save_data() -> Dictionary:
 		"start_day": start_day,
 		"bosses": bosses.duplicate(),  # Bloco 62
 		"last_result": last_result.duplicate(),
+		"patrulhas": patrulhas.duplicate(),  # Bloco 103
 	}
 	# Bloco 47: listas (antes: "campo" e "arsenal" com um só)
 	d["campos"] = campos().map(func(c): return SaveUtil.vec2_to_array(c.global_position))
@@ -1060,6 +1200,11 @@ func get_save_data() -> Dictionary:
 
 
 func load_save_data(d: Dictionary) -> void:
+	patrulhas = {}  # Bloco 103 (save antigo: nenhuma)
+	var pt := SaveUtil.dict(d, "patrulhas")
+	for k in pt:
+		if int(pt[k]) > 0:
+			patrulhas[String(k)] = int(pt[k])
 	weapons = ["porrete"]
 	for id in SaveUtil.array(d, "weapons"):
 		if id is String and id in WEAPON_IDS and not weapons.has(id):

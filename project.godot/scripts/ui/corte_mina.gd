@@ -267,11 +267,15 @@ func _lista() -> void:
 				else:
 					trancadas += 1
 		var info := "aberto" if motivo == "" else "FECHADO — " + motivo
+		var cat := get_tree().get_first_node_in_group("catalogo")
+		var reconhecido: bool = cat == null or not cat.has_method("reconhecido") or cat.reconhecido(String(a.id) if not cat.entrada(String(a.id)).is_empty() else "")
+		if motivo == "" and not reconhecido:  # Bloco 103: o andar abriu mas ninguém fez o reconhecimento
+			info = "aberto — NÃO RECONHECIDO%s" % (" (descida liberada: acidentes 2x)" if cat.descida_liberada.has(String(a.id)) else " (a pesquisadora vai lá: Catálogo, R)")
 		_area.draw_string(f, Vector2(x + 10, y + 32), info, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W - 24, Tipo.DETALHE,
-			Color(0.7, 0.95, 0.6) if motivo == "" else Color(1.0, 0.7, 0.5))
+			(Color(0.7, 0.95, 0.6) if reconhecido else Color(1.0, 0.85, 0.45)) if motivo == "" else Color(1.0, 0.7, 0.5))
 		var extra := "jazidas: %d abertas%s" % [abertas, (", %d trancadas" % trancadas) if trancadas > 0 else ""]
 		if String(a.perigo) != "":
-			extra += "  •  perigo: %s" % String(a.perigo)
+			extra += "  •  perigo: %s" % (String(a.perigo) if reconhecido else "???")  # Bloco 103: o reconhecimento revela
 		if d != null and d.get("REACTOR_IDS") != null and _onde((d as Node2D).global_position)[0] == i:
 			extra += "  •  escavadeira: %s" % d.REACTOR_NAMES.get(d.reactor, "-")
 		_area.draw_string(f, Vector2(x + 10, y + 50), extra, HORIZONTAL_ALIGNMENT_LEFT, PAINEL_W - 24, Tipo.DETALHE, UiSkin.COLOR_DIM)

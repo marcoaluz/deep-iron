@@ -123,7 +123,7 @@ func _confere(dt: float) -> void:
 	var rola_ataque := _hora_t >= hora
 	if rola_ataque:
 		_hora_t = 0.0
-	var tem_criatura := not get_tree().get_nodes_in_group("criaturas").is_empty()
+	var tem_criatura := get_tree().get_nodes_in_group("criaturas").any(func(c): return String(c.get("morador")) == "")  # (Bloco 103: o morador do fundo não chega no portão)
 	for e in esperando.duplicate():
 		e.prazo = float(e.prazo) - dt
 		if e.prazo <= 0.0:

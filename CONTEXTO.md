@@ -1,9 +1,25 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-08. Branch `isometrico`. Tudo até o Bloco 101 **foi enviado** pro GitHub em 2026-10-08 (push com o OK do Marco); o Bloco 102 está só no commit local. Push só com o OK dele.
+Atualizado em 2026-10-08. Branch `isometrico`. Tudo até o Bloco 102 **foi enviado** pro GitHub em 2026-10-08 (push com o OK do Marco); o Bloco 103 está só no commit local. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido".
 
-## AGORA (2026-10-08): Bloco 102 — catálogo, minérios e animais (feito; commit local, push pendente — pedir o OK)
+## AGORA (2026-10-08): Bloco 103 — corpos de criatura, bestiário e reconhecimento dos andares (feito; commit local, push pendente — pedir o OK)
+
+Prompt S2 + acréscimo. Plano `docs/BLOCO103_PLANO.md` (com as decisões). Relatório `docs/BLOCO103_BESTIARIO.md`; fotos
+`docs/arte/bloco103/`.
+- Corpo da criatura abatida (`props/corpo_criatura.gd`): o último quadro da morte, até o amanhecer seguinte + 8 h; o drop
+  fica no corpo (colhido no estudo; no prazo vai pro armazém); corpo na vila: -1,5 de ânimo (até 4,5).
+- A pesquisadora estuda a espécie NO CORPO (portão fechado: não vai lá fora). Ficha (comportamento, fraqueza, deixa,
+  perigo 1-5, POR QUE VEIO + dica, história) do `textos.txt`; cartão (banner) + diário; ela ganha xp (+10% de ritmo por
+  descoberta, até 50%) e ânimo, com balão.
+- Gosma e Magmante MORAM no S2/S3 (de dia e de noite, não sobem; `nivel_mina.moradores`); saíram das invasões. Guardas
+  descem caçar (`defense.patrulhas`, janela da Defesa). A Gosma corrói a arma (implementado). Os textos da barricada saíram.
+- Andar novo não reconhecido: a IA não desce; ordem/área/patrulha pedem confirmação (`hud.pergunta_descida`) e aí
+  acidentes x2 até o reconhecimento (com risco de ferimento; revela perigos, criaturas, equipamento).
+- Defesa: a previsão da próxima onda, "???" pra espécie não estudada, o banner da invasão também.
+- Sinais `criatura_estudada` / `andar_reconhecido`; objetivos `criatura` / `reconhecer`.
+
+## Bloco 102 — catálogo, minérios e animais (feito; enviado ao GitHub com o OK do Marco em 2026-10-08)
 
 Prompt S1. Plano `docs/BLOCO102_PLANO.md` (decisões: conhecimento inicial do plano; pesquisas travadas por estudo como na
 tabela; criaturas pela amostra do abate; locais S2-S5 + Leste "de momento"; tecla R). Relatório `docs/BLOCO102_CATALOGO.md`;

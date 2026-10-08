@@ -7,10 +7,14 @@ extends Node2D
 ##                crânio, olhos vermelhos). Sai da boca do poço do elevador (só depois que o nível 2
 ##                abre) — o poço não tem muro: entra direto e só os guardas do posto do poço param.
 ##                Ataca quem estiver perto e rouba minério do armazém.
-##   Gosma ácida — Bloco 70: do S2 (ácido). Sobe pelo poço (sem muro). O golpe corrói a arma do
-##                guarda; no armazém, dissolve o metal (ferro, cobre).
-##   Magmante   — Bloco 70: do S3 (lava). Lento e duro; no armazém come o carvão. Derrubado, às
-##                vezes deixa cristal rubro.
+##   Gosma ácida — Bloco 70: do S2 (ácido). Bloco 103: MORA no S2 (de dia e de noite, nunca sobe) e ataca quem
+##                está no andar; o golpe num guarda armado corrói a arma (corrosao_gosma).
+##   Magmante   — Bloco 70: do S3 (lava). Bloco 103: MORA no S3. Lento e duro. Derrubado, às vezes deixa
+##                cristal rubro.
+## Bloco 103: os MORADORES do fundo (morador = o andar) nascem pela Defesa (defense.gd: moradores dos dados do andar),
+## vagam perto de casa, só miram quem está no MESMO andar e não saem dele; não fogem ao amanhecer. Abatida, a criatura
+## deixa um CORPO (corpo_criatura.gd) com o que ela deixou (o drop de sempre): a pesquisadora estuda e colhe; espécie
+## já estudada (ou sem catálogo) manda o drop direto pro armazém, como antes.
 ## O Lumívoro vem da floresta: antes de entrar, precisa derrubar a barricada do portão (se tiver uma
 ## de pé). Bloco 36: com o guarda do portão dele CAÍDO (brecha), vai direto no armazém saquear
 ## (defense.gd: raid — uma parte do minério e dos créditos, uma vez por invasão). Bloco 80: o único
@@ -45,10 +49,18 @@ signal died(killed: bool)
 @export var notice_range: float = 150.0
 ## Bloco 70: multiplica o dano na barricada (o ácido e a lava derretem).
 @export var barricade_mult: float = 1.0
-## Bloco 70: derrubado, chance de deixar cristal (minério, quantidade) no armazém.
+## Bloco 70: derrubado, chance de deixar cristal (minério, quantidade) no armazém (Bloco 103: no corpo, até o estudo).
 @export var drop_ore: String = ""
 @export var drop_amount: int = 0
 @export_range(0.0, 1.0) var drop_chance: float = 0.0
+
+## Bloco 103: durabilidade que o golpe da Gosma tira a mais da arma do guarda (a corrosão do ácido; 0 = nenhuma).
+@export var corrosao_gosma: float = 1.0
+## Bloco 103: morador do fundo: distância (px) de casa até onde ele persegue alguém (depois volta).
+@export var alcance_casa: float = 260.0
+## Bloco 103: morador do fundo: raio (px) e intervalo (s) do passeio em volta de casa quando não tem ninguém por perto.
+@export var passeio_raio: float = 90.0
+@export var passeio_intervalo: float = 6.0
 
 @export_group("Luz (Bloco 90)")
 ## Lumívoro: o quanto uma tocha/lampião aceso da decoração atrai mais que um prédio aceso (a distância conta
@@ -109,6 +121,11 @@ var _shout_at := -100.0
 var _andando := false
 var _andado := 0.0
 var _carga: Sprite2D = null
+## Bloco 103: morador do fundo: o andar (id do nível: "S2"...; "" = criatura de invasão), onde nasceu e o passeio.
+var morador := ""
+var casa := Vector2.ZERO
+var _passeio := Vector2.INF
+var _passeio_t := 0.0
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _agent: NavigationAgent2D = $Agent
@@ -254,6 +271,8 @@ func _process(delta: float) -> void:
 		_retarget = 0.7
 		_target = _pick_target()
 	if _target == null:
+		if morador != "":
+			_passeia(delta)  # Bloco 103: ninguém no andar perto: passeia em volta de casa
 		return
 	var tpos := _target.global_position
 	var d := global_position.distance_to(tpos)
@@ -279,17 +298,44 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
+## Bloco 103: o morador sem alvo anda devagar até um ponto perto de casa e espera um pouco.
+func _passeia(delta: float) -> void:
+	_passeio_t -= delta
+	if _passeio == Vector2.INF or _passeio_t <= 0.0:
+		_passeio_t = passeio_intervalo * randf_range(0.7, 1.3)
+		var a := randf() * TAU
+		_passeio = casa + Vector2(cos(a), sin(a) * 0.6) * randf_range(10.0, passeio_raio)
+		_agent.target_position = _passeio
+	if global_position.distance_to(_passeio) < 6.0 or _agent.is_navigation_finished():
+		return
+	var step := (_agent.get_next_path_position() - global_position).limit_length(speed * 0.45 * delta)
+	global_position += step
+	_andando = step.length() > 0.05
+	_andado = fmod(_andado + step.length(), 100000.0)
+	if absf(step.x) > 0.01:
+		_visual.flip_h = step.x < 0.0
+
+
 func _is_building(n: Node) -> bool:
 	return n.is_in_group("casas") or n.is_in_group("armazens") or n.is_in_group("enfermarias") \
 		or n.is_in_group("tavernas") or n.is_in_group("village_hub")
 
 
 func _target_ok(t: Node2D) -> bool:
+	if morador != "":  # Bloco 103: o morador só mira quem está no mesmo andar e perto de casa
+		if not t.is_in_group("ipezinhos") or t.get("injured") or t.get("_inside") or not _mesmo_andar(t):
+			return false
+		return t.global_position.distance_to(casa) <= alcance_casa
 	if t.is_in_group("ipezinhos"):
 		return not t.get("injured") and not t.get("_inside") and _on_surface(t)
 	if t.is_in_group("robos"):
 		return t.can_fight()
 	return true
+
+
+func _mesmo_andar(n: Node2D) -> bool:
+	var env := get_tree().get_first_node_in_group("environment")
+	return env == null or env.level_at(n.global_position) == env.level_at(casa)
 
 
 func _on_surface(n: Node2D) -> bool:
@@ -320,6 +366,8 @@ func _pick_target() -> Node2D:
 			and global_position.distance_to(_aggressor.global_position) < notice_range:
 		return _aggressor
 	var awake := get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return _target_ok(w))
+	if morador != "":  # Bloco 103: quem está no andar dele, perto; senão ninguém (passeia)
+		return _nearest(awake, notice_range)
 	if kind == "lumivoro":
 		# atraído pela luz: gente acordada lá fora (lanterna na cabeça) ou prédio aceso
 		var who := _nearest(awake, notice_range * 1.8)
@@ -371,8 +419,9 @@ func _attack(t: Node2D) -> void:
 		if def and def.breached(gate_id):
 			def.raid(self, t)  # Bloco 36: saque pela brecha
 	if t.has_method("take_hit"):
-		if weapon_corrode > 0.0 and t.get("weapon") != null and String(t.weapon) != "" and t.has_method("_wear_weapon"):
-			t.weapon_durability -= weapon_corrode - 1.0  # Bloco 62: o golpe da Matriarca corrói a arma
+		var corroi := weapon_corrode if weapon_corrode > 0.0 else (corrosao_gosma if kind == "gosma" else 0.0)
+		if corroi > 0.0 and t.get("weapon") != null and String(t.weapon) != "" and t.has_method("_wear_weapon"):
+			t.weapon_durability -= maxf(corroi - 1.0, 0.0)  # Bloco 62: a Matriarca; Bloco 103: o ácido da Gosma
 			t._wear_weapon()
 		t.take_hit(damage, self)
 		if kind == "lumivoro":
@@ -433,29 +482,60 @@ func die(killed: bool) -> void:
 	if killed:
 		Audio.creature_down(global_position)  # Bloco 55
 	died.emit(killed)
-	if killed:  # Bloco 102: o abate deixa uma AMOSTRA pro catálogo (a pesquisadora estuda no laboratório)
-		var cat := get_tree().get_first_node_in_group("catalogo")
-		if cat:
-			cat.amostra(kind, is_in_group("chefes"))
-	if killed and kind == "ferrugento" and randf() < 0.35:
-		var finds := get_tree().get_first_node_in_group("finds")
-		if finds:
-			finds.rare_parts += 1
-			var hud := get_tree().get_first_node_in_group("hud")
-			if hud:
-				hud.show_toast("Um Ferrugento virou sucata: +1 peça rara.", Color(1.0, 0.85, 0.45))
-	if killed and drop_ore != "" and drop_amount > 0 and randf() < drop_chance:
-		var arm := get_tree().get_first_node_in_group("armazens")
-		if arm:
-			arm.add_ore(float(drop_amount), drop_ore)  # Bloco 70: o cristal que ele carregava
-			var hud := get_tree().get_first_node_in_group("hud")
-			if hud:
-				hud.show_toast("Dos restos: +%d %s no armazém." % [drop_amount, Ores.display_name(drop_ore).to_lower()], Color(1.0, 0.85, 0.45))
+	if killed:
+		_deixa_corpo()
 	var t := create_tween()
 	if _iso_art():
 		t.tween_interval(1.4)  # Prompt 17: cai (animação) e fica um pouco no chão antes de sumir
 	t.tween_property(self, "modulate:a", 0.0, 0.6)
 	t.tween_callback(queue_free)
+
+
+## Bloco 103: o abate deixa o CORPO no chão (o último quadro da morte) com o drop de sempre (mesmas chances). Espécie
+## ainda não estudada: o drop fica no corpo (a pesquisadora colhe no estudo; no prazo, vai pro armazém). Já estudada (ou
+## sem catálogo): o drop vai direto pro armazém, como antes. Bloco 102: e a AMOSTRA pro plano B do laboratório.
+func _deixa_corpo() -> void:
+	var drop := {}
+	if kind == "ferrugento" and randf() < 0.35:
+		drop["pecas"] = 1
+	if drop_ore != "" and drop_amount > 0 and randf() < drop_chance:
+		drop[drop_ore] = drop_amount  # Bloco 70: o cristal que ele carregava
+	var cat := get_tree().get_first_node_in_group("catalogo")
+	if cat:
+		cat.amostra(kind, is_in_group("chefes"))
+	var corpo: Node2D = preload("res://scripts/props/corpo_criatura.gd").new()
+	corpo.monta(self)
+	if cat:
+		var p: Array = cat.prazo_corpo()
+		corpo.prazo_dia = int(p[0])
+		corpo.prazo_t = float(p[1])
+	if cat == null or cat.estudado(corpo.especie):
+		var txt := _drop_ja(drop)  # (já conhecida: direto pro armazém, como antes)
+		if txt != "":
+			var hud := get_tree().get_first_node_in_group("hud")
+			if hud:
+				hud.show_toast("Dos restos: %s no armazém." % txt, Color(1.0, 0.85, 0.45))
+	else:
+		corpo.drop = drop  # (fica no corpo até o estudo ou o prazo)
+	get_parent().add_child.call_deferred(corpo)
+
+
+## O drop direto pro armazém (espécie já estudada), sem esperar o corpo entrar na árvore. Retorna o texto.
+func _drop_ja(drop: Dictionary) -> String:
+	var partes: Array[String] = []
+	for it in drop:
+		if it == "pecas":
+			var finds := get_tree().get_first_node_in_group("finds")
+			if finds:
+				finds.rare_parts += int(drop[it])
+				partes.append("+%d peça rara" % int(drop[it]))
+		else:
+			var arm := get_tree().get_first_node_in_group("armazens")
+			if arm:
+				arm.add_ore(float(drop[it]), String(it))
+				partes.append("+%d %s" % [int(drop[it]), Ores.display_name(String(it)).to_lower()])
+	drop.clear()
+	return ", ".join(partes)
 
 
 ## Amanhecer: o Lumívoro foge voando; o Ferrugento (robô) desliga, desmonta e vira pó de ferrugem.

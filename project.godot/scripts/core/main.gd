@@ -380,6 +380,10 @@ func _give_order(pos: Vector2, ore_hint: Node2D = null) -> void:
 	if selection.is_empty():
 		return
 	var ore := ore_hint if ore_hint else _find_ore_at(pos)
+	var destino: Vector2 = ore.global_position if ore else pos
+	# Bloco 103: andar ainda não reconhecido — pergunta antes (no "sim", libera a descida e dá a ordem)
+	if _hud and _hud.has_method("pergunta_descida") and _hud.pergunta_descida(destino, func(): _give_order(pos, ore_hint)):
+		return
 	if ore:
 		_order_mine(ore)
 	else:

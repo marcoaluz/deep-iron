@@ -21,6 +21,7 @@ const STATE_LABELS := {
 	"storing": "armazenando",
 	"na_mina": "dentro da mina",  # Bloco 99
 	"catalogando": "catalogando",  # Bloco 102
+	"patrulha": "caçando no fundo",  # Bloco 103
 	"manual": "ordem manual",
 	"home": "indo pra casa",
 	"gathering": "colhendo comida",
@@ -296,6 +297,14 @@ const Tipo := preload("res://scripts/ui/tipografia.gd")
 @export var sad_work_mult: float = 0.8
 @export var miserable_work_mult: float = 0.6
 
+@export_group("Descobertas (Bloco 103)")
+## Ânimo que a pesquisadora ganha a cada descoberta (estudo do catálogo) e quanto disso some por segundo.
+@export var animo_descoberta_ganho: float = 12.0
+@export var animo_descoberta_decai: float = 0.02
+## Cada descoberta (xp_pesquisa) deixa o estudo de campo esta fração mais rápido, até o máximo.
+@export var xp_pesquisa_bonus: float = 0.1
+@export var xp_pesquisa_max: float = 0.5
+
 @export_group("Guarda")
 ## Vida na luta = base + por_habilidade x habilidade (0..1). Zerou: machuca e sai da luta.
 @export var guard_base_hp: float = 30.0
@@ -538,6 +547,9 @@ var _saved_home_slot: int = -1
 ## vai entregar no laboratório (vai no save); _campo = a tarefa de agora {id, pos, fase (indo/anotando/voltando), t, lab}.
 var nota_campo := ""
 var _campo := {}
+## Bloco 103: descobertas feitas (cada uma deixa o estudo mais rápido) e o ânimo da última (vai sumindo).
+var xp_pesquisa := 0
+var animo_descoberta := 0.0
 
 ## Bloco 101: MIGRANTE esperando no portão (migrantes.gd): fora do grupo "ipezinhos" (não come, não ocupa cama, não conta)
 ## e sem IA nem necessidades — só anda até onde mandarem. Aceito: vira_morador().
@@ -915,6 +927,8 @@ func _process(delta: float) -> void:
 	_agenda_tick(delta)  # Bloco 84
 	if _ai_state == "catalogando":
 		_campo_tick(delta)  # Bloco 102
+	if animo_descoberta > 0.0:
+		animo_descoberta = maxf(animo_descoberta - animo_descoberta_decai * delta, 0.0)  # Bloco 103
 	_social_process(delta)  # Bloco 85
 	_motivo_tick(delta)  # Bloco 95
 
@@ -926,6 +940,8 @@ func _process(delta: float) -> void:
 	_equip_tick(delta)  # Bloco 42: casaco no inverno, traje nas zonas de perigo
 	if _ai_state == "guard":
 		_guard_tick(delta)
+	elif _ai_state == "patrulha":
+		_patrulha_tick(delta)  # Bloco 103
 	elif combat_hp >= 0.0:
 		combat_hp = guard_max_hp()  # fora da luta recupera o fôlego
 	# felicidade anda devagar pro alvo (na taverna quem manda é a taverna)
@@ -1122,6 +1138,9 @@ func _choose_state() -> String:
 			return "rearming"
 		if _is_night():
 			return "guard"
+		var def_p := _defense()
+		if def_p and def_p.has_method("patrulha_para") and def_p.patrulha_para(self) != "":
+			return "patrulha"  # Bloco 103: mandado caçar os moradores do fundo (de dia)
 		if combat_skill < 1.0 and ((_ai_state == "training" and _station_ok_for("training")) or _has_usable_station("campos")):
 			return "training"
 		return "home"
@@ -1286,6 +1305,12 @@ func _decide_next_action() -> void:
 			_release_station()
 			_set_state("guard")
 		return  # quem manda é o _guard_tick (posto / luta)
+
+	if desired == "patrulha":  # Bloco 103: quem manda é o _patrulha_tick (desce, procura o morador, luta)
+		if _ai_state != "patrulha":
+			_release_station()
+			_set_state("patrulha")
+		return
 
 	if desired == "downed":
 		if _ai_state != "downed":
@@ -1598,6 +1623,8 @@ func _has_usable_station(group_name: String) -> bool:
 			continue
 		if env and env.has_method("trancado") and env.trancado((node as Node2D).global_position):
 			continue  # Bloco 67
+		if _andar_bloqueado((node as Node2D).global_position):
+			continue  # Bloco 103: andar ainda não reconhecido
 		if not _area_permite(node, group_name):
 			continue  # Bloco 77: fora da área dele / dentro da área de outros
 		if node.has_method("has_free_slot_for") and not node.has_free_slot_for(self):
@@ -1616,6 +1643,8 @@ func _find_best_station(group_name: String) -> Node2D:
 			continue
 		if env and env.has_method("trancado") and env.trancado((node as Node2D).global_position):
 			continue  # Bloco 67: o leste ainda não foi desbravado
+		if _andar_bloqueado((node as Node2D).global_position):
+			continue  # Bloco 103: andar que ninguém reconheceu (a IA não manda ninguém sozinha)
 		if not _area_permite(node, group_name):
 			continue  # Bloco 77: fora da área dele / dentro da área de outros
 		if node.has_method("has_free_slot_for") and not node.has_free_slot_for(self):
@@ -1632,6 +1661,12 @@ func _find_best_station(group_name: String) -> Node2D:
 			best_score = score
 			best = node
 	return best
+
+
+## Bloco 103: o andar desse ponto ainda não foi reconhecido (e o jogador não mandou descer mesmo assim)?
+func _andar_bloqueado(pos: Vector2) -> bool:
+	var cat := _catalogo()
+	return cat != null and cat.has_method("andar_bloqueado") and cat.andar_bloqueado(pos, self)
 
 
 ## Bloco 47: pode ter mais de uma enfermaria. O médico vai pra que precisa dele (gente
@@ -1783,6 +1818,8 @@ func happiness_factors() -> Array:
 		f.append([nx.animo_motivo if nx.animo_motivo != "" else nx.nome, nx.animo])
 	if animo_social >= 0.5:
 		f.append(["conversou com os amigos", animo_social])  # Bloco 85
+	if animo_descoberta >= 0.5:
+		f.append(["fez uma descoberta", animo_descoberta])  # Bloco 103
 	if animo_fe >= 0.5:
 		f.append(["foi à missa", animo_fe])  # Bloco 88
 	var m := _morale()
@@ -1860,6 +1897,11 @@ func _guard_tick(delta: float) -> void:
 		if global_position.distance_to(post) > 10.0 and (not _moving or _target.distance_to(post) > 4.0):
 			_go_to(post)
 		return
+	_golpeia(def)
+
+
+## Bloco 103: chega no _foe e bate (o mesmo do posto, separado pra patrulha usar).
+func _golpeia(def: Node) -> void:
 	var reach: float = def.weapon_reach(weapon) if def else 18.0
 	var dist := global_position.distance_to(_foe.global_position)
 	if dist > reach:
@@ -1875,6 +1917,29 @@ func _guard_tick(delta: float) -> void:
 		_foe.take_hit(dmg, self)
 		Audio.hit(global_position)
 		_wear_weapon()
+
+
+## Bloco 103: a PATRULHA do fundo — desce pro andar (o caminho de sempre: elevador ou espiral), procura o morador
+## vivo mais perto e luta como no posto. Sem morador: o _choose_state tira ele daqui.
+func _patrulha_tick(delta: float) -> void:
+	_attack_cd -= delta
+	if combat_hp < 0.0:
+		combat_hp = guard_max_hp()
+	var def := _defense()
+	if def == null:
+		return
+	var andar: String = def.patrulha_para(self)
+	if andar == "":
+		_decision_timer = 0.0
+		return
+	if _foe == null or not is_instance_valid(_foe) or not _foe.is_alive():
+		_foe = def.alvo_patrulha(self, andar)
+	if _foe == null:
+		var p: Vector2 = def.ponto_patrulha(andar)
+		if global_position.distance_to(p) > 20.0 and (not _moving or _target.distance_to(p) > 4.0):
+			_go_to(p)
+		return
+	_golpeia(def)
 
 
 # ------------------------------------------------------------ arma do guarda (Bloco 35)
@@ -2576,6 +2641,28 @@ func _catalogo() -> Node:
 	return get_tree().get_first_node_in_group("catalogo") if is_inside_tree() else null
 
 
+## Bloco 103: quanto mais descobertas, mais rápido ela estuda (+xp_pesquisa_bonus cada, até xp_pesquisa_max).
+func ritmo_estudo() -> float:
+	return 1.0 + minf(float(xp_pesquisa) * xp_pesquisa_bonus, xp_pesquisa_max)
+
+
+## Bloco 103: fez uma descoberta (o catálogo chama): realizada — ânimo, experiência e o balão de comemoração com o
+## ícone do que ela descobriu.
+func descobriu(id: String) -> void:
+	xp_pesquisa += 1
+	animo_descoberta = animo_descoberta_ganho
+	var Cat := preload("res://scripts/core/catalogo.gd")
+	_popup("Descobri! %s" % Cat.nome(id), Color(0.75, 0.95, 1.0))
+	var ic: Texture2D = Cat.icone(id)
+	_mostra_balao("pesquisador")  # o balão de sempre...
+	if ic and _balao:
+		var s := _balao.get_node("Icone") as Sprite2D  # ...com o ícone do que ela descobriu
+		s.texture = ic
+		s.scale = Vector2.ONE * (11.0 / maxf(float(maxi(ic.get_width(), ic.get_height())), 1.0))
+		_balao.visible = true
+	_balao_vida = 3.0
+
+
 ## Decide o passo da tarefa de campo: pega o alvo (reservado no catálogo) ou vai entregar a anotação.
 func _catalogar() -> void:
 	var cat := _catalogo()
@@ -2589,6 +2676,8 @@ func _catalogar() -> void:
 			_decision_timer = 0.0  # (nada pra estudar: decide de novo)
 			return
 		_campo = {"id": a.id, "pos": a.pos, "fase": "indo", "t": 0.0, "lab": a.lab}
+		if a.has("corpo"):
+			_campo["corpo"] = a.corpo  # Bloco 103: estuda no corpo (colhe o que ele deixou)
 	if String(_campo.fase) in ["indo", "voltando"]:
 		var p: Vector2 = _campo.pos
 		if global_position.distance_to(p) > cat.alcance_estudo and (not _moving or _target.distance_to(p) > 2.0):
@@ -2604,8 +2693,8 @@ func _campo_tick(delta: float) -> void:
 	var perto: bool = global_position.distance_to(p) <= cat.alcance_estudo or (not _moving and global_position.distance_to(p) <= cat.alcance_estudo * 2.0)
 	match String(_campo.fase):
 		"indo":
-			if cat.estado(_campo.id) != cat.AVISTADO:
-				_campo = {}  # outra estudou (ou o laboratório): escolhe outro
+			if not cat.alvo_valido(_campo):
+				_campo = {}  # outra estudou (ou o laboratório), ou o corpo sumiu: escolhe outro
 				_decision_timer = 0.0
 			elif perto:
 				_moving = false
@@ -2613,9 +2702,14 @@ func _campo_tick(delta: float) -> void:
 				_campo.t = 0.0
 				_popup("Hmm, o que é isso?", Color(0.75, 0.9, 1.0))
 		"anotando":
-			_campo.t = float(_campo.t) + delta * work_mult()
+			if not cat.alvo_valido(_campo):
+				_campo = {}
+				_decision_timer = 0.0
+				return
+			_campo.t = float(_campo.t) + delta * work_mult() * ritmo_estudo()
 			_work_timer = 0.2  # a animação de pesquisar (anotando)
 			if float(_campo.t) >= cat.segundos_estudo:
+				cat.fim_da_anotacao(_campo, self)  # Bloco 103: colhe o corpo / o risco do reconhecimento
 				nota_campo = String(_campo.id)
 				_campo = {"id": nota_campo, "pos": cat.entrega_pos(self), "fase": "voltando", "t": 0.0, "lab": false}
 				if global_position.distance_to(_campo.pos) > cat.alcance_estudo:
@@ -3370,6 +3464,9 @@ func _roll_injury(mined: float) -> void:
 		var res := _research()
 		if res:
 			leak *= res.accident_mult()  # explosivos / escoramento
+		var cat := _catalogo()
+		if cat and cat.has_method("mult_acidente"):
+			leak *= cat.mult_acidente(global_position)  # Bloco 103: andar liberado sem reconhecimento
 		if randf() < injury_chance * [1.0, irritated_injury_mult, furious_injury_mult][_mood] * depth_danger() * leak:
 			hurt()
 			return
@@ -3663,6 +3760,7 @@ func _mostra_balao(icone: String) -> void:
 		add_child(_balao)
 	var tex := Icones.tex(icone)
 	(_balao.get_node("Icone") as Sprite2D).texture = tex
+	(_balao.get_node("Icone") as Sprite2D).scale = Vector2(0.34, 0.34)  # (Bloco 103: a descoberta troca o ícone e a escala)
 	_balao.visible = tex != null
 	_balao_vida = 1.8
 
@@ -4563,6 +4661,8 @@ func get_save_data() -> Dictionary:
 		"coletor_minerio_pos": SaveUtil.vec2_to_array(_my_coletor_minerio().global_position) if _my_coletor_minerio() != null else [],  # Bloco 57
 		"hunt_kills": hunt_kills,  # Bloco 61
 		"nota_campo": nota_campo,  # Bloco 102
+		"xp_pesquisa": xp_pesquisa,  # Bloco 103
+		"animo_descoberta": animo_descoberta,
 		"area_id": work_area.id if work_area != null else 0,  # Bloco 77
 		"refeicoes_hoje": refeicoes_hoje.keys(),  # Bloco 84
 		"refeicoes_perdidas": refeicoes_perdidas,
@@ -4661,6 +4761,8 @@ func load_save_data(d: Dictionary) -> void:
 		_relink_coletor.call_deferred(SaveUtil.vec2(d, "coletor_pos", Vector2.INF))  # Bloco 45/47
 	hunt_kills = maxi(SaveUtil.integer(d, "hunt_kills", 0), 0)  # Bloco 61
 	nota_campo = SaveUtil.text(d, "nota_campo", "")  # Bloco 102 (save antigo: nenhuma)
+	xp_pesquisa = maxi(SaveUtil.integer(d, "xp_pesquisa", 0), 0)  # Bloco 103 (save antigo: 0)
+	animo_descoberta = clampf(SaveUtil.num(d, "animo_descoberta", 0.0), 0.0, 50.0)
 	var area_id := SaveUtil.integer(d, "area_id", 0)  # Bloco 77 (save antigo: sem área)
 	if area_id > 0:
 		_religa_area.call_deferred(area_id)

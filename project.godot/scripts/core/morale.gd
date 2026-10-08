@@ -173,6 +173,9 @@ func village_factors() -> Array:
 		f.append(["festa recente", festa_bonus])
 	if funeral_left > 0.0:
 		f.append(["funeral digno", funeral_bonus])
+	var cat := get_tree().get_first_node_in_group("catalogo")
+	if cat and float(cat.get("desconforto")) > 0.0:
+		f.append(["corpos de criatura na vila", -float(cat.desconforto)])  # Bloco 103
 	var dig := get_tree().get_first_node_in_group("escavadeira")
 	if dig and dig.has_method("noise_penalty") and dig.noise_penalty() > 0.0:
 		f.append(["barulho do motor a diesel", -dig.noise_penalty()])

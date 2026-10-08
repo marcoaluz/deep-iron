@@ -91,6 +91,10 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 103: "catalogo" ganha "descida_liberada" [andares que o jogador mandou descer sem reconhecimento]; "defense"
+##     ganha "patrulhas" {andar: guardas}; o ipezinho ganha "xp_pesquisa" e "animo_descoberta". Os CORPOS de criatura e os
+##     MORADORES do fundo não entram (os moradores renascem quando o andar está aberto). Save antigo: nada liberado,
+##     nenhuma patrulha, xp 0 (o andar que já estava aberto entra reconhecido pela migração do Bloco 102).
 ##   Bloco 102: "catalogo" {estados {id: 1 avistado / 2 estudado} (o desconhecido não entra), bruto {tipo: minério
 ##     desconhecido que era desse tipo}, amostras {criatura: n}, estudo_lab {id, pontos} (o plano B)}; "research" ganha
 ##     "guardados" (pontos dos estudos sem pesquisa); o ipezinho ganha "nota_campo" (a entrada que a pesquisadora

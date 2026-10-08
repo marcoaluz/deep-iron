@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **950 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **970 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (79)
 
@@ -229,7 +229,7 @@ Total: **950 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `rota_entrada` | 140.0 |  | Rota do passeio: só usa caminho que comece/termine até esta distância (px) de quem sai e do destino. |
 | `rota_passo` | 3 |  | Rota do passeio: um waypoint a cada tantas células. |
 
-## `scripts/core/catalogo.gd` (6)
+## `scripts/core/catalogo.gd` (14)
 
 **Avistar**
 
@@ -245,6 +245,24 @@ Total: **950 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `segundos_estudo` | 40.0 |  | Segundos de jogo anotando no alvo (x o ritmo do pesquisador: zanga e tristeza deixam mais lento). |
 | `alcance_estudo` | 44.0 |  | Distância (px) do alvo em que a pesquisadora já começa a anotar. |
 | `pontos_por_estudo` | 8.0 |  | Pontos de pesquisa que cada estudo de campo dá (pra pesquisa em andamento, ou guardados pra próxima). |
+
+**Corpos e bestiário (Bloco 103)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `horas_corpo` | 8.0 |  | Horas depois do amanhecer SEGUINTE à morte em que o corpo da criatura some (se ninguém estudou). |
+| `desconforto_corpo` | 1.5 |  | Ânimo que cada corpo de criatura dentro da paliçada (ou perto do portão) tira da vila, e o máximo somado. |
+| `desconforto_max` | 4.5 |  |  |
+| `desconforto_perto_portao` | 120.0 |  | Distância (px) do portão em que o corpo do lado de fora ainda incomoda. |
+| `distancia_morador` | 150.0 |  | A pesquisadora não escolhe alvo com um morador do fundo vivo a menos disto (px). |
+
+**Reconhecimento dos andares (Bloco 103)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `risco_reconhecimento` | 0.15 |  | Chance de ferimento no fim de um reconhecimento (o andar é perigoso); com o traje do andar no vestiário, x 0,25. |
+| `risco_com_traje` | 0.25 |  |  |
+| `acidente_sem_reconhecimento` | 2.0 |  | Acidentes na mina num andar liberado sem reconhecimento (o jogador confirmou descer) até o reconhecimento. |
 
 **Plano B: o laboratório sozinho**
 
@@ -317,7 +335,7 @@ Total: **950 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `beleza_teto` | 6.0 |  | Teto do ânimo de "casa enfeitada". |
 | `nav_espera` | 0.6 |  | Segundos sem pôr/tirar peça grande até refazer a navegação (uma vez só pra várias). |
 
-## `scripts/core/defense.gd` (60)
+## `scripts/core/defense.gd` (63)
 
 **Armas (na ordem de WEAPON_IDS)**
 
@@ -387,6 +405,14 @@ Total: **950 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `strong_every` | 3 |  |  |
 | `strong_hp_mult` | 1.6 |  |  |
 | `strong_damage_mult` | 1.3 |  |  |
+
+**Moradores do fundo (Bloco 103)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `moradores_por_dia` | 1 |  | Quantos moradores nascem por dia (no amanhecer) num andar abaixo do número dele (nivel_mina.moradores). |
+| `moradores_confere` | 3.0 |  | Segundos entre uma conferência dos moradores e outra (nascer quando o andar abre). |
+| `moradores_longe` | 180.0 |  | Distância mínima (px) de quem está no andar pra um morador nascer. |
 
 **Tiers e chefe (Bloco 62)**
 
@@ -840,7 +866,7 @@ Total: **950 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `park_rate` | 0.5 |  | Ânimo ganho por segundo por quem está no raio (ao ar livre). |
 | `park_cap` | 100.0 |  | O parque só leva o ânimo até aqui (o teto geral é 100). |
 
-## `scripts/core/nivel_mina.gd` (33)
+## `scripts/core/nivel_mina.gd` (34)
 
 **(sem grupo)**
 
@@ -858,6 +884,7 @@ Total: **950 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `em_breve` | false |  | Declarado mas ainda não jogável (aparece como "em breve"). |
 | `minerios` | PackedStringArray() |  | Minérios e criaturas típicos (informativo + conteúdo do Bloco 70). |
 | `criaturas` | PackedStringArray() |  |  |
+| `moradores` | [] |  | Bloco 103: os MORADORES do andar — criaturas que vivem aqui de dia e de noite e nunca sobem: [[tipo, quantos], ...] (defense.gd faz nascer quando o andar abre e repõe um por dia). |
 | `cor_ambiente` | Color(1, 1, 1) |  | Atmosfera (Bloco 69): luz ambiente, cor da névoa, partículas ("", "poeira", "acido", "calor", "bolhas", "gotas"). |
 | `cor_nevoa` | Color(0, 0, 0, 0) |  |  |
 | `particulas` | "" |  |  |
@@ -1049,7 +1076,7 @@ Total: **950 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `pollen_amount` | 18 |  |  |
 
-## `scripts/workers/ipezinho.gd` (74)
+## `scripts/workers/ipezinho.gd` (78)
 
 **Obras (Bloco 51)**
 
@@ -1156,6 +1183,15 @@ Total: **950 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `happy_work_mult` | 1.1 |  | Multiplica a produção (minerar/cortar) em cada faixa. |
 | `sad_work_mult` | 0.8 |  |  |
 | `miserable_work_mult` | 0.6 |  |  |
+
+**Descobertas (Bloco 103)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `animo_descoberta_ganho` | 12.0 |  | Ânimo que a pesquisadora ganha a cada descoberta (estudo do catálogo) e quanto disso some por segundo. |
+| `animo_descoberta_decai` | 0.02 |  |  |
+| `xp_pesquisa_bonus` | 0.1 |  | Cada descoberta (xp_pesquisa) deixa o estudo de campo esta fração mais rápido, até o máximo. |
+| `xp_pesquisa_max` | 0.5 |  |  |
 
 **Guarda**
 
@@ -1967,7 +2003,7 @@ Total: **950 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `min_wood_to_chop` | 4.0 |  | Abaixo disso a árvore não atrai lenhadores novos. |
 | `chop_sound_interval` | 0.55 |  | Intervalo entre as machadadas (som). |
 
-## `scripts/creatures/creature.gd` (25)
+## `scripts/creatures/creature.gd` (29)
 
 **(sem grupo)**
 
@@ -1984,9 +2020,13 @@ Total: **950 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `scare_amount` | 1.0 |  | Lumívoro num prédio aceso: ânimo tirado de cada um lá dentro, por golpe. |
 | `notice_range` | 150.0 |  | Distância em que ele larga o alvo e parte pra cima de quem está perto. |
 | `barricade_mult` | 1.0 | **1.5** (gosma.tscn); **2.0** (magmante.tscn) | Bloco 70: multiplica o dano na barricada (o ácido e a lava derretem). |
-| `drop_ore` | "" | **"cristal_verde"** (gosma.tscn); **"cristal_rubro"** (magmante.tscn) | Bloco 70: derrubado, chance de deixar cristal (minério, quantidade) no armazém. |
+| `drop_ore` | "" | **"cristal_verde"** (gosma.tscn); **"cristal_rubro"** (magmante.tscn) | Bloco 70: derrubado, chance de deixar cristal (minério, quantidade) no armazém (Bloco 103: no corpo, até o estudo). |
 | `drop_amount` | 0 | **2** (gosma.tscn); **3** (magmante.tscn) |  |
 | `drop_chance` | 0.0 | **0.35** (gosma.tscn); **0.5** (magmante.tscn) |  |
+| `corrosao_gosma` | 1.0 |  | Bloco 103: durabilidade que o golpe da Gosma tira a mais da arma do guarda (a corrosão do ácido; 0 = nenhuma). |
+| `alcance_casa` | 260.0 |  | Bloco 103: morador do fundo: distância (px) de casa até onde ele persegue alguém (depois volta). |
+| `passeio_raio` | 90.0 |  | Bloco 103: morador do fundo: raio (px) e intervalo (s) do passeio em volta de casa quando não tem ninguém por perto. |
+| `passeio_intervalo` | 6.0 |  |  |
 
 **Luz (Bloco 90)**
 

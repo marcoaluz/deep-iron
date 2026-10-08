@@ -162,6 +162,15 @@ func try_confirm():
 		Audio.error()
 		_refresh()
 		return null
+	var hud0 := get_tree().get_first_node_in_group("hud")
+	var r0 := rect()
+	var tipo0 := tipo
+	var cria := func():
+		if wa.criar(tipo0, r0):  # Bloco 103: confirmou descer pro andar não reconhecido
+			Audio.place_sound()
+	if hud0 and hud0.has_method("pergunta_descida") and hud0.pergunta_descida(r0.get_center(), cria):
+		_end(null)
+		return null
 	var area = wa.criar(tipo, rect())
 	Audio.place_sound()
 	_end(area)

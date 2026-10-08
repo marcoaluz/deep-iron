@@ -3,7 +3,11 @@ extends PanelContainer
 ## próxima invasão, portões (ampliar/consertar), guardas, campo de treino e armas.
 ## Bloco 35: Arsenal (construir, cavalete, fila da forja), forjar/consertar cada arma e a
 ## arma + durabilidade de cada guarda (desarmado em destaque).
+## Bloco 103: o BESTIÁRIO (as espécies que já apareceram: "???" sem estudo, a ficha curta com o estudo), a PREVISÃO da
+## próxima invasão (tipos e quantidades; espécie sem estudo vira "???") e a PATRULHA do fundo (quantos guardas descem
+## caçar os moradores de cada andar, de dia).
 const Tipo := preload("res://scripts/ui/tipografia.gd")
+const Catalogo := preload("res://scripts/core/catalogo.gd")
 
 var _hud: CanvasLayer
 var _def: Node
@@ -17,6 +21,9 @@ var _forge_bar: ProgressBar
 var _arsenal_label: Label
 var _arsenal_button: Button
 var _forge_label: Label
+var _cri_box: VBoxContainer
+var _cri_sig := ""
+var _patrulha_rows := {}  # andar -> {label, qtd}
 
 
 func setup(hud: CanvasLayer, def: Node, _economy: Node) -> void:
@@ -51,6 +58,33 @@ func _build() -> void:
 	_status = _hud._label("", Tipo.TITULO, _hud.COLOR_TEXT)
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_status)
+
+	# Bloco 103: o bestiário e a patrulha do fundo
+	vbox.add_child(HSeparator.new())
+	vbox.add_child(_hud._label("CRIATURAS (estude os corpos: Catálogo, R)", Tipo.DETALHE, _hud.COLOR_DIM))
+	_cri_box = VBoxContainer.new()
+	_cri_box.name = "Bestiario"
+	_cri_box.add_theme_constant_override("separation", 4)
+	vbox.add_child(_cri_box)
+	for andar in ["S2", "S3"]:
+		var row := HBoxContainer.new()
+		row.name = "Patrulha_" + andar
+		row.add_theme_constant_override("separation", 4)
+		vbox.add_child(row)
+		var l: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.add_child(l)
+		for passo in [-1, 1]:
+			var b: Button = _hud._button("−" if passo < 0 else "+")
+			b.name = "Menos" if passo < 0 else "Mais"
+			b.add_theme_font_size_override("font_size", Tipo.DETALHE)
+			b.custom_minimum_size = Vector2(28, 0)
+			b.pressed.connect(func():
+				Audio.click()
+				_muda_patrulha(andar, passo))
+			row.add_child(b)
+		_patrulha_rows[andar] = {"label": l, "row": row}
 
 	vbox.add_child(HSeparator.new())
 	vbox.add_child(_hud._label("MURO (o que vem da floresta precisa derrubar pra entrar)", Tipo.DETALHE, _hud.COLOR_DIM))
@@ -153,9 +187,83 @@ func _build() -> void:
 		_weapon_rows[id] = {"status": status, "button": b, "fix": fix}
 
 
+## Bloco 103: mais ou menos guardas na patrulha de um andar (andar não reconhecido: pergunta antes).
+func _muda_patrulha(andar: String, passo: int) -> void:
+	var n := clampi(int(_def.patrulhas.get(andar, 0)) + passo, 0, _def.guards().size())
+	var faz := func():
+		_def.pede_patrulha(andar, n)
+		refresh()
+	var cat := get_tree().get_first_node_in_group("catalogo")
+	if passo > 0 and cat and not cat.reconhecido(andar) and not cat.descida_liberada.has(andar):
+		var c: Array = Catalogo.entrada(andar).get("pos", [])
+		if c.size() >= 2 and _hud.pergunta_descida(Vector2(float(c[0]), float(c[1])), faz):
+			return
+	faz.call()
+
+
+## Bloco 103: o bestiário e a previsão (remonta só quando muda).
+func _refresh_bestiario() -> void:
+	var cat := get_tree().get_first_node_in_group("catalogo")
+	var comp: Dictionary = _def.composicao(_def.wave + (0 if _def.invasion_active else 1))
+	var sig := "%s|%s" % [comp, cat.estados if cat else {}]
+	for andar in _patrulha_rows:
+		sig += "|%s%d%d" % [andar, int(_def.patrulhas.get(andar, 0)), _def.moradores(andar).size()]
+	if sig == _cri_sig:
+		return
+	_cri_sig = sig
+	for c in _cri_box.get_children():
+		_cri_box.remove_child(c)
+		c.queue_free()
+	var prev: Label = _hud._label("Previsão da próxima invasão: %s." % _def.texto_onda(comp), Tipo.DETALHE, Color(1.0, 0.85, 0.5))
+	prev.name = "Previsao"
+	prev.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_cri_box.add_child(prev)
+	for id in ["lumivoro", "ferrugento", "gosma", "magmante", "matriarca"]:
+		var est: int = cat.estado(id) if cat else Catalogo.ESTUDADO
+		if est == Catalogo.DESCONHECIDO:
+			continue  # (ainda não apareceu)
+		var row := HBoxContainer.new()
+		row.name = "Especie_" + id
+		row.add_theme_constant_override("separation", 6)
+		var ic := TextureRect.new()
+		ic.custom_minimum_size = Vector2(40, 40)
+		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		ic.texture = Catalogo.icone(id)
+		if est != Catalogo.ESTUDADO:
+			ic.modulate = Color(0, 0, 0, 0.85)
+		row.add_child(ic)
+		var txt := "???  — ainda não estudada (um corpo no chão, a pesquisadora estuda)"
+		if est == Catalogo.ESTUDADO:
+			var f: Array = cat.ficha(id)
+			var curto: Array[String] = ["%s  (perigo %d/5)" % [Catalogo.nome(id), cat.perigo(id)]]
+			for linha in f:
+				if String(linha[0]) in ["Fraqueza", "Deixa", "Dica"]:
+					curto.append("%s: %s" % [linha[0], linha[1]])
+			txt = "\n".join(curto)
+		var l: Label = _hud._label(txt, Tipo.DETALHE, _hud.COLOR_TEXT if est == Catalogo.ESTUDADO else _hud.COLOR_DIM)
+		l.name = "Texto"
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.custom_minimum_size.x = 400
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(l)
+		_cri_box.add_child(row)
+	for andar in _patrulha_rows:
+		var nv: Resource = preload("res://scripts/core/niveis.gd").por_id(andar)
+		var aberto: bool = nv != null and preload("res://scripts/core/niveis.gd").liberado(get_tree(), nv)
+		var r: Dictionary = _patrulha_rows[andar]
+		r.row.visible = aberto
+		var vivos: int = _def.moradores(andar).size()
+		var quem: String = "moradores" if cat == null else ", ".join(PackedStringArray(_def.moradores(andar).map(func(c): return Catalogo.nome(c.kind) if cat.estudado(c.kind) else "???")))
+		r.label.text = "Patrulha no %s: %d guarda%s (de dia descem caçar)  •  %s" % [andar, int(_def.patrulhas.get(andar, 0)),
+			"s" if int(_def.patrulhas.get(andar, 0)) != 1 else "", ("vivos lá: %s" % quem) if vivos > 0 else "ninguém vivo lá agora"]
+
+
 func refresh() -> void:
 	if not visible:
 		return
+	_refresh_bestiario()  # Bloco 103
 	var dn := get_tree().get_first_node_in_group("day_night")
 	if _def.invasion_active:
 		_status.text = "INVASÃO EM ANDAMENTO (onda %d): %d criaturas, %d já dentro da vila, %d derrubadas." % [
@@ -165,7 +273,7 @@ func refresh() -> void:
 		var nd: int = _def.next_invasion_day()
 		var today: bool = dn != null and nd == dn.day and not dn.is_night()
 		_status.text = ("Próxima invasão: HOJE À NOITE!" if today else "Próxima invasão: noite do dia %d" % nd) \
-			+ ("  •  Ferrugentos também (o nível 2 está aberto)" if _def.level2_open() else "")
+			+ ("  •  Ferrugentos também (o nível 2 está aberto)" if _def.level2_open() else "")  # (Bloco 103: a previsão vem embaixo)
 		_status.add_theme_color_override("font_color", _hud.COLOR_HUNGER_BAD if today else _hud.COLOR_TEXT)
 
 	for id in _gate_rows:
@@ -190,8 +298,8 @@ func refresh() -> void:
 		row.fix.text = "Consertar (%d madeira)" % g.repair_cost() if fix_reason == "" else ("Inteiro" if fix_reason == "inteiro" else "Consertar: " + fix_reason)
 		row.fix.disabled = fix_reason != ""
 
-	_poco_label.text = ("Poço do elevador: SEM MURO — os Ferrugentos (robôs enferrujados) e o que mais vem do fundo "
-		+ "saem direto da boca do poço. Metade dos guardas faz posto lá.") if _def.level2_open() \
+	_poco_label.text = ("Poço do elevador: SEM MURO — os Ferrugentos (robôs enferrujados) saem direto da boca do poço. "
+		+ "Metade dos guardas faz posto lá. (A Gosma e o Magmante moram no andar deles: não sobem.)") if _def.level2_open() \
 		else "Poço do elevador: fechado (os Ferrugentos só saem dele depois que o nível 2 abre)."
 	var gs: Array = _def.guards()
 	var ready_n := gs.filter(func(w): return w.combat_skill >= 1.0).size()
