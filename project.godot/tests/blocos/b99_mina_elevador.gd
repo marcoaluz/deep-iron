@@ -172,7 +172,13 @@ func _roda() -> void:
 	w2.move_to(s2)
 	var quebrou := await _ate(func(): return el.cabine.quebrada, 40.0)
 	check(quebrou and not el.get_node("Link").enabled, "o cabo arrebentou (depois de %d viagens): a ligação some" % el.viagens_ate_quebrar)
-	check(el.cabine.consertando and el.obra_pending() and ObraSite.de(el).tem_material(), "o conserto foi pedido sozinho, com material, pro engenheiro")
+	# Bloco 105: sem ninguém que conserte (mecânico ou engenheiro), o conserto NÃO é pago (nada gasto à toa)
+	check(not el.cabine.consertando, "sem mecânico nem engenheiro: o conserto espera (nada pago)")
+	var eng_c = ws[2]
+	eng_c.set_job("engenheiro")
+	el._tenta_t = 0.0
+	await _ate(func(): return el.cabine.consertando, 15.0)
+	check(el.cabine.consertando and el.obra_pending() and ObraSite.de(el).tem_material(), "com o engenheiro (sem mecânico): o conserto foi pedido sozinho, com material")
 	check(not w2.na_cabine() or w2.get("_a_bordo") == false, "ninguém ficou preso dentro (quebra sempre na chegada)")
 	await _espera(1.0)
 	var sobe: Vector2 = vila

@@ -323,7 +323,7 @@ func _process(delta: float) -> bool:
 		Ipe.baloes_motivo = true
 		var nomes: Dictionary = Ipe.MOTIVO_ICONE
 		var faltam: Array = nomes.values().filter(func(n): return preload("res://scripts/ui/icones.gd").tex(n) == null)
-		check(nomes.size() == 5 and faltam.is_empty(), "os 5 motivos têm ícone (faltam: %s)" % str(faltam))
+		check(nomes.size() >= 5 and faltam.is_empty(), "os %d motivos têm ícone (faltam: %s)" % [nomes.size(), str(faltam)])  # (Bloco 105: + sem material)
 		print("\nFALHAS: %d" % fails)
 		return true
 	return false

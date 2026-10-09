@@ -307,4 +307,14 @@ com o nome explícito** (sem nome, ele para): ninguém gera os outros três sem 
   - a barra, as teclas e o alerta;
   - as missões e a telemetria;
   - o save e o save antigo.
-- **A bateria completa:** ver o CONTEXTO.md, onde está o resultado da rodada.
+- **A bateria completa** rodou no commit do bloco, num worktree separado (`deep-iron-b105`), um teste por vez, com a pasta
+  `fake_appdata`: **89 testes**.
+  - **84 passaram de primeira.**
+  - **2 eram mudança de regra deste bloco, e os testes foram ajustados:**
+    - `b99_mina_elevador`: sem mecânico nem engenheiro, o conserto do cabo agora NÃO é pago (o teste confere isso e
+      depois põe um engenheiro);
+    - `b95_layout_v2`: agora são 6 motivos de balão (+ "sem material").
+  - **3 intermitentes, que passaram ao repetir:** `b58_oficina_construivel` (timeout), `b88_padre_igreja` (festival) e
+    `b92_arte_oficios` ("forjando de casaco"). Os três já tinham sido intermitentes antes.
+  - Depois dos ajustes, os 5 rodaram de novo: **0 falhas**.
+- **Não conferido:** os GUT `test_iso*` não rodaram nesta rodada.
