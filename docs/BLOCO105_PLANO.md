@@ -124,3 +124,39 @@ Confere:
    Ok?
 4. **As teclas [ e ]** (as letras acabaram)?
 5. **A arte:** ~300–400 gerações pros 4 personagens e os ícones. Ok?
+
+## A aprovação do Marco (2026-10-08) e o plano de execução
+
+**O que foi aprovado (com limites):**
+- **A forja:** fica como está.
+- **O desgaste:** gradual. A eficiência começa a cair com **40% de desgaste** (`@export`): até lá, a máquina funciona
+  normal; daí até 0% de condição cai aos poucos; em 0% quebra e para.
+  - **Os ventiladores** perdem a proteção aos poucos (no `fundo.ventilacao_mult` e no `nevoa_mult`, as regras de
+    sempre) e avisam antes de falhar.
+- **A telemetria antes do balanceamento:** uma simulação no ritmo padrão (`tests/bench_desgaste.gd`). **O balanceamento
+  só vale depois da análise do Marco.**
+- **Os custos:** a preventiva só custa tempo; a quebra usa material (as regras de reserva). Nada é consumido se o reparo
+  não puder ser feito. Sem mecânico, o engenheiro conserta a quebra quando não tem obra, e não há preventiva. A quebra
+  vem antes da preventiva.
+- **As teclas:** `[` e `]`, pelo código físico, remapeáveis e com persistência (o sistema de teclas do Bloco 54).
+- **A arte por etapas:** **UM personagem completo** primeiro, e para pra aprovação. O orçamento vai no CONTEXTO.
+
+**Os arquivos (nada de sistema paralelo: obra = `ObraSite`, conserto com material = obra, fila = `production_queue`):**
+- **Novos:**
+  - `scripts/core/desgaste.gd` (RefCounted: a condição de UMA máquina, a eficiência, a quebra);
+  - `scripts/core/manutencao.gd` (nó "Manutencao": as máquinas, a preventiva, a obra de conserto);
+  - `scripts/props/conserto_maquina.gd` (o dono da obra do conserto de quebra: ObraSite, ofício "mecanico");
+  - `scripts/core/logistica.gd` (nó "Logistica": as entregas do carregador, a reserva de cada uma, a espera do fallback);
+  - o teste `b105_carregador_mecanico`, a medição `tests/bench_desgaste.gd` e a arte `prototipos/.../oficios105.py`.
+- **Alterados:**
+  - `ipezinho.gd` (as funções, os estados "carregando" e "manutencao", o fallback do engenheiro, do fundidor e do
+    cozinheiro, o ofício das obras);
+  - `production_queue.gd` (as unidades "a caminho");
+  - `fornalha.gd` (as barras esperando o carregador);
+  - `comedouro.gd` (o estoque da cozinha);
+  - as máquinas: `escavadeira.gd`, `coletor_madeira.gd`, `coletor_minerio.gd`, `ventilador.gd` + `fundo.gd`,
+    `robo.gd`, e a condição visível de `deep_shaft.gd`, `abyss_shaft.gd` e `estacao_vagonete.gd` (o ofício "mecanico"
+    no conserto);
+  - `iso_billboard.gd` (a barrinha), `ui/alertas.gd` + `hud.gd` (o alerta, os botões);
+  - `teclas.gd`, `main.gd`, `save_manager.gd`, `missoes.gd`, `missao.gd`, `telemetria.gd` e a `main.tscn` (os 2 nós);
+  - os docs.
