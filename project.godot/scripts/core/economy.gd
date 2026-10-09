@@ -343,6 +343,10 @@ func tira(id: String, n: float) -> void:
 			var left := n
 			for a in get_tree().get_nodes_in_group("armazens"):
 				left -= _tira_de(a, "couro", left)
+		"pecas_raras":  # Bloco 104 (a Antena improvisada leva peças raras)
+			var finds := get_tree().get_first_node_in_group("finds")
+			if finds:
+				finds.rare_parts = maxi(int(finds.rare_parts) - int(ceilf(n)), 0)
 		_:
 			if Ores.TYPES.has(id):
 				spend(0.0, n, id)
@@ -363,6 +367,12 @@ func devolve(id: String, n: float, perto: Vector2 = Vector2.INF) -> void:
 			arm.wood_stored += n
 		"couro":
 			arm.leather_stored += n
+		"materia_prima":  # Bloco 104: a caça e as raízes que a expedição traz
+			arm.raw_stored += n
+		"pecas_raras":
+			var finds := get_tree().get_first_node_in_group("finds")
+			if finds:
+				finds.rare_parts += int(roundf(n))
 		_:
 			if Ores.TYPES.has(id):
 				arm.add_ore(n, id)

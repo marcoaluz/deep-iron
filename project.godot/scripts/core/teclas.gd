@@ -16,6 +16,8 @@ const PADRAO := {
 	"painel_trabalho": [KEY_5, KEY_KP_5],
 	"painel_missoes": [KEY_COMMA],  # Bloco 100
 	"painel_catalogo": [KEY_R],  # Bloco 102 (o R ficou livre no Bloco 101)
+	"batedor": [KEY_K],  # Bloco 104 (o "machucar" de teste foi pro Shift+K)
+	"painel_expedicoes": [KEY_SEMICOLON],  # Bloco 104
 	"fundidor": [KEY_6, KEY_KP_6],  # Bloco 86
 	"ferreiro": [KEY_7, KEY_KP_7],  # Bloco 87
 	"padre": [KEY_8, KEY_KP_8],  # Bloco 92
@@ -23,7 +25,7 @@ const PADRAO := {
 	"pessoas": [KEY_TAB],  # Bloco 95: a lista de pessoas (aba fina da esquerda); o "próximo" foi pro ponto
 	"salvar": [KEY_F5], "carregar": [KEY_F9],
 	# fixas (não aparecem pra remapear): Esc, e as de teste/depuração
-	"voltar": [KEY_ESCAPE], "caixas": [KEY_F4], "pular_fase": [KEY_N], "machucar": [KEY_K],
+	"voltar": [KEY_ESCAPE], "caixas": [KEY_F4], "pular_fase": [KEY_N],
 }
 ## Teclas que não podem virar atalho (câmera WASD/setas/Home, tela cheia, corte da mina, debug, Esc).
 const RESERVADAS := [KEY_ESCAPE, KEY_W, KEY_A, KEY_S, KEY_D, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_HOME,
@@ -34,12 +36,13 @@ const NOMES := [
 	["medico", "Função: médico"], ["engenheiro", "Função: engenheiro"], ["cozinheiro", "Função: cozinheiro"],
 	["lenhador", "Função: lenhador"], ["guarda", "Função: guarda"], ["pesquisador", "Função: pesquisador"],
 	["fundidor", "Função: fundidor"], ["ferreiro", "Função: ferreiro"], ["padre", "Função: padre (só um)"], ["carpinteiro", "Função: carpinteiro"],
+	["batedor", "Função: batedor"],
 	["sem_funcao", "Tirar a função"], ["turno_extra", "Turno extra"], ["vender", "Vender minério"],
 	["pessoas", "Lista de pessoas (abre/fecha)"], ["proximo", "Próximo ipezinho"], ["seguir", "Câmera segue"], ["pausa", "Pausa"], ["dicas", "Atalhos (ajuda)"],
 	["musica", "Música liga/desliga"], ["painel_hub", "Centro da Vila"], ["painel_escavadeira", "Escavadeira"],
 	["painel_oficina", "Oficina"], ["painel_enfermaria", "Enfermaria"], ["painel_moral", "Bem-estar"],
 	["painel_defesa", "Defesa"], ["painel_diario", "Diário"], ["painel_lab", "Laboratório"], ["painel_sol", "O Sol"],
-	["painel_trabalho", "Trabalhadores (áreas de trabalho)"], ["painel_missoes", "Missões"], ["painel_catalogo", "Catálogo"],
+	["painel_trabalho", "Trabalhadores (áreas de trabalho)"], ["painel_missoes", "Missões"], ["painel_catalogo", "Catálogo"], ["painel_expedicoes", "Expedições"],
 	["salvar", "Salvar"], ["carregar", "Carregar"],
 ]
 

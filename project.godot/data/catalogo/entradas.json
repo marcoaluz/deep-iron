@@ -20,6 +20,9 @@
 		{"id": "S3", "categoria": "local", "alvo": "S3", "nivel": "S3", "pos": [40, 4160], "pontos": 80, "libera": ["pesquisa:bombas"], "icone": {"png": "res://assets/game/ui/corte/faixa_abismo.png"}},
 		{"id": "S4", "categoria": "local", "alvo": "S4", "nivel": "S4", "pos": [-200, 4480], "pontos": 100, "diario": "nivel_S4", "icone": {"png": "res://assets/game/ui/corte/faixa_s4.png"}},
 		{"id": "S5", "categoria": "local", "alvo": "S5", "nivel": "S5", "pos": [0, 4930], "pontos": 120, "diario": "nivel_S5", "icone": {"png": "res://assets/game/ui/corte/faixa_s5.png"}},
-		{"id": "leste", "categoria": "local", "alvo": "leste", "pos": [2300, 120], "pontos": 60, "icone": {"png": "res://assets/game/iso/props/igreja_0.png"}}
+		{"id": "leste", "categoria": "local", "alvo": "leste", "pos": [2300, 120], "pontos": 60, "icone": {"png": "res://assets/game/iso/props/igreja_0.png"}},
+		{"id": "escuta_portao", "categoria": "pista", "alvo": "portao", "pontos": 30, "icone": {"ui": "pesquisador"}},
+		{"id": "escuta_pedreira", "categoria": "pista", "alvo": "pedreira", "pontos": 30, "icone": {"ui": "pesquisador"}},
+		{"id": "escuta_poco", "categoria": "pista", "alvo": "poco", "pontos": 30, "icone": {"ui": "pesquisador"}}
 	]
 }

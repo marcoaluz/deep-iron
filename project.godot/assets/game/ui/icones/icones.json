@@ -91,7 +91,10 @@
   "armazem_cheio",
   "caminho_bloqueado",
   "pessoas",
-  "missoes"
+  "missoes",
+  "batedor",
+  "expedicao",
+  "it_antena"
  ],
  "predios": [
   "casa",

@@ -56,6 +56,10 @@ func _liga() -> void:
 	var res := get_tree().get_first_node_in_group("research")
 	if res and res.has_signal("researched"):
 		res.researched.connect(func(_id: String): confere())
+	var exped := get_tree().get_first_node_in_group("expedicoes")
+	if exped and exped.has_signal("expedicao_voltou"):  # Bloco 104
+		exped.expedicao_voltou.connect(func(_r: String, _res: Dictionary): confere())
+		exped.regiao_revelada.connect(func(_id: String): confere())
 	var cat := get_tree().get_first_node_in_group("catalogo")
 	if cat and cat.has_signal("entrada_estudada"):  # Bloco 102: o objetivo "estudar"
 		cat.entrada_estudada.connect(func(_id: String, _categoria: String): confere())
@@ -290,6 +294,16 @@ func valor_do_objetivo(o: Array) -> float:
 			if alvo == "" or alvo in cat.CATEGORIAS:
 				return float(cat.quantos_estudados(alvo))
 			return 1.0 if cat.estudado(alvo) else 0.0
+		"expedicao":  # Bloco 104: quantas expedições voltaram (alvo = a região: voltou de lá ao menos uma vez)
+			var ex := get_tree().get_first_node_in_group("expedicoes")
+			if ex == null:
+				return 0.0
+			if alvo != "":
+				return 1.0 if ex.relatorios.any(func(r): return String(r.regiao) == alvo) or ex.voltou_de.has(alvo) else 0.0
+			return float(ex.total_voltaram)
+		"regiao":  # Bloco 104: uma região revelada
+			var ex2 := get_tree().get_first_node_in_group("expedicoes")
+			return 1.0 if ex2 and ex2.reveladas.has(alvo) else 0.0
 		"criatura", "reconhecer":  # Bloco 103: alvo = a espécie / o andar (1 = estudado), ou "" (quantos)
 			var cat2 := get_tree().get_first_node_in_group("catalogo")
 			if cat2 == null:

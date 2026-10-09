@@ -52,6 +52,8 @@ const AnimalScript := preload("res://scripts/creatures/animal.gd")
 var _animals: Array = []
 var _spawn_t := 0.0
 
+## Bloco 104: o dia em que o batedor rastreou esta toca (nesse dia nascem mais bichos: expedicoes.toca_rastreada_mult).
+var rastreada_dia := -1
 var game_remaining: float = 0.0
 var _cooldown: float = 0.0
 var _hit_time: float = 0.0
@@ -159,7 +161,7 @@ func _process(delta: float) -> void:
 		return
 	# nascer: até o limite, no ritmo da estação
 	if vivos.size() < max_animals():
-		_spawn_t += delta * season_spawn_mult[clampi(_season(), 0, season_spawn_mult.size() - 1)]
+		_spawn_t += delta * season_spawn_mult[clampi(_season(), 0, season_spawn_mult.size() - 1)] * _mult_rastreada()
 		if _spawn_t >= spawn_every_by_kind[_k()]:
 			_spawn_t = 0.0
 			spawn_animal()
@@ -185,6 +187,24 @@ func _process(delta: float) -> void:
 		game_remaining += a.meat_left
 	_hit_time = _hit_time + delta if hunting else 0.0
 	_update_visual()
+
+
+## Bloco 104: o batedor achou o rastro (vale pro dia de hoje).
+func rastreia() -> void:
+	var dn := get_tree().get_first_node_in_group("day_night")
+	rastreada_dia = int(dn.day) if dn else 1
+
+
+func rastreada() -> bool:
+	var dn := get_tree().get_first_node_in_group("day_night")
+	return dn != null and rastreada_dia == int(dn.day)
+
+
+func _mult_rastreada() -> float:
+	if not rastreada():
+		return 1.0
+	var ex := get_tree().get_first_node_in_group("expedicoes")
+	return float(ex.toca_rastreada_mult) if ex else 1.5
 
 
 ## O bicho que esse caçador está caçando (o vivo mais perto dele).

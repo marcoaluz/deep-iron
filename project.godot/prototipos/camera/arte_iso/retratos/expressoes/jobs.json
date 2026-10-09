@@ -460,11 +460,9 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\padre\\ferido.png"
  },
  "carpinteira_contente": {
-  "job": "ef365149-6f8c-4814-b3c1-3edc75703d78",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carpinteira\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carpinteira\\contente.png"
  },
  "carpinteira_cansado": {
   "ok": true,
@@ -500,5 +498,61 @@
   "ok": true,
   "pulado": true,
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carpinteiro\\ferido.png"
+ },
+ "batedor_contente": {
+  "job": "132353b7-e83a-4a0f-9a48-d6db46bdee8e",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\batedor\\contente.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "batedor_cansado": {
+  "job": "97e417a5-b64a-4bfd-9169-f4f7239bcad1",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\batedor\\cansado.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "batedor_bravo": {
+  "job": "4b70cefc-271c-4ed3-bb1c-98c02ddf235e",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\batedor\\bravo.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "batedor_ferido": {
+  "job": "dfbfe832-1a87-4de0-a424-323c620c4c25",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\batedor\\ferido.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "batedora_contente": {
+  "job": "af904e73-b8a1-48e6-b175-5d2f389394de",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\batedora\\contente.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "batedora_cansado": {
+  "job": "ef81c7b2-d122-41fd-bb5b-24fe73ac4a18",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\batedora\\cansado.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "batedora_bravo": {
+  "job": "b6426445-f999-4d26-84a8-6ba043c3e859",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\batedora\\bravo.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "batedora_ferido": {
+  "job": "d3965f7b-0a09-4005-bcea-1130c2bd2226",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\batedora\\ferido.png",
+  "ok": true,
+  "candidatos": 1
  }
 }

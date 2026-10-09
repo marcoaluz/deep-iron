@@ -158,6 +158,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _dragging:
 			_box_drawer.queue_redraw()
 	elif event is InputEventKey and event.pressed and not event.echo:
+		# Bloco 104: o "machucar" de teste foi pro Shift+K (Ctrl+Shift+K = grave); o K é o batedor
+		if event.physical_keycode == KEY_K and event.shift_pressed and OS.is_debug_build():
+			for unit in selection.duplicate():
+				if is_instance_valid(unit):
+					unit.hurt("mina", "grave" if event.ctrl_pressed else "")
+			return
 		# Bloco 54: as teclas são remapeáveis (Configurações > Teclas): pergunta a AÇÃO da tecla
 		match Teclas.acao(event.physical_keycode):
 			"proximo":
@@ -215,6 +221,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				_hud.toggle_panel("missoes")  # Bloco 100
 			"painel_catalogo":
 				_hud.toggle_panel("catalogo")  # Bloco 102
+			"painel_expedicoes":
+				_hud.toggle_panel("expedicoes")  # Bloco 104
+			"batedor":
+				toggle_scout()  # Bloco 104
 			"vender":
 				_economy.sell_all()
 			"construir":
@@ -249,10 +259,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				toggle_engineer()
 			"sem_funcao":
 				clear_job()
-			"machucar":
-				for unit in selection.duplicate():
-					if is_instance_valid(unit):
-						unit.hurt("mina", "grave" if event.shift_pressed else "")
 
 
 # ------------------------------------------------------------ clique / arrasto (botão esquerdo)
@@ -566,6 +572,11 @@ func toggle_smelter() -> void:
 ## 7 / botão do HUD: ferreiro (ou tira, se todos já forem) — Bloco 87.
 func toggle_smith() -> void:
 	toggle_job(Worker.ROLE_SMITH, "Ferreiro", Color(0.62, 0.74, 1.0))
+
+
+## K / botão do HUD: batedor (homem ou mulher; ou tira, se todos já forem) — Bloco 104.
+func toggle_scout() -> void:
+	toggle_job(Worker.ROLE_SCOUT, "Batedor", Color(0.7, 0.88, 0.55))
 
 
 ## 9 / botão do HUD: carpinteiro (homem ou mulher; ou tira, se todos já forem) — Bloco 94.

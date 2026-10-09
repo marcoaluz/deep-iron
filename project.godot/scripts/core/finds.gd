@@ -83,7 +83,10 @@ func roll(worker: Node2D, ore_type: String) -> void:
 	var kind := "peca"
 	if deep:
 		deep_finds += 1
-		if not robot_found and (deep_finds >= robot_guarantee_after or randf() < robot_chance):
+		# Bloco 104: o robô vem pela CADEIA (expedicoes.gd); a sorte só fica pros saves de antes, sem o robô (sorte_robo)
+		var ex := get_tree().get_first_node_in_group("expedicoes")
+		var sorte: bool = ex == null or bool(ex.sorte_robo)
+		if not robot_found and sorte and (deep_finds >= robot_guarantee_after or randf() < robot_chance):
 			kind = "robo"
 		elif ore_type == "prata" and not has_item("cristal") and randf() < cristal_chance:
 			kind = "cristal"

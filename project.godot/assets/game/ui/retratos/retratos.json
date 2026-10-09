@@ -193,6 +193,20 @@
    "cansado": "carpinteiro/cansado",
    "bravo": "carpinteiro/bravo",
    "ferido": "carpinteiro/ferido"
+  },
+  "batedor": {
+   "neutro": "batedor/neutro",
+   "contente": "batedor/contente",
+   "cansado": "batedor/cansado",
+   "bravo": "batedor/bravo",
+   "ferido": "batedor/ferido"
+  },
+  "batedora": {
+   "neutro": "batedora/neutro",
+   "contente": "batedora/contente",
+   "cansado": "batedora/cansado",
+   "bravo": "batedora/bravo",
+   "ferido": "batedora/ferido"
   }
  }
 }

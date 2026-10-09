@@ -98,6 +98,8 @@ const ORDER_JOBS := [
 		"Só UM, e só homem (selecione um ipezinho). Fica na igreja: missa de domingo, funeral e aconselha quem anda zangado. Abre com a Vila no estágio do padre."],
 	["carpinteiro", "Carpinteiro", "9", "res://assets/game/ui/icones/carpinteiro.png", "toggle_carpenter", Color(0.86, 0.7, 0.45),
 		"Opera a Carpintaria: tábuas e camas de tábua, só o que foi encomendado. Monta as camas novas nas casas."],  # Bloco 94
+	["batedor", "Batedor", "K", "res://assets/game/ui/icones/batedor.png", "toggle_scout", Color(0.7, 0.88, 0.55),
+		"Bate o mato: avista bichos e lugares de longe e rastreia as tocas (nascem mais bichos). Lidera as EXPEDIÇÕES (;): sem batedor, ninguém sai."],  # Bloco 104
 ]
 ## Bloco 92: largura do botão da barra de ordens (era 90; com o Padre são 14 botões na tela de 1280 px).
 ## Bloco 94: com o Carpinteiro são 15: 78 px.
@@ -106,7 +108,7 @@ const TOP_BAR_H := 40.0
 const SIDE_MARGIN := 10.0
 ## Bloco 95: a barra de funções AGRUPADA (só ícone + contador; o nome e a tecla na dica).
 const GRUPOS_FUNCOES := [["PRODUÇÃO", ["minerador", "lenhador", "caçador", "cozinheiro", "fundidor", "ferreiro", "carpinteiro"]],
-	["SERVIÇO", ["engenheiro", "médico", "pesquisador", "padre"]], ["DEFESA", ["guarda"]]]
+	["SERVIÇO", ["engenheiro", "médico", "pesquisador", "padre", "batedor"]], ["DEFESA", ["guarda"]]]
 ## Bloco 95: botão de função (ícone 32 no meio, o contador no canto).
 const BOTAO_FUNCAO := Vector2(46, 46)
 ## Bloco 95: a aba fina da esquerda e a gaveta da lista que sai dela.
@@ -732,6 +734,9 @@ func _build_janelas() -> void:
 	var cat := get_tree().get_first_node_in_group("catalogo")
 	if cat:  # Bloco 102: o catálogo de descobertas (tecla R)
 		_add_panel("catalogo", preload("res://scripts/core/catalogo_panel.gd"), cat)
+	var exped := get_tree().get_first_node_in_group("expedicoes")
+	if exped:  # Bloco 104: as expedições (tecla ;)
+		_add_panel("expedicoes", preload("res://scripts/core/expedicoes_panel.gd"), exped)
 	# Bloco 56: janela da casa (fora do menu: clique na casa ou o cartão do menu)
 	var casa_panel: PanelContainer = preload("res://scripts/core/casa_panel.gd").new()
 	add_child(casa_panel)
@@ -783,16 +788,16 @@ func _fill_hints() -> void:
 		"Ordens:  botão direito = mover / minerar a jazida clicada",
 		"Funções:  %s minerador  •  %s caçador  •  %s médico  •  %s engenheiro  •  %s cozinheiro  •  %s lenhador  •  %s guarda  •  %s pesquisador  •  %s sem função  •  %s turno extra" % [
 			k.call("minerador"), k.call("cacador"), k.call("medico"), k.call("engenheiro"), k.call("cozinheiro"), k.call("lenhador"),
-			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")] + "  •  %s fundidor  •  %s ferreiro  •  %s padre (só um)  •  %s carpinteiro" % [k.call("fundidor"), k.call("ferreiro"), k.call("padre"), k.call("carpinteiro")],
+			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")] + "  •  %s fundidor  •  %s ferreiro  •  %s padre (só um)  •  %s carpinteiro  •  %s batedor" % [k.call("fundidor"), k.call("ferreiro"), k.call("padre"), k.call("carpinteiro"), k.call("batedor")],
 		"Economia:  %s vender todo o minério (ou na janela do Armazém, a quantidade que quiser)  •  gente nova: os migrantes chegam no portão (precisa de cama livre)" % k.call("vender"),
 		"Pessoas:  %s = a lista da força de trabalho (ou passe o mouse na aba da esquerda)  •  alertas à direita: clique pra ir até lá" % k.call("pessoas"),
 		"Trabalho:  %s = TRABALHADORES — marcar áreas (madeira, alimentos, mina) e quantos trabalham em cada uma (até 5)" % k.call("painel_trabalho"),
 		"Construir:  %s = menu de construção (casas, cozinha, lazer, pesquisa, defesa, coleta automática…)" % k.call("construir"),
-		"Prédios:  %s Centro da Vila  •  %s Escavadeira  •  %s Oficina  •  %s Enfermaria  •  %s Bem-estar  •  %s Defesa  •  %s Laboratório  •  %s Sol  •  %s Diário  •  %s Catálogo  (ou clique no prédio, ou o menu Janelas lá em cima)" % [
+		"Prédios:  %s Centro da Vila  •  %s Escavadeira  •  %s Oficina  •  %s Enfermaria  •  %s Bem-estar  •  %s Defesa  •  %s Laboratório  •  %s Sol  •  %s Diário  •  %s Catálogo  •  %s Expedições  (ou clique no prédio, ou o menu Janelas lá em cima)" % [
 			k.call("painel_hub"), k.call("painel_escavadeira"), k.call("painel_oficina"), k.call("painel_enfermaria"), k.call("painel_moral"),
-			k.call("painel_defesa"), k.call("painel_lab"), k.call("painel_sol"), k.call("painel_diario"), k.call("painel_catalogo")],
+			k.call("painel_defesa"), k.call("painel_lab"), k.call("painel_sol"), k.call("painel_diario"), k.call("painel_catalogo"), k.call("painel_expedicoes")],
 		"Câmera:  roda = zoom (paradas nítidas)  •  botão do meio / WASD / setas = mover  •  Home = centralizar  •  F11 / Alt+Enter = tela cheia",
-		"Jogo:  %s salvar  •  %s carregar  •  %s música  •  Esc/%s pausa  •  F2 corte da mina  •  N pular fase (teste)  •  K machucar (teste; Shift+K grave)" % [
+		"Jogo:  %s salvar  •  %s carregar  •  %s música  •  Esc/%s pausa  •  F2 corte da mina  •  N pular fase (teste)  •  Shift+K machucar (teste; Ctrl+Shift+K grave)" % [
 			k.call("salvar"), k.call("carregar"), k.call("musica"), k.call("pausa")],
 		"Teclas: Configurações > Teclas (remapear e restaurar o padrão)",
 	]
@@ -816,7 +821,7 @@ func _add_panel(id: String, script: GDScript, target: Node) -> void:
 const TECLA_JANELA := {"hub": "painel_hub", "trabalho": "painel_trabalho", "escavadeira": "painel_escavadeira",
 	"oficina": "painel_oficina", "enfermaria": "painel_enfermaria", "moral": "painel_moral", "defesa": "painel_defesa",
 	"lab": "painel_lab", "sol": "painel_sol", "diario": "painel_diario", "missoes": "painel_missoes",
-	"catalogo": "painel_catalogo"}
+	"catalogo": "painel_catalogo", "expedicoes": "painel_expedicoes"}
 const ID_CORTE := 1000
 
 
@@ -1063,7 +1068,8 @@ func _reposiciona() -> void:
 var _confirma: ConfirmationDialog = null
 
 
-func confirma(titulo: String, texto: String, sim: Callable, botao_sim := "Sim", botao_nao := "Não") -> void:
+## nao = o que fazer no outro botão (Bloco 104: as decisões das expedições têm duas escolhas).
+func confirma(titulo: String, texto: String, sim: Callable, botao_sim := "Sim", botao_nao := "Não", nao: Callable = Callable()) -> void:
 	if _confirma == null:
 		_confirma = ConfirmationDialog.new()
 		_confirma.name = "Confirma"
@@ -1071,6 +1077,10 @@ func confirma(titulo: String, texto: String, sim: Callable, botao_sim := "Sim", 
 		add_child(_confirma)
 	for c in _confirma.confirmed.get_connections():
 		_confirma.confirmed.disconnect(c.callable)
+	for c in _confirma.canceled.get_connections():
+		_confirma.canceled.disconnect(c.callable)
+	if nao.is_valid():
+		_confirma.canceled.connect(nao, CONNECT_ONE_SHOT)
 	_confirma.title = titulo
 	_confirma.dialog_text = texto
 	_confirma.dialog_autowrap = true

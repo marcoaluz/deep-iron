@@ -211,7 +211,8 @@ func is_available() -> bool:
 
 
 func button_text() -> String:
-	return "Catálogo %d/%d" % [_cat.quantos_estudados(), _cat.entradas().size()]
+	var nas_abas: Array = _cat.entradas().filter(func(e): return String(e.categoria) in _cat.CATEGORIAS)  # (Bloco 104: as pistas não contam)
+	return "Catálogo %d/%d" % [nas_abas.filter(func(e): return _cat.estudado(String(e.id))).size(), nas_abas.size()]
 
 
 ## Tem o que fazer: alguma entrada avistada esperando estudo sem ninguém estudando.

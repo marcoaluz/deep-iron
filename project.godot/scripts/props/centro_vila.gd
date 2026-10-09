@@ -66,7 +66,7 @@ const ObraSite := preload("res://scripts/core/obra_site.gd")
 const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
 const Ores := preload("res://scripts/core/ores.gd")
 const STAGE_NAMES := ["Acampamento", "Vilarejo", "Vila", "Vila Mineira", "Cidade Mineira"]
-const UPGRADE_IDS := ["moradias", "enfermaria", "trilhas"]
+const UPGRADE_IDS := ["moradias", "enfermaria", "trilhas", "posto"]  # (Bloco 104: o Posto de expedição)
 const CASA_SCENE := preload("res://scenes/props/casa.tscn")
 const COMEDOURO_SCENE := preload("res://scenes/props/comedouro.tscn")
 const COMEDOURO_TEXTURE := preload("res://assets/game/comedouro.png")
@@ -99,6 +99,7 @@ const UPGRADE_NAMES := {
 	"moradias": "Moradias",
 	"enfermaria": "Enfermaria",
 	"trilhas": "Trilhas batidas",
+	"posto": "Posto de expedição",  # Bloco 104
 }
 
 @export_group("Estágios da vila")
@@ -134,6 +135,11 @@ const UPGRADE_NAMES := {
 ## Segundos de trabalho de engenheiro pra cada nível de cada melhoria.
 @export var enfermaria_build_times: Array[float] = [30.0, 45.0, 60.0]
 @export var trilhas_build_times: Array[float] = [25.0, 40.0, 55.0]
+## Bloco 104: o Posto de expedição (créditos, ferro; um nível): libera mais uma expedição ao mesmo tempo.
+@export var posto_costs: Array[Vector2i] = [Vector2i(500, 80)]
+@export var posto_build_times: Array[float] = [60.0]
+## Estágio da vila que libera o Posto.
+@export var posto_estagio: int = 3
 ## Segundos de trabalho de engenheiro pra erguer cada casa (por nível de Moradias).
 @export var house_build_times: Array[float] = [35.0, 45.0, 55.0, 65.0]
 ## Bloco 31b: segundos de engenheiro pra EXPANDIR a vila (estágio 2, 3, 4, 5).
@@ -261,7 +267,7 @@ var upgrade_left: float = 0.0
 var upgrade_total: float = 0.0
 var _obra := ObraSite.new()
 var level: int = 1
-var upgrades: Dictionary = {"moradias": 0, "enfermaria": 0, "trilhas": 0}
+var upgrades: Dictionary = {"moradias": 0, "enfermaria": 0, "trilhas": 0, "posto": 0}
 ## Bloco 37: a vila já foi fundada? (false só durante a fundação da partida nova)
 var founded: bool = true
 ## Casas iniciais que ainda dá pra encomendar (partida nova começa com starter_houses).
@@ -431,6 +437,8 @@ func upgrade_costs(id: String) -> Array[Vector2i]:
 			return enfermaria_costs
 		"trilhas":
 			return trilhas_costs
+		"posto":
+			return posto_costs
 	return []
 
 
@@ -454,6 +462,8 @@ func upgrade_block_reason(id: String) -> String:
 	var lvl: int = upgrades[id]
 	if lvl >= upgrade_max(id):
 		return "nível máximo"
+	if id == "posto" and level < posto_estagio:
+		return "requer vila nível %d" % posto_estagio  # Bloco 104
 	if lvl >= level:
 		return "requer vila nível %d" % (lvl + 1)
 	var cost := upgrade_cost(id)
@@ -511,6 +521,8 @@ func build_time(id: String) -> float:
 		times = enfermaria_build_times
 	elif id == "trilhas":
 		times = trilhas_build_times
+	elif id == "posto":
+		times = posto_build_times
 	return times[mini(lvl, times.size() - 1)] if not times.is_empty() else 30.0
 
 
@@ -605,6 +617,8 @@ func upgrade_effect_text(id: String, lvl: int) -> String:
 				roundi(inf.heal_time_leve * mult), roundi(inf.heal_time_grave * mult)]
 		"trilhas":
 			return "bônus dos caminhos +%d%%" % roundi(trilhas_bonus_por_nivel * lvl * 100.0)
+		"posto":
+			return "%d expedições ao mesmo tempo" % (2 if lvl > 0 else 1)
 	return ""
 
 
@@ -616,6 +630,8 @@ func upgrade_description(id: String) -> String:
 			return "+1 leito na Enfermaria e cura %d%% mais rápida por nível. Machucado só se cura lá." % roundi(recovery_cut_per_level * 100.0)
 		"trilhas":
 			return "Os CAMINHOS (menu Construir, aba Vila) aceleram %d%% mais por nível." % roundi(trilhas_bonus_por_nivel * 100.0)
+		"posto":
+			return "Mapas, mochilas e cordas guardados: duas EXPEDIÇÕES ao mesmo tempo (janela Expedições, ;)."
 	return ""
 
 

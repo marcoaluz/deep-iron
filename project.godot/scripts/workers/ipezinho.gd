@@ -22,6 +22,8 @@ const STATE_LABELS := {
 	"na_mina": "dentro da mina",  # Bloco 99
 	"catalogando": "catalogando",  # Bloco 102
 	"patrulha": "caçando no fundo",  # Bloco 103
+	"batendo": "batendo o mato",  # Bloco 104
+	"expedicao": "saindo em expedição",
 	"manual": "ordem manual",
 	"home": "indo pra casa",
 	"gathering": "colhendo comida",
@@ -91,6 +93,7 @@ const OUTFIT_FILES := {
 	"ferreiro": "res://assets/game/ipezinho_engenheiro_%s%d.png",
 	"padre": "res://assets/game/ipezinho_civil_%s%d.png",
 	"carpinteiro": "res://assets/game/ipezinho_lenhador_%s%d.png",  # Bloco 94 (na vista iso: a arte do PixelLab)
+	"batedor": "res://assets/game/ipezinho_cacador_%s%d.png",  # Bloco 104 (na vista iso: a arte do PixelLab, oficios104.py)
 }
 ## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
 const OUTFITS_WITH_LAMP := ["mineiro"]
@@ -136,13 +139,15 @@ const ROLE_SMELTER := "fundidor"  # Bloco 86: opera a Fornalha (só por ordem)
 const ROLE_SMITH := "ferreiro"  # Bloco 87: opera a Oficina e o Arsenal (só por ordem)
 const ROLE_PRIEST := "padre"  # Bloco 88: o padre (um só, chega por evento). Bloco 92: é FUNÇÃO — só homem, um por vez
 const ROLE_CARPENTER := "carpinteiro"  # Bloco 94: opera a Carpintaria (só por ordem) e monta as camas novas
-const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER, ROLE_SMITH, ROLE_PRIEST, ROLE_CARPENTER]
+const ROLE_SCOUT := "batedor"  # Bloco 104: bate o mato (avista de longe, rastreia tocas) e lidera as expedições
+const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER, ROLE_SMITH, ROLE_PRIEST, ROLE_CARPENTER, ROLE_SCOUT]
 ## Texto do popup ao receber a função.
 const JOB_LABELS := {
 	ROLE_IDLE: "Sem função", ROLE_MINER: "Minerador!", ROLE_COOK: "Cozinheiro!",
 	ROLE_LUMBER: "Lenhador!", ROLE_GUARD: "Guarda!", ROLE_RESEARCH: "Pesquisador!",
 	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!", ROLE_ENGINEER: "Engenheiro!", ROLE_SMELTER: "Fundidor!", ROLE_SMITH: "Ferreiro!", ROLE_PRIEST: "Padre",
 	ROLE_CARPENTER: "Carpinteiro!",  # Bloco 94
+	ROLE_SCOUT: "Batedor!",  # Bloco 104
 }
 ## Bloco 26/28: outfit inteiro por função (derivado do `job`: nada novo no save).
 ## REGRA (Bloco 28): toda função nova nasce com outfit próprio no mesmo bloco —
@@ -156,6 +161,7 @@ const JOB_OUTFIT := {
 	ROLE_SMITH: "ferreiro",  # Bloco 87: PROVISÓRIO: a roupa do engenheiro + tom de aço
 	ROLE_PRIEST: "padre",  # Bloco 88: PROVISÓRIO: a roupa de civil + tom de batina
 	ROLE_CARPENTER: "carpinteiro",  # Bloco 94: a arte do PixelLab (oficios94.py)
+	ROLE_SCOUT: "batedor",  # Bloco 104: a arte do PixelLab (oficios104.py)
 }
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
@@ -304,6 +310,10 @@ const Tipo := preload("res://scripts/ui/tipografia.gd")
 ## Cada descoberta (xp_pesquisa) deixa o estudo de campo esta fração mais rápido, até o máximo.
 @export var xp_pesquisa_bonus: float = 0.1
 @export var xp_pesquisa_max: float = 0.5
+
+@export_group("Batedor (Bloco 104)")
+## Segundos olhando de luneta em cada ponto da beira da floresta (e rastreando a toca).
+@export var segundos_bater: float = 20.0
 
 @export_group("Guarda")
 ## Vida na luta = base + por_habilidade x habilidade (0..1). Zerou: machuca e sai da luta.
@@ -551,6 +561,15 @@ var _campo := {}
 var xp_pesquisa := 0
 var animo_descoberta := 0.0
 
+## Bloco 104: EXPEDIÇÃO (expedicoes.gd). _expedicao_saida = andando até a saída; fora = fora do mundo (escondido, fora do
+## grupo da vila: não come, não trabalha, não conta; a cama fica); nasce_fora = recriado do save já fora.
+var fora := false
+var nasce_fora := false
+var _expedicao_saida := Vector2.INF
+var _camadas_colisao := Vector2i(-1, -1)
+## Bloco 104: o batedor batendo o mato: {pos, t (segundos parado olhando), toca}.
+var _bate := {}
+
 ## Bloco 101: MIGRANTE esperando no portão (migrantes.gd): fora do grupo "ipezinhos" (não come, não ocupa cama, não conta)
 ## e sem IA nem necessidades — só anda até onde mandarem. Aceito: vira_morador().
 var visitante := false
@@ -614,6 +633,8 @@ func _ready() -> void:
 	_apply_accessories()
 	if not visitante:
 		_claim_home.call_deferred()  # as casas precisam estar nos grupos
+	if nasce_fora:
+		sai_do_mundo.call_deferred()  # Bloco 104: do save, numa expedição
 	_sync_tool_visual.call_deferred()  # recrutado depois da picareta de aço já nasce com ela
 	_apply_research.call_deferred()  # carrinhos de mina (capacidade de carga)
 	_update_hunger_label()
@@ -927,6 +948,8 @@ func _process(delta: float) -> void:
 	_agenda_tick(delta)  # Bloco 84
 	if _ai_state == "catalogando":
 		_campo_tick(delta)  # Bloco 102
+	elif _ai_state == "batendo":
+		_bate_tick(delta)  # Bloco 104
 	if animo_descoberta > 0.0:
 		animo_descoberta = maxf(animo_descoberta - animo_descoberta_decai * delta, 0.0)  # Bloco 103
 	_social_process(delta)  # Bloco 85
@@ -1044,6 +1067,9 @@ func _choose_state() -> String:
 	# Bloco 36: caído em combate não anda — espera o médico (ou vai nas costas dele).
 	if downed:
 		return "downed"
+	# Bloco 104: mandado pra uma expedição: anda até a saída (a expedicoes.gd tira ele do mundo lá)
+	if _expedicao_saida != Vector2.INF and not injured:
+		return "expedicao"
 	# Machucado: só cura na ENFERMARIA — vai pra lá (ou espera leito na porta),
 	# de dia ou de noite, antes de qualquer outra coisa.
 	if injured and _has_infirmary():
@@ -1144,6 +1170,9 @@ func _choose_state() -> String:
 		if combat_skill < 1.0 and ((_ai_state == "training" and _station_ok_for("training")) or _has_usable_station("campos")):
 			return "training"
 		return "home"
+	# Bloco 104: o batedor bate o mato (de dia; a agenda já mandou pra casa de noite)
+	if is_scout():
+		return "batendo"
 	# Pesquisador: de dia no laboratório se tiver pesquisa em andamento; senão trabalha normal.
 	# Bloco 102: com uma anotação na mão, entrega primeiro; sem pesquisa, sai pra CATALOGAR o que a vila avistou
 	# (catalogo.gd); sem nada pra catalogar, minera como antes.
@@ -1266,6 +1295,22 @@ func _decide_next_action() -> void:
 
 	if desired == "montando_cama":  # Bloco 94
 		_montar_cama()
+		return
+
+	if desired == "expedicao":  # Bloco 104: até a saída da expedição
+		if _ai_state != "expedicao":
+			_release_station()
+			_set_state("expedicao")
+		if not _moving or _target.distance_to(_expedicao_saida) > 4.0:
+			_go_to(_expedicao_saida)
+		return
+
+	if desired == "batendo":  # Bloco 104: escolhe um ponto da beira da floresta e vai olhar
+		if _ai_state != "batendo":
+			_release_station()
+			_set_state("batendo")
+			_bate = {}
+		_batendo()
 		return
 
 	if desired == "catalogando":  # Bloco 102: a tarefa de campo (anda sozinha no _campo_tick)
@@ -3411,7 +3456,7 @@ func _die() -> void:
 		_larga_corpo()
 	if cal:
 		cal.on_morte(_display())  # Bloco 88: funeral na hora social seguinte
-		if cal.tem_cemiterio():
+		if cal.tem_cemiterio() and not has_meta("sem_corpo"):  # (Bloco 104: quem morreu na expedição não volta)
 			cal.novo_corpo(_display(), global_position, String(injury_cause))  # Bloco 93: o padre vem buscar
 	died.emit(_display())
 	var main := get_tree().get_first_node_in_group("game_main")
@@ -4067,6 +4112,113 @@ func is_priest() -> bool:
 ## Bloco 94: o carpinteiro / a carpinteira (Carpintaria e as camas novas).
 func is_carpenter() -> bool:
 	return job == ROLE_CARPENTER
+
+
+## Bloco 104: o batedor.
+func is_scout() -> bool:
+	return job == ROLE_SCOUT
+
+
+# ------------------------------------------------------------ expedições (Bloco 104)
+## A expedicoes.gd mandou: anda até a saída (lá ela tira do mundo).
+func vai_pra_expedicao(saida: Vector2) -> void:
+	_expedicao_saida = saida
+	_manual_timer = 0.0
+	_decision_timer = 0.0
+
+
+## Some do mundo: escondido, sem processar, fora do grupo da vila (não come, não trabalha, não defende). A cama fica.
+func sai_do_mundo() -> void:
+	if fora:
+		return
+	fora = true
+	_expedicao_saida = Vector2.INF
+	_release_station()
+	if _ai_state != "idle":
+		_set_state("idle")
+	_moving = false
+	velocity = Vector2.ZERO
+	remove_from_group("ipezinhos")
+	add_to_group("expedicao_gente")
+	_camadas_colisao = Vector2i(collision_layer, collision_mask)
+	collision_layer = 0
+	collision_mask = 0
+	_agent.avoidance_enabled = false
+	visible = false
+	var main := get_tree().get_first_node_in_group("game_main")
+	if main and main.has_method("is_selected") and main.is_selected(self):
+		main.toggle_selected(self)
+	process_mode = Node.PROCESS_MODE_DISABLED
+
+
+## Volta da expedição: aparece na saída e anda pra vila como sempre.
+func volta_ao_mundo(pos: Vector2) -> void:
+	if not fora:
+		return
+	fora = false
+	process_mode = Node.PROCESS_MODE_INHERIT
+	global_position = pos
+	_target = pos
+	visible = true
+	remove_from_group("expedicao_gente")
+	add_to_group("ipezinhos")
+	if _camadas_colisao.x >= 0:
+		collision_layer = _camadas_colisao.x
+		collision_mask = _camadas_colisao.y
+	_agent.avoidance_enabled = avoidance_enabled
+	_agent.target_position = pos
+	wake_decision()
+
+
+## Morreu longe (a expedição volta sem ele): o memorial e o luto como sempre, mas sem corpo pro padre buscar.
+func morre_na_expedicao(regiao: String) -> void:
+	set_meta("sem_corpo", true)
+	injury_cause = "expedicao: " + regiao
+	process_mode = Node.PROCESS_MODE_INHERIT
+	_die()
+
+
+## Bloco 104: o batedor escolhe pra onde olhar: as tocas (rastrear) e a beira da clareira/floresta.
+func _batendo() -> void:
+	if not _bate.is_empty():
+		var p: Vector2 = _bate.pos
+		if float(_bate.t) <= 0.0 and global_position.distance_to(p) > 20.0 and (not _moving or _target.distance_to(p) > 4.0):
+			_go_to(p)
+		return
+	var pontos: Array = []
+	var env := get_tree().get_first_node_in_group("environment")
+	for t in get_tree().get_nodes_in_group("caca"):
+		if t.visible and not (env and env.has_method("trancado") and env.trancado(t.global_position)):
+			pontos.append({"pos": (t as Node2D).global_position + Vector2(0, 40), "toca": t})
+	if env and env.get("clearing_rect") != null:
+		var r: Rect2 = env.clearing_rect
+		for i in 3:
+			pontos.append({"pos": Vector2(randf_range(r.position.x, r.end.x), randf_range(r.position.y, r.end.y)), "toca": null})
+	if pontos.is_empty():
+		_idle_at_hub()
+		return
+	var esc: Dictionary = pontos[randi() % pontos.size()]
+	_bate = {"pos": NavigationServer2D.map_get_closest_point(_agent.get_navigation_map(), esc.pos), "t": 0.0, "toca": esc.toca}
+	_go_to(_bate.pos)
+
+
+## Bloco 104: chegou no ponto: olha de luneta um tempo; na toca, deixa ela "rastreada" no dia (nascem mais bichos).
+func _bate_tick(delta: float) -> void:
+	if _bate.is_empty():
+		return
+	var p: Vector2 = _bate.pos
+	if float(_bate.t) <= 0.0 and (_moving and global_position.distance_to(p) > 24.0):
+		return
+	_moving = false
+	_bate.t = float(_bate.t) + delta
+	_work_timer = 0.2  # a animação de bater (a luneta)
+	if float(_bate.t) >= segundos_bater:
+		var t = _bate.toca
+		if t != null and is_instance_valid(t) and t.has_method("rastreia"):
+			t.rastreia()
+			_popup("Rastro fresco!", Color(0.8, 0.95, 0.6))
+		_bate = {}
+		_decision_timer = 0.0
 
 
 # ------------------------------------------------------------ carpinteiro, mochila, botas (Bloco 94)

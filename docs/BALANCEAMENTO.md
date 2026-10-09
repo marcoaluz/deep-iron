@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **970 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **1000 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (79)
 
@@ -639,6 +639,54 @@ Total: **970 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `repair_time_mult` | 0.5 |  |  |
 | `queue_max` | 6 |  |  |
 
+## `scripts/core/expedicoes.gd` (26)
+
+**Expedições**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `max_expedicoes` | 1 |  | Quantas expedições ao mesmo tempo (sem e com a melhoria "Posto de expedição" do Centro). |
+| `max_com_posto` | 2 |  |  |
+| `equipe_min` | 2 |  | Tamanho da equipe. |
+| `equipe_max` | 4 |  |  |
+| `racao_porcoes_dia` | 2.0 |  | Ração: porções da cozinha (Schedule.porcao) por pessoa por dia de expedição. |
+| `kit_ferro` | 20 |  | Kit de ferramentas (opcional): ferro e madeira; menos risco e mais minério nos achados. |
+| `kit_madeira` | 15 |  |  |
+| `kit_minerio_mult` | 1.3 |  |  |
+| `hora_saida_max` | 15.0 |  | Depois desta hora a equipe não sai mais (sai de dia) e a hora em que ela volta (no dia da volta). |
+| `hora_volta` | 8.0 |  |  |
+| `tempo_max_saindo` | 150.0 |  | Segundos (de jogo) andando até a saída antes de "sumir" mesmo sem chegar (não trava). |
+| `horas_decisao` | 2.0 |  | Horas de jogo pra responder uma decisão do caminho (sem resposta: a prudente). |
+
+**Risco**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `mult_guarda` | 0.8 |  | Cada guarda armado na escolta multiplica o risco por isto, até o mínimo. |
+| `mult_guarda_min` | 0.5 |  |  |
+| `mult_batedor` | 0.7 |  |  |
+| `mult_sem_traje` | 3.0 |  | Sem o traje que a região pede (pra alguém da equipe), sem ração inteira, com o kit, explorando uma região "?". |
+| `mult_sem_racao` | 2.0 |  |  |
+| `mult_kit` | 0.85 |  |  |
+| `mult_explorar` | 1.2 |  |  |
+| `chance_grave` | 0.3 |  | Ferido: chance de ser grave; grave: chance de morrer sem e com médico na equipe. |
+| `morte_sem_medico` | 0.3 |  |  |
+| `morte_com_medico` | 0.05 |  |  |
+
+**Achados**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `bonus_batedor_pistas` | 0.5 |  | O batedor: + esta fração na chance de mapas, pistas e entradas do catálogo. |
+| `achado_explorar` | 0.5 |  | Explorar uma região "?" (a 1ª ida): os achados valem esta fração. |
+
+**O batedor na vila**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `batedor_alcance_mult` | 3.0 |  | O batedor (sem expedição) avista bichos e lugares de mais longe: alcance do catálogo x isto. |
+| `toca_rastreada_mult` | 1.5 |  | Toca rastreada pelo batedor no dia: os bichos nascem mais rápido (x isto). |
+
 ## `scripts/core/finds.gd` (8)
 
 **Chances (por ciclo de mineração)**
@@ -1076,7 +1124,7 @@ Total: **970 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `pollen_amount` | 18 |  |  |
 
-## `scripts/workers/ipezinho.gd` (78)
+## `scripts/workers/ipezinho.gd` (79)
 
 **Obras (Bloco 51)**
 
@@ -1192,6 +1240,12 @@ Total: **970 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `animo_descoberta_decai` | 0.02 |  |  |
 | `xp_pesquisa_bonus` | 0.1 |  | Cada descoberta (xp_pesquisa) deixa o estudo de campo esta fração mais rápido, até o máximo. |
 | `xp_pesquisa_max` | 0.5 |  |  |
+
+**Batedor (Bloco 104)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `segundos_bater` | 20.0 |  | Segundos olhando de luneta em cada ponto da beira da floresta (e rastreando a toca). |
 
 **Guarda**
 
@@ -1421,7 +1475,7 @@ Total: **970 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `level_min_stage` | [0, 2, 3] |  | Pré-requisitos de cada nível [nível 1, 2, 3]: estágio mínimo do Centro da Vila e pesquisa ("" = nenhuma). |
 | `level_research` | ["", "", "medicina"] |  |  |
 
-## `scripts/props/centro_vila.gd` (81)
+## `scripts/props/centro_vila.gd` (84)
 
 **Estágios da vila**
 
@@ -1460,6 +1514,9 @@ Total: **970 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `enfermaria_build_times` | [30.0, 45.0, 60.0] |  | Segundos de trabalho de engenheiro pra cada nível de cada melhoria. |
 | `trilhas_build_times` | [25.0, 40.0, 55.0] |  |  |
+| `posto_costs` | [Vector2i(500, 80)] |  | Bloco 104: o Posto de expedição (créditos, ferro; um nível): libera mais uma expedição ao mesmo tempo. |
+| `posto_build_times` | [60.0] |  |  |
+| `posto_estagio` | 3 |  | Estágio da vila que libera o Posto. |
 | `house_build_times` | [35.0, 45.0, 55.0, 65.0] |  | Segundos de trabalho de engenheiro pra erguer cada casa (por nível de Moradias). |
 | `expand_build_times` | [60.0, 90.0, 120.0, 150.0] |  | Bloco 31b: segundos de engenheiro pra EXPANDIR a vila (estágio 2, 3, 4, 5). |
 
@@ -1889,10 +1946,10 @@ Total: **970 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `tool_costs` | [ |  | x = créditos, y = quantidade de minério, z = segundos na forja. |
-| `tool_ore_types` | ["ferro", "cobre", "carvao", "prata", "ferro", "ferro"] |  | Tipo do minério gasto em cada ferramenta. |
-| `tool_wood_costs` | [30, 25, 40, 30, 35, 20] |  | Madeira gasta em cada ferramenta (cabo/estrutura) — referência: 1 madeira pra 5 minério. |
-| `tool_min_stage` | [1, 2, 4, 4, 1, 3] |  | Estágio mínimo da vila (Centro da Vila) pra fabricar cada ferramenta. |
-| `tool_itens` | {"picareta_de_aco": {"aco": 12}} |  | Bloco 94: itens a mais de cada ferramenta (id -> {item: qtd}). A picareta de aço leva aço da Fundição. |
+| `tool_ore_types` | ["ferro", "cobre", "carvao", "prata", "ferro", "ferro", "cobre"] |  | Tipo do minério gasto em cada ferramenta. |
+| `tool_wood_costs` | [30, 25, 40, 30, 35, 20, 10] |  | Madeira gasta em cada ferramenta (cabo/estrutura) — referência: 1 madeira pra 5 minério. |
+| `tool_min_stage` | [1, 2, 4, 4, 1, 3, 2] |  | Estágio mínimo da vila (Centro da Vila) pra fabricar cada ferramenta. |
+| `tool_itens` | {"picareta_de_aco": {"aco": 12}, "antena": {"pecas_raras": 2}} |  | Bloco 94: itens a mais de cada ferramenta (id -> {item: qtd}). A picareta de aço leva aço da Fundição. |
 | `picareta_aco_mult` | 1.25 |  | Bloco 94: minério por golpe com a picareta de aço (1.25 = +25%), pra todos os mineradores. |
 
 **Encomendas do ferreiro (Bloco 87)**

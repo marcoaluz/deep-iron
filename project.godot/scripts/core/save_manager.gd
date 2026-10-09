@@ -91,6 +91,11 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 104: "expedicoes" {reveladas [ids], em_curso [{regiao, fase, dias, volta_dia, volta_t, decisoes, ... e "saves"
+##     (o save de cada ipezinho que está FORA: eles não estão no grupo da vila, então voltam por aqui)}], cadeia (0..5 a
+##     cadeia do robô), sorte_robo, relatorios, voltou_de, totais}; centro_vila "upgrades" ganha "posto"; o ipezinho ganha
+##     a função "batedor". Save antigo: nenhuma expedição, a floresta revelada, a cadeia no passo certo (robô achado = 5;
+##     Ferrugento estudado = 1) e a sorte do robô continua como reserva (sorte_robo) se o robô ainda não apareceu.
 ##   Bloco 103: "catalogo" ganha "descida_liberada" [andares que o jogador mandou descer sem reconhecimento]; "defense"
 ##     ganha "patrulhas" {andar: guardas}; o ipezinho ganha "xp_pesquisa" e "animo_descoberta". Os CORPOS de criatura e os
 ##     MORADORES do fundo não entram (os moradores renascem quando o andar está aberto). Save antigo: nada liberado,
@@ -543,6 +548,7 @@ func _collect() -> Dictionary:
 		"decoracoes": "decoracoes_mgr",  # Bloco 90: as peças de decoração do jogador
 		"migrantes": "migrantes",  # Bloco 101: quem espera no portão e o relógio do próximo grupo
 		"catalogo": "catalogo",  # Bloco 102: o que a vila avistou e estudou, o minério desconhecido, as amostras
+		"expedicoes": "expedicoes",  # Bloco 104: as regiões, as expedições em curso (com quem está fora), a cadeia do robô
 		"missoes": "missoes",  # Bloco 100: a campanha (capítulo liberado, missões cumpridas, objetivos, contadores)
 	}
 	for key in singles:
@@ -684,6 +690,11 @@ func apply_pending(main: Node) -> void:
 		if data.has("catalogo"):
 			cat.load_save_data(SaveUtil.dict(data, "catalogo"))
 		cat.depois_de_carregar(data.has("catalogo"))
+	var exped := get_tree().get_first_node_in_group("expedicoes")  # Bloco 104: depois dos ipezinhos (recria quem está fora)
+	if exped:
+		if data.has("expedicoes"):
+			exped.load_save_data(SaveUtil.dict(data, "expedicoes"))
+		exped.depois_de_carregar(data.has("expedicoes"))
 
 	var missoes := get_tree().get_first_node_in_group("missoes")  # Bloco 100: depois de tudo (confere o que a vila já fez)
 	if missoes:

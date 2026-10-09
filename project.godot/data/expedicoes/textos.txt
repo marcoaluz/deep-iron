@@ -1,0 +1,183 @@
+# EXPEDIÇÕES — textos (Bloco 104). Edite à vontade: o jogo lê este arquivo quando abre.
+#
+# O formato é o dos capítulos das missões:
+#   [secao]            começa uma seção
+#   chave = valor      uma linha com um texto; as linhas seguintes (sem "chave =") continuam o texto
+#   # comentário
+#
+# [<região>]: nome, texto (a descrição da janela), chegada (a primeira linha do relatório).
+# [evento.<id>]: titulo, texto, a, b (as duas opções), a_depois, b_depois (o que aconteceu, no relatório).
+# [pista.<id>]: titulo, texto (a página do diário).
+# [cadeia]: as páginas da cadeia do robô (origem, sinal, triangulacao, regiao).
+
+[floresta]
+nome = A floresta funda
+texto = O mato queimado do oeste, além da clareira. Bichos, raízes, madeira caída e às vezes gente que fugiu das
+  colônias de fora. Perto e quase sem perigo: a primeira expedição.
+chegada = A equipe sumiu entre os troncos pretos, seguindo o rastro dos bichos.
+
+[estrada]
+nome = A estrada velha
+texto = Asfalto rachado no sul, coberto de cinza, com carcaças de carros de antes da explosão. Quem anda por ela são os
+  que fogem das outras colônias.
+chegada = A estrada apareceu debaixo da cinza, reta, sem fim, cheia de carcaças.
+
+[ruinas_leste]
+nome = As ruínas além do leste
+texto = Depois da vila antiga, a cidade de antes: prédios caídos, oficinas e porões. Muito metal pra quem souber
+  procurar, e criaturas escondidas do sol.
+chegada = Os prédios de antes ainda estavam de pé, ocos, com as janelas pretas.
+
+[fabrica]
+nome = A fábrica soterrada
+texto = Atrás da zona de radiação do S2, o sinal vem de uma fábrica de antes da explosão enterrada na rocha. É de lá
+  que saem os Ferrugentos. Ninguém entra sem o traje antirradiação.
+chegada = Atrás da radiação, uma porta de aço meio enterrada. O sinal batia mais forte a cada passo.
+
+[galerias_s2]
+nome = As galerias fundas do S2
+texto = Os túneis que seguem além das poças de ácido, onde ninguém minera. Cristais e prata sem dono, e Gosmas.
+chegada = A equipe passou do último lampião e entrou no escuro verde.
+
+[fendas_s3]
+nome = As fendas do S3
+texto = As rachaduras do abismo onde a lava corre por baixo. Solarita e cristal rubro, e um calor que não deixa
+  ninguém ficar muito.
+chegada = O chão ficou quente através da bota. As fendas brilhavam lá embaixo.
+
+[veios_s4]
+nome = Os veios da cachoeira
+texto = Atrás da cachoeira do S4, veios de todas as cores. O vapor esconde as fendas no chão.
+chegada = A água despencava do lado, e por trás dela a parede inteira brilhava.
+
+[margem_s5]
+nome = A margem do lago azul
+texto = A volta inteira do lago do S5, até as casinhas de pedra do outro lado. Gemas na beira e silêncio.
+chegada = O lago estava parado como vidro. Ninguém quis falar alto.
+
+[evento.rio]
+titulo = O rio cheio
+texto = A chuva de cinza encheu o riacho. Dá pra atravessar com água pela cintura, ou dar a volta pela ponte velha.
+a = Atravessar agora
+b = Dar a volta (+meio dia)
+a_depois = Atravessaram o rio cheio, agarrados na corda.
+b_depois = Deram a volta pela ponte velha e perderam meio dia.
+
+[evento.rastro]
+titulo = O rastro do javali
+texto = Pegadas fundas e frescas saindo da trilha. Um javali grande passou por aqui.
+a = Seguir o rastro
+b = Ficar na trilha
+a_depois = Seguiram o rastro do javali até a toca dele.
+b_depois = Deixaram o javali em paz e ficaram na trilha.
+
+[evento.carroca]
+titulo = A carroça virada
+texto = Uma carroça virada no meio da estrada, com caixas fechadas. Pode ter alguém (ou alguma coisa) por perto.
+a = Abrir as caixas
+b = Seguir em frente
+a_depois = Abriram as caixas da carroça virada.
+b_depois = Passaram longe da carroça.
+
+[evento.abrigo]
+titulo = A tempestade de cinza
+texto = O céu escureceu de repente. Tem um posto de gasolina vazio ali do lado.
+a = Esperar no abrigo (+meio dia)
+b = Seguir na cinza
+a_depois = Esperaram a tempestade passar no posto vazio.
+b_depois = Seguiram com a cinza nos olhos.
+
+[evento.torre]
+titulo = A torre de rádio
+texto = Uma torre de antena tombada sobre um prédio. Lá em cima tem fio de cobre e peças, mas a estrutura range.
+a = Subir na torre
+b = Deixar a torre
+a_depois = Subiram na torre que rangia e desmontaram o que deu.
+b_depois = Olharam a torre de baixo e seguiram.
+
+[evento.porao]
+titulo = O porão trancado
+texto = Uma porta de porão com um cadeado enferrujado. Lá de baixo vem um cheiro de mofo e um barulho baixo.
+a = Arrombar
+b = Deixar fechado
+a_depois = Arrombaram o porão e desceram com a tocha.
+b_depois = Deixaram o porão trancado.
+
+[evento.esteira]
+titulo = A esteira parada
+texto = Uma esteira de montagem cheia de Ferrugentos desligados, no meio do caminho. Dá pra passar por cima ou contornar
+  pelo duto de ventilação.
+a = Passar por cima
+b = Contornar pelo duto (+meio dia)
+a_depois = Passaram por cima da esteira, devagar, sem acordar ninguém.
+b_depois = Contornaram pelo duto apertado.
+
+[evento.reator]
+titulo = O reator vazando
+texto = Uma sala com um reator rachado, brilhando. Tem peças boas lá dentro, e a radiação ali é forte até pro traje.
+a = Entrar na sala
+b = Passar longe
+a_depois = Entraram na sala do reator e saíram depressa, com os bolsos cheios.
+b_depois = Passaram longe do reator.
+
+[evento.poca]
+titulo = A poça no caminho
+texto = Uma poça larga de ácido (ou de lava) fechando o túnel. Dá pra pular pelas pedras ou voltar e achar outro caminho.
+a = Pular pelas pedras
+b = Achar outro caminho (+meio dia)
+a_depois = Pularam pelas pedras, uma por uma.
+b_depois = Voltaram e acharam outro caminho.
+
+[evento.desabamento]
+titulo = O teto rachado
+texto = O teto da galeria está rachado e pinga pedra. Do outro lado tem um veio bonito.
+a = Passar correndo
+b = Escorar e passar devagar (+meio dia)
+a_depois = Passaram correndo debaixo do teto rachado.
+b_depois = Escoraram o teto e passaram devagar.
+
+[evento.fenda]
+titulo = A fenda brilhando
+texto = Uma fenda funda com cristal brilhando lá embaixo. Dá pra descer de corda.
+a = Descer de corda
+b = Deixar a fenda
+a_depois = Desceram de corda na fenda e arrancaram o cristal.
+b_depois = Olharam o brilho lá de cima e seguiram.
+
+[evento.casinhas]
+titulo = As casinhas de pedra
+texto = As casinhas vazias do outro lado do lago. Ninguém entra nelas há muito tempo.
+a = Revirar as casinhas (+meio dia)
+b = Só olhar
+a_depois = Reviraram as casinhas de pedra com cuidado.
+b_depois = Olharam as casinhas de longe e voltaram.
+
+[pista.ruinas]
+titulo = O mapa da cidade de antes
+texto = No meio das ruínas a equipe achou um mapa de papel, com a vila, a estrada e uma fábrica marcada embaixo da
+  mina. Alguém circulou a fábrica com lápis vermelho.
+
+[pista.fabrica]
+titulo = A fábrica dos Ferrugentos
+texto = Era aqui que faziam os robôs. A linha de montagem parou no dia da explosão, e os Ferrugentos que sobraram
+  ficaram carregando de restos de sol, esperando a ordem de voltar ao trabalho. Um deles estava desligado num canto,
+  diferente dos outros: sem a ferrugem nos olhos.
+
+[pista.lago]
+titulo = As casinhas do lago
+texto = Nas casinhas de pedra do lago, pratos ainda na mesa e um calendário parado no mês da explosão. Quem morava aqui
+  desceu pra fugir do sol e nunca mais subiu.
+
+[cadeia]
+origem_titulo = O número de série
+origem = No corpo do Ferrugento, uma placa com um número de série e o nome de uma fábrica de antes da explosão. Os
+  robôs não vieram do nada: alguém fez eles, perto daqui.
+sinal_titulo = O sinal no rádio
+sinal = De madrugada o rádio chiou num padrão que não era música: um sinal fraco, repetido, como um robô chamando os
+  outros. Com três escutas em lugares diferentes dá pra saber de onde vem.
+triangulacao_titulo = A triangulação
+triangulacao = Três escutas: no portão, no alto da pedreira e na boca do poço. As três linhas se cruzam embaixo da
+  mina, atrás da zona de radiação do S2.
+regiao_titulo = A fábrica soterrada
+regiao = O sinal vem de uma fábrica enterrada atrás da radiação do S2. Uma expedição com o traje antirradiação pode
+  chegar lá. (Expedições, ponto e vírgula)

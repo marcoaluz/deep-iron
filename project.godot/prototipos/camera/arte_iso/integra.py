@@ -279,7 +279,8 @@ FUNCOES = {"minerador": ("minerador", "mineradora", "minerar"), "guarda": ("guar
            # Bloco 92: os ofícios dos Blocos 86-88 com arte do PixelLab (oficios92.py); o padre é só homem
            "fundidor": ("fundidor", "fundidora", "fundir"), "ferreiro": ("ferreiro", "ferreira", "forjar"),
            "padre": ("padre", "padre", "pregar"),
-           "carpinteiro": ("carpinteiro", "carpinteira", "serrar")}  # Bloco 94 (oficios94.py)
+           "carpinteiro": ("carpinteiro", "carpinteira", "serrar"),  # Bloco 94 (oficios94.py)
+           "batedor": ("batedor", "batedora", "bater")}  # Bloco 104 (oficios104.py)
 COMUNS = ["caminhada", "comer", "ferido", "deitar", "mancar_esq", "com_picareta"]
 # pendências dos Prompts 2 e 29: colher fruta (caçador sem arco), treinar no campo e o ataque com a
 # arma de verdade do guarda (lança / besta; a lança de prata usa a da lança)

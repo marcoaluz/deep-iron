@@ -1,9 +1,20 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-08. Branch `isometrico`. Tudo até o Bloco 102 **foi enviado** pro GitHub em 2026-10-08 (push com o OK do Marco); o Bloco 103 está só no commit local. Push só com o OK dele.
+Atualizado em 2026-10-08. Branch `isometrico`. Tudo até o Bloco 103 **foi enviado** pro GitHub em 2026-10-08 (push com o OK do Marco); o Bloco 104 está só no commit local. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido".
 
-## AGORA (2026-10-08): Bloco 103 — corpos de criatura, bestiário e reconhecimento dos andares (feito; commit local, push pendente — pedir o OK)
+## AGORA (2026-10-08): Bloco 104 — robô antigo, batedor e expedições (feito; commit local, push pendente — pedir o OK)
+
+Prompt E. Plano `docs/BLOCO104_PLANO.md` (decisões: Antena improvisada sem rádio; batedor obrigatório; a fábrica atrás da
+radiação do S2 — análise no relatório; Posto de expedição; arte; teclas K e ;). Relatório `docs/BLOCO104_EXPEDICOES.md`.
+- Cadeia do robô (expedicoes.gd): Ferrugento estudado -> sinal (Rádio/Antena, de noite) -> 3 escutas (pistas do catálogo)
+  -> "A fábrica soterrada" -> a expedição acha o robô. Partida nova sem sorte; save antigo sem robô mantém a sorte.
+- Batedor (K, h/m, arte completa PixelLab): bate o mato (avista x3, toca rastreada x1,5) e lidera as expedições.
+- Expedições (janela ;, mapa da região novo): equipe 2-4, ração/kit, risco com partes, sai do mundo (sai_do_mundo), 1-2
+  decisões, relatório; 8 regiões em data/expedicoes/. Posto de expedição (Centro, estágio 3) = 2 ao mesmo tempo.
+- PixelLab: 201 gerações (saldo 6.141).
+
+## Bloco 103 — corpos de criatura, bestiário e reconhecimento dos andares (feito; enviado ao GitHub com o OK do Marco em 2026-10-08)
 
 Prompt S2 + acréscimo. Plano `docs/BLOCO103_PLANO.md` (com as decisões). Relatório `docs/BLOCO103_BESTIARIO.md`; fotos
 `docs/arte/bloco103/`.

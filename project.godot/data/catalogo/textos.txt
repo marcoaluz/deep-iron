@@ -173,3 +173,16 @@ nome = O Leste — a vila antiga
 texto = Do outro lado da floresta, uma vila de antes da explosão: igreja, torre do relógio e casas de enxaimel, tudo
   vazio. Tem ferro, cobre, carvão e prata no chão.
 uso = Mais jazidas e mais árvores, longe do portão.
+
+# Bloco 104: as 3 ESCUTAS da cadeia do robô (categoria "pista": não aparecem nas abas; a pesquisadora anota em cada uma)
+[escuta_portao]
+nome = Escuta no portão
+texto = Com o fone no ouvido, o sinal vem de baixo e do leste.
+
+[escuta_pedreira]
+nome = Escuta no alto da pedreira
+texto = Lá de cima, o sinal some quando ela vira pro céu e volta quando vira pro chão.
+
+[escuta_poco]
+nome = Escuta na boca do poço
+texto = Na boca do poço o chiado fica forte, e as linhas das três escutas se cruzam embaixo da mina.

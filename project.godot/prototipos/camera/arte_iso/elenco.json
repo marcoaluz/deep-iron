@@ -382,5 +382,21 @@
   "char": "e7ad4941-8034-4c9e-87d1-02293c6b182a",
   "estado": "pronto",
   "_obs": "Bloco 94"
+ },
+ "batedor": {
+  "genero": "h",
+  "job": "b645648b-1d73-468e-aa5d-957037056ceb",
+  "escolhido": 0,
+  "char": "61778c87-4aa8-4360-9c62-3d37233c9d6f",
+  "estado": "pronto",
+  "_obs": "Bloco 92"
+ },
+ "batedora": {
+  "genero": "m",
+  "job": "e75e3fbc-b090-4887-83fa-ba755b0163de",
+  "escolhido": 6,
+  "char": "32e1ea1f-3ba4-4ef1-bc08-da64fc0196fe",
+  "estado": "pronto",
+  "_obs": "Bloco 92"
  }
 }

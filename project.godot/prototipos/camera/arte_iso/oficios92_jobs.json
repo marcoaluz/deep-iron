@@ -110,5 +110,40 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_it_picareta_de_aco.png",
   "ok": true,
   "candidatos": 64
+ },
+ "batedor": {
+  "job": "b645648b-1d73-468e-aa5d-957037056ceb",
+  "custo": 15,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\batedor\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "batedora": {
+  "job": "e75e3fbc-b090-4887-83fa-ba755b0163de",
+  "custo": 15,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\batedora\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "icone_batedor": {
+  "job": "ec9fcac1-4dda-4183-9b6d-091f900edfac",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_batedor.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_expedicao": {
+  "job": "82c7244d-402f-4563-b6fd-52337278a7f6",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_expedicao.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_it_antena": {
+  "job": "46c4d670-a2fd-4870-8189-8bf5489d2d78",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_it_antena.png",
+  "ok": true,
+  "candidatos": 64
  }
 }

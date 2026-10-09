@@ -22,7 +22,7 @@ const ObraSite := preload("res://scripts/core/obra_site.gd")
 const ProductionQueue := preload("res://scripts/core/production_queue.gd")  # Bloco 87
 const Items := preload("res://scripts/core/items.gd")
 const Tipo := preload("res://scripts/ui/tipografia.gd")
-const TOOL_IDS := ["picareta_aco", "lampiao", "broca", "traje", "arco", "picareta_de_aco"]
+const TOOL_IDS := ["picareta_aco", "lampiao", "broca", "traje", "arco", "picareta_de_aco", "antena"]
 const TOOL_NAMES := {
 	"picareta_aco": "Picareta temperada",  # Bloco 94: o nome mudou (o id ficou: saves e testes)
 	"lampiao": "Lampião de segurança",
@@ -30,6 +30,7 @@ const TOOL_NAMES := {
 	"traje": "Traje de chumbo",
 	"arco": "Arco e flecha",
 	"picareta_de_aco": "Picareta de aço",  # Bloco 94
+	"antena": "Antena improvisada",  # Bloco 104: capta o sinal do robô sem o Rádio
 }
 const TOOL_DESCRIPTIONS := {
 	"picareta_aco": "Ferro temperado, duro o bastante pra quebrar os veios de cobre.",
@@ -38,9 +39,10 @@ const TOOL_DESCRIPTIONS := {
 	"traje": "Protege do calor e da energia da solarita, lá no abismo (nível 3).",
 	"arco": "Deixa o caçador caçar os coelhos das tocas da clareira: rende mais que fruta por viagem.",
 	"picareta_de_aco": "Aço de verdade, da Fundição: cada golpe arranca mais minério (todos os mineradores).",
+	"antena": "Fio de cobre enrolado num mastro e duas peças raras de antes: capta o sinal fraco que vem do fundo, mesmo sem o Rádio.",
 }
 ## O que libera cada ferramenta que NÃO é de minério (texto do painel e do aviso de pronta).
-const TOOL_UNLOCK_LABELS := {"arco": "caça de animais", "picareta_de_aco": "mais minério por golpe"}
+const TOOL_UNLOCK_LABELS := {"arco": "caça de animais", "picareta_de_aco": "mais minério por golpe", "antena": "o sinal do robô antigo"}
 ## Tipo de minério que cada ferramenta libera (as que liberam outra coisa ficam de fora).
 const TOOL_UNLOCKS := {
 	"picareta_aco": "cobre",
@@ -61,15 +63,16 @@ const TOOL_UNLOCKS_EXTRA := {"cristal_verde": "broca", "cristal_rubro": "traje"}
 	Vector3i(1400, 120, 75),  # traje de chumbo
 	Vector3i(180, 40, 25),  # arco e flecha (Bloco 27)
 	Vector3i(400, 0, 40),  # picareta de aço (Bloco 94: o metal é o aço, em tool_itens)
+	Vector3i(150, 30, 25),  # antena improvisada (Bloco 104: cobre + 2 peças raras, em tool_itens)
 ]
 ## Tipo do minério gasto em cada ferramenta.
-@export var tool_ore_types: Array[String] = ["ferro", "cobre", "carvao", "prata", "ferro", "ferro"]
+@export var tool_ore_types: Array[String] = ["ferro", "cobre", "carvao", "prata", "ferro", "ferro", "cobre"]
 ## Madeira gasta em cada ferramenta (cabo/estrutura) — referência: 1 madeira pra 5 minério.
-@export var tool_wood_costs: Array[int] = [30, 25, 40, 30, 35, 20]
+@export var tool_wood_costs: Array[int] = [30, 25, 40, 30, 35, 20, 10]
 ## Estágio mínimo da vila (Centro da Vila) pra fabricar cada ferramenta.
-@export var tool_min_stage: Array[int] = [1, 2, 4, 4, 1, 3]
+@export var tool_min_stage: Array[int] = [1, 2, 4, 4, 1, 3, 2]
 ## Bloco 94: itens a mais de cada ferramenta (id -> {item: qtd}). A picareta de aço leva aço da Fundição.
-@export var tool_itens: Dictionary = {"picareta_de_aco": {"aco": 12}}
+@export var tool_itens: Dictionary = {"picareta_de_aco": {"aco": 12}, "antena": {"pecas_raras": 2}}
 ## Bloco 94: minério por golpe com a picareta de aço (1.25 = +25%), pra todos os mineradores.
 @export var picareta_aco_mult: float = 1.25
 
@@ -396,6 +399,10 @@ func tool_block_reason(id: String) -> String:
 		return "fabricando"
 	if crafting != "":
 		return "forja ocupada"
+	if id == "antena":  # Bloco 104: só serve depois da pista do Ferrugento (e não precisa com o Rádio)
+		var ex := get_tree().get_first_node_in_group("expedicoes")
+		if ex and int(ex.cadeia) < 1:
+			return "estude o corpo de um Ferrugento primeiro"
 	var hub := get_tree().get_first_node_in_group("village_hub")
 	if hub and hub.level < tool_stage(id):
 		return "requer vila nível %d" % tool_stage(id)

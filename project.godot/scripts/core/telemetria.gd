@@ -9,7 +9,8 @@ const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre"
 	"invasao_ativa", "pesquisas", "greve", "estagio_vila", "tier", "ultima_onda_total", "ultima_onda_derrubadas", "chefe",
 	"cristal_verde", "cristal_rubro", "queimaduras_acido", "queimaduras_lava", "ventiladores", "gema_azul",  # (Bloco 70: no fim)
 	"obras_prontas_dia", "obra_tempo_medio_s",  # Bloco 96: obras terminadas no dia e o tempo médio (s de jogo) encomenda -> pronto
-	"minerio_entrou_dia", "minerio_vagonete_dia", "mineiros_dentro"]  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
+	"minerio_entrou_dia", "minerio_vagonete_dia", "mineiros_dentro",
+	"expedicoes_fora", "gente_fora", "expedicoes_voltaram", "achados_expedicao", "feridos_expedicao"]  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
 
 var arquivo := ""
 var _t0 := 0
@@ -129,6 +130,8 @@ func registra() -> void:
 		fundo.ventiladores().size() if fundo else 0, int(stock.get("gema_azul", 0))]
 	v.append_array(obras_do_dia())  # Bloco 96
 	v.append_array(minerio_do_dia())  # Bloco 99
+	var ex := get_tree().get_first_node_in_group("expedicoes")  # Bloco 104
+	v.append_array([ex.em_curso.size(), ex.fora_agora().size(), ex.total_voltaram, ex.total_achados, ex.total_feridos] if ex else [0, 0, 0, 0, 0])
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return

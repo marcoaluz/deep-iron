@@ -41,7 +41,7 @@ const ARQ_TEXTOS := "res://data/catalogo/textos.txt"
 const CATEGORIAS := ["minerio", "animal", "criatura", "local"]
 const NOMES_CATEGORIA := {"minerio": "Minerais", "animal": "Animais", "criatura": "Criaturas", "local": "Locais"}
 ## A pesquisadora prefere, nesta ordem (depois pela distância): minério, local, animal, criatura.
-const PRIORIDADE := {"minerio": 0, "local": 1, "animal": 2, "criatura": 3}
+const PRIORIDADE := {"minerio": 0, "pista": 1, "local": 1, "animal": 2, "criatura": 3}  # (Bloco 104: as escutas do robô)
 const DESCONHECIDO := 0
 const AVISTADO := 1
 const ESTUDADO := 2
@@ -414,8 +414,11 @@ func _confere() -> void:
 
 
 func _alguem_perto(pos: Vector2, gente: Array) -> bool:
+	var ex := get_tree().get_first_node_in_group("expedicoes")
+	var mult: float = float(ex.batedor_alcance_mult) if ex else 1.0
 	for w in gente:
-		if (w as Node2D).global_position.distance_to(pos) <= alcance_avistar:
+		var alc := alcance_avistar * (mult if w.has_method("is_scout") and w.is_scout() else 1.0)  # Bloco 104: o batedor vê longe
+		if (w as Node2D).global_position.distance_to(pos) <= alc:
 			return true
 	return false
 
@@ -486,6 +489,12 @@ func _alvo_de(id: String, w: Node) -> Dictionary:
 					var pos := _chao(Vector2(float(p[0]) + dx, float(p[1])))
 					if not perigoso(pos, w) and (env == null or env.level_at(pos) == env.level_at(Vector2(float(p[0]), float(p[1])))):
 						return {"id": id, "pos": pos, "lab": false}
+		"pista":  # Bloco 104: as escutas da cadeia do robô (o ponto vem da expedicoes.gd)
+			var ex := get_tree().get_first_node_in_group("expedicoes")
+			if ex:
+				var pos := _chao(ex.ponto_escuta(String(e.alvo)))
+				if not perigoso(pos, w):
+					return {"id": id, "pos": pos, "lab": false}
 		"criatura":  # Bloco 103: estuda NO CORPO (o mais perto), não mais a amostra no laboratório
 			var melhor: Node2D = null
 			for c in get_tree().get_nodes_in_group("corpos_criatura"):

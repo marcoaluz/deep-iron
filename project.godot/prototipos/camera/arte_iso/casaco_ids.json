@@ -350,5 +350,33 @@
    "serrar"
   ],
   "_obs": "Bloco 92"
+ },
+ "casaco_batedor": {
+  "char": "4a587792-59d0-41f2-b365-30b8baa1d458",
+  "base": "batedor",
+  "trabalho": "bater",
+  "enviado": [
+   "caminhada",
+   "bater"
+  ],
+  "processado": [
+   "caminhada",
+   "bater"
+  ],
+  "_obs": "Bloco 92"
+ },
+ "casaco_batedora": {
+  "char": "b2d74e8c-7fc1-4bb1-9b14-180de694aac4",
+  "base": "batedora",
+  "trabalho": "bater",
+  "enviado": [
+   "caminhada",
+   "bater"
+  ],
+  "processado": [
+   "caminhada",
+   "bater"
+  ],
+  "_obs": "Bloco 92"
  }
 }

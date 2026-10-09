@@ -463,6 +463,10 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return _upgrade_cost_text(hub, "trilhas"),
 					"reason": func(): return hub.upgrade_block_reason("trilhas"),
 					"act": func(): hub.buy_upgrade("trilhas"), "label": "Melhorar", "tag": "melhoria"})
+				out.append({"name": "Posto de expedição", "img": _cartao("posto_expedicao"), "desc": "Duas expedições ao mesmo tempo (janela ;).",
+					"cost": func(): return _upgrade_cost_text(hub, "posto"),
+					"reason": func(): return hub.upgrade_block_reason("posto"),
+					"act": func(): hub.buy_upgrade("posto"), "label": "Construir", "tag": "melhoria"})  # Bloco 104
 			if sun:
 				out.append({"name": "Escudo solar", "img": _predio("escudo"),
 					"desc": "O projeto final: protege a vila do sol pra sempre.",
