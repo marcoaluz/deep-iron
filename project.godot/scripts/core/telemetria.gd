@@ -12,7 +12,8 @@ const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre"
 	"minerio_entrou_dia", "minerio_vagonete_dia", "mineiros_dentro",
 	"expedicoes_fora", "gente_fora", "expedicoes_voltaram", "achados_expedicao", "feridos_expedicao",
 	"maquinas_quebradas", "quebras_total", "preventivas", "consertos", "entregas_carregador",  # Bloco 105 (quebradas = agora; os outros: total da partida)
-	"compartimentos_cheios", "esperando_espaco"]  # Bloco 106: os compartimentos cheios em todos os armazéns (separados por "+") e quantos esperam espaço agora  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
+	"compartimentos_cheios", "esperando_espaco",
+	"hortas", "estufas", "colhido_horta", "colhido_estufa", "carvao_vegetal_feito", "couro_curtido_feito", "prato", "racoes"]  # Bloco 107 (os "feito/colhido": total da partida)  # Bloco 106: os compartimentos cheios em todos os armazéns (separados por "+") e quantos esperam espaço agora  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
 
 var arquivo := ""
 var _t0 := 0
@@ -141,6 +142,22 @@ func registra() -> void:
 	var eco6 := get_tree().get_first_node_in_group("economy")  # Bloco 106
 	v.append("+".join(eco6.categorias_cheias()) if eco6 and eco6.has_method("categorias_cheias") else "")
 	v.append(get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return w.get_state() == "esperando_espaco").size())
+	# Bloco 107: a horta, a estufa, as oficinas novas e o cardápio
+	var col_h := 0.0
+	var col_e := 0.0
+	for h in get_tree().get_nodes_in_group("hortas"):
+		col_h += float(h.total_colhido)
+	for h in get_tree().get_nodes_in_group("estufas"):
+		col_e += float(h.total_colhido)
+	var carv := 0.0
+	for o in get_tree().get_nodes_in_group("carvoarias"):
+		carv += float(o.produzido.get("carvao_vegetal", 0.0))
+	var curt := 0.0
+	for o in get_tree().get_nodes_in_group("curtumes"):
+		curt += float(o.produzido.get("couro_curtido", 0.0))
+	var coz := get_tree().get_first_node_in_group("comedouros")
+	v.append_array([get_tree().get_nodes_in_group("hortas").size(), get_tree().get_nodes_in_group("estufas").size(), int(col_h), int(col_e),
+		int(carv), int(curt), coz.prato if coz else "", int(eco6.quantidade("racao")) if eco6 else 0])
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return

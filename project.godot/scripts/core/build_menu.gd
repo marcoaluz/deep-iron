@@ -258,6 +258,19 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return hub.comedouro_cost_text(),
 					"reason": func(): return hub.comedouro_block_reason(),
 					"act": func(): hub.build_comedouro()})
+				# Bloco 107: horta e estufa, construídas DENTRO da vila (as imagens: o desenho da horta até a arte do PixelLab)
+				out.append({"name": "Horta", "img": _predio("horta"), "many": true, "scales": true,
+					"desc": "Fruta crua pra cozinha, dentro da vila. Quem colhe: o AGRICULTOR (sem agricultor, o caçador).",
+					"count": func(): return _count("hortas"),
+					"cost": func(): return hub.horta_cost_text(),
+					"reason": func(): return hub.horta_block_reason(),
+					"act": func(): hub.build_horta()})
+				out.append({"name": "Estufa", "img": _predio("estufa"), "many": true, "scales": true,
+					"desc": "Horta coberta, dentro da vila: no inverno rende bem mais que a horta aberta. Opera: o AGRICULTOR.",
+					"count": func(): return _count("estufas"),
+					"cost": func(): return hub.estufa_cost_text(),
+					"reason": func(): return hub.estufa_block_reason(),
+					"act": func(): hub.build_estufa()})
 		"Saúde":
 			if hub:
 				out.append({"name": "Ampliar Enfermaria", "img": _predio("enfermaria"),
@@ -380,6 +393,18 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return hub.carpintaria_cost_text(),
 					"reason": func(): return hub.carpintaria_block_reason(),
 					"act": func(): hub.build_carpintaria()})
+				out.append({"name": "Carvoaria", "img": _predio("fornalha"), "many": true, "scales": true,  # Bloco 107
+					"desc": "Madeira vira carvão vegetal, que a Fornalha gasta antes do carvão de mina — só por ordem, com quantidade. Opera: o LENHADOR.",
+					"count": func(): return _count("carvoarias"),
+					"cost": func(): return hub.carvoaria_cost_text(),
+					"reason": func(): return hub.carvoaria_block_reason(),
+					"act": func(): hub.build_carvoaria()})
+				out.append({"name": "Curtume", "img": _predio("carpintaria"), "many": true, "scales": true,  # Bloco 107
+					"desc": "Couro cru vira couro curtido; com um curtume, botas, mochila e trajes pedem o curtido — só por ordem. Opera: o CAÇADOR.",
+					"count": func(): return _count("curtumes"),
+					"cost": func(): return hub.curtume_cost_text(),
+					"reason": func(): return hub.curtume_block_reason(),
+					"act": func(): hub.build_curtume()})
 		"Decoração":  # Bloco 90: peças instantâneas (sem engenheiro), várias em sequência
 			var dm := _g("decoracoes_mgr")
 			if dm:

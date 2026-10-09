@@ -289,6 +289,8 @@ func religar(w: Node, id: int) -> void:
 ##   - da área dele (do tipo do grupo): só dentro do retângulo, e só com a área liberada (mina ligada);
 ##   - fora disso: não usa o que está dentro de área nenhuma que seja desse recurso.
 func pode_usar(w: Node, p: Vector2, grupo: String) -> bool:
+	if grupo == "coleta_comida" and w.has_method("is_farmer") and w.is_farmer():
+		return true  # Bloco 107: a horta e a estufa são do agricultor, esteja ou não dentro de uma área de alimentos
 	var minha = w.get("work_area")
 	if minha != null and grupo in minha.grupos():
 		return minha.contem(p) and minha.liberada()

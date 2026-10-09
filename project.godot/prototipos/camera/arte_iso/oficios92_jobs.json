@@ -152,5 +152,12 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\carregador\\candidatos.png",
   "ok": true,
   "candidatos": 16
+ },
+ "agricultor": {
+  "job": "794a55af-ebc6-4c57-9293-3f51a8835551",
+  "custo": 15,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\agricultor\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
  }
 }

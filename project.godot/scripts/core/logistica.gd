@@ -55,7 +55,7 @@ func entregas_abertas() -> Array:
 			if os.a_buscar(k) >= 0.5 and not eco.armazens_com(k, (site as Node2D).global_position).is_empty():
 				out.append({"tipo": "obra", "alvo": site, "chave": chave("obra", site), "ordem": float(site.obra_ordered_at())})
 				break
-	for grupo in ["fornalhas", "carpintarias"]:
+	for grupo in ["fornalhas", "carpintarias", "carvoarias", "curtumes"]:
 		for f in get_tree().get_nodes_in_group(grupo):
 			if f.get("fila") == null:
 				continue

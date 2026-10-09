@@ -25,6 +25,7 @@ const PADRAO := {
 	# Bloco 105: as teclas FÍSICAS que escrevem "[" e "]" no teclado ABNT2 (o do desenvolvimento, layout 0416). No
 	# americano são o "]" e o "\" (a tecla do lado); a tela mostra o rótulo do teclado de quem joga (nome_tecla).
 	# (A física KEY_BRACKETLEFT, no ABNT2, é o acento agudo: tecla morta, não serve.)
+	"agricultor": [KEY_MINUS],  # Bloco 107 (a tecla física do "-"; no ABNT2 e no americano é a mesma)
 	"carregador": [KEY_BRACKETRIGHT],
 	"mecanico": [KEY_BACKSLASH],
 	"pessoas": [KEY_TAB],  # Bloco 95: a lista de pessoas (aba fina da esquerda); o "próximo" foi pro ponto
@@ -41,7 +42,7 @@ const NOMES := [
 	["medico", "Função: médico"], ["engenheiro", "Função: engenheiro"], ["cozinheiro", "Função: cozinheiro"],
 	["lenhador", "Função: lenhador"], ["guarda", "Função: guarda"], ["pesquisador", "Função: pesquisador"],
 	["fundidor", "Função: fundidor"], ["ferreiro", "Função: ferreiro"], ["padre", "Função: padre (só um)"], ["carpinteiro", "Função: carpinteiro"],
-	["batedor", "Função: batedor"], ["carregador", "Função: carregador"], ["mecanico", "Função: mecânico"],
+	["batedor", "Função: batedor"], ["agricultor", "Função: agricultor"], ["carregador", "Função: carregador"], ["mecanico", "Função: mecânico"],
 	["sem_funcao", "Tirar a função"], ["turno_extra", "Turno extra"], ["vender", "Vender minério"],
 	["pessoas", "Lista de pessoas (abre/fecha)"], ["proximo", "Próximo ipezinho"], ["seguir", "Câmera segue"], ["pausa", "Pausa"], ["dicas", "Atalhos (ajuda)"],
 	["musica", "Música liga/desliga"], ["painel_hub", "Centro da Vila"], ["painel_escavadeira", "Escavadeira"],

@@ -307,6 +307,14 @@ func build_time(id: String) -> float:
 	return suit_time[SUITS.find(id)]
 
 
+## Bloco 107: o couro que a peça pede — COM um curtume na vila, botas e trajes pedem couro CURTIDO; o casaco fica no cru; sem
+## curtume, cru como sempre.
+func couro_de(id: String) -> String:
+	if id != "casaco" and not get_tree().get_nodes_in_group("curtumes").is_empty():
+		return "couro_curtido"
+	return "couro"
+
+
 func cost_text(c: Vector4i, id: String) -> String:
 	var bits: Array[String] = []
 	if c.x > 0:
@@ -316,7 +324,7 @@ func cost_text(c: Vector4i, id: String) -> String:
 	if c.z > 0:
 		bits.append("%d madeira" % c.z)
 	if c.w > 0:
-		bits.append("%d couro" % c.w)
+		bits.append("%d %s" % [c.w, "couro curtido" if couro_de(id) == "couro_curtido" else "couro"])
 	var eco := get_tree().get_first_node_in_group("economy")
 	var it: String = eco.itens_texto(itens_extra(id, c != cost(id))) if eco else ""
 	if it != "":
@@ -324,7 +332,10 @@ func cost_text(c: Vector4i, id: String) -> String:
 	return " + ".join(bits)
 
 
-func leather_stored() -> float:
+func leather_stored(id := "casaco") -> float:
+	if couro_de(id) == "couro_curtido":  # Bloco 107
+		var eco0 := get_tree().get_first_node_in_group("economy")
+		return eco0.livre("couro_curtido") if eco0 else 0.0
 	var n := 0.0
 	for a in get_tree().get_nodes_in_group("armazens"):
 		n += a.get("leather_stored") if a.get("leather_stored") != null else 0.0
@@ -336,8 +347,8 @@ func _missing(c: Vector4i, id: String) -> String:
 	if eco == null:
 		return "sem recursos"
 	var m: String = eco.missing_text(c.x, c.y, ore_type(id), c.z)
-	if leather_stored() < c.w:
-		var lt := "%d couro (caçador com arco)" % ceili(c.w - leather_stored())
+	if leather_stored(id) < c.w:
+		var lt := ("%d couro curtido (curtume)" if couro_de(id) == "couro_curtido" else "%d couro (caçador com arco)") % ceili(c.w - leather_stored(id))
 		m = (m + ", " + lt) if m != "" else "falta " + lt
 	var it: String = eco.itens_falta(itens_extra(id, c != cost(id)))  # Bloco 94: os pregos das botas
 	if it != "":
@@ -352,6 +363,9 @@ func _pay(c: Vector4i, id: String) -> bool:
 	if not eco.spend(c.x, c.y, ore_type(id), c.z):
 		return false
 	eco.paga_itens(itens_extra(id, c != cost(id)))  # Bloco 94
+	if couro_de(id) == "couro_curtido":  # Bloco 107
+		eco.tira("couro_curtido", float(c.w))
+		return true
 	var left := float(c.w)
 	for a in get_tree().get_nodes_in_group("armazens"):
 		var got := minf(left, a.leather_stored)

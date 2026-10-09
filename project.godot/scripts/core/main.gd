@@ -225,6 +225,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				_hud.toggle_panel("expedicoes")  # Bloco 104
 			"batedor":
 				toggle_scout()  # Bloco 104
+			"agricultor":
+				toggle_farmer()  # Bloco 107
 			"carregador":
 				toggle_carrier()  # Bloco 105
 			"mecanico":
@@ -581,6 +583,11 @@ func toggle_smith() -> void:
 ## K / botão do HUD: batedor (homem ou mulher; ou tira, se todos já forem) — Bloco 104.
 func toggle_scout() -> void:
 	toggle_job(Worker.ROLE_SCOUT, "Batedor", Color(0.7, 0.88, 0.55))
+
+
+## - / botão do HUD: agricultor (homem ou mulher; ou tira, se todos já forem) — Bloco 107.
+func toggle_farmer() -> void:
+	toggle_job(Worker.ROLE_FARMER, "Agricultor", Color(0.62, 0.82, 0.4))
 
 
 ## [ / botão do HUD: carregador (ou tira, se todos já forem) — Bloco 105.

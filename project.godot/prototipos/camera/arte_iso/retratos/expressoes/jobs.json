@@ -540,30 +540,50 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\batedora\\ferido.png"
  },
  "carregador_contente": {
-  "job": "ea69f1bc-604d-42ac-a7a2-82e5081c5a83",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregador\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregador\\contente.png"
  },
  "carregador_cansado": {
-  "job": "e5793cb2-10cd-4901-9164-fcdd8f6bd00d",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregador\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregador\\cansado.png"
  },
  "carregador_bravo": {
-  "job": "0e47a21e-ca3c-4df4-a54c-bbb851c62dbf",
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregador\\bravo.png"
+ },
+ "carregador_ferido": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregador\\ferido.png"
+ },
+ "agricultor_contente": {
+  "job": "62a639d4-2376-4acc-8108-e8b4bed13320",
   "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregador\\bravo.png",
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultor\\contente.png",
   "ok": true,
   "candidatos": 1
  },
- "carregador_ferido": {
-  "job": "199a4a36-b93b-4bbd-80ab-71faa38a6561",
+ "agricultor_cansado": {
+  "job": "c4be7895-4e24-498a-a7aa-a79e5f4bd90c",
   "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregador\\ferido.png",
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultor\\cansado.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "agricultor_bravo": {
+  "job": "0ed6af04-10d7-467b-87a6-9ab947e9f8ad",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultor\\bravo.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "agricultor_ferido": {
+  "job": "bdc47146-d9a2-48f3-82fe-569df02e785c",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultor\\ferido.png",
   "ok": true,
   "candidatos": 1
  }

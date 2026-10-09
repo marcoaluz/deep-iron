@@ -1,11 +1,33 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-09. Branch `isometrico`. Tudo até o Bloco 104 **foi enviado** pro GitHub (push com o OK do Marco); os Blocos 105 e 106 estão só no commit local. Push só com o OK dele.
+Atualizado em 2026-10-09. Branch `isometrico`. Tudo até o Bloco 104 **foi enviado** pro GitHub (push com o OK do Marco); os Blocos 105, 106 e 107 estão só no commit local. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
-## AGORA (2026-10-09): Bloco 106 — coleta, armazém por compartimento e ociosidade (feito; commit local; o Marco revisa)
+## AGORA (2026-10-09): Bloco 107 — agricultor, estufa, carvoaria, curtume e cardápio (feito; commit local; ESPERANDO o Marco: arte)
+
+Prompt W2. Plano `docs/BLOCO107_PLANO.md` (aprovado). Relatório `docs/BLOCO107_AGRICULTOR_OFICINAS.md`; fotos `docs/arte/bloco107/`.
+- Horta e estufa são construção DENTRO da vila (a horta da clareira sai na partida nova; save antigo mantém). Agricultor (tecla
+  `-`): colhe; com ele o caçador só caça (sem ele, o caçador colhe). Estufa (estágio 2): rende mais no inverno. O Marco quer a
+  estufa como construção de VIDRO de verdade (arte pendente; hoje usa o desenho da horta).
+- Carvoaria (lenhador) e Curtume (caçador): oficinas de ordens (herdam da Fornalha), um operador por vez; carvão vegetal vale
+  como o mineral (vegetal primeiro); com curtume, botas/mochila/trajes pedem couro curtido.
+- Cozinha (clique): prato da semana (comum/ensopado) e ORDEM de ração (item `racao`; a expedição gasta a pronta primeiro).
+- PENDENTE com o Marco: aprovar o PILOTO do agricultor (78 gerações; defeito: brotos no chão e a cabeça escura de costas no
+  "colher"); depois a agricultora, a estufa de vidro, carvoaria, curtume, a ruína do vagonete (Bloco 106), as animações novas
+  do lenhador/caçador e os ícones (~570 gerações previstas; saldo 5.985).
+- Provisórios: roupa de civil pro agricultor, desenhos da fornalha/carpintaria/horta nas estruturas novas, ícones existentes.
+
+### Orçamento do PixelLab (Bloco 107)
+| | Gerações | Tipo |
+|---|---|---|
+| Saldo inicial | 6.063 | confirmado |
+| Gasto (o agricultor completo) | 78 | real |
+| Saldo restante | 5.985 | confirmado |
+| Próximos (agricultora, 3 estruturas, animações, ruína do vagonete, ícones) | ~570 | estimado |
+
+## Bloco 106 — coleta, armazém por compartimento e ociosidade (feito; commit local; o Marco revisa)
 
 Prompt URGENTE (balanceamento da coleta). O Marco autorizou fazer as etapas A e B seguidas ("pode aplicar e depois so me
 documenta"). Relatório `docs/BLOCO106_COLETA_ARMAZEM.md`; telemetria `docs/telemetria/bloco106/` (antes/depois, medida com

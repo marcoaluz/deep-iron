@@ -406,5 +406,13 @@
   "char": "b1e63e4b-1eff-4f48-bdcb-88f50fc14150",
   "estado": "pronto",
   "_obs": "Bloco 92"
+ },
+ "agricultor": {
+  "genero": "h",
+  "job": "794a55af-ebc6-4c57-9293-3f51a8835551",
+  "escolhido": 10,
+  "char": "5e8a81cc-417d-4e70-b4cf-02b756611cc2",
+  "estado": "pronto",
+  "_obs": "Bloco 92"
  }
 }

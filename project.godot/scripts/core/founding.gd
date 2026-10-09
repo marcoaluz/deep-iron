@@ -58,6 +58,8 @@ func start(fresh: bool = true) -> void:
 				_remove(casa)
 		for c in get_tree().get_nodes_in_group("comedouros"):
 			_remove(c)
+		for h in get_tree().get_nodes_in_group("hortas") + get_tree().get_nodes_in_group("estufas"):
+			_remove(h)  # Bloco 107: a horta da clareira sai: o jogador constrói a dele DENTRO da vila (o pacote paga)
 		hub.starter_houses_left = hub.starter_houses
 	var env := get_tree().get_first_node_in_group("environment")
 	if env:
@@ -184,7 +186,7 @@ func _finish() -> void:
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
 		hud.show_banner("VILA FUNDADA!",
-			"Você tem recurso pra %d casas e 1 cozinha. Faça um engenheiro (tecla 4) e construa pelo Centro da Vila (U)." % hub.starter_houses_left)
+			"Você tem recurso pra %d casas, 1 cozinha e 1 horta. Faça um engenheiro (tecla 4) e construa pelo menu CONSTRUIR (espaço)." % hub.starter_houses_left)
 	done.emit()
 
 

@@ -220,6 +220,28 @@ func racao_total(n: int, dias: float) -> float:
 	return racao_porcoes_dia * porcao * n * dias
 
 
+## Bloco 107: as rações PRONTAS (item "racao", feitas na cozinha por ordem) e a comida que elas cobrem: 1 ração = 1 pessoa por
+## 1 dia = `racao_porcoes_dia` porções.
+func racoes_prontas() -> float:
+	var eco := get_tree().get_first_node_in_group("economy")
+	return eco.quantidade("racao") if eco else 0.0
+
+
+func comida_por_racao() -> float:
+	var s := get_tree().get_first_node_in_group("schedule")
+	return racao_porcoes_dia * (float(s.porcao) if s else 8.0)
+
+
+## Quantas rações prontas essa equipe gasta (as que existem, até o necessário).
+func racoes_a_gastar(n: int, dias: float) -> int:
+	return mini(int(floor(racoes_prontas())), ceili(float(n) * dias))
+
+
+## A comida que ainda faltaria tirar da cozinha depois das rações prontas.
+func comida_a_tirar(n: int, dias: float) -> float:
+	return maxf(racao_total(n, dias) - float(racoes_a_gastar(n, dias)) * comida_por_racao(), 0.0)
+
+
 func comida_na_cozinha() -> float:
 	var t := 0.0
 	for c in get_tree().get_nodes_in_group("comedouros"):
@@ -296,8 +318,8 @@ func motivo(id: String, equipe: Array, racao: bool, kit: bool, dias: int) -> Str
 	var dn := get_tree().get_first_node_in_group("day_night")
 	if dn and (dn.is_night() or float(dn.hora()) >= hora_saida_max or float(dn.hora()) < float(dn.hora_amanhecer)):
 		return "só sai de dia (até as %02d:00)" % int(hora_saida_max)
-	if racao and comida_na_cozinha() < racao_total(equipe.size(), dias):
-		return "falta comida pra ração (%d na cozinha, precisa de %d)" % [int(comida_na_cozinha()), int(racao_total(equipe.size(), dias))]
+	if racao and comida_na_cozinha() < comida_a_tirar(equipe.size(), dias):  # Bloco 107: as rações prontas contam primeiro
+		return "falta comida pra ração (%d na cozinha, precisa de %d; %d rações prontas)" % [int(comida_na_cozinha()), int(comida_a_tirar(equipe.size(), dias)), int(racoes_prontas())]
 	if kit:
 		var eco := get_tree().get_first_node_in_group("economy")
 		var falta: String = eco.missing_text(0, kit_ferro, "ferro", kit_madeira) if eco else ""
@@ -312,7 +334,11 @@ func parte(id: String, equipe: Array, racao: bool, kit: bool, dias: int) -> bool
 		return false
 	var dn := get_tree().get_first_node_in_group("day_night")
 	if racao:
-		var falta := racao_total(equipe.size(), dias)
+		var eco_r := get_tree().get_first_node_in_group("economy")
+		var n_prontas := racoes_a_gastar(equipe.size(), dias)  # Bloco 107: gasta as rações prontas primeiro
+		var falta := comida_a_tirar(equipe.size(), dias)
+		if n_prontas > 0 and eco_r:
+			eco_r.tira("racao", float(n_prontas))
 		for c in get_tree().get_nodes_in_group("comedouros"):
 			var tira := minf(float(c.food_stock), falta)
 			c.food_stock = float(c.food_stock) - tira

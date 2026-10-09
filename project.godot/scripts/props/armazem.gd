@@ -132,10 +132,18 @@ func _process(delta: float) -> void:
 			raw_moved = true
 			continue
 		if body.has_method("na_armazem_fundidor") and body.get_state() == "buscando_insumo":
-			var barras: float = body._material_qtd(body.barras_mao) if body.has_method("_material_qtd") else 0.0
-			if barras <= cabe_cat.minerios:  # Bloco 97: cheio, o fundidor espera com as barras
+			var por_cat := {}  # Bloco 107: cada item no compartimento dele (barra: minérios; carvão vegetal: madeira; curtido: manufaturados)
+			for item in body.barras_mao:
+				var cat_i := categoria_de(item)
+				por_cat[cat_i] = float(por_cat.get(cat_i, 0.0)) + float(body.barras_mao[item])
+			var cabe_tudo := true
+			for cat_i in por_cat:
+				if float(por_cat[cat_i]) > float(cabe_cat[cat_i]):
+					cabe_tudo = false  # Bloco 97: cheio, quem leva espera com a carga
+			if cabe_tudo:
 				body.na_armazem_fundidor(self)  # Bloco 86: larga as barras e pega os insumos da próxima leva
-				cabe_cat.minerios -= barras
+				for cat_i in por_cat:
+					cabe_cat[cat_i] -= float(por_cat[cat_i])
 			continue
 		if body.has_method("receive_raw") and body.get_state() == "fetching":
 			raw_stored -= body.receive_raw(minf(DEPOSIT_RATE * delta, raw_stored))

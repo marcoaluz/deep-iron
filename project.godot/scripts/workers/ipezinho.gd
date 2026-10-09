@@ -15,6 +15,8 @@ const STATE_LABELS := {
 	"buscando_insumo": "indo ao armazém (insumos)",  # Bloco 86
 	"fundindo": "fundindo",
 	"serrando": "serrando",  # Bloco 94
+	"carvoejando": "carvoejando",  # Bloco 107
+	"curtindo": "curtindo couro",  # Bloco 107
 	"montando_cama": "montando uma cama",
 	"idle": "ocioso",
 	"eating": "comendo",
@@ -99,6 +101,7 @@ const OUTFIT_FILES := {
 	"batedor": "res://assets/game/ipezinho_cacador_%s%d.png",  # Bloco 104 (na vista iso: a arte do PixelLab, oficios104.py)
 	"carregador": "res://assets/game/ipezinho_civil_%s%d.png",  # Bloco 105 (na vista iso: a arte do PixelLab, oficios105.py)
 	"mecanico": "res://assets/game/ipezinho_engenheiro_%s%d.png",
+	"agricultor": "res://assets/game/ipezinho_civil_%s%d.png",  # Bloco 107 (na vista iso: a arte do PixelLab, oficios107.py)
 }
 ## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
 const OUTFITS_WITH_LAMP := ["mineiro"]
@@ -127,6 +130,8 @@ const STATE_GROUP := {
 	"buscando_insumo": "armazens",  # Bloco 86: fundidor largando barras / pegando insumos
 	"fundindo": "fornalhas",  # Bloco 86: fundidor na fornalha
 	"serrando": "carpintarias",  # Bloco 94: carpinteiro na carpintaria
+	"carvoejando": "carvoarias",  # Bloco 107: lenhador na carvoaria
+	"curtindo": "curtumes",  # Bloco 107: caçador no curtume
 }
 ## Função (job) designada pelo jogador — Bloco 25: um campo só, com "ocioso" de padrão.
 ## Função nova (caçador, engenheiro...) = mais uma constante aqui + entrada em JOBS/JOB_LABELS
@@ -147,7 +152,8 @@ const ROLE_CARPENTER := "carpinteiro"  # Bloco 94: opera a Carpintaria (só por 
 const ROLE_SCOUT := "batedor"  # Bloco 104: bate o mato (avista de longe, rastreia tocas) e lidera as expedições
 const ROLE_CARRIER := "carregador"  # Bloco 105: leva o material do armazém pras obras, a fornalha e a cozinha (logistica.gd)
 const ROLE_MECHANIC := "mecânico"  # Bloco 105: consertos e manutenção das máquinas (manutencao.gd)
-const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER, ROLE_SMITH, ROLE_PRIEST, ROLE_CARPENTER, ROLE_SCOUT, ROLE_CARRIER, ROLE_MECHANIC]
+const ROLE_FARMER := "agricultor"  # Bloco 107: colhe a horta e a estufa (dentro da vila); com ele, o caçador só caça
+const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER, ROLE_SMITH, ROLE_PRIEST, ROLE_CARPENTER, ROLE_SCOUT, ROLE_CARRIER, ROLE_MECHANIC, ROLE_FARMER]
 ## Texto do popup ao receber a função.
 const JOB_LABELS := {
 	ROLE_IDLE: "Sem função", ROLE_MINER: "Minerador!", ROLE_COOK: "Cozinheiro!",
@@ -157,6 +163,7 @@ const JOB_LABELS := {
 	ROLE_SCOUT: "Batedor!",  # Bloco 104
 	ROLE_CARRIER: "Carregador!",  # Bloco 105
 	ROLE_MECHANIC: "Mecânico!",
+	ROLE_FARMER: "Agricultor!",  # Bloco 107
 }
 ## Bloco 26/28: outfit inteiro por função (derivado do `job`: nada novo no save).
 ## REGRA (Bloco 28): toda função nova nasce com outfit próprio no mesmo bloco —
@@ -173,6 +180,7 @@ const JOB_OUTFIT := {
 	ROLE_SCOUT: "batedor",  # Bloco 104: a arte do PixelLab (oficios104.py)
 	ROLE_CARRIER: "carregador",  # Bloco 105: a arte do PixelLab (oficios105.py)
 	ROLE_MECHANIC: "mecanico",
+	ROLE_FARMER: "agricultor",  # Bloco 107: a arte do PixelLab (oficios107.py)
 }
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
@@ -318,6 +326,8 @@ const Tipo := preload("res://scripts/ui/tipografia.gd")
 ## Ânimo que a pesquisadora ganha a cada descoberta (estudo do catálogo) e quanto disso some por segundo.
 @export var animo_descoberta_ganho: float = 12.0
 @export var animo_descoberta_decai: float = 0.02
+## Bloco 107: o ânimo do ENSOPADO (a cozinha soma a cada prato; some devagar, por segundo).
+@export var animo_prato_decai: float = 0.01
 ## Cada descoberta (xp_pesquisa) deixa o estudo de campo esta fração mais rápido, até o máximo.
 @export var xp_pesquisa_bonus: float = 0.1
 @export var xp_pesquisa_max: float = 0.5
@@ -571,6 +581,10 @@ var _campo := {}
 ## Bloco 103: descobertas feitas (cada uma deixa o estudo mais rápido) e o ânimo da última (vai sumindo).
 var xp_pesquisa := 0
 var animo_descoberta := 0.0
+## Bloco 107: o ânimo de ter comido ensopado (a cozinha soma; decai sozinho).
+var animo_prato := 0.0
+## Bloco 107: o cozinheiro prepara a leva x isto mais devagar (o ensopado / a ração; a cozinha põe a cada quadro).
+var prep_mult := 1.0
 
 ## Bloco 104: EXPEDIÇÃO (expedicoes.gd). _expedicao_saida = andando até a saída; fora = fora do mundo (escondido, fora do
 ## grupo da vila: não come, não trabalha, não conta; a cama fica); nasce_fora = recriado do save já fora.
@@ -801,6 +815,8 @@ func get_state_label() -> String:
 		return "sem função — esperando ordem"
 	if _ai_state == "idle" and is_cook():
 		return "esperando matéria-prima"
+	if _ai_state == "idle" and is_farmer():
+		return "sem horta nem estufa pra colher (construa pelo menu CONSTRUIR)"  # Bloco 107
 	if _ai_state == "idle" and is_hunter():
 		return "sem fruta nem caça na clareira"
 	if _ai_state == "doctor":
@@ -985,6 +1001,8 @@ func _process(delta: float) -> void:
 		_manut_tick(delta)
 	if animo_descoberta > 0.0:
 		animo_descoberta = maxf(animo_descoberta - animo_descoberta_decai * delta, 0.0)  # Bloco 103
+	if animo_prato > 0.0:
+		animo_prato = maxf(animo_prato - animo_prato_decai * delta, 0.0)  # Bloco 107
 	_social_process(delta)  # Bloco 85
 	_motivo_tick(delta)  # Bloco 95
 
@@ -1163,7 +1181,7 @@ func _choose_state() -> String:
 	# espera disponível (volta sozinho quando abrir espaço). A emergência, a agenda e as necessidades já vieram antes.
 	# (só quem COLETA aquilo espera; quem tem a carga por outro motivo — trocou de função, o engenheiro com sobra — fica
 	# com ela e segue a função dele, sem ir até o armazém cheio)
-	if raw_carrying > 0.0 and is_hunter() and _sem_espaco("alimentos"):
+	if raw_carrying > 0.0 and is_gatherer() and _sem_espaco("alimentos"):
 		return "esperando_espaco"
 	if wood_carrying > 0.0 and is_lumber() and _sem_espaco("madeira"):
 		return "esperando_espaco"
@@ -1171,7 +1189,7 @@ func _choose_state() -> String:
 		var pack_full := _raw_units >= hunter_carry - 0.01
 		# (quem já está colhendo/caçando continua até a fonte acabar; só depois descarrega)
 		var keep_going := _ai_state in ["foraging", "hunting"] and _station_ok_for(_ai_state)
-		if not is_hunter() or pack_full or _ai_state == "stocking" or (not keep_going and not _hunter_has_work()):
+		if not is_gatherer() or pack_full or _ai_state == "stocking" or (not keep_going and not _hunter_has_work()):
 			return "stocking"
 	# Madeira nas costas: leva pro armazém (lenhador cheio / sem árvore, ou quem deixou de ser lenhador).
 	if wood_carrying > 0.0 and not _sem_espaco("madeira"):
@@ -1244,6 +1262,9 @@ func _choose_state() -> String:
 	if is_lumber():
 		if carrying > 0.0 and not _sem_espaco("minerios"):
 			return "storing"
+		var op_carvao := _estado_oficina_extra()  # Bloco 107: com ordem na carvoaria, um lenhador opera
+		if op_carvao != "":
+			return op_carvao
 		if _sem_espaco("madeira"):
 			return "esperando_espaco"  # Bloco 106 (o coletor dele também para)
 		if _my_coletor() != null:
@@ -1280,16 +1301,29 @@ func _choose_state() -> String:
 	# uma toca volta, larga a fruta e volta a caçar (a mochila é a mesma: não perde nada).
 	# Bloco 34: horta e tocas ficam na clareira, então o caçador trabalha todo lá fora e só
 	# atravessa o túnel de volta pra deixar a matéria-prima no armazém.
+	# Bloco 107: o AGRICULTOR colhe a horta e a estufa (o grupo "coleta_comida") e leva a fruta pro armazém.
+	if is_farmer():
+		if _sem_espaco("alimentos"):
+			return "esperando_espaco"
+		if _ai_state == "foraging" and _station_ok_for("foraging"):
+			return "foraging"
+		if _has_usable_station("coleta_comida"):
+			return "foraging"
+		return "idle"
 	if is_hunter():
+		var op_curtume := _estado_oficina_extra()  # Bloco 107: com ordem no curtume, um caçador opera
+		if op_curtume != "":
+			return op_curtume
 		if _sem_espaco("alimentos"):
 			return "esperando_espaco"  # Bloco 106
 		if _ai_state == "hunting" and _station_ok_for("hunting"):
 			return "hunting"
 		if _has_usable_station("caca"):  # a toca só conta como usável com arco e flecha
 			return "hunting"
-		if _ai_state == "foraging" and _station_ok_for("foraging"):
+		# Bloco 107: com agricultor na vila, a horta é dele (o caçador só caça); sem, ele colhe como sempre
+		if _ai_state == "foraging" and _station_ok_for("foraging") and not _agricultor_na_vila():
 			return "foraging"
-		if _has_usable_station("coleta_comida"):
+		if _has_usable_station("coleta_comida") and not _agricultor_na_vila():
 			return "foraging"
 		return "idle"
 	# Bloco 86: fundidor — só trabalha com ORDEM na fornalha (sem ordem: não pega nada).
@@ -1970,6 +2004,8 @@ func happiness_factors() -> Array:
 		f.append(["conversou com os amigos", animo_social])  # Bloco 85
 	if animo_descoberta >= 0.5:
 		f.append(["fez uma descoberta", animo_descoberta])  # Bloco 103
+	if animo_prato >= 0.5:
+		f.append(["comeu um ensopado", animo_prato])  # Bloco 107
 	if animo_fe >= 0.5:
 		f.append(["foi à missa", animo_fe])  # Bloco 88
 	var m := _morale()
@@ -3031,7 +3067,7 @@ func hunt(amount: float, value: float) -> float:
 
 
 func _gather_raw(amount: float, value: float, state: String) -> float:
-	if not is_hunter() or injured or _ai_state != state:
+	if not is_gatherer() or injured or _ai_state != state:
 		return 0.0
 	var taken := minf(amount * work_mult(), hunter_carry - _raw_units)  # zangado rende menos
 	if taken <= 0.0:
@@ -3144,7 +3180,7 @@ func cook_tick(delta: float, space: float) -> float:
 	if not is_cook() or injured or _ai_state != "cooking" or raw_carrying <= 0.0 or space <= 0.5:
 		return 0.0
 	if _prep_left <= 0.0:
-		_prep_left = raw_carrying * prep_time_per_raw  # começa uma leva
+		_prep_left = raw_carrying * prep_time_per_raw * maxf(prep_mult, 0.1)  # começa uma leva (Bloco 107: o prato / a ração)
 	_prep_left -= delta * work_mult()  # zangado/triste cozinha mais devagar
 	_work_timer = 0.2
 	if _prep_left > 0.0:
@@ -3177,7 +3213,9 @@ func _raw_available() -> bool:
 
 ## O caçador tem onde trabalhar (toca com arco, ou horta)?
 func _hunter_has_work() -> bool:
-	return _has_usable_station("caca") or _has_usable_station("coleta_comida")
+	if is_farmer():
+		return _has_usable_station("coleta_comida")  # Bloco 107
+	return _has_usable_station("caca") or (_has_usable_station("coleta_comida") and not _agricultor_na_vila())
 
 
 func _has_bow() -> bool:
@@ -3998,7 +4036,7 @@ func motivo_parado() -> String:
 			return "armazem_cheio"
 	if _ai_state != "idle":
 		return ""
-	if is_hunter() and not _has_bow() and not get_tree().get_nodes_in_group("caca").is_empty() 			and not _has_usable_station("coleta_comida"):
+	if is_hunter() and not _has_bow() and not get_tree().get_nodes_in_group("caca").is_empty() 			and (not _has_usable_station("coleta_comida") or _agricultor_na_vila()):
 		return "sem_ferramenta"
 	if is_carrier() or is_smelter() or job == ROLE_CARPENTER:
 		if _ordem_sem_insumo():
@@ -4268,6 +4306,29 @@ func is_priest() -> bool:
 	return job == ROLE_PRIEST
 
 
+## Bloco 107: o agricultor / a agricultora (horta e estufa).
+func is_farmer() -> bool:
+	return job == ROLE_FARMER
+
+
+## Bloco 107: quem colhe a horta (caçador ou agricultor).
+func is_gatherer() -> bool:
+	return job == ROLE_HUNTER or job == ROLE_FARMER
+
+
+## Bloco 107: tem um agricultor trabalhando na vila (sem ferimento)? Olha a cada segundo, não a cada decisão.
+var _agri_na_vila_t := -10.0
+var _agri_na_vila := false
+
+
+func _agricultor_na_vila() -> bool:
+	var agora := Time.get_ticks_msec() / 1000.0
+	if agora - _agri_na_vila_t > 1.0:
+		_agri_na_vila_t = agora
+		_agri_na_vila = get_tree().get_nodes_in_group("ipezinhos").any(func(w): return w != self and w.has_method("is_farmer") and w.is_farmer() and not w.injured)
+	return _agri_na_vila
+
+
 ## Bloco 94: o carpinteiro / a carpinteira (Carpintaria e as camas novas).
 func is_carpenter() -> bool:
 	return job == ROLE_CARPENTER
@@ -4295,7 +4356,7 @@ func _sem_espaco(cat: String) -> bool:
 
 ## Bloco 105: alguma Fornalha/Carpintaria (a dele, se for o operador) com ordem parada por falta de insumo?
 func _ordem_sem_insumo() -> bool:
-	var grupos: Array = ["fornalhas", "carpintarias"]
+	var grupos: Array = ["fornalhas", "carpintarias", "carvoarias", "curtumes"]
 	if is_smelter():
 		grupos = ["fornalhas"]
 	elif job == ROLE_CARPENTER:
@@ -4501,7 +4562,7 @@ func _carrega_tick() -> void:
 					var total := 0.0
 					for k in entrega_mao:
 						total += float(entrega_mao[k])
-					var arm2: Node = eco.armazem_com_espaco(global_position, total, "minerios")
+					var arm2: Node = eco.armazem_com_espaco(global_position, total, Items.compartimento(String(entrega_mao.keys()[0])))  # (Bloco 107: o compartimento do item)
 					_carga["arm"] = arm2 if arm2 else _armazem_perto(eco)
 					_carga.fase = "ao_armazem2"
 					_go_to(_carga_destino())
@@ -4512,8 +4573,9 @@ func _carrega_tick() -> void:
 			var total2 := 0.0
 			for k in entrega_mao:
 				total2 += float(entrega_mao[k])
-			if arm3.has_method("espaco_cat") and float(arm3.espaco_cat("minerios")) < total2 - 0.01:
-				var outro: Node = eco.armazem_com_espaco(global_position, total2, "minerios")
+			var cat_e: String = Items.compartimento(String(entrega_mao.keys()[0])) if not entrega_mao.is_empty() else "minerios"
+			if arm3.has_method("espaco_cat") and float(arm3.espaco_cat(cat_e)) < total2 - 0.01:
+				var outro: Node = eco.armazem_com_espaco(global_position, total2, cat_e)
 				if outro and outro != arm3:
 					_carga["arm"] = outro
 					_go_to(_carga_destino())
@@ -4871,7 +4933,7 @@ func motivo_padre() -> String:
 
 ## A fornalha dele: a que tem as unidades que ele começou; senão a mais perto com ordem.
 func _fornalha_alvo() -> Node:
-	var grupo := "carpintarias" if is_carpenter() else "fornalhas"  # Bloco 94: a oficina de ordens da função
+	var grupo := _grupo_oficina()  # Bloco 94/107: a oficina de ordens da função
 	if _fornalha != null and is_instance_valid(_fornalha) and _fornalha.fila.tem_trabalho() and _fornalha.is_in_group(grupo):
 		return _fornalha
 	_fornalha = null
@@ -4884,6 +4946,43 @@ func _fornalha_alvo() -> Node:
 			d_min = d
 			_fornalha = f
 	return _fornalha
+
+
+## Bloco 107: o grupo da oficina de ordens da função (fundidor: fornalhas; carpinteiro: carpintarias; lenhador: carvoarias;
+## caçador: curtumes). O lenhador e o caçador só operam quando a oficina tem ORDEM (senão, o trabalho de sempre).
+func _grupo_oficina() -> String:
+	if is_carpenter():
+		return "carpintarias"
+	if is_lumber():
+		return "carvoarias"
+	if is_hunter():
+		return "curtumes"
+	return "fornalhas"
+
+
+## Bloco 107: o lenhador (carvoaria) e o caçador (curtume) operam a oficina quando ela tem ordem. "" = nada a fazer lá
+## (segue o trabalho de sempre). Só UM por vez começa uma leva nova; quem já está com o trabalho começado continua.
+func _estado_oficina_extra() -> String:
+	var f := _fornalha_alvo()
+	if f == null:
+		return "buscando_insumo" if not barras_mao.is_empty() else ""
+	if not f.e_operador(self):
+		return ""
+	# quem já é o operador (indo buscar insumo, trabalhando ou com o que ficou pronto na mão) continua; os outros seguem o
+	# trabalho de sempre (só UM opera a oficina)
+	var sou_o_operador := _ai_state in [f.estado_trabalho, "buscando_insumo"] or not barras_mao.is_empty()
+	if not sou_o_operador and _outro_opera(f):
+		return ""
+	var e := _estado_fundidor()
+	return "" if e == "idle" else e
+
+
+## Outro ipezinho já está operando essa oficina (indo buscar insumo, ou trabalhando)?
+func _outro_opera(f: Node) -> bool:
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		if w != self and w.get("_fornalha") == f and w.get_state() in [f.estado_trabalho, "buscando_insumo"]:
+			return true
+	return false
 
 
 ## A decisão do fundidor (no horário de trabalho): fundir as unidades começadas; buscar insumos (e largar as
@@ -5290,6 +5389,7 @@ func get_save_data() -> Dictionary:
 		"xp_pesquisa": xp_pesquisa,  # Bloco 103
 		"entrega_mao": entrega_mao.duplicate(),  # Bloco 105 (o carregador: volta pro armazém ao carregar)
 		"animo_descoberta": animo_descoberta,
+		"animo_prato": animo_prato,  # Bloco 107
 		"area_id": work_area.id if work_area != null else 0,  # Bloco 77
 		"refeicoes_hoje": refeicoes_hoje.keys(),  # Bloco 84
 		"refeicoes_perdidas": refeicoes_perdidas,
@@ -5393,6 +5493,7 @@ func load_save_data(d: Dictionary) -> void:
 	if not em.is_empty():
 		_devolve_entrega.call_deferred(em)
 	animo_descoberta = clampf(SaveUtil.num(d, "animo_descoberta", 0.0), 0.0, 50.0)
+	animo_prato = clampf(SaveUtil.num(d, "animo_prato", 0.0), 0.0, 50.0)  # Bloco 107 (save antigo: 0)
 	var area_id := SaveUtil.integer(d, "area_id", 0)  # Bloco 77 (save antigo: sem área)
 	if area_id > 0:
 		_religa_area.call_deferred(area_id)

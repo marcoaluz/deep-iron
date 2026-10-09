@@ -98,6 +98,9 @@ const ORDER_JOBS := [
 		"Só UM, e só homem (selecione um ipezinho). Fica na igreja: missa de domingo, funeral e aconselha quem anda zangado. Abre com a Vila no estágio do padre."],
 	["carpinteiro", "Carpinteiro", "9", "res://assets/game/ui/icones/carpinteiro.png", "toggle_carpenter", Color(0.86, 0.7, 0.45),
 		"Opera a Carpintaria: tábuas e camas de tábua, só o que foi encomendado. Monta as camas novas nas casas."],  # Bloco 94
+	# Bloco 107: o ícone é o provisório (a cesta do jogo) até o do PixelLab ser aprovado; Icones.FUNCAO cai nele sem o arquivo
+	["agricultor", "Agricultor", "-", "res://assets/game/food_basket.png", "toggle_farmer", Color(0.62, 0.82, 0.4),
+		"Colhe a horta e a estufa (dentro da vila) e leva a fruta pro armazém. Cuida da horta aberta (regenera mais). Com agricultor na vila, o caçador só caça."],
 	["batedor", "Batedor", "K", "res://assets/game/ui/icones/batedor.png", "toggle_scout", Color(0.7, 0.88, 0.55),
 		"Bate o mato: avista bichos e lugares de longe e rastreia as tocas (nascem mais bichos). Lidera as EXPEDIÇÕES (;): sem batedor, ninguém sai."],  # Bloco 104
 	# Bloco 105 (o ícone é o provisório até a arte própria ser aprovada: Icones.FUNCAO cai nele sem o arquivo)
@@ -112,7 +115,7 @@ const ORDER_BUTTON_W := 78.0
 const TOP_BAR_H := 40.0
 const SIDE_MARGIN := 10.0
 ## Bloco 95: a barra de funções AGRUPADA (só ícone + contador; o nome e a tecla na dica).
-const GRUPOS_FUNCOES := [["PRODUÇÃO", ["minerador", "lenhador", "caçador", "cozinheiro", "fundidor", "ferreiro", "carpinteiro"]],
+const GRUPOS_FUNCOES := [["PRODUÇÃO", ["minerador", "lenhador", "caçador", "agricultor", "cozinheiro", "fundidor", "ferreiro", "carpinteiro"]],
 	["SERVIÇO", ["engenheiro", "carregador", "mecânico", "médico", "pesquisador", "padre", "batedor"]], ["DEFESA", ["guarda"]]]
 ## Bloco 95: botão de função (ícone 32 no meio, o contador no canto).
 const BOTAO_FUNCAO := Vector2(46, 46)
@@ -694,6 +697,7 @@ func _build_janelas() -> void:
 	if _hub:
 		_add_panel("hub", preload("res://scripts/core/hub_panel.gd"), _hub)
 	_add_panel("trabalho", preload("res://scripts/core/work_panel.gd"), null)  # Bloco 77: áreas de trabalho
+	_add_panel("cozinha", preload("res://scripts/core/cozinha_panel.gd"), null)  # Bloco 107: o cardápio
 	var arm := get_tree().get_first_node_in_group("armazens")
 	if arm and _economy:
 		_add_panel("armazem", preload("res://scripts/core/armazem_panel.gd"), arm)  # Bloco 39
@@ -702,6 +706,8 @@ func _build_janelas() -> void:
 		_add_panel("coletor_minerio", preload("res://scripts/core/coletor_minerio_panel.gd"), _hub)  # Bloco 57
 		_add_panel("fornalha", preload("res://scripts/core/fornalha_panel.gd"), _hub)  # Bloco 86
 		_add_panel("carpintaria", preload("res://scripts/core/carpintaria_panel.gd"), _hub)  # Bloco 94
+		_add_panel("carvoaria", preload("res://scripts/core/carvoaria_panel.gd"), _hub)  # Bloco 107
+		_add_panel("curtume", preload("res://scripts/core/curtume_panel.gd"), _hub)  # Bloco 107
 	var cal := get_tree().get_first_node_in_group("calendario")
 	if cal:
 		_add_panel("calendario", preload("res://scripts/core/calendario_panel.gd"), cal)  # Bloco 88

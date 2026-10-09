@@ -44,6 +44,8 @@ var verbo := "fundindo"
 var fila
 ## Bloco 105: as barras prontas esperando o CARREGADOR levar pro armazém (com carregador, o operador não sai daqui).
 var barras_prontas := {}
+## Bloco 107: tudo que esta oficina já fez (item -> quantidade; a telemetria soma; vai pro save).
+var produzido := {}
 var _acesa := false
 var _sound_timer := 0.0
 
@@ -102,6 +104,8 @@ func _process(delta: float) -> void:
 		if body.has_method("fundir_tick"):
 			body.fundir_tick()
 		if not pronto.is_empty():
+			for k in pronto:
+				produzido[k] = float(produzido.get(k, 0.0)) + float(pronto[k])  # Bloco 107
 			var lg := get_tree().get_first_node_in_group("logistica")
 			if lg and lg.tem_carregador():
 				for k in pronto:
@@ -229,12 +233,17 @@ func pop_in() -> void:
 # ------------------------------------------------------------ save/load (pelo Centro da Vila)
 func get_save_data() -> Dictionary:
 	return {"position": [snappedf(global_position.x, 0.1), snappedf(global_position.y, 0.1)], "fila": fila.get_save_data(),
-		"barras_prontas": barras_prontas.duplicate()}  # Bloco 105
+		"barras_prontas": barras_prontas.duplicate(), "produzido": produzido.duplicate()}  # Bloco 105 / 107
 
 
 func load_save_data(d: Dictionary) -> void:
 	var lista = d.get("fila", [])
 	fila.load_save_data(lista if lista is Array else [])
+	produzido = {}  # Bloco 107 (save antigo: zero)
+	var pr = d.get("produzido", {})
+	if pr is Dictionary:
+		for k in pr:
+			produzido[String(k)] = maxf(float(pr[k]), 0.0)
 	barras_prontas = {}  # Bloco 105 (save antigo: nenhuma esperando)
 	var bp = d.get("barras_prontas", {})
 	if bp is Dictionary:

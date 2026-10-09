@@ -91,6 +91,12 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 107: centro_vila "hortas" [{estufa, position, dados {food_remaining, cooldown, total_colhido}}] (as hortas e estufas
+##     que o jogador construiu; COM a chave a horta da clareira, da cena, sai: a vila é do jogador; save antigo sem a chave:
+##     a horta da cena continua), "carvoarias" e "curtumes" [{position, fila, produzido, barras_prontas}]; o comedouro ganha
+##     "prato" (comum/ensopado), "racao_pedida" e "racao_acc"; o ipezinho ganha a função "agricultor" e "animo_prato"; os
+##     itens "carvao_vegetal", "couro_curtido" e "racao" vão no "itens" do armazém. Save antigo: nenhuma estrutura nova,
+##     prato comum, ninguém agricultor (o caçador continua colhendo), botas/mochila/trajes pedindo couro cru.
 ##   Bloco 106: o "estacao_mina" (o vagonete da boca, no save do Centro da Vila) ganha "etapa" (0 ruína .. 4 funcionando),
 ##     "pago", "progresso" e "obra" (a restauração). Save antigo sem a chave: funcionando (ninguém perde o vagonete que
 ##     andava). O armazém NÃO ganha chave: os compartimentos saem do nível; save antigo acima do limite de um compartimento

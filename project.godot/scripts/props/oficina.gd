@@ -85,7 +85,7 @@ const TOOL_UNLOCKS_EXTRA := {"cristal_verde": "broca", "cristal_rubro": "traje"}
 	{"id": "ferragem", "nome": "Ferragem", "insumos": {"barra_ferro": 2, "prego": 4}, "produto": {"ferragem": 1}, "segundos": 12.0, "estagio": 0},
 	# Bloco 94: o couro deixa de servir só pro casaco — a mochila do minerador (+carga); as botas são da fila de
 	# equipamento (vestiário), como o casaco
-	{"id": "mochila", "nome": "Mochila de couro", "insumos": {"couro": 3, "prego": 2}, "produto": {"mochila": 1}, "segundos": 14.0, "estagio": 0},
+	{"id": "mochila", "nome": "Mochila de couro", "insumos": {"couro": 3, "prego": 2}, "produto": {"mochila": 1}, "segundos": 14.0, "estagio": 0, "curtido": true},  # (Bloco 107: com curtume, o couro curtido)
 ]
 ## Máximo de ordens na fila do ferreiro.
 @export var max_fila_ferreiro: int = 4

@@ -157,9 +157,9 @@ const UPGRADE_NAMES := {
 @export var comedouro_cost: Vector3i = Vector3i(100, 20, 25)
 @export var comedouro_build_time: float = 20.0
 ## Pacote que entra quando a vila é fundada (dá pras 3 casas + 1 comedouro, com folga).
-@export var founding_credits: int = 400
+@export var founding_credits: int = 460  # Bloco 107: + a horta (60 cr e 30 de madeira: ela já não vem pronta na clareira)
 @export var founding_ore: int = 90
-@export var founding_wood: int = 80
+@export var founding_wood: int = 110
 
 @export_group("Coletor de madeira (Bloco 45)")
 ## Construir: créditos e ferro (não gasta madeira: é ele que faz madeira); segundos de engenheiro.
@@ -201,6 +201,35 @@ const UPGRADE_NAMES := {
 @export var carpintaria_build_time: float = 45.0
 ## Estágio da vila em que a carpintaria libera (2 = Vilarejo: os pregos vêm do ferreiro, que vem com a fornalha).
 @export_range(1, 5) var carpintaria_estagio: int = 2
+@export_group("Horta, estufa, carvoaria e curtume (Bloco 107)")
+## HORTA (construída dentro da vila; a da clareira some na partida nova): créditos, madeira, segundos de engenheiro e o
+## estágio da vila (1 = já). Cabem `horta_max`; as próximas custam mais (extra_building_cost_growth).
+@export var horta_credits: int = 60
+@export var horta_wood: int = 30
+@export var horta_build_time: float = 20.0
+@export_range(1, 5) var horta_estagio: int = 1
+@export var horta_max: int = 3
+## ESTUFA (horta coberta; no inverno rende mais que a horta aberta): créditos, ferro, madeira, pregos, segundos, estágio.
+@export var estufa_credits: int = 220
+@export var estufa_ore: int = 50
+@export var estufa_wood: int = 90
+@export var estufa_pregos: int = 20
+@export var estufa_build_time: float = 60.0
+@export_range(1, 5) var estufa_estagio: int = 2
+@export var estufa_max: int = 2
+## CARVOARIA (madeira vira carvão vegetal, operada pelo lenhador).
+@export var carvoaria_credits: int = 150
+@export var carvoaria_ore: int = 30
+@export var carvoaria_wood: int = 60
+@export var carvoaria_build_time: float = 35.0
+@export_range(1, 5) var carvoaria_estagio: int = 2
+## CURTUME (couro vira couro curtido, operado pelo caçador).
+@export var curtume_credits: int = 160
+@export var curtume_ore: int = 40
+@export var curtume_wood: int = 60
+@export var curtume_pregos: int = 15
+@export var curtume_build_time: float = 40.0
+@export_range(1, 5) var curtume_estagio: int = 2
 ## Bloco 97: o ARMAZÉM NOVO (construção nova; o jogador escolhe o lugar). Custo do primeiro, em créditos
 ## (os próximos crescem, como as outras construções repetíveis).
 @export var armazem_credits: int = 300
@@ -1185,6 +1214,185 @@ func spawn_carpintaria(pos: Vector2) -> Node2D:
 	return c
 
 
+# ------------------------------------------------------------ horta, estufa, carvoaria e curtume (Bloco 107)
+const HORTA_SCENE := preload("res://scenes/props/horta.tscn")
+const ESTUFA_SCENE := preload("res://scenes/props/estufa.tscn")
+const CARVOARIA_SCENE := preload("res://scenes/props/carvoaria.tscn")
+const CURTUME_SCENE := preload("res://scenes/props/curtume.tscn")
+const HORTA_FOOTPRINT := Rect2(-48, -36, 96, 52)
+## O que cada construção do Bloco 107 é: grupo dos que existem, nome, textura do fantasma e quadros.
+const OBRAS_107 := {
+	"horta": {"grupo": "hortas", "nome": "a Horta", "textura": "horta", "hframes": 3, "dentro": true},
+	"estufa": {"grupo": "estufas", "nome": "a Estufa", "textura": "horta", "hframes": 3, "dentro": true},
+	"carvoaria": {"grupo": "carvoarias", "nome": "a Carvoaria", "textura": "fornalha", "hframes": 2, "dentro": false},
+	"curtume": {"grupo": "curtumes", "nome": "o Curtume", "textura": "carpintaria", "hframes": 2, "dentro": false},
+}
+
+
+## Os que já existem de cada tipo.
+func obras107(kind: String) -> Array:
+	return get_tree().get_nodes_in_group(OBRAS_107[kind].grupo)
+
+
+func hortas() -> Array:
+	return obras107("horta")
+
+
+func estufas() -> Array:
+	return obras107("estufa")
+
+
+func carvoarias() -> Array:
+	return obras107("carvoaria")
+
+
+func curtumes() -> Array:
+	return obras107("curtume")
+
+
+## Os números de um tipo: [créditos, ferro, madeira, {itens}, segundos, estágio, máximo].
+func _dados107(kind: String) -> Array:
+	match kind:
+		"horta":
+			return [horta_credits, 0, horta_wood, {}, horta_build_time, horta_estagio, horta_max]
+		"estufa":
+			return [estufa_credits, estufa_ore, estufa_wood, {"prego": estufa_pregos}, estufa_build_time, estufa_estagio, estufa_max]
+		"carvoaria":
+			return [carvoaria_credits, carvoaria_ore, carvoaria_wood, {}, carvoaria_build_time, carvoaria_estagio, 99]
+	return [curtume_credits, curtume_ore, curtume_wood, {"prego": curtume_pregos}, curtume_build_time, curtume_estagio, 99]
+
+
+## Custo da PRÓXIMA (x cr, y ferro, z madeira): cresce a cada uma que já existe (Bloco 47). Os itens (pregos) não crescem.
+func obra107_cost(kind: String) -> Vector3i:
+	var d := _dados107(kind)
+	var eco := _economy()
+	var base := Vector3i(d[0], d[1], d[2])
+	return eco.scaled_cost(base, obras107(kind).size()) if eco else base
+
+
+func obra107_cost_text(kind: String) -> String:
+	var c := obra107_cost(kind)
+	var eco := _economy()
+	return eco.custo_metal_texto(c.x, c.y, "ferro", c.z, _dados107(kind)[3]) if eco else ""
+
+
+func obra107_block_reason(kind: String) -> String:
+	var d := _dados107(kind)
+	if level < int(d[5]):
+		return "precisa da vila no estágio %s" % STAGE_NAMES[clampi(int(d[5]), 1, STAGE_NAMES.size()) - 1]
+	if obras107(kind).size() >= int(d[6]):
+		return "já tem o máximo (%d)" % int(d[6])
+	var c := Canteiro.pending(get_tree(), kind)
+	if c:
+		return "em obra (%s)" % c._obra.status(c.obra_progress())
+	var eco := _economy()
+	var cost := obra107_cost(kind)
+	return eco.metal_falta(cost.x, cost.y, "ferro", cost.z, d[3]) if eco else "sem recursos"
+
+
+## O jogador escolhe o lugar: horta e estufa DENTRO da vila (o raio do Centro); carvoaria e curtume como a carpintaria.
+func obra107_build(kind: String) -> bool:
+	if obra107_block_reason(kind) != "":
+		Audio.error()
+		return false
+	var placer := get_tree().get_first_node_in_group("house_placer")
+	if placer == null:
+		return false
+	var info: Dictionary = OBRAS_107[kind]
+	var tex: Texture2D = load("res://assets/game/%s.png" % info.textura)
+	var opts := {"footprint": HORTA_FOOTPRINT if info.dentro else COLETOR_FOOTPRINT, "start": global_position + Vector2(-150, 70)}
+	if info.dentro:
+		opts["radius"] = house_radius()
+		opts["radius_center"] = global_position
+	var confirma: Callable = func(pos: Vector2) -> bool: return _obra107_confirma(kind, pos)
+	placer.begin(confirma, tex, int(info.hframes), String(info.nome), opts)
+	return true
+
+
+func _obra107_confirma(kind: String, pos: Vector2) -> bool:
+	if obra107_block_reason(kind) != "":
+		Audio.error()
+		return false
+	var d := _dados107(kind)
+	var cost := obra107_cost(kind)
+	if not _economy().paga_metal(cost.x, cost.y, "ferro", cost.z, d[3]):  # (Bloco 96: o material vira a lista da obra)
+		return false
+	Canteiro.order(get_tree(), kind, pos, float(d[4]))
+	Audio.click()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("%s encomendada — precisa de engenheiro (tecla 4)." % String(OBRAS_107[kind].nome).capitalize(), Color(1.0, 0.8, 0.45))
+	return true
+
+
+func horta_cost_text() -> String:
+	return obra107_cost_text("horta")
+
+
+func horta_block_reason() -> String:
+	return obra107_block_reason("horta")
+
+
+func build_horta() -> bool:
+	return obra107_build("horta")
+
+
+func estufa_cost_text() -> String:
+	return obra107_cost_text("estufa")
+
+
+func estufa_block_reason() -> String:
+	return obra107_block_reason("estufa")
+
+
+func build_estufa() -> bool:
+	return obra107_build("estufa")
+
+
+func carvoaria_cost_text() -> String:
+	return obra107_cost_text("carvoaria")
+
+
+func carvoaria_block_reason() -> String:
+	return obra107_block_reason("carvoaria")
+
+
+func build_carvoaria() -> bool:
+	return obra107_build("carvoaria")
+
+
+func curtume_cost_text() -> String:
+	return obra107_cost_text("curtume")
+
+
+func curtume_block_reason() -> String:
+	return obra107_block_reason("curtume")
+
+
+func build_curtume() -> bool:
+	return obra107_build("curtume")
+
+
+## Nasce um deles (obra pronta ou save). Nome: "Horta2", "Estufa", "Carvoaria"... (único, pro save por nome).
+func spawn_obra107(kind: String, pos: Vector2) -> Node2D:
+	var scene: PackedScene = {"horta": HORTA_SCENE, "estufa": ESTUFA_SCENE, "carvoaria": CARVOARIA_SCENE, "curtume": CURTUME_SCENE}[kind]
+	var n: Node2D = scene.instantiate()
+	var base: String = String(kind).capitalize()
+	var i := obras107(kind).size()
+	var nome := base if i == 0 else "%s%d" % [base, i + 1]
+	while get_parent().has_node(nome):
+		i += 1
+		nome = "%s%d" % [base, i + 1]
+	n.name = nome
+	n.position = pos
+	get_parent().add_child(n)
+	_coletor_mudou()
+	var res := get_tree().get_first_node_in_group("research")
+	if res and res.has_method("apply_all"):
+		res.apply_all()  # (a Hidroponia vale pra horta nova)
+	return n
+
+
 # ------------------------------------------------------------ armazém novo (Bloco 97)
 const ARMAZEM_SCENE := preload("res://scenes/props/armazem.tscn")
 const ARMAZEM_TEXTURE := preload("res://assets/game/armazem.png")
@@ -1739,6 +1947,19 @@ func finish_build(kind: String, pos: Vector2) -> void:
 		if han:
 			han.show_toast("Armazém novo pronto! Mais espaço, e quem trabalha perto entrega aqui (e o engenheiro busca aqui).", Color(0.55, 1.0, 0.5))
 		return
+	if kind in OBRAS_107:  # Bloco 107: horta, estufa, carvoaria, curtume
+		var o107 := spawn_obra107(kind, pos)
+		if o107.has_method("pop_in"):
+			o107.pop_in()
+		Audio.recruit()
+		var h107 := get_tree().get_first_node_in_group("hud")
+		if h107:
+			var dica: String = {"horta": "Dê a função AGRICULTOR a alguém (sem agricultor, o caçador colhe).",
+				"estufa": "Dê a função AGRICULTOR a alguém: no inverno ela rende mais que a horta aberta.",
+				"carvoaria": "Encomende carvão vegetal (clique nela): um LENHADOR opera.",
+				"curtume": "Encomende couro curtido (clique nele): um CAÇADOR opera."}[kind]
+			h107.show_toast("%s pronto! %s" % [String(OBRAS_107[kind].nome).capitalize(), dica], Color(0.55, 1.0, 0.5))
+		return
 	if kind == "carpintaria":  # Bloco 94
 		var ca := spawn_carpintaria(pos)
 		ca.pop_in()
@@ -1999,6 +2220,10 @@ func get_save_data() -> Dictionary:
 		"coletores": coletores().map(func(c): return c.get_save_data()),  # Bloco 81: + etapa da restauração e "fixo"
 		"fornalhas": fornalhas().map(func(f): return f.get_save_data()),  # Bloco 86: lugar + fila de ordens
 		"carpintarias": carpintarias().map(func(f): return f.get_save_data()),  # Bloco 94: lugar + fila de ordens
+		"carvoarias": carvoarias().map(func(f): return f.get_save_data()),  # Bloco 107: lugar + fila de ordens
+		"curtumes": curtumes().map(func(f): return f.get_save_data()),  # Bloco 107: lugar + fila de ordens
+		# Bloco 107: as hortas e estufas que o jogador construiu (a da clareira, da cena, só some na partida nova)
+		"hortas": (hortas() + estufas()).map(func(h): return {"estufa": h.estufa, "position": SaveUtil.vec2_to_array(h.global_position), "dados": h.get_save_data()}),
 		"armazens_novos": armazens_novos().map(func(a): return {"name": String(a.name), "position": SaveUtil.vec2_to_array(a.global_position)}),  # Bloco 97
 		"coletores_minerio": coletores_minerio().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position),
 			"total": c.total_produced, "jazida": SaveUtil.vec2_to_array(c.chosen_pos) if c.chosen_pos != Vector2.INF else [],
@@ -2056,6 +2281,30 @@ func load_save_data(d: Dictionary) -> void:
 		var cpos := SaveUtil.vec2(cd, "position", Vector2.INF)
 		if cpos != Vector2.INF:
 			spawn_carpintaria(cpos).load_save_data(cd)
+	# Bloco 107: carvoarias e curtumes (save antigo: nenhum)
+	for par in [["carvoaria", "carvoarias"], ["curtume", "curtumes"]]:
+		for old in obras107(par[0]):
+			old.get_parent().remove_child(old)
+			old.queue_free()
+		for od in SaveUtil.array(d, par[1]):
+			if typeof(od) != TYPE_DICTIONARY:
+				continue
+			var opos := SaveUtil.vec2(od, "position", Vector2.INF)
+			if opos != Vector2.INF:
+				spawn_obra107(par[0], opos).load_save_data(od)
+	# Bloco 107: hortas e estufas construídas. Save COM a chave: a horta da clareira (da cena) sai (a vila é do jogador);
+	# save antigo (sem a chave): a horta da cena continua como era e nada extra.
+	if d.has("hortas"):
+		for old in hortas() + estufas():
+			old.get_parent().remove_child(old)
+			old.queue_free()
+		for hd in SaveUtil.array(d, "hortas"):
+			if typeof(hd) != TYPE_DICTIONARY:
+				continue
+			var hpos := SaveUtil.vec2(hd, "position", Vector2.INF)
+			if hpos != Vector2.INF:
+				var hn := spawn_obra107("estufa" if SaveUtil.boolean(hd, "estufa", false) else "horta", hpos)
+				hn.load_save_data(SaveUtil.dict(hd, "dados"))
 	# Bloco 57: coletores de minério (save antigo: nenhum; o operador se religa sozinho)
 	for old in coletores_minerio():
 		old.get_parent().remove_child(old)

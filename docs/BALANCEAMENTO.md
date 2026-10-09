@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1020 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **1058 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (79)
 
@@ -1082,7 +1082,7 @@ Total: **1020 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `balao_max` | 4.5 |  |  |
 | `passeio_desvio` | 160.0 |  | Passeio: passa por outro ponto no caminho se o desvio for até isto (px do chão). |
 
-## `scripts/core/sun.gd` (17)
+## `scripts/core/sun.gd` (18)
 
 **Estações (índice 0 = Primavera)**
 
@@ -1092,6 +1092,7 @@ Total: **1020 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `season_wave_chance` | [0.25, 0.5, 0.25, 0.12] |  | Chance POR DIA de ter onda solar, em cada estação (Bloco 83: com estações de 14 dias e dias de 9 min, um pouco menor que antes, pra não virar onda todo dia no verão). |
 | `season_hunger_mult` | [1.0, 1.0, 1.0, 1.25] |  |  |
 | `season_garden_mult` | [1.3, 1.0, 0.8, 0.5] |  |  |
+| `season_estufa_mult` | [0.8, 0.8, 0.9, 1.0] |  | Bloco 107: o mesmo pra ESTUFA (primavera, verão, outono, inverno): rende menos que a horta aberta no calor e mais no inverno (a horta aberta cai pra 0,5; a estufa não). |
 | `winter_joy` | -3.0 |  | Ânimo no inverno (frio). |
 
 **Ondas solares**
@@ -1155,7 +1156,7 @@ Total: **1020 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `pollen_amount` | 18 |  |  |
 
-## `scripts/workers/ipezinho.gd` (79)
+## `scripts/workers/ipezinho.gd` (80)
 
 **Obras (Bloco 51)**
 
@@ -1269,6 +1270,7 @@ Total: **1020 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `animo_descoberta_ganho` | 12.0 |  | Ânimo que a pesquisadora ganha a cada descoberta (estudo do catálogo) e quanto disso some por segundo. |
 | `animo_descoberta_decai` | 0.02 |  |  |
+| `animo_prato_decai` | 0.01 |  | Bloco 107: o ânimo do ENSOPADO (a cozinha soma a cada prato; some devagar, por segundo). |
 | `xp_pesquisa_bonus` | 0.1 |  | Cada descoberta (xp_pesquisa) deixa o estudo de campo esta fração mais rápido, até o máximo. |
 | `xp_pesquisa_max` | 0.5 |  |  |
 
@@ -1476,6 +1478,14 @@ Total: **1020 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `receitas_carpintaria` | [ |  | {id, nome, insumos {item: qtd}, produto {item: qtd}, segundos (de carpinteiro por unidade), estagio}. |
 
+## `scripts/props/carvoaria.gd` (1)
+
+**Receitas da carvoaria (Bloco 107)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `receitas_carvoaria` | [ |  | {id, nome, insumos {item: qtd}, produto {item: qtd}, segundos (de lenhador por unidade), estagio}. |
+
 ## `scripts/props/casa.gd` (16)
 
 **(sem grupo)**
@@ -1509,7 +1519,7 @@ Total: **1020 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `level_min_stage` | [0, 2, 3] |  | Pré-requisitos de cada nível [nível 1, 2, 3]: estágio mínimo do Centro da Vila e pesquisa ("" = nenhuma). |
 | `level_research` | ["", "", "medicina"] |  |  |
 
-## `scripts/props/centro_vila.gd` (84)
+## `scripts/props/centro_vila.gd` (107)
 
 **Estágios da vila**
 
@@ -1563,9 +1573,9 @@ Total: **1020 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `starter_house_build_time` | 25.0 |  |  |
 | `comedouro_cost` | Vector3i(100, 20, 25) |  | Comedouro novo: x = créditos, y = ferro, z = madeira; e segundos de engenheiro. |
 | `comedouro_build_time` | 20.0 |  |  |
-| `founding_credits` | 400 |  | Pacote que entra quando a vila é fundada (dá pras 3 casas + 1 comedouro, com folga). |
+| `founding_credits` | 460 |  | Pacote que entra quando a vila é fundada (dá pras 3 casas + 1 comedouro, com folga). |
 | `founding_ore` | 90 |  |  |
-| `founding_wood` | 80 |  |  |
+| `founding_wood` | 110 |  |  |
 
 **Coletor de madeira (Bloco 45)**
 
@@ -1616,6 +1626,34 @@ Total: **1020 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `carpintaria_wood` | 90 |  |  |
 | `carpintaria_build_time` | 45.0 |  |  |
 | `carpintaria_estagio` | 2 |  | Estágio da vila em que a carpintaria libera (2 = Vilarejo: os pregos vêm do ferreiro, que vem com a fornalha). |
+
+**Horta, estufa, carvoaria e curtume (Bloco 107)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `horta_credits` | 60 |  | HORTA (construída dentro da vila; a da clareira some na partida nova): créditos, madeira, segundos de engenheiro e o estágio da vila (1 = já). Cabem `horta_max`; as próximas custam mais (extra_building_cost_growth). |
+| `horta_wood` | 30 |  |  |
+| `horta_build_time` | 20.0 |  |  |
+| `horta_estagio` | 1 |  |  |
+| `horta_max` | 3 |  |  |
+| `estufa_credits` | 220 |  | ESTUFA (horta coberta; no inverno rende mais que a horta aberta): créditos, ferro, madeira, pregos, segundos, estágio. |
+| `estufa_ore` | 50 |  |  |
+| `estufa_wood` | 90 |  |  |
+| `estufa_pregos` | 20 |  |  |
+| `estufa_build_time` | 60.0 |  |  |
+| `estufa_estagio` | 2 |  |  |
+| `estufa_max` | 2 |  |  |
+| `carvoaria_credits` | 150 |  | CARVOARIA (madeira vira carvão vegetal, operada pelo lenhador). |
+| `carvoaria_ore` | 30 |  |  |
+| `carvoaria_wood` | 60 |  |  |
+| `carvoaria_build_time` | 35.0 |  |  |
+| `carvoaria_estagio` | 2 |  |  |
+| `curtume_credits` | 160 |  | CURTUME (couro vira couro curtido, operado pelo caçador). |
+| `curtume_ore` | 40 |  |  |
+| `curtume_wood` | 60 |  |  |
+| `curtume_pregos` | 15 |  |  |
+| `curtume_build_time` | 40.0 |  |  |
+| `curtume_estagio` | 2 |  |  |
 | `armazem_credits` | 300 |  | Bloco 97: o ARMAZÉM NOVO (construção nova; o jogador escolhe o lugar). Custo do primeiro, em créditos (os próximos crescem, como as outras construções repetíveis). |
 | `armazem_ore` | 80 |  | Armazém novo: minério de ferro (unidades; como a Carpintaria). |
 | `armazem_wood` | 120 |  | Armazém novo: madeira (unidades). |
@@ -1713,7 +1751,7 @@ Total: **1020 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `ore_per_sec` | 0.5 |  | Minério por segundo com o operador no posto (antes da zanga/ânimo dele). |
 | `reach` | 230.0 |  | Até onde a broca alcança uma jazida (px da lógica). |
 
-## `scripts/props/comedouro.gd` (7)
+## `scripts/props/comedouro.gd` (16)
 
 **Ritmo**
 
@@ -1730,12 +1768,34 @@ Total: **1020 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `food_capacity` | 300.0 |  | Máximo de comida guardada. |
 | `start_food` | 240.0 |  | Comida no começo de um jogo novo. |
 
+**Cardápio (Bloco 107)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `ensopado_porcao_mult` | 1.5 |  | Ensopado: a porção servida é x isto (gasta mais comida)... |
+| `ensopado_fome_mult` | 1.25 |  | ...enche x isto de fome (rende menos por unidade de comida: 1,5x a comida, 1,25x a fome)... |
+| `ensopado_animo` | 2.0 |  | ...e dá este ânimo a cada refeição (soma até o máximo; some devagar: ipezinho.animo_prato_decai)... |
+| `ensopado_animo_max` | 6.0 |  |  |
+| `ensopado_preparo_mult` | 1.3 |  | ...e o cozinheiro demora x isto pra preparar a leva. |
+| `racao_cru` | 16.0 |  | Ração de expedição: comida crua gasta por ração (1 ração = 1 pessoa por 1 dia: 2 porções x 8) e o preparo x isto (o cozinheiro faz uma ração em ~40 s: 16 de crua x 0,8 s x 3,1). |
+| `racao_preparo_mult` | 3.1 |  |  |
+| `racao_reserva_minima` | 40.0 |  | Só faz ração com pelo menos esta comida pronta na cozinha (reserva: a ração não esvazia a vila). |
+| `racao_max_pedido` | 30 |  | O máximo de rações numa ordem. |
+
 **Som**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `eat_sound_interval` | 0.9 |  | Intervalo entre os sons de mastigar enquanto alguém come. |
 | `raw_local_max` | 40.0 |  | Bloco 105: o ESTOQUE DA COZINHA — matéria-prima que o carregador trouxe do armazém; o cozinheiro prepara direto daqui. |
+
+## `scripts/props/curtume.gd` (1)
+
+**Receitas do curtume (Bloco 107)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `receitas_curtume` | [ |  | {id, nome, insumos {item: qtd}, produto {item: qtd}, segundos (de caçador por unidade), estagio}. |
 
 ## `scripts/props/deep_shaft.gd` (14)
 
@@ -1881,15 +1941,22 @@ Total: **1020 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `rota_fixa` | false |  | Bloco 74: o da mina (fixo): o trilho sai do batente da boca, desce reto e vira pra porta do armazém (em vez do caminho da navegação). |
 | `ferrovia` | "" |  | Bloco 79: FERROVIA DE CARGA — o id do andar (S2..S5) onde fica a estação ("" = o vagonete comum). O trilho no chão é só o pedaço até a doca; o resto da viagem é a SUBIDA pelo cavalete até a superfície (a vista iso desenha o cavalete e o carrinho subindo), e a carga vai pro armazém. |
 
-## `scripts/props/food_source.gd` (5)
+## `scripts/props/food_source.gd` (7)
+
+**Estufa e cuidado (Bloco 107)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `estufa` | false | **true** (estufa.tscn) | Esta é uma ESTUFA (horta coberta): a estação conta pelo `sun.season_estufa_mult` (no inverno rende mais que a horta aberta) em vez de `season_garden_mult`. |
+| `cuidado_mult` | 1.25 |  | Com um AGRICULTOR na vila a horta aberta regenera x isto (ele cuida). A estufa já nasce pro agricultor: não conta. |
 
 **Colheita**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `HARVEST_RATE` | 3.0 |  | Comida colhida por segundo por cozinheiro. |
-| `food_total` | 150.0 |  | Comida total quando a horta está cheia. |
-| `regen_rate` | 0.35 |  | Comida que volta a crescer por segundo (0 = não regenera). |
+| `food_total` | 150.0 | **120.0** (estufa.tscn) | Comida total quando a horta está cheia. |
+| `regen_rate` | 0.35 | **0.3** (estufa.tscn) | Comida que volta a crescer por segundo (0 = não regenera). |
 | `depleted_cooldown` | 25.0 |  | Segundos "colhida" depois de esgotar, antes de começar a regenerar. |
 | `min_food_to_harvest` | 5.0 |  | Abaixo disso a horta não atrai cozinheiros novos. |
 

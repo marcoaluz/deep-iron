@@ -37,6 +37,9 @@ const SEASON_NOTES := [
 @export var season_wave_chance: Array[float] = [0.25, 0.5, 0.25, 0.12]
 @export var season_hunger_mult: Array[float] = [1.0, 1.0, 1.0, 1.25]
 @export var season_garden_mult: Array[float] = [1.3, 1.0, 0.8, 0.5]
+## Bloco 107: o mesmo pra ESTUFA (primavera, verão, outono, inverno): rende menos que a horta aberta no calor e mais no
+## inverno (a horta aberta cai pra 0,5; a estufa não).
+@export var season_estufa_mult: Array[float] = [0.8, 0.8, 0.9, 1.0]
 ## Ânimo no inverno (frio).
 @export var winter_joy: float = -3.0
 
@@ -115,6 +118,11 @@ func hunger_mult() -> float:
 
 func garden_mult() -> float:
 	return season_garden_mult[season_index()]
+
+
+## Bloco 107: o multiplicador da estufa nesta estação.
+func estufa_mult() -> float:
+	return season_estufa_mult[season_index()]
 
 
 func _on_day_started(day: int) -> void:

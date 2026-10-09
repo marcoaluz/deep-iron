@@ -35,7 +35,19 @@ func _init(lista: Array = [], p_max_fila := 4) -> void:
 
 
 func receita(id: String) -> Dictionary:
-	return receitas.get(id, {})
+	var r: Dictionary = receitas.get(id, {})
+	# Bloco 107: receita que aceita o COURO CURTIDO ("curtido": true): com um curtume na vila, pede o curtido no lugar do cru
+	if r.get("curtido", false) and r.get("insumos", {}).has("couro") and usa_curtido():
+		r = r.duplicate(true)
+		r.insumos["couro_curtido"] = r.insumos["couro"]
+		r.insumos.erase("couro")
+	return r
+
+
+## Bloco 107: tem um curtume na vila? (então botas, mochila e trajes pedem couro curtido)
+static func usa_curtido() -> bool:
+	var tree := Engine.get_main_loop() as SceneTree
+	return tree != null and not tree.get_nodes_in_group("curtumes").is_empty()
 
 
 # ------------------------------------------------------------ encomendar / cancelar
@@ -121,7 +133,9 @@ func falta_para(eco: Node) -> String:
 	var r := receita(o.receita)
 	var partes: Array[String] = []
 	for item in r.insumos:
-		var tem: float = eco.livre(item) if eco.has_method("livre") else eco.quantidade(item)  # Bloco 96: não o reservado
+		var tem := 0.0
+		for q in Items.EQUIVALENTES.get(item, [item]):  # Bloco 107: o carvão vegetal vale como o mineral
+			tem += eco.livre(q) if eco.has_method("livre") else eco.quantidade(q)  # Bloco 96: não o reservado
 		var precisa := float(r.insumos[item])
 		if tem < precisa:
 			var n := ceili(precisa - tem)
@@ -211,7 +225,17 @@ func texto_insumos(id: String) -> String:
 
 ## Bloco 94: a Economia tira/devolve qualquer item do catálogo (processado, minério, madeira, couro).
 func _tira(eco: Node, item: String, n: float) -> void:
-	eco.tira(item, n)
+	var resta := n
+	for q in Items.EQUIVALENTES.get(item, [item]):  # Bloco 107: o vegetal primeiro, o mineral no que faltar
+		var tem: float = eco.livre(q) if eco.has_method("livre") else eco.quantidade(q)
+		var t := minf(resta, tem)
+		if t > 0.0:
+			eco.tira(q, t)
+			resta -= t
+		if resta <= 0.001:
+			break
+	if resta > 0.001:
+		eco.tira(item, resta)
 
 
 func _devolve(eco: Node, item: String, n: float, perto: Vector2) -> void:

@@ -276,7 +276,7 @@ func _monta_detalhe() -> void:
 	var cr := CheckBox.new()
 	cr.name = "Racao"
 	cr.button_pressed = _racao
-	cr.text = "Ração (%d de comida)" % int(_ex.racao_total(maxi(_equipe.size(), 1), _dias))
+	cr.text = "Ração (%d de comida; %d rações prontas)" % [int(_ex.racao_total(maxi(_equipe.size(), 1), _dias)), int(_ex.racoes_prontas())]
 	cr.add_theme_font_size_override("font_size", Tipo.DETALHE)
 	cr.toggled.connect(func(on: bool):
 		_racao = on

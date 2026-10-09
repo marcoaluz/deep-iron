@@ -12,7 +12,8 @@ const FUNCAO := {"minerador": "minerador", "caçador": "cacador", "médico": "me
 	"fundidor": "fundidor", "ferreiro": "ferreiro", "padre": "padre",  # Bloco 92 (PixelLab, oficios92.py)
 	"carpinteiro": "carpinteiro",  # Bloco 94 (oficios94.py)
 	"batedor": "batedor",  # Bloco 104 (oficios104.py)
-	"carregador": "carregador", "mecânico": "mecanico"}  # Bloco 105 (oficios105.py; sem o arquivo, a barra usa o provisório)
+	"carregador": "carregador", "mecânico": "mecanico",
+	"agricultor": "agricultor"}  # Bloco 107 (oficios107.py)  # Bloco 105 (oficios105.py; sem o arquivo, a barra usa o provisório)
 ## estação (sun.season_index) -> ícone
 const ESTACAO := ["primavera", "verao", "outono", "inverno"]
 

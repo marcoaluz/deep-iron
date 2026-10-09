@@ -392,5 +392,19 @@
    "carregar"
   ],
   "_obs": "Bloco 92"
+ },
+ "casaco_agricultor": {
+  "char": "b4f37de3-b018-4a5c-9a78-8a64692523ca",
+  "base": "agricultor",
+  "trabalho": "colher",
+  "enviado": [
+   "caminhada",
+   "colher"
+  ],
+  "processado": [
+   "caminhada",
+   "colher"
+  ],
+  "_obs": "Bloco 92"
  }
 }

@@ -53,6 +53,11 @@ const ITENS := {
 	# Bloco 94: o que se fabrica pra USAR (carpintaria e ferreiro)
 	"cama_boa": {"nome": "Cama de tábua", "cat": "equipamento", "icone": "it_cama_boa", "preco": 30.0, "onde": "itens"},
 	"mochila": {"nome": "Mochila de couro", "cat": "equipamento", "icone": "it_mochila", "preco": 15.0, "onde": "itens"},
+	# Bloco 107: o que a Carvoaria, o Curtume e a cozinha fabricam por ordem (não vendem: são insumo). Os ícones são os
+	# provisórios do jogo até a arte própria (PixelLab) ser aprovada.
+	"carvao_vegetal": {"nome": "Carvão vegetal", "cat": "madeira", "icone": "carvao", "preco": 0.0, "onde": "itens"},
+	"couro_curtido": {"nome": "Couro curtido", "cat": "pecas", "icone": "it_couro", "preco": 0.0, "onde": "itens"},
+	"racao": {"nome": "Ração de expedição", "cat": "comida", "icone": "comida", "preco": 0.0, "onde": "itens"},
 }
 
 
@@ -114,10 +119,16 @@ static func processados() -> Array:
 	return ITENS.keys().filter(func(k): return ITENS[k].onde == "itens")
 
 
+## Bloco 107: o que vale no lugar do insumo da receita, na ORDEM de uso: "carvão" aceita o vegetal (o que o jogador mandou
+## fazer) primeiro e o mineral depois. Quem paga insumo (production_queue.gd) usa isto.
+const EQUIVALENTES := {"carvao": ["carvao_vegetal", "carvao"]}
+
+
 ## Bloco 87: nome no plural pros custos ("20 barras de ferro").
 const PLURAL := {"barra_ferro": "barras de ferro", "barra_cobre": "barras de cobre", "barra_prata": "barras de prata",
 	"lingote_solar": "lingotes solares", "aco": "aço", "prego": "pregos", "ferragem": "ferragens",
-	"tabua": "tábuas", "cama_boa": "camas de tábua", "mochila": "mochilas"}  # Bloco 94
+	"tabua": "tábuas", "cama_boa": "camas de tábua", "mochila": "mochilas",  # Bloco 94
+	"carvao_vegetal": "carvões vegetais", "couro_curtido": "couros curtidos", "racao": "rações"}  # Bloco 107
 
 
 static func plural(id: String) -> String:
