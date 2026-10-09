@@ -23,7 +23,7 @@ Prompt W2. Plano `docs/BLOCO107_PLANO.md` (aprovado). Relatório `docs/BLOCO107_
 |---|---|---|
 | Saldo inicial | 6.063 | confirmado |
 | Gasto (tudo o que o bloco precisou) | 332 | real |
-| Saldo restante | 5.731 | confirmado |
+| Saldo restante | 5.723 | confirmado (depois da refação do "curtir" dos casacos: 8) |
 | Previsto no plano | ~570 | estimado (as estruturas saíram bem mais baratas) |
 
 ## Bloco 106 — coleta, armazém por compartimento e ociosidade (feito; commit local; o Marco revisa)

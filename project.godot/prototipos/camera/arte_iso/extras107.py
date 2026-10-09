@@ -20,7 +20,8 @@ CURTIR = ("tanning work loop: {he} holds a DRAWKNIFE with both hands from the ve
           "flat steel blade (about 30 cm) with a small wooden handle at EACH end, NOT curved, NOT a scythe, NOT a sickle; {he} "
           "pulls it toward {his} body in front of {him} at chest height in short strokes, as if scraping a hide stretched on a "
           "beam, steps back to look, and scrapes again; feet planted, same body and outfit. Only the character and the "
-          "drawknife: no beam, no hide, no ground drawn, no motion trails, no white arcs, no effects.")
+          "drawknife (small, held low in front of the belly, never raised above the shoulders, nothing taller than the character's "
+          "head): no beam, no hide, no ground drawn, no motion trails, no white arcs, no effects.")
 ANIM = {"lenhador": ("carvoejar", CARVOEJAR), "lenhadora": ("carvoejar", CARVOEJAR),
         "cacador": ("curtir", CURTIR), "cacadora": ("curtir", CURTIR)}
 ELENCO = os.path.join(AQUI, "elenco.json")
@@ -69,6 +70,21 @@ def refaz(nomes):
     pede(nomes)
 
 
+def refaz_casaco(nomes):
+    """só o casaco de inverno (a base já está boa): apaga a animação dele e pede de novo."""
+    for nome in nomes:
+        an, _d = ANIM[nome]
+        _base, casaco = _ids(nome)
+        i = chars.info(casaco)
+        if an in i["anims"]:
+            t = gen._texto(pl.call("delete_animation", {"character_id": casaco, "animation_group_id": i["anims"][an]["group"]}))
+            print("  apagou casaco_" + nome, an, t[:60].replace(chr(10), " "))
+        d = ANIM[nome][1].format(**PRON[nome])
+        t = _pede({"character_id": casaco, "mode": "v3", "directions": ["south-east", "north-east"], "action_description": d,
+                   "frame_count": 8, "keep_first_frame": False, "animation_name": an})
+        print("  casaco_%s %s %s" % (nome, an, " | ".join(t.splitlines()[:2])[:100]), flush=True)
+
+
 def espera(cid, max_s=2400):
     t0 = time.time()
     while time.time() - t0 < max_s:
@@ -95,4 +111,4 @@ def baixa(nomes):
 if __name__ == "__main__":
     cmd, resto = sys.argv[1], sys.argv[2:]
     alvos = [a for a in resto if a in ANIM] or list(ANIM)
-    {"pede": pede, "baixa": baixa, "refaz": refaz}[cmd](alvos)
+    {"pede": pede, "baixa": baixa, "refaz": refaz, "refaz_casaco": refaz_casaco}[cmd](alvos)

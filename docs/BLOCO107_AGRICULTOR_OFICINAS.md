@@ -92,8 +92,11 @@ O Marco aprovou o piloto do agricultor ("aprovado"), e eu fiz o resto na sequên
 - **Animações novas de trabalho:** o lenhador/lenhadora **carvoejando** (empurra a lenha com a vara longa) e o caçador/caçadora **curtindo**
   (raspa o couro), nos personagens e nos casacos que já existiam. A vista isométrica troca pela animação certa pelo estado do ipezinho
   (`carvoejando` / `curtindo`).
-  - O "curtir" foi refeito uma vez (a 1ª leva trouxe uma foice): saiu com a faca de raspar, mas **no casaco do caçador, de frente, ainda
-    aparece uma ferramenta curva grande** (e na caçadora, em alguns quadros). Dá pra refazer (~16 gerações cada).
+  - O "curtir" foi refeito duas vezes (a 1ª leva trouxe uma foice; a 2ª ainda deixou uma ferramenta curva grande no casaco do caçador,
+    de frente, e um anel estranho num quadro da caçadora). A 3ª leva, só dos dois casacos (descrição: faca pequena, baixa, na frente da
+    barriga), saiu com a faca de raspar certa a partir do quadro 2; os 3 quadros ruins que sobraram (caçador SE 0 e 1, caçadora SE 3)
+    foram trocados pelo quadro vizinho limpo, sem gastar geração. De costas (NE) o casaco do caçador ainda mostra uma ferramenta
+    comprida em alguns quadros: se incomodar, é outra refação (~8 gerações).
 - **Ícones:** o agricultor, a estufa, o carvão vegetal, o couro curtido e a ração (32 px e 24 px), na barra e nos itens.
 - **A ruína do vagonete** (pedida no Bloco 106): o carrinho velho e destruído, com mato e dormentes soltos, parado no trilho enquanto o
   vagonete da boca não foi restaurado (`vagonete107.py`, a partir do carrinho do jogo). Restaurado, volta o carrinho de verdade.
@@ -114,9 +117,9 @@ O Marco aprovou o piloto do agricultor ("aprovado"), e eu fiz o resto na sequên
 |---|---|---|
 | Saldo no começo do bloco | 6.063 | confirmado |
 | Gasto neste bloco (tudo: agricultor, agricultora, 3 estruturas com obras, animações, ícones, ruína) | **332** | real |
-| Saldo agora | **5.731** | confirmado |
+| Saldo agora | **5.723** | confirmado |
 | Previsto no plano | ~570 | estimado (foi bem menos: as estruturas custaram ~10 cada tentativa) |
-| Opcional: refazer o "curtir" do casaco do caçador (e da caçadora) | ~16 cada | estimado |
+| Refação do "curtir" dos 2 casacos (caçador e caçadora) | 8 | real |
 
 ## 3) Os arquivos
 
@@ -199,7 +202,7 @@ Rodou um teste por vez, com a pasta `fake_appdata`: **os 90 testes de bloco, tod
 
 ## 9) Pendências e riscos
 
-- **O "curtir" do casaco do caçador** ainda mostra uma ferramenta curva grande (seção 2).
+- **O "curtir" do casaco do caçador, visto de costas (NE)**, ainda mostra uma ferramenta comprida em alguns quadros (seção 2).
 - **A quem a área de alimentos serve:** ela continua dando a função caçador. Se o jogador quiser áreas de horta pro agricultor, é um
   tipo novo em `work_areas.TIPOS`. Não fiz.
 - **O recibo de encomenda vale só no quadro do pagamento** (Bloco 96). Se uma unidade da Fornalha começa no MESMO quadro em que o jogador

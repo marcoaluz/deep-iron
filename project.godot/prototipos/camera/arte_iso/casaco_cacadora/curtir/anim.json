@@ -2,7 +2,7 @@
  "SE": {
   "quadros": 8,
   "ancora": [
-   42.2,
+   45.3,
    95
   ],
   "quadro_px": [
@@ -13,7 +13,7 @@
  "NE": {
   "quadros": 8,
   "ancora": [
-   56.9,
+   56.4,
    89
   ],
   "quadro_px": [
@@ -24,7 +24,7 @@
  "SO": {
   "quadros": 8,
   "ancora": [
-   68.8,
+   65.7,
    95
   ],
   "quadro_px": [
@@ -35,7 +35,7 @@
  "NO": {
   "quadros": 8,
   "ancora": [
-   46.1,
+   46.6,
    89
   ],
   "quadro_px": [
