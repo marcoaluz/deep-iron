@@ -59,7 +59,12 @@ var _posicao_cena := Vector2.ZERO
 @onready var _smoke: CPUParticles2D = $Smoke
 
 
+var _desgaste = Desgaste.new("coletor_madeira")  # Bloco 105
+
+
 func _ready() -> void:
+	_desgaste.dono = self
+	add_to_group("maquinas")
 	super()
 	add_to_group("coletores")
 	add_to_group("clickable")
@@ -72,6 +77,8 @@ func _ready() -> void:
 
 
 # ------------------------------------------------------------ restauração (Bloco 81)
+const Desgaste := preload("res://scripts/core/desgaste.gd")  # Bloco 105
+const Manutencao := preload("res://scripts/core/manutencao.gd")
 const ETAPA_PRONTA := 4
 
 
@@ -245,7 +252,8 @@ func obra_cancelar() -> void:
 
 func get_save_data() -> Dictionary:
 	return {"position": [snappedf(global_position.x, 0.1), snappedf(global_position.y, 0.1)], "fixo": fixo, "etapa": etapa,
-		"pago": pago, "progresso": progresso, "total": total_produced, "obra": _obra.get_save_data()}
+		"pago": pago, "progresso": progresso, "total": total_produced, "obra": _obra.get_save_data(),
+		"desgaste": _desgaste.get_save_data()}  # Bloco 105
 
 
 ## Save antigo sem a chave "etapa" = já funcionava.
@@ -254,6 +262,7 @@ func load_save_data(d: Dictionary) -> void:
 	pago = bool(d.get("pago", false)) and not restaurado()
 	progresso = maxf(float(d.get("progresso", 0.0)), 0.0) if pago else 0.0
 	total_produced = maxf(float(d.get("total", total_produced)), 0.0)
+	_desgaste.load_save_data(d.get("desgaste", {}) if d.get("desgaste") is Dictionary else {})  # Bloco 105 (save antigo: novo)
 	if d.get("obra") is Dictionary:
 		_obra.load_save_data(d.obra)
 	refresh()
@@ -325,11 +334,12 @@ func _process(delta: float) -> void:
 		if body == operator and body.get_state() == "operating":
 			_producing = true
 			body.operate_tick()
-			_acc += wood_per_sec * body.work_mult() * delta
+			_acc += wood_per_sec * body.work_mult() * delta * _desgaste.eficiencia()  # Bloco 105
 	while _acc >= 1.0:
 		_acc -= 1.0
 		total_produced += 1.0
 		_deliver(1.0)
+		Manutencao.gasta_em(self, "coletor_madeira", 1.0)  # Bloco 105
 	if _producing:
 		_sound_timer -= delta
 		if _sound_timer <= 0.0:
@@ -388,3 +398,32 @@ func refresh() -> void:
 func pop_in() -> void:
 	_visual.scale = Vector2(2.0, 0.2)
 	create_tween().tween_property(_visual, "scale", Vector2(2, 2), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+# ------------------------------------------------------------ manutenção (Bloco 105: manutencao.gd)
+func manut_tipo() -> String:
+	return "coletor_madeira"
+
+
+func manut_condicao() -> float:
+	return _desgaste.condicao
+
+
+func manut_quebrada() -> bool:
+	return _desgaste.quebrada
+
+
+func manut_titulo() -> String:
+	return "Coletor de madeira"
+
+
+func manut_pos(_w: Node) -> Vector2:
+	return global_position + Vector2(0, 36)
+
+
+func manut_preventiva() -> void:
+	_desgaste.restaura()
+
+
+func manut_conserto_proprio() -> bool:
+	return false

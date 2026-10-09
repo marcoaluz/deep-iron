@@ -90,6 +90,7 @@ var _sound_timer := 0.0
 
 
 func _ready() -> void:
+	add_to_group("maquinas")  # Bloco 105: a cabine gasta (o mecânico revisa)
 	add_to_group(grupo)
 	add_to_group("elevadores")  # Bloco 71: toda ligação entre andares (o ipezinho entra na gaiola)
 	add_to_group("clickable")
@@ -205,6 +206,9 @@ func obra_work(seconds: float) -> void:
 	if cabine.consertando:
 		if cabine.trabalha(seconds):
 			Audio.build_done(global_position)
+			var mt := get_tree().get_first_node_in_group("manutencao")
+			if mt:
+				mt.conserto_proprio_terminou(self)  # Bloco 105
 			remove_from_group("obras")
 			_apply(false)
 		return
@@ -281,6 +285,9 @@ func _pede_conserto() -> void:
 	var eco := get_tree().get_first_node_in_group("economy")
 	if eco == null or eco.metal_falta(conserto_custo.x, conserto_custo.y, "ferro", conserto_custo.z) != "":
 		return
+	var mt := get_tree().get_first_node_in_group("manutencao")
+	if mt and not mt.tem_quem_conserte():
+		return  # Bloco 105: sem mecânico nem engenheiro, não gasta o material (tenta de novo daqui a pouco)
 	if not eco.paga_metal(conserto_custo.x, conserto_custo.y, "ferro", conserto_custo.z):
 		return
 	cabine.comeca_conserto()
@@ -363,3 +370,37 @@ func load_save_data(d: Dictionary) -> void:
 	elif is_in_group("obras"):
 		remove_from_group("obras")
 	_apply(false)
+
+
+# ------------------------------------------------------------ manutenção (Bloco 105: o cabo da cabine)
+## O conserto do cabo é do mecânico (sem mecânico, do engenheiro); a restauração/conserto da plataforma é construção.
+func oficio_obra() -> String:
+	return "mecanico" if cabine.consertando else ""
+
+
+func manut_tipo() -> String:
+	return "cabine"
+
+
+func manut_condicao() -> float:
+	return cabine.condicao() if unlocked else 1.0
+
+
+func manut_quebrada() -> bool:
+	return cabine.quebrada
+
+
+func manut_titulo() -> String:
+	return "Cabine da plataforma"
+
+
+func manut_pos(_w: Node) -> Vector2:
+	return global_position + Vector2(0, 40)
+
+
+func manut_preventiva() -> void:
+	cabine.viagens = 0  # cabo revisado: conta de novo
+
+
+func manut_conserto_proprio() -> bool:
+	return true  # (o conserto do cabo já é a obra daqui, com material — Bloco 99)

@@ -31,6 +31,7 @@ const TIPOS := [
 	["ociosos", "sem_funcao", "Parados"],
 	["migrantes", "pessoas", "Migrantes no portão"],  # Bloco 101
 	["armazem_cheio", "armazem_cheio", "Armazém cheio"],  # Bloco 97
+	["maquina", "al_reator", "Máquina quebrada ou falhando"],  # Bloco 105 (ícone provisório até a arte ser aprovada)
 	["desarmados", "it_arma_quebrada", "Desarmados"],
 	["frio", "frio", "Sem casaco"],
 	["sem_teto", "camas", "Sem cama"],

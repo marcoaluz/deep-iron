@@ -22,7 +22,11 @@ const OUTFIT_FUNCAO := {"mineiro": "minerador", "civil": "civil", "cozinheiro": 
 	"guarda": "guarda", "pesquisador": "pesquisador", "cacador": "cacador", "medico": "medico", "engenheiro": "engenheiro",
 	"fundidor": "fundidor", "ferreiro": "ferreiro", "padre": "padre",  # Bloco 92: a arte própria (PixelLab, oficios92.py)
 	"carpinteiro": "carpinteiro",  # Bloco 94 (oficios94.py)
-	"batedor": "batedor"}  # Bloco 104 (oficios104.py)
+	"batedor": "batedor",  # Bloco 104 (oficios104.py)
+	"carregador": "carregador", "mecanico": "mecanico"}  # Bloco 105 (oficios105.py)
+## Bloco 105: PROVISÓRIO enquanto a arte própria não foi aprovada (o Marco aprova o piloto antes do lote): a função que
+## ainda não está no bonecos.json usa esta. Sai sozinho quando o `integra.py bonecos` puser a função lá.
+const PROVISORIO := {"carregador": "civil", "mecanico": "engenheiro"}
 ## desenho antigo da mão (assets/game/<nome>.png) -> ferramenta nova (Prompt 4)
 const ITEM_OF := {"pickaxe": "picareta", "pickaxe_aco": "picareta_aco", "axe": "machado", "hammer": "martelo",
 	"porrete": "porrete", "lanca": "lanca", "lanca_prata": "lanca_prata", "besta": "besta", "bow": "arco"}
@@ -90,8 +94,15 @@ static func enabled_for(w: Node) -> bool:
 
 
 ## A pasta base (função × gênero) e as que vestem por cima (traje, casaco), na ordem de procura.
-static func folders(w: Node) -> Array:
+static func funcao_de(w: Node) -> String:
 	var f: String = OUTFIT_FUNCAO.get(w.outfit() if w.has_method("outfit") else "mineiro", "minerador")
+	if PROVISORIO.has(f) and not data().get("funcoes", {}).has(f):
+		return PROVISORIO[f]
+	return f
+
+
+static func folders(w: Node) -> Array:
+	var f := funcao_de(w)
 	var pair: Array = data().get("funcoes", {}).get(f, ["minerador", "mineradora", "minerar"])
 	var woman: bool = String(w.get("gender")) == "menina"
 	var base: String = pair[1] if woman else pair[0]
@@ -109,7 +120,7 @@ static func folders(w: Node) -> Array:
 
 
 static func work_anim(w: Node) -> String:
-	var f: String = OUTFIT_FUNCAO.get(w.outfit() if w.has_method("outfit") else "mineiro", "minerador")
+	var f := funcao_de(w)
 	var pair: Array = data().get("funcoes", {}).get(f, [])
 	var a = pair[2] if pair.size() > 2 else null
 	if a == null and w.get("_ai_state") in ["mining", "storing"]:

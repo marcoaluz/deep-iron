@@ -23,6 +23,8 @@ const STATE_LABELS := {
 	"catalogando": "catalogando",  # Bloco 102
 	"patrulha": "caçando no fundo",  # Bloco 103
 	"batendo": "batendo o mato",  # Bloco 104
+	"carregando": "carregando material",  # Bloco 105
+	"manutencao": "fazendo manutenção",
 	"expedicao": "saindo em expedição",
 	"manual": "ordem manual",
 	"home": "indo pra casa",
@@ -94,6 +96,8 @@ const OUTFIT_FILES := {
 	"padre": "res://assets/game/ipezinho_civil_%s%d.png",
 	"carpinteiro": "res://assets/game/ipezinho_lenhador_%s%d.png",  # Bloco 94 (na vista iso: a arte do PixelLab)
 	"batedor": "res://assets/game/ipezinho_cacador_%s%d.png",  # Bloco 104 (na vista iso: a arte do PixelLab, oficios104.py)
+	"carregador": "res://assets/game/ipezinho_civil_%s%d.png",  # Bloco 105 (na vista iso: a arte do PixelLab, oficios105.py)
+	"mecanico": "res://assets/game/ipezinho_engenheiro_%s%d.png",
 }
 ## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
 const OUTFITS_WITH_LAMP := ["mineiro"]
@@ -140,7 +144,9 @@ const ROLE_SMITH := "ferreiro"  # Bloco 87: opera a Oficina e o Arsenal (só por
 const ROLE_PRIEST := "padre"  # Bloco 88: o padre (um só, chega por evento). Bloco 92: é FUNÇÃO — só homem, um por vez
 const ROLE_CARPENTER := "carpinteiro"  # Bloco 94: opera a Carpintaria (só por ordem) e monta as camas novas
 const ROLE_SCOUT := "batedor"  # Bloco 104: bate o mato (avista de longe, rastreia tocas) e lidera as expedições
-const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER, ROLE_SMITH, ROLE_PRIEST, ROLE_CARPENTER, ROLE_SCOUT]
+const ROLE_CARRIER := "carregador"  # Bloco 105: leva o material do armazém pras obras, a fornalha e a cozinha (logistica.gd)
+const ROLE_MECHANIC := "mecânico"  # Bloco 105: consertos e manutenção das máquinas (manutencao.gd)
+const JOBS := [ROLE_IDLE, ROLE_MINER, ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH, ROLE_HUNTER, ROLE_DOCTOR, ROLE_ENGINEER, ROLE_SMELTER, ROLE_SMITH, ROLE_PRIEST, ROLE_CARPENTER, ROLE_SCOUT, ROLE_CARRIER, ROLE_MECHANIC]
 ## Texto do popup ao receber a função.
 const JOB_LABELS := {
 	ROLE_IDLE: "Sem função", ROLE_MINER: "Minerador!", ROLE_COOK: "Cozinheiro!",
@@ -148,6 +154,8 @@ const JOB_LABELS := {
 	ROLE_HUNTER: "Caçador!", ROLE_DOCTOR: "Médico!", ROLE_ENGINEER: "Engenheiro!", ROLE_SMELTER: "Fundidor!", ROLE_SMITH: "Ferreiro!", ROLE_PRIEST: "Padre",
 	ROLE_CARPENTER: "Carpinteiro!",  # Bloco 94
 	ROLE_SCOUT: "Batedor!",  # Bloco 104
+	ROLE_CARRIER: "Carregador!",  # Bloco 105
+	ROLE_MECHANIC: "Mecânico!",
 }
 ## Bloco 26/28: outfit inteiro por função (derivado do `job`: nada novo no save).
 ## REGRA (Bloco 28): toda função nova nasce com outfit próprio no mesmo bloco —
@@ -162,6 +170,8 @@ const JOB_OUTFIT := {
 	ROLE_PRIEST: "padre",  # Bloco 88: PROVISÓRIO: a roupa de civil + tom de batina
 	ROLE_CARPENTER: "carpinteiro",  # Bloco 94: a arte do PixelLab (oficios94.py)
 	ROLE_SCOUT: "batedor",  # Bloco 104: a arte do PixelLab (oficios104.py)
+	ROLE_CARRIER: "carregador",  # Bloco 105: a arte do PixelLab (oficios105.py)
+	ROLE_MECHANIC: "mecanico",
 }
 ## Quem está sem função fica a até esta distância do Centro da Vila.
 const IDLE_HUB_RADIUS := 70.0
@@ -569,6 +579,17 @@ var _expedicao_saida := Vector2.INF
 var _camadas_colisao := Vector2i(-1, -1)
 ## Bloco 104: o batedor batendo o mato: {pos, t (segundos parado olhando), toca}.
 var _bate := {}
+## Bloco 105: o CARREGADOR — a entrega de agora (logistica.gd: {tipo, alvo, chave} + fase) e o que ele leva fora das
+## obras (barras, matéria-prima: {item: qtd}); os insumos a caminho da fornalha só aparecem (o pagamento já foi feito).
+var _carga := {}
+var entrega_mao := {}
+var _levando_insumo := false
+## Bloco 105: o MECÂNICO — a máquina da preventiva e o tempo que ele já trabalhou nela.
+var _manut_alvo: Node = null
+var _manut_t := 0.0
+var _manut_andando := 0.0  # Bloco 105: segundos andando sem chegar na máquina (desiste: manutencao.preventiva_desiste)
+## Bloco 105: o engenheiro (ou o mecânico) esperando o carregador trazer o material.
+var _espera_carregador := false
 
 ## Bloco 101: MIGRANTE esperando no portão (migrantes.gd): fora do grupo "ipezinhos" (não come, não ocupa cama, não conta)
 ## e sem IA nem necessidades — só anda até onde mandarem. Aceito: vira_morador().
@@ -759,6 +780,13 @@ func get_state_label() -> String:
 		return "passeando até: %s" % _spot.nome
 	if _ai_state == "eating" and _refeicao_alvo != "":  # Bloco 84
 		return "%s (%s)" % ["comendo" if _servido else "indo comer", Schedule.nome_refeicao(_refeicao_alvo)]
+	if _ai_state == "building" and _espera_carregador and _obra != null and is_instance_valid(_obra):
+		return "esperando o carregador trazer o material"  # Bloco 105
+	if _ai_state == "carregando" and not _carga.is_empty():  # Bloco 105
+		var nm := {"obra": "material pra obra", "insumo": "insumos pra fornalha", "barras": "barras pro armazém", "cozinha": "matéria-prima pra cozinha"}
+		return "levando %s" % nm.get(String(_carga.tipo), "material")
+	if _ai_state == "manutencao" and _manut_alvo != null and is_instance_valid(_manut_alvo):
+		return "manutenção: %s" % _manut_alvo.manut_titulo()
 	if _ai_state == "catalogando":  # Bloco 102
 		var cat := _catalogo()
 		var nm: String = "???" if cat == null or _campo.is_empty() else ("amostra de " + cat.nome(_campo.id) if _campo.get("lab", false) else "???")
@@ -950,6 +978,10 @@ func _process(delta: float) -> void:
 		_campo_tick(delta)  # Bloco 102
 	elif _ai_state == "batendo":
 		_bate_tick(delta)  # Bloco 104
+	elif _ai_state == "carregando":
+		_carrega_tick()  # Bloco 105
+	elif _ai_state == "manutencao":
+		_manut_tick(delta)
 	if animo_descoberta > 0.0:
 		animo_descoberta = maxf(animo_descoberta - animo_descoberta_decai * delta, 0.0)  # Bloco 103
 	_social_process(delta)  # Bloco 85
@@ -1156,6 +1188,20 @@ func _choose_state() -> String:
 	# Bloco 87: ferreiro — a obra da Oficina e a forja do Arsenal (só com encomenda; sem: espera).
 	if is_smith():
 		return "building" if _pick_obra() != null else "idle"
+	# Bloco 105: mecânico — primeiro o conserto da quebra (obra com material, ofício "mecanico"); depois a preventiva.
+	if is_mechanic():
+		if _pick_obra() != null:
+			return "building"
+		var mt := _manutencao()
+		if mt and ((_manut_alvo != null and is_instance_valid(_manut_alvo)) or mt.alvo_preventiva(self) != null):
+			return "manutencao"
+		return "idle"
+	# Bloco 105: carregador — as entregas da logística (obras, fornalha, cozinha).
+	if is_carrier():
+		var lg := _logistica()
+		if lg and (not _carga.is_empty() or lg.tem_entrega_para(self)):
+			return "carregando"
+		return "idle"
 	# Guarda: à noite fica nos portões; de dia treina (até ficar pronto) e descansa.
 	# Bloco 35: desarmado vai ao Arsenal pegar outra arma (até de noite: sem arma no
 	# posto não adianta); de dia também troca por uma melhor que estiver no cavalete.
@@ -1204,6 +1250,13 @@ func _choose_state() -> String:
 			return "cooking"
 		if raw_carrying >= cook_carry - 0.01:
 			return "cooking"
+		if raw_carrying <= 0.0 and _cozinha_com_estoque() != null:
+			return "cooking"  # Bloco 105: o carregador trouxe pro estoque da cozinha (ela abastece a cesta lá)
+		if _ai_state != "fetching" and raw_carrying <= 0.0:
+			var lgc := _logistica()
+			var coz := _closest_in_group("comedouros")
+			if lgc and coz and lgc.deixa_pro_carregador("cozinha", coz):
+				return "idle"  # Bloco 105: o carregador vem trazendo (sem ninguém pegar, ele mesmo vai: fallback)
 		if _ai_state == "fetching" and _station_ok_for("fetching"):
 			return "fetching"
 		if _raw_available():
@@ -1303,6 +1356,30 @@ func _decide_next_action() -> void:
 			_set_state("expedicao")
 		if not _moving or _target.distance_to(_expedicao_saida) > 4.0:
 			_go_to(_expedicao_saida)
+		return
+
+	if desired == "carregando":  # Bloco 105: a entrega (anda sozinha no _carrega_tick)
+		if _ai_state != "carregando":
+			_release_station()
+			_set_state("carregando")
+		_carregar()
+		return
+
+	if desired == "manutencao":  # Bloco 105: a preventiva (anda no _manut_tick)
+		if _ai_state != "manutencao":
+			_release_station()
+			_set_state("manutencao")
+		var mt := _manutencao()
+		if mt and (_manut_alvo == null or not is_instance_valid(_manut_alvo)):
+			_manut_alvo = mt.alvo_preventiva(self)
+			_manut_t = 0.0
+			_manut_andando = 0.0
+			if _manut_alvo:
+				mt.reserva(_manut_alvo, self)
+		if _manut_alvo:
+			var p: Vector2 = _manut_alvo.manut_pos(self)
+			if global_position.distance_to(p) > 26.0 and (not _moving or _target.distance_to(p) > 4.0):
+				_go_to(p)
 		return
 
 	if desired == "batendo":  # Bloco 104: escolhe um ponto da beira da floresta e vai olhar
@@ -1486,8 +1563,8 @@ func _station_ok_for(state: String) -> bool:
 		return raw_carrying > 0.0
 	if state == "fetching":
 		return _station.raw_stored >= 0.5 and raw_carrying < cook_carry - 0.01
-	if state == "cooking":
-		return raw_carrying > 0.0 and _station.space_left() > 0.5
+	if state == "cooking":  # (Bloco 105: ou o estoque da cozinha, que o carregador trouxe)
+		return (raw_carrying > 0.0 or float(_station.get("raw_local") if _station.get("raw_local") != null else 0.0) >= 0.5) and _station.space_left() > 0.5
 	if state == "delivering":
 		return food_carrying > 0.0 and _station.space_left() > 0.5
 	if state == "eating":
@@ -1786,6 +1863,12 @@ func _set_state(new_state: String) -> void:
 		_social_sai()  # Bloco 85: solta o lugar no ponto
 	if _ai_state == "na_mina":
 		_sai_mina()  # Bloco 99: refeição, fim do expediente, emergência ou o vagonete parou: sai pela boca
+	if _ai_state == "manutencao":
+		var mt := _manutencao()  # Bloco 105: largou a preventiva (o tempo feito se perde: recomeça)
+		if mt:
+			mt.solta(self)
+		_manut_alvo = null
+		_manut_t = 0.0
 	if _ai_state == "catalogando":
 		_campo = {}  # Bloco 102: largou o campo (a anotação feita continua com ela: entrega depois)
 		var cat := _catalogo()
@@ -2257,15 +2340,19 @@ func is_engineer() -> bool:
 func _pick_obra() -> Node:
 	if not material_mao.is_empty() and _material_obra != null and is_instance_valid(_material_obra) and _material_obra.obra_pending():
 		return _material_obra  # Bloco 96: primeiro entrega o que tem na mão
-	if _obra != null and is_instance_valid(_obra) and _obra.obra_pending() and (_obra.get("oficio") == ROLE_SMITH) == is_smith():
+	if _obra != null and is_instance_valid(_obra) and _obra.obra_pending() and _obra_e_minha(_obra):
 		return _obra
 	var oldest_free: Node = null
 	var oldest_any: Node = null
+	# Bloco 105: sem mecânico, o engenheiro conserta a máquina quebrada — mas só quando não tem obra de construção
+	var construcao := is_engineer() and get_tree().get_nodes_in_group("obras").any(func(o): return o.has_method("obra_pending") and o.obra_pending() and _oficio_de(o) == "")
 	for site in get_tree().get_nodes_in_group("obras"):
 		if not site.has_method("obra_pending") or not site.obra_pending():
 			continue
-		if (site.get("oficio") == ROLE_SMITH) != is_smith():
-			continue  # Bloco 87: Oficina e Arsenal são do ferreiro; o resto, do engenheiro
+		if not _obra_e_minha(site):
+			continue  # Bloco 87: Oficina e Arsenal são do ferreiro; Bloco 105: os consertos de máquina, do mecânico
+		if construcao and _oficio_de(site) == "mecanico":
+			continue
 		var t: float = site.obra_ordered_at()
 		if oldest_any == null or t < oldest_any.obra_ordered_at():
 			oldest_any = site
@@ -2276,6 +2363,28 @@ func _pick_obra() -> Node:
 		if not taken and (oldest_free == null or t < oldest_free.obra_ordered_at()):
 			oldest_free = site
 	return oldest_free if oldest_free != null else oldest_any
+
+
+## Bloco 105: o ofício de uma obra ("" = construção do engenheiro; "ferreiro"; "mecanico" = conserto de máquina).
+func _oficio_de(site: Node) -> String:
+	if site.has_method("oficio_obra"):
+		return String(site.oficio_obra())
+	var o = site.get("oficio")
+	return String(o) if o != null else ""
+
+
+## Bloco 105: essa obra é pra mim? O ferreiro: a forja. O mecânico: os consertos. O engenheiro: a construção — e os
+## consertos de máquina quando a vila não tem mecânico.
+func _obra_e_minha(site: Node) -> bool:
+	var of := _oficio_de(site)
+	if is_smith():
+		return of == ROLE_SMITH
+	if is_mechanic():
+		return of == "mecanico"
+	if of == "mecanico":
+		var mt := _manutencao()
+		return mt == null or not mt.tem_mecanico()
+	return of != ROLE_SMITH
 
 
 ## Prompt 18: acidente na mina — pedrinhas caindo do teto em cima dele (só visual; a vista iso
@@ -2823,6 +2932,13 @@ func set_job(new_job: String) -> void:
 		solta_material(true)  # Bloco 96: o material da mão volta pro armazém
 	if job == ROLE_DOCTOR:
 		_drop_patient()  # Bloco 36: tirou do médico no meio do resgate: larga o caído ali
+	if job == ROLE_CARRIER and not _carga.is_empty():
+		_desfaz_carga(true)  # Bloco 105: deixou de ser carregador no meio da entrega
+	if job == ROLE_MECHANIC:
+		var mt0 := _manutencao()
+		if mt0:
+			mt0.solta(self)
+		_manut_alvo = null
 	if job == ROLE_RESEARCH and nota_campo != "":
 		var cat := _catalogo()  # Bloco 102: deixou de ser pesquisadora com a anotação na mão: ela entrega na hora
 		if cat:
@@ -3813,9 +3929,10 @@ func _mostra_balao(icone: String) -> void:
 # ------------------------------------------------------------ balão de motivo (Bloco 95)
 ## Ícone de cada motivo (assets/game/ui/icones/) e o nome dele (dica, lista, teste).
 const MOTIVO_ICONE := {"sem_trabalho": "sem_funcao", "sem_ferramenta": "sem_ferramenta", "armazem_cheio": "armazem_cheio",
-	"caminho_bloqueado": "caminho_bloqueado", "sem_comida": "al_falta_comida"}
+	"caminho_bloqueado": "caminho_bloqueado", "sem_comida": "al_falta_comida",
+	"sem_material": "al_obra_parada"}  # Bloco 105 (ícone provisório até a arte própria ser aprovada)
 const MOTIVO_NOME := {"sem_trabalho": "sem trabalho", "sem_ferramenta": "sem ferramenta", "armazem_cheio": "armazém cheio",
-	"caminho_bloqueado": "caminho bloqueado", "sem_comida": "sem comida"}
+	"caminho_bloqueado": "caminho bloqueado", "sem_comida": "sem comida", "sem_material": "sem material"}
 ## Segundos parado pelo MESMO motivo antes de o balão aparecer (não pisca a cada troca de tarefa).
 @export var motivo_espera: float = 2.0
 ## A cada quantos segundos o motivo é conferido (barato: só olha o estado que a IA já decidiu).
@@ -3828,6 +3945,8 @@ const MOTIVO_NOME := {"sem_trabalho": "sem trabalho", "sem_ferramenta": "sem fer
 ##   armazem_cheio      com a carga nas costas e o armazém cheio (Bloco 97: o armazém tem limite)
 ##   caminho_bloqueado  andando e preso no mesmo lugar (o anti-travamento já começou a agir)
 ##   sem_comida         com fome e a cozinha vazia
+##   sem_material       (Bloco 105) o carregador ou o fundidor/carpinteiro sem nada pra levar e uma ordem parada por
+##                      falta de insumo no armazém
 func motivo_parado() -> String:
 	if downed or injured or _resting or holding_robot != null:
 		return ""
@@ -3856,6 +3975,13 @@ func motivo_parado() -> String:
 		return ""
 	if is_hunter() and not _has_bow() and not get_tree().get_nodes_in_group("caca").is_empty() 			and not _has_usable_station("coleta_comida"):
 		return "sem_ferramenta"
+	if is_carrier() or is_smelter() or job == ROLE_CARPENTER:
+		if _ordem_sem_insumo():
+			return "sem_material"
+		if not is_carrier():
+			var fo := _fornalha_alvo()
+			if fo and (fo.fila.a_caminho() > 0 or not (fo.barras_prontas as Dictionary).is_empty() or (fo.fila.a_comecar() > 0 and fo.falta() == "")):
+				return ""  # esperando o carregador trazer o insumo / levar as barras: não está parado à toa
 	if is_miner() and _find_best_station("minerios") == null:
 		for m in get_tree().get_nodes_in_group("minerios"):
 			if m.has_method("is_unlocked") and not m.is_unlocked() and m.ore_remaining > 0.0:
@@ -3987,9 +4113,17 @@ func _material_tick() -> bool:
 	# 3) a parte liberada está feita? então vai buscar o que falta (do armazém mais perto que tem)
 	if site.tudo_entregue() or _obra.obra_progress() < site.fracao() - 0.0001:
 		_material_falta = false
+		_espera_carregador = false
 		return false  # ainda tem o que construir com o que já chegou
 	if eco == null:
 		return false
+	# Bloco 105: com carregador na vila, quem constrói só constrói: espera ele trazer (fallback: ninguém pegou a tempo)
+	var lg := _logistica()
+	if lg and lg.deixa_pro_carregador("obra", _obra):
+		_espera_carregador = true
+		_material_falta = false
+		return false
+	_espera_carregador = false
 	var cabe := carga_material
 	var escolhido: Node = null
 	for k in site.necessario:
@@ -4117,6 +4251,298 @@ func is_carpenter() -> bool:
 ## Bloco 104: o batedor.
 func is_scout() -> bool:
 	return job == ROLE_SCOUT
+
+
+## Bloco 105: alguma Fornalha/Carpintaria (a dele, se for o operador) com ordem parada por falta de insumo?
+func _ordem_sem_insumo() -> bool:
+	var grupos: Array = ["fornalhas", "carpintarias"]
+	if is_smelter():
+		grupos = ["fornalhas"]
+	elif job == ROLE_CARPENTER:
+		grupos = ["carpintarias"]
+	for g in grupos:
+		for f in get_tree().get_nodes_in_group(g):
+			if f.get("fila") != null and f.fila.a_comecar() > 0 and f.fila.comecadas() == 0 and f.has_method("falta") and f.falta() != "":
+				return true
+	return false
+
+
+## Bloco 105: do save: o que o carregador levava (barras, matéria-prima) volta pro armazém.
+func _devolve_entrega(em: Dictionary) -> void:
+	var eco := get_tree().get_first_node_in_group("economy") if is_inside_tree() else null
+	if eco:
+		for k in em:
+			eco.devolve(String(k), float(em[k]), global_position)
+
+
+## Bloco 105: o carregador e o mecânico.
+func is_carrier() -> bool:
+	return job == ROLE_CARRIER
+
+
+func is_mechanic() -> bool:
+	return job == ROLE_MECHANIC
+
+
+func _logistica() -> Node:
+	return get_tree().get_first_node_in_group("logistica") if is_inside_tree() else null
+
+
+func _manutencao() -> Node:
+	return get_tree().get_first_node_in_group("manutencao") if is_inside_tree() else null
+
+
+## Bloco 105: a cozinha com matéria-prima no estoque (o carregador trouxe), ou null.
+func _cozinha_com_estoque() -> Node:
+	for c in get_tree().get_nodes_in_group("comedouros"):
+		if float(c.get("raw_local") if c.get("raw_local") != null else 0.0) >= 0.5:
+			return c
+	return null
+
+
+# ------------------------------------------------------------ o carregador (Bloco 105)
+## Pega a entrega (reservada na logística) e vai pro primeiro ponto dela.
+func _carregar() -> void:
+	var lg := _logistica()
+	var eco := get_tree().get_first_node_in_group("economy")
+	if lg == null or eco == null:
+		return
+	if _carga.is_empty():
+		var t: Dictionary = lg.reserva(self)
+		if t.is_empty():
+			_decision_timer = 0.0
+			return
+		_carga = t.duplicate()
+		_carga["fase"] = "ao_alvo" if String(t.tipo) == "barras" else "ao_armazem"
+		if String(t.tipo) == "obra" and not _prepara_obra(t.alvo, eco):
+			lg.solta(self)
+			_carga = {}
+			return
+		if String(t.tipo) in ["insumo", "cozinha"]:
+			_carga["arm"] = _armazem_perto(eco)
+	var dest := _carga_destino()
+	if dest != Vector2.INF and global_position.distance_to(dest) > 24.0 and (not _moving or _target.distance_to(dest) > 4.0):
+		_go_to(dest)
+
+
+## A obra: escolhe o armazém e o que levar (até a carga dele) — os mesmos campos do engenheiro (a obra conta como "a caminho").
+func _prepara_obra(site: Node, eco: Node) -> bool:
+	var os = ObraSite.de(site)
+	if os == null:
+		return false
+	var cabe := capacidade_carga()
+	var escolhido: Node = null
+	material_pedido.clear()
+	for k in os.necessario:
+		var precisa: float = os.a_buscar(k)
+		if precisa < 0.5:
+			continue
+		var arms: Array = eco.armazens_com(k, global_position)
+		if arms.is_empty():
+			continue
+		if escolhido == null:
+			escolhido = arms[0]
+		if not arms.has(escolhido):
+			continue
+		var q := minf(minf(precisa, cabe), eco._no_armazem(escolhido, k))
+		if q >= 0.5:
+			material_pedido[k] = q
+			cabe -= q
+		if cabe < 0.5:
+			break
+	if material_pedido.is_empty():
+		return false
+	_material_obra = site
+	_material_armazem = escolhido
+	_carga["arm"] = escolhido
+	eco.reserva_mudou()
+	return true
+
+
+func _armazem_perto(eco: Node) -> Node:
+	var melhor: Node = null
+	for a in get_tree().get_nodes_in_group("armazens"):
+		if melhor == null or global_position.distance_to(a.global_position) < global_position.distance_to(melhor.global_position):
+			melhor = a
+	return melhor
+
+
+func _carga_destino() -> Vector2:
+	if _carga.is_empty():
+		return Vector2.INF
+	var alvo = _carga.get("alvo")
+	if String(_carga.fase) in ["ao_armazem", "ao_armazem2"]:
+		var a = _carga.get("arm")
+		if a == null or not is_instance_valid(a):
+			return Vector2.INF
+		return a.get_wait_position(self) if a.has_method("get_wait_position") else (a as Node2D).global_position
+	if alvo == null or not is_instance_valid(alvo):
+		return Vector2.INF
+	if String(_carga.tipo) == "obra":
+		return alvo.obra_position(self)
+	return (alvo as Node2D).global_position + Vector2(0, 30)
+
+
+## Cada quadro: chegou no ponto da fase -> pega / entrega.
+func _carrega_tick() -> void:
+	if _carga.is_empty():
+		return
+	var lg := _logistica()
+	var eco := get_tree().get_first_node_in_group("economy")
+	var alvo = _carga.get("alvo")
+	if alvo == null or not is_instance_valid(alvo) or eco == null:
+		_desfaz_carga(true)
+		return
+	var dest := _carga_destino()
+	if dest == Vector2.INF:
+		_desfaz_carga(true)
+		return
+	var d := global_position.distance_to(dest)
+	if not (d <= 24.0 or (not _moving and d <= 60.0)):
+		return
+	_moving = false
+	var tipo := String(_carga.tipo)
+	match String(_carga.fase):
+		"ao_armazem":
+			match tipo:
+				"obra":
+					for k in material_pedido:
+						var got: float = eco.tira_do_armazem(_material_armazem, k, float(material_pedido[k]))
+						if got > 0.0:
+							material_mao[k] = float(material_mao.get(k, 0.0)) + got
+					material_pedido.clear()
+					_material_armazem = null
+					eco.reserva_mudou()
+					if material_mao.is_empty():
+						_desfaz_carga(false)
+						return
+				"insumo":
+					var n: int = alvo.fila.comecar_unidades(int(alvo.lote), eco, true)
+					if n <= 0:
+						_desfaz_carga(false)
+						return
+					_levando_insumo = true
+					_popup("Insumos: %d x (%s)" % [n, alvo.fila.texto_insumos(alvo.fila.atual().receita)], Color(1.0, 0.85, 0.45))
+				"cozinha":
+					var arm = _carga.get("arm")
+					var quer := minf(capacidade_carga(), float(alvo.raw_local_max) - float(alvo.raw_local))
+					var tem := minf(float(arm.raw_stored), eco.livre("comida_crua"))
+					var q := minf(quer, tem)
+					if q < 0.5:
+						_desfaz_carga(false)
+						return
+					arm.raw_stored -= q
+					entrega_mao["comida_crua"] = q
+			_carga.fase = "ao_alvo"
+			_go_to(_carga_destino())
+		"ao_alvo":
+			match tipo:
+				"obra":
+					var os = ObraSite.de(alvo)
+					if os:
+						for k in material_mao:
+							os.entregar(k, float(material_mao[k]))
+						_popup("+" + ", ".join(material_mao.keys().map(func(k): return "%d %s" % [int(material_mao[k]), ObraSite._nome(k)])), Color(0.55, 1.0, 0.5))
+					material_mao.clear()
+					_material_obra = null
+					eco.reserva_mudou()
+				"insumo":
+					alvo.fila.entrega_a_caminho()
+					_levando_insumo = false
+				"cozinha":
+					alvo.raw_local = minf(float(alvo.raw_local) + float(entrega_mao.get("comida_crua", 0.0)), float(alvo.raw_local_max))
+					entrega_mao.clear()
+				"barras":
+					entrega_mao = (alvo.barras_prontas as Dictionary).duplicate()
+					alvo.barras_prontas.clear()
+					if entrega_mao.is_empty():
+						_desfaz_carga(false)
+						return
+					var total := 0.0
+					for k in entrega_mao:
+						total += float(entrega_mao[k])
+					var arm2: Node = eco.armazem_com_espaco(global_position, total)
+					_carga["arm"] = arm2 if arm2 else _armazem_perto(eco)
+					_carga.fase = "ao_armazem2"
+					_go_to(_carga_destino())
+					return
+			_fim_da_entrega(tipo)
+		"ao_armazem2":  # as barras chegando no armazém (cheio: espera como todo mundo, Bloco 97)
+			var arm3 = _carga.get("arm")
+			var total2 := 0.0
+			for k in entrega_mao:
+				total2 += float(entrega_mao[k])
+			if arm3.has_method("espaco") and float(arm3.espaco()) < total2 - 0.01:
+				var outro: Node = eco.armazem_com_espaco(global_position, total2)
+				if outro and outro != arm3:
+					_carga["arm"] = outro
+					_go_to(_carga_destino())
+				return
+			for k in entrega_mao:
+				arm3.add_item(k, float(entrega_mao[k]))
+			_popup("+%s" % ", ".join(entrega_mao.keys().map(func(k): return "%d %s" % [int(entrega_mao[k]), Items.nome(k).to_lower()])), Color(0.55, 1.0, 0.5))
+			entrega_mao.clear()
+			_fim_da_entrega(tipo)
+
+
+func _fim_da_entrega(tipo: String) -> void:
+	var lg := _logistica()
+	if lg:
+		lg.feita(self, tipo)
+	_carga = {}
+	_decision_timer = 0.0
+
+
+## Larga a entrega (a obra sumiu, trocou de função...). devolve = o que estiver na mão volta pro armazém; os insumos já
+## pagos vão pra fornalha (as unidades começam: nada se perde).
+func _desfaz_carga(devolve: bool) -> void:
+	var lg := _logistica()
+	if lg:
+		lg.solta(self)
+	if not material_mao.is_empty() or not material_pedido.is_empty():
+		solta_material(devolve)
+	var eco := get_tree().get_first_node_in_group("economy") if is_inside_tree() else null
+	if _levando_insumo and _carga.get("alvo") != null and is_instance_valid(_carga.alvo) and _carga.alvo.get("fila") != null:
+		_carga.alvo.fila.entrega_a_caminho()
+	_levando_insumo = false
+	if eco:
+		for k in entrega_mao:
+			eco.devolve(k, float(entrega_mao[k]), global_position)
+	entrega_mao.clear()
+	_carga = {}
+	_decision_timer = 0.0
+
+
+# ------------------------------------------------------------ o mecânico (Bloco 105)
+## Chegou na máquina: trabalha o tempo da preventiva (a animação de consertar) e ela volta nova.
+func _manut_tick(delta: float) -> void:
+	if _manut_alvo == null or not is_instance_valid(_manut_alvo):
+		_manut_alvo = null
+		return
+	var mt := _manutencao()
+	if mt == null or _manut_alvo.manut_quebrada():
+		_manut_alvo = null
+		_decision_timer = 0.0
+		return
+	var p: Vector2 = _manut_alvo.manut_pos(self)
+	if global_position.distance_to(p) > 30.0 and (_moving or global_position.distance_to(p) > 70.0):
+		_manut_andando += delta
+		if _manut_andando > mt.preventiva_desiste:
+			mt.desiste(_manut_alvo, self)  # não chega (caminho fechado): larga e vai pra outra
+			_manut_alvo = null
+			_manut_andando = 0.0
+			_decision_timer = 0.0
+		return
+	_manut_andando = 0.0
+	_moving = false
+	_manut_t += delta * work_mult()
+	_work_timer = 0.2  # a animação de consertar
+	if _manut_t >= mt.segundos_de(_manut_alvo):
+		mt.preventiva_feita(_manut_alvo, self)
+		_popup("Manutenção feita: %s" % _manut_alvo.manut_titulo(), Color(0.6, 1.0, 0.7))
+		_manut_alvo = null
+		_manut_t = 0.0
+		_decision_timer = 0.0
 
 
 # ------------------------------------------------------------ expedições (Bloco 104)
@@ -4431,7 +4857,17 @@ func _estado_fundidor() -> String:
 		return f.estado_trabalho  # "fundindo" / "serrando" (Bloco 94)
 	if tem_barra:
 		return "buscando_insumo"
+	# Bloco 105: com carregador, ele traz os insumos e leva as barras; sem ninguém pegar a tempo, o operador vai
+	var lg := _logistica()
+	if not (f.barras_prontas as Dictionary).is_empty() and not (lg and lg.deixa_pro_carregador("barras", f)):
+		pega_barras(f.barras_prontas.duplicate())
+		f.barras_prontas.clear()
+		return "buscando_insumo"
+	if f.fila.a_caminho() > 0:
+		return "idle"  # o carregador vem trazendo
 	if f.fila.a_comecar() > 0 and f.falta() == "":
+		if lg and lg.deixa_pro_carregador("insumo", f):
+			return "idle"
 		return "buscando_insumo"
 	return "idle"  # pausada (falta insumo): espera; nada é gasto
 
@@ -4814,6 +5250,7 @@ func get_save_data() -> Dictionary:
 		"hunt_kills": hunt_kills,  # Bloco 61
 		"nota_campo": nota_campo,  # Bloco 102
 		"xp_pesquisa": xp_pesquisa,  # Bloco 103
+		"entrega_mao": entrega_mao.duplicate(),  # Bloco 105 (o carregador: volta pro armazém ao carregar)
 		"animo_descoberta": animo_descoberta,
 		"area_id": work_area.id if work_area != null else 0,  # Bloco 77
 		"refeicoes_hoje": refeicoes_hoje.keys(),  # Bloco 84
@@ -4914,6 +5351,9 @@ func load_save_data(d: Dictionary) -> void:
 	hunt_kills = maxi(SaveUtil.integer(d, "hunt_kills", 0), 0)  # Bloco 61
 	nota_campo = SaveUtil.text(d, "nota_campo", "")  # Bloco 102 (save antigo: nenhuma)
 	xp_pesquisa = maxi(SaveUtil.integer(d, "xp_pesquisa", 0), 0)  # Bloco 103 (save antigo: 0)
+	var em := SaveUtil.dict(d, "entrega_mao")  # Bloco 105: o que um carregador levava volta pro armazém (a entrega recomeça)
+	if not em.is_empty():
+		_devolve_entrega.call_deferred(em)
 	animo_descoberta = clampf(SaveUtil.num(d, "animo_descoberta", 0.0), 0.0, 50.0)
 	var area_id := SaveUtil.integer(d, "area_id", 0)  # Bloco 77 (save antigo: sem área)
 	if area_id > 0:

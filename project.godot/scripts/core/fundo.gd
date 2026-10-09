@@ -96,17 +96,22 @@ func ventiladores() -> Array:
 	return get_tree().get_nodes_in_group("ventiladores")
 
 
-## 1.0 = sem ventilação; menos = o ventilador está ajudando nesse ponto (só no S2).
+## 1.0 = sem ventilação; menos = o ventilador está ajudando nesse ponto (só no S2). Bloco 105: vale o ventilador que
+## mais protege no alcance, pela eficiência dele (o desgaste tira a proteção aos poucos; quebrado não protege).
 func ventilacao_mult(pos: Vector2) -> float:
+	var melhor := 0.0
 	for v in ventiladores():
 		if (v as Node2D).global_position.distance_to(pos) <= ventilador_alcance:
-			return 1.0 - ventilador_reducao
-	return 1.0
+			melhor = maxf(melhor, v.eficiencia() if v.has_method("eficiencia") else 1.0)
+	return 1.0 - ventilador_reducao * melhor
 
 
-## Quanto sobra da névoa verde do S2 com os ventiladores (1 = toda).
+## Quanto sobra da névoa verde do S2 com os ventiladores (1 = toda). Bloco 105: cada um conta pela eficiência.
 func nevoa_mult() -> float:
-	return 1.0 - minf(ventiladores().size() * ventilador_nevoa, ventilador_nevoa_max)
+	var soma := 0.0
+	for v in ventiladores():
+		soma += v.eficiencia() if v.has_method("eficiencia") else 1.0
+	return 1.0 - minf(soma * ventilador_nevoa, ventilador_nevoa_max)
 
 
 func ventilador_cost_text() -> String:
@@ -196,7 +201,7 @@ func broca_mult() -> float:
 
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
-	return {"ventiladores": ventiladores().map(func(v): return SaveUtil.vec2_to_array(v.global_position)),
+	return {"ventiladores": ventiladores().map(func(v): return SaveUtil.vec2_to_array(v.global_position) + [v._desgaste.condicao]),  # (Bloco 105: + a condição)
 		"queimaduras": queimaduras.duplicate()}
 
 
@@ -206,7 +211,10 @@ func load_save_data(d: Dictionary) -> void:
 		v.queue_free()
 	for p in SaveUtil.array(d, "ventiladores"):
 		if p is Array and p.size() >= 2:
-			spawn_ventilador(Vector2(float(p[0]), float(p[1])))
+			var v: Node = spawn_ventilador(Vector2(float(p[0]), float(p[1])))
+			if v and p.size() >= 3:  # Bloco 105 (save antigo: novo)
+				v._desgaste.condicao = clampf(float(p[2]), 0.0, 1.0)
+				v._desgaste.quebrada = v._desgaste.condicao <= 0.0
 	var q := SaveUtil.dict(d, "queimaduras")
 	queimaduras = {"acido": int(SaveUtil.num(q, "acido", 0.0)), "lava": int(SaveUtil.num(q, "lava", 0.0))}
 	get_tree().call_group("efeitos", "efeitos_mudaram")

@@ -378,5 +378,19 @@
    "bater"
   ],
   "_obs": "Bloco 92"
+ },
+ "casaco_carregador": {
+  "char": "cf13763b-6c13-4f3c-a031-59d2f970da8f",
+  "base": "carregador",
+  "trabalho": "carregar",
+  "enviado": [
+   "caminhada",
+   "carregar"
+  ],
+  "processado": [
+   "caminhada",
+   "carregar"
+  ],
+  "_obs": "Bloco 92"
  }
 }

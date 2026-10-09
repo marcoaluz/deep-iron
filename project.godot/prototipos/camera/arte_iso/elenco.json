@@ -398,5 +398,13 @@
   "char": "32e1ea1f-3ba4-4ef1-bc08-da64fc0196fe",
   "estado": "pronto",
   "_obs": "Bloco 92"
+ },
+ "carregador": {
+  "genero": "h",
+  "job": "1fc4c0f9-99d4-4e7f-8ee4-1fd9e313bb65",
+  "escolhido": 4,
+  "char": "b1e63e4b-1eff-4f48-bdcb-88f50fc14150",
+  "estado": "pronto",
+  "_obs": "Bloco 92"
  }
 }

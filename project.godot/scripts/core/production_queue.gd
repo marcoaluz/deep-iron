@@ -91,10 +91,26 @@ func comecadas() -> int:
 	return int(atual().get("comecadas", 0))
 
 
+## Bloco 105: unidades pagas pelo CARREGADOR e ainda na mão dele (começam quando ele entrega na oficina).
+func a_caminho() -> int:
+	return int(atual().get("a_caminho", 0))
+
+
 ## Unidades que ainda faltam começar na ordem da vez.
 func a_comecar() -> int:
 	var o := atual()
-	return 0 if o.is_empty() else int(o.quantidade) - int(o.feitas) - int(o.comecadas)
+	return 0 if o.is_empty() else int(o.quantidade) - int(o.feitas) - int(o.comecadas) - int(o.get("a_caminho", 0))
+
+
+## Bloco 105: o carregador chegou com os insumos: as unidades a caminho começam.
+func entrega_a_caminho() -> int:
+	var o := atual()
+	if o.is_empty():
+		return 0
+	var n := int(o.get("a_caminho", 0))
+	o.comecadas = int(o.comecadas) + n
+	o.a_caminho = 0
+	return n
 
 
 ## O que falta pra começar UMA unidade da ordem da vez ("" = tem tudo).
@@ -115,7 +131,8 @@ func falta_para(eco: Node) -> String:
 
 ## COMEÇA até `n` unidades da ordem da vez: tira os insumos (tudo ou nada por unidade) pela economia.
 ## Retorna quantas começaram. 0 com insumo faltando = a ordem fica PAUSADA com o aviso (falta).
-func comecar_unidades(n: int, eco: Node) -> int:
+## a_caminho = true: quem pagou foi o carregador (as unidades só começam na entrega: entrega_a_caminho).
+func comecar_unidades(n: int, eco: Node, a_caminho := false) -> int:
 	var o := atual()
 	if o.is_empty() or eco == null:
 		return 0
@@ -127,7 +144,10 @@ func comecar_unidades(n: int, eco: Node) -> int:
 		for item in r.insumos:
 			_tira(eco, item, float(r.insumos[item]))
 		feitas += 1
-	o.comecadas = int(o.comecadas) + feitas
+	if a_caminho:
+		o.a_caminho = int(o.get("a_caminho", 0)) + feitas
+	else:
+		o.comecadas = int(o.comecadas) + feitas
 	o.falta = falta_para(eco) if feitas == 0 and int(o.comecadas) == 0 else ""
 	return feitas
 
@@ -212,7 +232,8 @@ func load_save_data(lista: Array) -> void:
 		var q := clampi(int(o.get("quantidade", 1)), 1, max_quantidade)
 		var f := clampi(int(o.get("feitas", 0)), 0, q)
 		fila.append({"receita": String(o.receita), "quantidade": q, "feitas": f,
-			"comecadas": clampi(int(o.get("comecadas", 0)), 0, q - f), "progresso": maxf(float(o.get("progresso", 0.0)), 0.0),
+			# (Bloco 105: o que estava a caminho na mão de um carregador já foi pago: começa)
+			"comecadas": clampi(int(o.get("comecadas", 0)) + int(o.get("a_caminho", 0)), 0, q - f), "progresso": maxf(float(o.get("progresso", 0.0)), 0.0),
 			"falta": "", "ordered_at": float(o.get("ordered_at", 0.0))})
 		if fila.size() >= max_fila:
 			break

@@ -75,6 +75,7 @@ var _tenta_t := 0.0
 
 
 func _ready() -> void:
+	add_to_group("maquinas")  # Bloco 105: a cabine gasta (o mecânico revisa)
 	add_to_group("elevador")  # (não entra em "elevadores": aquele grupo é das plataformas S3..S5, salvas por nome)
 	add_to_group("clickable")
 	add_to_group("obras")
@@ -289,7 +290,7 @@ func _cabine_quebrou() -> void:
 	Audio.gate_break(global_position)
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
-		hud.show_toast("O cabo do elevador arrebentou! A descida vai pela escada em espiral até o conserto (engenheiro).", Color(1.0, 0.55, 0.4), self)
+		hud.show_toast("O cabo do elevador arrebentou! A descida vai pela escada em espiral até o conserto (mecânico; sem mecânico, o engenheiro).", Color(1.0, 0.55, 0.4), self)
 	_tenta_t = 0.0
 	_pede_conserto()
 	_apply(false)
@@ -302,6 +303,9 @@ func _pede_conserto() -> void:
 	var eco := get_tree().get_first_node_in_group("economy")
 	if eco == null or eco.metal_falta(conserto_custo.x, conserto_custo.y, "ferro", conserto_custo.z) != "":
 		return
+	var mt := get_tree().get_first_node_in_group("manutencao")
+	if mt and not mt.tem_quem_conserte():
+		return  # Bloco 105: sem mecânico nem engenheiro, não gasta o material (tenta de novo daqui a pouco)
 	if not eco.paga_metal(conserto_custo.x, conserto_custo.y, "ferro", conserto_custo.z):
 		return
 	cabine.comeca_conserto()
@@ -339,6 +343,9 @@ func obra_work(seconds: float) -> void:
 			var hud := get_tree().get_first_node_in_group("hud")
 			if hud:
 				hud.show_toast("Elevador consertado: a cabine voltou a andar.", Color(0.55, 1.0, 0.5))
+			var mt := get_tree().get_first_node_in_group("manutencao")
+			if mt:
+				mt.conserto_proprio_terminou(self)  # Bloco 105
 			_apply(false)
 		return
 	if not pago or restaurado():
@@ -392,3 +399,37 @@ func load_save_data(d: Dictionary) -> void:
 	_obra.load_save_data(SaveUtil.dict(d, "obra"))
 	cabine.load_save_data(SaveUtil.dict(d, "cabine"))
 	_apply(false)
+
+
+# ------------------------------------------------------------ manutenção (Bloco 105: o cabo da cabine)
+## O conserto do cabo é do mecânico (sem mecânico, do engenheiro); a restauração/conserto da plataforma é construção.
+func oficio_obra() -> String:
+	return "mecanico" if cabine.consertando else ""
+
+
+func manut_tipo() -> String:
+	return "cabine"
+
+
+func manut_condicao() -> float:
+	return cabine.condicao() if funcionando() else 1.0
+
+
+func manut_quebrada() -> bool:
+	return cabine.quebrada
+
+
+func manut_titulo() -> String:
+	return "Cabine do elevador"
+
+
+func manut_pos(_w: Node) -> Vector2:
+	return global_position + Vector2(0, 40)
+
+
+func manut_preventiva() -> void:
+	cabine.viagens = 0  # cabo revisado: conta de novo
+
+
+func manut_conserto_proprio() -> bool:
+	return true  # (o conserto do cabo já é a obra daqui, com material — Bloco 99)

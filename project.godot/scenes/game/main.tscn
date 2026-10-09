@@ -66,6 +66,8 @@
 [ext_resource type="PackedScene" path="res://scenes/props/coletor_madeira.tscn" id="70_coletor"]
 [ext_resource type="Script" path="res://scripts/core/schedule.gd" id="71_agenda"]
 [ext_resource type="Script" path="res://scripts/core/calendario.gd" id="72_cal"]
+[ext_resource type="Script" path="res://scripts/core/logistica.gd" id="105_logistica"]
+[ext_resource type="Script" path="res://scripts/core/manutencao.gd" id="105_manutencao"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
@@ -343,6 +345,12 @@ script = ExtResource("53_catalogo")
 
 [node name="Expedicoes" type="Node" parent="."]
 script = ExtResource("53_expedicoes")
+
+[node name="Logistica" type="Node" parent="."]
+script = ExtResource("105_logistica")
+
+[node name="Manutencao" type="Node" parent="."]
+script = ExtResource("105_manutencao")
 
 [node name="Research" type="Node" parent="."]
 script = ExtResource("54_research")

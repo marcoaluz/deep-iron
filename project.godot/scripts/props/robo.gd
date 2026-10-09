@@ -13,6 +13,11 @@ extends Node2D
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 96
 var _obra := ObraSite.new()
+const Desgaste := preload("res://scripts/core/desgaste.gd")  # Bloco 105: cada queda na luta gasta
+const Manutencao := preload("res://scripts/core/manutencao.gd")
+var _desgaste = Desgaste.new("robo")
+## Bloco 105: a restauração do robô achado é conserto: do mecânico (sem mecânico, o engenheiro).
+var oficio := "mecanico"
 
 @export_group("Conserto")
 @export var repair_parts: int = 6
@@ -56,6 +61,7 @@ var _attack_cd := 0.0
 
 
 func _ready() -> void:
+	_desgaste.dono = self
 	add_to_group("robos")
 	add_to_group("clickable")
 	_eye.add_to_group("cullable_lights")
@@ -228,9 +234,13 @@ func take_hit(amount: float, attacker: Node2D) -> void:
 		stunned = true
 		_eye.enabled = false
 		_visual.frame = 0
+		Manutencao.gasta_em(self, "robo", 1.0)  # Bloco 105: cada queda gasta (quebrado, só volta com o conserto)
 		var hud := get_tree().get_first_node_in_group("hud")
 		if hud:
-			hud.show_toast("O Guarda Ferrugento caiu! Volta a funcionar de manhã.", Color(1.0, 0.6, 0.45))
+			if _desgaste.quebrada:
+				hud.show_toast("O Guarda Ferrugento caiu e QUEBROU: só volta com o mecânico.", Color(1.0, 0.5, 0.4))
+			else:
+				hud.show_toast("O Guarda Ferrugento caiu! Volta a funcionar de manhã.", Color(1.0, 0.6, 0.45))
 
 
 ## Vê criatura por perto: vai lá e bate. true = está lutando (não patrulha).
@@ -269,8 +279,8 @@ func _fight(delta: float) -> bool:
 func _guard(delta: float) -> void:
 	var night := _is_night()
 	if stunned:
-		if night:
-			return
+		if night or _desgaste.quebrada:
+			return  # (Bloco 105: quebrado não religa de manhã: precisa do conserto)
 		stunned = false  # amanheceu: religa
 		robot_hp = robot_max_hp
 	if robot_hp < 0.0 or not night:
@@ -391,7 +401,7 @@ func obra_workers() -> Array[Node]:
 
 func get_save_data() -> Dictionary:
 	return {"state": state, "position": SaveUtil.vec2_to_array(global_position), "repair_left": repair_left,
-		"obra": _obra.get_save_data()}
+		"obra": _obra.get_save_data(), "desgaste": _desgaste.get_save_data()}  # (Bloco 105: o desgaste)
 
 
 ## Quem estava sendo carregado volta pro chão (é só mandar buscar de novo).
@@ -401,8 +411,49 @@ func load_save_data(d: Dictionary) -> void:
 	global_position = SaveUtil.vec2(d, "position", global_position)
 	repair_left = clampf(SaveUtil.num(d, "repair_left", repair_time), 0.0, repair_time) if state == "repairing" else 0.0
 	_obra.load_save_data(SaveUtil.dict(d, "obra"))  # Bloco 96 (save antigo: sem material = tudo entregue)
+	_desgaste.load_save_data(SaveUtil.dict(d, "desgaste"))  # Bloco 105 (save antigo: novo)
 	if state == "repairing":
 		add_to_group("obras")
 	elif is_in_group("obras"):
 		remove_from_group("obras")
 	carrier = null
+
+
+# ------------------------------------------------------------ manutenção (Bloco 105: só o guarda ativo gasta)
+func _enter_tree() -> void:
+	if not is_in_group("maquinas"):
+		add_to_group("maquinas")
+
+
+func manut_tipo() -> String:
+	return "robo"
+
+
+func manut_condicao() -> float:
+	return _desgaste.condicao if state == "active" else 1.0
+
+
+func manut_quebrada() -> bool:
+	return state == "active" and _desgaste.quebrada
+
+
+func manut_titulo() -> String:
+	return "Guarda Ferrugento"
+
+
+func manut_pos(_w: Node) -> Vector2:
+	return global_position + Vector2(0, 28)
+
+
+func manut_preventiva() -> void:
+	_desgaste.restaura()
+
+
+func manut_consertada() -> void:
+	stunned = false
+	robot_hp = robot_max_hp
+	_eye.enabled = true
+
+
+func manut_conserto_proprio() -> bool:
+	return false

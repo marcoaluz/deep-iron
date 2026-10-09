@@ -67,6 +67,8 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 | `obra_site.gd` | O pedaço comum de toda obra feita por engenheiro. Bloco 96: a lista de material (reservada no armazém, levada pelo engenheiro até `carga_material` por viagem), o progresso limitado ao entregue, o estado ("levando N/M"…) e o `cancelar` (devolve créditos e material). |
 | `catalogo.gd` + `catalogo_panel.gd` | O CATÁLOGO DE DESCOBERTAS (Bloco 102): entradas por dados (`data/catalogo/entradas.json` + `textos.txt`) de minérios, animais, criaturas e locais, cada uma Desconhecido → Avistado → Estudado. A pesquisadora sem pesquisa sai pra catalogar (estado `catalogando` no `ipezinho.gd`); jazida não estudada é "pedra desconhecida" e dá "minério desconhecido" (vira o de verdade no estudo); toca não estudada não aparece pro caçador; a entrada pode travar pesquisa (`libera`); plano B: o laboratório sozinho; a criatura se estuda pela amostra do abate. Janela: tecla R. Bloco 103: o BESTIÁRIO (a criatura abatida deixa um corpo — `props/corpo_criatura.gd` — que a pesquisadora estuda e colhe; ficha com por que veio + dica no `textos.txt`) e o RECONHECIMENTO dos andares (andar novo não reconhecido: a IA não desce; ordem à mão/área/patrulha pedem confirmação, `hud.pergunta_descida`; acidentes 2x até o reconhecimento). |
 | `expedicoes.gd` + `expedicoes_panel.gd` | EXPEDIÇÕES (Bloco 104): regiões por dados (`data/expedicoes/regioes.json` + `textos.txt`: perigo, dias, saída, traje, como aparece, achados, decisões); equipe de 2 a 4 com o BATEDOR obrigatório; ração e kit; a equipe sai do mundo (`ipezinho.sai_do_mundo`/`volta_ao_mundo`: fora do grupo da vila, a cama guardada; o save leva quem está fora); decisões no caminho; o relatório (janela, banner, diário). A CADEIA DO ROBÔ (o corpo do Ferrugento → o sinal no Rádio/Antena → 3 escutas → a fábrica soterrada atrás da radiação do S2 → a expedição acha o robô). Janela: tecla ;. |
+| `logistica.gd` | O CARREGADOR (Bloco 105): monta as entregas na hora (obra, insumo, barras, cozinha), reserva cada uma pra um carregador, `deixa_pro_carregador(tipo, alvo)` (quem precisava espera `espera_carregador` s; sem carregador vai ele mesmo). |
+| `manutencao.gd` + `desgaste.gd` + `props/conserto_maquina.gd` | O DESGASTE e o MECÂNICO (Bloco 105): cada máquina guarda um `Desgaste` (condição 1..0; eficiência 100% até 40% de desgaste, cai até `eficiencia_min`, 0 = quebrada); a `Manutencao` tem a vida, o aviso, a preventiva (só tempo) e o conserto da quebra (obra com material, pago só com o material todo e alguém pra consertar). Interface da máquina: grupo "maquinas" + `manut_tipo/condicao/quebrada/titulo/pos/preventiva/conserto_proprio`. |
 | `migrantes.gd` + `migrantes_panel.gd` | MIGRANTES (Bloco 101): grupos vêm pela floresta e esperam do lado de fora do portão (ipezinhos com `visitante = true`, fora do grupo "ipezinhos"); cartão com Aceitar (precisa de cama) / Recusar / Esperar, prazo, ataque à noite; frequência pela atratividade + rede de segurança; o satélite chama um grupo. É também o evento "refugiados" do Prompt 11. |
 | `missao.gd` + `missoes.gd` + `missoes_panel.gd` | As MISSÕES (Bloco 100, seção 21 do guia): recurso `missao.gd` (um `.tres` por missão em `data/missoes/`: objetivos [tipo, alvo, quantidade], recompensa, pré-requisitos), o gerenciador (nó `Missoes`, grupo "missoes": escuta os sinais do jogo, confere a cada segundo, objetivo cumprido não desfaz), a janela (tecla vírgula) e o rastreador do canto (`ui/rastreador_missoes.gd`). Os TEXTOS ficam em `data/missoes/capitulo_N.txt` (um por capítulo, editável). |
 | `build_menu.gd` | O menu CONSTRUIR: janela de tamanho fixo, grade de cartões com estrutura fixa e o campo `img` de cada cartão (Bloco 95). |
@@ -105,7 +107,10 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
   pesquisador, **fundidor** (Fornalha), **ferreiro** (Oficina e Arsenal; homem ou mulher) e o **padre** (função da
   barra, tecla 8: só homem, um por vila; busca os mortos e enterra no cemitério; o Padre Bento chega por evento) e o
   **carpinteiro** (Carpintaria e camas de tábua; tecla 9; homem ou mulher) e o **batedor** (Bloco 104: bate o mato — avista de
-  longe e rastreia tocas — e lidera as expedições; tecla K; homem ou mulher).
+  longe e rastreia tocas — e lidera as expedições; tecla K; homem ou mulher), o **carregador** (Bloco 105: as entregas da
+  `logistica.gd` — material das obras, insumos e barras da Fornalha/Carpintaria, estoque da cozinha; tecla `[`) e o
+  **mecânico** (Bloco 105: consertos de máquina e preventiva da `manutencao.gd`; tecla `]`; sem ele, o engenheiro só
+  conserta o que quebrou).
 - Bloco 94: a mochila (`tem_mochila`, `capacidade_carga()`) e a neve (`_neve_mult()`: sem botas, no inverno, na
   superfície, anda mais devagar).
 - `_find_best_station(grupo)` escolhe a estação, filtrada por área de trabalho e por andar trancado.
@@ -122,7 +127,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b104**; o próximo é o **b105**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b105**; o próximo é o **b106**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:
@@ -161,6 +166,8 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
    | Criatura nova | a cena + uma entrada `criatura` no catálogo (o texto com `comportamento`, `fraqueza`, `porque` — só o que o código FAZ —, `dica`, `historia`); morador de um andar = uma linha em `moradores` do `.tres` do nível |
    | Mandar gente pra um ponto que pode ser andar não reconhecido | `hud.pergunta_descida(pos, depois)` (true = perguntou: faça o resto no `depois`) |
    | Expedição / região nova | uma entrada em `data/expedicoes/regioes.json` (+ a seção em `textos.txt`; decisão nova = `eventos` + `[evento.<id>]`); tipo de achado novo = um `match` em `expedicoes._entrega_achado` |
+   | Máquina que gasta e quebra (Bloco 105) | um `Desgaste` em `_desgaste` + `Manutencao.gasta_em(self, tipo, qtd)` + a interface `manut_*` no grupo "maquinas"; a vida/conserto em `manutencao.gd` |
+   | Entrega do armazém pra uma estação (Bloco 105) | uma entrada nova em `logistica.gd entregas_abertas()` + o tipo no `_carrega_tick` do ipezinho; quem precisava chama `deixa_pro_carregador` |
    | Gente nova na vila | `migrantes.gd` `chama_grupo(n, motivo)` (nunca "comprar"); nascimento interno (Fundação, testes): `Economy.novo_ipezinho(gender)`; quem cabe: `Economy.free_beds()` |
    | Item, preço, onde guardar | `items.gd` + `Economy.quantidade/add_item/take_item` |
    | Custo em metal | `Economy.metal_falta` / `paga_metal` / `custo_metal_texto` (barra a partir do estágio da fornalha) |

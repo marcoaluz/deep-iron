@@ -557,6 +557,8 @@ func sync_static(view_rect: Rect2) -> bool:
 	if src.is_in_group("canteiros") or src.is_in_group("parques") or src.is_in_group("obras"):
 		_top.queue_redraw()
 		queue_redraw()
+	elif src.is_in_group("maquinas"):
+		_top.queue_redraw()  # Bloco 105: a barra do desgaste
 	var changed := _update_box()
 	position = Iso.iso(_view.art(src.global_position), box.zb).round()
 	return changed
@@ -975,6 +977,8 @@ func _draw_top() -> void:
 		_top.draw_set_transform(Vector2.ZERO)
 		_desenha_pilha(k)
 		return
+	if src.is_in_group("maquinas"):
+		_draw_desgaste()
 	if not src.is_in_group("criaturas"):
 		return
 	var hp = src.get("hp")
@@ -996,3 +1000,29 @@ func _draw_top() -> void:
 	_top.draw_set_transform(Vector2.ZERO, 0.0, Vector2(_flip, 1.0))
 	_top.draw_rect(Rect2(-w * 0.5, y, w, 3), Color(0, 0, 0, 0.7))
 	_top.draw_rect(Rect2(-w * 0.5, y, w * clampf(hp / max_hp, 0.0, 1.0), 3), Color(0.9, 0.3, 0.25))
+
+
+## Bloco 105: a barra do DESGASTE em cima da máquina gasta (abaixo do limite da preventiva): verde -> amarelo ->
+## vermelho; quebrada, a barra vazia e o "!" (o mecânico conserta com material).
+func _draw_desgaste() -> void:
+	if not src.has_method("manut_condicao"):
+		return
+	var mt := src.get_tree().get_first_node_in_group("manutencao")
+	var limite: float = float(mt.limite_preventiva) if mt else 0.6
+	var quebrada: bool = src.manut_quebrada()
+	var c: float = 0.0 if quebrada else clampf(src.manut_condicao(), 0.0, 1.0)
+	if c >= limite and not quebrada:
+		return
+	var y := -56.0
+	if not _art_box.is_empty():
+		y = -(_art_box.h / _view.S + 8.0)
+	var k := Vector2(1.0 / maxf(absf(scale.x), 0.01), 1.0 / maxf(absf(scale.y), 0.01))
+	_top.draw_set_transform(Vector2(0, y), 0.0, k)
+	_top.draw_rect(Rect2(-20, -3, 40, 5), Color(0.05, 0.04, 0.03, 0.85))
+	var cor := Color(0.95, 0.3, 0.25).lerp(Color(0.95, 0.85, 0.3), clampf(c / maxf(limite, 0.01), 0.0, 1.0))
+	_top.draw_rect(Rect2(-19, -2, 38.0 * c, 3), cor)
+	if quebrada:
+		var alerta := Icones.tex("p_alerta")
+		if alerta:
+			_top.draw_texture(alerta, Vector2(22, -12))
+	_top.draw_set_transform(Vector2.ZERO)

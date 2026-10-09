@@ -145,5 +145,12 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_it_antena.png",
   "ok": true,
   "candidatos": 64
+ },
+ "carregador": {
+  "job": "1fc4c0f9-99d4-4e7f-8ee4-1fd9e313bb65",
+  "custo": 15,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\carregador\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
  }
 }

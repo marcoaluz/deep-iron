@@ -83,6 +83,7 @@ var _lampiao: Node2D  # o lampião no poste com as picaretas, na boca (só com g
 
 func _ready() -> void:
 	super()
+	add_to_group("maquinas")  # Bloco 105: o trilho gasta (o mecânico revisa)
 	add_to_group("pontos_carga")
 	add_to_group("obras")
 	if ferrovia != "":
@@ -379,7 +380,7 @@ func _process(delta: float) -> void:
 				cart_state = "indo"
 				_wait_t = 0.0
 		"indo":
-			cart_d = minf(cart_d + cart_speed * delta, _len)
+			cart_d = minf(cart_d + cart_speed * _ef_trilho() * delta, _len)  # (Bloco 105: trilho gasto, mais devagar)
 			var arm_c := armazem()
 			var carga := 0.0
 			for k in cart_load:
@@ -389,16 +390,19 @@ func _process(delta: float) -> void:
 				_unload_cart()
 				cart_state = "voltando"
 		"voltando":
-			cart_d = maxf(cart_d - cart_speed * delta, 0.0)
+			cart_d = maxf(cart_d - cart_speed * _ef_trilho() * delta, 0.0)
 			if cart_d <= 0.0:
 				cart_state = "esperando"
 				rail_left -= maxf(_carga_viagem, 1.0) / maxf(desgaste_ref, 1.0)  # Bloco 99: o desgaste é por minério levado
 				if is_broken():
 					rail.broken = true
 					_obra.start()
+					var mt := get_tree().get_first_node_in_group("manutencao")
+					if mt:
+						mt.conta_quebra(self)  # Bloco 105 (telemetria)
 					var hud := get_tree().get_first_node_in_group("hud")
 					if hud:
-						hud.show_toast("O trilho do vagonete quebrou — precisa de engenheiro (tecla 4).", Color(1.0, 0.6, 0.4))
+						hud.show_toast("O trilho do vagonete quebrou — precisa de mecânico (sem mecânico, o engenheiro).", Color(1.0, 0.6, 0.4))
 	_place_cart()
 	if Engine.get_process_frames() % 15 == 0:
 		_update_label()
@@ -437,7 +441,7 @@ func _unload_cart() -> void:
 func _update_label() -> void:
 	if _label == null:
 		return
-	var st: String = "trilho QUEBRADO — engenheiro" if is_broken() else {"esperando": "esperando carga", "indo": "levando", "voltando": "voltando"}.get(cart_state, cart_state)
+	var st: String = "trilho QUEBRADO — mecânico" if is_broken() else {"esperando": "esperando carga", "indo": "levando", "voltando": "voltando"}.get(cart_state, cart_state)
 	if _sem_espaco and cart_state == "indo":
 		st = "ARMAZÉM CHEIO — o carrinho espera"  # Bloco 97
 	if _parado_area and cart_state == "esperando" and not is_broken():
@@ -481,6 +485,9 @@ func obra_work(seconds: float) -> void:
 		repair_left = 0.0
 		rail_left = float(rail_trips)
 		rail.broken = false
+		var mt := get_tree().get_first_node_in_group("manutencao")
+		if mt:
+			mt.conserto_proprio_terminou(self)  # Bloco 105
 
 		Audio.build_done(global_position)
 
@@ -524,3 +531,43 @@ func load_save_data(d: Dictionary) -> void:
 	if is_broken():
 		_obra.start()
 	_build_rail.call_deferred()
+
+
+# ------------------------------------------------------------ manutenção (Bloco 105: o trilho e o vagonete)
+func _ef_trilho() -> float:
+	return maxf(preload("res://scripts/core/desgaste.gd").eficiencia_de(manut_condicao()), 0.2)
+
+
+## O conserto do trilho é do mecânico (sem mecânico, do engenheiro).
+func oficio_obra() -> String:
+	return "mecanico"
+
+
+func manut_tipo() -> String:
+	return "trilho"
+
+
+func manut_condicao() -> float:
+	if is_broken():
+		return 0.0
+	return clampf(rail_left / maxf(float(rail_trips), 1.0), 0.0, 1.0) if rail != null and is_instance_valid(rail) else 1.0
+
+
+func manut_quebrada() -> bool:
+	return is_broken()
+
+
+func manut_titulo() -> String:
+	return "Trilho do vagonete"
+
+
+func manut_pos(_w: Node) -> Vector2:
+	return global_position + Vector2(0, 30)
+
+
+func manut_preventiva() -> void:
+	rail_left = float(rail_trips)
+
+
+func manut_conserto_proprio() -> bool:
+	return true  # (o conserto do trilho já é a obra daqui — Bloco 64)

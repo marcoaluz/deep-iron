@@ -54,8 +54,8 @@ func start() -> void:
 	necessario = {}
 	entregue = {}
 	creditos = 0.0
-	if trabalhador != "engenheiro":
-		return
+	if trabalhador == "ferreiro":
+		return  # (a forja é produção: paga na hora. Bloco 105: o conserto do mecânico tem material, como a obra)
 	var tree := Engine.get_main_loop() as SceneTree
 	var eco: Node = tree.get_first_node_in_group("economy") if tree else null
 	if eco and eco.has_method("recibo_da_encomenda"):

@@ -42,6 +42,8 @@ var estado_trabalho := "fundindo"
 var verbo := "fundindo"
 ## A fila de ordens (ProductionQueue).
 var fila
+## Bloco 105: as barras prontas esperando o CARREGADOR levar pro armazém (com carregador, o operador não sai daqui).
+var barras_prontas := {}
 var _acesa := false
 var _sound_timer := 0.0
 
@@ -100,7 +102,12 @@ func _process(delta: float) -> void:
 		if body.has_method("fundir_tick"):
 			body.fundir_tick()
 		if not pronto.is_empty():
-			body.pega_barras(pronto)
+			var lg := get_tree().get_first_node_in_group("logistica")
+			if lg and lg.tem_carregador():
+				for k in pronto:
+					barras_prontas[k] = float(barras_prontas.get(k, 0.0)) + float(pronto[k])  # Bloco 105: o carregador leva
+			else:
+				body.pega_barras(pronto)
 			_som_pronto()
 			refresh()
 	_mostra_trabalho(_acesa)
@@ -221,10 +228,17 @@ func pop_in() -> void:
 
 # ------------------------------------------------------------ save/load (pelo Centro da Vila)
 func get_save_data() -> Dictionary:
-	return {"position": [snappedf(global_position.x, 0.1), snappedf(global_position.y, 0.1)], "fila": fila.get_save_data()}
+	return {"position": [snappedf(global_position.x, 0.1), snappedf(global_position.y, 0.1)], "fila": fila.get_save_data(),
+		"barras_prontas": barras_prontas.duplicate()}  # Bloco 105
 
 
 func load_save_data(d: Dictionary) -> void:
 	var lista = d.get("fila", [])
 	fila.load_save_data(lista if lista is Array else [])
+	barras_prontas = {}  # Bloco 105 (save antigo: nenhuma esperando)
+	var bp = d.get("barras_prontas", {})
+	if bp is Dictionary:
+		for k in bp:
+			if float(bp[k]) > 0.0:
+				barras_prontas[String(k)] = float(bp[k])
 	refresh()

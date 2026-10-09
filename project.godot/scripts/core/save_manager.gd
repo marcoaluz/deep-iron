@@ -91,6 +91,12 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 105: "logistica" {entregas}; "manutencao" {consertos [{maquina (caminho), segundos, progresso, obra}],
+##     preventivas, consertos_feitos, quebras {tipo: n}}; o ipezinho ganha as funções "carregador" e "mecânico" e
+##     "entrega_mao" (o que o carregador levava volta pro armazém); a escavadeira, os coletores, o robô e cada ventilador
+##     (fundo: [x, y, condição]) ganham "desgaste" {c, q}; a fornalha ganha "barras_prontas"; o comedouro "raw_local";
+##     a fila de produção converte o "a caminho" em começado. Save antigo: as funções de sempre, as máquinas novas
+##     inteiras (100%), nada a caminho, a cozinha sem estoque.
 ##   Bloco 104: "expedicoes" {reveladas [ids], em_curso [{regiao, fase, dias, volta_dia, volta_t, decisoes, ... e "saves"
 ##     (o save de cada ipezinho que está FORA: eles não estão no grupo da vila, então voltam por aqui)}], cadeia (0..5 a
 ##     cadeia do robô), sorte_robo, relatorios, voltou_de, totais}; centro_vila "upgrades" ganha "posto"; o ipezinho ganha
@@ -549,6 +555,8 @@ func _collect() -> Dictionary:
 		"migrantes": "migrantes",  # Bloco 101: quem espera no portão e o relógio do próximo grupo
 		"catalogo": "catalogo",  # Bloco 102: o que a vila avistou e estudou, o minério desconhecido, as amostras
 		"expedicoes": "expedicoes",  # Bloco 104: as regiões, as expedições em curso (com quem está fora), a cadeia do robô
+		"logistica": "logistica",  # Bloco 105: o contador de entregas do carregador (as em curso recomeçam)
+		"manutencao": "manutencao",  # Bloco 105: os consertos abertos, as preventivas, os consertos e as quebras
 		"missoes": "missoes",  # Bloco 100: a campanha (capítulo liberado, missões cumpridas, objetivos, contadores)
 	}
 	for key in singles:
@@ -695,6 +703,13 @@ func apply_pending(main: Node) -> void:
 		if data.has("expedicoes"):
 			exped.load_save_data(SaveUtil.dict(data, "expedicoes"))
 		exped.depois_de_carregar(data.has("expedicoes"))
+
+	var logi := get_tree().get_first_node_in_group("logistica")  # Bloco 105 (save antigo: 0 entregas)
+	if logi:
+		logi.load_save_data(SaveUtil.dict(data, "logistica"))
+	var manut := get_tree().get_first_node_in_group("manutencao")  # Bloco 105: depois das máquinas (o conserto aponta pra elas)
+	if manut:
+		manut.load_save_data(SaveUtil.dict(data, "manutencao"))
 
 	var missoes := get_tree().get_first_node_in_group("missoes")  # Bloco 100: depois de tudo (confere o que a vila já fez)
 	if missoes:

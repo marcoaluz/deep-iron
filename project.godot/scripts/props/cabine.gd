@@ -121,7 +121,9 @@ func tick(delta: float) -> void:
 			_porta = 0.0
 			Audio.elevator(dono.global_position)
 		return
-	pos = move_toward(pos, alvo, delta / maxf(segundos_viagem, 0.1))
+	# Bloco 105: o cabo gasto anda mais devagar (a eficiência do desgaste: as viagens até quebrar)
+	var ef := preload("res://scripts/core/desgaste.gd").eficiencia_de(condicao())
+	pos = move_toward(pos, alvo, delta * maxf(ef, 0.2) / maxf(segundos_viagem, 0.1))
 	if not parada():
 		return
 	# chegou: todo mundo desce
@@ -141,6 +143,9 @@ func quebra() -> void:
 	quebrada = true
 	consertando = false
 	conserto_left = 0.0
+	var mt: Node = dono.get_tree().get_first_node_in_group("manutencao") if dono and dono.is_inside_tree() else null
+	if mt:
+		mt.conta_quebra(dono)  # Bloco 105 (telemetria)
 	for e in fila:
 		if is_instance_valid(e.w) and e.w.has_method("cabine_cancelada"):
 			e.w.cabine_cancelada()
@@ -208,3 +213,10 @@ func load_save_data(d: Dictionary) -> void:
 	conserto_left = clampf(SaveUtil.num(d, "conserto_left", conserto_segundos), 0.0, conserto_segundos) if consertando else 0.0
 	fila.clear()
 	a_bordo.clear()
+
+
+## Bloco 105: a condição do cabo (1 novo .. 0 arrebentado) — as viagens até quebrar.
+func condicao() -> float:
+	if quebrada:
+		return 0.0
+	return clampf(1.0 - float(viagens) / maxf(float(viagens_ate_quebrar), 1.0), 0.0, 1.0)

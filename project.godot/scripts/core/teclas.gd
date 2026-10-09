@@ -22,6 +22,11 @@ const PADRAO := {
 	"ferreiro": [KEY_7, KEY_KP_7],  # Bloco 87
 	"padre": [KEY_8, KEY_KP_8],  # Bloco 92
 	"carpinteiro": [KEY_9, KEY_KP_9],  # Bloco 94
+	# Bloco 105: as teclas FÍSICAS que escrevem "[" e "]" no teclado ABNT2 (o do desenvolvimento, layout 0416). No
+	# americano são o "]" e o "\" (a tecla do lado); a tela mostra o rótulo do teclado de quem joga (nome_tecla).
+	# (A física KEY_BRACKETLEFT, no ABNT2, é o acento agudo: tecla morta, não serve.)
+	"carregador": [KEY_BRACKETRIGHT],
+	"mecanico": [KEY_BACKSLASH],
 	"pessoas": [KEY_TAB],  # Bloco 95: a lista de pessoas (aba fina da esquerda); o "próximo" foi pro ponto
 	"salvar": [KEY_F5], "carregar": [KEY_F9],
 	# fixas (não aparecem pra remapear): Esc, e as de teste/depuração
@@ -36,7 +41,7 @@ const NOMES := [
 	["medico", "Função: médico"], ["engenheiro", "Função: engenheiro"], ["cozinheiro", "Função: cozinheiro"],
 	["lenhador", "Função: lenhador"], ["guarda", "Função: guarda"], ["pesquisador", "Função: pesquisador"],
 	["fundidor", "Função: fundidor"], ["ferreiro", "Função: ferreiro"], ["padre", "Função: padre (só um)"], ["carpinteiro", "Função: carpinteiro"],
-	["batedor", "Função: batedor"],
+	["batedor", "Função: batedor"], ["carregador", "Função: carregador"], ["mecanico", "Função: mecânico"],
 	["sem_funcao", "Tirar a função"], ["turno_extra", "Turno extra"], ["vender", "Vender minério"],
 	["pessoas", "Lista de pessoas (abre/fecha)"], ["proximo", "Próximo ipezinho"], ["seguir", "Câmera segue"], ["pausa", "Pausa"], ["dicas", "Atalhos (ajuda)"],
 	["musica", "Música liga/desliga"], ["painel_hub", "Centro da Vila"], ["painel_escavadeira", "Escavadeira"],
@@ -83,7 +88,14 @@ static func nome(nome_acao: String) -> String:
 static func nome_tecla(k: int) -> String:
 	if k == KEY_SPACE:
 		return "Espaço"
-	var logical := DisplayServer.keyboard_get_keycode_from_physical(k) if DisplayServer.get_name() != "headless" else k
+	if DisplayServer.get_name() == "headless":
+		return OS.get_keycode_string(k)
+	# Bloco 105: sinal (não letra nem número) aparece como o caractere do RÓTULO no teclado de quem joga: no ABNT2 a
+	# física "]" é o "[" e a ";" é o "Ç" (antes saía "BraceLeft", "Semicolon")
+	var rotulo := DisplayServer.keyboard_get_label_from_physical(k)
+	if rotulo > 32 and rotulo < KEY_SPECIAL and not (rotulo >= KEY_A and rotulo <= KEY_Z) and not (rotulo >= KEY_0 and rotulo <= KEY_9):
+		return String.chr(rotulo)
+	var logical := DisplayServer.keyboard_get_keycode_from_physical(k)
 	return OS.get_keycode_string(logical if logical != KEY_NONE else k)
 
 

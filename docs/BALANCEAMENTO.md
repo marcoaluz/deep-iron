@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1000 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **1012 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (79)
 
@@ -770,6 +770,14 @@ Total: **1000 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `worker_list_max_height` | 300.0 |  | Altura máxima da lista de ipezinhos antes de virar rolagem. |
 | `refresh_rate` | 10.0 |  | Atualizações do HUD por segundo. |
 
+## `scripts/core/logistica.gd` (1)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `espera_carregador` | 30.0 |  | Segundos de jogo que uma entrega espera um carregador antes de quem precisa ir buscar ele mesmo. |
+
 ## `scripts/core/main.gd` (1)
 
 **(sem grupo)**
@@ -777,6 +785,23 @@ Total: **1000 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `founding_on_new_game` | true |  | Bloco 37: partida nova começa com a FUNDAÇÃO (o jogador escolhe onde ficam o Centro da Vila e o Armazém; ver founding.gd). false = começa com o layout da cena (testes). |
+
+## `scripts/core/manutencao.gd` (10)
+
+**Desgaste (Bloco 105) — PROVISÓRIO até a análise da telemetria**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `desgaste_inicio_perda` | 0.4 |  | Desgaste (fração) a partir do qual a máquina começa a render menos (0.4 = com 40% de desgaste). |
+| `eficiencia_min` | 0.5 |  | O quanto ela rende no fim (logo antes de quebrar). |
+| `limite_preventiva` | 0.6 |  | A preventiva do mecânico começa abaixo desta condição. |
+| `condicao_aviso` | 0.25 |  | Condição em que a máquina avisa que vai falhar (o aviso e o alerta do ventilador). |
+| `vida` | {"escavadeira": 600.0, "coletor_madeira": 300.0, "coletor_minerio": 300.0, |  | A VIDA de cada tipo até quebrar, na unidade dele: escavadeira = minério tirado; coletores = unidades produzidas; ventilador = horas de jogo ligado; robô = quedas na luta. |
+| `segundos_preventiva` | {"escavadeira": 30.0, "coletor_madeira": 20.0, "coletor_minerio": 20.0, |  | Segundos de jogo de trabalho do mecânico na preventiva, por tipo. |
+| `conserto` | {"escavadeira": [120, 30, 10, 45.0], "coletor_madeira": [60, 15, 15, 30.0], |  | O conserto da QUEBRA por tipo: [créditos, metal (ferro/barra), madeira, segundos de trabalho]. |
+| `conserto_tenta_cada` | 5.0 |  | Segundos (reais) entre uma tentativa e outra de pagar um conserto que faltava material. |
+| `preventiva_desiste` | 60.0 |  | Segundos de jogo andando sem chegar na máquina da preventiva antes de o mecânico desistir (caminho fechado, andar sem acesso: a telemetria achou o mecânico preso horas atrás dos ventiladores do S2). |
+| `preventiva_evita` | 240.0 |  | Depois de desistir, segundos de jogo em que essa máquina fica fora da lista da preventiva. |
 
 ## `scripts/core/migrantes.gd` (24)
 
@@ -1679,7 +1704,7 @@ Total: **1000 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `ore_per_sec` | 0.5 |  | Minério por segundo com o operador no posto (antes da zanga/ânimo dele). |
 | `reach` | 230.0 |  | Até onde a broca alcança uma jazida (px da lógica). |
 
-## `scripts/props/comedouro.gd` (6)
+## `scripts/props/comedouro.gd` (7)
 
 **Ritmo**
 
@@ -1701,6 +1726,7 @@ Total: **1000 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `eat_sound_interval` | 0.9 |  | Intervalo entre os sons de mastigar enquanto alguém come. |
+| `raw_local_max` | 40.0 |  | Bloco 105: o ESTOQUE DA COZINHA — matéria-prima que o carregador trouxe do armazém; o cozinheiro prepara direto daqui. |
 
 ## `scripts/props/deep_shaft.gd` (14)
 

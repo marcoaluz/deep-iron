@@ -1,9 +1,38 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-08. Branch `isometrico`. Tudo até o Bloco 103 **foi enviado** pro GitHub em 2026-10-08 (push com o OK do Marco); o Bloco 104 está só no commit local. Push só com o OK dele.
-Ele disse "pode executar todos os prompts que depois eu valido".
+Atualizado em 2026-10-09. Branch `isometrico`. Tudo até o Bloco 104 **foi enviado** pro GitHub (push com o OK do Marco); o Bloco 105 está só no commit local. Push só com o OK dele.
+Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
+da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
+documenta".
 
-## AGORA (2026-10-08): Bloco 104 — robô antigo, batedor e expedições (feito; commit local, push pendente — pedir o OK)
+## AGORA (2026-10-09): Bloco 105 — carregador e mecânico (feito; commit local; ESPERANDO o Marco: telemetria e arte)
+
+Prompt W1. Plano `docs/BLOCO105_PLANO.md` (com a aprovação). Relatório `docs/BLOCO105_CARREGADOR_MECANICO.md`.
+- Carregador (tecla física BracketRight = "[" no ABNT2): `logistica.gd` (obra, insumo "a caminho" da Fornalha/Carpintaria,
+  barras, estoque da cozinha), fallback de 30 s. A forja não mudou.
+- Mecânico (tecla física BackSlash = "]" no ABNT2): `manutencao.gd` + `desgaste.gd` + `props/conserto_maquina.gd`; desgaste
+  gradual (100% até 40%, cai até 50%, quebra em 0) na escavadeira, coletores, ventiladores (aviso a 25%), robô; cabine e
+  trilho com a curva. Conserto só com o material todo e quem conserte; preventiva só tempo; sem mecânico o engenheiro
+  conserta só a quebra. Desiste de máquina sem caminho (60 s) — achado na telemetria.
+- PENDENTE com o Marco: (1) a TELEMETRIA do desgaste (seção 4 do relatório; `docs/telemetria/bloco105/`) — o
+  balanceamento do `Manutencao` está PROVISÓRIO; (2) o PILOTO da arte (o carregador: `docs/arte/bloco105/`) — só depois da
+  aprovação: carregadora, mecânico, mecânica, os ícones e a integração (`integra.py bonecos carregador ...`); defeito
+  apontado: o "carregar" de frente perde a armação (refaz ~16); (3) apertar `[` e `]` no teclado real.
+- Ícones provisórios: barra (it_mochila / it_ferragem), alerta da máquina (al_reator), balão sem material (al_obra_parada);
+  o mecânico veste o engenheiro (`iso_bonecos.PROVISORIO`).
+
+### Orçamento do PixelLab (Bloco 105)
+| | Gerações | Tipo |
+|---|---|---|
+| Saldo inicial do bloco | 6.141 | confirmado (`get_balance`) |
+| Gasto neste bloco (o carregador completo) | 78 | real |
+| Saldo restante | 6.063 | confirmado (`get_balance`) |
+| Próximos personagens (carregadora, mecânico, mecânica) | ~78 cada = ~234 | estimado (custo real do piloto) |
+| Ícones (carregador, mecânico, sem material, alerta da máquina) | ~40–60 | estimado |
+| Refazer o "carregar" de frente (opcional) | ~16 | estimado |
+| Total previsto pro resto | ~290–310 (saldo ~5.750) | estimado |
+
+## Bloco 104 — robô antigo, batedor e expedições (feito; enviado ao GitHub com o OK do Marco)
 
 Prompt E. Plano `docs/BLOCO104_PLANO.md` (decisões: Antena improvisada sem rádio; batedor obrigatório; a fábrica atrás da
 radiação do S2 — análise no relatório; Posto de expedição; arte; teclas K e ;). Relatório `docs/BLOCO104_EXPEDICOES.md`.

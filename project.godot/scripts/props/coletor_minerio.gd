@@ -8,6 +8,8 @@ extends "res://scripts/props/station.gd"
 ## Construída pelo engenheiro (canteiro "coletor_minerio", dono: Centro da Vila), perto de uma jazida
 ## liberada. Pode ter vários (custo cresce), cada um com o seu operador.
 
+const Desgaste := preload("res://scripts/core/desgaste.gd")  # Bloco 105
+const Manutencao := preload("res://scripts/core/manutencao.gd")
 @export_group("Coleta (Bloco 57)")
 ## Minério por segundo com o operador no posto (antes da zanga/ânimo dele).
 @export var ore_per_sec: float = 0.5
@@ -33,7 +35,12 @@ var _why := ""
 @onready var _smoke: CPUParticles2D = $Smoke
 
 
+var _desgaste = Desgaste.new("coletor_minerio")  # Bloco 105
+
+
 func _ready() -> void:
+	_desgaste.dono = self
+	add_to_group("maquinas")
 	super()
 	add_to_group("coletores_minerio")
 	add_to_group("clickable")
@@ -144,7 +151,7 @@ func _process(delta: float) -> void:
 			if body == operator and body.get_state() == "operating_ore":
 				_producing = true
 				body.operate_tick()
-				_acc += ore_per_sec * body.work_mult() * delta
+				_acc += ore_per_sec * body.work_mult() * delta * _desgaste.eficiencia()  # Bloco 105
 		if not _producing:
 			_why = "%s: %s" % [operator.display_name, operator.get_state_label()]
 	while _producing and _acc >= 1.0:
@@ -154,6 +161,7 @@ func _process(delta: float) -> void:
 			break
 		total_produced += got
 		_deliver(got, j.tipo_extraido())  # Bloco 102
+		Manutencao.gasta_em(self, "coletor_minerio", got)  # Bloco 105
 	if _producing:
 		_sound_timer -= delta
 		if _sound_timer <= 0.0:
@@ -197,3 +205,32 @@ func refresh() -> void:
 func pop_in() -> void:
 	_visual.scale = Vector2(2.0, 0.2)
 	create_tween().tween_property(_visual, "scale", Vector2(2, 2), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+# ------------------------------------------------------------ manutenção (Bloco 105: manutencao.gd)
+func manut_tipo() -> String:
+	return "coletor_minerio"
+
+
+func manut_condicao() -> float:
+	return _desgaste.condicao
+
+
+func manut_quebrada() -> bool:
+	return _desgaste.quebrada
+
+
+func manut_titulo() -> String:
+	return "Coletor de minério"
+
+
+func manut_pos(_w: Node) -> Vector2:
+	return global_position + Vector2(0, 36)
+
+
+func manut_preventiva() -> void:
+	_desgaste.restaura()
+
+
+func manut_conserto_proprio() -> bool:
+	return false

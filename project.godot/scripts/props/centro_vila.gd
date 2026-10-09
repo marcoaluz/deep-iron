@@ -1999,7 +1999,8 @@ func get_save_data() -> Dictionary:
 		"carpintarias": carpintarias().map(func(f): return f.get_save_data()),  # Bloco 94: lugar + fila de ordens
 		"armazens_novos": armazens_novos().map(func(a): return {"name": String(a.name), "position": SaveUtil.vec2_to_array(a.global_position)}),  # Bloco 97
 		"coletores_minerio": coletores_minerio().map(func(c): return {"position": SaveUtil.vec2_to_array(c.global_position),
-			"total": c.total_produced, "jazida": SaveUtil.vec2_to_array(c.chosen_pos) if c.chosen_pos != Vector2.INF else []}),  # Bloco 57
+			"total": c.total_produced, "jazida": SaveUtil.vec2_to_array(c.chosen_pos) if c.chosen_pos != Vector2.INF else [],
+			"desgaste": c._desgaste.get_save_data()}),  # Bloco 57 (Bloco 105: o desgaste)
 		"vagonetes": vagonetes().map(func(v): return v.get_save_data()),  # Bloco 64
 		"ferrovias": ferrovias().map(func(v): return v.get_save_data()),  # Bloco 79
 		"estacao_mina": estacao_mina().get_save_data() if estacao_mina() else {},  # Bloco 74
@@ -2065,6 +2066,7 @@ func load_save_data(d: Dictionary) -> void:
 			var cm := spawn_coletor_minerio(mpos)
 			cm.total_produced = maxf(SaveUtil.num(cd, "total", 0.0), 0.0)
 			cm.chosen_pos = SaveUtil.vec2(cd, "jazida", Vector2.INF)
+			cm._desgaste.load_save_data(SaveUtil.dict(cd, "desgaste"))  # Bloco 105 (save antigo: novo)
 	# Bloco 67: o leste (save antigo: trancado)
 	var envl := get_tree().get_first_node_in_group("environment")
 	if envl and envl.has_method("set_leste_aberto"):

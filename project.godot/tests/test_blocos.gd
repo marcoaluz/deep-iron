@@ -434,5 +434,9 @@ func test_b104_expedicoes() -> void:
 	run_bloco("b104_expedicoes.gd")
 
 
+func test_b105_carregador_mecanico() -> void:
+	run_bloco("b105_carregador_mecanico.gd")
+
+
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")

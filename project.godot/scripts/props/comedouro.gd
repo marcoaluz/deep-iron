@@ -35,6 +35,9 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 @export var eat_sound_interval: float = 0.9
 
 var food_stock: float = 0.0
+## Bloco 105: o ESTOQUE DA COZINHA — matéria-prima que o carregador trouxe do armazém; o cozinheiro prepara direto daqui.
+@export var raw_local_max: float = 40.0
+var raw_local: float = 0.0
 var _sound_timer: float = 0.0
 var _was_empty: bool = false
 ## Algum cozinheiro preparando uma leva aqui agora (a placa mostra "preparando...").
@@ -79,6 +82,11 @@ func _process(delta: float) -> void:
 			food_stock += body.deliver_food(minf(DELIVER_RATE * delta, space_left()))
 			continue
 		if body.has_method("cook_tick") and body.get_state() == "cooking":
+			if raw_local >= 0.5 and float(body.raw_carrying) < float(body.cook_carry) - 0.01 and float(body._prep_left) <= 0.0:
+				var t := minf(raw_local, float(body.cook_carry) - float(body.raw_carrying))  # Bloco 105: o estoque da cozinha
+				raw_local -= t
+				body.raw_carrying = float(body.raw_carrying) + t
+				body._raw_units = float(body._raw_units) + t
 			food_stock += body.cook_tick(delta, space_left())  # 0 até a leva ficar pronta
 			cooking = true
 			continue
@@ -138,9 +146,10 @@ func _update_visual() -> void:
 
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
-	return {"food_stock": food_stock}
+	return {"food_stock": food_stock, "raw_local": raw_local}  # Bloco 105
 
 
 func load_save_data(d: Dictionary) -> void:
 	food_stock = clampf(SaveUtil.num(d, "food_stock", food_stock), 0.0, food_capacity)
+	raw_local = clampf(SaveUtil.num(d, "raw_local", 0.0), 0.0, raw_local_max)  # Bloco 105 (save antigo: vazio)
 	_update_visual()

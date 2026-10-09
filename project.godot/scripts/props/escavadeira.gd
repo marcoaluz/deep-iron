@@ -23,6 +23,8 @@ signal part_started(id: String)
 signal part_installed(id: String)
 signal completed
 
+const Desgaste := preload("res://scripts/core/desgaste.gd")  # Bloco 105
+const Manutencao := preload("res://scripts/core/manutencao.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")
 const ObraEstagio := preload("res://scripts/core/obra_estagio.gd")
@@ -164,7 +166,14 @@ var _anim_time: float = 0.0
 @onready var _label: Label = $StatusLabel
 
 
+var _desgaste = Desgaste.new("escavadeira")  # Bloco 105
+## Minério que a broca entregou nesta sessão (medição: tests/bench_desgaste.gd; não vai pro save).
+var total_produced := 0.0
+
+
 func _ready() -> void:
+	_desgaste.dono = self
+	add_to_group("maquinas")
 	super()
 	add_to_group("escavadeira")
 	add_to_group("obras")
@@ -602,10 +611,11 @@ func _drill(delta: float) -> void:
 				no_fuel = true
 				_fuel_retry = 2.0
 				return
-	_drill_accum += reactor_rate() * delta * _fundo_mult()
+	_drill_accum += reactor_rate() * delta * _fundo_mult() * _desgaste.eficiencia()  # Bloco 105: gasta e rende menos
 	while _drill_accum >= 1.0:
 		_drill_accum -= 1.0
 		_deliver_ore(_pick_ore())
+		Manutencao.gasta_em(self, "escavadeira", 1.0)
 	if reactor == "fusao":
 		_fusao_timer += delta
 		if _fusao_timer >= fusao_check_interval:
@@ -648,6 +658,7 @@ func _deliver_ore(t: String) -> void:
 	var best: Node2D = eco.armazem_com_espaco(global_position, 1.0) if eco else null  # Bloco 97: só onde cabe
 	if best:
 		best.add_ore(1.0, t)
+		total_produced += 1.0
 
 
 ## Pane do reator de fusão: explode, desliga e machuca (grave) quem estiver perto.
@@ -676,11 +687,13 @@ func get_save_data() -> Dictionary:
 		"reactor": reactor, "built_reactors": built_reactors.duplicate(), "drill_on": drill_on,
 		"outage_left": outage_left, "obra": _obra.get_save_data(),
 		"building_reactor": building_reactor, "reactor_left": reactor_left, "reactor_total": reactor_total,
+		"desgaste": _desgaste.get_save_data(),  # Bloco 105
 	}
 
 
 ## Carregar uma escavadeira pronta NÃO repete a fanfarra nem o banner de conquista.
 func load_save_data(d: Dictionary) -> void:
+	_desgaste.load_save_data(SaveUtil.dict(d, "desgaste"))  # Bloco 105 (save antigo: nova)
 	var saved := SaveUtil.dict(d, "installed")
 	for id in PART_IDS:
 		installed[id] = SaveUtil.boolean(saved, id, false)
@@ -706,3 +719,32 @@ func load_save_data(d: Dictionary) -> void:
 	outage_left = clampf(SaveUtil.num(d, "outage_left", 0.0), 0.0, fusao_outage)
 	no_fuel = false
 	_update_visual()
+
+
+# ------------------------------------------------------------ manutenção (Bloco 105: manutencao.gd)
+func manut_tipo() -> String:
+	return "escavadeira"
+
+
+func manut_condicao() -> float:
+	return _desgaste.condicao
+
+
+func manut_quebrada() -> bool:
+	return _desgaste.quebrada
+
+
+func manut_titulo() -> String:
+	return "Escavadeira"
+
+
+func manut_pos(_w: Node) -> Vector2:
+	return global_position + Vector2(0, 50)
+
+
+func manut_preventiva() -> void:
+	_desgaste.restaura()
+
+
+func manut_conserto_proprio() -> bool:
+	return false

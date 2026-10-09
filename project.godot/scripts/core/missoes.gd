@@ -301,6 +301,14 @@ func valor_do_objetivo(o: Array) -> float:
 			if alvo != "":
 				return 1.0 if ex.relatorios.any(func(r): return String(r.regiao) == alvo) or ex.voltou_de.has(alvo) else 0.0
 			return float(ex.total_voltaram)
+		"entregas":  # Bloco 105: quantas entregas os carregadores fizeram
+			var lg := get_tree().get_first_node_in_group("logistica")
+			return float(lg.entregas) if lg else 0.0
+		"consertos":  # Bloco 105: alvo "" = consertos de máquina quebrada; "preventiva" = as manutenções preventivas
+			var mt := get_tree().get_first_node_in_group("manutencao")
+			if mt == null:
+				return 0.0
+			return float(mt.preventivas) if alvo == "preventiva" else float(mt.consertos_feitos)
 		"regiao":  # Bloco 104: uma região revelada
 			var ex2 := get_tree().get_first_node_in_group("expedicoes")
 			return 1.0 if ex2 and ex2.reveladas.has(alvo) else 0.0

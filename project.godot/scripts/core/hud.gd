@@ -100,6 +100,11 @@ const ORDER_JOBS := [
 		"Opera a Carpintaria: tábuas e camas de tábua, só o que foi encomendado. Monta as camas novas nas casas."],  # Bloco 94
 	["batedor", "Batedor", "K", "res://assets/game/ui/icones/batedor.png", "toggle_scout", Color(0.7, 0.88, 0.55),
 		"Bate o mato: avista bichos e lugares de longe e rastreia as tocas (nascem mais bichos). Lidera as EXPEDIÇÕES (;): sem batedor, ninguém sai."],  # Bloco 104
+	# Bloco 105 (o ícone é o provisório até a arte própria ser aprovada: Icones.FUNCAO cai nele sem o arquivo)
+	["carregador", "Carregador", "[", "res://assets/game/ui/icones/it_mochila.png", "toggle_carrier", Color(0.92, 0.8, 0.5),
+		"Leva o material do armazém pras obras (o engenheiro só constrói), traz o minério da Fornalha e da Carpintaria, leva as barras pro armazém e enche o estoque da cozinha. Sem carregador, cada um busca o seu."],
+	["mecânico", "Mecânico", "]", "res://assets/game/ui/icones/it_ferragem.png", "toggle_mechanic", Color(0.6, 0.85, 0.95),
+		"Conserta as máquinas quebradas (com material) e faz a manutenção preventiva das gastas (só o tempo dele): cabines, trilhos, escavadeira, coletores, ventiladores e o robô. Sem mecânico, o engenheiro só conserta o que quebrou."],
 ]
 ## Bloco 92: largura do botão da barra de ordens (era 90; com o Padre são 14 botões na tela de 1280 px).
 ## Bloco 94: com o Carpinteiro são 15: 78 px.
@@ -108,7 +113,7 @@ const TOP_BAR_H := 40.0
 const SIDE_MARGIN := 10.0
 ## Bloco 95: a barra de funções AGRUPADA (só ícone + contador; o nome e a tecla na dica).
 const GRUPOS_FUNCOES := [["PRODUÇÃO", ["minerador", "lenhador", "caçador", "cozinheiro", "fundidor", "ferreiro", "carpinteiro"]],
-	["SERVIÇO", ["engenheiro", "médico", "pesquisador", "padre", "batedor"]], ["DEFESA", ["guarda"]]]
+	["SERVIÇO", ["engenheiro", "carregador", "mecânico", "médico", "pesquisador", "padre", "batedor"]], ["DEFESA", ["guarda"]]]
 ## Bloco 95: botão de função (ícone 32 no meio, o contador no canto).
 const BOTAO_FUNCAO := Vector2(46, 46)
 ## Bloco 95: a aba fina da esquerda e a gaveta da lista que sai dela.
@@ -788,7 +793,7 @@ func _fill_hints() -> void:
 		"Ordens:  botão direito = mover / minerar a jazida clicada",
 		"Funções:  %s minerador  •  %s caçador  •  %s médico  •  %s engenheiro  •  %s cozinheiro  •  %s lenhador  •  %s guarda  •  %s pesquisador  •  %s sem função  •  %s turno extra" % [
 			k.call("minerador"), k.call("cacador"), k.call("medico"), k.call("engenheiro"), k.call("cozinheiro"), k.call("lenhador"),
-			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")] + "  •  %s fundidor  •  %s ferreiro  •  %s padre (só um)  •  %s carpinteiro  •  %s batedor" % [k.call("fundidor"), k.call("ferreiro"), k.call("padre"), k.call("carpinteiro"), k.call("batedor")],
+			k.call("guarda"), k.call("pesquisador"), k.call("sem_funcao"), k.call("turno_extra")] + "  •  %s fundidor  •  %s ferreiro  •  %s padre (só um)  •  %s carpinteiro  •  %s batedor  •  %s carregador  •  %s mecânico" % [k.call("fundidor"), k.call("ferreiro"), k.call("padre"), k.call("carpinteiro"), k.call("batedor"), k.call("carregador"), k.call("mecanico")],
 		"Economia:  %s vender todo o minério (ou na janela do Armazém, a quantidade que quiser)  •  gente nova: os migrantes chegam no portão (precisa de cama livre)" % k.call("vender"),
 		"Pessoas:  %s = a lista da força de trabalho (ou passe o mouse na aba da esquerda)  •  alertas à direita: clique pra ir até lá" % k.call("pessoas"),
 		"Trabalho:  %s = TRABALHADORES — marcar áreas (madeira, alimentos, mina) e quantos trabalham em cada uma (até 5)" % k.call("painel_trabalho"),
@@ -2116,6 +2121,15 @@ func _refresh_alertas(workers: Array) -> void:
 	_alertas.poe("armazem_cheio", cheios.size(), "%d armazém%s cheio%s%s. Venda, gaste ou amplie (janela do Armazém); ou construa um Armazém novo." % [
 		cheios.size(), "" if cheios.size() == 1 else "s", "" if cheios.size() == 1 else "s",
 		(" — %d esperando pra entregar" % esperando) if esperando > 0 else ""], cheios)
+	# Bloco 105: máquina quebrada (parou) ou falhando (a eficiência caiu muito: o mecânico precisa ir)
+	var mt := get_tree().get_first_node_in_group("manutencao")
+	if mt and mt.has_method("com_problema"):
+		var probl: Array = mt.com_problema()
+		var quebr := probl.filter(func(m): return m.manut_quebrada()).size()
+		var mec_dica := "%d quebrada%s (parada%s)" % [quebr, "" if quebr == 1 else "s", "" if quebr == 1 else "s"] if quebr > 0 else ""
+		if probl.size() > quebr:
+			mec_dica += ("; " if mec_dica != "" else "") + "%d falhando" % (probl.size() - quebr)
+		_alertas.poe("maquina", probl.size(), mec_dica + ". %s" % ("O mecânico (tecla %s) conserta." % Teclas.nome("mecanico") if mt.tem_mecanico() else "Sem mecânico (tecla %s): o engenheiro só conserta o que quebrou." % Teclas.nome("mecanico")), probl)
 	# Bloco 101: migrantes esperando no portão
 	var mig := get_tree().get_first_node_in_group("migrantes")
 	var esp: Array = mig.esperando.map(func(e): return e.w).filter(func(w): return is_instance_valid(w)) if mig else []

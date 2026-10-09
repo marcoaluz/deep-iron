@@ -32,7 +32,9 @@ NOTA = {"ferreiro": " He is BALD: no hat, no helmet, no cap on his bald head.",
         "carpinteira": " She wears a pale grey-brown cloth kerchief over her hair: keep exactly this kerchief and its pale grey-brown color; no helmet, no hat, no scarf around the neck.",
         # Bloco 104
         "batedor": " He wears a wide-brimmed brown leather bush hat and a dark green cloak: keep exactly this hat and the stubble; no helmet, no headlamp.",
-        "batedora": " She has NO hat: dark brown hair and the dark green hood DOWN on her shoulders; keep the hood and the hair exactly; no helmet, no hat, no cap."}
+        "batedora": " She has NO hat: dark brown hair and the dark green hood DOWN on her shoulders; keep the hood and the hair exactly; no helmet, no hat, no cap.",
+        # Bloco 105
+        "carregador": " He wears a faded indigo-blue knitted beanie and has a short dark beard: keep exactly this beanie and the beard; the wooden carrying frame on his back stays; no helmet, no headlamp."}
 
 
 def expressoes():

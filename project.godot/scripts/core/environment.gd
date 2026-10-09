@@ -695,6 +695,8 @@ func _build_navigation() -> void:
 
 ## Refaz a malha de navegação (ex.: casa nova posicionada pelo jogador).
 func rebuild_navigation() -> void:
+	if not is_inside_tree():
+		return  # Bloco 105: pedido adiado que chegou com a partida já saindo da árvore (carregando outro save)
 	if navigation_region:
 		navigation_region.navigation_polygon = _bake_navigation()
 

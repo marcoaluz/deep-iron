@@ -10,7 +10,8 @@ const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre"
 	"cristal_verde", "cristal_rubro", "queimaduras_acido", "queimaduras_lava", "ventiladores", "gema_azul",  # (Bloco 70: no fim)
 	"obras_prontas_dia", "obra_tempo_medio_s",  # Bloco 96: obras terminadas no dia e o tempo médio (s de jogo) encomenda -> pronto
 	"minerio_entrou_dia", "minerio_vagonete_dia", "mineiros_dentro",
-	"expedicoes_fora", "gente_fora", "expedicoes_voltaram", "achados_expedicao", "feridos_expedicao"]  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
+	"expedicoes_fora", "gente_fora", "expedicoes_voltaram", "achados_expedicao", "feridos_expedicao",
+	"maquinas_quebradas", "quebras_total", "preventivas", "consertos", "entregas_carregador"]  # Bloco 105 (quebradas = agora; os outros: total da partida)  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
 
 var arquivo := ""
 var _t0 := 0
@@ -132,6 +133,10 @@ func registra() -> void:
 	v.append_array(minerio_do_dia())  # Bloco 99
 	var ex := get_tree().get_first_node_in_group("expedicoes")  # Bloco 104
 	v.append_array([ex.em_curso.size(), ex.fora_agora().size(), ex.total_voltaram, ex.total_achados, ex.total_feridos] if ex else [0, 0, 0, 0, 0])
+	var mt := get_tree().get_first_node_in_group("manutencao")  # Bloco 105
+	var lg := get_tree().get_first_node_in_group("logistica")
+	v.append_array([mt.maquinas().filter(func(m): return m.manut_quebrada()).size(), mt.total_quebras(), mt.preventivas, mt.consertos_feitos] if mt else [0, 0, 0, 0])
+	v.append(lg.entregas if lg else 0)
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return
