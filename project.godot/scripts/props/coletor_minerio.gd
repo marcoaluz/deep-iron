@@ -146,7 +146,11 @@ func _process(delta: float) -> void:
 		_why = "nenhuma jazida no alcance"
 	elif j.is_depleted() or not j.has_ore():
 		_why = "jazida esgotada (volta quando regenerar)"
+	elif get_tree().get_first_node_in_group("economy").armazem_com_espaco(global_position, 1.0, "minerios") == null:
+		_sem_espaco = true  # Bloco 106: o compartimento de minério cheio: para ANTES de tirar da jazida (nada some)
+		_why = "o armazém de minério está cheio"
 	else:
+		_sem_espaco = false
 		for body in _working_bodies():
 			if body == operator and body.get_state() == "operating_ore":
 				_producing = true
@@ -175,10 +179,11 @@ func _process(delta: float) -> void:
 
 func _deliver(amount: float, ore: String) -> void:
 	var eco := get_tree().get_first_node_in_group("economy")
-	var best: Node2D = eco.armazem_com_espaco(global_position, amount) if eco else null  # Bloco 97: só onde cabe
-	_sem_espaco = best == null
+	var best: Node2D = eco.armazem_com_espaco(global_position, amount, "minerios") if eco else null  # Bloco 97/106
 	if best:
 		best.add_ore(amount, ore)
+	elif eco:
+		eco.devolve(ore, amount, global_position)  # (já tirado da jazida: entra mesmo assim, nada some)
 
 
 ## Texto da placa (e da janela).

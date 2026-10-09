@@ -14,8 +14,16 @@ extends "res://scripts/props/station.gd"
 ## "dentro da mina N/5", lanterna acesa e o som da picareta na boca), tirando da jazida da área no ritmo `taxa_dentro`
 ## (o mesmo de hoje nas galerias: a renda fica igual) direto pro ponto. Sem trilho, quebrado, ponto cheio ou armazém
 ## cheio: não aceita e ele sai e minera na mão, como antes.
+##
+## Bloco 106: o vagonete da BOCA DA MINA (`tem_interior`) começa em RUÍNA numa partida nova (o trilho velho e sem
+## carrinho), como a ruína do coletor (Bloco 81) e o elevador (Bloco 99): o jogador manda restaurar por ETAPAS — só com
+## um MECÂNICO na vila (a máquina é dele) —, paga, e o material vai pela obra (o carregador ou quem trabalha leva). Em
+## ruína o ponto não recebe nada (o minerador leva na mão pro armazém) e ninguém entra na galeria. Restaurado, funciona
+## mesmo que o mecânico saia (a manutenção é dele). Restaurar NÃO liga a mina: a área de mina (Bloco 77) continua sendo o
+## comando do jogador. Save antigo com o vagonete funcionando: continua funcionando (sem a chave = restaurado).
 
 const Iso := preload("res://scripts/iso/iso_core.gd")
+const SaveUtil := preload("res://scripts/core/save_util.gd")
 
 @export_group("Vagonete (Bloco 64)")
 ## Minério que o ponto guarda esperando o vagonete, e quanto o vagonete leva por viagem (Bloco 99: 60 -> 240, 25 -> 100).
@@ -31,14 +39,26 @@ const Iso := preload("res://scripts/iso/iso_core.gd")
 @export var desgaste_ref: float = 25.0
 @export var repair_seconds: float = 20.0
 
+@export_group("Restauração do vagonete da boca (Bloco 106)")
+## Nome de cada etapa (índice = etapa; a última = funcionando).
+@export var etapa_nomes: PackedStringArray = PackedStringArray(["Ruína", "Limpar o trilho e o entulho", "Trilhos e dormentes novos",
+	"O vagonete e o freio", "Funcionando"])
+## Custo de cada etapa (índice 1..3): x = créditos, y = ferro (barras a partir do estágio da fornalha), z = madeira.
+@export var etapa_custo: Array[Vector3i] = [Vector3i.ZERO, Vector3i(0, 0, 30), Vector3i(120, 40, 40), Vector3i(160, 40, 10), Vector3i.ZERO]
+## Itens a mais de cada etapa (pregos antes da fornalha viram ferro: Economy.itens_efetivos).
+@export var etapa_itens: Array[Dictionary] = [{}, {}, {"prego": 10}, {}, {}]
+## Segundos de trabalho de cada etapa (índice 1..3).
+@export var etapa_segundos: PackedFloat32Array = PackedFloat32Array([0.0, 25.0, 40.0, 45.0, 0.0])
+
 @export_group("Dentro da mina (Bloco 99)")
 ## Esta é a boca da mina (tem galeria de dentro onde o mineiro trabalha escondido)?
 @export var tem_interior := false
 ## Quantos mineiros cabem lá dentro.
 @export var vagas_dentro: int = 5
-## Minério por mineiro por HORA DE JOGO lá dentro (o mesmo que eles tiram hoje nas galerias da montanha, contando a
-## caminhada até o armazém: a renda fica igual; ver tests/bench_minerio.gd).
-@export var taxa_dentro: float = 21.0
+## Minério por mineiro por HORA DE JOGO lá dentro (o mesmo que eles tiram nas galerias da montanha, contando a
+## caminhada até o armazém: a renda fica igual; ver tests/bench_minerio.gd). Bloco 106: era 21; com o ritmo_mineracao
+## novo da Economia o mineiro de fora tira ~3,7 por hora de expediente (bench_coleta: 134/dia com 4), então aqui também.
+@export var taxa_dentro: float = 3.5
 ## A área de mina conta se a boca estiver dentro dela ou a até esta distância da borda (px).
 @export var alcance_area: float = 80.0
 ## Bloco 74: o da mina (fixo): o trilho sai do batente da boca, desce reto e vira pra porta do armazém
@@ -94,8 +114,10 @@ func _ready() -> void:
 	v.scale = Vector2.ONE * (0.6 / maxf(sc, 0.01))
 	v.offset = Vector2(-v.texture.get_width() * 0.5, -v.texture.get_height() + 16.0)
 	rail_left = float(rail_trips)
+	_obra.trabalhador = "mecânico"  # Bloco 105/106: o conserto do trilho e a restauração são do mecânico
 	if tem_interior:
 		add_to_group("bocas_mina")
+		add_to_group("clickable")  # Bloco 106: a janela da restauração
 		_lanterna = PointLight2D.new()
 		_lanterna.name = "Lamp"  # (a vista iso copia como lampião)
 		_lanterna.texture = load("res://assets/game/light_radial.tres")
@@ -114,9 +136,17 @@ func _accepts(body: Node2D) -> bool:
 	return body.has_method("deposit")
 
 
+## Bloco 106: a boca da mina abre a janela do vagonete (a restauração); os outros pontos não têm janela.
+var panel_id := "vagonete"
+
+
+func contains_point(p: Vector2) -> bool:
+	return tem_interior and Rect2(global_position + Vector2(-40, -60), Vector2(80, 80)).has_point(p)
+
+
 ## Recebe carga? (cheio ou trilho quebrado com o ponto lotado: não — o minerador vai pro armazém)
 func is_usable() -> bool:
-	return not _parado_area and buffered() < buffer_capacity - 1.0 and rail != null and not (is_broken() and buffered() >= cart_capacity)
+	return restaurado() and not _parado_area and buffered() < buffer_capacity - 1.0 and rail != null and not (is_broken() and buffered() >= cart_capacity)
 
 
 ## Bloco 77: work_areas.gd chama (o estado da área de mina onde fica o ponto).
@@ -159,7 +189,7 @@ func boca_pos() -> Vector2:
 
 ## O vagonete leva o que sai daqui agora? (trilho inteiro, área operando, ponto com espaço, armazém com espaço)
 func operando() -> bool:
-	return rail != null and is_instance_valid(rail) and not is_broken() and not _parado_area \
+	return restaurado() and rail != null and is_instance_valid(rail) and not is_broken() and not _parado_area \
 		and buffered() < buffer_capacity - 1.0 and not _sem_espaco
 
 
@@ -346,6 +376,14 @@ func _place_cart() -> void:
 
 # ------------------------------------------------------------ andamento
 func _process(delta: float) -> void:
+	if not restaurado():  # Bloco 106: em ruína não anda nada (sem carrinho, sem carga, sem galeria)
+		if _cart and is_instance_valid(_cart) and _cart.visible:
+			_cart.visible = false
+		if Engine.get_process_frames() % 30 == 0:
+			_update_label()
+		return
+	if _cart and is_instance_valid(_cart) and not _cart.visible:
+		_cart.visible = true
 	if tem_interior:  # Bloco 99: quem está dentro da mina
 		_produz_dentro(delta)
 		if _lampiao:
@@ -385,7 +423,7 @@ func _process(delta: float) -> void:
 			var carga := 0.0
 			for k in cart_load:
 				carga += float(cart_load[k])
-			_sem_espaco = arm_c != null and arm_c.has_method("espaco") and arm_c.espaco() < carga
+			_sem_espaco = arm_c != null and arm_c.has_method("espaco_cat") and arm_c.espaco_cat("minerios") < carga  # (Bloco 106: o compartimento de minério)
 			if cart_d >= _len and not _sem_espaco:  # Bloco 97: armazém cheio = o carrinho espera carregado
 				_unload_cart()
 				cart_state = "voltando"
@@ -443,7 +481,7 @@ func _update_label() -> void:
 		return
 	var st: String = "trilho QUEBRADO — mecânico" if is_broken() else {"esperando": "esperando carga", "indo": "levando", "voltando": "voltando"}.get(cart_state, cart_state)
 	if _sem_espaco and cart_state == "indo":
-		st = "ARMAZÉM CHEIO — o carrinho espera"  # Bloco 97
+		st = "ARMAZÉM DE MINÉRIO CHEIO — o carrinho espera"  # Bloco 97/106
 	if _parado_area and cart_state == "esperando" and not is_broken():
 		st = "parado — mina: %s" % _motivo_area  # Bloco 77
 	var trilho := "  •  trilho %d%%" % roundi(100.0 * clampf(rail_left / maxf(float(rail_trips), 1.0), 0.0, 1.0)) if not is_broken() else ""
@@ -453,21 +491,142 @@ func _update_label() -> void:
 		_label.modulate = Color(1.0, 0.6, 0.4) if is_broken() else Color(0.9, 0.86, 0.8)
 		return
 	_label.text = "Vagonete\n%s\ncarga: %d/%d  •  levou: %d%s" % [st, int(buffered()), int(buffer_capacity), int(total_moved), trilho]
+	if not restaurado():  # Bloco 106
+		_label.text = "Vagonete em RUÍNA\n%s" % (("restaurando: %s" % _obra.status(obra_progress())) if pago else "restaurar: clique (precisa de mecânico)")
+		_label.modulate = Color(0.8, 0.72, 0.62)
+		return
 	if tem_interior and not dentro.is_empty():
 		_label.text = "Mina — dentro: %d/%d\n" % [dentro.size(), vagas_dentro] + _label.text
 	_label.modulate = Color(1.0, 0.6, 0.4) if is_broken() else Color(0.9, 0.86, 0.8)
 
 
-# ------------------------------------------------------------ conserto (obra do engenheiro)
+# ------------------------------------------------------------ restauração da ruína (Bloco 106)
+const ETAPA_PRONTA := 4
+## A etapa (0 ruína .. 4 funcionando), se a etapa atual já foi paga e os segundos feitos nela.
+var etapa: int = ETAPA_PRONTA
+var pago := false
+var progresso := 0.0
+var _etapa_iniciada := false
+
+
+func restaurado() -> bool:
+	return etapa >= ETAPA_PRONTA
+
+
+## A etapa que vem agora (1..3), ou -1 (funcionando).
+func etapa_atual() -> int:
+	return -1 if restaurado() else maxi(etapa, 1)
+
+
+func etapa_nome(i: int) -> String:
+	return etapa_nomes[i] if i >= 0 and i < etapa_nomes.size() else "?"
+
+
+func custo_etapa(i: int) -> Vector3i:
+	return etapa_custo[i] if i >= 0 and i < etapa_custo.size() else Vector3i.ZERO
+
+
+func itens_etapa(i: int) -> Dictionary:
+	return etapa_itens[i] if i >= 0 and i < etapa_itens.size() else {}
+
+
+func segundos_etapa(i: int) -> float:
+	return maxf(etapa_segundos[i], 1.0) if i >= 0 and i < etapa_segundos.size() else 1.0
+
+
+func custo_texto(i: int) -> String:
+	var c := custo_etapa(i)
+	var eco := get_tree().get_first_node_in_group("economy") if is_inside_tree() else null
+	return eco.custo_metal_texto(c.x, c.y, "ferro", c.z, itens_etapa(i)) if eco else "?"
+
+
+## "" = dá pra pedir a etapa agora; senão o motivo. Só com um MECÂNICO na vila (o vagonete é máquina dele).
+func etapa_block_reason() -> String:
+	var i := etapa_atual()
+	if i < 0:
+		return "já está funcionando"
+	if pago:
+		return "em obra (%s)" % _obra.status(obra_progress())
+	var mt := get_tree().get_first_node_in_group("manutencao") if is_inside_tree() else null
+	if mt == null or not mt.tem_mecanico():
+		return "precisa de mecânico (tecla %s)" % preload("res://scripts/core/teclas.gd").nome("mecanico")
+	var eco := get_tree().get_first_node_in_group("economy") if is_inside_tree() else null
+	if eco == null:
+		return "sem recursos"
+	var c := custo_etapa(i)
+	return eco.metal_falta(c.x, c.y, "ferro", c.z, itens_etapa(i))
+
+
+## O jogador pede (paga) a etapa: o material vira a lista da obra (Bloco 96) e o mecânico trabalha (sem ele, o engenheiro).
+func pedir_etapa() -> bool:
+	if etapa_block_reason() != "":
+		var au := get_node_or_null("/root/Audio")
+		if au:
+			au.error()
+		return false
+	var i := etapa_atual()
+	var c := custo_etapa(i)
+	var eco := get_tree().get_first_node_in_group("economy")
+	if not eco.paga_metal(c.x, c.y, "ferro", c.z, itens_etapa(i)):
+		return false
+	etapa = i
+	pago = true
+	progresso = 0.0
+	_obra.start()  # (no MESMO quadro do pagamento: o material vira a lista da obra)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Vagonete: %s encomendado — o mecânico faz (o carregador leva o material)." % etapa_nome(i), Color(1.0, 0.8, 0.45), self)
+	_update_label()
+	return true
+
+
+## Termina tudo (testes e atalho do F3).
+func restaura_tudo() -> void:
+	etapa = ETAPA_PRONTA
+	pago = false
+	progresso = 0.0
+	_update_label()
+
+
+func _etapa_pronta() -> void:
+	var feita := etapa
+	pago = false
+	progresso = 0.0
+	etapa = feita + 1
+	var au := get_node_or_null("/root/Audio")
+	if au:
+		au.build_done(global_position)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		if restaurado():
+			hud.show_banner("VAGONETE RESTAURADO!", "O trilho da boca da mina voltou a andar: o minerador entrega no ponto e o carrinho leva pro armazém. A mina (área de mina, tecla 5) continua sendo você quem liga.")
+		else:
+			hud.show_toast("%s: pronto. Próxima etapa: %s (%s)." % [etapa_nome(feita), etapa_nome(etapa), custo_texto(etapa)], Color(0.55, 1.0, 0.5), self)
+	_update_label()
+
+
+## Bloco 96/106: a etapa cancelada volta a "não encomendada" (ObraSite.cancelar devolveu créditos e material).
+func obra_cancelar() -> void:
+	if not restaurado():
+		pago = false
+		progresso = 0.0
+		_update_label()
+
+
+# ------------------------------------------------------------ conserto (obra do engenheiro) — Bloco 106: e a restauração
 func obra_pending() -> bool:
+	if not restaurado():
+		return pago
 	return is_broken()
 
 
 func obra_title() -> String:
-	return "Consertar o trilho"
+	return "Vagonete: " + etapa_nome(etapa) if not restaurado() else "Consertar o trilho"
 
 
 func obra_progress() -> float:
+	if not restaurado():
+		return clampf(progresso / segundos_etapa(etapa), 0.0, 1.0) if pago else 0.0
 	return clampf(1.0 - repair_left / maxf(repair_seconds, 0.1), 0.0, 1.0) if repair_left > 0.0 else 0.0
 
 
@@ -476,6 +635,13 @@ func obra_position(worker: Node) -> Vector2:
 
 
 func obra_work(seconds: float) -> void:
+	if not restaurado():  # Bloco 106: a etapa da restauração
+		if not pago:
+			return
+		progresso += seconds
+		if progresso >= segundos_etapa(etapa):
+			_etapa_pronta()
+		return
 	if not is_broken():
 		return
 	if repair_left <= 0.0:
@@ -511,7 +677,8 @@ func obra_workers() -> Array[Node]:
 # ------------------------------------------------------------ save
 func get_save_data() -> Dictionary:
 	return {"position": [global_position.x, global_position.y], "ferrovia": ferrovia, "stock": stock.duplicate(), "rail_left": rail_left,
-		"repair_left": repair_left, "total": total_moved, "cart_state": cart_state, "cart_d": cart_d, "cart_load": cart_load.duplicate()}
+		"repair_left": repair_left, "total": total_moved, "cart_state": cart_state, "cart_d": cart_d, "cart_load": cart_load.duplicate(),
+		"etapa": etapa, "pago": pago, "progresso": progresso, "obra": _obra.get_save_data()}  # Bloco 106: a restauração
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -528,7 +695,13 @@ func load_save_data(d: Dictionary) -> void:
 	var cl: Dictionary = d.get("cart_load", {}) if d.get("cart_load") is Dictionary else {}
 	for k in cl:
 		cart_load[String(k)] = maxf(float(cl[k]), 0.0)
-	if is_broken():
+	# Bloco 106: a restauração (save antigo, sem a chave: o vagonete já funcionava = restaurado)
+	etapa = clampi(SaveUtil.integer(d, "etapa", ETAPA_PRONTA), 0, ETAPA_PRONTA)
+	pago = SaveUtil.boolean(d, "pago", false) and not restaurado()
+	progresso = maxf(SaveUtil.num(d, "progresso", 0.0), 0.0) if pago else 0.0
+	if pago:
+		_obra.load_save_data(SaveUtil.dict(d, "obra"))
+	elif is_broken() and restaurado():
 		_obra.start()
 	_build_rail.call_deferred()
 
@@ -548,13 +721,15 @@ func manut_tipo() -> String:
 
 
 func manut_condicao() -> float:
+	if not restaurado():
+		return 1.0  # (Bloco 106: a ruína é restauração, não desgaste)
 	if is_broken():
 		return 0.0
 	return clampf(rail_left / maxf(float(rail_trips), 1.0), 0.0, 1.0) if rail != null and is_instance_valid(rail) else 1.0
 
 
 func manut_quebrada() -> bool:
-	return is_broken()
+	return restaurado() and is_broken()
 
 
 func manut_titulo() -> String:

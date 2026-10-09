@@ -723,6 +723,8 @@ func _build_janelas() -> void:
 		_add_panel("missoes", preload("res://scripts/core/missoes_panel.gd"), _missoes_mgr)
 		_missoes_mgr.mudou.connect(_atualiza_rastreador)
 		_atualiza_rastreador.call_deferred()
+	_registra_vagonete()
+	_registra_vagonete.call_deferred()  # Bloco 106 (a boca da mina pode nascer depois do HUD)
 	var elev := get_tree().get_first_node_in_group("elevador")
 	if elev and elev.has_method("pedir_etapa"):
 		_add_panel("elevador", preload("res://scripts/core/elevador_panel.gd"), elev)  # Bloco 99
@@ -813,6 +815,15 @@ func _fill_hints() -> void:
 # =================================================================== janelas das estruturas
 ## Cada janela é um PanelContainer com setup(hud, alvo, economia), refresh(),
 ## button_text() e has_available_action().
+## Bloco 106: a janela do vagonete da boca da mina (a restauração da ruína).
+func _registra_vagonete() -> void:
+	if _panels.has("vagonete"):
+		return
+	var boca := get_tree().get_first_node_in_group("bocas_mina")
+	if boca and boca.has_method("pedir_etapa"):
+		_add_panel("vagonete", preload("res://scripts/core/vagonete_panel.gd"), boca)
+
+
 func _add_panel(id: String, script: GDScript, target: Node) -> void:
 	var panel: PanelContainer = script.new()
 	add_child(panel)
@@ -910,6 +921,8 @@ func toggle_build_menu() -> void:
 ## Bloco 47: `focus` = o prédio clicado, pra janela que pode mostrar um de vários (coletor,
 ## enfermaria). Pelo botão/tecla vem null: a janela mostra o primeiro.
 func open_panel(id: String, focus: Node = null) -> void:
+	if id == "vagonete":
+		_registra_vagonete()  # Bloco 106: criada na primeira vez (a boca nasce depois do HUD)
 	if not _panels.has(id):
 		return
 	_build_menu.visible = false
@@ -2115,12 +2128,14 @@ func _refresh_alertas(workers: Array) -> void:
 		gv = 1
 		gv_dica = "Greve!" if _morale.on_strike else "O ânimo está baixo: greve em %ds se não melhorar (taverna, festa, comida, camas)." % ceili(_morale.strike_grace - _morale.below_time)
 	_alertas.poe("greve", gv, gv_dica, [_hub] if _hub else [])
-	# Bloco 97: armazém cheio (quem entrega espera; as máquinas param)
-	var cheios := get_tree().get_nodes_in_group("armazens").filter(func(a): return a.has_method("cheio") and a.cheio())
+	# Bloco 97/106: o compartimento cheio em todos os armazéns (quem coleta aquilo espera; as máquinas param; os outros
+	# compartimentos continuam recebendo)
+	var cats_cheias: Array = _economy.categorias_cheias() if _economy and _economy.has_method("categorias_cheias") else []
+	var cheios := get_tree().get_nodes_in_group("armazens").filter(func(a): return a.has_method("categorias_cheias") and not a.categorias_cheias().is_empty())
 	var esperando := workers.filter(func(w): return w.has_method("motivo_no_balao") and w.motivo_parado() == "armazem_cheio").size()
-	_alertas.poe("armazem_cheio", cheios.size(), "%d armazém%s cheio%s%s. Venda, gaste ou amplie (janela do Armazém); ou construa um Armazém novo." % [
-		cheios.size(), "" if cheios.size() == 1 else "s", "" if cheios.size() == 1 else "s",
-		(" — %d esperando pra entregar" % esperando) if esperando > 0 else ""], cheios)
+	var nomes_c: Array = cats_cheias.map(func(c): return preload("res://scripts/core/items.gd").NOME_COMPARTIMENTO[c])
+	_alertas.poe("armazem_cheio", cats_cheias.size(), "Armazém de %s cheio%s. Venda, gaste ou amplie (janela do Armazém); ou construa um Armazém novo. Os outros compartimentos continuam recebendo." % [
+		" e ".join(nomes_c) if not nomes_c.is_empty() else "?", (" — %d esperando espaço" % esperando) if esperando > 0 else ""], cheios)
 	# Bloco 105: máquina quebrada (parou) ou falhando (a eficiência caiu muito: o mecânico precisa ir)
 	var mt := get_tree().get_first_node_in_group("manutencao")
 	if mt and mt.has_method("com_problema"):

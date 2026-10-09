@@ -1,5 +1,7 @@
 extends "res://scripts/props/station.gd"
 ## Armazém: onde a vila guarda minério, madeira, matéria-prima, couro e itens processados.
+## Bloco 106: o limite é POR COMPARTIMENTO (lógico, dentro do mesmo prédio): alimentos, madeira, minérios e barras,
+## manufaturados e demais. Um cheio não bloqueia os outros (o minério não tira mais o lugar da comida e da madeira).
 ## Bloco 97: tem LIMITE (capacidade = total de unidades guardadas, de tudo junto) e sobe até o nível 3. A ampliação
 ## é OBRA de engenheiro com material (ObraSite, Bloco 96). Cheio: quem vem ENTREGAR espera (balão "armazém cheio")
 ## ou vai pra outro armazém com espaço; as máquinas param de mandar. Devolução, prêmio e fundação entram mesmo
@@ -10,9 +12,18 @@ signal stored_changed(total: float)
 @export_group("Ritmo")
 ## Minério descarregado por segundo por ipezinho (era 10.0).
 @export var DEPOSIT_RATE: float = 8.0
-@export_group("Capacidade e níveis (Bloco 97)")
-## Quanto cabe por nível (unidades, tudo junto: minério + madeira + matéria-prima + couro + itens). Índice 0 = nível 1.
-@export var capacidade_por_nivel: Array[float] = [400.0, 1000.0, 2000.0]
+@export_group("Capacidade e níveis (Bloco 97; por compartimento: Bloco 106)")
+## Bloco 106: quanto cabe em cada COMPARTIMENTO, por nível (unidades; índice 0 = nível 1). A ampliação multiplica cada
+## um como antes (1.000/400 = 2,5x no nível 2; 2.000/400 = 5x no nível 3). Antes era 400 de tudo junto.
+## Alimentos = comida crua (a caça e a horta). Uma vila de 10 come ~90 por dia (bench_comida, Bloco 101).
+@export var cap_alimentos: Array[float] = [150.0, 375.0, 750.0]
+## Madeira = madeira + tábua. Folga pra 1 dia de jogo de 4 lenhadores sem gastar (telemetria do Bloco 106: com 300 o
+## caso "10 coletando" enchia no fim do 1º expediente; a madeira é o material das obras, então não cortei o ritmo dela).
+@export var cap_madeira: Array[float] = [350.0, 875.0, 1750.0]
+## Minérios e barras = todo minério (ferro é a "pedra" das obras) + as barras/aço/lingote.
+@export var cap_minerios: Array[float] = [400.0, 1000.0, 2000.0]
+## Manufaturados e demais = couro, pregos, ferragens, camas, mochilas...
+@export var cap_manufaturados: Array[float] = [100.0, 250.0, 500.0]
 ## Ampliar PARA o nível do índice (0 = nível 1, não usado): créditos.
 @export var ampliar_creditos: Array[int] = [0, 250, 600]
 ## Ampliar: ferro (a partir do estágio da fornalha vira barra: 100 de ferro = 50 barras).
@@ -96,32 +107,35 @@ func _process(delta: float) -> void:
 	var received := 0.0
 	var wood_in := 0.0
 	var raw_moved := false
-	var cabe := espaco()  # Bloco 97: o que ainda cabe (quem entrega espera se não couber)
+	# Bloco 106: o que ainda cabe em cada compartimento (quem entrega espera se o DELE não couber)
+	var cabe_cat := {}
+	for c in CATEGORIAS:
+		cabe_cat[c] = espaco_cat(c)
 	for body in _working_bodies():
 		# lenhador descarregando madeira
 		if body.has_method("deliver_wood") and body.get_state() == "hauling":
-			var w: float = body.deliver_wood(minf(DEPOSIT_RATE * delta, cabe))
+			var w: float = body.deliver_wood(minf(DEPOSIT_RATE * delta, cabe_cat.madeira))
 			wood_stored += w
 			wood_in += w
-			cabe -= w
+			cabe_cat.madeira -= w
 			continue
 		# Bloco 27: caçador descarregando / cozinheiro buscando matéria-prima
-		if body.get("leather_carrying") != null and body.leather_carrying > 0.0 and cabe >= float(body.leather_carrying):
+		if body.get("leather_carrying") != null and body.leather_carrying > 0.0 and cabe_cat.manufaturados >= float(body.leather_carrying):
 			var c: float = body.deliver_leather()  # Bloco 42: couro vai junto
 			leather_stored += c
-			cabe -= c
+			cabe_cat.manufaturados -= c
 			raw_moved = true
 		if body.has_method("deliver_raw") and body.get_state() == "stocking":
-			var r: float = body.deliver_raw(minf(DEPOSIT_RATE * delta, cabe))
+			var r: float = body.deliver_raw(minf(DEPOSIT_RATE * delta, cabe_cat.alimentos))
 			raw_stored += r
-			cabe -= r
+			cabe_cat.alimentos -= r
 			raw_moved = true
 			continue
 		if body.has_method("na_armazem_fundidor") and body.get_state() == "buscando_insumo":
 			var barras: float = body._material_qtd(body.barras_mao) if body.has_method("_material_qtd") else 0.0
-			if barras <= cabe:  # Bloco 97: cheio, o fundidor espera com as barras
+			if barras <= cabe_cat.minerios:  # Bloco 97: cheio, o fundidor espera com as barras
 				body.na_armazem_fundidor(self)  # Bloco 86: larga as barras e pega os insumos da próxima leva
-				cabe -= barras
+				cabe_cat.minerios -= barras
 			continue
 		if body.has_method("receive_raw") and body.get_state() == "fetching":
 			raw_stored -= body.receive_raw(minf(DEPOSIT_RATE * delta, raw_stored))
@@ -130,12 +144,12 @@ func _process(delta: float) -> void:
 			continue
 		if body.has_method("pega_mochila") and body.get_state() == "storing":
 			body.pega_mochila(self)  # Bloco 94: o minerador sem mochila pega uma, se tiver
-		var got: float = body.deposit(minf(DEPOSIT_RATE * delta, cabe)) if cabe > 0.0 else 0.0
+		var got: float = body.deposit(minf(DEPOSIT_RATE * delta, cabe_cat.minerios)) if cabe_cat.minerios > 0.0 else 0.0
 		if got > 0.0:
 			var t: String = body.cargo_type
 			stock[t] = stock.get(t, 0.0) + got
 			received += got
-			cabe -= got
+			cabe_cat.minerios -= got
 	_sound_timer -= delta
 	if raw_moved:
 		_update_label()
@@ -222,8 +236,10 @@ func item_count(id: String) -> float:
 func accepts_worker(worker: Node) -> bool:
 	if worker.has_method("get_state") and worker.get_state() == "fetching":
 		return raw_stored >= 0.5
-	if worker.has_method("get_state") and worker.get_state() in ["storing", "hauling", "stocking"] and cheio():
-		return false  # Bloco 97: cheio, quem vem entregar procura outro armazém (ou espera)
+	if worker.has_method("get_state"):
+		var cat: String = {"storing": "minerios", "hauling": "madeira", "stocking": "alimentos"}.get(worker.get_state(), "")
+		if cat != "" and cheio_cat(cat):
+			return false  # Bloco 97/106: o compartimento dele cheio: procura outro armazém (ou espera)
 	return true
 
 
@@ -232,10 +248,89 @@ func accepts_worker(worker: Node) -> bool:
 static var limite_desligado := false
 
 
+## Bloco 106: os compartimentos (lógicos) e o nome deles na tela (os dados ficam no items.gd).
+const CATEGORIAS := Items.COMPARTIMENTOS
+const NOME_CATEGORIA := Items.NOME_COMPARTIMENTO
+
+
+## Bloco 106: o compartimento de um item/minério (Items.compartimento).
+static func categoria_de(id: String) -> String:
+	return Items.compartimento(id)
+
+
+func _cap_de(cat: String) -> Array[float]:
+	match cat:
+		"alimentos":
+			return cap_alimentos
+		"madeira":
+			return cap_madeira
+		"minerios":
+			return cap_minerios
+	return cap_manufaturados
+
+
+func capacidade_cat(cat: String) -> float:
+	if limite_desligado:
+		return INF
+	var c := _cap_de(cat)
+	return c[clampi(nivel - 1, 0, c.size() - 1)] if not c.is_empty() else 0.0
+
+
+## O que está guardado num compartimento.
+func usado_cat(cat: String) -> float:
+	match cat:
+		"alimentos":
+			var n := raw_stored
+			for k in itens:
+				if categoria_de(k) == "alimentos":
+					n += float(itens[k])
+			return n
+		"madeira":
+			var n2 := wood_stored
+			for k in itens:
+				if categoria_de(k) == "madeira":
+					n2 += float(itens[k])
+			return n2
+		"minerios":
+			var n3 := 0.0
+			for t in stock:
+				n3 += float(stock[t])
+			for k in itens:
+				if categoria_de(k) == "minerios":
+					n3 += float(itens[k])
+			return n3
+	var n4 := leather_stored
+	for k in itens:
+		if categoria_de(k) == "manufaturados":
+			n4 += float(itens[k])
+	return n4
+
+
+func espaco_cat(cat: String) -> float:
+	return maxf(capacidade_cat(cat) - usado_cat(cat), 0.0)
+
+
+func cheio_cat(cat: String) -> bool:
+	return espaco_cat(cat) < 1.0
+
+
+## Os compartimentos cheios agora (a placa, o alerta, a janela).
+func categorias_cheias() -> Array[String]:
+	var out: Array[String] = []
+	for c in CATEGORIAS:
+		if cheio_cat(c):
+			out.append(c)
+	return out
+
+
+## O total: a soma dos compartimentos.
 func capacidade() -> float:
 	if limite_desligado:
 		return INF
-	return capacidade_por_nivel[clampi(nivel - 1, 0, capacidade_por_nivel.size() - 1)]
+	var n := 0.0
+	for c in CATEGORIAS:
+		n += capacidade_cat(c)
+	return n
 
 
 ## Tudo guardado aqui, junto (minério + madeira + matéria-prima + couro + itens).
@@ -248,16 +343,30 @@ func usado() -> float:
 	return n
 
 
+## O que ainda cabe somando os compartimentos (cada um no limite dele).
 func espaco() -> float:
-	return maxf(capacidade() - usado(), 0.0)
+	var n := 0.0
+	for c in CATEGORIAS:
+		n += espaco_cat(c)
+	return n
 
 
+## Todos os compartimentos cheios.
 func cheio() -> bool:
 	return espaco() < 1.0
 
 
 func nivel_maximo() -> int:
-	return capacidade_por_nivel.size()
+	return cap_minerios.size()
+
+
+## A soma dos compartimentos num nível (a janela mostra o que a ampliação dá).
+func capacidade_minima_no_nivel(n: int) -> float:
+	var t := 0.0
+	for c in CATEGORIAS:
+		var a := _cap_de(c)
+		t += a[clampi(n - 1, 0, a.size() - 1)]
+	return t
 
 
 ## "" = pode ampliar; senão o motivo.
@@ -389,7 +498,9 @@ func _update_label() -> void:
 	if proc >= 1.0:
 		_label.text += "  •  itens %d" % int(proc)  # Bloco 82
 	if not limite_desligado:
-		_label.text += "\n%d/%d%s" % [int(usado()), int(capacidade()), "  CHEIO" if cheio() else ""]  # Bloco 97
+		# Bloco 106: o compartimento cheio aparece pelo nome (os outros continuam recebendo)
+		var cheias := categorias_cheias()
+		_label.text += "\n%d/%d%s" % [int(usado()), int(capacidade()), ("  CHEIO: " + ", ".join(cheias.map(func(c): return NOME_CATEGORIA[c]))) if not cheias.is_empty() else ""]  # Bloco 97
 	var stage := 0
 	for t in pile_thresholds:
 		if total_stored >= t:

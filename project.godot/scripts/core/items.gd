@@ -68,6 +68,28 @@ static func categoria(id: String) -> String:
 	return ITENS[id].cat if ITENS.has(id) else ""
 
 
+## Bloco 106: os COMPARTIMENTOS do armazém (lógicos, no mesmo prédio) e o nome deles na tela. Ficam aqui (dados puros)
+## pra a Economia, o HUD e a janela usarem sem carregar o armazem.gd.
+const COMPARTIMENTOS := ["alimentos", "madeira", "minerios", "manufaturados"]
+const NOME_COMPARTIMENTO := {"alimentos": "alimentos", "madeira": "madeira", "minerios": "minérios e barras",
+	"manufaturados": "manufaturados"}
+
+
+## O compartimento de um item/minério: comida -> alimentos; madeira/tábua -> madeira; minério/metal -> minérios e
+## barras; o resto (couro, pregos, ferragens, equipamento) -> manufaturados.
+static func compartimento(id: String) -> String:
+	if id in Ores.TYPES:
+		return "minerios"
+	match categoria(id):
+		"comida":
+			return "alimentos"
+		"madeira":
+			return "madeira"
+		"minerio", "metal":
+			return "minerios"
+	return "manufaturados"
+
+
 static func onde(id: String) -> String:
 	return ITENS[id].onde if ITENS.has(id) else ""
 

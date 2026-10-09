@@ -91,6 +91,11 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 106: o "estacao_mina" (o vagonete da boca, no save do Centro da Vila) ganha "etapa" (0 ruína .. 4 funcionando),
+##     "pago", "progresso" e "obra" (a restauração). Save antigo sem a chave: funcionando (ninguém perde o vagonete que
+##     andava). O armazém NÃO ganha chave: os compartimentos saem do nível; save antigo acima do limite de um compartimento
+##     fica com tudo (só não recebe mais daquilo até abrir espaço). O ipezinho pode estar em "esperando_espaco" (estado
+##     comum: no load ele decide de novo).
 ##   Bloco 105: "logistica" {entregas}; "manutencao" {consertos [{maquina (caminho), segundos, progresso, obra}],
 ##     preventivas, consertos_feitos, quebras {tipo: n}}; o ipezinho ganha as funções "carregador" e "mecânico" e
 ##     "entrega_mao" (o que o carregador levava volta pro armazém); a escavadeira, os coletores, o robô e cada ventilador

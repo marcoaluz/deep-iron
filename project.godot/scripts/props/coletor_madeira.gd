@@ -330,12 +330,15 @@ func _process(delta: float) -> void:
 		if Engine.get_process_frames() % 15 == 0:
 			refresh()
 		return
+	# Bloco 106: o compartimento de madeira cheio em todos os armazéns: para ANTES de produzir (nada some)
+	var eco_c := get_tree().get_first_node_in_group("economy")
+	_sem_espaco = eco_c != null and eco_c.armazem_com_espaco(global_position, 1.0, "madeira") == null
 	for body in _working_bodies():
-		if body == operator and body.get_state() == "operating":
+		if body == operator and body.get_state() == "operating" and not _sem_espaco:
 			_producing = true
 			body.operate_tick()
 			_acc += wood_per_sec * body.work_mult() * delta * _desgaste.eficiencia()  # Bloco 105
-	while _acc >= 1.0:
+	while _acc >= 1.0 and not _sem_espaco:
 		_acc -= 1.0
 		total_produced += 1.0
 		_deliver(1.0)
@@ -353,11 +356,12 @@ func _process(delta: float) -> void:
 
 func _deliver(amount: float) -> void:
 	var eco := get_tree().get_first_node_in_group("economy")
-	var best: Node2D = eco.armazem_com_espaco(global_position, amount) if eco else null  # Bloco 97: só onde cabe
-	_sem_espaco = best == null
+	var best: Node2D = eco.armazem_com_espaco(global_position, amount, "madeira") if eco else null  # Bloco 97/106: só onde cabe
 	if best:
 		best.wood_stored += amount
 		best._recount()
+	elif eco:
+		eco.devolve("madeira", amount, global_position)  # (já produzida: entra mesmo assim, nada some)
 
 
 ## Texto da placa (e da janela).
@@ -367,7 +371,7 @@ var _sem_espaco := false
 
 func status_text() -> String:
 	if restaurado() and has_operator() and _sem_espaco:
-		return "parado — armazém cheio (venda, gaste ou amplie o armazém)"
+		return "parado — o armazém de madeira está cheio (gaste, amplie ou construa outro armazém)"
 	if not restaurado():  # Bloco 81
 		var i := etapa_atual()
 		if pago:

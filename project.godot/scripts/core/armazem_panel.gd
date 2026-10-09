@@ -32,6 +32,9 @@ var _auto_check: CheckBox  # Bloco 95: o "auto" que ficava na barra de cima
 ## Bloco 97: o espaço (deste armazém e de todos) e a ampliação.
 var _espaco_label: Label
 var _espaco_barra: ProgressBar
+const Itens := preload("res://scripts/core/items.gd")  # (Bloco 106: os compartimentos)
+## Bloco 106: uma linha (texto + barra) por compartimento: alimentos, madeira, minérios e barras, manufaturados.
+var _cat_linhas: Dictionary = {}  # categoria -> {label, barra}
 var _ampliar: Button
 var _ampliar_motivo: Label
 var _other_label: Label
@@ -104,6 +107,20 @@ func _build() -> void:
 	_espaco_barra = _hud._bar(Color(0.75, 0.62, 0.35))
 	_espaco_barra.custom_minimum_size = Vector2(260, 8)
 	ev.add_child(_espaco_barra)
+	var cores := {"alimentos": Color(0.62, 0.8, 0.4), "madeira": Color(0.72, 0.52, 0.3), "minerios": Color(0.78, 0.45, 0.25),
+		"manufaturados": Color(0.6, 0.62, 0.78)}
+	for cat in Itens.COMPARTIMENTOS:
+		var linha_c := HBoxContainer.new()
+		linha_c.add_theme_constant_override("separation", 8)
+		var l: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
+		l.custom_minimum_size = Vector2(230, 0)
+		linha_c.add_child(l)
+		var b: ProgressBar = _hud._bar(cores.get(cat, Color(0.75, 0.62, 0.35)))
+		b.custom_minimum_size = Vector2(150, 8)
+		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		linha_c.add_child(b)
+		ev.add_child(linha_c)
+		_cat_linhas[cat] = {"label": l, "barra": b}
 	_ampliar_motivo = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
 	_ampliar_motivo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	ev.add_child(_ampliar_motivo)
@@ -374,12 +391,20 @@ func _refresh_espaco() -> void:
 		_espaco_label.text += "   •   todos (%d): %d / %d" % [arms.size(), int(u), int(c)]
 	_espaco_barra.max_value = _arm.capacidade()
 	_espaco_barra.value = minf(_arm.usado(), _arm.capacidade())
+	for cat in _cat_linhas:  # Bloco 106: os compartimentos (um cheio não bloqueia os outros)
+		var cap: float = _arm.capacidade_cat(cat)
+		var uso: float = _arm.usado_cat(cat)
+		var li: Dictionary = _cat_linhas[cat]
+		li.label.text = "%s: %d / %d%s" % [String(Itens.NOME_COMPARTIMENTO[cat]).left(1).to_upper() + String(Itens.NOME_COMPARTIMENTO[cat]).substr(1), int(uso), int(cap), "  CHEIO" if _arm.cheio_cat(cat) else ""]
+		li.label.add_theme_color_override("font_color", Color(1.0, 0.55, 0.45) if _arm.cheio_cat(cat) else _hud.COLOR_TEXT)
+		li.barra.max_value = maxf(cap, 1.0)
+		li.barra.value = minf(uso, cap)
 	var motivo: String = _arm.ampliar_motivo()
 	_ampliar.visible = _arm.nivel < _arm.nivel_maximo() or _arm.ampliando
 	_ampliar.disabled = motivo != ""
 	_ampliar.text = "Ampliar pro nível %d" % (_arm.nivel + 1)
 	_ampliar.tooltip_text = "Ampliar: cabe %d. Custo: %s (obra de engenheiro: ele leva o material)." % [
-		int(_arm.capacidade_por_nivel[mini(_arm.nivel, _arm.capacidade_por_nivel.size() - 1)]), _arm.ampliar_custo_texto()]
+		int(_arm.capacidade_minima_no_nivel(_arm.nivel + 1)), _arm.ampliar_custo_texto()]
 	_ampliar_motivo.text = ("Ampliar: %s" % _arm.ampliar_custo_texto()) if motivo == "" else ("Ampliar: %s" % motivo)
 
 

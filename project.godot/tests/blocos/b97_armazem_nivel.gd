@@ -73,7 +73,8 @@ func _process(delta: float) -> bool:
 	if step == 0 and t > 3.0:
 		step = 1
 		print("== A) capacidade por nível (tudo junto)")
-		check(arm.capacidade_por_nivel == [400.0, 1000.0, 2000.0] and arm.nivel == 1 and arm.capacidade() == 400.0, "nível 1: cabe 400")
+		# Bloco 106: o limite é por COMPARTIMENTO; o de minério continua 400 / 1000 / 2000
+		check(arm.cap_minerios == [400.0, 1000.0, 2000.0] and arm.nivel == 1 and arm.capacidade_cat("minerios") == 400.0, "nível 1: cabem 400 de minério")
 		for k in arm.stock:
 			arm.stock[k] = 0.0
 		arm.itens.clear()
@@ -83,9 +84,12 @@ func _process(delta: float) -> bool:
 		arm.stock["ferro"] = 200.0
 		arm._recount()
 		eco.add_item("prego", 20.0)
-		check(is_equal_approx(arm.usado(), 320.0) and is_equal_approx(arm.espaco(), 80.0), "usado = madeira + minério + itens (%d; cabe mais %d)" % [int(arm.usado()), int(arm.espaco())])
+		check(is_equal_approx(arm.usado(), 320.0) and is_equal_approx(arm.espaco_cat("minerios"), 200.0) and is_equal_approx(arm.usado_cat("manufaturados"), 20.0),
+			"usado = madeira + minério + itens (%d; cabe mais %d de minério)" % [int(arm.usado()), int(arm.espaco_cat("minerios"))])
 		print("== B) cheio: o minerador espera com a carga (balão e alerta)")
-		arm.stock["ferro"] = 275.0  # 100 madeira + 275 ferro + 20 pregos = 395: cabem só 5
+		arm.stock["ferro"] = 395.0  # (Bloco 106: o compartimento de minério com 395: cabem só 5)
+		for p in get_nodes_in_group("pontos_carga"):
+			p.parar_por_area(true, "teste")
 		arm._recount()
 		mineiro = get_nodes_in_group("ipezinhos")[0]
 		mineiro.set_job("minerador")
@@ -98,21 +102,25 @@ func _process(delta: float) -> bool:
 		Engine.time_scale = 1.0
 		step = 2
 		print("  usado %d de %d, mão do minerador %.1f, estado %s, motivo '%s'" % [arm.usado(), arm.capacidade(), mineiro.carrying, mineiro.get_state(), mineiro.motivo_parado()])
-		check(arm.usado() <= arm.capacidade() + 0.01, "não passou do limite (%d de %d)" % [int(arm.usado()), int(arm.capacidade())])
-		check(arm.cheio(), "encheu")
+		check(arm.usado_cat("minerios") <= arm.capacidade_cat("minerios") + 0.01, "não passou do limite (%d de %d)" % [int(arm.usado_cat("minerios")), int(arm.capacidade_cat("minerios"))])
+		check(arm.cheio_cat("minerios"), "encheu (o minério)")
 		check(mineiro.carrying > 0.5, "o minerador ficou com o resto da carga (%.1f)" % mineiro.carrying)
 		check(mineiro.motivo_parado() == "armazem_cheio", "balão de motivo: armazém cheio ('%s')" % mineiro.motivo_parado())
 		check(mineiro._entrega_pendente() == "", "fora do expediente, a carga não prende: vai pro festival/funeral/cama e entrega depois")
 		var hud = main.get_node("HUD")
 		hud._refresh()
 		check(hud._alertas.ativos().has("armazem_cheio"), "alerta 'armazém cheio' na coluna")
-		check(not arm.accepts_worker(mineiro), "cheio: recusa quem vem entregar")
+		check(mineiro.get_state() == "esperando_espaco", "cheio: ele não fica na porta, espera disponível (Bloco 106: %s)" % mineiro.get_state())
 		print("== C) a máquina para; devolução entra mesmo cheio")
 		var col = g("coletores")
 		if col and col.has_method("_deliver"):
-			var w0: float = arm.wood_stored
-			col._deliver(5.0)
-			check(is_equal_approx(arm.wood_stored, w0) and col._sem_espaco, "o coletor de madeira não manda pro armazém cheio")
+			var w_antes: float = arm.wood_stored
+			arm.wood_stored = arm.capacidade_cat("madeira")  # (Bloco 106: o compartimento de madeira cheio)
+			if col.has_method("restaurado") and not col.restaurado():
+				col.restaura_tudo()  # (a ruína não produz: aqui ele restaurado)
+			col._process(0.1)
+			check(col._sem_espaco, "o coletor de madeira para com a madeira cheia (antes de produzir)")
+			arm.wood_stored = w_antes
 		var m0: float = arm.wood_stored
 		eco.devolve("madeira", 10.0)
 		check(is_equal_approx(arm.wood_stored, m0 + 10.0), "devolução entra mesmo cheio (nada some)")
@@ -130,8 +138,9 @@ func _process(delta: float) -> bool:
 		check(arm.ampliar() and arm.ampliando and arm.nivel == 1 and arm.is_in_group("obras"), "ampliação encomendada: vira obra (nível 1 até acabar)")
 		check(is_equal_approx(eco.credits, c0 - 250.0) and ObraSite.de(arm).tem_material(), "créditos na hora; material reservado %s" % str(ObraSite.de(arm).necessario))
 		termina_obra(arm)
-		check(arm.nivel == 2 and arm.capacidade() == 1000.0 and not arm.ampliando, "nível 2: cabe 1000")
-		check(not mineiro.motivo_parado() == "armazem_cheio" or arm.espaco() < 1.0, "com espaço, o motivo do balão some")
+		check(arm.nivel == 2 and arm.capacidade_cat("minerios") == 1000.0 and not arm.ampliando, "nível 2: cabem 1000 de minério")
+		# Bloco 106: com espaço ele não está mais bloqueado (na próxima decisão sai do "esperando espaço" e o balão some)
+		check(not mineiro._sem_espaco("minerios") and arm.espaco_cat("minerios") >= 1.0, "com espaço, ele não está mais bloqueado (o balão some na próxima decisão)")
 		print("== E) armazém novo: estágio 2, o jogador escolhe o lugar, canteiro, obra")
 		hub.level = 1
 		check(hub.armazem_block_reason().begins_with("precisa da vila"), "armazém novo só no estágio 2 ('%s')" % hub.armazem_block_reason())
@@ -157,7 +166,7 @@ func _process(delta: float) -> bool:
 			if a.construido:
 				novo = a
 		check(novo != null and arms.size() == 2, "o armazém novo nasceu (%d armazéns)" % arms.size())
-		check(novo != null and novo.nivel == 1 and novo.capacidade() == 400.0, "começa no nível 1")
+		check(novo != null and novo.nivel == 1 and novo.capacidade_cat("minerios") == 400.0, "começa no nível 1")
 		novo.wood_stored = 33.0
 		novo._recount()
 		novo_nome = String(novo.name)
@@ -189,7 +198,7 @@ func _process(delta: float) -> bool:
 		print("== G) save antigo: nível 1 e fica com o que tem (mesmo passando)")
 		var a2 = velho
 		a2.load_save_data({"stock": {"ferro": 900.0}, "wood_stored": 50.0})
-		check(a2.nivel == 1 and is_equal_approx(a2.usado(), 950.0) and a2.cheio(), "save antigo: nível 1, com os 950 (cheio, não recebe mais)")
+		check(a2.nivel == 1 and is_equal_approx(a2.usado(), 950.0) and a2.cheio_cat("minerios"), "save antigo: nível 1, com os 950 (o minério cheio, não recebe mais)")
 		print("\nFALHAS: %d" % fails)
 		return true
 	return false

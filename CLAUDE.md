@@ -46,7 +46,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 |---|---|
 | `main.gd` | Entrada do jogador: seleção, ordens, atalhos (via `teclas.gd`, remapeável). Cria `house_placer`, `area_placer`, `WorkAreas`, `founding` e `weather`. |
 | `environment.gd` | Monta o mapa: superfície, faixas dos andares, decoração, navegação, níveis por dados, lotes. |
-| `economy.gd` | Créditos, vender (minério e itens); Bloco 101: NÃO compra ipezinho (acabou o "Recrutar"), `novo_ipezinho()` é o nascimento interno e a capacidade da vila são as camas (`free_beds`); `quantidade(id)`, `add_item`/`take_item`; custos em metal (`metal_falta`, `paga_metal`, `custo_metal_texto`: barra a partir do estágio da fornalha, Bloco 87). |
+| `economy.gd` | Créditos, vender (minério e itens); Bloco 106: `ritmo_mineracao` (multiplica o `MINE_RATE` de toda jazida), `armazens_cheios(compartimento)`, `categorias_cheias()`; Bloco 101: NÃO compra ipezinho (acabou o "Recrutar"), `novo_ipezinho()` é o nascimento interno e a capacidade da vila são as camas (`free_beds`); `quantidade(id)`, `add_item`/`take_item`; custos em metal (`metal_falta`, `paga_metal`, `custo_metal_texto`: barra a partir do estágio da fornalha, Bloco 87). |
 | `save_manager.gd` + `save_util.gd` | Save em JSON (`user://savegame.json`), backups, migração de versões, leitura tolerante. |
 | `day_night.gd` | Relógio de 24 h (Bloco 83): `hora()`, `hora_texto()`, semana (o 7º dia é domingo), marcos (amanhecer, fim do expediente, anoitecer, dormir), `is_night()`, "Pular dia". `time` = segundos reais desde o amanhecer. |
 | `schedule.gd` | A AGENDA dos ipezinhos (Bloco 84): `periodo(ipezinho)`, refeições (porção por refeição, refeição perdida), exceções (médico, guardas, cozinheiro), números da hora social (Bloco 85). |
@@ -82,11 +82,11 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 |---|---|
 | `station.gd` | **Base de toda estação de trabalho.** Slots reservados, `is_usable`, `accepts_worker`, obstáculo da navegação. |
 | `mineral_node.gd`, `tree_node.gd`, `food_source.gd`, `hunt_spot.gd` | Jazida, árvore, horta e toca: os recursos. |
-| `armazem.gd`, `comedouro.gd`, `casa.gd`, `enfermaria.gd`, `taverna.gd`, `laboratorio.gd`, `arsenal.gd`, `oficina.gd`, `vestiario.gd` | Os prédios. Bloco 97: o armazém tem **limite** (tudo junto: 400 / 1.000 / 2.000 por nível), amplia até o nível 3 (obra com material) e o jogador constrói outros (`centro_vila.build_armazem`, estágio 2). Cheio: quem entrega espera, as máquinas param, devolução entra mesmo assim. |
+| `armazem.gd`, `comedouro.gd`, `casa.gd`, `enfermaria.gd`, `taverna.gd`, `laboratorio.gd`, `arsenal.gd`, `oficina.gd`, `vestiario.gd` | Os prédios. Bloco 97: o armazém tem **limite**, amplia até o nível 3 (obra com material) e o jogador constrói outros (`centro_vila.build_armazem`, estágio 2). Bloco 106: o limite é POR COMPARTIMENTO lógico (`items.gd COMPARTIMENTOS`: alimentos, madeira, minérios e barras, manufaturados; `cap_*` por nível; `espaco_cat`/`cheio_cat`); um cheio não bloqueia os outros. Cheio: quem coleta aquilo para e espera disponível (estado `esperando_espaco` do ipezinho), as máquinas param ANTES de produzir, devolução entra mesmo assim. |
 | `centro_vila.gd` | Hub de progressão: estágios, melhorias, e quem ergue as construções encomendadas (`finish_build`). |
 | `canteiro.gd` | Obra encomendada e já paga, esperando engenheiro. `KINDS` lista os tipos. |
 | `barricada.gd` | O portão da paliçada (o único). Bloco 98: abre de dia e fecha às 18:30 (abre 05:00), com a animação `nivel_N`/`meio_N`/`aberto_N`; fechado, desliga as FAIXAS de passagem (`NavigationLink2D`) — a paliçada inteira é parede na malha (`environment.portao_por_faixas`). Quem tem destino do outro lado espera encostado no portão (`ipezinho._ate_o_portao`); um guarda abre. |
-| `estacao_vagonete.gd` + `trilho.gd` + `vagonete.gd` | Transporte de carga (Bloco 64) e ferrovia por andar (Bloco 79). Bloco 99: cargas de 100 (ponto 240, espera 60 s), desgaste por minério; o ponto da BOCA (`tem_interior`, grupo "bocas_mina") tem a galeria de dentro onde o mineiro da área de mina trabalha escondido (`aceita_dentro`, `taxa_dentro`). |
+| `estacao_vagonete.gd` + `trilho.gd` + `vagonete.gd` | Transporte de carga (Bloco 64) e ferrovia por andar (Bloco 79). Bloco 99: cargas de 100 (ponto 240, espera 60 s), desgaste por minério; o ponto da BOCA (`tem_interior`, grupo "bocas_mina") tem a galeria de dentro onde o mineiro da área de mina trabalha escondido (`aceita_dentro`, `taxa_dentro`). Bloco 106: o da BOCA começa em RUÍNA na partida nova (3 etapas, só com mecânico; janela `vagonete_panel.gd`); restaurar não liga a mina (a área de mina é o comando). |
 | `deep_shaft.gd` / `abyss_shaft.gd` + `cabine.gd` + `espiral.gd` | Ligações entre andares. Bloco 99: o elevador do S2 é restaurado por 3 etapas (em paralelo com a escavadeira; janela `elevador_panel.gd`); a CABINE (fila, embarque, viagem pelo poço, quebra por uso e conserto com material) vale pro elevador e pras plataformas; a ESCADA EM ESPIRAL é a rota lenta sempre aberta (o caminho prefere o elevador). |
 | `escavadeira.gd` | Montada peça por peça; abre o S2. |
 | `escudo.gd` | O projeto final. |
@@ -127,7 +127,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b105**; o próximo é o **b106**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b106**; o próximo é o **b107**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:
@@ -171,7 +171,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
    | Gente nova na vila | `migrantes.gd` `chama_grupo(n, motivo)` (nunca "comprar"); nascimento interno (Fundação, testes): `Economy.novo_ipezinho(gender)`; quem cabe: `Economy.free_beds()` |
    | Item, preço, onde guardar | `items.gd` + `Economy.quantidade/add_item/take_item` |
    | Custo em metal | `Economy.metal_falta` / `paga_metal` / `custo_metal_texto` (barra a partir do estágio da fornalha) |
-   | Mandar coisa pro armazém (máquina, entrega nova) | `Economy.armazem_com_espaco(perto, n)` (null = todos cheios: pare e espere) e `armazem.espaco()`; devolução/prêmio usam `add_item`/`devolve` (entram mesmo cheio). Teste que enche o armazém pra outro assunto: `armazem.gd limite_desligado = true` no `_initialize` (Bloco 97) |
+   | Mandar coisa pro armazém (máquina, entrega nova) | `Economy.armazem_com_espaco(perto, n, compartimento)` (Bloco 106: o compartimento do item, `Items.compartimento(id)`; null = cheio em todos: PARE ANTES de produzir) e `armazem.espaco_cat(c)`; devolução/prêmio usam `add_item`/`devolve` (entram mesmo cheio). Teste que enche o armazém pra outro assunto: `armazem.gd limite_desligado = true` no `_initialize` (Bloco 97) |
    | Custo com itens (pregos, ferragens, aço, couro…) | o parâmetro `itens` desses três, ou `Economy.itens_falta` / `paga_itens` / `itens_texto`; pregos e ferragens antes da fornalha viram ferro (`itens_efetivos`); `Economy.tira`/`devolve` pra qualquer item |
    | Horário e agenda | `DayNight.hora()` / `tempo_da_hora()` / sinal `marco`; `Schedule.periodo(ipezinho)` |
    | Lugar pra conversar | `social_spot.gd` (`SocialSpot.criar(...)` no `_ready` do prédio) |

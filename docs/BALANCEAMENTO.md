@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1012 valores** em 4 pastas de scripts (77 trocados por alguma cena).
+Total: **1020 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (79)
 
@@ -435,7 +435,7 @@ Total: **1012 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `boss_reward_parts` | 2 |  |  |
 | `boss_reward_research` | 80.0 |  |  |
 
-## `scripts/core/economy.gd` (20)
+## `scripts/core/economy.gd` (21)
 
 **Venda**
 
@@ -467,6 +467,12 @@ Total: **1012 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `ferro_por_ferragem` | 6.7 |  | Ferro por ferragem (2 barras + 4 pregos). |
 | `auto_sell` | false |  | Vende sozinho o que estiver no armazém a cada auto_sell_interval segundos. |
 | `auto_sell_interval` | 4.0 |  |  |
+
+**Ritmo da coleta (Bloco 106)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `ritmo_mineracao` | 0.045 |  | Multiplica o ritmo de extração de TODA jazida (o MINE_RATE, minério por segundo com o mineiro batendo; cada jazida guarda o dela). 1 = o de antes do Bloco 106. A telemetria do Bloco 106 mediu ~27 minério por hora de jogo por mineiro: 4 mineradores enchiam os 400 do armazém em ~2,5 h de jogo (~1 min real). O minério era a única coleta acima do necessário (madeira ~5/h por lenhador e comida ~6/h por caçador ficaram como estavam). |
 
 **Ipezinhos**
 
@@ -1380,7 +1386,7 @@ Total: **1012 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `conserto_segundos` | 35.0 |  |  |
 | `conserto_tenta_cada` | 5.0 |  | De quantos em quantos segundos tenta pagar o conserto quando falta material. |
 
-## `scripts/props/armazem.gd` (11)
+## `scripts/props/armazem.gd` (14)
 
 **Ritmo**
 
@@ -1388,11 +1394,14 @@ Total: **1012 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 |---|---|---|---|
 | `DEPOSIT_RATE` | 8.0 |  | Minério descarregado por segundo por ipezinho (era 10.0). |
 
-**Capacidade e níveis (Bloco 97)**
+**Capacidade e níveis (Bloco 97; por compartimento: Bloco 106)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `capacidade_por_nivel` | [400.0, 1000.0, 2000.0] |  | Quanto cabe por nível (unidades, tudo junto: minério + madeira + matéria-prima + couro + itens). Índice 0 = nível 1. |
+| `cap_alimentos` | [150.0, 375.0, 750.0] |  | Bloco 106: quanto cabe em cada COMPARTIMENTO, por nível (unidades; índice 0 = nível 1). A ampliação multiplica cada um como antes (1.000/400 = 2,5x no nível 2; 2.000/400 = 5x no nível 3). Antes era 400 de tudo junto. Alimentos = comida crua (a caça e a horta). Uma vila de 10 come ~90 por dia (bench_comida, Bloco 101). |
+| `cap_madeira` | [350.0, 875.0, 1750.0] |  | Madeira = madeira + tábua. Folga pra 1 dia de jogo de 4 lenhadores sem gastar (telemetria do Bloco 106: com 300 o caso "10 coletando" enchia no fim do 1º expediente; a madeira é o material das obras, então não cortei o ritmo dela). |
+| `cap_minerios` | [400.0, 1000.0, 2000.0] |  | Minérios e barras = todo minério (ferro é a "pedra" das obras) + as barras/aço/lingote. |
+| `cap_manufaturados` | [100.0, 250.0, 500.0] |  | Manufaturados e demais = couro, pregos, ferragens, camas, mochilas... |
 | `ampliar_creditos` | [0, 250, 600] |  | Ampliar PARA o nível do índice (0 = nível 1, não usado): créditos. |
 | `ampliar_ferro` | [0, 60, 100] |  | Ampliar: ferro (a partir do estágio da fornalha vira barra: 100 de ferro = 50 barras). |
 | `ampliar_madeira` | [0, 100, 150] |  | Ampliar: madeira. |
@@ -1506,7 +1515,7 @@ Total: **1012 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `level_ore_required` | [0, 375, 1250, 3100, 6250] |  | Minério coletado no total pra chegar em cada estágio (índice 0 = estágio 1). |
+| `level_ore_required` | [0, 200, 650, 1600, 3200] |  | Minério coletado no total pra chegar em cada estágio (índice 0 = estágio 1). Bloco 106: era [0, 375, 1250, 3100, 6250], feito pro ritmo antigo (4 mineradores davam o estágio 2 em ~2 h de jogo); com o ritmo novo da mineração (~0,19x por mineiro) ficou ~0,52x, pro estágio 2 sair perto do 2º dia com a abertura padrão. |
 | `level_credit_cost` | [0, 190, 625, 1500, 3100] |  | Créditos pra expandir pra cada estágio (índice 0 = estágio 1, não usado). |
 
 **Melhoria: Moradias**
@@ -1838,7 +1847,7 @@ Total: **1012 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `segundos_por_andar` | 20.0 |  | Segundos (de jogo) pra subir ou descer um andar pela escada. |
 | `custo` | 1.0 |  | Custo de navegação por px (o elevador custa 0,05: alto aqui = só quando a cabine não serve). |
 
-## `scripts/props/estacao_vagonete.gd` (13)
+## `scripts/props/estacao_vagonete.gd` (17)
 
 **Vagonete (Bloco 64)**
 
@@ -1852,13 +1861,22 @@ Total: **1012 valores** em 4 pastas de scripts (77 trocados por alguma cena).
 | `desgaste_ref` | 25.0 |  | Minério que vale 1 viagem de desgaste (o carrinho de antes levava 25: 25 x 25 = 625 minério até quebrar). |
 | `repair_seconds` | 20.0 |  |  |
 
+**Restauração do vagonete da boca (Bloco 106)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `etapa_nomes` | PackedStringArray(["Ruína", "Limpar o trilho e o entulho", "Trilhos e dormentes novos", |  | Nome de cada etapa (índice = etapa; a última = funcionando). |
+| `etapa_custo` | [Vector3i.ZERO, Vector3i(0, 0, 30), Vector3i(120, 40, 40), Vector3i(160, 40, 10), Vector3i.ZERO] |  | Custo de cada etapa (índice 1..3): x = créditos, y = ferro (barras a partir do estágio da fornalha), z = madeira. |
+| `etapa_itens` | [{}, {}, {"prego": 10}, {}, {}] |  | Itens a mais de cada etapa (pregos antes da fornalha viram ferro: Economy.itens_efetivos). |
+| `etapa_segundos` | PackedFloat32Array([0.0, 25.0, 40.0, 45.0, 0.0]) |  | Segundos de trabalho de cada etapa (índice 1..3). |
+
 **Dentro da mina (Bloco 99)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `tem_interior` | false |  | Esta é a boca da mina (tem galeria de dentro onde o mineiro trabalha escondido)? |
 | `vagas_dentro` | 5 |  | Quantos mineiros cabem lá dentro. |
-| `taxa_dentro` | 21.0 |  | Minério por mineiro por HORA DE JOGO lá dentro (o mesmo que eles tiram hoje nas galerias da montanha, contando a caminhada até o armazém: a renda fica igual; ver tests/bench_minerio.gd). |
+| `taxa_dentro` | 3.5 |  | Minério por mineiro por HORA DE JOGO lá dentro (o mesmo que eles tiram nas galerias da montanha, contando a caminhada até o armazém: a renda fica igual; ver tests/bench_minerio.gd). Bloco 106: era 21; com o ritmo_mineracao novo da Economia o mineiro de fora tira ~3,7 por hora de expediente (bench_coleta: 134/dia com 4), então aqui também. |
 | `alcance_area` | 80.0 |  | A área de mina conta se a boca estiver dentro dela ou a até esta distância da borda (px). |
 | `rota_fixa` | false |  | Bloco 74: o da mina (fixo): o trilho sai do batente da boca, desce reto e vira pra porta do armazém (em vez do caminho da navegação). |
 | `ferrovia` | "" |  | Bloco 79: FERROVIA DE CARGA — o id do andar (S2..S5) onde fica a estação ("" = o vagonete comum). O trilho no chão é só o pedaço até a doca; o resto da viagem é a SUBIDA pelo cavalete até a superfície (a vista iso desenha o cavalete e o carrinho subindo), e a carga vai pro armazém. |

@@ -1,11 +1,28 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-09. Branch `isometrico`. Tudo até o Bloco 104 **foi enviado** pro GitHub (push com o OK do Marco); o Bloco 105 está só no commit local. Push só com o OK dele.
+Atualizado em 2026-10-09. Branch `isometrico`. Tudo até o Bloco 104 **foi enviado** pro GitHub (push com o OK do Marco); os Blocos 105 e 106 estão só no commit local. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
-## AGORA (2026-10-09): Bloco 105 — carregador e mecânico (feito; commit local; ESPERANDO o Marco: telemetria e arte)
+## AGORA (2026-10-09): Bloco 106 — coleta, armazém por compartimento e ociosidade (feito; commit local; o Marco revisa)
+
+Prompt URGENTE (balanceamento da coleta). O Marco autorizou fazer as etapas A e B seguidas ("pode aplicar e depois so me
+documenta"). Relatório `docs/BLOCO106_COLETA_ARMAZEM.md`; telemetria `docs/telemetria/bloco106/` (antes/depois, medida com
+`tests/bench_coleta.gd` numa partida nova de verdade); fotos `docs/arte/bloco106/` (`tests/capturas_bloco106.gd`).
+- Causa: mineiro ~30 minério/h de jogo (6x o lenhador) + um limite só de 400 de tudo junto -> cheio em 2,4-3,7 h de jogo
+  (~1 min real; 30-40 s em 2x). O vagonete operava sem área (o "mina desativada" do Bloco 77 só valia com área), mas não era
+  a causa. Ociosidade = estado "storing" preso na porta (não animação). Perda: escavadeira/coletor de minério sumiam o
+  minério com o armazém cheio.
+- Feito: `Economy.ritmo_mineracao` 0,045; `taxa_dentro` 3,5; `level_ore_required` 0/200/650/1600/3200; compartimentos
+  (alimentos 150, madeira 350, minérios 400, manufaturados 100 no nível 1; x2,5 e x5); estado `esperando_espaco`; máquinas
+  param antes de produzir; alerta/janela por compartimento; o vagonete da BOCA em RUÍNA (3 etapas, só com mecânico,
+  `vagonete_panel.gd`; save antigo = funcionando).
+- Depois (medido): abertura -> 1º compartimento (madeira) cheio a h38, minério 258/400 em 2 dias; 3 casas + cozinha em 12,5 h.
+- PENDENTE com o Marco: o ritmo novo vale pro jogo todo (os custos em minério dos prédios não mudaram); arte da ruína do
+  vagonete não foi gerada; "Pedra" não existe como recurso separado.
+
+## Bloco 105 — carregador e mecânico (feito; commit local; ESPERANDO o Marco: telemetria e arte)
 
 Prompt W1. Plano `docs/BLOCO105_PLANO.md` (com a aprovação). Relatório `docs/BLOCO105_CARREGADOR_MECANICO.md`.
 - Carregador (tecla física BracketRight = "[" no ABNT2): `logistica.gd` (obra, insumo "a caminho" da Fornalha/Carpintaria,

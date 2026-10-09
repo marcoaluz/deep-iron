@@ -61,6 +61,13 @@ signal ore_sold(amount: float, earned: float)
 @export var auto_sell: bool = false
 @export var auto_sell_interval: float = 4.0
 
+@export_group("Ritmo da coleta (Bloco 106)")
+## Multiplica o ritmo de extração de TODA jazida (o MINE_RATE, minério por segundo com o mineiro batendo; cada jazida
+## guarda o dela). 1 = o de antes do Bloco 106. A telemetria do Bloco 106 mediu ~27 minério por hora de jogo por mineiro:
+## 4 mineradores enchiam os 400 do armazém em ~2,5 h de jogo (~1 min real). O minério era a única coleta acima do
+## necessário (madeira ~5/h por lenhador e comida ~6/h por caçador ficaram como estavam).
+@export var ritmo_mineracao: float = 0.045
+
 @export_group("Ipezinhos")
 ## A cena do ipezinho (a Fundação e os migrantes nascem daqui).
 @export var worker_scene: PackedScene
@@ -654,12 +661,15 @@ func reserva_mudou() -> void:
 	_reserva_quadro = -1
 
 
-## Bloco 97: o armazém mais perto de `perto` em que cabem `n` unidades (null = todos cheios).
-func armazem_com_espaco(perto: Vector2, n: float = 1.0) -> Node:
+## Bloco 97: o armazém mais perto de `perto` em que cabem `n` unidades (null = todos cheios). Bloco 106: `cat` = o
+## compartimento ("minerios", "madeira", "alimentos", "manufaturados"; "" = a soma de todos).
+func armazem_com_espaco(perto: Vector2, n: float = 1.0, cat: String = "") -> Node:
 	var melhor: Node = null
 	var melhor_d := INF
 	for a in get_tree().get_nodes_in_group("armazens"):
-		if not a.has_method("espaco") or a.espaco() < n:
+		if not a.has_method("espaco"):
+			continue
+		if (a.espaco_cat(cat) if cat != "" and a.has_method("espaco_cat") else a.espaco()) < n:
 			continue
 		var d: float = perto.distance_squared_to(a.global_position)
 		if d < melhor_d:
@@ -668,9 +678,20 @@ func armazem_com_espaco(perto: Vector2, n: float = 1.0) -> Node:
 	return melhor
 
 
-## Bloco 97: todos os armazéns estão cheios?
-func armazens_cheios() -> bool:
+## Bloco 97: todos os armazéns estão cheios? Bloco 106: `cat` = só aquele compartimento ("" = todos os compartimentos).
+func armazens_cheios(cat: String = "") -> bool:
+	if cat != "":
+		return get_tree().get_nodes_in_group("armazens").all(func(a): return not a.has_method("cheio_cat") or a.cheio_cat(cat))
 	return get_tree().get_nodes_in_group("armazens").all(func(a): return not a.has_method("cheio") or a.cheio())
+
+
+## Bloco 106: os compartimentos cheios em TODOS os armazéns (o alerta "armazém de X cheio").
+func categorias_cheias() -> Array[String]:
+	var out: Array[String] = []
+	for c in Items.COMPARTIMENTOS:
+		if armazens_cheios(c):
+			out.append(c)
+	return out
 
 
 ## Algum armazém tem esse item de verdade (pra buscar agora)?

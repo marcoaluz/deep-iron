@@ -621,6 +621,7 @@ func _build_estacao_mina() -> void:
 	e.position = bocas[0] + Vector2(0, 34)
 	e.set("rota_fixa", true)
 	e.set("tem_interior", true)  # Bloco 99: a boca principal tem a galeria de dentro (o mineiro trabalha lá dentro)
+	e.set("etapa", 0)  # Bloco 106: começa em RUÍNA (o save, se tiver, volta a etapa dele; save antigo = restaurado)
 	e.add_to_group("ponto_carga_fixo")
 	get_parent().add_child(e)
 	var v := e.get_node_or_null("Visual") as CanvasItem

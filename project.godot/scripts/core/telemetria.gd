@@ -11,7 +11,8 @@ const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre"
 	"obras_prontas_dia", "obra_tempo_medio_s",  # Bloco 96: obras terminadas no dia e o tempo médio (s de jogo) encomenda -> pronto
 	"minerio_entrou_dia", "minerio_vagonete_dia", "mineiros_dentro",
 	"expedicoes_fora", "gente_fora", "expedicoes_voltaram", "achados_expedicao", "feridos_expedicao",
-	"maquinas_quebradas", "quebras_total", "preventivas", "consertos", "entregas_carregador"]  # Bloco 105 (quebradas = agora; os outros: total da partida)  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
+	"maquinas_quebradas", "quebras_total", "preventivas", "consertos", "entregas_carregador",  # Bloco 105 (quebradas = agora; os outros: total da partida)
+	"compartimentos_cheios", "esperando_espaco"]  # Bloco 106: os compartimentos cheios em todos os armazéns (separados por "+") e quantos esperam espaço agora  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
 
 var arquivo := ""
 var _t0 := 0
@@ -137,6 +138,9 @@ func registra() -> void:
 	var lg := get_tree().get_first_node_in_group("logistica")
 	v.append_array([mt.maquinas().filter(func(m): return m.manut_quebrada()).size(), mt.total_quebras(), mt.preventivas, mt.consertos_feitos] if mt else [0, 0, 0, 0])
 	v.append(lg.entregas if lg else 0)
+	var eco6 := get_tree().get_first_node_in_group("economy")  # Bloco 106
+	v.append("+".join(eco6.categorias_cheias()) if eco6 and eco6.has_method("categorias_cheias") else "")
+	v.append(get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return w.get_state() == "esperando_espaco").size())
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return

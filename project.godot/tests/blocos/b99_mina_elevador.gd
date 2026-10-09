@@ -199,6 +199,8 @@ func _roda() -> void:
 	print("== F) o vagonete: cargas grandes e desgaste por minério")
 	var est: Node = g("bocas_mina")
 	check(est != null and est.tem_interior and est.is_in_group("ponto_carga_fixo"), "a boca principal tem a galeria de dentro")
+	check(not est.restaurado(), "partida nova: o vagonete da boca em ruína (Bloco 106: o mecânico restaura)")
+	est.restaura_tudo()  # (o assunto daqui é o vagonete funcionando)
 	check(est.cart_capacity == 100.0 and est.buffer_capacity == 240.0 and est.cart_wait == 60.0, "100 por viagem, guarda 240, espera até 60 s")
 	var r0: float = est.rail_left
 	est.stock = {"ferro": 100.0}
@@ -242,7 +244,7 @@ func _roda() -> void:
 	var ore1: float = 0.0
 	for j in jaz:
 		ore1 += j.ore_remaining
-	check(prod > 10.0, "lá dentro sai minério pro ponto (%.1f em ~1 h com 2: a meta é ~%d/h cada)" % [prod, int(est.taxa_dentro)])
+	check(prod > est.taxa_dentro, "lá dentro sai minério pro ponto (%.1f em ~1 h com 2: a meta é ~%.1f/h cada; Bloco 106: o ritmo novo)" % [prod, est.taxa_dentro])
 	check(ore1 < ore0 + 2.0 * jaz.size() * 22.5, "e ele sai da jazida da área (nada de minério infinito)")
 	_hora(12.1)  # o almoço
 	var sairam := await _ate(func(): return est.dentro.is_empty() and mineiros.all(func(m): return not m.dentro_da_mina() and m.visible), 30.0)

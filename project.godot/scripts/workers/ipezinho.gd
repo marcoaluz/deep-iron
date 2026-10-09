@@ -6,6 +6,7 @@ signal mood_changed(level: int)  # 0 calmo, 1 irritado, 2 furioso
 signal died(worker_name: String)
 
 const STATE_LABELS := {
+	"esperando_espaco": "esperando espaço no armazém",  # Bloco 106
 	"social": "hora social",  # Bloco 85
 	"padre": "na igreja",  # Bloco 88
 	"buscando_corpo": "buscando um corpo",  # Bloco 93
@@ -1158,14 +1159,22 @@ func _choose_state() -> String:
 	# Bloco 27: matéria-prima nas mãos de quem não é cozinheiro vai pro armazém
 	# (caçador com a mochila cheia / sem mais fruta nem caça, ou quem trocou de função).
 	# (O cozinheiro com matéria-prima vai preparar: ver o bloco dele mais abaixo.)
-	if raw_carrying > 0.0 and not is_cook():
+	# Bloco 106: o compartimento do que ele coleta cheio em todos os armazéns: não coleta mais, guarda o que carrega e
+	# espera disponível (volta sozinho quando abrir espaço). A emergência, a agenda e as necessidades já vieram antes.
+	# (só quem COLETA aquilo espera; quem tem a carga por outro motivo — trocou de função, o engenheiro com sobra — fica
+	# com ela e segue a função dele, sem ir até o armazém cheio)
+	if raw_carrying > 0.0 and is_hunter() and _sem_espaco("alimentos"):
+		return "esperando_espaco"
+	if wood_carrying > 0.0 and is_lumber() and _sem_espaco("madeira"):
+		return "esperando_espaco"
+	if raw_carrying > 0.0 and not is_cook() and not _sem_espaco("alimentos"):
 		var pack_full := _raw_units >= hunter_carry - 0.01
 		# (quem já está colhendo/caçando continua até a fonte acabar; só depois descarrega)
 		var keep_going := _ai_state in ["foraging", "hunting"] and _station_ok_for(_ai_state)
 		if not is_hunter() or pack_full or _ai_state == "stocking" or (not keep_going and not _hunter_has_work()):
 			return "stocking"
 	# Madeira nas costas: leva pro armazém (lenhador cheio / sem árvore, ou quem deixou de ser lenhador).
-	if wood_carrying > 0.0:
+	if wood_carrying > 0.0 and not _sem_espaco("madeira"):
 		var wood_full := wood_carrying >= lumber_carry - 0.01
 		# (quem já está cortando continua até a árvore virar toco; só depois vai descarregar)
 		var keep_chopping := _ai_state == "chopping" and _station_ok_for("chopping")
@@ -1175,7 +1184,7 @@ func _choose_state() -> String:
 	# (ex.: trocou de função no meio da carga, ou tiraram a função dele).
 	# Pesquisador fica de fora: sem laboratório ele volta a minerar (como já era),
 	# e mandar guardar cada pedrinha viraria um vai-e-volta sem fim.
-	if carrying > 0.0 and not is_miner() and not is_researcher():
+	if carrying > 0.0 and not is_miner() and not is_researcher() and not _sem_espaco("minerios"):
 		return "storing"
 	# Médico (Bloco 30): plantão DENTRO da enfermaria, tendo internado ou não (esperando
 	# por lá: não sai pra minerar sozinho). Comer, dormir, se tratar etc. vêm antes.
@@ -1233,8 +1242,10 @@ func _choose_state() -> String:
 	# Lenhador: larga o minério que tiver e passa a só cortar e levar madeira.
 	# Bloco 45: o designado pro coletor de madeira fica operando a máquina.
 	if is_lumber():
-		if carrying > 0.0:
+		if carrying > 0.0 and not _sem_espaco("minerios"):
 			return "storing"
+		if _sem_espaco("madeira"):
+			return "esperando_espaco"  # Bloco 106 (o coletor dele também para)
 		if _my_coletor() != null:
 			return "operating"
 		if _ai_state == "chopping" and _station_ok_for("chopping"):
@@ -1270,6 +1281,8 @@ func _choose_state() -> String:
 	# Bloco 34: horta e tocas ficam na clareira, então o caçador trabalha todo lá fora e só
 	# atravessa o túnel de volta pra deixar a matéria-prima no armazém.
 	if is_hunter():
+		if _sem_espaco("alimentos"):
+			return "esperando_espaco"  # Bloco 106
 		if _ai_state == "hunting" and _station_ok_for("hunting"):
 			return "hunting"
 		if _has_usable_station("caca"):  # a toca só conta como usável com arco e flecha
@@ -1292,6 +1305,8 @@ func _choose_state() -> String:
 	if has_no_job():
 		return "idle"
 	# Bloco 57: o minerador designado pro coletor de minério entrega o que tem e fica operando.
+	if is_miner() and _sem_espaco("minerios"):
+		return "esperando_espaco"  # Bloco 106: o minério (e o ponto do vagonete) cheio: não minera mais
 	if is_miner() and _my_coletor_minerio() != null:
 		return "storing" if carrying > 0.0 else "operating_ore"
 	# Daqui pra baixo: minerador (e pesquisador sem laboratório, como antes).
@@ -1493,6 +1508,13 @@ func _decide_next_action() -> void:
 
 	_release_station()
 	_set_state(desired)
+
+	if desired == "esperando_espaco":  # Bloco 106: disponível, esperando o armazém abrir espaço (no Centro ou na área)
+		if _ai_state != "esperando_espaco":
+			_release_station()
+			_set_state("esperando_espaco")
+		_idle_at_hub()
+		return
 
 	if desired == "idle":
 		if has_no_job() or is_engineer() or is_smith() or work_area != null:  # Bloco 77: com área, espera nela
@@ -3964,12 +3986,15 @@ func motivo_parado() -> String:
 		var def := _defense()
 		if def == null or def.arsenal() == null:
 			return "sem_ferramenta"
+	# Bloco 106: esperando o compartimento dele abrir espaço
+	if _ai_state == "esperando_espaco":
+		return "armazem_cheio"
 	# Bloco 97: com carga pra entregar, parado, e o armazém dele (ou todos) cheio
 	var tem_carga := carrying > 0.0 or wood_carrying > 0.0 or raw_carrying > 0.0 or not barras_mao.is_empty()
 	if tem_carga and not _moving and _ai_state in ["storing", "hauling", "stocking", "buscando_insumo"]:
-		var eco := get_tree().get_first_node_in_group("economy")
-		var cheio_aqui: bool = _station != null and _station.has_method("cheio") and _station.cheio()
-		if cheio_aqui or (_station == null and eco != null and eco.has_method("armazens_cheios") and eco.armazens_cheios()):
+		var cat_c: String = {"storing": "minerios", "hauling": "madeira", "stocking": "alimentos", "buscando_insumo": "minerios"}[_ai_state]
+		var cheio_aqui: bool = _station != null and _station.has_method("cheio_cat") and _station.cheio_cat(cat_c)
+		if cheio_aqui or (_station == null and _sem_espaco(cat_c)):
 			return "armazem_cheio"
 	if _ai_state != "idle":
 		return ""
@@ -4253,6 +4278,21 @@ func is_scout() -> bool:
 	return job == ROLE_SCOUT
 
 
+## Bloco 106: o compartimento `cat` está cheio em TODOS os armazéns (e, pro minério, nenhum ponto do vagonete recebe)?
+## Quem coleta isso para de coletar e espera disponível.
+func _sem_espaco(cat: String) -> bool:
+	if not is_inside_tree():
+		return false
+	var eco := get_tree().get_first_node_in_group("economy")
+	if eco == null or not eco.has_method("armazens_cheios") or not eco.armazens_cheios(cat):
+		return false
+	if cat == "minerios":
+		for p in get_tree().get_nodes_in_group("pontos_carga"):
+			if p.has_method("is_usable") and p.is_usable():
+				return false  # (o ponto do vagonete ainda recebe)
+	return true
+
+
 ## Bloco 105: alguma Fornalha/Carpintaria (a dele, se for o operador) com ordem parada por falta de insumo?
 func _ordem_sem_insumo() -> bool:
 	var grupos: Array = ["fornalhas", "carpintarias"]
@@ -4461,7 +4501,7 @@ func _carrega_tick() -> void:
 					var total := 0.0
 					for k in entrega_mao:
 						total += float(entrega_mao[k])
-					var arm2: Node = eco.armazem_com_espaco(global_position, total)
+					var arm2: Node = eco.armazem_com_espaco(global_position, total, "minerios")
 					_carga["arm"] = arm2 if arm2 else _armazem_perto(eco)
 					_carga.fase = "ao_armazem2"
 					_go_to(_carga_destino())
@@ -4472,8 +4512,8 @@ func _carrega_tick() -> void:
 			var total2 := 0.0
 			for k in entrega_mao:
 				total2 += float(entrega_mao[k])
-			if arm3.has_method("espaco") and float(arm3.espaco()) < total2 - 0.01:
-				var outro: Node = eco.armazem_com_espaco(global_position, total2)
+			if arm3.has_method("espaco_cat") and float(arm3.espaco_cat("minerios")) < total2 - 0.01:
+				var outro: Node = eco.armazem_com_espaco(global_position, total2, "minerios")
 				if outro and outro != arm3:
 					_carga["arm"] = outro
 					_go_to(_carga_destino())
@@ -4909,14 +4949,12 @@ func fundir_tick() -> void:
 func _entrega_pendente() -> String:
 	# Bloco 97: todos os armazéns cheios = a entrega não acaba nunca; fica com a carga e segue a agenda
 	# (festival, funeral, dormir) — entrega amanhã no expediente, quando tiver espaço
-	var eco := get_tree().get_first_node_in_group("economy")
-	if eco != null and eco.has_method("armazens_cheios") and eco.armazens_cheios():
-		return ""
-	if wood_carrying > 0.0:
+	# Bloco 106: por compartimento (o cheio não prende; os outros entregam)
+	if wood_carrying > 0.0 and not _sem_espaco("madeira"):
 		return "hauling"
-	if raw_carrying > 0.0 and not is_cook():
+	if raw_carrying > 0.0 and not is_cook() and not _sem_espaco("alimentos"):
 		return "stocking"
-	if carrying > 0.0 and not is_researcher():
+	if carrying > 0.0 and not is_researcher() and not _sem_espaco("minerios"):
 		return "storing"
 	if not barras_mao.is_empty():
 		return "buscando_insumo"  # Bloco 86: o fundidor leva as barras (sem começar leva nova fora de hora)

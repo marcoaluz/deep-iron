@@ -440,3 +440,7 @@ func test_b105_carregador_mecanico() -> void:
 
 func test_b77_areas() -> void:
 	run_bloco("b77_areas.gd")
+
+
+func test_b106_coleta_armazem() -> void:
+	run_bloco("b106_coleta_armazem.gd")

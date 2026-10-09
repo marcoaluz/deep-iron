@@ -203,6 +203,9 @@ func _vagonete_monta() -> void:
 	check(absf(r.points[0].y - boca.y) < 8.0 and absf(r.points[0].x - r.points[1].x) < 0.5 and env().height_at(r.points[0]) == 0.0,
 		"sai do batente da boca (no chão, não em cima da montanha) e desce reto")
 	check(r.points[2].distance_to(arm.global_position + Vector2(0, 30)) < 1.0, "termina na porta do armazém")
+	# Bloco 106: o vagonete da boca começa em RUÍNA (restaurado pelo mecânico); aqui ele já restaurado
+	check(est.has_method("restaurado") and not est.restaurado(), "partida nova: o vagonete da boca em ruína (Bloco 106)")
+	est.restaura_tudo()
 	# carga esperando: o vagonete sai sozinho e descarrega no armazém
 	antes = float(arm.stock.get("cobre", 0.0))
 	est.stock = {"cobre": 30.0}

@@ -259,6 +259,9 @@ func is_depleted() -> bool:
 	return _cooldown > 0.0
 
 
+var _eco: Node = null  # (Bloco 106: o ritmo_mineracao da Economia)
+
+
 func _process(delta: float) -> void:
 	if _cooldown > 0.0:
 		_cooldown -= delta
@@ -269,8 +272,11 @@ func _process(delta: float) -> void:
 
 	var mined_any := false
 	if ore_remaining > 0.0 and _unlocked:
+		if _eco == null or not is_instance_valid(_eco):
+			_eco = get_tree().get_first_node_in_group("economy")
+		var ritmo: float = float(_eco.ritmo_mineracao) if _eco and _eco.get("ritmo_mineracao") != null else 1.0  # Bloco 106
 		for body in _working_bodies():
-			var amount: float = minf(MINE_RATE * delta, ore_remaining)
+			var amount: float = minf(MINE_RATE * ritmo * delta, ore_remaining)
 			var taken: float = body.mine(amount, tipo_extraido())  # Bloco 102: pedra desconhecida dá "desconhecido"
 			_anota_bruto(taken)
 			if taken > 0.0:

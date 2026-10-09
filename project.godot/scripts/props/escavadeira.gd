@@ -169,6 +169,8 @@ var _anim_time: float = 0.0
 var _desgaste = Desgaste.new("escavadeira")  # Bloco 105
 ## Minério que a broca entregou nesta sessão (medição: tests/bench_desgaste.gd; não vai pro save).
 var total_produced := 0.0
+## Bloco 106: parada porque o compartimento de minério está cheio em todos os armazéns.
+var sem_espaco := false
 
 
 func _ready() -> void:
@@ -491,6 +493,8 @@ func drill_status() -> String:
 		return "PANE! volta em %ds" % ceili(outage_left)
 	if no_fuel:
 		return "SEM CARVÃO"
+	if sem_espaco:
+		return "PARADA — o armazém de minério está cheio"  # Bloco 106
 	return "perfurando  %.2f minério/s" % (reactor_rate() * _fundo_mult())
 
 
@@ -595,6 +599,12 @@ func _drill(delta: float) -> void:
 		return
 	if not drill_on or reactor == "":
 		return
+	# Bloco 106: o compartimento de minério cheio em todos os armazéns: a broca para ANTES (não queima carvão nem gasta;
+	# antes o minério tirado sumia)
+	var eco_d := get_tree().get_first_node_in_group("economy")
+	sem_espaco = eco_d != null and eco_d.armazem_com_espaco(global_position, 1.0, "minerios") == null
+	if sem_espaco:
+		return
 	if reactor == "vapor":
 		if no_fuel:
 			_fuel_retry -= delta
@@ -655,9 +665,12 @@ func _pick_ore() -> String:
 
 func _deliver_ore(t: String) -> void:
 	var eco := get_tree().get_first_node_in_group("economy")
-	var best: Node2D = eco.armazem_com_espaco(global_position, 1.0) if eco else null  # Bloco 97: só onde cabe
+	var best: Node2D = eco.armazem_com_espaco(global_position, 1.0, "minerios") if eco else null  # Bloco 97/106: só onde cabe
 	if best:
 		best.add_ore(1.0, t)
+		total_produced += 1.0
+	elif eco:
+		eco.devolve(t, 1.0, global_position)  # (já tirado: entra mesmo assim, nada some)
 		total_produced += 1.0
 
 

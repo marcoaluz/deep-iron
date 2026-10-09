@@ -317,4 +317,4 @@ com o nome explícito** (sem nome, ele para): ninguém gera os outros três sem 
   - **3 intermitentes, que passaram ao repetir:** `b58_oficina_construivel` (timeout), `b88_padre_igreja` (festival) e
     `b92_arte_oficios` ("forjando de casaco"). Os três já tinham sido intermitentes antes.
   - Depois dos ajustes, os 5 rodaram de novo: **0 falhas**.
-- **Não conferido:** os GUT `test_iso*` não rodaram nesta rodada.
+- GUT `test_iso*` no commit do bloco: 12 de 12.

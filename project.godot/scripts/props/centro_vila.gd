@@ -103,8 +103,10 @@ const UPGRADE_NAMES := {
 }
 
 @export_group("Estágios da vila")
-## Minério coletado no total pra chegar em cada estágio (índice 0 = estágio 1).
-@export var level_ore_required: Array[int] = [0, 375, 1250, 3100, 6250]
+## Minério coletado no total pra chegar em cada estágio (índice 0 = estágio 1). Bloco 106: era [0, 375, 1250, 3100,
+## 6250], feito pro ritmo antigo (4 mineradores davam o estágio 2 em ~2 h de jogo); com o ritmo novo da mineração
+## (~0,19x por mineiro) ficou ~0,52x, pro estágio 2 sair perto do 2º dia com a abertura padrão.
+@export var level_ore_required: Array[int] = [0, 200, 650, 1600, 3200]
 ## Créditos pra expandir pra cada estágio (índice 0 = estágio 1, não usado).
 @export var level_credit_cost: Array[int] = [0, 190, 625, 1500, 3100]
 
