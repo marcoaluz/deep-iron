@@ -114,7 +114,7 @@ func _tem_agricultor() -> bool:
 func _update_visual() -> void:
 	var ratio := food_remaining / food_total if food_total > 0.0 else 0.0
 	# quadro 0 = cheia, 1 = pela metade, 2 = colhida
-	_visual.frame = 2 if ratio < 0.15 else (1 if ratio < 0.6 else 0)
+	_visual.frame = clampi(2 if ratio < 0.15 else (1 if ratio < 0.6 else 0), 0, maxi(_visual.hframes - 1, 0))  # (Bloco 107: a estufa tem 2 quadros)
 	_visual.position.x = sin(_hit_time * 30.0) * 0.8 if _hit_time > 0.0 else 0.0
 	if _cooldown > 0.0:
 		_label.text = "colhida (%ds)" % ceili(_cooldown)

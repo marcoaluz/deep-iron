@@ -50,6 +50,9 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 ## Segundos de trabalho de cada etapa (índice 1..3).
 @export var etapa_segundos: PackedFloat32Array = PackedFloat32Array([0.0, 25.0, 40.0, 45.0, 0.0])
 
+## Em ruína, o carrinho velho fica parado a esta distância do começo do trilho (px da lógica): fora da sombra da boca, pra ele se ver.
+@export var ruina_d: float = 44.0
+
 @export_group("Dentro da mina (Bloco 99)")
 ## Esta é a boca da mina (tem galeria de dentro onde o mineiro trabalha escondido)?
 @export var tem_interior := false
@@ -376,13 +379,19 @@ func _place_cart() -> void:
 
 # ------------------------------------------------------------ andamento
 func _process(delta: float) -> void:
-	if not restaurado():  # Bloco 106: em ruína não anda nada (sem carrinho, sem carga, sem galeria)
-		if _cart and is_instance_valid(_cart) and _cart.visible:
-			_cart.visible = false
+	if not restaurado():  # Bloco 106: em ruína não anda nada (sem carga, sem galeria); Bloco 107: o carrinho velho fica parado (arte da ruína)
+		if _cart and is_instance_valid(_cart) and not _cart.ruina:
+			_cart.ruina = true
+			cart_d = ruina_d
+			cart_state = "esperando"
+			_place_cart()
+			_cart.visible = true
 		if Engine.get_process_frames() % 30 == 0:
+			_place_cart()  # (o trilho pode nascer depois: confere o lugar do carrinho velho)
 			_update_label()
 		return
-	if _cart and is_instance_valid(_cart) and not _cart.visible:
+	if _cart and is_instance_valid(_cart) and _cart.ruina:
+		_cart.ruina = false  # restaurado: o carrinho de verdade
 		_cart.visible = true
 	if tem_interior:  # Bloco 99: quem está dentro da mina
 		_produz_dentro(delta)

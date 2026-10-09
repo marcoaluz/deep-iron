@@ -42,6 +42,13 @@ NOVOS = {
                     "olive green",
                     ("colher", COLHER)),
 }
+# a 1ª leva trouxe brotos e um cogumelo desenhados no chão e, de costas, a cabeça escurecendo: descrição mais literal
+o.REFAZ["colher"] = ("harvesting work loop: {he} bends forward at the waist and mimes picking small things from low plants on the "
+                     "ground in front of {him} with the right hand, drops them into a round wicker basket held on {his} left "
+                     "forearm, straightens up a little and bends again; feet planted, same body and outfit. The head, the wide "
+                     "straw hat and the face keep the same colors and the same light in EVERY frame (never darker). Only the "
+                     "character and the basket: NO plants, NO sprouts, NO mushrooms, NO vegetables, NO soil, NO ground drawn, no "
+                     "motion trails, no white arcs, no effects.")
 o.OFICIOS.clear()
 o.OFICIOS.update(NOVOS)
 o.CASACO_MANTEM.update({"agricultor": "wide straw hat and the wicker basket at the belt over the coat",

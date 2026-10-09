@@ -5,27 +5,26 @@ Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
-## AGORA (2026-10-09): Bloco 107 — agricultor, estufa, carvoaria, curtume e cardápio (feito; commit local; ESPERANDO o Marco: arte)
+## AGORA (2026-10-09): Bloco 107 — agricultor, estufa, carvoaria, curtume e cardápio (feito; commit local)
 
 Prompt W2. Plano `docs/BLOCO107_PLANO.md` (aprovado). Relatório `docs/BLOCO107_AGRICULTOR_OFICINAS.md`; fotos `docs/arte/bloco107/`.
 - Horta e estufa são construção DENTRO da vila (a horta da clareira sai na partida nova; save antigo mantém). Agricultor (tecla
-  `-`): colhe; com ele o caçador só caça (sem ele, o caçador colhe). Estufa (estágio 2): rende mais no inverno. O Marco quer a
-  estufa como construção de VIDRO de verdade (arte pendente; hoje usa o desenho da horta).
+  `-`): colhe; com ele o caçador só caça (sem ele, o caçador colhe). Estufa de VIDRO (estágio 2): rende mais no inverno.
 - Carvoaria (lenhador) e Curtume (caçador): oficinas de ordens (herdam da Fornalha), um operador por vez; carvão vegetal vale
   como o mineral (vegetal primeiro); com curtume, botas/mochila/trajes pedem couro curtido.
 - Cozinha (clique): prato da semana (comum/ensopado) e ORDEM de ração (item `racao`; a expedição gasta a pronta primeiro).
-- PENDENTE com o Marco: aprovar o PILOTO do agricultor (78 gerações; defeito: brotos no chão e a cabeça escura de costas no
-  "colher"); depois a agricultora, a estufa de vidro, carvoaria, curtume, a ruína do vagonete (Bloco 106), as animações novas
-  do lenhador/caçador e os ícones (~570 gerações previstas; saldo 5.985).
-- Provisórios: roupa de civil pro agricultor, desenhos da fornalha/carpintaria/horta nas estruturas novas, ícones existentes.
+- ARTE feita e integrada (o Marco aprovou o piloto do agricultor): agricultor/agricultora, estufa/carvoaria/curtume (obra 1-2-3-
+  pronto), animações carvoejar e curtir, ícones e a RUÍNA do vagonete (Bloco 106). Pendência pequena: o "curtir" do casaco do caçador
+  ainda mostra uma ferramenta curva grande (refazer ~16).
+- Provisório: o cartão e o desenho da horta (o que já existia).
 
 ### Orçamento do PixelLab (Bloco 107)
 | | Gerações | Tipo |
 |---|---|---|
 | Saldo inicial | 6.063 | confirmado |
-| Gasto (o agricultor completo) | 78 | real |
-| Saldo restante | 5.985 | confirmado |
-| Próximos (agricultora, 3 estruturas, animações, ruína do vagonete, ícones) | ~570 | estimado |
+| Gasto (tudo o que o bloco precisou) | 332 | real |
+| Saldo restante | 5.731 | confirmado |
+| Previsto no plano | ~570 | estimado (as estruturas saíram bem mais baratas) |
 
 ## Bloco 106 — coleta, armazém por compartimento e ociosidade (feito; commit local; o Marco revisa)
 

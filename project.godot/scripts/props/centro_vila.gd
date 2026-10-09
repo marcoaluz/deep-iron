@@ -1220,12 +1220,13 @@ const ESTUFA_SCENE := preload("res://scenes/props/estufa.tscn")
 const CARVOARIA_SCENE := preload("res://scenes/props/carvoaria.tscn")
 const CURTUME_SCENE := preload("res://scenes/props/curtume.tscn")
 const HORTA_FOOTPRINT := Rect2(-48, -36, 96, 52)
+const ESTUFA_FOOTPRINT := Rect2(-70, -66, 140, 80)
 ## O que cada construção do Bloco 107 é: grupo dos que existem, nome, textura do fantasma e quadros.
 const OBRAS_107 := {
-	"horta": {"grupo": "hortas", "nome": "a Horta", "textura": "horta", "hframes": 3, "dentro": true},
-	"estufa": {"grupo": "estufas", "nome": "a Estufa", "textura": "horta", "hframes": 3, "dentro": true},
-	"carvoaria": {"grupo": "carvoarias", "nome": "a Carvoaria", "textura": "fornalha", "hframes": 2, "dentro": false},
-	"curtume": {"grupo": "curtumes", "nome": "o Curtume", "textura": "carpintaria", "hframes": 2, "dentro": false},
+	"horta": {"grupo": "hortas", "nome": "a Horta", "textura": "horta", "hframes": 3, "dentro": true, "f": true},
+	"estufa": {"grupo": "estufas", "nome": "a Estufa", "textura": "estufa", "hframes": 2, "dentro": true, "f": true},
+	"carvoaria": {"grupo": "carvoarias", "nome": "a Carvoaria", "textura": "carvoaria", "hframes": 2, "dentro": false, "f": true},
+	"curtume": {"grupo": "curtumes", "nome": "o Curtume", "textura": "curtume", "hframes": 2, "dentro": false, "f": false},
 }
 
 
@@ -1300,7 +1301,8 @@ func obra107_build(kind: String) -> bool:
 		return false
 	var info: Dictionary = OBRAS_107[kind]
 	var tex: Texture2D = load("res://assets/game/%s.png" % info.textura)
-	var opts := {"footprint": HORTA_FOOTPRINT if info.dentro else COLETOR_FOOTPRINT, "start": global_position + Vector2(-150, 70)}
+	var opts := {"footprint": (ESTUFA_FOOTPRINT if kind == "estufa" else HORTA_FOOTPRINT) if info.dentro else COLETOR_FOOTPRINT,
+		"start": global_position + Vector2(-150, 70)}
 	if info.dentro:
 		opts["radius"] = house_radius()
 		opts["radius_center"] = global_position
@@ -1321,7 +1323,7 @@ func _obra107_confirma(kind: String, pos: Vector2) -> bool:
 	Audio.click()
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
-		hud.show_toast("%s encomendada — precisa de engenheiro (tecla 4)." % String(OBRAS_107[kind].nome).capitalize(), Color(1.0, 0.8, 0.45))
+		hud.show_toast("%s encomendad%s — precisa de engenheiro (tecla 4)." % [String(OBRAS_107[kind].nome).capitalize(), "a" if OBRAS_107[kind].f else "o"], Color(1.0, 0.8, 0.45))
 	return true
 
 
@@ -1371,6 +1373,16 @@ func curtume_block_reason() -> String:
 
 func build_curtume() -> bool:
 	return obra107_build("curtume")
+
+
+## Carregando o save: se já existe um do mesmo tipo NO MESMO LUGAR (a horta da cena, ou o de antes de recarregar), usa ele em vez
+## de apagar e recriar (cada criação refaz a malha de navegação: 50 recarregamentos seguidos viravam 50 refeitas à toa).
+func _reaproveita_ou_cria(kind: String, pos: Vector2, vivos: Array) -> Node2D:
+	for v in vivos:
+		if is_instance_valid(v) and (v as Node2D).global_position.distance_to(pos) < 1.0 and (kind == "estufa") == (v.get("estufa") == true):
+			vivos.erase(v)
+			return v
+	return spawn_obra107(kind, pos)
 
 
 ## Nasce um deles (obra pronta ou save). Nome: "Horta2", "Estufa", "Carvoaria"... (único, pro save por nome).
@@ -1958,7 +1970,7 @@ func finish_build(kind: String, pos: Vector2) -> void:
 				"estufa": "Dê a função AGRICULTOR a alguém: no inverno ela rende mais que a horta aberta.",
 				"carvoaria": "Encomende carvão vegetal (clique nela): um LENHADOR opera.",
 				"curtume": "Encomende couro curtido (clique nele): um CAÇADOR opera."}[kind]
-			h107.show_toast("%s pronto! %s" % [String(OBRAS_107[kind].nome).capitalize(), dica], Color(0.55, 1.0, 0.5))
+			h107.show_toast("%s pront%s! %s" % [String(OBRAS_107[kind].nome).capitalize(), "a" if OBRAS_107[kind].f else "o", dica], Color(0.55, 1.0, 0.5))
 		return
 	if kind == "carpintaria":  # Bloco 94
 		var ca := spawn_carpintaria(pos)
@@ -2283,28 +2295,31 @@ func load_save_data(d: Dictionary) -> void:
 			spawn_carpintaria(cpos).load_save_data(cd)
 	# Bloco 107: carvoarias e curtumes (save antigo: nenhum)
 	for par in [["carvoaria", "carvoarias"], ["curtume", "curtumes"]]:
-		for old in obras107(par[0]):
-			old.get_parent().remove_child(old)
-			old.queue_free()
+		var vivos: Array = obras107(par[0]).filter(func(n): return n.get_parent() == get_parent())  # (só os desta cena: a cena velha, saindo, ainda está nos grupos)
 		for od in SaveUtil.array(d, par[1]):
 			if typeof(od) != TYPE_DICTIONARY:
 				continue
 			var opos := SaveUtil.vec2(od, "position", Vector2.INF)
 			if opos != Vector2.INF:
-				spawn_obra107(par[0], opos).load_save_data(od)
+				_reaproveita_ou_cria(par[0], opos, vivos).load_save_data(od)
+		for old in vivos:  # sobrou: não está no save
+			old.get_parent().remove_child(old)
+			old.queue_free()
 	# Bloco 107: hortas e estufas construídas. Save COM a chave: a horta da clareira (da cena) sai (a vila é do jogador);
 	# save antigo (sem a chave): a horta da cena continua como era e nada extra.
 	if d.has("hortas"):
-		for old in hortas() + estufas():
-			old.get_parent().remove_child(old)
-			old.queue_free()
+		var vivas: Array = (hortas() + estufas()).filter(func(n): return n.get_parent() == get_parent())
 		for hd in SaveUtil.array(d, "hortas"):
 			if typeof(hd) != TYPE_DICTIONARY:
 				continue
 			var hpos := SaveUtil.vec2(hd, "position", Vector2.INF)
 			if hpos != Vector2.INF:
-				var hn := spawn_obra107("estufa" if SaveUtil.boolean(hd, "estufa", false) else "horta", hpos)
-				hn.load_save_data(SaveUtil.dict(hd, "dados"))
+				var tipo := "estufa" if SaveUtil.boolean(hd, "estufa", false) else "horta"
+				_reaproveita_ou_cria(tipo, hpos, vivas).load_save_data(SaveUtil.dict(hd, "dados"))
+		for old in vivas:  # sobrou: não está no save (a horta da clareira, numa partida nova)
+			old.get_parent().remove_child(old)
+			old.queue_free()
+		_coletor_mudou()
 	# Bloco 57: coletores de minério (save antigo: nenhum; o operador se religa sozinho)
 	for old in coletores_minerio():
 		old.get_parent().remove_child(old)

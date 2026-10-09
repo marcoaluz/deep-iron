@@ -1,11 +1,11 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/props/food_source.gd" id="1_horta"]
-[ext_resource type="Texture2D" path="res://assets/game/horta.png" id="2_sprite"]
+[ext_resource type="Texture2D" path="res://assets/game/estufa.png" id="2_sprite"]
 [ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="3_shadow"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_horta"]
-radius = 40.0
+radius = 52.0
 
 [node name="Estufa" type="Area2D"]
 script = ExtResource("1_horta")
@@ -13,30 +13,32 @@ estufa = true
 food_total = 120.0
 regen_rate = 0.3
 slot_count = 3
-slot_radius = Vector2(30, 20)
-obstacle_size = Vector2(18, 6)
-obstacle_offset = Vector2(0, -6)
+slot_radius = Vector2(34, 34)
+slot_arc_deg = 80.0
+auto_fit_area = false
+obstacle_size = Vector2(70, 14)
+obstacle_offset = Vector2(0, -8)
+obstacle_is_rect = true
 
 [node name="Shadow" type="Sprite2D" parent="."]
 z_index = -4
 position = Vector2(3, 0)
-scale = Vector2(2.2, 1.6)
+scale = Vector2(4.4, 1.7)
 texture = ExtResource("3_shadow")
 
 [node name="Visual" type="Sprite2D" parent="."]
-scale = Vector2(2, 2)
 texture = ExtResource("2_sprite")
-hframes = 3
-offset = Vector2(0, -8)
+hframes = 2
+offset = Vector2(0, -41)
 
 [node name="Shape" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_horta")
 
 [node name="AmountLabel" type="Label" parent="."]
 offset_left = -60.0
-offset_top = -52.0
+offset_top = -118.0
 offset_right = 60.0
-offset_bottom = -34.0
+offset_bottom = -92.0
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 12

@@ -560,30 +560,50 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregador\\ferido.png"
  },
  "agricultor_contente": {
-  "job": "62a639d4-2376-4acc-8108-e8b4bed13320",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultor\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultor\\contente.png"
  },
  "agricultor_cansado": {
-  "job": "c4be7895-4e24-498a-a7aa-a79e5f4bd90c",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultor\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultor\\cansado.png"
  },
  "agricultor_bravo": {
-  "job": "0ed6af04-10d7-467b-87a6-9ab947e9f8ad",
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultor\\bravo.png"
+ },
+ "agricultor_ferido": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultor\\ferido.png"
+ },
+ "agricultora_contente": {
+  "job": "9132029d-fc84-45fb-965e-22fb29a14633",
   "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultor\\bravo.png",
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultora\\contente.png",
   "ok": true,
   "candidatos": 1
  },
- "agricultor_ferido": {
-  "job": "bdc47146-d9a2-48f3-82fe-569df02e785c",
+ "agricultora_cansado": {
+  "job": "4b406f5f-ba92-425b-9942-d9c95529285f",
   "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultor\\ferido.png",
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultora\\cansado.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "agricultora_bravo": {
+  "job": "b1532ff0-bd93-4ae5-a6d8-f78782dab3e5",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultora\\bravo.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "agricultora_ferido": {
+  "job": "030ea8d3-de67-4593-bcd1-aaa6a88193ab",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\agricultora\\ferido.png",
   "ok": true,
   "candidatos": 1
  }

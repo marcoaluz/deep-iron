@@ -34,6 +34,7 @@ NOTA = {"ferreiro": " He is BALD: no hat, no helmet, no cap on his bald head.",
         "batedor": " He wears a wide-brimmed brown leather bush hat and a dark green cloak: keep exactly this hat and the stubble; no helmet, no headlamp.",
         "batedora": " She has NO hat: dark brown hair and the dark green hood DOWN on her shoulders; keep the hood and the hair exactly; no helmet, no hat, no cap.",
         # Bloco 105
+        "agricultora": " She wears a wide-brimmed faded straw hat tied under the chin and has a long braid over one shoulder: keep exactly this hat and the braid; no helmet, no headlamp.",
         "agricultor": " He wears a wide-brimmed faded straw hat and has a short grey-brown beard: keep exactly this hat and the beard; no helmet, no headlamp.",
         "carregador": " He wears a faded indigo-blue knitted beanie and has a short dark beard: keep exactly this beanie and the beard; the wooden carrying frame on his back stays; no helmet, no headlamp."}
 

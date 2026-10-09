@@ -414,5 +414,13 @@
   "char": "5e8a81cc-417d-4e70-b4cf-02b756611cc2",
   "estado": "pronto",
   "_obs": "Bloco 92"
+ },
+ "agricultora": {
+  "genero": "m",
+  "job": "c2748c01-4ffc-4188-bfb0-007f09311ac8",
+  "escolhido": 4,
+  "char": "8ec2fc7b-ac09-482d-ac9b-9b3fca638b29",
+  "estado": "pronto",
+  "_obs": "Bloco 92"
  }
 }

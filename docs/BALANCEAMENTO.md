@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1058 valores** em 4 pastas de scripts (80 trocados por alguma cena).
+Total: **1059 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (79)
 
@@ -1907,7 +1907,7 @@ Total: **1058 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `segundos_por_andar` | 20.0 |  | Segundos (de jogo) pra subir ou descer um andar pela escada. |
 | `custo` | 1.0 |  | Custo de navegação por px (o elevador custa 0,05: alto aqui = só quando a cabine não serve). |
 
-## `scripts/props/estacao_vagonete.gd` (17)
+## `scripts/props/estacao_vagonete.gd` (18)
 
 **Vagonete (Bloco 64)**
 
@@ -1929,6 +1929,7 @@ Total: **1058 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `etapa_custo` | [Vector3i.ZERO, Vector3i(0, 0, 30), Vector3i(120, 40, 40), Vector3i(160, 40, 10), Vector3i.ZERO] |  | Custo de cada etapa (índice 1..3): x = créditos, y = ferro (barras a partir do estágio da fornalha), z = madeira. |
 | `etapa_itens` | [{}, {}, {"prego": 10}, {}, {}] |  | Itens a mais de cada etapa (pregos antes da fornalha viram ferro: Economy.itens_efetivos). |
 | `etapa_segundos` | PackedFloat32Array([0.0, 25.0, 40.0, 45.0, 0.0]) |  | Segundos de trabalho de cada etapa (índice 1..3). |
+| `ruina_d` | 44.0 |  | Em ruína, o carrinho velho fica parado a esta distância do começo do trilho (px da lógica): fora da sombra da boca, pra ele se ver. |
 
 **Dentro da mina (Bloco 99)**
 

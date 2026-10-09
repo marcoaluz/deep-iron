@@ -94,7 +94,12 @@
   "missoes",
   "batedor",
   "expedicao",
-  "it_antena"
+  "it_antena",
+  "agricultor",
+  "estufa",
+  "carvao_vegetal",
+  "couro_curtido",
+  "racao"
  ],
  "predios": [
   "casa",
@@ -115,6 +120,9 @@
   "fornalha",
   "igreja",
   "cemiterio",
-  "carpintaria"
+  "carpintaria",
+  "estufa",
+  "carvoaria",
+  "curtume"
  ]
 }

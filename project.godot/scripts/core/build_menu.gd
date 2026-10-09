@@ -393,13 +393,13 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return hub.carpintaria_cost_text(),
 					"reason": func(): return hub.carpintaria_block_reason(),
 					"act": func(): hub.build_carpintaria()})
-				out.append({"name": "Carvoaria", "img": _predio("fornalha"), "many": true, "scales": true,  # Bloco 107
+				out.append({"name": "Carvoaria", "img": _predio("carvoaria"), "many": true, "scales": true,  # Bloco 107
 					"desc": "Madeira vira carvão vegetal, que a Fornalha gasta antes do carvão de mina — só por ordem, com quantidade. Opera: o LENHADOR.",
 					"count": func(): return _count("carvoarias"),
 					"cost": func(): return hub.carvoaria_cost_text(),
 					"reason": func(): return hub.carvoaria_block_reason(),
 					"act": func(): hub.build_carvoaria()})
-				out.append({"name": "Curtume", "img": _predio("carpintaria"), "many": true, "scales": true,  # Bloco 107
+				out.append({"name": "Curtume", "img": _predio("curtume"), "many": true, "scales": true,  # Bloco 107
 					"desc": "Couro cru vira couro curtido; com um curtume, botas, mochila e trajes pedem o curtido — só por ordem. Opera: o CAÇADOR.",
 					"count": func(): return _count("curtumes"),
 					"cost": func(): return hub.curtume_cost_text(),

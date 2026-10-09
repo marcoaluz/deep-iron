@@ -5,12 +5,15 @@ extends Node2D
 
 const TEX := {"cheio_SE": "res://assets/game/iso/props/vagonete_cheio_SE.png", "cheio_SO": "res://assets/game/iso/props/vagonete_cheio_SO.png",
 	"vazio_SE": "res://assets/game/iso/props/vagonete_vazio_SE.png", "vazio_SO": "res://assets/game/iso/props/vagonete_vazio_SO.png",
-	"grande_SE": "res://assets/game/iso/props/vagonete_grande_SE.png", "grande_SO": "res://assets/game/iso/props/vagonete_grande_SO.png"}
+	"grande_SE": "res://assets/game/iso/props/vagonete_grande_SE.png", "grande_SO": "res://assets/game/iso/props/vagonete_grande_SO.png",
+	"ruina_SE": "res://assets/game/iso/props/vagonete_ruina_SE.png", "ruina_SO": "res://assets/game/iso/props/vagonete_ruina_SO.png"}  # Bloco 107
 ## Bloco 99: com a carga a partir disso o carrinho mostra o monte grande de minério.
 const CARGA_GRANDE := 60.0
 
 var station: Node = null
 var full := false
+## Bloco 107: a RUÍNA do vagonete da boca (a estação em ruína): o carrinho velho e destruído, parado no começo do trilho.
+var ruina := false
 var dir := Vector2.RIGHT
 var _sprite: Sprite2D
 static var _tex := {}
@@ -36,6 +39,8 @@ func _process(_delta: float) -> void:
 	var scr := Vector2(dir.x - dir.y, (dir.x + dir.y) * 0.5)
 	var lado := "SE" if (scr.x >= 0.0) == (scr.y >= 0.0) else "SO"
 	var key := ("cheio_" if full else "vazio_") + lado
+	if ruina:
+		key = "ruina_" + lado
 	if full and station.has_method("carga_no_carrinho") and station.carga_no_carrinho() >= CARGA_GRANDE:
 		key = "grande_" + lado  # Bloco 99: a carga grande
 	if not _tex.has(key):

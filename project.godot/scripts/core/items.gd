@@ -53,11 +53,10 @@ const ITENS := {
 	# Bloco 94: o que se fabrica pra USAR (carpintaria e ferreiro)
 	"cama_boa": {"nome": "Cama de tábua", "cat": "equipamento", "icone": "it_cama_boa", "preco": 30.0, "onde": "itens"},
 	"mochila": {"nome": "Mochila de couro", "cat": "equipamento", "icone": "it_mochila", "preco": 15.0, "onde": "itens"},
-	# Bloco 107: o que a Carvoaria, o Curtume e a cozinha fabricam por ordem (não vendem: são insumo). Os ícones são os
-	# provisórios do jogo até a arte própria (PixelLab) ser aprovada.
-	"carvao_vegetal": {"nome": "Carvão vegetal", "cat": "madeira", "icone": "carvao", "preco": 0.0, "onde": "itens"},
-	"couro_curtido": {"nome": "Couro curtido", "cat": "pecas", "icone": "it_couro", "preco": 0.0, "onde": "itens"},
-	"racao": {"nome": "Ração de expedição", "cat": "comida", "icone": "comida", "preco": 0.0, "onde": "itens"},
+	# Bloco 107: o que a Carvoaria, o Curtume e a cozinha fabricam por ordem (não vendem: são insumo); ícones do PixelLab
+	"carvao_vegetal": {"nome": "Carvão vegetal", "cat": "madeira", "icone": "carvao_vegetal", "preco": 0.0, "onde": "itens"},
+	"couro_curtido": {"nome": "Couro curtido", "cat": "pecas", "icone": "couro_curtido", "preco": 0.0, "onde": "itens"},
+	"racao": {"nome": "Ração de expedição", "cat": "comida", "icone": "racao", "preco": 0.0, "onde": "itens"},
 }
 
 

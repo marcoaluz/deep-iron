@@ -406,5 +406,19 @@
    "colher"
   ],
   "_obs": "Bloco 92"
+ },
+ "casaco_agricultora": {
+  "char": "07d6ea10-b144-49e2-8023-30eda04dd54b",
+  "base": "agricultora",
+  "trabalho": "colher",
+  "enviado": [
+   "caminhada",
+   "colher"
+  ],
+  "processado": [
+   "caminhada",
+   "colher"
+  ],
+  "_obs": "Bloco 92"
  }
 }

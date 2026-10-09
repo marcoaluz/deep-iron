@@ -226,8 +226,9 @@ func refresh() -> void:
 
 
 func pop_in() -> void:
-	_visual.scale = Vector2(2.0, 0.2)
-	create_tween().tween_property(_visual, "scale", Vector2(2, 2), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var s0 := _visual.scale  # (Bloco 107: cada oficina tem a escala do desenho dela: a fornalha 2x, as outras 1x)
+	_visual.scale = Vector2(s0.x, s0.y * 0.1)
+	create_tween().tween_property(_visual, "scale", s0, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 # ------------------------------------------------------------ save/load (pelo Centro da Vila)

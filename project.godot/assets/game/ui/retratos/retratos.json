@@ -207,6 +207,20 @@
    "cansado": "batedora/cansado",
    "bravo": "batedora/bravo",
    "ferido": "batedora/ferido"
+  },
+  "agricultor": {
+   "neutro": "agricultor/neutro",
+   "contente": "agricultor/contente",
+   "cansado": "agricultor/cansado",
+   "bravo": "agricultor/bravo",
+   "ferido": "agricultor/ferido"
+  },
+  "agricultora": {
+   "neutro": "agricultora/neutro",
+   "contente": "agricultora/contente",
+   "cansado": "agricultora/cansado",
+   "bravo": "agricultora/bravo",
+   "ferido": "agricultora/ferido"
   }
  }
 }

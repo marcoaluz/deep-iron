@@ -75,51 +75,48 @@ Data: 2026-10-09. Branch `isometrico`. Teste: `b107_agricultor_oficinas`. Pedido
   - **As expedições gastam as rações prontas primeiro**, e o que sobra sai da comida da cozinha, como antes.
 - No domingo, aparece o aviso "revise o cardápio da semana".
 
-## 2) Arte (PixelLab, regra 11) — piloto do agricultor, esperando sua aprovação
+## 2) Arte (PixelLab, regra 11) — tudo gerado e integrado depois do "aprovado" do Marco
 
-- **O agricultor (homem) está completo:**
-  - 16 candidatos, e o **c10** escolhido (a cesta de vime no quadril);
-  - personagem v3 "high top-down";
-  - caminhada de 8 quadros, comer, ferido, deitar e mancar;
-  - o trabalho "colher" (8 quadros);
-  - o casaco de inverno (caminhada + colher);
-  - o retrato com as 5 expressões.
+O Marco aprovou o piloto do agricultor ("aprovado"), e eu fiz o resto na sequência.
+
+- **Agricultor e agricultora** (completos, receita do elenco): candidatos, personagem v3, caminhada de 8 quadros, comer, ferido,
+  deitar, mancar, o trabalho "colher", o casaco de inverno e o retrato com 5 expressões. Integrados (`integra.py bonecos`).
+  - O "colher" do agricultor foi **refeito** (brotos no chão e a cabeça escura de costas): agora limpo. O da agricultora também.
+- **Três estruturas, cada uma com a obra 1 → 2 → 3 → pronto** (`predios107.py`, a mesma receita da carpintaria):
+  - **Estufa de vidro:** armação de madeira escura, paredes e telhado de painéis de vidro (alguns remendados), canteiros com plantas
+    e cogumelos vistos pelo vidro. Na obra, os painéis chegam em caixotes e entram aos poucos.
+  - **Carvoaria:** forno em cúpula de barro e pedra, escurecido pela fuligem, com a porta gradeada e um abrigo de tábuas com lenha e
+    sacos de carvão.
+  - **Curtume:** galpão aberto de madeira com telhado de chapa enferrujada, tinas redondas, varais de couro e a viga de raspar.
+  - Cada uma tem o desenho do mapa antigo/fantasma (`assets/game/<nome>.png`) e o cartão do menu CONSTRUIR (96×64).
+- **Animações novas de trabalho:** o lenhador/lenhadora **carvoejando** (empurra a lenha com a vara longa) e o caçador/caçadora **curtindo**
+  (raspa o couro), nos personagens e nos casacos que já existiam. A vista isométrica troca pela animação certa pelo estado do ipezinho
+  (`carvoejando` / `curtindo`).
+  - O "curtir" foi refeito uma vez (a 1ª leva trouxe uma foice): saiu com a faca de raspar, mas **no casaco do caçador, de frente, ainda
+    aparece uma ferramenta curva grande** (e na caçadora, em alguns quadros). Dá pra refazer (~16 gerações cada).
+- **Ícones:** o agricultor, a estufa, o carvão vegetal, o couro curtido e a ração (32 px e 24 px), na barra e nos itens.
+- **A ruína do vagonete** (pedida no Bloco 106): o carrinho velho e destruído, com mato e dormentes soltos, parado no trilho enquanto o
+  vagonete da boca não foi restaurado (`vagonete107.py`, a partir do carrinho do jogo). Restaurado, volta o carrinho de verdade.
 - **Conferência:**
-  - `docs/arte/bloco107/agricultor_piloto.png` (as 8 poses, o casaco, o retrato);
-  - `agricultor_trabalho.png` e os GIFs `agricultor_*_4dir.gif`.
-- **Dois defeitos que vi:**
-  1. No trabalho, o modelo desenhou **brotos e um cogumelo no chão** (a descrição pedia sem plantas). Dá pra refazer só a animação (~16
-     gerações) ou deixar: com a cesta na mão, o desenho se explica.
-  2. **Vista de costas (NE) do "colher":** o rosto e o chapéu escurecem nos quadros do meio (a cabeça vira uma mancha preta). Pede refazer
-     essa animação.
-- **O que NÃO foi feito ainda (esperam sua aprovação):**
-  - a agricultora;
-  - a estufa de vidro (com a obra 1 → 2 → 3 → pronto);
-  - a carvoaria e o curtume;
-  - as animações novas do lenhador e do caçador;
-  - os ícones;
-  - a integração no jogo (`integra.py bonecos agricultor`).
-- **Provisórios até lá:**
-  - o agricultor usa a roupa de civil na vista isométrica (`iso_bonecos.PROVISORIO`);
-  - a carvoaria usa o desenho da fornalha e o curtume o da carpintaria;
-  - a horta e a estufa usam o desenho da horta;
-  - o ícone da barra é a cesta do jogo;
-  - os itens novos usam ícones que já existem;
-  - os cartões do menu usam o desenho dos prédios parecidos (a horta e a estufa têm um cartão de 96×64 feito do desenho da horta).
+  - `docs/arte/bloco107/agricultor_piloto.png`, `agricultora_piloto.png`;
+  - `animacoes_novas.png`, `animacoes_refeitas.png`;
+  - `estruturas_primeira.png` (as 3 estruturas em todos os estágios);
+  - `icones_candidatos.png`;
+  - `vagonete_ruina_candidatos.png`;
+  - as fotos do jogo: `obras_*.png`, `prontas.png`, `lenhador_carvoejando.png`, `cacador_curtindo.png`, `agricultor_colhendo.png`,
+    `cozinha_cardapio.png`, `menu_alimentacao.png`, `vagonete_ruina.png`, `vagonete_restaurado.png`.
+- **Ainda provisório:**
+  - o cartão da **horta** no menu usa o desenho da horta reduzido;
+  - o desenho da horta construída é o da horta que já existia (só a estufa, a carvoaria e o curtume ganharam a obra por etapas).
 
 ### Orçamento do PixelLab
 | | Gerações | Tipo |
 |---|---|---|
 | Saldo no começo do bloco | 6.063 | confirmado |
-| Gasto neste bloco (o agricultor completo) | 78 | real |
-| Saldo agora | **5.985** | confirmado |
-| A agricultora | ~78 | estimado |
-| Estufa de vidro, carvoaria e curtume (obra 1 → 2 → 3 → pronto, ~80 cada) | ~240 | estimado |
-| Animações de trabalho novas (lenhador/a e caçador/a) | ~128 | estimado |
-| A ruína do vagonete (pedida pelo Marco no Bloco 106) | ~80 | estimado |
-| Ícones (agricultor, estufa, 3 itens, cartões) | ~30 | estimado |
-| Refazer o "colher" de costas (opcional) | ~16 | estimado |
-| **Total previsto pro resto** | **~570** → saldo ~5.400 | estimado |
+| Gasto neste bloco (tudo: agricultor, agricultora, 3 estruturas com obras, animações, ícones, ruína) | **332** | real |
+| Saldo agora | **5.731** | confirmado |
+| Previsto no plano | ~570 | estimado (foi bem menos: as estruturas custaram ~10 cada tentativa) |
+| Opcional: refazer o "curtir" do casaco do caçador (e da caçadora) | ~16 cada | estimado |
 
 ## 3) Os arquivos
 
@@ -189,16 +186,20 @@ O CSV ganhou `hortas`, `estufas`, `colhido_horta`, `colhido_estufa`, `carvao_veg
 
 ## 8) A bateria
 
-Rodou um teste por vez, com a pasta `fake_appdata`: **os 89 testes de bloco** (b100–b106 e todos os antigos) **+ o b107**.
-- **87 passaram de primeira.**
-- **2 eram intermitentes e passaram ao repetir sozinhos:** `b101_migrantes` (os migrantes pela floresta) e `b77_areas` (a medição de
-  madeira de 30 s oscila). Os dois já constavam como intermitentes nos relatórios anteriores.
-- Nenhum teste antigo precisou de ajuste neste bloco (a horta da cena continua nos testes, que abrem o jogo sem a Fundação).
+Rodou um teste por vez, com a pasta `fake_appdata`: **os 90 testes de bloco, todos sem falha, no código final** (depois da arte).
+- Nenhum teste antigo precisou de ajuste neste bloco.
+- **O que a bateria achou no meio do caminho (e foi corrigido):**
+  - O `b51_engenheiro_estresse` começou a falhar depois que o Centro da Vila passou a apagar e recriar as hortas a cada
+    carregamento (50 carregamentos seguidos = 50 refeitas da malha de navegação). Agora o carregamento **reaproveita** o que já existe
+    no mesmo lugar e só cria ou apaga a diferença.
+  - Essa mesma troca quebrava o `p28_save` (14 mil erros): ao carregar, a cena velha ainda está nos grupos e a horta dela era reaproveitada.
+    Agora só se reaproveita o que é da cena atual.
+- Intermitentes de rodadas anteriores (`b101`, `b77`) passaram.
 - **GUT `test_iso*`:** 12 de 12.
 
 ## 9) Pendências e riscos
 
-- **A arte da estufa de vidro e da ruína do vagonete** esperam a aprovação do piloto.
+- **O "curtir" do casaco do caçador** ainda mostra uma ferramenta curva grande (seção 2).
 - **A quem a área de alimentos serve:** ela continua dando a função caçador. Se o jogador quiser áreas de horta pro agricultor, é um
   tipo novo em `work_areas.TIPOS`. Não fiz.
 - **O recibo de encomenda vale só no quadro do pagamento** (Bloco 96). Se uma unidade da Fornalha começa no MESMO quadro em que o jogador

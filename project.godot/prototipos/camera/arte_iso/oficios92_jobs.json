@@ -159,5 +159,47 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\agricultor\\candidatos.png",
   "ok": true,
   "candidatos": 16
+ },
+ "agricultora": {
+  "job": "c2748c01-4ffc-4188-bfb0-007f09311ac8",
+  "custo": 15,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\agricultora\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "icone_agricultor": {
+  "job": "9028bab5-9026-40bc-a30c-652a150486d0",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_agricultor.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_estufa": {
+  "job": "87a9f06a-ddf3-4df7-b242-12e7999f2985",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_estufa.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_carvao_vegetal": {
+  "job": "53157428-3f67-4770-b89e-aa125648c63f",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_carvao_vegetal.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_couro_curtido": {
+  "job": "1f828c6b-ca86-4fe7-b98e-d083b57d943d",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_couro_curtido.png",
+  "ok": true,
+  "candidatos": 64
+ },
+ "icone_racao": {
+  "job": "39e4efd5-02b4-4bd4-904a-46a1111932dd",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_racao.png",
+  "ok": true,
+  "candidatos": 64
  }
 }

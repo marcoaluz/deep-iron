@@ -45,6 +45,7 @@ PREDIOS = {
     "fornalha": ("fundicao", None),  # Bloco 92: a Fundição do Prompt 12 (nunca tinha entrado no jogo)
     "igreja": ("igreja", None),  # Bloco 92 (predios92.py)
     "carpintaria": ("carpintaria", None),  # Bloco 94 (predios94.py)
+    "estufa": ("estufa", None), "carvoaria": ("carvoaria", None), "curtume": ("curtume", None),  # Bloco 107 (predios107.py)
     "escudo": ("escudo", {"etapa_%d" % (k + 1): "../%s/escudo_%d_%s.png" % (MAQ, k + 1, n)
                           for k, n in enumerate(["fundacao", "bobinas", "nucleo", "emissor"])}),
     "escavadeira": ("escavadeira", {"estrutura": "../%s/escavadeira_1_estrutura.png" % MAQ,
@@ -280,11 +281,13 @@ FUNCOES = {"minerador": ("minerador", "mineradora", "minerar"), "guarda": ("guar
            "fundidor": ("fundidor", "fundidora", "fundir"), "ferreiro": ("ferreiro", "ferreira", "forjar"),
            "padre": ("padre", "padre", "pregar"),
            "carpinteiro": ("carpinteiro", "carpinteira", "serrar"),  # Bloco 94 (oficios94.py)
-           "batedor": ("batedor", "batedora", "bater")}  # Bloco 104 (oficios104.py)
+           "batedor": ("batedor", "batedora", "bater"),  # Bloco 104 (oficios104.py)
+           "agricultor": ("agricultor", "agricultora", "colher")}  # Bloco 107 (oficios107.py)
 COMUNS = ["caminhada", "comer", "ferido", "deitar", "mancar_esq", "com_picareta"]
 # pendências dos Prompts 2 e 29: colher fruta (caçador sem arco), treinar no campo e o ataque com a
 # arma de verdade do guarda (lança / besta; a lança de prata usa a da lança)
-EXTRA = {"cacador": ["colher"], "cacadora": ["colher"],
+EXTRA = {"cacador": ["colher", "curtir"], "cacadora": ["colher", "curtir"],  # Bloco 107: curtir (curtume)
+         "lenhador": ["carvoejar"], "lenhadora": ["carvoejar"],  # Bloco 107: carvoejar (carvoaria)
          "guarda": ["treinar", "atacar_lanca", "atacar_besta"], "guarda_mulher": ["treinar", "atacar_lanca", "atacar_besta"]}
 
 
@@ -457,7 +460,8 @@ def bonecos():
             print("%-14s %s" % (pasta, sorted(out["pastas"][pasta]["anims"])))
             cas = "casaco_" + pasta
             if os.path.isdir(os.path.join(AQUI, cas)):
-                out["pastas"][cas] = _exporta_boneco(cas, ["caminhada"] + ([trab] if trab else []))
+                out["pastas"][cas] = _exporta_boneco(cas, ["caminhada"] + ([trab] if trab else [])
+                                                     + [x for x in EXTRA.get(pasta, []) if x in ("carvoejar", "curtir")])  # Bloco 107
     for k in ("gas", "calor", "radiacao"):
         for g in ("m", "f"):
             p = "traje_%s_%s" % (k, g)
@@ -660,7 +664,7 @@ def so_bonecos(funcoes):
             anims = COMUNS + ([trab] if trab else []) + EXTRA.get(pasta, [])
             novas = {pasta: anims}
             if os.path.isdir(os.path.join(AQUI, "casaco_" + pasta)):
-                novas["casaco_" + pasta] = ["caminhada"] + ([trab] if trab else [])
+                novas["casaco_" + pasta] = ["caminhada"] + ([trab] if trab else [])                     + [x for x in EXTRA.get(pasta, []) if x in ("carvoejar", "curtir")]  # Bloco 107
             for pz, an in novas.items():
                 out["pastas"][pz] = _exporta_boneco(pz, an)
                 print("%-18s %s" % (pz, sorted(out["pastas"][pz]["anims"])))

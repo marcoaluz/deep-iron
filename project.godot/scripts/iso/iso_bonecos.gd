@@ -27,7 +27,7 @@ const OUTFIT_FUNCAO := {"mineiro": "minerador", "civil": "civil", "cozinheiro": 
 	"agricultor": "agricultor"}  # Bloco 107 (oficios107.py)  # Bloco 105 (oficios105.py)
 ## Bloco 105: PROVISÓRIO enquanto a arte própria não foi aprovada (o Marco aprova o piloto antes do lote): a função que
 ## ainda não está no bonecos.json usa esta. Sai sozinho quando o `integra.py bonecos` puser a função lá.
-const PROVISORIO := {"carregador": "civil", "mecanico": "engenheiro", "agricultor": "civil"}
+const PROVISORIO := {"carregador": "civil", "mecanico": "engenheiro"}
 ## desenho antigo da mão (assets/game/<nome>.png) -> ferramenta nova (Prompt 4)
 const ITEM_OF := {"pickaxe": "picareta", "pickaxe_aco": "picareta_aco", "axe": "machado", "hammer": "martelo",
 	"porrete": "porrete", "lanca": "lanca", "lanca_prata": "lanca_prata", "besta": "besta", "bow": "arco"}
@@ -198,6 +198,10 @@ static func pose(w: Node, iso_dir: int, clock: float, passo: float = -1.0, mexen
 			anim = "colher"
 		elif st == "training" and not _find(fs, "treinar", d).is_empty():
 			anim = "treinar"
+		elif st == "carvoejando" and not _find(fs, "carvoejar", d).is_empty():
+			anim = "carvoejar"  # Bloco 107: o lenhador na carvoaria
+		elif st == "curtindo" and not _find(fs, "curtir", d).is_empty():
+			anim = "curtir"  # Bloco 107: o caçador no curtume
 		elif anim == "atacar":
 			var arma := String(w.get("weapon")) if w.get("weapon") != null else ""
 			var a2: String = {"lanca": "atacar_lanca", "lanca_prata": "atacar_lanca", "besta": "atacar_besta"}.get(arma, "")

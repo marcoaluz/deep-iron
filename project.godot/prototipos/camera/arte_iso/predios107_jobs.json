@@ -1,0 +1,44 @@
+{
+ "estufa": {
+  "job": "e10ff696-dd7d-49ae-ad26-1ba4a835e973",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\estufa\\pronto.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "estufa_obra": {
+  "job": "6261ca82-e441-4b9e-ad28-c29ab07eecc7",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\estufa\\obra_2.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "curtume": {
+  "job": "bb00b1d0-6747-43f7-955d-9221a79cd474",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\curtume\\pronto.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "carvoaria": {
+  "job": "f42f5d81-9cc4-4eec-afb0-4bda97f871c5",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\carvoaria\\pronto.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "carvoaria_obra": {
+  "job": "16b07c31-90f5-40a6-af11-279c954ae5fa",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\carvoaria\\obra_2.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "curtume_obra": {
+  "job": "9061ca7b-e15d-43e4-b11a-dbe11c534fe3",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\curtume\\obra_2.png",
+  "ok": true,
+  "candidatos": 1
+ }
+}

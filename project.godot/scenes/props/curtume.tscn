@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/props/curtume.gd" id="1_carp"]
-[ext_resource type="Texture2D" path="res://assets/game/carpintaria.png" id="2_sprite"]
+[ext_resource type="Texture2D" path="res://assets/game/curtume.png" id="2_sprite"]
 [ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="3_shadow"]
 [ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="4_light"]
 
@@ -35,7 +35,7 @@ texture = ExtResource("3_shadow")
 [node name="Visual" type="Sprite2D" parent="."]
 texture = ExtResource("2_sprite")
 hframes = 2
-offset = Vector2(0, -42)
+offset = Vector2(0, -41)
 
 [node name="Smoke" type="CPUParticles2D" parent="."]
 position = Vector2(-10, -84)

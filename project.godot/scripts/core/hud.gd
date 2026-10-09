@@ -98,8 +98,7 @@ const ORDER_JOBS := [
 		"Só UM, e só homem (selecione um ipezinho). Fica na igreja: missa de domingo, funeral e aconselha quem anda zangado. Abre com a Vila no estágio do padre."],
 	["carpinteiro", "Carpinteiro", "9", "res://assets/game/ui/icones/carpinteiro.png", "toggle_carpenter", Color(0.86, 0.7, 0.45),
 		"Opera a Carpintaria: tábuas e camas de tábua, só o que foi encomendado. Monta as camas novas nas casas."],  # Bloco 94
-	# Bloco 107: o ícone é o provisório (a cesta do jogo) até o do PixelLab ser aprovado; Icones.FUNCAO cai nele sem o arquivo
-	["agricultor", "Agricultor", "-", "res://assets/game/food_basket.png", "toggle_farmer", Color(0.62, 0.82, 0.4),
+	["agricultor", "Agricultor", "-", "res://assets/game/ui/icones/agricultor.png", "toggle_farmer", Color(0.62, 0.82, 0.4),
 		"Colhe a horta e a estufa (dentro da vila) e leva a fruta pro armazém. Cuida da horta aberta (regenera mais). Com agricultor na vila, o caçador só caça."],
 	["batedor", "Batedor", "K", "res://assets/game/ui/icones/batedor.png", "toggle_scout", Color(0.7, 0.88, 0.55),
 		"Bate o mato: avista bichos e lugares de longe e rastreia as tocas (nascem mais bichos). Lidera as EXPEDIÇÕES (;): sem batedor, ninguém sai."],  # Bloco 104
