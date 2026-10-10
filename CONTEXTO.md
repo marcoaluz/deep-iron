@@ -1,11 +1,11 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-10. Branch `isometrico`. Bloco 112 feito (commit local, sem push). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
+Atualizado em 2026-10-10. Branch `isometrico`. Bloco 112 feito (push aprovado pelo Marco; ele mesmo roda o push). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
-## Bloco 112 — INTRODUÇÃO + PRIMEIRO DIA GUIADO (feito; commit local, sem push)
+## Bloco 112 — INTRODUÇÃO + PRIMEIRO DIA GUIADO (feito; push aprovado)
 
 Pedido "Prompt 4" (cena inicial + tutorial = começo do Capítulo 1). Plano aprovado ("pode ser"): quadros 4–7 NO MAPA real,
 capataz = retrato do minerador ("Capataz Bastião"). Relatório `docs/BLOCO112_INTRO.md`; fotos `docs/arte/bloco112/`
@@ -20,7 +20,10 @@ capataz = retrato do minerador ("Capataz Bastião"). Relatório `docs/BLOCO112_I
   não sumia (ligação no nó do cinema que é apagado); legenda de 2 linhas cortada; balões na caravana; cartão do capataz cobria as
   abas do Construir (some com o menu aberto); `Q1_sol.png` com maiúscula.
 - Testes conferidos: b112, b100 (ajustado), b37, b95b, b95, p28_save, hud_frostpunk, b52, b111. O resto da bateria não.
-- PENDENTE com o Marco: validar a intro jogando; sons da intro (gerar com ElevenLabs se ele quiser); push.
+- Marco (2026-10-10): "Estou de acordo" (push aprovado) e "sem criar som agora" — os sons da intro ficam pra depois (a intro
+  roda em silêncio; os ganchos estão prontos). O push pelo Claude foi barrado pela permissão do modo automático: Marco roda
+  `git push origin isometrico`.
+- PENDENTE com o Marco: validar a intro jogando.
 
 REGRAS QUE O MARCO DEFINIU (valem sempre):
 - Sempre usar as skills do projeto (.claude/skills) ao desenvolver; se ver algo estranho pode corrigir e depois contar.
