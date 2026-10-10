@@ -21,7 +21,7 @@ Pedido "Prompt 5" (seção 25 do guia). Plano aprovado ("pode"). Relatório `doc
 - Tranquilo e Ferro: números do pedido, SEM simulação de balanceamento (só conferi que são aplicados). Normal intocado.
 - Testes conferidos: b113, b39, b62, b108, p28_save, b100, b112, b52, b37 (falhou 1x "obras não terminaram", passou ao repetir:
   espera até 400 s por obras). O resto da bateria não.
-- PENDENTE com o Marco: ver a tela jogando; simular Tranquilo/Ferro se quiser; push.
+- Marco olhou (2026-10-10): "está tudo ok". PENDENTE: simular Tranquilo/Ferro só se ele pedir; push (ele roda).
 
 ## Bloco 112 — INTRODUÇÃO + PRIMEIRO DIA GUIADO (feito; push aprovado)
 
