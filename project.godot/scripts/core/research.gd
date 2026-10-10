@@ -306,7 +306,7 @@ func _finish(id: String) -> void:
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
 		hud.show_banner("PESQUISA CONCLUÍDA: %s" % TECHS[id].name.to_upper(), TECHS[id].desc)
-	Audio.fanfare()
+	Audio.stinger("pesquisa_pronta")  # Bloco 114 (sem arquivo: a fanfarra)
 	for w in researchers():
 		w.wake_decision()  # sem pesquisa: voltam a trabalhar
 	researched.emit(id)

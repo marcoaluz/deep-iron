@@ -16,6 +16,8 @@ var full := false
 var ruina := false
 var dir := Vector2.RIGHT
 var _sprite: Sprite2D
+var _pos_ant := Vector2.ZERO
+var _andando := false
 static var _tex := {}
 
 
@@ -31,10 +33,17 @@ func _ready() -> void:
 	_sprite.scale = Vector2.ONE / maxf(s, 0.01)
 
 
+## Bloco 114: o loop de som do vagonete (sons_predios.gd) só toca com o carrinho andando (não parado nem em ruína).
+func som_ativo() -> bool:
+	return _andando and not ruina
+
+
 func _process(_delta: float) -> void:
 	if station == null or not is_instance_valid(station):
 		queue_free()
 		return
+	_andando = global_position.distance_to(_pos_ant) > 0.05
+	_pos_ant = global_position
 	# direção na tela: x-y (direita) e (x+y)/2 (baixo)
 	var scr := Vector2(dir.x - dir.y, (dir.x + dir.y) * 0.5)
 	var lado := "SE" if (scr.x >= 0.0) == (scr.y >= 0.0) else "SO"

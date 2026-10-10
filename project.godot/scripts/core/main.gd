@@ -115,6 +115,8 @@ func _ready() -> void:
 	fundo.name = "Fundo"
 	add_child(fundo)
 	SaveManager.register_game(self)
+	if SaveManager.cinema == "":
+		Audio.tema("")  # Bloco 114: partida normal: a música do jogo (com a intro rodando, o tema dela segue)
 	if not SaveManager.pending_load:  # Bloco 113: a dificuldade da tela de Nova partida (testes e --smoke: Normal)
 		var dif := get_tree().get_first_node_in_group("dificuldade")
 		if dif:
@@ -551,6 +553,8 @@ func toggle_job(job: String, label: String, color: Color) -> void:
 	var make := selection.any(func(w): return w.job != job)
 	for unit in selection:
 		unit.set_job(job if make else Worker.ROLE_IDLE)
+	if make:
+		Audio.voz(selection[0].global_position, "ordem", String(selection[0].gender))  # Bloco 114: "Sim!" (desligável)
 	Audio.click()
 	_hud.show_toast("%s: %d ipezinho%s" % [
 		label if make else "Sem função", selection.size(), "s" if selection.size() > 1 else ""],

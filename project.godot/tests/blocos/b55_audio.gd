@@ -130,7 +130,7 @@ func _eventos() -> void:
 	# a fanfarra não é mais cortada por um clique (4 vozes de interface)
 	audio.fanfare()
 	audio.click()
-	var tocando: int = audio._ui_pool.filter(func(u): return u.playing).size()
+	var tocando: int = (audio._ui_pool + audio._iface_pool).filter(func(u): return u.playing).size()  # Bloco 114: o clique saiu pro bus UI
 	check(tocando >= 2, "fanfarra + clique tocam juntos (%d vozes de interface)" % tocando)
 
 
@@ -185,7 +185,7 @@ func _ambiencia() -> void:
 		cam.position = cam._target_pos
 		cam.force_update_scroll()
 		audio._update_context()
-		check(audio.ambience_now == "fundo", "nível 2: %s" % audio.ambience_now)
+		check(audio.ambience_now == "s2", "nível 2: %s" % audio.ambience_now)  # Bloco 114: cada andar tem a ambiência dele
 	dn.time = 10.0
 	dn._process(0.0)
 	cam.focus_on(g("village_hub").global_position)

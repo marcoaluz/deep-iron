@@ -209,7 +209,7 @@ func _process(delta: float) -> void:
 		if hud:
 			hud.show_banner("ONDA SOLAR CHEGANDO",
 				"Em %d segundos o sol castiga a superfície. Todo mundo pros abrigos; no nível 2 e no abismo a rocha protege." % ceili(t))
-		Audio.alarm()
+		Audio.stinger("onda_solar")  # Bloco 114 (sem arquivo: o alarme de sempre; a música abaixa)
 		for w in get_tree().get_nodes_in_group("ipezinhos"):
 			w.wake_decision()  # já vão pros abrigos
 	if t <= 0.0:
@@ -311,7 +311,7 @@ func win() -> void:
 	won = true
 	wave_today = false
 	wave_left = 0.0
-	Audio.fanfare()
+	Audio.stinger("vitoria")  # Bloco 114 (sem arquivo: a fanfarra de sempre)
 	var dn := _dn()
 	var screen: CanvasLayer = VictoryScreen.new()
 	get_tree().root.add_child(screen)

@@ -43,6 +43,7 @@ var _trocando := false
 
 
 func _ready() -> void:
+	Audio.tema("intro")  # Bloco 114: a música da introdução (segue tocando nos quadros no mapa)
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var bg := ColorRect.new()
 	bg.color = Color.BLACK

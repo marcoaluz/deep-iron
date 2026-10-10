@@ -359,6 +359,7 @@ func _fim() -> void:
 	if _acabou:
 		return
 	_acabou = true
+	Audio.tema("")  # Bloco 114: acabou a introdução: volta a música do jogo
 	for par in _parados:
 		if is_instance_valid(par[0]):
 			par[0].set("auto_mode", par[1] if par[1] != null else true)

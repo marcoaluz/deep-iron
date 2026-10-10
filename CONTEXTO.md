@@ -1,11 +1,25 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-10. Branch `isometrico`. Bloco 113 feito (commit local, sem push). Tudo até o Bloco 112 **foi enviado** pro GitHub (push do Marco em 2026-10-10). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
+Atualizado em 2026-10-10. Branch `isometrico`. Bloco 114 feito (commit local, sem push). Tudo até o Bloco 113 **foi enviado** pro GitHub (push do Marco em 2026-10-10). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
-## Bloco 113 — DIFICULDADE + NOVA PARTIDA (feito; commit local, sem push)
+## Bloco 114 — SISTEMAS DE SOM (feito; commit local, sem push)
+
+Pedido "Prompt 6". Plano aprovado ("pode": bus UI sem bus de voz, voz ligada por padrão, nomes da lista). Relatório `docs/BLOCO114_SOM.md`; lista dos
+arquivos de som `docs/AUDIO_ARQUIVOS.md` (`python tools/lista_audio.py`); teste `b114_audio_sistemas` (116 OK, registrado no GUT). NENHUM áudio criado:
+os sons são gerados pelo Marco no ElevenLabs (plano Creator, 131 mil créditos) e postos em `project.godot/assets/audio/<pasta>/<nome>` com o nome da lista.
+- Catálogo `data/audio/slots.json` (55 slots, 73 arquivos): `audio_slots.gd` acha `<id>.ogg|wav|mp3` (+ `_0.._N`); sem arquivo = mudo ou a RESERVA (o som de
+  antes). Ambiência por andar (s2 a s5 pelo `env.level_at`), floresta dia/noite, camadas de chuva e vento no inverno, eco do S5 (reverb no bus Ambience);
+  loops de prédio posicionais (`sons_predios.gd`: só perto da câmera, só com `som_ativo()`, máx. 6); stingers; sino da missa e do funeral; bus UI novo; passos
+  por chão (`Audio.chao_de`); voz curta desligável; ducking (alarme −9, sino −7, aviso −6 dB; Amplify no bus Music); temas `Audio.tema("abertura"/"intro"/"")`.
+- A música da abertura e da intro (pendente do Bloco 112) = os slots `musica/abertura` e `musica/intro` + o sistema de temas: falta só GERAR os arquivos.
+- NADA foi ouvido (sem arquivo novo, só números). Ajustar `eco`/`eco_sala` e os dB depois de ouvir. Ganchos de stinger conferidos no código, não disparados um a um.
+- Testes conferidos: b114 (2x + GUT), b55 (ajustado: "s2" e o clique no bus UI), b112, b54, hud_frostpunk, b88, b64, b86, b113, b100, b95, p28_save. O resto da bateria não.
+- PENDENTE com o Marco: gerar os arquivos (se quiser, escrevo os prompts prontos pro ElevenLabs); push.
+
+## Bloco 113 — DIFICULDADE + NOVA PARTIDA (feito; enviado)
 
 Pedido "Prompt 5" (seção 25 do guia). Plano aprovado ("pode"). Relatório `docs/BLOCO113_DIFICULDADE.md`; fotos `docs/arte/bloco113/`
 (`tests/capturas_bloco113.gd`); teste `b113_dificuldade` (67 OK, registrado no GUT).

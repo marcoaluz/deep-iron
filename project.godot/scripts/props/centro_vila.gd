@@ -426,7 +426,7 @@ func _finish_expansion() -> void:
 	_grow_to_stage(_stage_index())  # Bloco 38: o fantasma assenta e vira o prédio novo
 	_update_visual()
 	_popup("A vila agora é: %s!" % stage_name(), Color(1.0, 0.85, 0.4))
-	Audio.recruit()
+	Audio.stinger("estagio_novo")  # Bloco 114 (sem arquivo: a fanfarra)
 	_refresh_galleries(true)
 	var opened := galleries_for_level(level)
 	var hud := get_tree().get_first_node_in_group("hud")

@@ -381,7 +381,7 @@ func _cumpre(m: Resource) -> void:
 	if hud and not _silencio:
 		var som := get_node_or_null("/root/Audio")  # (o autoload por caminho: o teste carrega este script antes dos autoloads)
 		if som:
-			som.fanfare()
+			som.stinger("missao_cumprida")  # Bloco 114 (sem arquivo: a fanfarra)
 		var sub := "Recompensa: %s." % recompensa_texto(m)
 		if lib > 0:
 			sub += (" O Capítulo %d está liberado." % lib) if capitulo_existe(lib) else " O Capítulo %d ainda está sendo escrito." % lib

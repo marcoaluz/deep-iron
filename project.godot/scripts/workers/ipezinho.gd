@@ -3176,6 +3176,7 @@ func _go_home() -> void:
 func _start_resting() -> void:
 	if overtime:
 		set_overtime(false)  # foi dormir por conta própria (ex.: machucou): acabou o turno extra
+	Audio.voz(global_position, "cansaco", gender)  # Bloco 114: suspiro de quem vai dormir (desligável)
 	_resting = true
 	_moving = false
 	_inside = has_home()
@@ -4193,6 +4194,7 @@ func hurt(cause: String = "mina", severity: String = "") -> void:
 	if grave and not downed and cause != "parto":  # (caído em combate e o parto têm o aviso próprio)
 		_toast("%s se machucou feio! Precisa de leito na enfermaria." % _display())
 	Audio.hurt(global_position)
+	Audio.voz(global_position, "dor", gender)  # Bloco 114: a voz curta (desligável)
 	var flash := create_tween()
 	flash.tween_property(_body, "self_modulate", Color(2.0, 0.5, 0.5), 0.06)
 	flash.tween_property(_body, "self_modulate", Color.WHITE, 0.3)
@@ -4296,6 +4298,7 @@ func _worsen() -> void:
 	_death_warned = false
 	_popup("Piorou!", Color(1.0, 0.25, 0.2))
 	Audio.hurt(global_position)
+	Audio.voz(global_position, "dor", gender)
 	_toast("%s piorou: machucado GRAVE! Precisa de leito." % _display())
 	injured_changed.emit(true)
 
@@ -4310,7 +4313,7 @@ func _die() -> void:
 	var inf := _closest_in_group("enfermarias")
 	if inf:
 		inf.record_death(self)  # o HUD mostra a faixa pelo sinal patient_died
-	Audio.toll()
+	Audio.stinger("morte")  # Bloco 114 (sem arquivo: o sino fúnebre)
 	var cal := get_tree().get_first_node_in_group("calendario")
 	if not carregando_corpo.is_empty():
 		_larga_corpo()

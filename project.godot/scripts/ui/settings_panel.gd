@@ -53,6 +53,7 @@ func _build_main() -> void:
 	_slider(left, "Música", "music_volume")
 	_slider(left, "Ambiente da caverna", "ambience_volume")
 	_slider(left, "Efeitos", "sfx_volume")
+	_slider(left, "Interface (cliques, avisos)", "ui_volume")  # Bloco 114: o bus UI
 	var music := CheckBox.new()
 	music.text = "Música ligada  (M)"
 	music.button_pressed = Audio.music_enabled
@@ -60,6 +61,13 @@ func _build_main() -> void:
 		if on != Audio.music_enabled:
 			Audio.toggle_music())
 	left.add_child(music)
+	var voz := CheckBox.new()  # Bloco 114: a voz curta dos ipezinhos
+	voz.text = "Voz dos ipezinhos"
+	voz.button_pressed = Audio.voz_ligada
+	voz.toggled.connect(func(on: bool):
+		Audio.voz_ligada = on
+		Audio.save_settings())
+	left.add_child(voz)
 	# Bloco 48: tela cheia (F11 / Alt+Enter também alternam; a escolha fica salva)
 	_fullscreen = CheckBox.new()
 	_fullscreen.text = "Tela cheia  (F11 / Alt+Enter)"

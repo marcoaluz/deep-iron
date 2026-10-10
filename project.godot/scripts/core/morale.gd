@@ -321,7 +321,7 @@ func _expel() -> void:
 		"stage": hub.stage_name() if hub else "",
 		"ore": hub.lifetime_ore() if hub else 0.0,
 	})
-	Audio.toll()
+	Audio.stinger("derrota")  # Bloco 114 (sem arquivo: o sino)
 	expelled.emit()
 
 

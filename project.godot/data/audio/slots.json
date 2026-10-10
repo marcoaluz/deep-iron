@@ -1,0 +1,67 @@
+{
+	"_ajuda": "Bloco 114: o CATÁLOGO DE SONS. Cada slot é um som com nome fixo: o jogo procura res://assets/audio/<id>.ogg (ou .wav / .mp3) e, nos slots com variações, <id>_0, <id>_1... Sem arquivo o slot fica mudo (ou usa o som antigo da 'reserva'), sem erro. Campos: tipo = loop (ambiência, o jogo força a repetição) | loop_predio (loop posicional que só toca perto da câmera) | tiro (toca uma vez) | tema (música: loop conforme 'loop'); bus = Ambience | SFX | UI | Music; db = volume (dB); variacoes = quantos arquivos _0.._N-1 (0 = um só, sem sufixo); quando = onde/quando toca; reserva = o som que vale enquanto não há arquivo (prop:<variável do Audio> | novo:<chave dos sons do Bloco 55>); eco = reverb do bus Ambience neste andar (0 a 1); grupo/ativo/raio = prédios (grupo do jogo, método que diz se está em atividade, raio em px do mundo); duck = a música abaixa (alarme | sino | aviso). docs/AUDIO_ARQUIVOS.md lista tudo (python tools/lista_audio.py).",
+	"slots": [
+		{"id": "ambiencia/mina", "tipo": "loop", "bus": "Ambience", "db": 0.0, "quando": "Vila, pedreira e túneis do S1 (a câmera na área da mina). Loop contínuo, sem pico alto.", "reserva": "prop:ambience"},
+		{"id": "ambiencia/floresta_dia", "tipo": "loop", "bus": "Ambience", "db": -4.0, "quando": "Floresta e clareira de dia: pássaros, folhas, vento leve.", "reserva": "novo:surface_day_loop"},
+		{"id": "ambiencia/floresta_noite", "tipo": "loop", "bus": "Ambience", "db": -5.0, "quando": "Floresta e clareira de noite: grilos e uma coruja distante.", "reserva": "novo:surface_night_loop"},
+		{"id": "ambiencia/vento_inverno", "tipo": "loop", "bus": "Ambience", "db": -8.0, "quando": "CAMADA por cima da floresta e da vila no inverno: vento frio e constante, sem pássaros."},
+		{"id": "ambiencia/chuva", "tipo": "loop", "bus": "Ambience", "db": -6.0, "quando": "CAMADA por cima da clareira quando está chovendo.", "reserva": "novo:rain_loop"},
+		{"id": "ambiencia/s2_acido", "tipo": "loop", "bus": "Ambience", "db": -1.0, "quando": "S2 (ácido e gás): bolhas de ácido borbulhando e gotejar.", "reserva": "novo:deep_loop"},
+		{"id": "ambiencia/s3_lava", "tipo": "loop", "bus": "Ambience", "db": -1.0, "quando": "S3 (lava): lava borbulhando e ronco grave de fundo.", "reserva": "novo:deep_loop"},
+		{"id": "ambiencia/s4_cachoeira", "tipo": "loop", "bus": "Ambience", "db": -1.0, "quando": "S4 (cachoeira e lava): queda d'água constante ao longe.", "reserva": "novo:deep_loop"},
+		{"id": "ambiencia/s5_lago", "tipo": "loop", "bus": "Ambience", "db": -1.0, "eco": 0.35, "quando": "S5 (lago azul): gotas e água parada, o jogo põe o eco (reverb) sozinho.", "reserva": "novo:deep_loop"},
+
+		{"id": "predios/fornalha", "tipo": "loop_predio", "bus": "SFX", "db": -12.0, "grupo": "fornalhas", "ativo": "som_ativo", "raio": 600.0, "quando": "Fornalha acesa (só enquanto o fundidor funde): fogo e foles."},
+		{"id": "predios/carpintaria", "tipo": "loop_predio", "bus": "SFX", "db": -12.0, "grupo": "carpintarias", "ativo": "som_ativo", "raio": 600.0, "quando": "Carpintaria com ordem em andamento: serra e martelo."},
+		{"id": "predios/taverna", "tipo": "loop_predio", "bus": "SFX", "db": -12.0, "grupo": "tavernas", "ativo": "som_ativo", "raio": 600.0, "quando": "Taverna com gente dentro: murmúrio, canecas, riso."},
+		{"id": "predios/cemiterio", "tipo": "loop_predio", "bus": "SFX", "db": -14.0, "grupo": "cemiterios", "ativo": "som_ativo", "raio": 600.0, "quando": "Cemitério (sempre): vento baixo e um corvo distante."},
+		{"id": "predios/vagonete", "tipo": "loop_predio", "bus": "SFX", "db": -10.0, "grupo": "vagonetes", "ativo": "som_ativo", "raio": 600.0, "quando": "Vagonete andando no trilho: rodas de ferro."},
+		{"id": "predios/coletor_madeira", "tipo": "loop_predio", "bus": "SFX", "db": -12.0, "grupo": "coletores", "ativo": "som_ativo", "raio": 600.0, "quando": "Coletor de madeira funcionando: engrenagem e serra mecânica."},
+		{"id": "predios/coletor_minerio", "tipo": "loop_predio", "bus": "SFX", "db": -12.0, "grupo": "coletores_minerio", "ativo": "som_ativo", "raio": 600.0, "quando": "Coletor de minério funcionando: motor e broca."},
+		{"id": "predios/sino_missa", "tipo": "tiro", "bus": "SFX", "db": -5.0, "duck": "sino", "quando": "Sino da igreja quando a missa de domingo começa (posicional, na igreja).", "reserva": "prop:toll_sound"},
+		{"id": "predios/sino_funeral", "tipo": "tiro", "bus": "SFX", "db": -5.0, "duck": "sino", "quando": "Sino da igreja (ou do cemitério) quando o funeral começa: mais lento e grave.", "reserva": "prop:toll_sound"},
+
+		{"id": "stingers/amanhecer", "tipo": "tiro", "bus": "SFX", "db": -8.0, "quando": "Começa um novo dia (05:00): curto, claro, 2 a 3 s."},
+		{"id": "stingers/onda_solar", "tipo": "tiro", "bus": "SFX", "db": -4.0, "duck": "alarme", "quando": "O aviso 'ONDA SOLAR CHEGANDO' (tensão crescente, 3 a 4 s).", "reserva": "prop:alarm_sound"},
+		{"id": "stingers/estagio_novo", "tipo": "tiro", "bus": "SFX", "db": -4.0, "quando": "A vila sobe de estágio: fanfarra de conquista, 3 a 4 s.", "reserva": "prop:fanfare_sound"},
+		{"id": "stingers/pesquisa_pronta", "tipo": "tiro", "bus": "SFX", "db": -4.0, "quando": "Uma pesquisa termina: brilho curto, 2 s.", "reserva": "prop:fanfare_sound"},
+		{"id": "stingers/morte", "tipo": "tiro", "bus": "SFX", "db": -5.0, "duck": "sino", "quando": "Um ipezinho morre: sino fúnebre curto e triste.", "reserva": "prop:toll_sound"},
+		{"id": "stingers/vitoria", "tipo": "tiro", "bus": "SFX", "db": -3.0, "quando": "Vitória (o escudo solar fica pronto): triunfo, 5 a 8 s.", "reserva": "prop:fanfare_sound"},
+		{"id": "stingers/derrota", "tipo": "tiro", "bus": "SFX", "db": -3.0, "duck": "sino", "quando": "Derrota (os ipezinhos expulsam o jogador): grave e vazio, 4 a 6 s.", "reserva": "prop:toll_sound"},
+		{"id": "stingers/missao_cumprida", "tipo": "tiro", "bus": "SFX", "db": -4.0, "quando": "Uma missão é cumprida: fanfarra curta de recompensa, 2 a 3 s.", "reserva": "prop:fanfare_sound"},
+
+		{"id": "ui/abrir_janela", "tipo": "tiro", "bus": "UI", "db": -14.0, "quando": "Abrir uma janela: whoosh/papel curto, menos de 0,3 s.", "reserva": "novo:ui_open"},
+		{"id": "ui/fechar_janela", "tipo": "tiro", "bus": "UI", "db": -14.0, "quando": "Fechar uma janela: o oposto do abrir, menos de 0,3 s.", "reserva": "novo:ui_close"},
+		{"id": "ui/confirmar", "tipo": "tiro", "bus": "UI", "db": -8.0, "quando": "Confirmar (pôr um prédio, marcar uma área, comprar): toque firme e satisfatório.", "reserva": "novo:place"},
+		{"id": "ui/erro", "tipo": "tiro", "bus": "UI", "db": -6.0, "quando": "Ação negada (sem recurso, lugar inválido): buzz curto e seco.", "reserva": "prop:error_sound"},
+		{"id": "ui/clique", "tipo": "tiro", "bus": "UI", "db": -12.0, "quando": "Clique de botão: tec curto e suave.", "reserva": "prop:click_sound"},
+		{"id": "ui/noticia_boa", "tipo": "tiro", "bus": "UI", "db": -8.0, "quando": "Aviso bom (aviso verde): dois toques ascendentes, 0,5 s."},
+		{"id": "ui/noticia_ruim", "tipo": "tiro", "bus": "UI", "db": -8.0, "quando": "Aviso ruim (aviso vermelho): dois toques descendentes, 0,5 s."},
+
+		{"id": "passos/terra", "tipo": "tiro", "bus": "SFX", "db": -22.0, "variacoes": 3, "quando": "Passo de ipezinho na terra (floresta, vila, caminho de terra batida).", "reserva": "prop:step_sounds"},
+		{"id": "passos/cascalho", "tipo": "tiro", "bus": "SFX", "db": -22.0, "variacoes": 3, "quando": "Passo no cascalho (a pedreira e o caminho de cascalho).", "reserva": "prop:step_sounds"},
+		{"id": "passos/pedra", "tipo": "tiro", "bus": "SFX", "db": -22.0, "variacoes": 3, "quando": "Passo na pedra (caminho de pedra e os andares fundos da mina).", "reserva": "prop:step_sounds"},
+		{"id": "passos/madeira", "tipo": "tiro", "bus": "SFX", "db": -22.0, "variacoes": 3, "quando": "Passo na madeira (plataformas, elevadores e escadas).", "reserva": "prop:step_sounds"},
+		{"id": "passos/agua", "tipo": "tiro", "bus": "SFX", "db": -22.0, "variacoes": 3, "quando": "Passo na água (as poças do S2 e do S3).", "reserva": "prop:step_sounds"},
+
+		{"id": "voz/homem_ordem", "tipo": "tiro", "bus": "SFX", "db": -14.0, "variacoes": 2, "quando": "Voz curta (homem) quando recebe uma ordem do jogador: 'Sim!', 'Pode deixar'. Menos de 1 s."},
+		{"id": "voz/homem_dor", "tipo": "tiro", "bus": "SFX", "db": -12.0, "variacoes": 2, "quando": "Voz curta (homem) ao se machucar: 'Ai!'. Menos de 1 s."},
+		{"id": "voz/homem_alegria", "tipo": "tiro", "bus": "SFX", "db": -14.0, "variacoes": 2, "quando": "Voz curta (homem) num brinde ou festa: riso e 'Eita!'. Menos de 1 s."},
+		{"id": "voz/homem_cansaco", "tipo": "tiro", "bus": "SFX", "db": -14.0, "variacoes": 2, "quando": "Voz curta (homem) cansado, indo dormir: suspiro e bocejo. Menos de 1,5 s."},
+		{"id": "voz/mulher_ordem", "tipo": "tiro", "bus": "SFX", "db": -14.0, "variacoes": 2, "quando": "Voz curta (mulher) quando recebe uma ordem do jogador. Menos de 1 s."},
+		{"id": "voz/mulher_dor", "tipo": "tiro", "bus": "SFX", "db": -12.0, "variacoes": 2, "quando": "Voz curta (mulher) ao se machucar. Menos de 1 s."},
+		{"id": "voz/mulher_alegria", "tipo": "tiro", "bus": "SFX", "db": -14.0, "variacoes": 2, "quando": "Voz curta (mulher) num brinde ou festa. Menos de 1 s."},
+		{"id": "voz/mulher_cansaco", "tipo": "tiro", "bus": "SFX", "db": -14.0, "variacoes": 2, "quando": "Voz curta (mulher) cansada, indo dormir. Menos de 1,5 s."},
+
+		{"id": "musica/abertura", "tipo": "tema", "bus": "Music", "db": 0.0, "loop": true, "quando": "A ABERTURA do jogo: toca na tela inicial (o menu). Loop de 1 a 2 minutos, tema principal do DEEP IRON (sol, ruína, esperança)."},
+		{"id": "musica/intro", "tipo": "tema", "bus": "Music", "db": 0.0, "loop": false, "quando": "A INTRODUÇÃO (3 quadros ilustrados + 4 no mapa, uns 60 s): uma peça só, crescendo da explosão até a fogueira e o título. Não repete."},
+
+		{"id": "intro/explosao", "tipo": "tiro", "bus": "SFX", "db": -6.0, "quando": "Quadro 1 da introdução: o sol explode sobre a cidade mineira."},
+		{"id": "intro/vento", "tipo": "tiro", "bus": "SFX", "db": -6.0, "quando": "Quadro 2 da introdução: cidades em ruína, vento e silêncio."},
+		{"id": "intro/caravana", "tipo": "tiro", "bus": "SFX", "db": -6.0, "quando": "Quadro 3 da introdução: a caravana a caminho da pedreira (passos, carroça)."},
+		{"id": "intro/pedreira", "tipo": "tiro", "bus": "SFX", "db": -6.0, "quando": "Quadro 4 (no mapa): a câmera atravessa a pedreira."},
+		{"id": "intro/mina", "tipo": "tiro", "bus": "SFX", "db": -6.0, "quando": "Quadro 6 (no mapa): o corte da mina descendo andar por andar."},
+		{"id": "intro/fogo", "tipo": "tiro", "bus": "SFX", "db": -6.0, "quando": "Quadro 7 (no mapa): a fogueira acesa no meio da vila."},
+		{"id": "intro/titulo", "tipo": "tiro", "bus": "SFX", "db": -6.0, "quando": "O título DEEP IRON aparece: batida grave e curta."}
+	]
+}

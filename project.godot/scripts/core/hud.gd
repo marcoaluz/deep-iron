@@ -1038,6 +1038,7 @@ func show_toast(text: String, color: Color = COLOR_TITLE, alvo: Node = null) -> 
 	if ic == "":
 		ic = "p_alerta" if color == COLOR_HUNGER_BAD or color.r > 0.9 and color.g < 0.5 else ""
 	_avisos.avisa(text, color, ic, alvo)
+	Audio.noticia_cor(color)  # Bloco 114: aviso verde = notícia boa, vermelho = ruim (neutro: silêncio)
 
 
 ## Bloco 100: o rastreador do canto: o capítulo e até 3 objetivos (os que faltam primeiro; sem missão valendo, some).
@@ -1141,6 +1142,7 @@ func pergunta_descida(pos: Vector2, depois: Callable) -> bool:
 
 
 func show_banner(title: String, subtitle: String, ilustracao: String = "") -> void:
+	Audio.duck("aviso")  # Bloco 114: a música abaixa um pouco no aviso grande
 	var panel := PanelContainer.new()
 	var style: StyleBox = UiSkin.faixa() if UiSkin.ok() else _panel_style()
 	if style is StyleBoxFlat:

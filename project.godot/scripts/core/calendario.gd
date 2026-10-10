@@ -127,8 +127,30 @@ func _process(_delta: float) -> void:
 				hud.open_panel("calendario")
 	# funeral que acabou: alivia o luto
 	_confere_funerais(dn)
+	_sinos(dn)
 	if Engine.get_process_frames() % 30 == 0:
 		_placa_igreja(dn)
+
+
+var _sino_missa := false
+var _sino_funeral := false
+
+
+## Bloco 114: o sino da igreja quando a missa e o funeral COMEÇAM (só na subida: não repete a cada quadro).
+func _sinos(dn: Node) -> void:
+	var ig := igreja()
+	_toca_sinos(ig != null and periodo_domingo(dn.hora()) == "missa", ig, funeral_lugar_agora())
+
+
+## A conta do sino (separada pra testar): `missa` = tem missa agora na igreja `ig`; `lugar_funeral` = onde é o funeral (null = não tem).
+func _toca_sinos(missa: bool, ig: Node, lugar_funeral: Node) -> void:
+	if missa and not _sino_missa and ig is Node2D:
+		Audio.sino((ig as Node2D).global_position, "missa")
+	_sino_missa = missa
+	var funeral := lugar_funeral != null
+	if funeral and not _sino_funeral and lugar_funeral is Node2D:
+		Audio.sino((lugar_funeral as Node2D).global_position, "funeral")
+	_sino_funeral = funeral
 
 
 ## O padre chega (uma vez): um ipezinho com a função "padre", no Centro da Vila.

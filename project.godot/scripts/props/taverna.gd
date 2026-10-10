@@ -64,10 +64,16 @@ func fun_rate() -> float:
 	return fun_per_level[clampi(level, 1, fun_per_level.size()) - 1]
 
 
+## Bloco 114: o murmúrio da taverna só soa com gente dentro.
+func som_ativo() -> bool:
+	return not _inside.is_empty()
+
+
 func set_inside(worker: Node, inside: bool) -> void:
 	if inside and not _inside.has(worker):
 		_inside.append(worker)
 		Audio.cheers(global_position)
+		Audio.voz(global_position, "alegria", String(worker.get("gender")))  # Bloco 114 (desligável)
 	elif not inside:
 		_inside.erase(worker)
 	_update_visual()

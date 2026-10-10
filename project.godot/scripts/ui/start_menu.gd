@@ -28,6 +28,7 @@ var _box: VBoxContainer
 
 
 func _ready() -> void:
+	Audio.tema("abertura")  # Bloco 114: a música de abertura (sem arquivo, segue a música de sempre)
 	if UiSkin.ok():
 		get_tree().root.theme = UiSkin.theme()  # Prompt 20: a pele nova (botões, painéis, dicas)
 	var status: String = SaveManager.save_status()

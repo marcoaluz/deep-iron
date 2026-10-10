@@ -94,6 +94,11 @@ func _on_body_exited(body: Node2D) -> void:
 	_bodies.erase(body)
 
 
+## Bloco 114: o loop de som do prédio (sons_predios.gd) só toca com isto verdadeiro: alguém trabalhando (ou dentro).
+func som_ativo() -> bool:
+	return not _working_bodies().is_empty()
+
+
 ## Corpos dentro da área que de fato estão trabalhando nesta estação.
 func _working_bodies() -> Array[Node2D]:
 	var result: Array[Node2D] = []

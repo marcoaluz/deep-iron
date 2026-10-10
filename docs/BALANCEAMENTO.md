@@ -9,9 +9,9 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1199 valores** em 4 pastas de scripts (80 trocados por alguma cena).
+Total: **1214 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 
-## `scripts/core/audio_manager.gd` (80)
+## `scripts/core/audio_manager.gd` (91)
 
 **Volumes (0 a 1)**
 
@@ -114,6 +114,22 @@ Total: **1199 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `rain_db` | -6.0 |  |  |
 | `limiter_ceiling_db` | -0.5 |  | Teto do limitador no Master (dB): nada passa disso, nem com tudo tocando junto. |
 
+**Bloco 114: interface, ducking, voz, passos e prédios**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `ui_volume` | 0.8 |  | Volume do bus UI (0 a 1; o slider "Interface" das Configurações). |
+| `voz_ligada` | true |  | Voz curta dos ipezinhos ligada (Configurações). Sem arquivo de voz, nada toca. |
+| `voz_intervalo` | 1.2 |  | Segundos mínimos entre duas vozes (a vila inteira não vira um coro). |
+| `duck_alarme_db` | -9.0 |  | DUCKING: quanto a música abaixa (dB) no alarme, no sino e no aviso grande (banner)... |
+| `duck_sino_db` | -7.0 |  |  |
+| `duck_aviso_db` | -6.0 |  |  |
+| `duck_ataque` | 0.2 |  | ...em quantos segundos desce, quanto tempo segura lá embaixo e em quantos volta. |
+| `duck_segura` | 2.5 |  |  |
+| `duck_solta` | 1.2 |  |  |
+| `noticia_intervalo` | 0.6 |  | Intervalo mínimo entre dois sons de notícia (aviso verde ou vermelho). |
+| `eco_sala` | 0.85 |  | Tamanho da sala do reverb (eco) que o bus Ambience ganha nos andares com "eco" no slot (0 a 1). |
+
 **Limites**
 
 | valor | padrão | na cena | o quê |
@@ -121,7 +137,7 @@ Total: **1199 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `max_voices` | 24 |  |  |
 | `max_steps_per_second` | 8.0 |  | Máximo de passos tocando por segundo somando todos os ipezinhos. |
 | `sfx_max_distance` | 900.0 |  | Distância (em pixels do mundo) além da qual efeitos posicionais não tocam. |
-| `intro_db` | -6.0 |  |  |
+| `intro_db` | -6.0 |  | Bloco 112: os sons da INTRODUÇÃO por nome ("explosao", "vento", "caravana", "pedreira", "mina", "fogo", "titulo"). Gancho: toca res://assets/audio/intro/<nome>.ogg (ou .wav) se o arquivo existir; sem ele, fica em silêncio. Os arquivos vêm depois — é só pôr na pasta com o nome. |
 
 ## `scripts/core/build_menu.gd` (7)
 
@@ -1304,6 +1320,17 @@ Total: **1199 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `balao_min` | 2.0 |  | Intervalo (s) entre um balão e outro de quem está numa roda (sorteado entre os dois). |
 | `balao_max` | 4.5 |  |  |
 | `passeio_desvio` | 160.0 |  | Passeio: passa por outro ponto no caminho se o desvio for até isto (px do chão). |
+
+## `scripts/core/sons_predios.gd` (4)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `confere` | 0.25 |  | Segundos entre uma conferência e a próxima. |
+| `max_loops` | 6 |  | No máximo quantos loops de prédio tocam juntos (os mais perto da câmera). |
+| `fade` | 0.7 |  | Segundos pra um loop subir ao entrar no alcance e descer ao sair. |
+| `db_mudo` | -40.0 |  | Volume de quem está sem som (dB). |
 
 ## `scripts/core/sun.gd` (18)
 

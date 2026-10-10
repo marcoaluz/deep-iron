@@ -85,6 +85,11 @@ func _exit_tree() -> void:
 			n.queue_free()
 
 
+## Bloco 114: o cemitério tem o som dele sempre (vento baixo, um corvo distante).
+func som_ativo() -> bool:
+	return true
+
+
 func ponto() -> Node2D:
 	return _spot
 

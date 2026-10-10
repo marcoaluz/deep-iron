@@ -94,6 +94,11 @@ func is_usable() -> bool:
 	return fila.tem_trabalho()
 
 
+## Bloco 114: o fogo/serra só soa enquanto a oficina trabalha numa ordem (a Carpintaria, a Carvoaria e o Curtume herdam).
+func som_ativo() -> bool:
+	return _acesa
+
+
 func _process(delta: float) -> void:
 	_acesa = false
 	for body in _working_bodies():

@@ -472,3 +472,7 @@ func test_b112_intro_primeiro_dia() -> void:
 
 func test_b113_dificuldade() -> void:
 	run_bloco("b113_dificuldade.gd")
+
+
+func test_b114_audio_sistemas() -> void:
+	run_bloco("b114_audio_sistemas.gd")

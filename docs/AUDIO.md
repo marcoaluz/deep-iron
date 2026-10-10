@@ -1,5 +1,9 @@
 # Áudio (Bloco 55)
 
+> **Bloco 114:** os SISTEMAS de som (catálogo de slots, ambiência por andar, loops de prédios, stingers, bus UI, passos por chão, voz,
+> ducking e os temas de abertura e intro) estão descritos em `docs/BLOCO114_SOM.md`; a lista dos arquivos que o jogo espera, com os nomes
+> exatos, é `docs/AUDIO_ARQUIVOS.md` (gerada por `python tools/lista_audio.py`). Os sons do Bloco 55 abaixo viraram a *reserva* dos slots novos.
+
 Tudo sintetizado do zero (`tools/gen_audio.py` = os sons antigos; `tools/gen_audio_novos.py` = os do
 Bloco 55, cada um com a sua seed: rodar um não muda os do outro). WAV mono 16-bit 22050 Hz em
 `project.godot/assets/audio/`. Autoload `Audio` (`scripts/core/audio_manager.gd`).
