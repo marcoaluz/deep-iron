@@ -195,6 +195,28 @@ func de_vigia(w: Node) -> bool:
 	return posmod(i - dia, n) < de_vez
 
 
+## Bloco 109: ele vigiou a noite passada? (o rodízio de ontem; com a vigilância reforçada ou noite de invasão, todos) —
+## quem vigiou descansa de dia em vez de fazer a função secundária.
+func vigiou_ontem(w: Node) -> bool:
+	var dn := _relogio()
+	var def := get_tree().get_first_node_in_group("defense")
+	var dia: int = (dn.day if dn else 1) - 1
+	if dia < 1:
+		return false
+	if def and def.is_invasion_night(dia):
+		return true
+	var pol := get_tree().get_first_node_in_group("politicas")
+	if pol and pol.opcao("seguranca") == "vigilancia":
+		return true
+	var guardas: Array = _da_funcao("is_guard")
+	var n := guardas.size()
+	var i := guardas.find(w)
+	if n == 0 or i < 0:
+		return false
+	var de_vez := clampi(ceili(n * vigilia_fracao), 1, n)
+	return posmod(i - dia, n) < de_vez
+
+
 func _entre(h: float, a: float, b: float) -> bool:
 	return fposmod(h - a, 24.0) < fposmod(b - a, 24.0)
 

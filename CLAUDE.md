@@ -117,7 +117,17 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
   caçador só caça; tecla `-`). O lenhador opera a Carvoaria e o caçador o Curtume quando a oficina tem ordem.
 - Bloco 94: a mochila (`tem_mochila`, `capacidade_carga()`) e a neve (`_neve_mult()`: sem botas, no inverno, na
   superfície, anda mais devagar).
-- `_find_best_station(grupo)` escolhe a estação, filtrada por área de trabalho e por andar trancado.
+- `_find_best_station(grupo)` escolhe a estação, filtrada por área de trabalho e por andar trancado. Bloco 109: pelo CUSTO
+  (`_custo_estacao`: distância + fila − o quanto ela tem (`fracao_restante()` da estação) − o que falta no armazém + perigo;
+  pesos no grupo "Escolha da estação").
+- Bloco 109: a FUNÇÃO SECUNDÁRIA (`funcao_secundaria`, `secundaria()`, `secundaria_padrao` por função; o cartão do selecionado
+  troca): no expediente, quando a principal não tem NADA pra fazer (`_sem_trabalho`: "idle" de verdade — esperar espaço no
+  armazém ou uma entrega NÃO conta; fundidor/carpinteiro só sem ordem nenhuma; o guarda de dia, se não vigiou), ele faz a
+  secundária e veste a roupa dela (`outfit()`); cozinheiro e carregador nunca; `_faz(funcao)` vale pra principal OU a secundária em curso. O `_choose_state`
+  virou emergência/agenda/necessidades + `_estado_funcao()` (a principal) + `_estado_secundario()`.
+- Bloco 109: PERIGO — recolhe já no aviso da invasão (`defense.aviso_dado()`), foge de criatura (`fuga_raio`/`fuga_tempo`),
+  e na onda solar vai pro ABRIGO mais perto (casa pronta ou taverna de qualquer um, estado "abrigo"; sem cama nunca mais
+  fica do lado de fora). CARONA: sem carregador, quem descarregou leva material de obra perto (`logistica.reserva_carona`).
 - `set_job()` troca a função com segurança: ele entrega o que carrega antes.
 - Tem também necessidades, ferimentos, humor e o save do ipezinho.
 
@@ -131,7 +141,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b108**; o próximo é o **b109**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b109**; o próximo é o **b110**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:
@@ -166,7 +176,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
    | Fila de produção | `production_queue.gd` (Fornalha, Carpintaria, encomendas da Oficina); a forja das armas é a fila do `defense.gd` (Arsenal) e a do equipamento é a do `equipment.gd` — todas feitas pelo ferreiro/fundidor/carpinteiro |
    | Oficina de ordens nova (prédio + função) | herdar de `fornalha.gd` e `fornalha_panel.gd`, como a `carpintaria.gd` (Bloco 94) |
    | Missão / capítulo novo | um `.tres` em `data/missoes/` (`missao.gd`) + a seção dela em `data/missoes/capitulo_N.txt` (título, texto, `objetivo.N`, `[diario.<id>]`); tipo de objetivo novo = um `match` em `missoes.gd` `valor_do_objetivo` |
-   | Descoberta nova (minério, bicho, criatura, lugar) | uma entrada em `data/catalogo/entradas.json` + a seção dela em `data/catalogo/textos.txt`; pesquisa que espera um estudo = `"libera": ["pesquisa:<id>"]` na entrada. Pra saber se a vila conhece: `catalogo.minerio_conhecido(tipo)` / `animal_conhecido(kind)` / `estudado(id)`. Teste antigo que minera cobre/carvão, caça ou pesquisa: `catalogo.gd tudo_estudado = true` no `_initialize` (Bloco 102); que desce gente ao S2/S3: `load("res://scripts/core/defense.gd").moradores_desligados = true` (Bloco 103; `load`, não `preload`) |
+   | Descoberta nova (minério, bicho, criatura, lugar) | uma entrada em `data/catalogo/entradas.json` + a seção dela em `data/catalogo/textos.txt`; pesquisa que espera um estudo = `"libera": ["pesquisa:<id>"]` na entrada. Pra saber se a vila conhece: `catalogo.minerio_conhecido(tipo)` / `animal_conhecido(kind)` / `estudado(id)`. Teste antigo que minera cobre/carvão, caça ou pesquisa: `catalogo.gd tudo_estudado = true` no `_initialize` (Bloco 102); que desce gente ao S2/S3: `load("res://scripts/core/defense.gd").moradores_desligados = true` (Bloco 103; `load`, não `preload`); que mede o tempo de resposta de uma função parada (fundidor, engenheiro): `load("res://scripts/workers/ipezinho.gd").secundaria_desligada = true` (Bloco 109) |
    | Criatura nova | a cena + uma entrada `criatura` no catálogo (o texto com `comportamento`, `fraqueza`, `porque` — só o que o código FAZ —, `dica`, `historia`); morador de um andar = uma linha em `moradores` do `.tres` do nível |
    | Mandar gente pra um ponto que pode ser andar não reconhecido | `hud.pergunta_descida(pos, depois)` (true = perguntou: faça o resto no `depois`) |
    | Expedição / região nova | uma entrada em `data/expedicoes/regioes.json` (+ a seção em `textos.txt`; decisão nova = `eventos` + `[evento.<id>]`); tipo de achado novo = um `match` em `expedicoes._entrega_achado` |

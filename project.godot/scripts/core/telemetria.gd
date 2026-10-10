@@ -14,7 +14,8 @@ const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre"
 	"maquinas_quebradas", "quebras_total", "preventivas", "consertos", "entregas_carregador",  # Bloco 105 (quebradas = agora; os outros: total da partida)
 	"compartimentos_cheios", "esperando_espaco",
 	"hortas", "estufas", "colhido_horta", "colhido_estufa", "carvao_vegetal_feito", "couro_curtido_feito", "prato", "racoes",
-	"pol_jornada", "pol_racao", "pol_seguranca", "pol_migracao", "trocas_politica", "fraqueza", "comida_servida_dia", "acidentes_dia"]  # Bloco 108 (servida/acidentes: desde a última linha)  # Bloco 107 (os "feito/colhido": total da partida)  # Bloco 106: os compartimentos cheios em todos os armazéns (separados por "+") e quantos esperam espaço agora  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
+	"pol_jornada", "pol_racao", "pol_seguranca", "pol_migracao", "trocas_politica", "fraqueza", "comida_servida_dia", "acidentes_dia",  # Bloco 108 (servida/acidentes: desde a última linha)
+	"ociosos_expediente", "na_secundaria", "mortes_bobas", "caronas"]  # Bloco 109 (ociosos: média no expediente do dia; bobas/caronas: da sessão)  # Bloco 107 (os "feito/colhido": total da partida)  # Bloco 106: os compartimentos cheios em todos os armazéns (separados por "+") e quantos esperam espaço agora  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
 
 var arquivo := ""
 var _t0 := 0
@@ -29,6 +30,9 @@ var _vagonete_ant := -1.0
 ## Bloco 108: a comida servida e os acidentes de trabalho da linha anterior (pra dar o do dia).
 var _servida_ant := -1.0
 var _acidentes_ant := -1
+## Bloco 109: os ociosos no expediente (quem tem função e está parado), somados a cada meio segundo.
+var _ociosos_soma := 0.0
+var _ociosos_n := 0
 
 
 func _ready() -> void:
@@ -60,6 +64,7 @@ func _process(delta: float) -> void:
 	if _olha > 0.0:
 		return
 	_olha = 0.5
+	_conta_ociosos()  # Bloco 109
 	var agora := {}
 	for o in get_tree().get_nodes_in_group("obras"):
 		if o.has_method("obra_pending") and o.obra_pending() and o.get("oficio") != "ferreiro":
@@ -122,6 +127,35 @@ func politicas_do_dia() -> Array:
 	_servida_ant = servida
 	_acidentes_ant = acid
 	return out
+
+
+## Bloco 109: quem tem função e está parado no expediente (idle / esperando espaço), uma amostra.
+func _conta_ociosos() -> void:
+	var sch := _g("schedule")
+	if sch == null:
+		return
+	var n := 0
+	var conta := false
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		if w.has_no_job() or w.is_doctor() or sch.periodo(w) != "trabalho":
+			continue
+		conta = true
+		if w.get_state() in ["idle", "esperando_espaco"]:
+			n += 1
+	if conta:
+		_ociosos_soma += n
+		_ociosos_n += 1
+
+
+## Bloco 109: [ociosos médios no expediente desde a última linha, quantos estão na secundária agora, mortes bobas e caronas
+## da sessão].
+func ia_do_dia() -> Array:
+	var W = load("res://scripts/workers/ipezinho.gd")  # (load: a telemetria carrega antes dos autoloads nos testes)
+	var oc := snappedf(_ociosos_soma / _ociosos_n, 0.01) if _ociosos_n > 0 else 0.0
+	_ociosos_soma = 0.0
+	_ociosos_n = 0
+	var sec := get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return w.has_method("na_secundaria") and w.na_secundaria()).size()
+	return [oc, sec, int(W.mortes_bobas), int(W.caronas)]
 
 
 ## Uma linha com o estado da vila agora.
@@ -188,6 +222,7 @@ func registra() -> void:
 	v.append_array([get_tree().get_nodes_in_group("hortas").size(), get_tree().get_nodes_in_group("estufas").size(), int(col_h), int(col_e),
 		int(carv), int(curt), coz.prato if coz else "", int(eco6.quantidade("racao")) if eco6 else 0])
 	v.append_array(politicas_do_dia())  # Bloco 108
+	v.append_array(ia_do_dia())  # Bloco 109
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return

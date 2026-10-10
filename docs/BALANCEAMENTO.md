@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1087 valores** em 4 pastas de scripts (80 trocados por alguma cena).
+Total: **1101 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (79)
 
@@ -986,7 +986,7 @@ Total: **1087 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `animo_motivo` | "" |  |  |
 | `titulo_abertura` | "" |  | Bloco 71: a faixa que aparece quando a ligação abre (título; o texto é a descrição). |
 
-## `scripts/core/politicas.gd` (26)
+## `scripts/core/politicas.gd` (27)
 
 **Geral**
 
@@ -996,6 +996,7 @@ Total: **1087 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `animo_penalidade_max` | 12.0 |  | Teto (em pontos de ânimo) da penalidade SOMADA de todas as políticas numa pessoa: nunca empurra sozinha a vila pra greve. |
 | `estagio_minimo` | 2 |  | Estágio do Centro da Vila em que a janela libera (2 = Vilarejo). |
 | `aviso_animo` | 40.0 |  | A confirmação avisa em vermelho se o ânimo médio previsto ficar abaixo disto. |
+| `greve_derruba` | true |  | Greve começou: as opções que tiram ânimo (jornada estendida, ração reduzida, treinamento) voltam ao padrão, sem espera. (Medido no Bloco 108: estendida + reduzida + uma morte na invasão levaram a vila à greve.) |
 
 **Jornada**
 
@@ -1007,7 +1008,7 @@ Total: **1087 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `reduzida_producao` | 0.85 |  | Reduzida: multiplica a produção, a chance de acidente e soma este ânimo. |
 | `reduzida_acidente` | 1.0 |  |  |
 | `reduzida_animo` | 5.0 |  |  |
-| `funcoes_essenciais` | [Worker.ROLE_COOK, Worker.ROLE_DOCTOR, Worker.ROLE_GUARD, Worker.ROLE_PRIEST] |  | Funções que a jornada NÃO afeta (os serviços essenciais: rendimento e ânimo ficam como estão). |
+| `funcoes_essenciais` | ["cozinheiro", "médico", "guarda", "padre"] |  | Funções que a jornada NÃO afeta (os serviços essenciais: rendimento e ânimo ficam como estão). (Os nomes são os ROLE_* do ipezinho.gd; sem preload dele aqui: a janela carrega este script antes dos autoloads nos testes.) |
 
 **Ração**
 
@@ -1209,7 +1210,7 @@ Total: **1087 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 |---|---|---|---|
 | `pollen_amount` | 18 |  |  |
 
-## `scripts/workers/ipezinho.gd` (80)
+## `scripts/workers/ipezinho.gd` (93)
 
 **Obras (Bloco 51)**
 
@@ -1384,6 +1385,39 @@ Total: **1087 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `decision_interval` | 1.0 |  |  |
 | `manual_override_time` | 6.0 |  | Segundos que a IA espera depois de uma ordem manual antes de voltar a decidir. Só começa a contar quando ele CHEGA no destino (a caminhada não gasta esse tempo). |
 | `idle_wander_radius` | 50.0 |  | Distância máxima de um passeio aleatório quando está ocioso. |
+
+**Escolha da estação (Bloco 109)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `peso_distancia` | 1.0 |  | A estação de menor CUSTO ganha; cada termo vale "px de caminho". A distância conta x peso_distancia... |
+| `peso_fila` | 40.0 |  | ...cada trabalhador já na estação soma isto (a fila; era o 40 fixo de antes)... |
+| `peso_quantidade` | 60.0 |  | ...uma estação cheia desconta até isto (proporcional ao que ela ainda tem, 0..1)... |
+| `peso_falta` | 120.0 |  | ...o que está FALTANDO no armazém desconta até isto (0 = tem falta_referencia ou mais; 1 = não tem nada)... |
+| `peso_perigo` | 250.0 |  | ...e cada ponto de perigo soma isto (andar mais fundo, zona sem o traje, criatura viva perto da estação). |
+| `falta_referencia` | 120.0 |  | Unidades no armazém que contam como "tem bastante" pro peso_falta. |
+| `perigo_criatura_raio` | 160.0 |  | Raio (px) em volta da estação em que uma criatura viva conta como perigo. |
+
+**Função secundária (Bloco 109)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `secundaria_padrao` | {"engenheiro": "lenhador", "ferreiro": "minerador", "fundidor": "minerador", |  | A secundária de cada função quando o jogador deixa no automático (sem a chave = nenhuma). Só vale no expediente e só quando a função principal não tem NADA pra fazer (o engenheiro sem obra, o ferreiro sem encomenda, o fundidor sem ordem em oficina nenhuma, o guarda de dia que não vigiou). Esperar espaço no armazém (Bloco 106) ou uma entrega do carregador NÃO conta: aí ele espera, como antes. O cozinheiro e o carregador nunca têm secundária (o parado deles é esperar entrega). |
+
+**Perigo (Bloco 109)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `fuga_raio` | 140.0 |  | Quem não é guarda e vê uma criatura viva a esta distância (px, no mesmo andar) larga tudo e corre pra casa... |
+| `fuga_tempo` | 20.0 |  | ...e fica longe por estes segundos (pra não ir e voltar). |
+| `abrigo_folga` | 80.0 |  | Onda solar: vai pro ABRIGO mais perto (casa pronta ou taverna, de qualquer um) quando a própria cama fica mais longe que ele + isto (px). Sem cama: sempre o abrigo mais perto. |
+
+**Carona (Bloco 109)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `carona_raio` | 260.0 |  | Sem carregador na vila: quem acabou de descarregar no armazém leva o material de uma obra a até esta distância (px) dele antes de voltar ao trabalho (o mesmo caminho do carregador do Bloco 105)... |
+| `carona_intervalo` | 45.0 |  | ...e só uma vez a cada tantos segundos (não vira carregador de tempo inteiro). |
 
 **Visual**
 

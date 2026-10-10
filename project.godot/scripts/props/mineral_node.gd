@@ -96,6 +96,11 @@ func _accepts(body: Node2D) -> bool:
 	return body.has_method("mine")
 
 
+## Bloco 109: quanto ainda tem (0..1) — a escolha da estação prefere a mais cheia (ipezinho._custo_estacao).
+func fracao_restante() -> float:
+	return ore_remaining / ore_total if ore_total > 0.0 else 0.0
+
+
 func is_usable() -> bool:
 	return _unlocked and _cooldown <= 0.0 and ore_remaining >= minf(min_ore_to_mine, ore_total)
 

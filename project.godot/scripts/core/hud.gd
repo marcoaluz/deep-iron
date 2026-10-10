@@ -1737,6 +1737,9 @@ var _portrait_card: PanelContainer
 var _portrait_img: TextureRect
 var _portrait_name: Label
 var _portrait_info: Label
+## Bloco 109: a função secundária do selecionado (botão que troca: automática, nenhuma, minerador, lenhador...).
+var _portrait_sec: Button
+var _portrait_sec_w: Node = null
 var _portrait_job: Label
 var _portrait_doing: Label
 
@@ -1777,6 +1780,12 @@ func _monta_cartao_selecionado() -> void:
 	v.add_child(_portrait_doing)
 	_portrait_info = _label("", Tipo.DETALHE, COLOR_DIM)
 	v.add_child(_portrait_info)
+	_portrait_sec = _button("")
+	_portrait_sec.add_theme_font_size_override("font_size", Tipo.DETALHE)
+	_portrait_sec.tooltip_text = "Função SECUNDÁRIA: o que ele faz no expediente quando a função dele não tem trabalho
+(o engenheiro sem obra, o ferreiro sem ordem...). Clique pra trocar."
+	_portrait_sec.pressed.connect(_troca_secundaria)
+	v.add_child(_portrait_sec)
 	_selection_caption = _label("", Tipo.CORPO, COLOR_TITLE)
 	v.add_child(_selection_caption)
 	_selection_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1802,6 +1811,7 @@ func _update_portrait(sel: Array) -> void:
 	_portrait_job.visible = um
 	_portrait_doing.visible = um
 	_portrait_info.visible = um
+	_portrait_sec.visible = um
 	_selection_caption.visible = not um
 	if not um:
 		return
@@ -1813,11 +1823,32 @@ func _update_portrait(sel: Array) -> void:
 			if entry[0] == w.job:
 				job_name = entry[1]
 				job_color = entry[5]
-	_set_text(_portrait_job, job_name + ("  •  turno extra" if w.overtime else ""))
+	var de_sec: String = ("  •  de %s agora" % w.nome_funcao(w.secundaria())) if w.has_method("na_secundaria") and w.na_secundaria() else ""
+	_set_text(_portrait_job, job_name + ("  •  turno extra" if w.overtime else "") + de_sec)
+	_portrait_sec_w = w
+	_portrait_sec.visible = not w.has_no_job() and w.has_method("set_secundaria")
+	if _portrait_sec.visible:
+		var nome_sec: String = w.nome_funcao(w.secundaria()) if w.secundaria() != "" else "nenhuma"
+		_set_text(_portrait_sec, "Secundária: %s%s" % [nome_sec, "  (auto)" if w.funcao_secundaria == "" else ""])
 	_set_font_color(_portrait_job, job_color)
 	_set_text(_portrait_doing, w.get_state_label() if w.hunger > 0.0 else "FAMINTO!")
 	_set_text(_portrait_info, "%s  •  ânimo %d" % [{"ferido": "machucado", "bravo": "zangado",
 		"cansado": "cansado", "contente": "contente", "neutro": "tranquilo"}.get(Retratos.expressao(w), ""), roundi(w.happiness)])
+
+
+## Bloco 109: o botão da secundária: automática -> nenhuma -> minerador -> lenhador -> caçador -> agricultor -> automática.
+func _troca_secundaria() -> void:
+	var w := _portrait_sec_w
+	if w == null or not is_instance_valid(w) or not w.has_method("set_secundaria"):
+		return
+	var lista: Array = w.SECUNDARIAS
+	var i: int = lista.find(w.funcao_secundaria)
+	var prox: String = lista[(i + 1) % lista.size()]
+	if prox == w.job:
+		prox = lista[(i + 2) % lista.size()]  # (a própria função não vale como secundária)
+	w.set_secundaria(prox)
+	Audio.click()
+	_update_portrait([w])
 
 
 # =================================================================== ícones (Prompt 21)

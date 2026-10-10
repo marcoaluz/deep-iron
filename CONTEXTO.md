@@ -5,7 +5,18 @@ Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
-## AGORA (2026-10-10): Bloco 108 — Políticas da Vila (feito; commit local). FILA: Prompt 8 (b109), R (b110), F (b111)
+## AGORA (2026-10-10): Bloco 109 — IA (feito; commit local). FILA: Prompt R (b110), F (b111)
+
+Prompt 8. Relatório `docs/BLOCO109_IA.md`; medição `docs/telemetria/bloco109/` (`tests/bench_ia.gd`); fotos `docs/arte/bloco109/`.
+- Estação por PONTUAÇÃO (`_custo_estacao`: distância, fila, quanto tem, o que falta no armazém, perigo). FUNÇÃO SECUNDÁRIA
+  (padrão por função, botão no cartão; só no expediente e só sem NADA a fazer — não em "esperando espaço" nem esperando entrega;
+  veste a roupa da secundária). Perigo: recolhe no AVISO da invasão, foge de criatura, ABRIGO mais perto na onda solar (sem cama
+  nunca mais fica exposto). Carona sem carregador (material de obra).
+- Achado e corrigido: o prato preso do Bloco 84 (sem lugar no comedouro, parado em "comendo" pra sempre: matava a vila de fome).
+- Testes antigos de tempo de resposta (b105, b86, b94) ligam `ipezinho.secundaria_desligada = true`.
+- Medido: ociosos 3,67 -> 2,14 (dias 1-2: 3,4/2,7 -> 0,0/1,6), minério +86%, expostos na onda 2 -> 0.
+
+## Bloco 108 — Políticas da Vila (feito; commit local)
 
 Prompt L. Plano `docs/BLOCO108_PLANO.md` (aprovado com: sem "Farta", F6, espera 1 dia, Vilarejo). Relatório
 `docs/BLOCO108_POLITICAS.md`; medição `docs/telemetria/bloco108/` (`tests/bench_politicas.gd`); fotos `docs/arte/bloco108/`.

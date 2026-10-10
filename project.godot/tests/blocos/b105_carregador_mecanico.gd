@@ -44,6 +44,7 @@ func _initialize() -> void:
 		return
 	preload("res://scripts/core/catalogo.gd").tudo_estudado = true  # (o minério da fornalha já estudado: Bloco 102)
 	load("res://scripts/core/defense.gd").moradores_desligados = true  # (Bloco 103: sem moradores no fundo)
+	load("res://scripts/workers/ipezinho.gd").secundaria_desligada = true  # (Bloco 109: aqui o assunto é o tempo de resposta do Bloco 105)
 	var sm = root.get_node("SaveManager")
 	sm.autosave_interval = 0.0
 	sm.save_on_quit = false

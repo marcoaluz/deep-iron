@@ -1,0 +1,12 @@
+IA: 12 ipezinhos, camas livres 0, secundária padrão
+   desempenho: 69 s reais no dia | processo 43.42 ms/quadro | física 6.64 ms/quadro | 5721 quadros | trocas da secundária 14
+dia 1 | ociosos no expediente 0.02 | minério  125 | madeira  274 | machucados { "galho": 2 } | mortes 0 (bobas 0) | 12 ipezinhos
+  ONDA SOLAR começou às 10:00: 0 na superfície fora de abrigo
+  ONDA SOLAR acabou: no máximo 0 expostos ao mesmo tempo
+   desempenho: 68 s reais no dia | processo 26.58 ms/quadro | física 7.83 ms/quadro | 5800 quadros | trocas da secundária 16
+dia 2 | ociosos no expediente 1.62 | minério  100 | madeira   75 | machucados { "galho": 2 } | mortes 0 (bobas 0) | 12 ipezinhos
+   desempenho: 68 s reais no dia | processo 31.68 ms/quadro | física 6.02 ms/quadro | 5545 quadros | trocas da secundária 8
+dia 3 | ociosos no expediente 3.51 | minério  117 | madeira    0 | machucados { "galho": 2, "mina": 1, "lumivoro": 1 } | mortes 0 (bobas 0) | 12 ipezinhos
+   desempenho: 68 s reais no dia | processo 29.12 ms/quadro | física 4.56 ms/quadro | 5777 quadros | trocas da secundária 8
+dia 4 | ociosos no expediente 3.41 | minério   98 | madeira    0 | machucados { "galho": 2, "mina": 1, "lumivoro": 1 } | mortes 1 (bobas 0) | 11 ipezinhos
+RESUMO (média/dia) | ociosos 2.14 | minério 110 | madeira 87 | machucados { "galho": 2, "mina": 1, "lumivoro": 1 } | mortes 1 | bobas 0

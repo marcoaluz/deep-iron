@@ -1,0 +1,12 @@
+dia 1 | ociosos no expediente 0.47 | minério  158 | madeira  261 | machucados { "galho": 3 } | mortes 0 (bobas 0) | 12 ipezinhos
+   [ânimo] média 71.8 fatores { "tem cama": 8.4, "conversou com os amigos": 4.4 }
+   [comida] pronta 65 | estoque da cozinha 0 | crua no armazém 0 | { "cozinheiro:home": 1, "caçador:home": 1 } | cheios []
+   [ânimo] média 70.4 fatores { "tem cama": 8.4, "conversou com os amigos": 3.3 }
+   [comida] pronta 38 | estoque da cozinha 0 | crua no armazém 0 | { "cozinheiro:idle": 1, "caçador:stocking": 1 } | cheios ["madeira"]
+   [ânimo] média 74.5 fatores { "tem cama": 8.4, "conversou com os amigos": 6.2 }
+   [preso] cozinheiro fome 57 prato 5.7 servido true movendo false dist_coz 118 estação <null> inside false abrigo <null>
+   [comida] pronta 0 | estoque da cozinha 0 | crua no armazém 0 | { "cozinheiro:eating": 1, "caçador:home": 1 } | cheios ["madeira"]
+   [ânimo] média 72.6 fatores { "tem cama": 8.4, "conversou com os amigos": 5.1, "com fome": -0.8 }
+   [preso] cozinheiro fome 31 prato 5.7 servido true movendo false dist_coz 118 estação <null> inside false abrigo <null>
+   [comida] pronta 0 | estoque da cozinha 0 | crua no armazém 0 | { "cozinheiro:eating": 1, "caçador:home": 1 } | cheios ["madeira"]
+dia 2 | ociosos no expediente 1.49 | minério  109 | madeira   89 | machucados { "galho": 4, "mina": 1 } | mortes 0 (bobas 0) | 12 ipezinhos

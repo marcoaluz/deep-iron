@@ -140,6 +140,11 @@ func bow_ready() -> bool:
 	return oficina != null and oficina.has_tool(required_tool)
 
 
+## Bloco 109: quanto ainda tem (0..1) — a escolha da estação prefere a mais cheia (ipezinho._custo_estacao).
+func fracao_restante() -> float:
+	return game_remaining / game_total if game_total > 0.0 else 0.0
+
+
 func is_usable() -> bool:
 	return bow_ready() and conhecida() and _cooldown <= 0.0 and not alive().is_empty()
 

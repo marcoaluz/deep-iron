@@ -98,6 +98,29 @@ func reserva(w: Node) -> Dictionary:
 	return melhor
 
 
+## Bloco 109: a CARONA — uma entrega de OBRA livre a até `raio` de quem pede (sem carregador na vila, quem acabou de
+## descarregar no armazém leva). Reserva pra ele. {} = nenhuma.
+func reserva_carona(w: Node, raio: float) -> Dictionary:
+	var de: Vector2 = (w as Node2D).global_position
+	var melhor := {}
+	var nota := INF
+	for e in entregas_abertas():
+		if String(e.tipo) != "obra":
+			continue
+		var dono = _reservas.get(e.chave)
+		if dono != null and dono != w and is_instance_valid(dono):
+			continue
+		var d := de.distance_to((e.alvo as Node2D).global_position)
+		if d <= raio and d < nota:
+			nota = d
+			melhor = e
+	if not melhor.is_empty():
+		solta(w)
+		_reservas[melhor.chave] = w
+		_pendente.erase(melhor.chave)
+	return melhor
+
+
 func tem_entrega_para(w: Node) -> bool:
 	for e in entregas_abertas():
 		var dono = _reservas.get(e.chave)

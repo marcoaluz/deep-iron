@@ -43,6 +43,11 @@ func _accepts(body: Node2D) -> bool:
 	return body.has_method("chop")
 
 
+## Bloco 109: quanto ainda tem (0..1) — a escolha da estação prefere a mais cheia (ipezinho._custo_estacao).
+func fracao_restante() -> float:
+	return wood_remaining / wood_total if wood_total > 0.0 else 0.0
+
+
 func is_usable() -> bool:
 	return _cooldown <= 0.0 and wood_remaining >= minf(min_wood_to_chop, wood_total)
 

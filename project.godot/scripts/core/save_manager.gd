@@ -91,6 +91,8 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 109: o ipezinho ganha "funcao_secundaria" ("" automática pela função, "nenhuma", ou minerador/lenhador/caçador/
+##     agricultor). Save antigo: automática. O abrigo da onda solar, a fuga e a carona não vão pro save (ele decide de novo).
 ##   Bloco 108: "politicas" {ativa {jornada, racao, seguranca, migracao}, espera {política: s de jogo até poder trocar},
 ##     racao_dias (amanheceres seguidos na ração reduzida), fraqueza_recupera (dias), vigilancia_paga, trocas}; o
 ##     "combat_skill" do ipezinho vai até 2,0 no load (acima de 1,0 = o treinamento; cai sozinho fora dele). Save antigo

@@ -855,6 +855,12 @@ func _process(delta: float) -> void:
 	_moradores_tick(delta)  # Bloco 103
 
 
+## Bloco 109: o aviso da invasão desta noite já tocou (quem não é guarda já recolhe, antes do ataque)?
+func aviso_dado() -> bool:
+	var dn := get_tree().get_first_node_in_group("day_night")
+	return dn != null and _warned_day == dn.day and is_invasion_night(dn.day) and dn.time < tempo_invasao() + dn.cycle_length() * 0.25
+
+
 ## Bloco 60: com o rádio, o aviso vem antes.
 func _has_radio() -> bool:
 	var res := get_tree().get_first_node_in_group("research")

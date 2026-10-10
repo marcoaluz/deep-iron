@@ -7,6 +7,7 @@ signal died(worker_name: String)
 
 const STATE_LABELS := {
 	"esperando_espaco": "esperando espaço no armazém",  # Bloco 106
+	"abrigo": "no abrigo (onda solar)",  # Bloco 109
 	"social": "hora social",  # Bloco 85
 	"padre": "na igreja",  # Bloco 88
 	"buscando_corpo": "buscando um corpo",  # Bloco 93
@@ -384,6 +385,46 @@ const Tipo := preload("res://scripts/ui/tipografia.gd")
 ## Distância máxima de um passeio aleatório quando está ocioso.
 @export var idle_wander_radius: float = 50.0
 
+@export_group("Escolha da estação (Bloco 109)")
+## A estação de menor CUSTO ganha; cada termo vale "px de caminho". A distância conta x peso_distancia...
+@export var peso_distancia: float = 1.0
+## ...cada trabalhador já na estação soma isto (a fila; era o 40 fixo de antes)...
+@export var peso_fila: float = 40.0
+## ...uma estação cheia desconta até isto (proporcional ao que ela ainda tem, 0..1)...
+@export var peso_quantidade: float = 60.0
+## ...o que está FALTANDO no armazém desconta até isto (0 = tem falta_referencia ou mais; 1 = não tem nada)...
+@export var peso_falta: float = 120.0
+## ...e cada ponto de perigo soma isto (andar mais fundo, zona sem o traje, criatura viva perto da estação).
+@export var peso_perigo: float = 250.0
+## Unidades no armazém que contam como "tem bastante" pro peso_falta.
+@export var falta_referencia: float = 120.0
+## Raio (px) em volta da estação em que uma criatura viva conta como perigo.
+@export var perigo_criatura_raio: float = 160.0
+
+@export_group("Função secundária (Bloco 109)")
+## A secundária de cada função quando o jogador deixa no automático (sem a chave = nenhuma). Só vale no expediente e só
+## quando a função principal não tem NADA pra fazer (o engenheiro sem obra, o ferreiro sem encomenda, o fundidor sem ordem
+## em oficina nenhuma, o guarda de dia que não vigiou). Esperar espaço no armazém (Bloco 106) ou uma entrega do carregador
+## NÃO conta: aí ele espera, como antes. O cozinheiro e o carregador nunca têm secundária (o parado deles é esperar entrega).
+@export var secundaria_padrao: Dictionary = {"engenheiro": "lenhador", "ferreiro": "minerador", "fundidor": "minerador",
+	"carpinteiro": "lenhador", "mecânico": "lenhador", "guarda": "lenhador", "pesquisador": "minerador"}
+
+@export_group("Perigo (Bloco 109)")
+## Quem não é guarda e vê uma criatura viva a esta distância (px, no mesmo andar) larga tudo e corre pra casa...
+@export var fuga_raio: float = 140.0
+## ...e fica longe por estes segundos (pra não ir e voltar).
+@export var fuga_tempo: float = 20.0
+## Onda solar: vai pro ABRIGO mais perto (casa pronta ou taverna, de qualquer um) quando a própria cama fica mais longe que
+## ele + isto (px). Sem cama: sempre o abrigo mais perto.
+@export var abrigo_folga: float = 80.0
+
+@export_group("Carona (Bloco 109)")
+## Sem carregador na vila: quem acabou de descarregar no armazém leva o material de uma obra a até esta distância (px)
+## dele antes de voltar ao trabalho (o mesmo caminho do carregador do Bloco 105)...
+@export var carona_raio: float = 260.0
+## ...e só uma vez a cada tantos segundos (não vira carregador de tempo inteiro).
+@export var carona_intervalo: float = 45.0
+
 @export_group("Visual")
 ## Bloco 73: 13 quadros/s na velocidade normal = o passo da vista iso (IsoBillboard.PASSO_CICLO:
 ## 4 quadros a cada 56 px de arte = ~37 px daqui); o som do passo cai junto com o pé.
@@ -558,6 +599,22 @@ var _balao_vida := 0.0
 static var baloes_motivo := true
 ## Bloco 108: acidentes de trabalho (mina + galho) da sessão, pra telemetria contar por dia.
 static var acidentes_trabalho := 0
+## Bloco 109: mortes "bobas" da sessão (quem não é guarda, por criatura ou radiação) e as caronas — telemetria.
+static var mortes_bobas := 0
+static var caronas := 0
+## Bloco 109: teste antigo que mede o tempo de resposta de uma função (fundidor, engenheiro...) liga isto no _initialize.
+static var secundaria_desligada := false
+const CAUSAS_BOBAS := ["radiacao", "lumivoro", "ferrugento", "gosma", "magmante"]
+## Bloco 109: as secundárias possíveis ("" = automática pela função; "nenhuma" = desligada).
+const SECUNDARIAS := ["", "nenhuma", ROLE_MINER, ROLE_LUMBER, ROLE_HUNTER, ROLE_FARMER]
+## Bloco 109: a função secundária escolhida pelo jogador ("" = automática) e se ele está nela agora.
+var funcao_secundaria := ""
+var _na_secundaria := false
+## Bloco 109: o abrigo da onda solar onde ele entrou, a fuga de uma criatura e a carona da logística.
+var _abrigado_em: Node = null
+var _fuga_t := 0.0
+var _carona := false
+var _carona_cd := 0.0
 static var _baloes_lido := false
 var _motivo := ""
 var _motivo_t := 0.0
@@ -1006,6 +1063,8 @@ func _process(delta: float) -> void:
 		animo_descoberta = maxf(animo_descoberta - animo_descoberta_decai * delta, 0.0)  # Bloco 103
 	if animo_prato > 0.0:
 		animo_prato = maxf(animo_prato - animo_prato_decai * delta, 0.0)  # Bloco 107
+	_fuga_t = maxf(_fuga_t - delta, 0.0)  # Bloco 109
+	_carona_cd = maxf(_carona_cd - delta, 0.0)
 	_social_process(delta)  # Bloco 85
 	_motivo_tick(delta)  # Bloco 95
 
@@ -1137,21 +1196,27 @@ func _choose_state() -> String:
 	if sun and sun.shelter_now():
 		var env := get_tree().get_first_node_in_group("environment")
 		if env == null or env.level_at(global_position) == 0:
-			return "home"
+			return _destino_onda()  # Bloco 109: o abrigo MAIS PERTO (sem cama, nunca mais do lado de fora)
 		if _ai_state == "mining" and _station_ok_for("mining"):
 			return "mining"
 		return "idle"
 	# Bloco 84: invasão em andamento — quem não é guarda fica em casa (o médico, no plantão).
+	# Bloco 109: e já no AVISO da invasão (recolhe mais cedo); criatura viva perto: larga tudo e corre pra casa.
 	var def_inv := _defense()
-	if def_inv and def_inv.invasion_active and not is_guard():
+	if def_inv and (def_inv.invasion_active or (def_inv.has_method("aviso_dado") and def_inv.aviso_dado())) and not is_guard():
 		return "doctor" if is_doctor() and _has_infirmary() else "home"
+	if not is_guard() and not is_doctor() and _foge():
+		return "home"
 	# Sem enfermaria na cena (fallback antigo): machucado descansa em casa.
 	if injured:
 		return "home"
 	# Bloco 84: comendo (pegou o prato, ou indo pegar com comida lá): fica até acabar.
 	var food_ok := _food_available()
 	if _ai_state == "eating" and ((not _servido and food_ok) or _prato > 0.0):
-		return "eating"
+		if _prato > 0.0 and not _moving and (_station == null or not is_instance_valid(_station) or _slot < 0):
+			_prato = 0.0  # Bloco 109: perdeu o lugar no comedouro com o prato pela metade: larga (antes ficava parado pra sempre)
+		else:
+			return "eating"
 	# Bloco 84: a AGENDA (Schedule): dormir, refeições, voltar, hora social, plantão, vigília. "" = horário
 	# de trabalho (ou sem relógio): segue a lógica de sempre aqui embaixo.
 	var ag := _agenda_estado(food_ok)
@@ -1177,6 +1242,13 @@ func _choose_state() -> String:
 	# Comida PRONTA na cesta (só de save de antes do Bloco 27): entrega no comedouro.
 	if food_carrying > 0.0:
 		return "delivering"
+	# Bloco 109: a CARONA (sem carregador na vila): acabou de descarregar no armazém e leva material pra uma obra perto.
+	if _carona:
+		if not _carga.is_empty():
+			return "carregando"
+		_carona = false
+	if _quer_carona():
+		return "carregando"
 	# Bloco 27: matéria-prima nas mãos de quem não é cozinheiro vai pro armazém
 	# (caçador com a mochila cheia / sem mais fruta nem caça, ou quem trocou de função).
 	# (O cozinheiro com matéria-prima vai preparar: ver o bloco dele mais abaixo.)
@@ -1184,29 +1256,47 @@ func _choose_state() -> String:
 	# espera disponível (volta sozinho quando abrir espaço). A emergência, a agenda e as necessidades já vieram antes.
 	# (só quem COLETA aquilo espera; quem tem a carga por outro motivo — trocou de função, o engenheiro com sobra — fica
 	# com ela e segue a função dele, sem ir até o armazém cheio)
-	if raw_carrying > 0.0 and is_gatherer() and _sem_espaco("alimentos"):
+	if raw_carrying > 0.0 and _faz_coleta() and _sem_espaco("alimentos"):
 		return "esperando_espaco"
-	if wood_carrying > 0.0 and is_lumber() and _sem_espaco("madeira"):
+	if wood_carrying > 0.0 and _faz(ROLE_LUMBER) and _sem_espaco("madeira"):
 		return "esperando_espaco"
 	if raw_carrying > 0.0 and not is_cook() and not _sem_espaco("alimentos"):
 		var pack_full := _raw_units >= hunter_carry - 0.01
 		# (quem já está colhendo/caçando continua até a fonte acabar; só depois descarrega)
 		var keep_going := _ai_state in ["foraging", "hunting"] and _station_ok_for(_ai_state)
-		if not is_gatherer() or pack_full or _ai_state == "stocking" or (not keep_going and not _hunter_has_work()):
+		if not _faz_coleta() or pack_full or _ai_state == "stocking" or (not keep_going and not _hunter_has_work()):
 			return "stocking"
 	# Madeira nas costas: leva pro armazém (lenhador cheio / sem árvore, ou quem deixou de ser lenhador).
 	if wood_carrying > 0.0 and not _sem_espaco("madeira"):
 		var wood_full := wood_carrying >= lumber_carry - 0.01
 		# (quem já está cortando continua até a árvore virar toco; só depois vai descarregar)
 		var keep_chopping := _ai_state == "chopping" and _station_ok_for("chopping")
-		if not is_lumber() or wood_full or _ai_state == "hauling" or (not keep_chopping and not _has_usable_station("arvores")):
+		if not _faz(ROLE_LUMBER) or wood_full or _ai_state == "hauling" or (not keep_chopping and not _has_usable_station("arvores")):
 			return "hauling"
 	# Bloco 25: quem não é minerador não fica com minério na mão — entrega antes
 	# (ex.: trocou de função no meio da carga, ou tiraram a função dele).
 	# Pesquisador fica de fora: sem laboratório ele volta a minerar (como já era),
 	# e mandar guardar cada pedrinha viraria um vai-e-volta sem fim.
-	if carrying > 0.0 and not is_miner() and not is_researcher() and not _sem_espaco("minerios"):
+	if carrying > 0.0 and not _faz(ROLE_MINER) and not is_researcher() and not _sem_espaco("minerios"):
 		return "storing"
+	# Bloco 109: a FUNÇÃO; sem nada pra fazer nela (no expediente), a SECUNDÁRIA.
+	var e := _estado_funcao()
+	if _sem_trabalho(e) and _pode_secundaria():
+		var e2 := _estado_secundario()
+		if e2 != "":
+			if not _na_secundaria:
+				_na_secundaria = true
+				_apply_outfit()  # veste a roupa da secundária (a arte que já existe dela)
+				_popup("De %s agora" % nome_funcao(secundaria()), Color(0.8, 0.9, 0.6))
+			return e2
+	if _na_secundaria:
+		_na_secundaria = false
+		_apply_outfit()
+	return e
+
+
+## A decisão da FUNÇÃO principal (o que vinha no fim do _choose_state antes do Bloco 109).
+func _estado_funcao() -> String:
 	# Médico (Bloco 30): plantão DENTRO da enfermaria, tendo internado ou não (esperando
 	# por lá: não sai pra minerar sozinho). Comer, dormir, se tratar etc. vêm antes.
 	if is_doctor():
@@ -1369,6 +1459,14 @@ func _choose_state() -> String:
 
 func _decide_next_action() -> void:
 	var desired := _choose_state()
+	if desired != "abrigo" and _abrigado_em != null:
+		_sai_do_abrigo()  # Bloco 109: a onda passou (ou outra coisa ganhou): sai do abrigo
+	if desired == "abrigo":  # Bloco 109: vai pro abrigo mais perto e entra
+		if _ai_state != "abrigo":
+			_release_station()
+			_set_state("abrigo")
+		_vai_pro_abrigo()
+		return
 	if not carregando_corpo.is_empty() and desired != "padre":
 		_larga_corpo()  # Bloco 93: emergência no meio do caminho: o corpo volta pro chão (ele busca depois)
 
@@ -1832,16 +1930,275 @@ func _find_best_station(group_name: String) -> Node2D:
 			continue
 		if node.has_method("accepts_worker") and not node.accepts_worker(self) and node != _station:
 			continue
-		var score := global_position.distance_to(node.global_position)
-		if node.has_method("occupied_slot_count") and node != _station:
-			score += node.occupied_slot_count() * 40.0
-		# minério mais valioso "parece mais perto" (cobre vale 2x o ferro -> distância pela metade)
-		if node.has_method("get_value_weight"):
-			score /= maxf(node.get_value_weight(), 0.1)
+		var score := _custo_estacao(node, group_name)
 		if score < best_score:
 			best_score = score
 			best = node
 	return best
+
+
+## Bloco 109: o CUSTO de uma estação (menor = melhor), em "px de caminho": distância + fila - o quanto ela tem - o que
+## FALTA no armazém + perigo (pesos no grupo "Escolha da estação"). O minério mais valioso continua "parecendo mais perto"
+## (a distância dividida pelo valor, como antes do Bloco 109).
+func _custo_estacao(node: Node, group_name: String) -> float:
+	var pos: Vector2 = (node as Node2D).global_position
+	var c := global_position.distance_to(pos) * peso_distancia
+	if node.has_method("occupied_slot_count") and node != _station:
+		c += node.occupied_slot_count() * peso_fila
+	if node.has_method("get_value_weight"):
+		c /= maxf(node.get_value_weight(), 0.1)
+	if node.has_method("fracao_restante"):
+		c -= clampf(node.fracao_restante(), 0.0, 1.0) * peso_quantidade
+	c -= _falta_no_armazem(node, group_name) * peso_falta
+	c += _perigo_em(node) * peso_perigo
+	return c
+
+
+## 0..1: o quanto a vila está SEM o que essa estação dá (1 = nada no armazém; 0 = falta_referencia ou mais).
+func _falta_no_armazem(node: Node, group_name: String) -> float:
+	var eco := get_tree().get_first_node_in_group("economy")
+	if eco == null or falta_referencia <= 0.0:
+		return 0.0
+	var item := ""
+	match group_name:
+		"minerios":
+			item = String(node.tipo_extraido()) if node.has_method("tipo_extraido") else String(node.get("ore_type"))
+		"arvores":
+			item = "madeira"
+		"coleta_comida", "caca":
+			item = "comida_crua"
+	if item == "":
+		return 0.0
+	return 1.0 - clampf(float(eco.quantidade(item)) / falta_referencia, 0.0, 1.0)
+
+
+## Pontos de perigo da estação: o andar mais fundo (o multiplicador de acidente - 1, até 1), a zona de perigo sem o traje
+## e criatura viva por perto (Bloco 109).
+func _perigo_em(node: Node) -> float:
+	var pos: Vector2 = (node as Node2D).global_position
+	var env := get_tree().get_first_node_in_group("environment")
+	var p := 0.0
+	if env and env.has_method("danger_mult_at"):
+		p += clampf(float(env.danger_mult_at(pos)) - 1.0, 0.0, 1.0)
+	var hz := String(node.get("hazard")) if node.get("hazard") != null else ""
+	if hz != "" and not wearing.has(hz):
+		p += 0.5
+	if _criatura_perto(pos, perigo_criatura_raio) != null:
+		p += 1.0
+	return p
+
+
+## Bloco 109: uma criatura viva a até `raio` de `pos`, no mesmo andar (null = nenhuma).
+func _criatura_perto(pos: Vector2, raio: float) -> Node:
+	var env := get_tree().get_first_node_in_group("environment")
+	var andar: int = env.level_at(pos) if env and env.has_method("level_at") else 0
+	for c in get_tree().get_nodes_in_group("criaturas"):
+		if not c.has_method("is_alive") or not c.is_alive():
+			continue
+		if pos.distance_to(c.global_position) > raio:
+			continue
+		if env and env.has_method("level_at") and env.level_at(c.global_position) != andar:
+			continue
+		return c
+	return null
+
+
+## Bloco 109: viu criatura perto: foge (e continua fugindo por fuga_tempo, pra não ir e voltar).
+func _foge() -> bool:
+	if _criatura_perto(global_position, fuga_raio) != null:
+		if _fuga_t <= 0.0:
+			_popup("Bicho! Pra casa!", Color(1.0, 0.55, 0.4))
+		_fuga_t = fuga_tempo
+	return _fuga_t > 0.0
+
+
+# ------------------------------------------------------------ função secundária (Bloco 109)
+## A secundária que vale agora ("" = nenhuma): a escolhida pelo jogador ou, no automático, a padrão da função.
+func secundaria() -> String:
+	var sec := funcao_secundaria
+	if sec == "":
+		sec = String(secundaria_padrao.get(job, ""))
+	if sec == "nenhuma" or sec == job or not sec in [ROLE_MINER, ROLE_LUMBER, ROLE_HUNTER, ROLE_FARMER]:
+		return ""
+	return sec
+
+
+## Está fazendo a secundária agora?
+func na_secundaria() -> bool:
+	return _na_secundaria
+
+
+static func nome_funcao(f: String) -> String:
+	return {ROLE_MINER: "minerador", ROLE_LUMBER: "lenhador", ROLE_HUNTER: "caçador", ROLE_FARMER: "agricultor"}.get(f, f)
+
+
+## Faz o trabalho dessa função agora (a principal ou a secundária em curso)?
+func _faz(funcao: String) -> bool:
+	return job == funcao or (_na_secundaria and secundaria() == funcao)
+
+
+func _faz_coleta() -> bool:
+	return is_gatherer() or (_na_secundaria and secundaria() in [ROLE_HUNTER, ROLE_FARMER])
+
+
+## A principal não tem NADA pra fazer? ("idle" de verdade: não vale esperar espaço no armazém nem uma entrega; o fundidor e o
+## carpinteiro só sem ordem em oficina nenhuma; o guarda de dia em casa.)
+func _sem_trabalho(e: String) -> bool:
+	if is_guard():
+		return e == "home"
+	if e != "idle":
+		return false
+	if is_smelter() or is_carpenter():  # nenhuma ordem em oficina nenhuma (nem a que espera insumo: o balão "sem material" fica)
+		return not get_tree().get_nodes_in_group(_grupo_oficina()).any(func(f): return f.get("fila") != null and not (f.fila.fila as Array).is_empty())
+	return true
+
+
+## A secundária só entra no EXPEDIENTE, com a IA ligada, fora de uma área de trabalho (a área manda) e — no guarda — de
+## dia e só se ele não vigiou a noite passada (quem vigiou descansa).
+func _pode_secundaria() -> bool:
+	if secundaria_desligada or has_no_job() or work_area != null or not auto_mode or secundaria() == "" or is_cook() or is_carrier():
+		return false
+	var sch := _schedule()
+	if sch and sch.periodo(self) != "trabalho":
+		return false
+	if is_guard():
+		if _is_night():
+			return false
+		if sch and sch.has_method("vigiou_ontem") and sch.vigiou_ontem(self):
+			return false
+	return true
+
+
+## O estado da secundária ("" = ela também não tem o que fazer agora).
+func _estado_secundario() -> String:
+	match secundaria():
+		ROLE_LUMBER:
+			if _sem_espaco("madeira"):
+				return ""
+			if (_ai_state == "chopping" and _station_ok_for("chopping")) or _has_usable_station("arvores"):
+				return "chopping"
+		ROLE_MINER:
+			if _sem_espaco("minerios"):
+				return ""
+			if carrying >= capacidade_carga() - 0.01 or (_ai_state == "storing" and carrying > 0.0):
+				return "storing"
+			if (_ai_state == "mining" and _station_ok_for("mining")) or _find_best_station("minerios") != null:
+				return "mining"
+			if carrying > 0.0:
+				return "storing"
+		ROLE_HUNTER:
+			if _sem_espaco("alimentos"):
+				return ""
+			if (_ai_state == "hunting" and _station_ok_for("hunting")) or _has_usable_station("caca"):
+				return "hunting"
+			if not _agricultor_na_vila() and ((_ai_state == "foraging" and _station_ok_for("foraging")) or _has_usable_station("coleta_comida")):
+				return "foraging"
+		ROLE_FARMER:
+			if _sem_espaco("alimentos"):
+				return ""
+			if (_ai_state == "foraging" and _station_ok_for("foraging")) or _has_usable_station("coleta_comida"):
+				return "foraging"
+	return ""
+
+
+## O jogador escolhe ("" automática, "nenhuma" ou uma função).
+func set_secundaria(f: String) -> void:
+	if not f in SECUNDARIAS:
+		return
+	funcao_secundaria = f
+	if _na_secundaria and secundaria() == "":
+		_na_secundaria = false
+		_apply_outfit()
+	if auto_mode and _ai_state != "manual":
+		_decision_timer = randf_range(0.05, 0.4)
+
+
+# ------------------------------------------------------------ abrigo da onda solar (Bloco 109)
+## A casa pronta ou taverna mais perto (de qualquer um: na onda solar todo mundo entra onde der).
+func _abrigo_mais_perto() -> Node2D:
+	var best: Node2D = null
+	var bd := INF
+	for grupo in ["casas", "tavernas"]:
+		for a in get_tree().get_nodes_in_group(grupo):
+			if not a.has_method("set_inside") or (a.get("built") != null and not a.built):
+				continue
+			var d := global_position.distance_to((a as Node2D).global_position)
+			if d < bd:
+				bd = d
+				best = a
+	return best
+
+
+## Onda solar: a própria cama (se não estiver bem mais longe que o abrigo mais perto) ou o abrigo mais perto.
+func _destino_onda() -> String:
+	var abr := _abrigo_mais_perto()
+	if abr == null:
+		return "home"
+	if has_home() and global_position.distance_to(_rest_position()) <= global_position.distance_to(abr.global_position) + abrigo_folga:
+		return "home"
+	return "abrigo"
+
+
+func _vai_pro_abrigo() -> void:
+	if _abrigado_em != null and is_instance_valid(_abrigado_em):
+		return
+	var abr := _abrigo_mais_perto()
+	if abr == null:
+		_go_home()
+		return
+	var porta: Vector2 = abr.get_wait_position(self) if abr.has_method("get_wait_position") else abr.global_position
+	if global_position.distance_to(porta) <= REST_REACH + 8.0:
+		_moving = false
+		_abrigado_em = abr
+		_inside = true
+		abr.set_inside(self, true)
+		_agent.avoidance_enabled = false
+		queue_redraw()
+	elif not _moving or _target.distance_to(porta) > 1.0:
+		_go_to(porta)
+
+
+func _sai_do_abrigo() -> void:
+	if _abrigado_em != null and is_instance_valid(_abrigado_em):
+		_abrigado_em.set_inside(self, false)
+	_abrigado_em = null
+	if not _resting:
+		_inside = false
+	_agent.avoidance_enabled = avoidance_enabled
+	queue_redraw()
+
+
+# ------------------------------------------------------------ carona (Bloco 109)
+## Sem carregador na vila: acabou de descarregar no armazém, de mãos vazias? Leva o material de uma obra perto (a mesma
+## entrega do carregador: a obra conta como "a caminho"). true = pegou a carona.
+func _quer_carona() -> bool:
+	if _carona_cd > 0.0 or is_carrier() or is_engineer() or has_no_job() or not _carga.is_empty():
+		return false
+	if not _ai_state in ["storing", "hauling", "stocking"]:
+		return false
+	if carrying > 0.0 or wood_carrying > 0.0 or raw_carrying > 0.0 or not material_mao.is_empty():
+		return false
+	var lg := _logistica()
+	var eco := get_tree().get_first_node_in_group("economy")
+	if lg == null or eco == null or not lg.has_method("reserva_carona") or lg.tem_carregador():
+		return false
+	var arm := _closest_in_group("armazens")
+	if arm == null or global_position.distance_to(arm.global_position) > 90.0:
+		return false
+	_carona_cd = carona_intervalo
+	var t: Dictionary = lg.reserva_carona(self, carona_raio)
+	if t.is_empty():
+		return false
+	_carga = t.duplicate()
+	_carga["fase"] = "ao_armazem"
+	if not _prepara_obra(t.alvo, eco):
+		lg.solta(self)
+		_carga = {}
+		return false
+	_carona = true
+	caronas += 1
+	_popup("Levo material pra obra", Color(1.0, 0.85, 0.45))
+	return true
 
 
 ## Bloco 103: o andar desse ponto ainda não foi reconhecido (e o jogador não mandou descer mesmo assim)?
@@ -2777,7 +3134,7 @@ func _apply_outfit() -> void:
 
 ## Nome do outfit que a função atual veste ("mineiro", "lenhador", "cozinheiro", "civil").
 func outfit() -> String:
-	return JOB_OUTFIT.get(job, "mineiro")
+	return JOB_OUTFIT.get(secundaria() if _na_secundaria else job, "mineiro")  # Bloco 109: na secundária, a roupa dela
 
 
 static var _texture_cache := {}
@@ -3024,6 +3381,7 @@ func set_job(new_job: String) -> void:
 	if job == ROLE_MINER and _my_coletor_minerio() != null:
 		_my_coletor_minerio().release()  # Bloco 57: deixou de ser minerador: a broca para
 	job = new_job
+	_na_secundaria = false  # Bloco 109: a secundária recomeça pela função nova
 	_popup(JOB_LABELS[job], Color(0.95, 0.9, 0.6) if job != ROLE_IDLE else Color(0.75, 0.75, 0.8))
 	# Bloco 35: o primeiro porrete vem de casa; depois disso, arma nova só no Arsenal
 	if job == ROLE_GUARD and weapon == "" and not got_porrete:
@@ -3084,7 +3442,7 @@ func hunt(amount: float, value: float) -> float:
 
 
 func _gather_raw(amount: float, value: float, state: String) -> float:
-	if not is_gatherer() or injured or _ai_state != state:
+	if not _faz_coleta() or injured or _ai_state != state:
 		return 0.0
 	var taken := minf(amount * work_mult(), hunter_carry - _raw_units)  # zangado rende menos
 	if taken <= 0.0:
@@ -3242,7 +3600,7 @@ func _has_bow() -> bool:
 
 ## Árvore chama: o lenhador põe madeira nas costas. Retorna quanto pegou.
 func chop(amount: float) -> float:
-	if not is_lumber() or injured or _ai_state != "chopping":
+	if not _faz(ROLE_LUMBER) or injured or _ai_state != "chopping":
 		return 0.0
 	var taken := minf(amount * work_mult(), lumber_carry - wood_carrying)  # zangado corta menos
 	if taken <= 0.0:
@@ -3642,6 +4000,8 @@ func _worsen() -> void:
 
 ## Grave sem leito até o fim: morre. Vai pro memorial da enfermaria (cruz onde caiu).
 func _die() -> void:
+	if not is_guard() and String(injury_cause) in CAUSAS_BOBAS:
+		mortes_bobas += 1  # Bloco 109: morte "boba" (quem não é guarda, por criatura ou radiação) — telemetria
 	var inf := _closest_in_group("enfermarias")
 	if inf:
 		inf.record_death(self)  # o HUD mostra a faixa pelo sinal patient_died
@@ -5394,6 +5754,7 @@ func get_save_data() -> Dictionary:
 		"display_name": display_name,
 		"look": look,
 		"combat_skill": combat_skill,
+		"funcao_secundaria": funcao_secundaria,  # Bloco 109
 		"weapon": weapon,
 		"weapon_durability": weapon_durability,
 		"broken_weapon": broken_weapon,
@@ -5483,6 +5844,8 @@ func load_save_data(d: Dictionary) -> void:
 	else:
 		var r := SaveUtil.text(d, "role", "")
 		job = r if r in [ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH] else ROLE_MINER
+	var sec := SaveUtil.text(d, "funcao_secundaria", "")  # Bloco 109 (save antigo: automática pela função)
+	funcao_secundaria = sec if sec in SECUNDARIAS else ""
 	combat_skill = clampf(SaveUtil.num(d, "combat_skill", 0.0), 0.0, 2.0)  # Bloco 108: acima de 1,0 = treinamento (cai sozinho fora dele)
 	# Bloco 35 (save antigo: o SaveManager já pôs a melhor arma forjada nos guardas)
 	var wpn := SaveUtil.text(d, "weapon", "")

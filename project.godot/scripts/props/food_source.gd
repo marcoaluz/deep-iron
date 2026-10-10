@@ -53,6 +53,11 @@ func _accepts(body: Node2D) -> bool:
 	return body.has_method("harvest")
 
 
+## Bloco 109: quanto ainda tem (0..1) — a escolha da estação prefere a mais cheia (ipezinho._custo_estacao).
+func fracao_restante() -> float:
+	return food_remaining / food_total if food_total > 0.0 else 0.0
+
+
 func is_usable() -> bool:
 	return _cooldown <= 0.0 and food_remaining >= minf(min_food_to_harvest, food_total)
 

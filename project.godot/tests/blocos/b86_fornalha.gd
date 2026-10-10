@@ -15,6 +15,7 @@ func _initialize() -> void:
 		quit()
 		return
 	preload("res://scripts/core/catalogo.gd").tudo_estudado = true  # Bloco 102: o teste é de antes do catálogo (tudo conhecido)
+	load("res://scripts/workers/ipezinho.gd").secundaria_desligada = true  # (Bloco 109: aqui o fundidor/carpinteiro sem ordem fica parado e as contas de insumo são exatas)
 	var sm = root.get_node("SaveManager")
 	sm.autosave_interval = 0.0
 	sm.save_on_quit = false

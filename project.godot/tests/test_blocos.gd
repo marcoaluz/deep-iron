@@ -452,3 +452,7 @@ func test_b107_agricultor_oficinas() -> void:
 
 func test_b108_politicas() -> void:
 	run_bloco("b108_politicas.gd")
+
+
+func test_b109_ia() -> void:
+	run_bloco("b109_ia.gd")
