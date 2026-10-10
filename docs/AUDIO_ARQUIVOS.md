@@ -46,14 +46,14 @@ Os sons NÃO são criados pelo jogo nem pelo código: são gerados fora (ElevenL
 | `predios/sino_funeral` | toca uma vez | SFX | -5.0 | Sino da igreja (ou do cemitério) quando o funeral começa: mais lento e grave. *(abaixa a música (sino))* | o som de antes | pronto |
 | `predios/poca_perigo` | loop posicional | SFX | -16.0 | Perto de uma poça de ácido ou lava (sempre): borbulhar baixo e chiado. *(só perto da câmera (400 px), com o prédio em atividade)* | mudo | pronto |
 | `predios/ventilador` | loop posicional | SFX | -14.0 | Perto de um ventilador da mina (sempre): zumbido de ar. *(só perto da câmera (500 px), com o prédio em atividade)* | mudo | pronto |
-| `predios/tocha` | loop posicional | SFX | -16.0 | Perto de uma tocha acesa (sempre): fogo crepitando. *(só perto da câmera (350 px), com o prédio em atividade)* | mudo | pronto |
+| `predios/tocha` | loop posicional | SFX | -8.0 | Perto de uma tocha acesa (sempre): fogo crepitando. *(só perto da câmera (350 px), com o prédio em atividade)* | mudo | pronto |
 | `predios/conversa` | loop posicional | SFX | -14.0 | Num ponto social (refeitório, praça, parque, igreja...) com gente reunida: o murmúrio da conversa. *(só perto da câmera (500 px), com o prédio em atividade)* | mudo | pronto |
 | `predios/oficina` | loop posicional | SFX | -12.0 | Oficina com o ferreiro trabalhando: martelo na bigorna. *(só perto da câmera (600 px), com o prédio em atividade)* | mudo | pronto |
 | `predios/arsenal` | loop posicional | SFX | -12.0 | Arsenal com o ferreiro trabalhando: metal batido e armas. *(só perto da câmera (600 px), com o prédio em atividade)* | mudo | pronto |
 | `predios/laboratorio` | loop posicional | SFX | -14.0 | Laboratório com a pesquisadora trabalhando: líquidos borbulhando. *(só perto da câmera (600 px), com o prédio em atividade)* | mudo | pronto |
 | `predios/escavadeira` | loop posicional | SFX | -10.0 | Escavadeira gigante funcionando: motor e broca. *(só perto da câmera (700 px), com o prédio em atividade)* | mudo | pronto |
 | `predios/escola` | loop posicional | SFX | -14.0 | Escola com gente dentro: crianças ao longe e giz. *(só perto da câmera (600 px), com o prédio em atividade)* | mudo | pronto |
-| `predios/cozinha` | loop posicional | SFX | -14.0 | Cozinha com o cozinheiro trabalhando: panela e fogão. *(só perto da câmera (600 px), com o prédio em atividade)* | mudo | pronto |
+| `predios/cozinha` | loop posicional | SFX | -9.0 | Cozinha com o cozinheiro trabalhando: panela e fogão. *(só perto da câmera (600 px), com o prédio em atividade)* | mudo | pronto |
 
 ## Stingers (eventos do jogo)
 

@@ -70,6 +70,19 @@ gerou o resto pelos prompts do `slots.json` (modelo `eleven_text_to_sound_v2`, l
 - **Nada foi ouvido por mim.** O Marco aprovou o piloto de 5 (s2_acido, fornalha, estágio novo, confirmar, explosão); os outros 186 saíram do mesmo prompt e ele ainda vai ouvir.
 - Pra refazer um som: edite o `prompt` no `slots.json` e rode `python tools/gera_audio_elevenlabs.py --ids <slot> --force` (gasta créditos de novo).
 
+### Ajuste de volume (depois de o Marco ouvir)
+
+O Marco avisou que o som do cemitério não dava pra ouvir. A causa: o ElevenLabs entrega cada arquivo num nível (pico de −60 a 0 dBFS) e os dB do `slots.json` foram pensados
+pros sons antigos (loops com RMS ≈ −18 dBFS, picos ≈ −2; curtos com pico entre −1 e −6). O cemitério saiu com RMS −35,7 e ainda ia −14 dB abaixo: ~−50 dBFS efetivo, inaudível.
+
+- `tools/normaliza_audio.py`: leva os arquivos pro nível dos antigos e **só sobe o que está baixo** (loops: RMS −20 dBFS, pico ≤ −2; curtos: pico −3 dBFS; ganho máx. +36 dB).
+  74 arquivos subiram (o cemitério +15,7 dB, a escola +23,9, os cliques +20, os passos +14 a +27). O que já estava alto não mudou (os 5 do piloto aprovado ficaram como estavam).
+- Os **passos na pedra** saíam como ruído fraco (sem batida): o prompt mudou pra `One footstep on a solid stone floor, hard shoe heel, loud crisp click, echoing in a cave...` (testei 4 variações e medi
+  qual dava batida nítida) e os 3 arquivos foram regerados. Água e gotejar também foram regerados (prompt mais forte no gotejar e na água).
+- Tocha (−16 → −8 dB) e cozinha (−14 → −9 dB): a normalização não subia mais por causa do pico; subi no slot.
+- Se algum som ainda estiver baixo ou alto, o ajuste é o `db` do slot no `slots.json` (sem refazer o arquivo). Se ainda não ouvir o cemitério: ele só toca com a câmera a até **600 px do centro** do cemitério (campo `raio`).
+- Custo da regeração: menos de 150 créditos.
+
 ## 7) Pendências
 
 - Ouvir os 186 sons novos e pedir o refazer dos que não ficaram bons (e, à parte, a música da abertura e da introdução).

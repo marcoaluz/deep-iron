@@ -16,6 +16,8 @@ pessoal falando, radiação, tudo)". Relatório `docs/BLOCO115_SONS.md`; **`docs
 - Testes conferidos: b115 (+GUT), b114, b55, b61, b62, b98, b105, b110, b111, b93, b85, b88, b57. O resto da bateria não.
 - GERADO (2026-10-10): a chave está no `.env` (gitignored); `tools/gera_audio_elevenlabs.py` gerou os 191 WAV (0 erros, 10.756 créditos de 131.000). Piloto de 5 aprovado pelo
   Marco ("bem nítido e legal"); os outros 186 ainda não foram ouvidos por ele. Refazer um: `--ids <slot> --force`. O PCM da API vem ESTÉREO (a doc diz mono): a ferramenta trata.
+- Volume (Marco: "só o cemitério não ouvi"): o ElevenLabs entrega cada arquivo num nível; `tools/normaliza_audio.py` subiu 74 arquivos pro nível dos antigos (só sobe), passos da pedra/água e
+  gotejar regerados com prompt melhor, tocha e cozinha +dB no slot. Ajuste fino = o `db` do slot no `slots.json`; o loop de prédio só toca a até `raio` (600 px) do centro do prédio.
 - PENDENTE com o Marco: ouvir os 186 sons e pedir refazer os ruins; ajustar db/intervalo/raio no `slots.json`; a música (abertura e intro) à parte; push.
 
 ## Bloco 114 — SISTEMAS DE SOM (feito; commit local, sem push)

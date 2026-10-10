@@ -803,10 +803,10 @@ Gerado por `python tools/lista_audio.py` a partir de `project.godot/data/audio/s
 ### 95. `passos/pedra`
 
 - **Arquivo(s):** `passos/pedra_0`, `passos/pedra_1`, `passos/pedra_2`
-- **Duração:** 0.3 s cada  •  **Tipo:** toca uma vez
+- **Duração:** 0.5 s cada  •  **Tipo:** toca uma vez
 - **Onde toca:** Passo na pedra (caminho de pedra e os andares fundos da mina).
 
-> A single footstep of a hobnailed boot on a hard stone floor in a cave, dry tap with a slight echo, 0.3 seconds, no other sounds.
+> One footstep on a solid stone floor, hard shoe heel, loud crisp click, echoing in a cave, close microphone, 0.5 seconds.
 
 ### 96. `passos/madeira`
 
@@ -822,7 +822,7 @@ Gerado por `python tools/lista_audio.py` a partir de `project.godot/data/audio/s
 - **Duração:** 0.4 s cada  •  **Tipo:** toca uma vez
 - **Onde toca:** Passo na água (as poças do S2 e do S3).
 
-> A single footstep of a boot splashing in a shallow puddle, wet slap and small splash, 0.4 seconds, no other sounds.
+> A single clear, loud footstep of a boot splashing into a shallow puddle, a distinct wet slap with a visible splash, close microphone, strong and clearly audible, 0.4 seconds, no other sounds.
 
 
 ## Voz curta dos ipezinhos (desligável)
@@ -980,7 +980,7 @@ Gerado por `python tools/lista_audio.py` a partir de `project.godot/data/audio/s
 - **Duração:** 1.5 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 8 a 20 s enquanto vale: mina/s2
 - **Onde toca:** Na mina e no S2: uma gota cai.
 
-> A single water drip falling in a cave with an echo, 1.5 seconds.
+> A single clear, loud water drip falling into a pool in a cave, a distinct plink with a short echo, close microphone, strong and clearly audible, 1.5 seconds, no other sounds.
 
 ### 117. `pontuais/acido_borbulha`
 
