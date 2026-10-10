@@ -1,11 +1,36 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-10. Branch `isometrico`. Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
+Atualizado em 2026-10-10. Branch `isometrico`. Bloco 112 feito (commit local, sem push). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
-## AGORA (2026-10-10): Bloco 111 — famílias (feito; commit local). FIM DO PACOTE 8 → R → F: o Marco valida 108–111
+## Bloco 112 — INTRODUÇÃO + PRIMEIRO DIA GUIADO (feito; commit local, sem push)
+
+Pedido "Prompt 4" (cena inicial + tutorial = começo do Capítulo 1). Plano aprovado ("pode ser"): quadros 4–7 NO MAPA real,
+capataz = retrato do minerador ("Capataz Bastião"). Relatório `docs/BLOCO112_INTRO.md`; fotos `docs/arte/bloco112/`
+(`tests/capturas_bloco112.gd`); teste `b112_intro_primeiro_dia` (59 OK, registrado no GUT).
+- `scenes/ui/intro.tscn` + `intro.gd` (quadros 1–3), `intro_cinema.gd` (4–7 no mapa: pedreira, coletor em ruína, corte,
+  fogueira + título; sem HUD/nomes/balões), `guia.gd` (capataz + setas pela missão `cap1_primeiro_dia`, em ordem; a Cinzas
+  depois), `SaveManager.cinema`/`ver_introducao`/`so_vendo`, "Ver a introdução" no menu, "Primeiro dia guiado" nas Configurações,
+  ganchos `Audio.intro(nome)` (SEM arquivos de som ainda).
+- Arte: 3 ilustrações (75 gerações, saldo ~5.487), aprovadas; fogueira animada reaproveitada como fx.
+- Achados na retomada: "vila fundada" contava antes da Fundação (a 1ª conferência das missões via o founded=true padrão — já
+  afetava a Cinzas desde o 100; `main.gd` zera antes do await); tween da câmera do quadro anterior brigava ao pular; a fogueira
+  não sumia (ligação no nó do cinema que é apagado); legenda de 2 linhas cortada; balões na caravana; cartão do capataz cobria as
+  abas do Construir (some com o menu aberto); `Q1_sol.png` com maiúscula.
+- Testes conferidos: b112, b100 (ajustado), b37, b95b, b95, p28_save, hud_frostpunk, b52, b111. O resto da bateria não.
+- PENDENTE com o Marco: validar a intro jogando; sons da intro (gerar com ElevenLabs se ele quiser); push.
+
+REGRAS QUE O MARCO DEFINIU (valem sempre):
+- Sempre usar as skills do projeto (.claude/skills) ao desenvolver; se ver algo estranho pode corrigir e depois contar.
+- Pacote de prompts + "pode aplicar": listar as decisões no começo, seguir o recomendado, ele valida no fim.
+- Testes um por vez, em primeiro plano, APPDATA isolado (fake_appdata); listar os não conferidos. GUT só um script:
+  `-gselect=<nome>` (o `-gtest` roda a bateria inteira).
+- Arte só do PixelLab (nada de placeholder), mostrar antes de integrar quando ele pedir; reaproveitar o que já existe.
+- Commit por caminho explícito; push só com o OK dele.
+
+## Bloco 111 — famílias (feito; enviado)
 
 Prompt F. Relatório `docs/BLOCO111_FAMILIAS.md`; simulação de 3 anos `docs/telemetria/bloco111/` (`tests/sim_familias.gd`,
 modelo dia a dia que lê os @export); fotos `docs/arte/bloco111/`.

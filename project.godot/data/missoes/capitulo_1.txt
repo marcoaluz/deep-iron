@@ -17,6 +17,18 @@ intro = O sol queimou tudo lá em cima e o que sobrou do mundo é cinza. Os ipez
   pedreira velha e uma boca de mina: é aqui que a vila nasce. Primeiro um teto, depois comida,
   depois ferro nas mãos, e só então a noite.
 
+# Bloco 112: o PRIMEIRO DIA guiado pelo capataz (os objetivos valem em ordem; o capataz e as setas são do guia.gd).
+[cap1_primeiro_dia]
+titulo = Primeiro dia
+texto = O capataz mostra o caminho: o Centro da vila, as funções, as casas e o preparo pra primeira noite.
+objetivo.0 = Fundar o Centro da vila
+objetivo.1 = Dar a função de engenheiro a alguém
+objetivo.2 = Dar função a {n} ipezinhos
+objetivo.3 = Erguer {n} casas
+objetivo.4 = Ter um guarda
+objetivo.5 = Construir a cozinha
+recompensa = 50 créditos e a missão Cinzas
+
 [cap1_cinzas]
 titulo = Cinzas
 texto = Fundar a vila e aguentar a primeira noite com as criaturas da floresta batendo no portão.

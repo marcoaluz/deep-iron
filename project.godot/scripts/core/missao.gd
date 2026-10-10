@@ -26,7 +26,10 @@ extends Resource
 ##   "vendido"          minério vendido, no total (quantidade)
 ##   "obras"            obras prontas de um tipo (alvo = tipo do canteiro: "taverna"...; quantidade)
 ##   "mortes"           mortes na vila (quantidade)
+##   "funcoes"          Bloco 112: adultos com função (alvo = "" qualquer função, ou a função: "engenheiro"...; quantidade)
 @export var objetivos: Array = []
+## Bloco 112: os objetivos valem EM ORDEM (o próximo só conta depois do anterior) — o primeiro dia guiado do capataz.
+@export var em_ordem: bool = false
 ## Recompensa: {"creditos": 150, "diario": "id da página", "libera_capitulo": 2, "itens": {id: qtd}}.
 @export var recompensa: Dictionary = {}
 ## Ids das missões que precisam estar cumpridas antes desta aparecer.
@@ -43,6 +46,8 @@ func objetivo_padrao(i: int) -> String:
 	match String(o[0]):
 		"fundar_vila":
 			return "Fundar a vila"
+		"funcoes":
+			return ("%d com função" % q) if alvo == "" else ("%d %s" % [q, alvo])
 		"casas":
 			return "%d casas construídas" % q
 		"construcao":

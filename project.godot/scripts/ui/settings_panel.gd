@@ -130,6 +130,16 @@ func _build_main() -> void:
 		Ipe.baloes_motivo = on
 		Ipe._baloes_lido = true)
 	right.add_child(motivo)
+	var guia := CheckBox.new()  # Bloco 112: o capataz e as setas do primeiro dia (a missão continua valendo sem eles)
+	guia.text = "Primeiro dia guiado (capataz e setas)"
+	guia.button_pressed = Settings.get_value("jogo", "guia_primeiro_dia", true)
+	guia.toggled.connect(func(on: bool):
+		Audio.click()
+		Settings.set_value("jogo", "guia_primeiro_dia", on)
+		var g := get_tree().get_first_node_in_group("guia")
+		if g and g.has_method("ligado_mudou"):
+			g.ligado_mudou())
+	right.add_child(guia)
 	# idioma
 	var lang_row := HBoxContainer.new()
 	lang_row.add_theme_constant_override("separation", 10)

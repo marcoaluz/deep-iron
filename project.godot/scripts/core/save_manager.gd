@@ -91,6 +91,9 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 112: "guia" {pulado, fim_visto} (o primeiro dia guiado); "missoes" ganha "primeiro_dia": true. Save antigo (sem
+##     "primeiro_dia"): a missão cap1_primeiro_dia vem cumprida (sem recompensa) e o guia não aparece — nada se repete; a
+##     introdução nunca roda num save carregado. A marca "intro vista" e o guia ligado/desligado ficam no settings.cfg.
 ##   Bloco 111: "familias" {nascimentos, viraram_adultos, ultimo_filho {"a|b": dia}, filhos_do_casal {"a|b": n}}; o ipezinho
 ##     ganha "fase" (adulto/bebe/crianca/aprendiz), "idade_s", "pais" e "filhos" (nomes), "gravidez_s" (-1 = não), "pai_bebe",
 ##     "resguardo_s", "estudo" e "mentor"; o memorial ganha "familia" (texto); o Centro da Vila "escolas"; as políticas a
@@ -273,6 +276,10 @@ const LEGACY_LOTS := {
 	"Lote4": Vector2(-640, 365),
 }
 const MAIN_SCENE := "res://scenes/game/main.tscn"
+## Bloco 112: a introdução (quadros 1 a 3; os 4 a 7 rodam no mapa da partida, intro_cinema.gd).
+const INTRO_SCENE := "res://scenes/ui/intro.tscn"
+const START_MENU := "res://scenes/ui/start_menu.tscn"
+const Settings := preload("res://scripts/core/settings.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const Canteiro := preload("res://scripts/props/canteiro.gd")
 
@@ -292,6 +299,9 @@ var _autosave_timer: float = 0.0
 var _backup_checked: bool = false
 ## Partida perdida (expulso pela greve): não salva mais nada até sair dela.
 var game_over: bool = false
+## Bloco 112: a introdução em curso. "" = nenhuma; "novo" = partida nova (os quadros no mapa e depois a Fundação);
+## "ver" = só rever pelo menu (a partida do mapa NÃO salva nem faz backup e volta pro menu no fim).
+var cinema: String = ""
 
 
 func _ready() -> void:
@@ -363,7 +373,7 @@ func register_game(main: Node) -> void:
 	_game = main
 	game_over = false
 	_autosave_timer = 0.0
-	if not pending_load and has_save() and not _backup_checked:
+	if not pending_load and has_save() and not _backup_checked and not so_vendo():
 		# partida nova (ex.: rodando main.tscn direto no editor) com save antigo na pasta:
 		# guarda o antigo antes que o autosave o substitua
 		backup_existing_save()
@@ -376,6 +386,54 @@ func is_game_running() -> bool:
 
 ## Menu: começa do zero. Se havia save, ele vira um backup com data/hora (user://backups).
 func start_new_game() -> void:
+	# Bloco 112: a primeira partida nova passa pela introdução (depois só pelo "Ver a introdução" do menu)
+	if not Settings.get_value("jogo", "intro_vista", false) and not "--smoke" in OS.get_cmdline_user_args():
+		cinema = "novo"
+		get_tree().change_scene_to_file(INTRO_SCENE)
+		return
+	_comeca_partida_nova()
+
+
+## Bloco 112: o menu "Ver a introdução": os quadros e o mapa sem salvar nada.
+func ver_introducao() -> void:
+	cinema = "ver"
+	get_tree().change_scene_to_file(INTRO_SCENE)
+
+
+## Bloco 112: a intro acabou (ou foi pulada): a marca "intro vista" e a partida (ou de volta ao menu).
+## com_mapa = false: pulou tudo (Esc): sem os quadros no mapa.
+func intro_terminou(com_mapa: bool) -> void:
+	Settings.set_value("jogo", "intro_vista", true)
+	if not com_mapa:
+		if cinema == "ver":
+			cinema = ""
+			get_tree().change_scene_to_file(START_MENU)
+			return
+		cinema = ""
+	if cinema == "ver":
+		pending_load = false
+		_pending_data = {}
+		Carregando.mostra(get_tree())
+		get_tree().change_scene_to_file(MAIN_SCENE)
+		return
+	_comeca_partida_nova()
+
+
+## Bloco 112: o cinema no mapa terminou: "ver" volta pro menu (a partida de mentira some sem salvar).
+func cinema_terminou() -> void:
+	var era := cinema
+	cinema = ""
+	if era == "ver":
+		_game = null
+		get_tree().change_scene_to_file(START_MENU)
+
+
+## Só rever a introdução: esta partida não pode salvar (nem backup, nem autosave, nem ao fechar).
+func so_vendo() -> bool:
+	return cinema == "ver"
+
+
+func _comeca_partida_nova() -> void:
 	backup_existing_save()
 	_backup_checked = true
 	pending_load = false
@@ -527,7 +585,7 @@ func quarantine_corrupt_save() -> void:
 
 # ------------------------------------------------------------ salvar
 func save_game(reason: String = "manual") -> bool:
-	if not is_game_running() or game_over:
+	if not is_game_running() or game_over or so_vendo():  # (Bloco 112: revendo a intro, nada é salvo)
 		return false
 	var data := _collect()
 	var json := JSON.stringify(data, "\t")
@@ -585,6 +643,7 @@ func _collect() -> Dictionary:
 		"politicas": "politicas",  # Bloco 108: as políticas da vila, as esperas e a fraqueza
 		"relacoes": "relacoes",  # Bloco 110: os pares (pontos, casal, casado), o luto pessoal, os marcos do diário
 		"familias": "familias",  # Bloco 111: os nascimentos e o último filho de cada casal
+		"guia": "guia",  # Bloco 112: o primeiro dia guiado (pulou o guia? já viu o "pronto"?)
 		"missoes": "missoes",  # Bloco 100: a campanha (capítulo liberado, missões cumpridas, objetivos, contadores)
 	}
 	for key in singles:
@@ -735,6 +794,9 @@ func apply_pending(main: Node) -> void:
 	var logi := get_tree().get_first_node_in_group("logistica")  # Bloco 105 (save antigo: 0 entregas)
 	if logi:
 		logi.load_save_data(SaveUtil.dict(data, "logistica"))
+	var guia := get_tree().get_first_node_in_group("guia")  # Bloco 112 (save antigo: o guia não aparece; a missão diz)
+	if guia:
+		guia.load_save_data(SaveUtil.dict(data, "guia"))
 	var fam := get_tree().get_first_node_in_group("familias")  # Bloco 111 (save antigo: ninguém nasceu ainda)
 	if fam:
 		fam.load_save_data(SaveUtil.dict(data, "familias"))

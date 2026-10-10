@@ -1,0 +1,17 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/missao.gd" id="1_missao"]
+
+[resource]
+script = ExtResource("1_missao")
+id = "cap1_primeiro_dia"
+titulo = "Primeiro dia"
+texto = "O capataz guia o primeiro dia: fundar, dar funções, erguer as casas e se preparar para a noite."
+capitulo = 1
+ordem = -1
+objetivos = [["fundar_vila", "", 1], ["funcoes", "engenheiro", 1], ["funcoes", "", 6], ["casas", "", 3], ["funcoes", "guarda", 1], ["construcao", "comedouros", 1]]
+em_ordem = true
+recompensa = {
+"creditos": 50
+}
+prerequisitos = PackedStringArray()

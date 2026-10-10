@@ -16,6 +16,9 @@ signal mudou
 signal missao_cumprida(id: String)
 signal objetivo_cumprido(id: String, indice: int)
 
+## Bloco 112: a missão do primeiro dia guiado (o capataz do guia.gd segue os objetivos dela).
+const PRIMEIRO_DIA := "cap1_primeiro_dia"
+
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const Missao := preload("res://scripts/core/missao.gd")
 const DIR := "res://data/missoes/"
@@ -265,6 +268,10 @@ func valor_do_objetivo(o: Array) -> float:
 			return 1.0 if hub != null and hub.get("founded") != false else 0.0
 		"casas":
 			return float(get_tree().get_nodes_in_group("casas").filter(func(c): return c.get("built") == true).size())
+		"funcoes":  # Bloco 112: adultos com função (alvo "" = qualquer uma)
+			return float(get_tree().get_nodes_in_group("ipezinhos").filter(func(w):
+				var j := String(w.get("job"))
+				return j != "ocioso" and j != "" and not (w.has_method("e_crianca") and w.e_crianca()) and (alvo == "" or j == alvo)).size())
 		"construcao":
 			return float(get_tree().get_nodes_in_group(alvo).size()) if alvo != "" else 0.0
 		"minerio_armazem":
@@ -334,6 +341,8 @@ func confere() -> void:
 		for i in m.objetivos.size():
 			if lista.has(i):
 				continue
+			if m.get("em_ordem") == true and i > 0 and not lista.has(i - 1):
+				break  # Bloco 112: em ordem — o próximo só conta depois do anterior
 			var o: Array = m.objetivos[i]
 			var q := float(o[2]) if o.size() > 2 else 1.0
 			if valor_do_objetivo(o) >= q:
@@ -399,7 +408,7 @@ func _aviso(texto: String, cor: Color) -> void:
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	return {"capitulo_liberado": capitulo_liberado, "cumpridas": cumpridas.duplicate(), "feitos": feitos.duplicate(true),
-		"contadores": contadores.duplicate(true)}
+		"contadores": contadores.duplicate(true), "primeiro_dia": true}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -408,6 +417,8 @@ func load_save_data(d: Dictionary) -> void:
 	for id in SaveUtil.array(d, "cumpridas"):
 		if por_id(String(id)) != null and not cumpridas.has(String(id)):
 			cumpridas.append(String(id))
+	if not SaveUtil.boolean(d, "primeiro_dia", false):
+		_primeiro_dia_ja_passou()  # Bloco 112: save de antes do guia — o primeiro dia já passou
 	feitos = {}
 	var f := SaveUtil.dict(d, "feitos")
 	for id in f:
@@ -435,6 +446,12 @@ func load_save_data(d: Dictionary) -> void:
 	mudou.emit()
 
 
+## Bloco 112: save de antes do primeiro dia guiado: a missão dele conta como cumprida (sem recompensa nem guia de novo).
+func _primeiro_dia_ja_passou() -> void:
+	if por_id(PRIMEIRO_DIA) != null and not cumpridas.has(PRIMEIRO_DIA):
+		cumpridas.append(PRIMEIRO_DIA)
+
+
 ## O SaveManager chama no fim do carregamento: `tinha` = o save tem a chave "missoes". Sem ela (save de antes do
 ## Bloco 100) a campanha começa no capítulo certo: refaz os contadores do que a vila já viveu e confere tudo.
 func depois_de_carregar(tinha: bool) -> void:
@@ -453,6 +470,7 @@ func depois_de_carregar(tinha: bool) -> void:
 		mortes += (e.get("memorial") as Array).size() if e.get("memorial") != null else 0
 	contadores = {"invasoes": passadas, "vendido": 0.0, "mortes": mortes, "obras": {}}
 	_silencio = true  # (um aviso só, no fim: não uma chuva de "objetivo cumprido")
+	_primeiro_dia_ja_passou()  # Bloco 112: save sem missões é de antes do guia
 	var antes := cumpridas.size()
 	for volta in ULTIMO_CAPITULO:  # cumprir um capítulo libera o seguinte: confere de novo até assentar
 		var n := cumpridas.size()

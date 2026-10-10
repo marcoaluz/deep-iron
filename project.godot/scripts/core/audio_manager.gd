@@ -501,6 +501,34 @@ func migrantes(pos: Vector2) -> void:
 		play_at(&"migrantes", [migrantes_sound], pos, ui_db)
 
 
+## Bloco 112: os sons da INTRODUÇÃO por nome ("explosao", "vento", "caravana", "pedreira", "mina", "fogo", "titulo").
+## Gancho: toca res://assets/audio/intro/<nome>.ogg (ou .wav) se o arquivo existir; sem ele, fica em silêncio. Os
+## arquivos vêm depois — é só pôr na pasta com o nome.
+const INTRO_DIR := "res://assets/audio/intro/"
+@export var intro_db: float = -6.0  # volume dos sons da introdução (dB)
+var _intro_cache := {}
+
+
+func intro(nome: String) -> void:
+	if not _intro_cache.has(nome):
+		var st: AudioStream = null
+		for ext: String in ["ogg", "wav", "mp3"]:
+			var path := INTRO_DIR + nome + "." + ext
+			if ResourceLoader.exists(path):
+				st = load(path)
+				break
+		_intro_cache[nome] = st
+	play_ui(_intro_cache[nome], intro_db)
+
+
+## Bloco 112: quais sons da intro já têm arquivo (pro teste e pro relatório).
+func intro_tem(nome: String) -> bool:
+	for ext: String in ["ogg", "wav", "mp3"]:
+		if ResourceLoader.exists(INTRO_DIR + nome + "." + ext):
+			return true
+	return false
+
+
 func click() -> void:
 	play_ui(click_sound, ui_db - 6.0)
 

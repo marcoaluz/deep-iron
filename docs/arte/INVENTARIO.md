@@ -175,6 +175,7 @@ prompts 0–31).
 | Clima: folha, pólen, chuva, neve (partícula por estação) + neblina | 18 | **integrado** (textura de pixel, pixel inteiro em qualquer zoom; neblina de manhã e na chuva) | ~4 (feito) |
 | Poeira, lascas, serragem, faíscas, fumaça, gás, calor, radiação, gotas, pedras (acidente), fogo animado, onda solar, domo do escudo, festa (bandeirinhas, fogos, confete), greve (barril, placas), marcadores (seleção, destino, obra) | 18 | **integrado** (`iso_fx.gd`; relatório `prompt18/`) | ~37 (feito) |
 | Luzes (janelas, forja, tochas, cabine, giroflex) | 19 | **integrado** (Prompt 19: ponto de luz por desenho, texturas por tipo, janelas acesas, lava, tom por estação) | 0 |
+| **Fogueira animada do mapa** (a que já existia em objetos/final/fogueira_f0..f3, virou efeito: `integra.py fx fogueira`; quadro 7 da introdução) — Bloco 112 | — | **integrado** | 0 (reaproveitada) |
 
 ## 11. Interface
 
@@ -189,6 +190,7 @@ prompts 0–31).
 | Cartões do menu de construção (normal, trancado com cadeado, em breve; miniatura = render reduzido do prédio) | 20/21 | **integrado** | 0 |
 | Fonte pixel: texto (com todos os acentos, números de largura fixa) e título (estêncil de ferro) | 22 | **integrado** em cabeçalhos, faixas e números do HUD (o texto corrido segue na padrão: ver `prompt22/`) | 50 (feito) |
 | Menus: início (key art animada + logo), pausa, opções, fim de jogo, vitória | 20/26 | **integrado** (pele nova) | incluído |
+| **Introdução**: 3 ilustrações 640x360 (o sol explodindo sobre a cidade mineira, as cidades em ruína, a caravana indo pra pedreira) — Bloco 112 (`intro112.py gera/galeria/integra` → `assets/game/ui/intro/`); o capataz do guia usa o retrato do minerador (sem arte nova) | — | **integrado** (aprovado pelo Marco) | 75 (feito; saldo ~5.562 → ~5.487) |
 
 ## 12. Enfeite (depois que o jogo roda com a arte nova)
 

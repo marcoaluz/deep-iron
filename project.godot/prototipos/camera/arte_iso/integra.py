@@ -889,16 +889,23 @@ def props(so=None):
 # ------------------------------------------------------------ efeitos (Prompt 18)
 FX_DEST = os.path.normpath(os.path.join(AQUI, "../../../assets/game/iso/fx"))
 # efeito animado (efeitos/anim/<nome>/c01..c08, animate_image; c00 = o desenho de entrada)
-FX_ANIM = ["chama_p", "chama_g", "barril_fogo", "bandeirinhas", "cachoeira"]  # (Bloco 71: a cachoeira do S4, por script)
+FX_ANIM = ["chama_p", "chama_g", "barril_fogo", "bandeirinhas", "cachoeira",  # (Bloco 71: a cachoeira do S4, por script)
+           "fogueira"]  # Bloco 112: a fogueira do acampamento da introdução (objetos/final/fogueira_f0..f3, Prompt 14)
 
 
-def fx():
+def fx(so=None):
     """Texturas de partícula (efeitos/particulas.py) + tiras dos efeitos animados, recortadas na
-    caixa que cabe todos os quadros; âncora = meio da base (o fogo nasce do chão)."""
+    caixa que cabe todos os quadros; âncora = meio da base (o fogo nasce do chão).
+    `so` (Bloco 112): só esses efeitos, mesclados no fx.json que já existe (sem as partículas nem as outras tiras)."""
     import runpy
-    runpy.run_path(os.path.join(AQUI, "efeitos", "particulas.py"))
     out = {"_obs": "Prompt 18 (integra.py fx): efeito -> tira (n quadros de 'quadro' px), âncora (base)", "anim": {}}
+    if so:
+        out = json.load(open(os.path.join(FX_DEST, "fx.json"), encoding="utf-8"))
+    else:
+        runpy.run_path(os.path.join(AQUI, "efeitos", "particulas.py"))
     for nome in FX_ANIM:
+        if so and nome not in so:
+            continue
         fr = sorted(glob.glob(os.path.join(AQUI, "efeitos", "anim", nome, "c*.png")))[1:]
         ims = [Image.open(f).convert("RGBA") for f in fr]
         bb = [i.getbbox() for i in ims if i.getbbox()]
@@ -1045,8 +1052,8 @@ if __name__ == "__main__":
     elif sys.argv[1:2] == ["props"]:
         props()
         contorno()
-    elif sys.argv[1:2] == ["fx"]:  # Prompt 18: partículas e efeitos animados
-        fx()
+    elif sys.argv[1:2] == ["fx"]:  # Prompt 18: partículas e efeitos animados (Bloco 112: com nomes = só esses)
+        fx(sys.argv[2:] or None)
     elif sys.argv[1:2] == ["criaturas"]:  # Prompt 17: só os invasores (sem refazer os bonecos)
         so_criaturas()
     elif sys.argv[1:2] == ["luz"]:  # Prompt 19: texturas de luz + janelas acesas + pontos de luz

@@ -255,6 +255,8 @@ func cancela_racao() -> void:
 
 ## No domingo a cozinha lembra de revisar o cardápio da semana.
 func _novo_dia(_dia: int) -> void:
+	if not is_inside_tree():
+		return  # (a cozinha que a Fundação tirou do mapa ainda não foi liberada)
 	var dn := get_tree().get_first_node_in_group("day_night")
 	var hud := get_tree().get_first_node_in_group("hud")
 	if dn and hud and dn.e_domingo():

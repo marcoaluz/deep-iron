@@ -15,4 +15,4 @@ recompensa = {
 "diario": "cap1_cinzas",
 "libera_capitulo": 2
 }
-prerequisitos = PackedStringArray()
+prerequisitos = PackedStringArray("cap1_primeiro_dia")

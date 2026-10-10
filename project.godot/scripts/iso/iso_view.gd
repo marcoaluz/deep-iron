@@ -57,6 +57,8 @@ var enabled := false
 ## Prompt 30: no zoom "longe" (menos de 1 px de tela por px de arte) os rótulos somem: o texto
 ## fica pequeno demais e um cobre o outro.
 var labels_on := true
+## Bloco 112: a introdução no mapa (intro_cinema.gd): sem os nomes dos prédios.
+var cinema := false
 ## Bloco 95: o que está debaixo do mouse (o HUD atualiza) e o prédio da janela aberta: os dois mostram o rótulo
 ## inteiro no mapa (os detalhes); os outros só o nome, pequeno.
 var hover: Node = null
@@ -1250,7 +1252,7 @@ func _process(_delta: float) -> void:
 	_sync_blocos()
 	_sync_cabines()  # Bloco 99
 	var stops: Array = _camera.zoom_stops() if _camera.has_method("zoom_stops") else []
-	labels_on = stops.size() < 2 or _camera.zoom.x > float(stops[0]) + 0.001
+	labels_on = not cinema and (stops.size() < 2 or _camera.zoom.x > float(stops[0]) + 0.001)
 	if not _levels.is_empty() and _ground_sv and _frame % GROUND_REFRESH_EVERY == 0:
 		_ground_sv.render_target_update_mode = SubViewport.UPDATE_ONCE
 	var view := _screen_view().grow(256.0)

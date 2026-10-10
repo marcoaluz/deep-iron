@@ -61,6 +61,7 @@ func _base() -> void:
 	var m = g("missoes")
 	m.capitulo_liberado = 1
 	m.cumpridas.clear()
+	m.cumpridas.append(Missoes.PRIMEIRO_DIA)  # Bloco 112: a Cinzas vem depois do primeiro dia guiado
 	m.feitos = {}
 	m.contadores = {"invasoes": 0, "vendido": 0.0, "mortes": 0, "obras": {}}
 	for c in get_nodes_in_group("casas"):
@@ -205,14 +206,14 @@ func _roda() -> void:
 
 	print("== D) save: a chave 'missoes' volta igual")
 	var d: Dictionary = m.get_save_data()
-	check(d.cumpridas == ["cap1_cinzas"] and d.capitulo_liberado == 2 and (d.feitos.cap1_cinzas as Array).size() == 5, "o que vai pro save (%s)" % [d.cumpridas])
+	check(d.cumpridas == [Missoes.PRIMEIRO_DIA, "cap1_cinzas"] and d.capitulo_liberado == 2 and (d.feitos.cap1_cinzas as Array).size() == 5, "o que vai pro save (%s)" % [d.cumpridas])
 	m.cumpridas.clear()
 	m.feitos = {}
 	m.capitulo_liberado = 1
 	m.load_save_data(d)
 	check(m.cumprida("cap1_cinzas") and m.capitulo_liberado == 2 and m.objetivo_feito(c1, 3), "carregou: a missão cumprida, o capítulo 2 e os objetivos voltam")
 	m.load_save_data({"capitulo_liberado": 99, "cumpridas": ["nao_existe"], "feitos": {"cap1_cinzas": [0, 99, -1]}})
-	check(m.capitulo_liberado == 6 and m.cumpridas.is_empty() and (m.feitos.cap1_cinzas as Array) == [0], "chaves ruins: ignora o que não existe (sem erro)")
+	check(m.capitulo_liberado == 6 and m.cumpridas == [Missoes.PRIMEIRO_DIA] and (m.feitos.cap1_cinzas as Array) == [0], "chaves ruins: ignora o que não existe (sem erro; sem 'primeiro_dia' = save antigo: o primeiro dia já passou)")
 	var sm = root.get_node("SaveManager")
 	m.load_save_data(d)
 	sm.save_game("manual")

@@ -1,0 +1,23 @@
+{
+ "q1_sol": {
+  "job": "d3faee5f-7bee-409f-9759-1fe22c4e8088",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\intro\\q1_sol.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "q2_cidades": {
+  "job": "150d0347-0acc-422c-9612-f9a9cc0a44d0",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\intro\\q2_cidades.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "q3_caravana": {
+  "job": "dffa4e11-4084-43e3-9b98-76c3cb9c6fc5",
+  "custo": 25,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\intro\\q3_caravana.png",
+  "ok": true,
+  "candidatos": 1
+ }
+}

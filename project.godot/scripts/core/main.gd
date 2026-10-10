@@ -102,6 +102,10 @@ func _ready() -> void:
 	_founding = preload("res://scripts/core/founding.gd").new()
 	_founding.name = "Founding"
 	add_child(_founding)
+	# Bloco 112: o primeiro dia guiado (o capataz e as setas, pela missão cap1_primeiro_dia)
+	var guia := preload("res://scripts/core/guia.gd").new()
+	guia.name = "Guia"
+	add_child(guia)
 	# Bloco 40: clima visual da clareira (folhas, neve, chuva, pólen)
 	var weather := preload("res://scripts/core/weather.gd").new()
 	weather.name = "Weather"
@@ -122,7 +126,24 @@ func _ready() -> void:
 		var ofi := get_tree().get_first_node_in_group("oficina")
 		if ofi and ofi.has_method("set_built"):
 			ofi.set_built(false)  # Bloco 58: jogo novo — a Oficina é construída pelo engenheiro
+		var hub0 := get_tree().get_first_node_in_group("village_hub")
+		if hub0:
+			hub0.founded = false  # Bloco 112: já agora (a 1ª conferência das missões não pode contar "vila fundada")
 		await _environment.navigation_ready
+		if SaveManager.cinema != "":  # Bloco 112: os quadros 4 a 7 da introdução, no mapa, antes da Fundação
+			_founding.prepara()  # (a pedreira vazia; e a vila ainda não fundada: as missões não contam isso na intro)
+			var env0 := get_tree().get_first_node_in_group("environment")
+			if env0:
+				env0.rebuild_navigation()
+			var cin := preload("res://scripts/ui/intro_cinema.gd").new()
+			cin.name = "IntroCinema"
+			cin.setup(self)
+			add_child(cin)
+			await cin.terminou
+			var so_ver: bool = SaveManager.so_vendo()
+			SaveManager.cinema_terminou()
+			if so_ver:
+				return  # (só revendo: o SaveManager volta pro menu)
 		_founding.start(true)
 
 

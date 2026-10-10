@@ -9,9 +9,9 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1181 valores** em 4 pastas de scripts (80 trocados por alguma cena).
+Total: **1186 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 
-## `scripts/core/audio_manager.gd` (79)
+## `scripts/core/audio_manager.gd` (80)
 
 **Volumes (0 a 1)**
 
@@ -121,6 +121,7 @@ Total: **1181 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `max_voices` | 24 |  |  |
 | `max_steps_per_second` | 8.0 |  | Máximo de passos tocando por segundo somando todos os ipezinhos. |
 | `sfx_max_distance` | 900.0 |  | Distância (em pixels do mundo) além da qual efeitos posicionais não tocam. |
+| `intro_db` | -6.0 |  |  |
 
 ## `scripts/core/build_menu.gd` (7)
 
@@ -824,6 +825,16 @@ Total: **1181 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `broca_cristal_rubro` | 0.08 |  |  |
 | `broca_s3_mult` | 1.25 |  | Com o S3 aberto a broca rende mais (o fundo do abismo é mais quente e mais mole). |
 
+## `scripts/core/guia.gd` (3)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `confere_cada` | 0.25 |  | Segundos entre as conferências do passo (as setas andam a cada quadro). |
+| `seta_pulso_hz` | 1.6 |  | Pulsar das setas: ciclos por segundo e quantos px ela sobe e desce. |
+| `seta_pulso_px` | 6.0 |  |  |
+
 ## `scripts/core/hud.gd` (4)
 
 **(sem grupo)**
@@ -909,7 +920,7 @@ Total: **1181 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `camas_boas` | 4 |  | Camas livres que contam como "muitas" (1,0). |
 | `decoracao_boa` | 8 |  | Peças de decoração que contam como "vila bonita" (1,0). |
 
-## `scripts/core/missao.gd` (7)
+## `scripts/core/missao.gd` (8)
 
 **(sem grupo)**
 
@@ -919,7 +930,8 @@ Total: **1181 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `titulo` | "" |  | Título e texto (os do arquivo do capítulo ganham destes). |
 | `capitulo` | 1 |  | Capítulo (1..6) e a ordem da missão dentro dele. |
 | `ordem` | 0 |  |  |
-| `objetivos` | [] |  | Objetivos: [tipo, alvo, quantidade]. Tipos (os que a Missoes sabe medir; ver missoes.gd `valor_do_objetivo`): "fundar_vila"      a vila foi fundada (alvo e quantidade ignorados) "casas"            casas construídas (quantidade) "construcao"       prédios de um grupo do jogo (alvo = grupo: "comedouros" = cozinha, "tavernas"...; quantidade) "minerio_armazem"  minério guardado nos armazéns (alvo = "" qualquer, ou o minério; quantidade) "item"             itens processados no armazém (alvo = id do item: barra_ferro...; quantidade) "invasoes"         invasões que acabaram (quantidade) "estagio"          estágio da vila (quantidade = o número do estágio) "pesquisa"         pesquisa pronta (alvo = id da pesquisa) "vendido"          minério vendido, no total (quantidade) "obras"            obras prontas de um tipo (alvo = tipo do canteiro: "taverna"...; quantidade) "mortes"           mortes na vila (quantidade) |
+| `objetivos` | [] |  | Objetivos: [tipo, alvo, quantidade]. Tipos (os que a Missoes sabe medir; ver missoes.gd `valor_do_objetivo`): "fundar_vila"      a vila foi fundada (alvo e quantidade ignorados) "casas"            casas construídas (quantidade) "construcao"       prédios de um grupo do jogo (alvo = grupo: "comedouros" = cozinha, "tavernas"...; quantidade) "minerio_armazem"  minério guardado nos armazéns (alvo = "" qualquer, ou o minério; quantidade) "item"             itens processados no armazém (alvo = id do item: barra_ferro...; quantidade) "invasoes"         invasões que acabaram (quantidade) "estagio"          estágio da vila (quantidade = o número do estágio) "pesquisa"         pesquisa pronta (alvo = id da pesquisa) "vendido"          minério vendido, no total (quantidade) "obras"            obras prontas de um tipo (alvo = tipo do canteiro: "taverna"...; quantidade) "mortes"           mortes na vila (quantidade) "funcoes"          Bloco 112: adultos com função (alvo = "" qualquer função, ou a função: "engenheiro"...; quantidade) |
+| `em_ordem` | false |  | Bloco 112: os objetivos valem EM ORDEM (o próximo só conta depois do anterior) — o primeiro dia guiado do capataz. |
 | `recompensa` | {} |  | Recompensa: {"creditos": 150, "diario": "id da página", "libera_capitulo": 2, "itens": {id: qtd}}. |
 | `prerequisitos` | PackedStringArray() |  | Ids das missões que precisam estar cumpridas antes desta aparecer. |
 

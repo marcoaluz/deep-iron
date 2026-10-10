@@ -109,6 +109,13 @@ func _build(status: String) -> void:
 		box.add_child(new_game)
 		new_game.grab_focus.call_deferred()
 
+	# Bloco 112: ver a introdução de novo (não mexe no save: os quadros no mapa rodam numa partida que não salva)
+	var intro := _button("Ver a introdução")
+	intro.pressed.connect(func():
+		Audio.click()
+		SaveManager.ver_introducao())
+	box.add_child(intro)
+
 	var backups: Array[Dictionary] = SaveManager.list_backups_with_summary()
 	if not backups.is_empty():
 		var backups_button := _button("Backups (%d)" % backups.size())

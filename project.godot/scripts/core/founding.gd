@@ -50,21 +50,31 @@ func start(fresh: bool = true) -> void:
 	var hub := _hub()
 	if hub == null or _placer() == null:
 		return
-	hub.founded = false
 	_fresh = fresh
 	if fresh:
-		for casa in get_tree().get_nodes_in_group("casas"):
-			if not casa.placed_by_player:
-				_remove(casa)
-		for c in get_tree().get_nodes_in_group("comedouros"):
-			_remove(c)
-		for h in get_tree().get_nodes_in_group("hortas") + get_tree().get_nodes_in_group("estufas"):
-			_remove(h)  # Bloco 107: a horta da clareira sai: o jogador constrói a dele DENTRO da vila (o pacote paga)
-		hub.starter_houses_left = hub.starter_houses
+		prepara()
+	hub.founded = false
 	var env := get_tree().get_first_node_in_group("environment")
 	if env:
 		env.rebuild_navigation()
 	_place_hub()
+
+
+## A pedreira vazia de uma partida nova: sem o Centro, as casas, a cozinha e a horta do layout da cena (o jogador ergue
+## os dele). Bloco 112: a introdução chama isto ANTES dos quadros no mapa (a câmera passa por uma pedreira vazia).
+func prepara() -> void:
+	var hub := _hub()
+	if hub:
+		hub.founded = false
+		hub.visible = false
+		hub.starter_houses_left = hub.starter_houses
+	for casa in get_tree().get_nodes_in_group("casas"):
+		if not casa.placed_by_player:
+			_remove(casa)
+	for c in get_tree().get_nodes_in_group("comedouros"):
+		_remove(c)
+	for h in get_tree().get_nodes_in_group("hortas") + get_tree().get_nodes_in_group("estufas"):
+		_remove(h)  # Bloco 107: a horta da clareira sai: o jogador constrói a dele DENTRO da vila (o pacote paga)
 
 
 func _remove(n: Node) -> void:

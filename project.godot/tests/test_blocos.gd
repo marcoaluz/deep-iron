@@ -464,3 +464,7 @@ func test_b110_relacoes() -> void:
 
 func test_b111_familias() -> void:
 	run_bloco("b111_familias.gd")
+
+
+func test_b112_intro_primeiro_dia() -> void:
+	run_bloco("b112_intro_primeiro_dia.gd")

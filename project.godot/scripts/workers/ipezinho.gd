@@ -621,6 +621,8 @@ var _balao_vida := 0.0
 ## Bloco 95: o BALÃO DE MOTIVO (por que está parado). Liga/desliga nas configurações ([hud] baloes_motivo):
 ## lido uma vez aqui (o settings.cfg é lido do disco a cada get_value) e trocado pela tela de configurações.
 static var baloes_motivo := true
+## Bloco 112: a introdução no mapa (intro_cinema.gd) esconde os balões (a caravana parada não está "sem trabalho").
+static var sem_baloes := false
 ## Bloco 108: acidentes de trabalho (mina + galho) da sessão, pra telemetria contar por dia.
 static var acidentes_trabalho := 0
 ## Bloco 109: mortes "bobas" da sessão (quem não é guarda, por criatura ou radiação) e as caronas — telemetria.
@@ -4693,7 +4695,7 @@ func _mostra_balao(icone: String) -> void:
 	var tex := Icones.tex(icone)
 	(_balao.get_node("Icone") as Sprite2D).texture = tex
 	(_balao.get_node("Icone") as Sprite2D).scale = Vector2(0.34, 0.34)  # (Bloco 103: a descoberta troca o ícone e a escala)
-	_balao.visible = tex != null
+	_balao.visible = tex != null and not sem_baloes
 	_balao_vida = 1.8
 
 
@@ -4771,7 +4773,7 @@ func _motivo_tick(delta: float) -> void:
 	if not _baloes_lido:
 		_baloes_lido = true
 		baloes_motivo = bool(Settings.get_value("hud", "baloes_motivo", true))
-	var m := motivo_parado() if baloes_motivo else ""
+	var m := motivo_parado() if baloes_motivo and not sem_baloes else ""
 	if m != _motivo:
 		_motivo = m
 		_motivo_t = 0.0
