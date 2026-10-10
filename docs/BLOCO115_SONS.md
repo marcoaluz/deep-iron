@@ -57,7 +57,20 @@ vários eventos do jogo não tinham som nenhum (animais, radiação, poças, por
 - Os ganchos de animais, criaturas, portão, máquinas, nascimento, casamento, enterro e jazida foram conferidos no código, não disparados um a um no jogo (a conversa dos loops, o Geiger, o "oi" e os sons soltos foram exercitados no teste).
 - Não conferi o preço em créditos do ElevenLabs: são 193 arquivos, a maioria curta.
 
-## 6) Pendências
+## 6) Os sons foram GERADOS (API do ElevenLabs)
 
-- Gerar os 191 arquivos de som (e, à parte, a música da abertura e da introdução).
+Depois do bloco, o Marco pôs a chave no `.env` (fora do git) e aprovou um piloto de 5 sons ("bem nítido e legal"); aí a ferramenta `tools/gera_audio_elevenlabs.py`
+gerou o resto pelos prompts do `slots.json` (modelo `eleven_text_to_sound_v2`, loop ligado nos loops, `prompt_influence` 0,5).
+
+- **191 arquivos WAV, 0 erros**, 1.040 s de áudio, em `project.godot/assets/audio/<pasta>/` (a música não entrou). Gastou **10.756 créditos de 131.000** (cerca de 54 por arquivo).
+- Achado: o PCM da API vem em **estéreo intercalado** (a documentação diz mono); a ferramenta já trata. Loops, interface, stingers e sons globais ficam estéreo; prédios,
+  efeitos, passos, voz e sons soltos viram **mono**. Loops a 24 kHz, o resto a 44,1 kHz. WAV em vez de MP3 pra o loop emendar.
+- Conferido pelo jogo (script de verificação): os 191 carregam, os loops repetem, mono/estéreo na regra, nenhum curto demais.
+- Os testes `b114` e `b115` ignoram os arquivos reais (`AudioSlots.ignora_arquivos`) pra não dependerem do que está na pasta.
+- **Nada foi ouvido por mim.** O Marco aprovou o piloto de 5 (s2_acido, fornalha, estágio novo, confirmar, explosão); os outros 186 saíram do mesmo prompt e ele ainda vai ouvir.
+- Pra refazer um som: edite o `prompt` no `slots.json` e rode `python tools/gera_audio_elevenlabs.py --ids <slot> --force` (gasta créditos de novo).
+
+## 7) Pendências
+
+- Ouvir os 186 sons novos e pedir o refazer dos que não ficaram bons (e, à parte, a música da abertura e da introdução).
 - Depois de ouvir: ajustar `db`, `intervalo` e `raio` no `data/audio/slots.json`.

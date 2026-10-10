@@ -14,7 +14,9 @@ pessoal falando, radiação, tudo)". Relatório `docs/BLOCO115_SONS.md`; **`docs
   pontos sociais, oficina, arsenal, laboratório, escavadeira, escola, cozinha); 12 sons soltos por contexto (`tipo "pontual"`); camada da onda solar; animais; Geiger da
   radiação; criaturas por espécie (+Matriarca); máquinas quebrou/consertada; bebê, casamento, enterro; portão abre/fecha; "oi" ao selecionar. O prompt de cada slot mora no `slots.json`.
 - Testes conferidos: b115 (+GUT), b114, b55, b61, b62, b98, b105, b110, b111, b93, b85, b88, b57. O resto da bateria não.
-- PENDENTE com o Marco: gerar os 191 arquivos no ElevenLabs (e a música à parte); depois ajustar db/intervalo/raio no `slots.json`; push.
+- GERADO (2026-10-10): a chave está no `.env` (gitignored); `tools/gera_audio_elevenlabs.py` gerou os 191 WAV (0 erros, 10.756 créditos de 131.000). Piloto de 5 aprovado pelo
+  Marco ("bem nítido e legal"); os outros 186 ainda não foram ouvidos por ele. Refazer um: `--ids <slot> --force`. O PCM da API vem ESTÉREO (a doc diz mono): a ferramenta trata.
+- PENDENTE com o Marco: ouvir os 186 sons e pedir refazer os ruins; ajustar db/intervalo/raio no `slots.json`; a música (abertura e intro) à parte; push.
 
 ## Bloco 114 — SISTEMAS DE SOM (feito; commit local, sem push)
 
