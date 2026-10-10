@@ -1,11 +1,26 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-09. Branch `isometrico`. Tudo até o Bloco 104 **foi enviado** pro GitHub (push com o OK do Marco); os Blocos 105, 106 e 107 estão só no commit local. Push só com o OK dele.
+Atualizado em 2026-10-10. Branch `isometrico`. Tudo até o Bloco 104 **foi enviado** pro GitHub (push com o OK do Marco); os Blocos 105 a 108 estão só no commit local. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
-## AGORA (2026-10-09): Bloco 107 — agricultor, estufa, carvoaria, curtume e cardápio (feito; commit local)
+## AGORA (2026-10-10): Bloco 108 — Políticas da Vila (feito; commit local). FILA: Prompt 8 (b109), R (b110), F (b111)
+
+Prompt L. Plano `docs/BLOCO108_PLANO.md` (aprovado com: sem "Farta", F6, espera 1 dia, Vilarejo). Relatório
+`docs/BLOCO108_POLITICAS.md`; medição `docs/telemetria/bloco108/` (`tests/bench_politicas.gd`); fotos `docs/arte/bloco108/`.
+- `politicas.gd` (jornada, ração, segurança, migração; espera; fraqueza; vigilância paga ao anoitecer; treino até 125%; a greve
+  derruba as opções que tiram ânimo) + `politicas_panel.gd` (F6) + `modificadores.gd` (o ponto único dos multiplicadores: a
+  Dificuldade do Prompt 5 só entra no grupo "modificadores"). Ânimo num ponto só: `fatores_animo` / `_reacao` (pros traços).
+- Achado: ~40% da comida servida vai pro lixo (o prato sai inteiro e quem enche larga o resto). NÃO mexido (anularia a ração
+  reduzida e mudaria o balanceamento do 101); proposta no relatório.
+- O Marco disse (2026-10-10) "pode aplicar" os Prompts 8, R e F em seguida, com as decisões: secundária por ipezinho com padrão
+  por função; combinar viagens só sem carregador; só o balão de coração (sem animação de abraço); casal muda de casa sozinho;
+  adulto aos 28 dias (@export; simular também 56); escola SEM função nova ("já temos muitas"); arte das crianças e da escola
+  COMPLETA (sem parar no piloto); a política de Família no cartão reservado da janela de Políticas. "Sempre usar skill"; "se ver
+  algo estranho pode alterar e depois só me fala".
+
+## Bloco 107 — agricultor, estufa, carvoaria, curtume e cardápio (feito; commit local)
 
 Prompt W2. Plano `docs/BLOCO107_PLANO.md` (aprovado). Relatório `docs/BLOCO107_AGRICULTOR_OFICINAS.md`; fotos `docs/arte/bloco107/`.
 - Horta e estufa são construção DENTRO da vila (a horta da clareira sai na partida nova; save antigo mantém). Agricultor (tecla

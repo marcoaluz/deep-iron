@@ -45,6 +45,7 @@ signal invasion_started(wave: int)
 signal invasion_ended(killed: int)
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const Modificadores := preload("res://scripts/core/modificadores.gd")  # Bloco 108: a vigilância reforçada
 const LUMIVORO := preload("res://scenes/creatures/lumivoro.tscn")
 const FERRUGENTO := preload("res://scenes/creatures/ferrugento.tscn")
 ## Bloco 70: as criaturas do fundo (saem do poço como o Ferrugento).
@@ -427,14 +428,15 @@ func raid(creature: Node, armazem: Node) -> void:
 		return
 	_raided_gates.append(gid)
 	var ore_taken := 0.0
+	var vigia := Modificadores.mult(get_tree(), "roubo")  # Bloco 108: armazém vigiado (vigilância reforçada) leva menos
 	for ore in armazem.stock.keys():
-		var amount: float = floorf(float(armazem.stock[ore]) * raid_ore_percent)
+		var amount: float = floorf(float(armazem.stock[ore]) * raid_ore_percent * vigia)
 		if amount >= 1.0:
 			ore_taken += armazem.take(amount, ore)
 	var eco := get_tree().get_first_node_in_group("economy")
 	var cr_taken := 0
 	if eco:
-		cr_taken = floori(eco.credits * raid_credit_percent)
+		cr_taken = floori(eco.credits * raid_credit_percent * vigia)
 		if cr_taken > 0:
 			eco.credits -= cr_taken
 			eco.credits_changed.emit(eco.credits)

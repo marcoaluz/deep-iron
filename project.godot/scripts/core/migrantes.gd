@@ -19,6 +19,7 @@ signal mudou
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const Worker := preload("res://scripts/workers/ipezinho.gd")
+const Modificadores := preload("res://scripts/core/modificadores.gd")  # Bloco 108
 const CONDICOES := ["saudavel", "com_fome", "ferido", "doente"]
 const NOME_CONDICAO := {"saudavel": "saudável", "com_fome": "com fome", "ferido": "ferido", "doente": "doente"}
 ## As funções que um migrante pode querer (o padre é único e chega pelo evento dele).
@@ -91,6 +92,15 @@ func _seg_por_dia() -> float:
 	return dn.cycle_length() if dn and dn.has_method("cycle_length") else 540.0
 
 
+func _politicas() -> Node:
+	return get_tree().get_first_node_in_group("politicas")
+
+
+func _camas_livres() -> int:
+	var eco := get_tree().get_first_node_in_group("economy")
+	return int(eco.free_beds()) if eco and eco.has_method("free_beds") else 1
+
+
 func _populacao() -> int:
 	var eco := get_tree().get_first_node_in_group("economy")
 	return eco.worker_count() if eco else get_tree().get_nodes_in_group("ipezinhos").size()
@@ -108,9 +118,20 @@ func _process(delta: float) -> void:
 		var socorro := _populacao() < socorro_abaixo_de
 		if socorro:
 			proximo = minf(proximo, socorro_dias * _seg_por_dia())
+		var pol := _politicas()
+		if not socorro and pol and pol.migracao_fechada():
+			return  # Bloco 108: migração FECHADA — o relógio para (a rede de segurança vale sempre)
 		proximo -= delta
 		if proximo <= 0.0:
-			chama_grupo(randi_range(2, 3) if socorro else -1, "socorro" if socorro else "")
+			var n := randi_range(2, 3) if socorro else -1
+			if not socorro and pol and pol.migracao_seletiva():
+				# Bloco 108: SELETIVA — só vem com cama livre, e do tamanho das camas
+				var camas := _camas_livres()
+				if camas <= 0:
+					proximo = 1.0  # espera uma cama (confere de novo daqui a 1 s)
+					return
+				n = mini(randi_range(grupo_min, maxi(grupo_max, grupo_min)), camas)
+			chama_grupo(n, "socorro" if socorro else "")
 
 
 ## Uma vez por segundo: o prazo de quem espera, o ataque à noite e quem já foi embora.
@@ -129,9 +150,15 @@ func _confere(dt: float) -> void:
 		if e.prazo <= 0.0:
 			_vai_embora(e, "%s cansou de esperar no portão e foi embora." % e.w.display_name)
 			continue
-		if rola_ataque and noite and tem_criatura and randf() < risco_ataque_hora:
+		if rola_ataque and noite and tem_criatura and not _portao_vigiado() and randf() < risco_ataque_hora:
 			_atacado(e)
 	mudou.emit()
+
+
+## Bloco 108: vigilância reforçada (paga esta noite) com algum guarda na vila: quem espera no portão está protegido.
+func _portao_vigiado() -> bool:
+	var pol := _politicas()
+	return pol != null and pol.vigilancia_ativa() and not pol.guardas().is_empty()
 
 
 func _atacado(e: Dictionary) -> void:
@@ -194,7 +221,7 @@ func intervalo() -> float:
 	var eco := get_tree().get_first_node_in_group("economy")
 	if eco and eco.free_beds() <= 0:
 		dias *= sem_cama_mult
-	return maxf(dias, intervalo_min_dias) * _seg_por_dia()
+	return maxf(dias, intervalo_min_dias) * _seg_por_dia() * Modificadores.mult(get_tree(), "migracao_intervalo")  # Bloco 108: seletiva
 
 
 # ------------------------------------------------------------ a chegada
@@ -244,7 +271,7 @@ func chama_grupo(n: int = -1, motivo: String = "") -> Array:
 		w.name = "Migrante%d" % (Time.get_ticks_usec() % 1000000 + i)
 		w.position = base + Vector2(randf_range(-16, 16), randf_range(-16, 16) + i * 10.0)
 		parent.add_child(w)
-		var e := {"w": w, "condicao": _sorteia_condicao(), "funcao": FUNCOES[randi() % FUNCOES.size()], "prazo": prazo_dias * _seg_por_dia()}
+		var e := {"w": w, "condicao": _sorteia_condicao(), "funcao": FUNCOES[randi() % FUNCOES.size()], "prazo": prazo_dias * _seg_por_dia() * (_politicas().prazo_mult() if _politicas() else 1.0)}  # Bloco 108: seletiva = mais prazo
 		if e.condicao == "com_fome":
 			w.hunger = w.hunger_max * 0.25
 		esperando.append(e)

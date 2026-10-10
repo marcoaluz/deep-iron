@@ -18,6 +18,7 @@ extends "res://scripts/props/station.gd"
 
 const SocialSpot := preload("res://scripts/props/social_spot.gd")  # Bloco 85
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const Modificadores := preload("res://scripts/core/modificadores.gd")  # Bloco 108
 
 @export_group("Ritmo")
 ## Fome restaurada por segundo por ipezinho comendo.
@@ -52,6 +53,12 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 ## O máximo de rações numa ordem.
 @export var racao_max_pedido: int = 30
 
+@export_group("Ração da vila (Bloco 108)")
+## A porção (e a fome que ela enche) = básico x prato do cardápio x ração das Políticas, presa entre estes múltiplos do
+## básico (o teto é o próprio ensopado: as duas escolhas nunca somam além dele).
+@export var porcao_mult_min: float = 0.6
+@export var porcao_mult_max: float = 1.5
+
 @export_group("Som")
 ## Intervalo entre os sons de mastigar enquanto alguém come.
 @export var eat_sound_interval: float = 0.9
@@ -67,6 +74,8 @@ var prato := "comum"
 var racao_pedida: int = 0
 var _racao_acc := 0.0
 var panel_id := "cozinha"
+## Bloco 108: comida que já saiu servida (unidades, total da partida desta cozinha; a telemetria conta por dia).
+var servido_total := 0.0
 ## Algum cozinheiro preparando uma leva aqui agora (a placa mostra "preparando...").
 var is_cooking: bool = false
 
@@ -132,6 +141,7 @@ func _process(delta: float) -> void:
 				var porcao := _porcao()
 				var p := minf(porcao, food_stock)
 				food_stock -= p
+				servido_total += p
 				body.recebe_prato(p / porcao * _fome_da_porcao())
 				if prato == "ensopado" and p >= porcao * 0.5:  # Bloco 107: o ensopado alegra
 					body.animo_prato = minf(float(body.animo_prato) + ensopado_animo, ensopado_animo_max)
@@ -158,13 +168,15 @@ func _process(delta: float) -> void:
 func _porcao() -> float:
 	var s := get_tree().get_first_node_in_group("schedule")
 	var base: float = maxf(s.porcao, 0.01) if s else 8.0
-	return base * (ensopado_porcao_mult if prato == "ensopado" else 1.0)  # Bloco 107
+	var m: float = (ensopado_porcao_mult if prato == "ensopado" else 1.0) * Modificadores.mult(get_tree(), "porcao")  # Bloco 107 + 108
+	return base * clampf(m, porcao_mult_min, porcao_mult_max)
 
 
 func _fome_da_porcao() -> float:
 	var s := get_tree().get_first_node_in_group("schedule")
 	var base: float = s.refeicao_fome if s else 45.0
-	return base * (ensopado_fome_mult if prato == "ensopado" else 1.0)  # Bloco 107
+	var m: float = (ensopado_fome_mult if prato == "ensopado" else 1.0) * Modificadores.mult(get_tree(), "fome_refeicao")  # Bloco 107 + 108
+	return base * clampf(m, porcao_mult_min, porcao_mult_max)
 
 
 # ------------------------------------------------------------ o cardápio (Bloco 107)

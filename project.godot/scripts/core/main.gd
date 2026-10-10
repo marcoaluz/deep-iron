@@ -223,6 +223,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				_hud.toggle_panel("catalogo")  # Bloco 102
 			"painel_expedicoes":
 				_hud.toggle_panel("expedicoes")  # Bloco 104
+			"painel_politicas":
+				_abre_politicas()  # Bloco 108
 			"batedor":
 				toggle_scout()  # Bloco 104
 			"agricultor":
@@ -586,6 +588,15 @@ func toggle_scout() -> void:
 
 
 ## - / botão do HUD: agricultor (homem ou mulher; ou tira, se todos já forem) — Bloco 107.
+## Bloco 108: a janela Políticas da Vila (F6) — antes do estágio dela, um aviso curto.
+func _abre_politicas() -> void:
+	var pol := get_tree().get_first_node_in_group("politicas")
+	if pol and not pol.liberada():
+		_hud.show_toast("Políticas da Vila: libera no estágio %s." % pol._nome_estagio(), Color(1.0, 0.75, 0.45))
+		return
+	_hud.toggle_panel("politicas")
+
+
 func toggle_farmer() -> void:
 	toggle_job(Worker.ROLE_FARMER, "Agricultor", Color(0.62, 0.82, 0.4))
 

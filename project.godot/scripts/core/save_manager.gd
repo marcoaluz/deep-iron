@@ -91,6 +91,10 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 108: "politicas" {ativa {jornada, racao, seguranca, migracao}, espera {política: s de jogo até poder trocar},
+##     racao_dias (amanheceres seguidos na ração reduzida), fraqueza_recupera (dias), vigilancia_paga, trocas}; o
+##     "combat_skill" do ipezinho vai até 2,0 no load (acima de 1,0 = o treinamento; cai sozinho fora dele). Save antigo
+##     (sem a chave): todas no padrão (o jogo de antes), sem espera, sem fraqueza — não precisa de _migrate.
 ##   Bloco 107: centro_vila "hortas" [{estufa, position, dados {food_remaining, cooldown, total_colhido}}] (as hortas e estufas
 ##     que o jogador construiu; COM a chave a horta da clareira, da cena, sai: a vila é do jogador; save antigo sem a chave:
 ##     a horta da cena continua), "carvoarias" e "curtumes" [{position, fila, produzido, barras_prontas}]; o comedouro ganha
@@ -568,6 +572,7 @@ func _collect() -> Dictionary:
 		"expedicoes": "expedicoes",  # Bloco 104: as regiões, as expedições em curso (com quem está fora), a cadeia do robô
 		"logistica": "logistica",  # Bloco 105: o contador de entregas do carregador (as em curso recomeçam)
 		"manutencao": "manutencao",  # Bloco 105: os consertos abertos, as preventivas, os consertos e as quebras
+		"politicas": "politicas",  # Bloco 108: as políticas da vila, as esperas e a fraqueza
 		"missoes": "missoes",  # Bloco 100: a campanha (capítulo liberado, missões cumpridas, objetivos, contadores)
 	}
 	for key in singles:
@@ -718,6 +723,9 @@ func apply_pending(main: Node) -> void:
 	var logi := get_tree().get_first_node_in_group("logistica")  # Bloco 105 (save antigo: 0 entregas)
 	if logi:
 		logi.load_save_data(SaveUtil.dict(data, "logistica"))
+	var pol := get_tree().get_first_node_in_group("politicas")  # Bloco 108 (save antigo: tudo no padrão)
+	if pol:
+		pol.load_save_data(SaveUtil.dict(data, "politicas"))
 	var manut := get_tree().get_first_node_in_group("manutencao")  # Bloco 105: depois das máquinas (o conserto aponta pra elas)
 	if manut:
 		manut.load_save_data(SaveUtil.dict(data, "manutencao"))

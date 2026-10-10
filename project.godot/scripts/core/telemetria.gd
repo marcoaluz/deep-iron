@@ -13,7 +13,8 @@ const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre"
 	"expedicoes_fora", "gente_fora", "expedicoes_voltaram", "achados_expedicao", "feridos_expedicao",
 	"maquinas_quebradas", "quebras_total", "preventivas", "consertos", "entregas_carregador",  # Bloco 105 (quebradas = agora; os outros: total da partida)
 	"compartimentos_cheios", "esperando_espaco",
-	"hortas", "estufas", "colhido_horta", "colhido_estufa", "carvao_vegetal_feito", "couro_curtido_feito", "prato", "racoes"]  # Bloco 107 (os "feito/colhido": total da partida)  # Bloco 106: os compartimentos cheios em todos os armazéns (separados por "+") e quantos esperam espaço agora  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
+	"hortas", "estufas", "colhido_horta", "colhido_estufa", "carvao_vegetal_feito", "couro_curtido_feito", "prato", "racoes",
+	"pol_jornada", "pol_racao", "pol_seguranca", "pol_migracao", "trocas_politica", "fraqueza", "comida_servida_dia", "acidentes_dia"]  # Bloco 108 (servida/acidentes: desde a última linha)  # Bloco 107 (os "feito/colhido": total da partida)  # Bloco 106: os compartimentos cheios em todos os armazéns (separados por "+") e quantos esperam espaço agora  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
 
 var arquivo := ""
 var _t0 := 0
@@ -25,12 +26,17 @@ var _olha := 0.0
 ## Bloco 99: os contadores da linha anterior (minério que entrou nos armazéns e que o vagonete levou).
 var _entrou_ant := -1.0
 var _vagonete_ant := -1.0
+## Bloco 108: a comida servida e os acidentes de trabalho da linha anterior (pra dar o do dia).
+var _servida_ant := -1.0
+var _acidentes_ant := -1
 
 
 func _ready() -> void:
 	name = "Telemetria"
 	add_to_group("telemetria")
 	_t0 = Time.get_ticks_msec()
+	_servida_ant = 0.0  # Bloco 108: a cozinha começa a contar do zero na sessão
+	_acidentes_ant = _acidentes_agora()
 	DirAccess.make_dir_recursive_absolute("user://telemetria")
 	var agora := Time.get_datetime_string_from_system().replace(":", "-").replace("T", "_")
 	arquivo = "user://telemetria/partida_%s.csv" % agora
@@ -92,6 +98,29 @@ func minerio_do_dia() -> Array:
 	var out := [int(entrou - _entrou_ant) if _entrou_ant >= 0.0 else 0, int(vag - _vagonete_ant) if _vagonete_ant >= 0.0 else 0, dentro]
 	_entrou_ant = entrou
 	_vagonete_ant = vag
+	return out
+
+
+## Bloco 108: os acidentes de trabalho da sessão (contador do ipezinho.gd). load(), não preload: a telemetria é carregada por
+## testes antes dos autoloads, e o ipezinho.gd usa o Audio.
+func _acidentes_agora() -> int:
+	return int(load("res://scripts/workers/ipezinho.gd").acidentes_trabalho)
+
+
+## Bloco 108: [as 4 políticas, trocas na partida, fraqueza 0/1, comida servida desde a última linha, acidentes de trabalho idem].
+func politicas_do_dia() -> Array:
+	var pol := _g("politicas")
+	var servida := 0.0
+	for c in get_tree().get_nodes_in_group("comedouros"):
+		servida += float(c.get("servido_total")) if c.get("servido_total") != null else 0.0
+	var acid: int = _acidentes_agora()
+	var out: Array = []
+	for p in ["jornada", "racao", "seguranca", "migracao"]:
+		out.append(pol.opcao(p) if pol else "")
+	out.append_array([pol.trocas if pol else 0, 1 if pol and pol.fraqueza_ativa() else 0,
+		int(servida - _servida_ant) if _servida_ant >= 0.0 else 0, acid - _acidentes_ant if _acidentes_ant >= 0 else 0])
+	_servida_ant = servida
+	_acidentes_ant = acid
 	return out
 
 
@@ -158,6 +187,7 @@ func registra() -> void:
 	var coz := get_tree().get_first_node_in_group("comedouros")
 	v.append_array([get_tree().get_nodes_in_group("hortas").size(), get_tree().get_nodes_in_group("estufas").size(), int(col_h), int(col_e),
 		int(carv), int(curt), coz.prato if coz else "", int(eco6.quantidade("racao")) if eco6 else 0])
+	v.append_array(politicas_do_dia())  # Bloco 108
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return

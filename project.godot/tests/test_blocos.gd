@@ -448,3 +448,7 @@ func test_b106_coleta_armazem() -> void:
 
 func test_b107_agricultor_oficinas() -> void:
 	run_bloco("b107_agricultor_oficinas.gd")
+
+
+func test_b108_politicas() -> void:
+	run_bloco("b108_politicas.gd")

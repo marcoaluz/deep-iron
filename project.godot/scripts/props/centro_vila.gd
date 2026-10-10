@@ -450,6 +450,9 @@ func stage_unlocks_text(lvl: int) -> String:
 	for m in galleries_for_level(lvl):
 		parts.append(_gallery_text(m))
 	parts.append("melhorias até o nível %d" % lvl)
+	var pol := get_tree().get_first_node_in_group("politicas")
+	if pol and int(pol.estagio_minimo) == lvl:
+		parts.append("Políticas da Vila (%s)" % preload("res://scripts/core/teclas.gd").nome("painel_politicas"))  # Bloco 108
 	return ", ".join(parts)
 
 

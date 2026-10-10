@@ -31,6 +31,7 @@ extends Node2D
 
 const IsoArt := preload("res://scripts/iso/iso_art.gd")
 const Ores := preload("res://scripts/core/ores.gd")
+const Modificadores := preload("res://scripts/core/modificadores.gd")  # Bloco 108: a vigilância reforçada
 signal died(killed: bool)
 
 @export_enum("lumivoro", "ferrugento", "gosma", "magmante") var kind: String = "lumivoro"
@@ -442,14 +443,15 @@ func _attack(t: Node2D) -> void:
 		Audio.clank(global_position)
 		return
 	if kind == "ferrugento" and t.is_in_group("armazens"):
-		var left := steal_amount
+		var golpe := steal_amount * Modificadores.mult(get_tree(), "roubo")  # Bloco 108: armazém vigiado rouba menos
+		var left := golpe
 		for ore in Ores.TYPES:
 			if left <= 0.0:
 				break
 			left -= t.take(left, ore)
-		if left < steal_amount:
+		if left < golpe:
 			looted = true
-			t.show_popup("-%d (Ferrugento)" % roundi(steal_amount - left), Color(1.0, 0.45, 0.35))
+			t.show_popup("-%d (Ferrugento)" % roundi(golpe - left), Color(1.0, 0.45, 0.35))
 		Audio.clank(global_position)
 		return
 	if kind == "lumivoro":

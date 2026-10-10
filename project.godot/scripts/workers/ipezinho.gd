@@ -62,6 +62,7 @@ const SaveUtil := preload("res://scripts/core/save_util.gd")
 const Schedule := preload("res://scripts/core/schedule.gd")  # Bloco 84
 const Items := preload("res://scripts/core/items.gd")  # Bloco 86
 const Icones := preload("res://scripts/ui/icones.gd")  # Bloco 85: o balão da hora social
+const Modificadores := preload("res://scripts/core/modificadores.gd")  # Bloco 108: políticas (e a dificuldade, depois)
 const Settings := preload("res://scripts/core/settings.gd")  # Bloco 95: liga/desliga o balão de motivo
 const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 96: o material da obra
 const BALAO := preload("res://assets/game/ui/balao.png")
@@ -555,6 +556,8 @@ var _balao_vida := 0.0
 ## Bloco 95: o BALÃO DE MOTIVO (por que está parado). Liga/desliga nas configurações ([hud] baloes_motivo):
 ## lido uma vez aqui (o settings.cfg é lido do disco a cada get_value) e trocado pela tela de configurações.
 static var baloes_motivo := true
+## Bloco 108: acidentes de trabalho (mina + galho) da sessão, pra telemetria contar por dia.
+static var acidentes_trabalho := 0
 static var _baloes_lido := false
 var _motivo := ""
 var _motivo_t := 0.0
@@ -1240,7 +1243,7 @@ func _choose_state() -> String:
 		var def_p := _defense()
 		if def_p and def_p.has_method("patrulha_para") and def_p.patrulha_para(self) != "":
 			return "patrulha"  # Bloco 103: mandado caçar os moradores do fundo (de dia)
-		if combat_skill < 1.0 and ((_ai_state == "training" and _station_ok_for("training")) or _has_usable_station("campos")):
+		if combat_skill < teto_treino() and ((_ai_state == "training" and _station_ok_for("training")) or _has_usable_station("campos")):
 			return "training"
 		return "home"
 	# Bloco 104: o batedor bate o mato (de dia; a agenda já mandou pra casa de noite)
@@ -2011,6 +2014,9 @@ func happiness_factors() -> Array:
 	var m := _morale()
 	if m:
 		f.append_array(m.village_factors())
+	var pol := get_tree().get_first_node_in_group("politicas")
+	if pol:
+		f.append_array(pol.fatores_animo(self))  # Bloco 108: o ponto único do ânimo das políticas
 	return f
 
 
@@ -2051,13 +2057,24 @@ func _defense() -> Node:
 
 ## Campo de treino chama enquanto ele treina.
 func train(amount: float) -> void:
-	if combat_skill >= 1.0:
+	var teto := teto_treino()  # Bloco 108: o treinamento (política) sobe o teto acima de 100%
+	if combat_skill >= teto:
 		return
-	combat_skill = minf(combat_skill + amount, 1.0)
+	var antes := combat_skill
+	combat_skill = minf(combat_skill + amount, teto)
 	_work_timer = 0.2  # balança a lança no boneco
-	if combat_skill >= 1.0:
+	if antes < 1.0 and combat_skill >= 1.0:
 		_popup("Pronto pra lutar!", Color(0.55, 1.0, 0.5))
+	if combat_skill >= teto:
+		if teto > 1.0:
+			_popup("Veterano!", Color(0.55, 1.0, 0.5))
 		_decision_timer = randf_range(0.05, 0.4)
+
+
+## Bloco 108: até onde a habilidade de combate sobe agora (1,0 = 100%; o treinamento das políticas sobe).
+func teto_treino() -> float:
+	var pol := get_tree().get_first_node_in_group("politicas") if is_inside_tree() else null
+	return float(pol.teto_treino()) if pol else 1.0
 
 
 ## De noite, de guarda: vai pro posto; vendo criatura por perto, parte pra cima.
@@ -3248,7 +3265,9 @@ func _roll_branch(chopped: float) -> void:
 		var chance: float = branch_injury_chance * [1.0, irritated_injury_mult, furious_injury_mult][_mood]
 		if _is_night():
 			chance *= night_chop_injury_mult
+		chance *= Modificadores.mult(get_tree(), "acidente", self)  # Bloco 108: a jornada e a fraqueza
 		if randf() < chance:
+			acidentes_trabalho += 1
 			if _station and is_instance_valid(_station) and _station.has_method("drop_branch"):
 				_station.drop_branch(global_position)
 			hurt("galho")
@@ -3308,7 +3327,7 @@ func mood_label() -> String:
 
 ## Multiplicador da produção pela zanga e pela felicidade.
 func work_mult() -> float:
-	return [1.0, irritated_work_mult, furious_work_mult][_mood] * _happiness_work_mult() * _cold_mult() * _mult_refeicoes()
+	return [1.0, irritated_work_mult, furious_work_mult][_mood] * _happiness_work_mult() * _cold_mult() * _mult_refeicoes() 		* (Modificadores.mult(get_tree(), "producao", self) if is_inside_tree() else 1.0)  # Bloco 108: a jornada e a fraqueza
 
 
 ## Bloco 84: refeição perdida rende menos (Schedule.perda_por_refeicao cada, até perda_max).
@@ -3688,7 +3707,9 @@ func _roll_injury(mined: float) -> void:
 		var cat := _catalogo()
 		if cat and cat.has_method("mult_acidente"):
 			leak *= cat.mult_acidente(global_position)  # Bloco 103: andar liberado sem reconhecimento
+		leak *= Modificadores.mult(get_tree(), "acidente", self)  # Bloco 108: a jornada e a fraqueza (políticas da vila)
 		if randf() < injury_chance * [1.0, irritated_injury_mult, furious_injury_mult][_mood] * depth_danger() * leak:
+			acidentes_trabalho += 1
 			hurt()
 			return
 
@@ -5462,7 +5483,7 @@ func load_save_data(d: Dictionary) -> void:
 	else:
 		var r := SaveUtil.text(d, "role", "")
 		job = r if r in [ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH] else ROLE_MINER
-	combat_skill = clampf(SaveUtil.num(d, "combat_skill", 0.0), 0.0, 1.0)
+	combat_skill = clampf(SaveUtil.num(d, "combat_skill", 0.0), 0.0, 2.0)  # Bloco 108: acima de 1,0 = treinamento (cai sozinho fora dele)
 	# Bloco 35 (save antigo: o SaveManager já pôs a melhor arma forjada nos guardas)
 	var wpn := SaveUtil.text(d, "weapon", "")
 	weapon = wpn if WEAPON_SPRITES.has(wpn) else ""

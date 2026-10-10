@@ -1,0 +1,7 @@
+POLÍTICAS: jornada=estendida racao=reduzida seguranca=padrao migracao=aberta | 10 ipezinhos | porção 8.0
+dia 1 | minério  116 | madeira  106 | comida servida 114.0 | fome média  85.7 | ânimo médio  59.7 | perdidas 0 | acidentes 2 | greve 0 s | onda - | 10 ipezinhos
+dia 2 | minério   96 | madeira   98 | comida servida 174.0 | fome média  86.5 | ânimo médio  62.0 | perdidas 0 | acidentes 1 | greve 0 s | onda - | 10 ipezinhos
+dia 3 | minério  116 | madeira  136 | comida servida 180.0 | fome média  85.7 | ânimo médio  54.7 | perdidas 0 | acidentes 1 | greve 11 s | onda { "onda": 1, "tier": 1, "total": 2, "derrubadas": 0, "chefe": "" } | 10 ipezinhos
+dia 4 | minério   20 | madeira   10 | comida servida 108.0 | fome média  70.7 | ânimo médio  50.9 | perdidas 0 | acidentes 2 | greve 177 s | onda { "onda": 1, "tier": 1, "total": 2, "derrubadas": 0, "chefe": "" } | 9 ipezinhos
+dia 5 | minério   90 | madeira    0 | comida servida 162.0 | fome média  82.1 | ânimo médio  55.3 | perdidas 0 | acidentes 0 | greve 177 s | onda { "onda": 2, "tier": 1, "total": 3, "derrubadas": 0, "chefe": "" } | 9 ipezinhos
+RESUMO (média/dia) | minério 88 | madeira 70 | comida servida 147.6 | fome 82.1 | ânimo 56.5 | acidentes 1.20 | greve 177 s | migrantes chegaram 6 | créditos +150 | fraqueza true | expulso false

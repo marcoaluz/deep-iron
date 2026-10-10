@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1059 valores** em 4 pastas de scripts (80 trocados por alguma cena).
+Total: **1087 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (79)
 
@@ -986,6 +986,59 @@ Total: **1059 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `animo_motivo` | "" |  |  |
 | `titulo_abertura` | "" |  | Bloco 71: a faixa que aparece quando a ligação abre (título; o texto é a descrição). |
 
+## `scripts/core/politicas.gd` (26)
+
+**Geral**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `troca_espera_dias` | 1.0 |  | Dias de jogo de espera entre duas trocas da MESMA política (a primeira troca é livre). |
+| `animo_penalidade_max` | 12.0 |  | Teto (em pontos de ânimo) da penalidade SOMADA de todas as políticas numa pessoa: nunca empurra sozinha a vila pra greve. |
+| `estagio_minimo` | 2 |  | Estágio do Centro da Vila em que a janela libera (2 = Vilarejo). |
+| `aviso_animo` | 40.0 |  | A confirmação avisa em vermelho se o ânimo médio previsto ficar abaixo disto. |
+
+**Jornada**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `estendida_producao` | 1.15 |  | Estendida: multiplica a produção, a chance de acidente de trabalho e soma este ânimo. |
+| `estendida_acidente` | 1.30 |  |  |
+| `estendida_animo` | -8.0 |  |  |
+| `reduzida_producao` | 0.85 |  | Reduzida: multiplica a produção, a chance de acidente e soma este ânimo. |
+| `reduzida_acidente` | 1.0 |  |  |
+| `reduzida_animo` | 5.0 |  |  |
+| `funcoes_essenciais` | [Worker.ROLE_COOK, Worker.ROLE_DOCTOR, Worker.ROLE_GUARD, Worker.ROLE_PRIEST] |  | Funções que a jornada NÃO afeta (os serviços essenciais: rendimento e ânimo ficam como estão). |
+
+**Ração**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `racao_reduzida_porcao` | 0.75 |  | Reduzida: multiplica a porção (unidades do comedouro) e a fome que ela enche — a MESMA proporção (não cria comida). |
+| `racao_reduzida_fome` | 0.75 |  |  |
+| `racao_reduzida_animo` | -6.0 |  | Ânimo de quem come a ração reduzida. |
+| `fraqueza_dias` | 3 |  | Dias seguidos de ração reduzida (contados a cada amanhecer) até a FRAQUEZA... |
+| `fraqueza_recupera_dias` | 2 |  | ...que dura estes dias depois de voltar à ração normal... |
+| `fraqueza_producao` | 0.9 |  | ...e multiplica a produção e a chance de acidente de trabalho (de quem a jornada afeta). Ninguém morre disso. |
+| `fraqueza_acidente` | 1.25 |  |  |
+
+**Segurança**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `vigilancia_custo_guarda` | 5 |  | Vigilância reforçada: créditos por guarda de vigia, por noite (cobrados ao anoitecer). |
+| `vigilancia_roubo` | 0.5 |  | Vigilância reforçada: multiplica o roubo do Ferrugento no armazém e o saque da brecha. |
+| `treino_ritmo` | 1.5 |  | Treinamento: multiplica o ritmo do campo de treino... |
+| `treino_teto` | 1.25 |  | ...e o teto da habilidade de combate (1,0 = 100%: o padrão). A fórmula de dano e vida é a de sempre, esticada. |
+| `treino_animo` | -6.0 |  | Ânimo dos GUARDAS no treinamento ("treino puxado"). |
+| `treino_decai` | 0.002 |  | Fora do treinamento, o que passou de 100% cai isto por segundo (até 100%). |
+
+**Migração**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `seletiva_intervalo` | 1.5 |  | Seletiva: multiplica o intervalo entre grupos... |
+| `seletiva_prazo` | 2.0 |  | ...e o prazo de quem espera no portão (mais tempo pra avaliar). |
+
 ## `scripts/core/research.gd` (27)
 
 **Laboratório**
@@ -1751,7 +1804,7 @@ Total: **1059 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `ore_per_sec` | 0.5 |  | Minério por segundo com o operador no posto (antes da zanga/ânimo dele). |
 | `reach` | 230.0 |  | Até onde a broca alcança uma jazida (px da lógica). |
 
-## `scripts/props/comedouro.gd` (16)
+## `scripts/props/comedouro.gd` (18)
 
 **Ritmo**
 
@@ -1781,6 +1834,13 @@ Total: **1059 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `racao_preparo_mult` | 3.1 |  |  |
 | `racao_reserva_minima` | 40.0 |  | Só faz ração com pelo menos esta comida pronta na cozinha (reserva: a ração não esvazia a vila). |
 | `racao_max_pedido` | 30 |  | O máximo de rações numa ordem. |
+
+**Ração da vila (Bloco 108)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `porcao_mult_min` | 0.6 |  | A porção (e a fome que ela enche) = básico x prato do cardápio x ração das Políticas, presa entre estes múltiplos do básico (o teto é o próprio ensopado: as duas escolhas nunca somam além dele). |
+| `porcao_mult_max` | 1.5 |  |  |
 
 **Som**
 

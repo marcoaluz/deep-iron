@@ -28,6 +28,7 @@ const PADRAO := {
 	"agricultor": [KEY_MINUS],  # Bloco 107 (a tecla física do "-"; no ABNT2 e no americano é a mesma)
 	"carregador": [KEY_BRACKETRIGHT],
 	"mecanico": [KEY_BACKSLASH],
+	"painel_politicas": [KEY_F6],  # Bloco 108 (todas as letras e o "[ ]" já tinham dono; o "=" o Marco não quis)
 	"pessoas": [KEY_TAB],  # Bloco 95: a lista de pessoas (aba fina da esquerda); o "próximo" foi pro ponto
 	"salvar": [KEY_F5], "carregar": [KEY_F9],
 	# fixas (não aparecem pra remapear): Esc, e as de teste/depuração
@@ -48,7 +49,7 @@ const NOMES := [
 	["musica", "Música liga/desliga"], ["painel_hub", "Centro da Vila"], ["painel_escavadeira", "Escavadeira"],
 	["painel_oficina", "Oficina"], ["painel_enfermaria", "Enfermaria"], ["painel_moral", "Bem-estar"],
 	["painel_defesa", "Defesa"], ["painel_diario", "Diário"], ["painel_lab", "Laboratório"], ["painel_sol", "O Sol"],
-	["painel_trabalho", "Trabalhadores (áreas de trabalho)"], ["painel_missoes", "Missões"], ["painel_catalogo", "Catálogo"], ["painel_expedicoes", "Expedições"],
+	["painel_trabalho", "Trabalhadores (áreas de trabalho)"], ["painel_missoes", "Missões"], ["painel_catalogo", "Catálogo"], ["painel_expedicoes", "Expedições"], ["painel_politicas", "Políticas da Vila"],
 	["salvar", "Salvar"], ["carregar", "Carregar"],
 ]
 

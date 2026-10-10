@@ -1,0 +1,4 @@
+POLÍTICAS: jornada=normal racao=normal seguranca=padrao migracao=fechada | 3 ipezinhos | porção 8.0
+dia 1 | minério    0 | madeira    0 | comida servida  48.0 | fome média  85.2 | ânimo médio  70.8 | perdidas 0 | acidentes 0 | greve 0 s | onda - | 3 ipezinhos
+dia 2 | minério    0 | madeira    0 | comida servida  72.0 | fome média  86.3 | ânimo médio  73.1 | perdidas 0 | acidentes 0 | greve 0 s | onda - | 3 ipezinhos
+RESUMO (média/dia) | minério 0 | madeira 0 | comida servida 60.0 | fome 85.8 | ânimo 72.0 | acidentes 0.00 | greve 0 s | migrantes chegaram 3 | créditos +0 | fraqueza false | expulso false

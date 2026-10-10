@@ -1,0 +1,6 @@
+POLÍTICAS: (referência: sem políticas) | 10 ipezinhos | porção 8.0
+dia 1 | minério  104 | madeira  128 | comida servida 152.0 | fome média  85.3 | ânimo médio  70.5 | perdidas 0 | acidentes 0 | greve 0 s | onda - | 10 ipezinhos
+dia 2 | minério   82 | madeira  115 | comida servida 232.0 | fome média  86.0 | ânimo médio  73.1 | perdidas 0 | acidentes 1 | greve 0 s | onda - | 10 ipezinhos
+dia 3 | minério   84 | madeira  107 | comida servida 240.0 | fome média  85.7 | ânimo médio  66.9 | perdidas 0 | acidentes 1 | greve 0 s | onda { "onda": 1, "tier": 1, "total": 2, "derrubadas": 0, "chefe": "" } | 10 ipezinhos
+dia 4 | minério   79 | madeira    0 | comida servida 216.0 | fome média  85.6 | ânimo médio  64.1 | perdidas 0 | acidentes 0 | greve 0 s | onda { "onda": 1, "tier": 1, "total": 2, "derrubadas": 0, "chefe": "" } | 9 ipezinhos
+RESUMO (média/dia) | minério 88 | madeira 88 | comida servida 210.0 | fome 85.6 | ânimo 68.7 | acidentes 0.50 | greve 0 s

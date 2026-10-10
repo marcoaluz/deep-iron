@@ -183,6 +183,9 @@ func de_vigia(w: Node) -> bool:
 	var dia: int = dn.day if dn else 1
 	if def and (def.invasion_active or def.is_invasion_night(dia)):
 		return true
+	var pol := get_tree().get_first_node_in_group("politicas")
+	if pol and pol.vigilancia_ativa():
+		return true  # Bloco 108: vigilância reforçada (paga esta noite) — todos, toda noite
 	var guardas: Array = _da_funcao("is_guard")
 	var n := guardas.size()
 	var i := guardas.find(w)
@@ -236,12 +239,13 @@ func refeicoes_restantes_hoje() -> int:
 	return total
 
 
-## Porções no estoque (comedouros).
+## Porções no estoque (comedouros). Bloco 108: na porção de verdade (prato do cardápio x ração das Políticas).
 func porcoes_em_estoque() -> float:
-	var comida := 0.0
+	var n := 0.0
 	for c in get_tree().get_nodes_in_group("comedouros"):
-		comida += c.food_stock
-	return comida / maxf(porcao, 0.01)
+		var p: float = c._porcao() if c.has_method("_porcao") else porcao
+		n += c.food_stock / maxf(p, 0.01)
+	return n
 
 
 static func nome_refeicao(m: String) -> String:

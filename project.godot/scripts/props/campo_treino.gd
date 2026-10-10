@@ -7,6 +7,8 @@ extends "res://scripts/props/station.gd"
 ## Habilidade ganha por segundo treinando (1.0 = 100%). 0.009 -> ~110 s pra ficar pronto.
 @export var train_rate: float = 0.009
 
+const Modificadores := preload("res://scripts/core/modificadores.gd")
+
 var panel_id := "defesa"
 
 @onready var _label: Label = $StatusLabel
@@ -30,7 +32,7 @@ func _process(delta: float) -> void:
 	var n := 0
 	for body in _working_bodies():
 		if body.get_state() == "training":
-			body.train(train_rate * delta)
+			body.train(train_rate * delta * Modificadores.mult(get_tree(), "treino"))  # Bloco 108: o treinamento (política)
 			n += 1
 	_label.text = "Campo de treino" + ("\n%d treinando" % n if n > 0 else "")
 

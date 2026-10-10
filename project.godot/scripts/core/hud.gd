@@ -749,6 +749,9 @@ func _build_janelas() -> void:
 	var exped := get_tree().get_first_node_in_group("expedicoes")
 	if exped:  # Bloco 104: as expedições (tecla ;)
 		_add_panel("expedicoes", preload("res://scripts/core/expedicoes_panel.gd"), exped)
+	var pol := get_tree().get_first_node_in_group("politicas")
+	if pol:  # Bloco 108: as políticas da vila (tecla F6; libera no Vilarejo)
+		_add_panel("politicas", preload("res://scripts/core/politicas_panel.gd"), pol)
 	# Bloco 56: janela da casa (fora do menu: clique na casa ou o cartão do menu)
 	var casa_panel: PanelContainer = preload("res://scripts/core/casa_panel.gd").new()
 	add_child(casa_panel)
@@ -805,9 +808,9 @@ func _fill_hints() -> void:
 		"Pessoas:  %s = a lista da força de trabalho (ou passe o mouse na aba da esquerda)  •  alertas à direita: clique pra ir até lá" % k.call("pessoas"),
 		"Trabalho:  %s = TRABALHADORES — marcar áreas (madeira, alimentos, mina) e quantos trabalham em cada uma (até 5)" % k.call("painel_trabalho"),
 		"Construir:  %s = menu de construção (casas, cozinha, lazer, pesquisa, defesa, coleta automática…)" % k.call("construir"),
-		"Prédios:  %s Centro da Vila  •  %s Escavadeira  •  %s Oficina  •  %s Enfermaria  •  %s Bem-estar  •  %s Defesa  •  %s Laboratório  •  %s Sol  •  %s Diário  •  %s Catálogo  •  %s Expedições  (ou clique no prédio, ou o menu Janelas lá em cima)" % [
+		"Prédios:  %s Centro da Vila  •  %s Escavadeira  •  %s Oficina  •  %s Enfermaria  •  %s Bem-estar  •  %s Defesa  •  %s Laboratório  •  %s Sol  •  %s Diário  •  %s Catálogo  •  %s Expedições  •  %s Políticas da Vila  (ou clique no prédio, ou o menu Janelas lá em cima)" % [
 			k.call("painel_hub"), k.call("painel_escavadeira"), k.call("painel_oficina"), k.call("painel_enfermaria"), k.call("painel_moral"),
-			k.call("painel_defesa"), k.call("painel_lab"), k.call("painel_sol"), k.call("painel_diario"), k.call("painel_catalogo"), k.call("painel_expedicoes")],
+			k.call("painel_defesa"), k.call("painel_lab"), k.call("painel_sol"), k.call("painel_diario"), k.call("painel_catalogo"), k.call("painel_expedicoes"), k.call("painel_politicas")],
 		"Câmera:  roda = zoom (paradas nítidas)  •  botão do meio / WASD / setas = mover  •  Home = centralizar  •  F11 / Alt+Enter = tela cheia",
 		"Jogo:  %s salvar  •  %s carregar  •  %s música  •  Esc/%s pausa  •  F2 corte da mina  •  N pular fase (teste)  •  Shift+K machucar (teste; Ctrl+Shift+K grave)" % [
 			k.call("salvar"), k.call("carregar"), k.call("musica"), k.call("pausa")],
@@ -838,11 +841,17 @@ func _add_panel(id: String, script: GDScript, target: Node) -> void:
 	_panel_ordem.append(id)  # Bloco 95: a ordem no menu "Janelas"
 
 
+## Bloco 108: a porção servida de verdade (prato do cardápio x ração das Políticas).
+func _porcao_real(sched: Node) -> float:
+	var c := get_tree().get_first_node_in_group("comedouros")
+	return float(c._porcao()) if c and c.has_method("_porcao") else float(sched.porcao)
+
+
 ## Bloco 95: tecla de cada janela no menu (a ação de teclas.gd).
 const TECLA_JANELA := {"hub": "painel_hub", "trabalho": "painel_trabalho", "escavadeira": "painel_escavadeira",
 	"oficina": "painel_oficina", "enfermaria": "painel_enfermaria", "moral": "painel_moral", "defesa": "painel_defesa",
 	"lab": "painel_lab", "sol": "painel_sol", "diario": "painel_diario", "missoes": "painel_missoes",
-	"catalogo": "painel_catalogo", "expedicoes": "painel_expedicoes"}
+	"catalogo": "painel_catalogo", "expedicoes": "painel_expedicoes", "politicas": "painel_politicas"}
 const ID_CORTE := 1000
 
 
@@ -1364,7 +1373,7 @@ func _refresh_top_bar(workers: Array) -> void:
 			food_color = COLOR_HUNGER_LOW if porcoes * 2 >= faltam else COLOR_HUNGER_BAD
 		_set_chip("food", "ACABOU" if stock <= 0.0 else "%d (hoje %d)" % [porcoes, faltam], food_color,
 			"Porções na cozinha: %d (%d de comida de %d; %s por porção).\nRefeições que ainda faltam hoje: %d (café, almoço e jantar de cada um).%s%s" % [
-			porcoes, int(stock), int(capacity), str(snappedf(sched.porcao, 0.1)), faltam,
+			porcoes, int(stock), int(capacity), str(snappedf(_porcao_real(sched), 0.1)), faltam,
 			("\nNão dá pra todo mundo: faltam %d porções!" % (faltam - porcoes)) if porcoes < faltam else "",
 			"\nNinguém cozinhando!" if cooks == 0 else ""])
 		_falta_porcoes = maxi(faltam - porcoes, 0) if stock > 0.0 else maxi(faltam, 1)
