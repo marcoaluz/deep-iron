@@ -28,6 +28,9 @@ const CHANCE_PAR_DIA := 0.12
 ## ninguém engravida.
 const ANIMO_BOM := 70.0
 const ANIMO_FOME := 25.0
+## A vila tem médico no parto (a complicação fica x morte_parto_medico_mult). O modelo CONTA as complicações e não mata
+## ninguém: no jogo, a mãe com machucado grave sobrevive se chegar a um leito da enfermaria a tempo.
+const COM_MEDICO := false
 
 var fam: Node
 var out := PackedStringArray()
@@ -56,8 +59,8 @@ func _initialize() -> void:
 	var adulto := float(args.get("adulto", "28"))
 	var semente := int(args.get("semente", "7"))
 	_p("SIMULAÇÃO DE 3 ANOS (%d dias de jogo; 1 dia = 9 min reais em 1x, 3 anos = %.1f h reais em 1x) — MODELO, ver o cabeçalho" % [DIAS, DIAS * 9.0 / 60.0])
-	_p("familias.gd: gestação %.0f d, bebê até %.0f d, criança até %.0f d, ADULTO aos %.0f d, chance %.2f/dia, intervalo %d d, máx %d filhos, porção da criança x%.1f" % [
-		fam.gestacao_dias, fam.bebe_dias, fam.crianca_ate, adulto, fam.chance_dia, fam.intervalo_filhos_dias, fam.max_filhos, fam.crianca_porcao])
+	_p("familias.gd: gestação %.0f d, bebê até %.0f d, criança até %.0f d, ADULTO aos %.0f d, chance %.2f/dia, intervalo %d d, máx %d filhos (incentivar +%d, desestimular -%d), porção da criança x%.1f, complicação no parto %.0f%%" % [
+		fam.gestacao_dias, fam.bebe_dias, fam.crianca_ate, adulto, fam.chance_dia, fam.intervalo_filhos_dias, fam.max_filhos, fam.incentivar_filhos_extra, fam.desestimular_filhos_menos, fam.crianca_porcao, fam.morte_parto_chance * 100.0])
 	for pol in ["neutro", "incentivar", "desestimular"]:
 		for constroi in [false, true]:
 			seed(semente)
@@ -78,6 +81,8 @@ func _p(s: String) -> void:
 
 func _roda(adulto_aos: float, pol: String, constroi: bool) -> void:
 	var mult: float = 1.0 if pol == "neutro" else (fam.incentivar_mult if pol == "incentivar" else fam.desestimular_mult)
+	var max_f: int = fam.max_filhos + (fam.incentivar_filhos_extra if pol == "incentivar" else 0) - (fam.desestimular_filhos_menos if pol == "desestimular" else 0)
+	max_f = maxi(max_f, 1)
 	_p("")
 	_p("== política %s | jogador %s | adulto aos %.0f dias" % [pol, "constrói uma casa a cada %d dias" % CASA_A_CADA if constroi else "NÃO constrói casa", adulto_aos])
 	_p("  dia | adultos crianças bebês grávidas | nasceram | camas livres | comida (porções/morador) | casais | travou por")
@@ -93,6 +98,7 @@ func _roda(adulto_aos: float, pol: String, constroi: bool) -> void:
 	var camas := CAMAS_INICIAIS
 	var estoque := ESTOQUE_INICIAL
 	var nasceram := 0
+	var complicacoes := 0
 	var filhos_do_casal := {}
 	var ultimo := {}
 	var travas := {}
@@ -140,7 +146,7 @@ func _roda(adulto_aos: float, pol: String, constroi: bool) -> void:
 			var motivo := ""
 			if dia - m.par_desde < fam.casal_estavel_dias:
 				motivo = "casal novo"
-			elif int(filhos_do_casal.get(k, 0)) >= fam.max_filhos:
+			elif int(filhos_do_casal.get(k, 0)) >= max_f:
 				motivo = "máx de filhos"
 			elif dia - int(ultimo.get(k, -999)) < fam.intervalo_filhos_dias:
 				motivo = "filho recente"
@@ -180,6 +186,8 @@ func _roda(adulto_aos: float, pol: String, constroi: bool) -> void:
 					filhos_do_casal[k] = int(filhos_do_casal.get(k, 0)) + 1
 					ultimo[k] = dia
 					nasceram += 1
+					if randf() < fam.morte_parto_chance * (fam.morte_parto_medico_mult if COM_MEDICO else 1.0):
+						complicacoes += 1  # (machucado grave: com enfermaria e médico, sobrevive — o modelo não mata)
 		gente.append_array(novos)
 		if dia % 14 == 0 or dia == 1:
 			var bebes := gente.filter(func(p): return not p.adulto and p.idade < fam.bebe_dias).size()
@@ -196,7 +204,7 @@ func _roda(adulto_aos: float, pol: String, constroi: bool) -> void:
 				"FOME" if fome else "    ", casais, ("%s (%d casal-dias)" % [trava, maior]) if trava != "" else "-"])
 			travas.clear()
 	var adultos_fim := gente.filter(func(p): return p.adulto).size()
-	_p("  FIM: %d pessoas (%d adultos), %d nascimentos em 3 anos; a vila de adultos foi de %d pra %d (+%d%%)" % [gente.size(), adultos_fim, nasceram, INICIAL, adultos_fim, int(round(100.0 * (adultos_fim - INICIAL) / INICIAL))])
+	_p("  FIM: %d pessoas (%d adultos), %d nascimentos em 3 anos (máx %d filhos por casal); a vila de adultos foi de %d pra %d (+%d%%); complicações no parto: %d (com médico: %s)" % [gente.size(), adultos_fim, nasceram, max_f, INICIAL, adultos_fim, int(round(100.0 * (adultos_fim - INICIAL) / INICIAL)), complicacoes, str(COM_MEDICO)])
 
 
 func _parentes(a: Pessoa, b: Pessoa) -> bool:

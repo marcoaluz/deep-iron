@@ -7,7 +7,8 @@ extends Node
 ##     está em greve, o intervalo desde o último filho do casal e menos que max_filhos. Gestação de gestacao_dias com o
 ##     sinal sobre a cabeça; nos últimos trabalho_leve_dias ela trabalha leve (rende menos, não desce na mina funda).
 ##   PARTO: no fim, ela vai pra enfermaria (se tem) ou pra casa; com médico de plantão é mais rápido e ela não precisa de
-##     resguardo. Padrão: sem morte no parto (morte_parto_chance, configurável).
+##     resguardo. COMPLICAÇÃO no parto (morte_parto_chance; menor com médico): a mãe fica com o machucado GRAVE de sempre
+##     — morre só se não chegar a um leito da enfermaria a tempo (ligada na validação do Marco).
 ##   FASES (dias de jogo, todos @export): BEBÊ até bebe_dias (fica em casa, na cama, só o ícone), CRIANÇA até crianca_ate
 ##     (anda, brinca na praça e no parque, vai à ESCOLA no horário de trabalho, come meia porção, dorme em casa), APRENDIZ
 ##     até adulto_aos (acompanha um adulto — o pai ou a mãe com função — e aprende a função dele), ADULTO (sem função; traço
@@ -54,8 +55,11 @@ const NOME_FASE := {"bebe": "bebê", "crianca": "criança", "aprendiz": "aprendi
 @export var parto_segundos: float = 45.0
 @export var parto_medico_mult: float = 0.5
 @export var resguardo_dias: float = 1.0
-## Chance (0..1) de a mãe morrer no parto. Padrão 0 (o Marco: sem morte no parto); com médico, x0,25.
-@export var morte_parto_chance: float = 0.0
+## Chance (0..1) de COMPLICAÇÃO no parto: a mãe sai com o machucado grave de sempre (morre se não chegar a um leito da
+## enfermaria a tempo). O Marco ligou na validação do Bloco 111 (antes era 0).
+@export var morte_parto_chance: float = 0.06
+## Com médico no parto, a chance da complicação x isto.
+@export var morte_parto_medico_mult: float = 0.25
 
 @export_group("Crianças")
 ## A criança come esta fração da porção (e a fome dela cai nesta fração da de um adulto: a conta fecha igual).
@@ -79,6 +83,10 @@ const NOME_FASE := {"bebe": "bebê", "crianca": "criança", "aprendiz": "aprendi
 @export var desestimular_mult: float = 0.3
 @export var incentivar_mult: float = 2.0
 @export var incentivar_auxilio: int = 30
+## Máximo de filhos por casal: o Incentivar soma isto e o Desestimular tira isto (nunca abaixo de 1). Assim as duas mudam
+## o TAMANHO da vila, não só o ritmo (a simulação de 3 anos mostrou que só a chance quase não mudava o total).
+@export var incentivar_filhos_extra: int = 1
+@export var desestimular_filhos_menos: int = 1
 ## Ânimo do casal que espera um filho.
 @export var animo_esperando: float = 5.0
 
@@ -134,6 +142,16 @@ func mult_politica() -> float:
 	return 1.0
 
 
+## O máximo de filhos por casal com a política de agora.
+func max_filhos_casal() -> int:
+	match politica():
+		"incentivar":
+			return max_filhos + incentivar_filhos_extra
+		"desestimular":
+			return maxi(max_filhos - desestimular_filhos_menos, 1)
+	return max_filhos
+
+
 # ------------------------------------------------------------ gravidez
 ## Por que este casal NÃO pode esperar filho agora ("" = pode).
 func motivo_sem_filho(a: Node, b: Node) -> String:
@@ -148,8 +166,8 @@ func motivo_sem_filho(a: Node, b: Node) -> String:
 	if dn.day - int(d.get("desde", 0)) < casal_estavel_dias:
 		return "casal novo"
 	var k: String = rel.chave(a, b)
-	if int(filhos_do_casal.get(k, 0)) >= max_filhos:
-		return "já tem %d filhos" % max_filhos
+	if int(filhos_do_casal.get(k, 0)) >= max_filhos_casal():
+		return "já tem %d filhos" % max_filhos_casal()
 	if dn.day - int(ultimo_filho.get(k, -999)) < intervalo_filhos_dias:
 		return "filho recente"
 	var eco := get_tree().get_first_node_in_group("economy")
@@ -261,9 +279,13 @@ func parto(mae: Node, com_medico: bool) -> Node:
 		filhos_do_casal[k] = int(filhos_do_casal.get(k, 0)) + 1
 	if politica() == "incentivar" and eco and int(eco.credits) >= incentivar_auxilio:
 		eco.spend(incentivar_auxilio, 0)  # o auxílio da política Incentivar
-	if morte_parto_chance > 0.0 and randf() < morte_parto_chance * (0.25 if com_medico else 1.0):
+	var complicacao := morte_parto_chance > 0.0 and randf() < morte_parto_chance * (morte_parto_medico_mult if com_medico else 1.0)
+	if complicacao:
+		mae.resguardo_s = 0.0  # (vai direto pro leito da enfermaria, não pra casa)
 		mae.hurt("parto", "grave")
 	var hud := _hud()
+	if hud and complicacao and hud.has_method("show_banner"):
+		hud.show_banner("COMPLICAÇÃO NO PARTO", "%s teve %s, mas saiu mal do parto. Precisa de leito na enfermaria logo." % [_nome(mae), _nome(bebe)])
 	if hud:
 		hud.show_toast("Nasceu %s, filh%s de %s%s!" % [_nome(bebe), "o" if bebe.gender == "menino" else "a", _nome(mae),
 			(" e " + _nome(pai)) if pai else ""], Color(1.0, 0.85, 0.9), bebe)

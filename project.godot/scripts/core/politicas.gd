@@ -527,13 +527,15 @@ func texto(politica: String, op: String) -> Dictionary:
 		["familia", "desestimular"]:
 			var fam1 := get_tree().get_first_node_in_group("familias") if is_inside_tree() else null
 			return {"porque": "Segurar o crescimento numa crise de comida ou de camas.",
-				"ganha": ["Menos nascimentos (%s)." % pct.call(fam1.desestimular_mult if fam1 else 0.3)],
+				"ganha": ["Menos nascimentos (%s)." % pct.call(fam1.desestimular_mult if fam1 else 0.3),
+					"Até %d filhos por casal." % (maxi(fam1.max_filhos - fam1.desestimular_filhos_menos, 1) if fam1 else 2)],
 				"custa": ["Ânimo %+d dos casais (queriam filhos)." % roundi(familia_desestimular_animo)],
 				"restricao": "Não impede: só diminui a chance."}
 		["familia", "incentivar"]:
 			var fam2 := get_tree().get_first_node_in_group("familias") if is_inside_tree() else null
 			return {"porque": "Fazer a vila crescer por dentro (gente que nasce aqui já conhece a vila).",
-				"ganha": ["Mais nascimentos (%s)." % pct.call(fam2.incentivar_mult if fam2 else 2.0)],
+				"ganha": ["Mais nascimentos (%s)." % pct.call(fam2.incentivar_mult if fam2 else 2.0),
+					"Até %d filhos por casal." % ((fam2.max_filhos + fam2.incentivar_filhos_extra) if fam2 else 4)],
 				"custa": ["Auxílio de %d cr por nascimento." % (fam2.incentivar_auxilio if fam2 else 30)],
 				"restricao": "Sem créditos pro auxílio, a chance volta ao normal. Bebê ainda precisa de cama livre, comida e ânimo."}
 		["migracao", "fechada"]:

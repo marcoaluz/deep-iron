@@ -16,6 +16,8 @@ modelo dia a dia que lê os @export); fotos `docs/arte/bloco111/`.
 - Simulado: sem casa nova, 4 bebês e para (a cama é o freio); com 1 casa a cada 14 dias, 12 → 42 adultos em 3 anos; adulto aos
   56 dá fome no 3º ano (por isso 28).
 - Cuidado no commit: os 161 retratos " M" (aviso do LFS) são idênticos ao HEAD — commitar por caminho explícito.
+- VALIDADO pelo Marco (2026-10-10): ritmo ok; política mexe no máximo de filhos (Incentivar 4, Desestimular 2: 46/33/17
+  nascimentos em 3 anos); complicação no parto LIGADA (6%, x0,25 com médico: machucado grave, morre sem leito); arte ok.
 - Teste: o b85 agora mede o máximo da hora social (a foto de um instante falhava quando todos trocavam de roda).
 
 ## Bloco 110 — relacionamentos (feito; commit local)

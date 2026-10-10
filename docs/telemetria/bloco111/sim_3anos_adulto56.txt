@@ -1,5 +1,5 @@
 SIMULAÇÃO DE 3 ANOS (168 dias de jogo; 1 dia = 9 min reais em 1x, 3 anos = 25.2 h reais em 1x) — MODELO, ver o cabeçalho
-familias.gd: gestação 7 d, bebê até 7 d, criança até 21 d, ADULTO aos 56 d, chance 0.15/dia, intervalo 14 d, máx 3 filhos, porção da criança x0.5
+familias.gd: gestação 7 d, bebê até 7 d, criança até 21 d, ADULTO aos 56 d, chance 0.15/dia, intervalo 14 d, máx 3 filhos (incentivar +1, desestimular -1), porção da criança x0.5, complicação no parto 6%
 
 == política neutro | jogador NÃO constrói casa | adulto aos 56 dias
   dia | adultos crianças bebês grávidas | nasceram | camas livres | comida (porções/morador) | casais | travou por
@@ -11,35 +11,35 @@ familias.gd: gestação 7 d, bebê até 7 d, criança até 21 d, ADULTO aos 56 d
    70 |      12        4     0        0 |        4 |            0 |        0.0 FOME |      6 | sem cama (84 casal-dias)
    84 |      12        4     0        0 |        4 |            0 |        0.0 FOME |      6 | sem cama (84 casal-dias)
    98 |      16        0     0        0 |        4 |            0 |        1.6      |      6 | sem cama (84 casal-dias)
-  112 |      16        0     0        0 |        4 |            0 |        3.3      |      7 | sem cama (93 casal-dias)
+  112 |      16        0     0        0 |        4 |            0 |        3.3      |      7 | sem cama (85 casal-dias)
   126 |      16        0     0        0 |        4 |            0 |        5.1      |      7 | sem cama (98 casal-dias)
   140 |      16        0     0        0 |        4 |            0 |        6.8      |      7 | sem cama (98 casal-dias)
   154 |      16        0     0        0 |        4 |            0 |        8.6      |      7 | sem cama (98 casal-dias)
   168 |      16        0     0        0 |        4 |            0 |       10.3      |      7 | sem cama (98 casal-dias)
-  FIM: 16 pessoas (16 adultos), 4 nascimentos em 3 anos; a vila de adultos foi de 12 pra 16 (+33%)
+  FIM: 16 pessoas (16 adultos), 4 nascimentos em 3 anos (máx 3 filhos por casal); a vila de adultos foi de 12 pra 16 (+33%); complicações no parto: 0 (com médico: false)
 
 == política neutro | jogador constrói uma casa a cada 14 dias | adulto aos 56 dias
   dia | adultos crianças bebês grávidas | nasceram | camas livres | comida (porções/morador) | casais | travou por
     1 |      12        0     0        0 |        0 |            4 |        3.3      |      0 | -
    14 |      12        0     0        0 |        0 |            8 |        4.9      |      1 | casal novo (1 casal-dias)
    28 |      12        0     0        5 |        0 |           12 |        6.6      |      6 | casal novo (17 casal-dias)
-   42 |      12        5     1        0 |        6 |           10 |        3.4      |      6 | filho recente (55 casal-dias)
-   56 |      12        6     4        0 |       10 |           10 |        0.0 FOME |      6 | filho recente (38 casal-dias)
-   70 |      12       10     0        0 |       10 |           14 |        0.0 FOME |      6 | desânimo (47 casal-dias)
-   84 |      12       10     0        0 |       10 |           18 |        0.0 FOME |      6 | desânimo (84 casal-dias)
-   98 |      18        4     0        2 |       10 |           22 |        1.5      |      6 | desânimo (36 casal-dias)
-  112 |      22        2     1        4 |       13 |           23 |        2.0      |      7 | máx de filhos (13 casal-dias)
-  126 |      22        7     2        0 |       19 |           21 |        3.0      |      9 | máx de filhos (54 casal-dias)
-  140 |      22        9     2        3 |       21 |           23 |        1.3      |     11 | máx de filhos (70 casal-dias)
-  154 |      22       14     0        0 |       24 |           24 |        0.0 FOME |     11 | máx de filhos (84 casal-dias)
-  168 |      25       11     0        0 |       24 |           28 |        0.0 FOME |     11 | máx de filhos (84 casal-dias)
-  FIM: 36 pessoas (25 adultos), 24 nascimentos em 3 anos; a vila de adultos foi de 12 pra 25 (+108%)
+   42 |      12        5     1        0 |        6 |           10 |        3.4      |      6 | filho recente (58 casal-dias)
+   56 |      12        6     3        0 |        9 |           11 |        0.0 FOME |      6 | filho recente (33 casal-dias)
+   70 |      12        9     0        0 |        9 |           15 |        0.0 FOME |      6 | desânimo (58 casal-dias)
+   84 |      12        9     0        0 |        9 |           19 |        0.0 FOME |      6 | desânimo (84 casal-dias)
+   98 |      18        3     0        1 |        9 |           23 |        1.9      |      6 | desânimo (36 casal-dias)
+  112 |      21        1     2        2 |       12 |           24 |        4.3      |      9 | filho recente (12 casal-dias)
+  126 |      21        5     4        1 |       18 |           22 |        6.4      |     10 | máx de filhos (46 casal-dias)
+  140 |      21       10     1        1 |       20 |           24 |        5.7      |     10 | máx de filhos (61 casal-dias)
+  154 |      21       13     2        1 |       24 |           24 |        3.2      |     10 | máx de filhos (74 casal-dias)
+  168 |      24       13     1        0 |       26 |           26 |        0.0 FOME |     10 | máx de filhos (84 casal-dias)
+  FIM: 38 pessoas (24 adultos), 26 nascimentos em 3 anos (máx 3 filhos por casal); a vila de adultos foi de 12 pra 24 (+100%); complicações no parto: 2 (com médico: false)
 
 == política incentivar | jogador NÃO constrói casa | adulto aos 56 dias
   dia | adultos crianças bebês grávidas | nasceram | camas livres | comida (porções/morador) | casais | travou por
     1 |      12        0     0        0 |        0 |            4 |        3.3      |      0 | -
    14 |      12        0     0        0 |        0 |            4 |        4.9      |      1 | casal novo (1 casal-dias)
-   28 |      12        0     4        0 |        4 |            0 |        4.3      |      6 | casal novo (16 casal-dias)
+   28 |      12        0     4        0 |        4 |            0 |        4.3      |      6 | casal novo (15 casal-dias)
    42 |      12        4     0        0 |        4 |            0 |        2.7      |      6 | filho recente (48 casal-dias)
    56 |      12        4     0        0 |        4 |            0 |        0.0 FOME |      6 | sem cama (84 casal-dias)
    70 |      12        4     0        0 |        4 |            0 |        0.0 FOME |      6 | sem cama (84 casal-dias)
@@ -50,55 +50,55 @@ familias.gd: gestação 7 d, bebê até 7 d, criança até 21 d, ADULTO aos 56 d
   140 |      16        0     0        0 |        4 |            0 |        7.6      |      7 | sem cama (98 casal-dias)
   154 |      16        0     0        0 |        4 |            0 |        9.4      |      7 | sem cama (98 casal-dias)
   168 |      16        0     0        0 |        4 |            0 |       11.1      |      7 | sem cama (98 casal-dias)
-  FIM: 16 pessoas (16 adultos), 4 nascimentos em 3 anos; a vila de adultos foi de 12 pra 16 (+33%)
+  FIM: 16 pessoas (16 adultos), 4 nascimentos em 3 anos (máx 4 filhos por casal); a vila de adultos foi de 12 pra 16 (+33%); complicações no parto: 0 (com médico: false)
 
 == política incentivar | jogador constrói uma casa a cada 14 dias | adulto aos 56 dias
   dia | adultos crianças bebês grávidas | nasceram | camas livres | comida (porções/morador) | casais | travou por
     1 |      12        0     0        0 |        0 |            4 |        3.3      |      0 | -
    14 |      12        0     0        0 |        0 |            8 |        4.9      |      1 | casal novo (1 casal-dias)
-   28 |      12        0     4        1 |        4 |            8 |        4.3      |      6 | casal novo (16 casal-dias)
-   42 |      12        5     1        2 |        6 |           10 |        2.3      |      6 | filho recente (62 casal-dias)
-   56 |      12        9     1        0 |       10 |           10 |        0.0 FOME |      6 | filho recente (41 casal-dias)
-   70 |      12       10     0        0 |       10 |           14 |        0.0 FOME |      6 | desânimo (61 casal-dias)
+   28 |      12        0     4        1 |        4 |            8 |        4.3      |      6 | casal novo (15 casal-dias)
+   42 |      12        5     1        2 |        6 |           10 |        2.3      |      6 | filho recente (59 casal-dias)
+   56 |      12        8     2        0 |       10 |           10 |        0.0 FOME |      6 | filho recente (46 casal-dias)
+   70 |      12       10     0        0 |       10 |           14 |        0.0 FOME |      6 | desânimo (63 casal-dias)
    84 |      16        6     0        0 |       10 |           18 |        0.0 FOME |      6 | desânimo (84 casal-dias)
-   98 |      18        4     0        2 |       10 |           22 |        1.0      |      7 | pouca comida (42 casal-dias)
-  112 |      22        3     3        2 |       16 |           20 |        2.8      |      8 | máx de filhos (20 casal-dias)
-  126 |      22        8     0        4 |       18 |           22 |        2.8      |     10 | máx de filhos (53 casal-dias)
-  140 |      22       12     2        0 |       24 |           20 |        0.4      |     11 | máx de filhos (79 casal-dias)
-  154 |      22       14     0        0 |       24 |           24 |        0.0 FOME |     11 | máx de filhos (84 casal-dias)
-  168 |      28        8     0        0 |       24 |           28 |        0.0 FOME |     11 | máx de filhos (84 casal-dias)
-  FIM: 36 pessoas (28 adultos), 24 nascimentos em 3 anos; a vila de adultos foi de 12 pra 28 (+133%)
+   98 |      18        4     0        5 |       10 |           22 |        1.3      |      7 | desânimo (36 casal-dias)
+  112 |      22        6     0        1 |       16 |           20 |        2.1      |      7 | filho recente (54 casal-dias)
+  126 |      22        7     3        5 |       20 |           20 |        1.1      |      9 | filho recente (39 casal-dias)
+  140 |      22       16     0        0 |       26 |           18 |        0.0 FOME |      9 | filho recente (48 casal-dias)
+  154 |      22       16     0        0 |       26 |           22 |        0.0 FOME |      9 | máx de filhos (56 casal-dias)
+  168 |      28       10     0        0 |       26 |           26 |        0.0 FOME |      9 | desânimo (70 casal-dias)
+  FIM: 38 pessoas (28 adultos), 26 nascimentos em 3 anos (máx 4 filhos por casal); a vila de adultos foi de 12 pra 28 (+133%); complicações no parto: 0 (com médico: false)
 
 == política desestimular | jogador NÃO constrói casa | adulto aos 56 dias
   dia | adultos crianças bebês grávidas | nasceram | camas livres | comida (porções/morador) | casais | travou por
     1 |      12        0     0        0 |        0 |            4 |        3.3      |      0 | -
    14 |      12        0     0        0 |        0 |            4 |        4.9      |      1 | casal novo (1 casal-dias)
    28 |      12        0     0        3 |        0 |            4 |        6.6      |      6 | casal novo (17 casal-dias)
-   42 |      12        3     1        0 |        4 |            0 |        4.5      |      6 | filho recente (35 casal-dias)
-   56 |      12        4     0        0 |        4 |            0 |        1.1      |      6 | sem cama (67 casal-dias)
+   42 |      12        3     1        0 |        4 |            0 |        4.5      |      6 | filho recente (36 casal-dias)
+   56 |      12        4     0        0 |        4 |            0 |        1.0      |      6 | sem cama (68 casal-dias)
    70 |      12        4     0        0 |        4 |            0 |        0.0 FOME |      6 | sem cama (84 casal-dias)
    84 |      12        4     0        0 |        4 |            0 |        0.0 FOME |      6 | sem cama (84 casal-dias)
-   98 |      16        0     0        0 |        4 |            0 |        2.7      |      6 | sem cama (84 casal-dias)
-  112 |      16        0     0        0 |        4 |            0 |        4.5      |      6 | sem cama (84 casal-dias)
-  126 |      16        0     0        0 |        4 |            0 |        6.2      |      7 | sem cama (94 casal-dias)
-  140 |      16        0     0        0 |        4 |            0 |        8.0      |      7 | sem cama (98 casal-dias)
-  154 |      16        0     0        0 |        4 |            0 |        9.7      |      7 | sem cama (98 casal-dias)
-  168 |      16        0     0        0 |        4 |            0 |       11.5      |      7 | sem cama (98 casal-dias)
-  FIM: 16 pessoas (16 adultos), 4 nascimentos em 3 anos; a vila de adultos foi de 12 pra 16 (+33%)
+   98 |      16        0     0        0 |        4 |            0 |        2.6      |      6 | sem cama (84 casal-dias)
+  112 |      16        0     0        0 |        4 |            0 |        4.4      |      7 | sem cama (90 casal-dias)
+  126 |      16        0     0        0 |        4 |            0 |        6.1      |      8 | sem cama (108 casal-dias)
+  140 |      16        0     0        0 |        4 |            0 |        7.9      |      8 | sem cama (112 casal-dias)
+  154 |      16        0     0        0 |        4 |            0 |        9.6      |      8 | sem cama (112 casal-dias)
+  168 |      16        0     0        0 |        4 |            0 |       11.4      |      8 | sem cama (112 casal-dias)
+  FIM: 16 pessoas (16 adultos), 4 nascimentos em 3 anos (máx 2 filhos por casal); a vila de adultos foi de 12 pra 16 (+33%); complicações no parto: 0 (com médico: false)
 
 == política desestimular | jogador constrói uma casa a cada 14 dias | adulto aos 56 dias
   dia | adultos crianças bebês grávidas | nasceram | camas livres | comida (porções/morador) | casais | travou por
     1 |      12        0     0        0 |        0 |            4 |        3.3      |      0 | -
    14 |      12        0     0        0 |        0 |            8 |        4.9      |      1 | casal novo (1 casal-dias)
    28 |      12        0     0        3 |        0 |           12 |        6.6      |      6 | casal novo (17 casal-dias)
-   42 |      12        3     1        0 |        4 |           12 |        4.5      |      6 | filho recente (35 casal-dias)
-   56 |      12        4     1        0 |        5 |           15 |        1.0      |      6 | filho recente (17 casal-dias)
-   70 |      12        5     0        0 |        5 |           19 |        0.0 FOME |      6 | desânimo (56 casal-dias)
-   84 |      12        5     0        0 |        5 |           23 |        0.0 FOME |      6 | desânimo (84 casal-dias)
-   98 |      16        1     0        1 |        5 |           27 |        1.5      |      6 | pouca comida (36 casal-dias)
-  112 |      17        1     1        2 |        7 |           29 |        1.3      |      7 | filho recente (14 casal-dias)
-  126 |      17        4     2        1 |       11 |           29 |        5.1      |      7 | filho recente (37 casal-dias)
-  140 |      17        7     2        1 |       14 |           30 |        6.5      |      8 | máx de filhos (23 casal-dias)
-  154 |      17       10     1        0 |       16 |           32 |        4.6      |      8 | máx de filhos (38 casal-dias)
-  168 |      19        9     2        0 |       18 |           34 |        1.5      |      8 | máx de filhos (45 casal-dias)
-  FIM: 30 pessoas (19 adultos), 18 nascimentos em 3 anos; a vila de adultos foi de 12 pra 19 (+58%)
+   42 |      12        3     1        0 |        4 |           12 |        4.5      |      6 | filho recente (36 casal-dias)
+   56 |      12        4     1        0 |        5 |           15 |        0.9      |      6 | filho recente (16 casal-dias)
+   70 |      12        5     0        0 |        5 |           19 |        0.0 FOME |      6 | desânimo (55 casal-dias)
+   84 |      12        5     0        0 |        5 |           23 |        0.0 FOME |      6 | desânimo (70 casal-dias)
+   98 |      16        1     0        1 |        5 |           27 |        1.4      |      6 | pouca comida (30 casal-dias)
+  112 |      17        1     1        2 |        7 |           29 |        1.4      |      8 | máx de filhos (25 casal-dias)
+  126 |      17        4     1        1 |       10 |           30 |        5.9      |      8 | máx de filhos (51 casal-dias)
+  140 |      17        6     1        1 |       12 |           32 |        7.5      |      8 | máx de filhos (62 casal-dias)
+  154 |      17        8     0        0 |       13 |           35 |        7.7      |      8 | máx de filhos (70 casal-dias)
+  168 |      19        7     0        1 |       14 |           38 |        6.4      |      8 | máx de filhos (77 casal-dias)
+  FIM: 26 pessoas (19 adultos), 14 nascimentos em 3 anos (máx 2 filhos por casal); a vila de adultos foi de 12 pra 19 (+58%); complicações no parto: 0 (com médico: false)

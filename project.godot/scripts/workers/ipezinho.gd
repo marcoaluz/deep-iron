@@ -862,7 +862,7 @@ func get_state_label() -> String:
 			return "machucado %s, esperando leito (%s)" % [injury_severity, clock]
 		return "machucado %s, indo pra enfermaria (%s)" % [injury_severity, clock]
 	if injured and _ai_state == "home":
-		var why := " por galho" if injury_cause == "galho" else ""
+		var why: String = {"galho": " por galho", "parto": " do parto"}.get(injury_cause, "")
 		return "curando (%ds)" % ceili(_recovery_left) if _resting else "machucado%s, indo pra casa" % why
 	if _ai_state == "home" and _resting:
 		var sun := _sun()
@@ -4185,9 +4185,9 @@ func hurt(cause: String = "mina", severity: String = "") -> void:
 			if hud and hud.has_method("show_banner"):
 				hud.show_banner("ACIDENTE NA MINA", "%s se machucou feio no desabamento. Precisa de leito na enfermaria." % _display())
 	var grave := injury_severity == "grave"
-	var text: String = {"galho": "Ai! Um galho!", "javali": "Ai! O javali!", "acido": "Ai! Ácido!", "lava": "Ai! Queimou!"}.get(cause, "Ai!")
+	var text: String = {"galho": "Ai! Um galho!", "javali": "Ai! O javali!", "acido": "Ai! Ácido!", "lava": "Ai! Queimou!", "parto": "Complicação no parto!"}.get(cause, "Ai!")
 	_popup(text + (" (grave)" if grave else ""), Color(1.0, 0.25, 0.2) if grave else Color(1.0, 0.4, 0.35))
-	if grave and not downed:  # (caído em combate tem o aviso próprio)
+	if grave and not downed and cause != "parto":  # (caído em combate e o parto têm o aviso próprio)
 		_toast("%s se machucou feio! Precisa de leito na enfermaria." % _display())
 	Audio.hurt(global_position)
 	var flash := create_tween()

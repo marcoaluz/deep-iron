@@ -148,9 +148,11 @@ func roda() -> void:
 	hub.level = 2
 	var pol = g("politicas")
 	pol.forca("familia", "desestimular")
+	check(fam.max_filhos_casal() == maxi(fam.max_filhos - fam.desestimular_filhos_menos, 1), "desestimular: menos filhos por casal (%d)" % fam.max_filhos_casal())
 	check(perto(fam.mult_politica(), fam.desestimular_mult) and pol.fatores_animo(pai).any(func(f): return f[0] == "queriam filhos"), "desestimular: chance x0,3 e os casais tristes")
 	pol.forca("familia", "incentivar")
 	check(perto(fam.mult_politica(), fam.incentivar_mult), "incentivar: chance x2")
+	check(fam.max_filhos_casal() == fam.max_filhos + fam.incentivar_filhos_extra, "incentivar: mais filhos por casal (%d)" % fam.max_filhos_casal())
 	pol.forca("familia", "neutro")
 	fam.chance_dia = 1.0
 	fam._amanheceu(dn.day)
@@ -167,6 +169,9 @@ func roda() -> void:
 	var n_antes: int = ws().size()
 	var nomes_antes: Array = ws().map(func(x): return String(x.name))
 	var cama_mae: bool = mae.has_home() and mae._home.free_slot_count() > 0
+	var chance_compl: float = fam.morte_parto_chance
+	check(chance_compl > 0.0 and fam.morte_parto_medico_mult < 1.0, "complicação no parto ligada (%.0f%%; com médico x%.2f)" % [chance_compl * 100.0, fam.morte_parto_medico_mult])
+	fam.morte_parto_chance = 0.0  # (este parto é o normal; a complicação vem logo abaixo)
 	var bebe: Node = fam.parto(mae, false)
 	await process_frame
 	var novos: Array = ws().filter(func(x): return not String(x.name) in nomes_antes).map(func(x): return "%s fase=%s visitante=%s" % [x.name, x.fase, str(x.visitante)])
@@ -175,6 +180,19 @@ func roda() -> void:
 	check(not mae.gravida() and mae.resguardo_s > 0.0 and mae._estado_funcao() == "home", "sem médico: a mãe fica de resguardo em casa")
 	check(String(bebe.name) in mae.filhos and String(bebe.name) in pai.filhos and String(mae.name) in bebe.pais, "pais e filhos anotados")
 	check(fam.nascimentos == 1 and g("diary").has_page("fam_primeiro_bebe"), "o primeiro bebê no diário")
+	var outra_mae: Node = ws().filter(func(x): return x != mae and String(x.gender) == "menina" and not x.e_crianca() and not x.injured)[0]
+	fam.morte_parto_chance = 1.0
+	var bebe2: Node = fam.parto(outra_mae, false)
+	check(bebe2 != null and outra_mae.injured and outra_mae.injury_severity == "grave" and outra_mae.injury_cause == "parto" and outra_mae.resguardo_s <= 0.0,
+		"complicação: o bebê nasce e a mãe sai com machucado grave (morre só sem leito a tempo)")
+	check(outra_mae._choose_state() != "home", "com a complicação ela vai pra enfermaria, não pro resguardo (%s)" % outra_mae._choose_state())
+	outra_mae.injured = false
+	outra_mae.injury_severity = ""
+	bebe2.remove_from_group("ipezinhos")
+	bebe2.queue_free()
+	fam.nascimentos -= 1
+	fam.morte_parto_chance = chance_compl
+	await process_frame
 
 	print("-- (C) o bebê")
 	check(bebe._choose_state() == "bebe" and bebe.has_home(), "o bebê fica em casa, na cama")

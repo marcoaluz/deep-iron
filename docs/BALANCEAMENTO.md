@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1178 valores** em 4 pastas de scripts (80 trocados por alguma cena).
+Total: **1181 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (79)
 
@@ -693,7 +693,7 @@ Total: **1178 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `batedor_alcance_mult` | 3.0 |  | O batedor (sem expedição) avista bichos e lugares de mais longe: alcance do catálogo x isto. |
 | `toca_rastreada_mult` | 1.5 |  | Toca rastreada pelo batedor no dia: os bichos nascem mais rápido (x isto). |
 
-## `scripts/core/familias.gd` (29)
+## `scripts/core/familias.gd` (32)
 
 **Tempos (dias de jogo; 1 dia = 9 min reais em 1x)**
 
@@ -725,7 +725,8 @@ Total: **1178 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `parto_segundos` | 45.0 |  | Segundos de jogo do parto (com médico de plantão, x parto_medico_mult) e os dias de resguardo sem médico (em casa). |
 | `parto_medico_mult` | 0.5 |  |  |
 | `resguardo_dias` | 1.0 |  |  |
-| `morte_parto_chance` | 0.0 |  | Chance (0..1) de a mãe morrer no parto. Padrão 0 (o Marco: sem morte no parto); com médico, x0,25. |
+| `morte_parto_chance` | 0.06 |  | Chance (0..1) de COMPLICAÇÃO no parto: a mãe sai com o machucado grave de sempre (morre se não chegar a um leito da enfermaria a tempo). O Marco ligou na validação do Bloco 111 (antes era 0). |
+| `morte_parto_medico_mult` | 0.25 |  | Com médico no parto, a chance da complicação x isto. |
 
 **Crianças**
 
@@ -747,6 +748,8 @@ Total: **1178 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `desestimular_mult` | 0.3 |  | Desestimular / Incentivar: multiplicam a chance; Incentivar paga um auxílio por nascimento (sem créditos, a chance volta ao neutro). O ânimo do Desestimular (os casais queriam filhos) fica nas Políticas (politicas.familia_desestimular_animo). |
 | `incentivar_mult` | 2.0 |  |  |
 | `incentivar_auxilio` | 30 |  |  |
+| `incentivar_filhos_extra` | 1 |  | Máximo de filhos por casal: o Incentivar soma isto e o Desestimular tira isto (nunca abaixo de 1). Assim as duas mudam o TAMANHO da vila, não só o ritmo (a simulação de 3 anos mostrou que só a chance quase não mudava o total). |
+| `desestimular_filhos_menos` | 1 |  |  |
 | `animo_esperando` | 5.0 |  | Ânimo do casal que espera um filho. |
 
 ## `scripts/core/finds.gd` (8)

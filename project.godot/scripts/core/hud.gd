@@ -226,7 +226,7 @@ func _ready() -> void:
 		_inf.patient_died.connect(func(who: String, cause: String):
 			show_banner("%s MORREU" % who.to_upper(),
 				"Machucado grave (%s) e sem leito na enfermaria. Descansa no cemitério ao lado dela." % (
-					{"galho": "queda de galho", "explosao": "explosão do reator", "lumivoro": "ataque de Lumívoro", "ferrugento": "ataque de Ferrugento", "radiacao": "radiação solar"}.get(cause, "acidente na mina"))))
+					{"galho": "queda de galho", "explosao": "explosão do reator", "lumivoro": "ataque de Lumívoro", "ferrugento": "ataque de Ferrugento", "radiacao": "radiação solar", "parto": "complicação no parto"}.get(cause, "acidente na mina"))))
 	if _dig:
 		_dig.completed.connect(func():
 			show_banner("ESCAVADEIRA CONCLUÍDA!",

@@ -3,7 +3,7 @@
 Data: 2026-10-10. Branch `isometrico`. Pedido: "Prompt F" (o terceiro do pacote 8 → R → F). O Marco decidiu: **vida adulta aos
 28 dias** (`@export`; a simulação mostra também 56), **nenhuma função nova** (a escola funciona sem professor), **o lote
 completo de arte das crianças sem parar no piloto** e **a política de Família no cartão reservado da janela de Políticas**.
-Teste: `tests/blocos/b111_familias.gd` (61 verificações). Simulação: `tests/sim_familias.gd` (`docs/telemetria/bloco111/`).
+Teste: `tests/blocos/b111_familias.gd` (66 verificações). Simulação: `tests/sim_familias.gd` (`docs/telemetria/bloco111/`).
 Fotos: `docs/arte/bloco111/` (`tests/capturas_bloco111.gd`).
 
 ## 1) O que entrou
@@ -11,13 +11,13 @@ Fotos: `docs/arte/bloco111/` (`tests/capturas_bloco111.gd`).
 | Item | Como ficou | Onde |
 |---|---|---|
 | **Gravidez** | De manhã, cada casal (Bloco 110) pode esperar um filho, com chance de 15% ao dia, se: o casal tem 3 dias ou mais; o último filho foi há 14 dias ou mais; o casal tem menos de 3 filhos; existe **cama livre** (descontadas as camas já prometidas aos bebês a caminho); a vila está no Vilarejo ou acima; o ânimo médio é 55 ou mais, sem greve; e há pelo menos 1 porção guardada por morador. A ficha diz o motivo quando não pode. Os dois ficam contentes ("vai ter um filho"). | `familias.gd motivo_sem_filho`, `_amanheceu` |
-| **Trabalho leve e parto** | Nos 2 últimos dias a mãe rende ×0,6. O parto leva 45 s em casa; com médico perto, a metade. Depois vem 1 dia de resguardo em casa. A chance de morte no parto é **0** (`@export`, desligada por padrão). | `trabalho_leve`, `parto`, `ipezinho._destino_parto` |
+| **Trabalho leve e parto** | Nos 2 últimos dias a mãe rende ×0,6. O parto leva 45 s em casa; com médico perto, a metade. Depois vem 1 dia de resguardo em casa. **Complicação no parto** (ligada na validação): 6%, ou 1,5% com médico no parto. A mãe sai com o machucado GRAVE de sempre (faixa "COMPLICAÇÃO NO PARTO", vai direto pro leito) e só morre se não chegar à enfermaria a tempo. O bebê nasce bem. | `trabalho_leve`, `parto`, `ipezinho._destino_parto` |
 | **Bebê** | Nasce pelo `Economy.novo_ipezinho`, com o tom de pele de um dos pais, mora na casa dos pais e só aparece como **ícone** (sem boneco andando). Não come comida do armazém (a mãe amamenta). | `parto`, `retratos.de` → ícone `bebe` |
 | **Criança** (7–21 dias) | Tem boneco próprio, menor que o adulto. Não trabalha, não faz greve, não vai à taverna e não é alvo de criatura. De dia vai à **escola** (estuda e ganha ânimo) ou **brinca** perto de casa. Come meia porção. | `_estado_crianca`, `_brinca`, `escola.gd` |
 | **Aprendiz** (21–28 dias) | Segue um **mentor** (o pai, a mãe ou um adulto da função mais forte da vila) e aprende a função dele. Também estuda, com metade do rendimento. | `_escolhe_mentor`, `_acompanha`, `aprende` |
 | **Vira adulto** (28 dias) | Fica **sem função**, para o jogador escolher. Ganha o traço de um dos pais + 1 sorteado, 20% da habilidade do pai/mãe e um bônus pelo estudo (até +15%). O diário registra o primeiro adulto nascido na vila. | `_vira_adulto` |
 | **Escola** | Obra do engenheiro (140 cr, 20 de minério, 80 de madeira, 10 pregos, 45 s; libera no Vilarejo, no máximo 2). Tem 8 lugares e conta como estação das crianças. Card real no CONSTRUIR, com a imagem do prédio. | `escola.gd`, `centro_vila OBRAS_107 "escola"`, `build_menu` |
-| **Política de Família** | Ocupa o cartão que o Bloco 108 tinha reservado: Neutro / Desestimular (chance ×0,3; os casais ficam −3, "queriam filhos") / Incentivar (chance ×2; auxílio de 30 cr por nascimento; sem crédito, a chance volta ao normal). | `politicas.gd POLITICAS.familia` |
+| **Política de Família** | Ocupa o cartão que o Bloco 108 tinha reservado: Neutro / Desestimular (chance ×0,3, **até 2 filhos por casal**; os casais ficam −3, "queriam filhos") / Incentivar (chance ×2, **até 4 filhos por casal**; auxílio de 30 cr por nascimento; sem crédito, a chance volta ao normal). | `politicas.gd POLITICAS.familia` |
 | **Família no resto do jogo** | Luto dos pais e dos filhos com o peso do luto pelo parceiro. **Família não namora** (pai/mãe com filho, irmãos). O memorial da enfermaria e o diário mostram a família. A ficha ganhou a seção FAMÍLIA (pais, filhos com a fase, "esperando um filho (faltam N dias)"). A rede de segurança dos migrantes conta só adultos. As refeições do HUD contam a meia porção. A criança não entra em "sem função", nos parados nem no topo da lista de pessoas. | `relacoes.parentes`, `enfermaria`, `ficha_panel`, `migrantes._populacao`, `schedule`, `hud._parado` |
 | **Save** | Chave `familias` (casais: filhos e o dia do último; os marcos) + no ipezinho: `fase`, `idade_s`, `pais`, `filhos`, `gravidez_s`, `pai_bebe`, `resguardo_s`, `estudo`, `mentor`. Save antigo: todo mundo vira adulto, sem família. Escolas na chave `escolas` do Centro. | `save_manager.gd` (cabeçalho) |
 | **Telemetria** | Colunas novas: bebês, crianças, aprendizes, grávidas, nascimentos e camas livres. | `telemetria.gd` |
@@ -55,9 +55,9 @@ Fotos: `docs/arte/bloco111/` (`tests/capturas_bloco111.gd`).
 `gestacao_dias` 7, `bebe_dias` 7, `crianca_ate` 21, `adulto_aos` 28, `chance_dia` 0,15, `casal_estavel_dias` 3,
 `intervalo_filhos_dias` 14, `max_filhos` 3, `animo_minimo` 55, `estagio_minimo` 2, `comida_porcoes_por_morador` 1,
 `trabalho_leve_dias` 2 / `trabalho_leve_mult` 0,6, `parto_segundos` 45, `parto_medico_mult` 0,5, `resguardo_dias` 1,
-`morte_parto_chance` 0, `crianca_porcao` 0,5, `estudo_por_s` 0,002, `animo_escola` 5, `aprendiz_ganho` 0,0008,
+`morte_parto_chance` 0,06 / `morte_parto_medico_mult` 0,25, `crianca_porcao` 0,5, `estudo_por_s` 0,002, `animo_escola` 5, `aprendiz_ganho` 0,0008,
 `aprendiz_estudo_mult` 0,5, `aprendiz_perto` 36, `heranca_habilidade` 0,2, `estudo_bonus` 0,15, `desestimular_mult` 0,3,
-`incentivar_mult` 2, `incentivar_auxilio` 30, `animo_esperando` 5; escola: 140 cr, 20 de minério, 80 de madeira, 10 pregos,
+`incentivar_mult` 2, `incentivar_auxilio` 30, `incentivar_filhos_extra` 1, `desestimular_filhos_menos` 1, `animo_esperando` 5; escola: 140 cr, 20 de minério, 80 de madeira, 10 pregos,
 45 s, estágio 2, até 2.
 
 ## 4) Simulação de 3 anos (`docs/telemetria/bloco111/sim_3anos_adulto28.txt` e `..._adulto56.txt`)
@@ -74,20 +74,27 @@ Começo: 12 adultos, 16 camas, sem migrantes (pra isolar as famílias).
 
 | Adulto aos | Política | Jogador | Nascimentos | Adultos no fim (de 12) | Comida no fim |
 |---|---|---|---|---|---|
-| 28 | neutro | **não constrói casa** | 4 | 16 (+33%) | sobra |
-| 28 | neutro | 1 casa a cada 14 dias | 36 | 42 (+250%) | 0,6 porção/morador (no limite) |
-| 28 | incentivar | 1 casa a cada 14 dias | 38 | 45 (+275%) | 1,5 |
-| 28 | desestimular | 1 casa a cada 14 dias | 24 | 32 (+167%) | 5,2 |
-| 56 | neutro | 1 casa a cada 14 dias | 24 | 25 (+108%) | **FOME no dia 168** |
-| 56 | incentivar | 1 casa a cada 14 dias | 24 | 28 (+133%) | **FOME no dia 168** |
+| 28 | qualquer | **não constrói casa** | 4 | 16 (+33%) | sobra |
+| 28 | neutro (até 3 filhos) | 1 casa a cada 14 dias | 33 | 39 (+225%) + 6 crianças | 4,8 porções/morador |
+| 28 | incentivar (até 4) | 1 casa a cada 14 dias | **46** | 38 (+217%) + 20 crianças e bebês | 2,9 |
+| 28 | desestimular (até 2) | 1 casa a cada 14 dias | **17** | 25 (+108%) | 14,9 |
+| 56 | neutro | 1 casa a cada 14 dias | 26 | 24 (+100%) | **FOME no dia 168** |
+| 56 | incentivar | 1 casa a cada 14 dias | 26 | 28 (+133%) | **FOME no dia 168** |
+
+Complicações no parto, sem médico: 1 a 3 em 3 anos nos cenários com casas (o modelo conta e não mata ninguém; no jogo, quem
+chega ao leito sobrevive).
+
+(1ª rodada, antes da validação, com o máximo de 3 filhos em todas as políticas: 36 nascimentos no neutro, 38 no incentivar e
+24 no desestimular. O incentivar quase não mudava o total, só adiantava os nascimentos.)
 
 O que a simulação mostra:
 
 - **A cama é o freio.** Se o jogador não constrói, nascem 4 bebês (as 4 camas livres) e a vila para aí, em qualquer política.
   O controle continua na mão do jogador, como o Prompt pedia.
-- **Com casas, a vila cresce sozinha**, e o teto passa a ser o máximo de 3 filhos por casal. O **incentivar** quase não muda o
-  total em 3 anos (38 × 36): ele **adianta** os nascimentos, mas não aumenta o teto. O **desestimular** corta um terço.
-- **A criança pesa na comida.** Aos 28 dias a vila fica no limite (0,6 porção por morador). Aos **56** dias há gente demais
+- **Com casas, a vila cresce sozinha**, e o teto passa a ser o máximo de filhos por casal. Por isso a política mexe no máximo
+  (validação do Marco: "o que achar melhor pro jogo"): **17 / 33 / 46** nascimentos em 3 anos. O Incentivar enche a vila de
+  crianças (20 no fim) e aperta a comida; o Desestimular segura o crescimento e sobra comida.
+- **A criança pesa na comida.** Com o Incentivar, a comida cai de 4,8 pra 2,9 porções por morador. Aos **56** dias há gente demais
   comendo meia porção por tempo demais, e a vila **passa fome** no fim do 3º ano. Por isso fica **28** como padrão; o 56 só
   com mais comida.
 
@@ -106,7 +113,7 @@ O que a simulação mostra:
 
 ## 6) Testes (um por vez, APPDATA isolado; o save real não mudou)
 
-**Aprovados:** b111_familias (novo, 61/0), b110, b109, b108 (resumo esperado com `familia=neutro`), b107, b106, b105, b104,
+**Aprovados:** b111_familias (novo, 66/0), b110, b109, b108 (resumo esperado com `familia=neutro`), b107, b106, b105, b104,
 b103, b101, b100, b97, b95b_construir_abas, b95_layout_v2, b93, b88, b85 (ajustado), b84, b62, b52, b36, b35, b27, p28_save,
 hud_frostpunk e o GUT `test_iso*` (3 scripts, 12 testes, 491 asserts).
 
@@ -116,10 +123,12 @@ hud_frostpunk e o GUT `test_iso*` (3 scripts, 12 testes, 491 asserts).
   o GUT só com `-gtest` disparou a bateria inteira (a `.gutconfig.json` aponta pra pasta toda) e foi parada pela nota de
   memória do projeto. Pra rodar só um script, use `-gselect=<nome>`.
 
-## 7) Pra o Marco validar
+## 7) Validação do Marco (2026-10-10)
 
-- O ritmo (pela simulação): os 1ºs bebês nascem entre o dia ~25 e o ~35 (4 a 5 semanas de jogo); o filho vira adulto em ~4 h reais em 1x.
-- O crescimento com casas (+250% em 3 anos) e se o incentivar deveria **também** subir o máximo de filhos, já que hoje ele só
-  adianta os nascimentos.
-- A morte no parto continua desligada (0). Se quiser, é só ligar pelo `@export`.
-- A arte das crianças e da escola (fotos em `docs/arte/bloco111/`).
+- **O ritmo**: aprovado ("pode ser"). Os 1ºs bebês nascem entre o dia ~25 e o ~35, e o filho vira adulto em ~4 h reais em 1x.
+- **Máximo de filhos pela política**: "o que achar melhor pro jogo". O Incentivar vai até 4 filhos por casal e o Desestimular
+  até 2 (`incentivar_filhos_extra`, `desestimular_filhos_menos`); o texto da janela de Políticas mostra isso.
+- **Morte no parto**: "pode ligar". Virou complicação no parto: 6% (×0,25 com médico), com o machucado grave de sempre. Morre
+  só sem leito a tempo, e isso dá motivo pra ter médico e enfermaria. Teste: a complicação acontece, o bebê nasce, a mãe vai
+  pra enfermaria e não pro resguardo.
+- **Arte das crianças e da escola**: aprovada ("pode fazer ok").
