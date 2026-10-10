@@ -229,6 +229,7 @@ func extract(amount: float) -> float:
 	if ore_remaining <= 0.0:
 		ore_remaining = 0.0
 		_cooldown = depleted_cooldown
+		Audio.som("sfx/minerio_esgotado", global_position)  # Bloco 115: a veia desaba
 		depleted.emit()
 	_update_visual()
 	return taken
@@ -290,6 +291,7 @@ func _process(delta: float) -> void:
 			if ore_remaining <= 0.0:
 				ore_remaining = 0.0
 				_cooldown = depleted_cooldown
+				Audio.som("sfx/minerio_esgotado", global_position)  # Bloco 115
 				depleted.emit()
 				break
 

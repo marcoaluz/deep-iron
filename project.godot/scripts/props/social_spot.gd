@@ -133,6 +133,11 @@ func companheiros(w: Node) -> Array:
 	return out
 
 
+## Bloco 115: o murmúrio da conversa (sons_predios.gd) só soa com 2 ou mais gente reunida aqui.
+func som_ativo() -> bool:
+	return ocupantes().size() >= 2
+
+
 ## Quem está reservado aqui (pra janela/teste).
 func ocupantes() -> Array:
 	_prepara()

@@ -415,8 +415,7 @@ func _attack(t: Node2D) -> void:
 	create_tween().tween_property(_visual, "position:y", 0.0, 0.15)
 	if t.is_in_group("barricadas"):
 		t.damage(damage * barricade_mult)
-		if kind == "ferrugento":
-			Audio.clank(global_position)
+		Audio.criatura_golpe(kind, variant, global_position)  # Bloco 115: cada criatura bate no seu jeito
 		return
 	if t.is_in_group("armazens"):
 		var def := get_tree().get_first_node_in_group("defense")
@@ -428,10 +427,7 @@ func _attack(t: Node2D) -> void:
 			t.weapon_durability -= maxf(corroi - 1.0, 0.0)  # Bloco 62: a Matriarca; Bloco 103: o ácido da Gosma
 			t._wear_weapon()
 		t.take_hit(damage, self)
-		if kind == "lumivoro":
-			Audio.screech(global_position)
-		else:
-			Audio.clank(global_position)
+		Audio.criatura_golpe(kind, variant, global_position)  # Bloco 115: Lumívoro, Ferrugento, Gosma, Magmante e a Matriarca
 		return
 	if kind in ["gosma", "magmante"] and t.is_in_group("armazens"):
 		# Bloco 70: a Gosma dissolve o metal; o Magmante come o carvão (some, ninguém leva)

@@ -155,6 +155,12 @@ var _tema_player: AudioStreamPlayer
 var _tema_atual := ""
 var _over := {}  # camada (chuva, vento) -> AudioStreamPlayer
 var _vento := false
+var _onda := false
+var _pont_pool: Array[AudioStreamPlayer2D] = []  # os sons soltos (pontuais), no bus Ambience
+var _pont_prox := {}  # slot -> (ms) de quando toca o próximo
+var _pont_t := 0.0
+var _pont_ids: Array[String] = []
+var _geiger_ultimo := -100000
 var _eco_fx: AudioEffectReverb
 var _duck_fx: AudioEffectAmplify
 var _duck_db := 0.0  # o quanto a música está abaixada agora (dB, <= 0)
@@ -182,7 +188,7 @@ const SonsPredios := preload("res://scripts/core/sons_predios.gd")
 const CTX_SLOT := {"mina": "ambiencia/mina", "dia": "ambiencia/floresta_dia", "noite": "ambiencia/floresta_noite",
 	"s2": "ambiencia/s2_acido", "s3": "ambiencia/s3_lava", "s4": "ambiencia/s4_cachoeira", "s5": "ambiencia/s5_lago"}
 ## As camadas por cima da ambiência (ligam e desligam à parte).
-const CAMADAS := {"chuva": "ambiencia/chuva", "vento": "ambiencia/vento_inverno"}
+const CAMADAS := {"chuva": "ambiencia/chuva", "vento": "ambiencia/vento_inverno", "onda_solar": "ambiencia/onda_solar"}
 ## Estação do inverno na lista do sun.gd (Primavera, Verão, Outono, Inverno).
 const INVERNO := 3
 ## Perto de uma plataforma, escada ou elevador o passo é de madeira (px do mundo).
@@ -232,6 +238,16 @@ func _ready() -> void:
 	_music_player = _make_loop_player(music, &"Music")
 	_danger_player = _make_loop_player(_first("music_danger"), &"Music")
 	_ambience_player = _make_loop_player(ambience, &"Ambience")
+	for i in 4:  # Bloco 115: os sons soltos pelo contexto (pássaro, trovão, gota...) saem no bus Ambience
+		var q := AudioStreamPlayer2D.new()
+		q.bus = &"Ambience"
+		q.max_distance = sfx_max_distance
+		q.attenuation = 1.0
+		add_child(q)
+		_pont_pool.append(q)
+	for id in Slots.todos():
+		if String(Slots.slot(id).get("tipo", "")) == "pontual":
+			_pont_ids.append(id)
 	_amb = {"mina": _ambience_player}
 	for ctx in CTX_SLOT:
 		if ctx != "mina":
@@ -256,6 +272,7 @@ func _process(delta: float) -> void:
 		_ctx_timer = 0.5
 		_update_context()
 	_duck_tick()
+	_pontuais_tick(delta)
 
 
 # ------------------------------------------------------------ Bloco 55: contexto (ambiência e música)
@@ -268,6 +285,7 @@ func _update_context() -> void:
 	var ctx := "mina"
 	var rain := false
 	var vento := false
+	var onda := false
 	if env and cam:
 		var ground: Vector2 = cam.ground_center() if cam.has_method("ground_center") else cam.get_screen_center_position()
 		var nivel: int = env.level_at(ground) if env.has_method("level_at") else 0
@@ -281,7 +299,10 @@ func _update_context() -> void:
 			rain = w != null and w.has_method("level") and w.level("rain") > 0.3
 			var sol := tree.get_first_node_in_group("sun")
 			vento = sol != null and sol.has_method("season_index") and sol.season_index() == INVERNO  # Bloco 114: vento no inverno
-	set_ambience(ctx, rain, vento)
+	if ctx in ["dia", "noite", "mina"]:  # Bloco 115: a onda solar (a rocha protege os andares fundos: lá não soa)
+		var sol2 := tree.get_first_node_in_group("sun")
+		onda = sol2 != null and sol2.has_method("wave_active") and sol2.wave_active()
+	set_ambience(ctx, rain, vento, onda)
 	var d := tree.get_first_node_in_group("defense")
 	set_danger(d != null and bool(d.get("invasion_active")))
 	# Bloco 114: amanhecer (o dia virou; o 1º dia que o jogo vê não conta, e sem partida zera)
@@ -295,7 +316,7 @@ func _update_context() -> void:
 		_dia_visto = dia
 
 
-func set_ambience(ctx: String, rain: bool = false, vento: bool = false) -> void:
+func set_ambience(ctx: String, rain: bool = false, vento: bool = false, onda: bool = false) -> void:
 	if not _amb.has(ctx):
 		ctx = "mina"
 	if ctx != ambience_now:
@@ -311,6 +332,9 @@ func set_ambience(ctx: String, rain: bool = false, vento: bool = false) -> void:
 	if vento != _vento:
 		_vento = vento
 		_camada("vento", vento)
+	if onda != _onda:
+		_onda = onda
+		_camada("onda_solar", onda)
 
 
 ## Liga ou desliga uma camada por cima da ambiência (chuva, vento do inverno).
@@ -454,7 +478,7 @@ func _fade_in(p: AudioStreamPlayer, to_db: float = 0.0) -> void:
 
 # ------------------------------------------------------------ efeitos
 func pick(pos: Vector2) -> void:
-	play_at(&"pick", pick_sounds, pos, pick_db)
+	som("sfx/picareta", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func step(pos: Vector2) -> void:
@@ -466,124 +490,108 @@ func step(pos: Vector2) -> void:
 
 
 func deposit(pos: Vector2) -> void:
-	play_at(&"deposit", deposit_sounds, pos, deposit_db)
+	som("sfx/deposito", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func eat(pos: Vector2) -> void:
-	play_at(&"eat", eat_sounds, pos, eat_db)
+	som("sfx/comer", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func hurt(pos: Vector2) -> void:
-	if hurt_sound:
-		play_at(&"hurt", [hurt_sound], pos, hurt_db)
+	som("sfx/ferido", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func heal(pos: Vector2) -> void:
-	if heal_sound:
-		play_at(&"heal", [heal_sound], pos, heal_db, 0.0)
+	som("sfx/curar", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func forge(pos: Vector2) -> void:
-	if forge_sound:
-		play_at(&"forge", [forge_sound], pos, forge_db, 0.12)
+	som("sfx/forja", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func chop(pos: Vector2) -> void:
-	play_at(&"chop", chop_sounds, pos, chop_db)
+	som("sfx/machadada", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func elevator(pos: Vector2) -> void:
-	if elevator_sound:
-		play_at(&"elevator", [elevator_sound], pos, elevator_db, 0.05)
+	som("sfx/elevador", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func branch(pos: Vector2) -> void:
-	if branch_sound:
-		play_at(&"branch", [branch_sound], pos, branch_db)
+	som("sfx/galho", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func fanfare() -> void:
-	play_ui(fanfare_sound, fanfare_db)
+	som_global("sfx/fanfarra")  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func toll() -> void:
-	play_ui(toll_sound, toll_db)
-	duck("sino")  # Bloco 114
+	som_global("sfx/sino_funebre")  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func cheers(pos: Vector2) -> void:
-	if cheers_sound:
-		play_at(&"cheers", [cheers_sound], pos, cheers_db)
+	som("sfx/brinde", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func find(pos: Vector2) -> void:
-	if find_sound:
-		play_at(&"find", [find_sound], pos, find_db, 0.02)
+	som("sfx/achado", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func robot(pos: Vector2) -> void:
-	if robot_sound:
-		play_at(&"robot", [robot_sound], pos, robot_db, 0.0)
+	som("sfx/robo", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func boom(pos: Vector2) -> void:
-	if boom_sound:
-		play_at(&"boom", [boom_sound], pos, boom_db, 0.05)
+	som("sfx/explosao", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func alarm() -> void:
-	play_ui(alarm_sound, alarm_db)
-	duck("alarme")  # Bloco 114
+	som_global("sfx/alarme_invasao")  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func solar() -> void:
-	play_ui(solar_sound, solar_db)
+	som_global("sfx/solar")  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func screech(pos: Vector2) -> void:
-	if screech_sound:
-		play_at(&"screech", [screech_sound], pos, screech_db, 0.12)
+	som("sfx/lumivoro_grito", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func clank(pos: Vector2) -> void:
-	if clank_sound:
-		play_at(&"clank", [clank_sound], pos, clank_db, 0.1)
+	som("sfx/ferrugento_golpe", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func hit(pos: Vector2) -> void:
-	if hit_sound:
-		play_at(&"hit", [hit_sound], pos, hit_db, 0.12)
+	som("sfx/golpe", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func gate_break(pos: Vector2) -> void:
-	if gate_break_sound:
-		play_at(&"gate_break", [gate_break_sound], pos, gate_break_db, 0.05)
+	som("sfx/portao_quebra", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func protest(pos: Vector2) -> void:
-	if protest_sound:
-		play_at(&"protest", [protest_sound], pos, protest_db, 0.03)
+	som("sfx/greve", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 # ------------------------------------------------------------ Bloco 55: eventos que não tinham som
 func build_hit(pos: Vector2) -> void:
-	play_at(&"build", _streams.get("build", [] as Array[AudioStream]), pos, build_db, 0.1)
+	som("sfx/martelo", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func build_done(pos: Vector2) -> void:
-	play_at(&"build_done", _streams.get("build_done", [] as Array[AudioStream]), pos, build_done_db, 0.02)
+	som("sfx/obra_pronta", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func harvest(pos: Vector2) -> void:
-	play_at(&"harvest", _streams.get("harvest", [] as Array[AudioStream]), pos, harvest_db)
+	som("sfx/colher", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func equip(pos: Vector2) -> void:
-	play_at(&"equip", _streams.get("equip", [] as Array[AudioStream]), pos, equip_db)
+	som("sfx/equipar", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func party() -> void:
-	play_ui(_first("party"), party_db)
+	som_global("sfx/festa")  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func place_sound() -> void:
@@ -591,11 +599,11 @@ func place_sound() -> void:
 
 
 func creature_down(pos: Vector2) -> void:
-	play_at(&"creature_down", _streams.get("creature_down", [] as Array[AudioStream]), pos, creature_down_db)
+	som("sfx/criatura_cai", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func drill(pos: Vector2) -> void:
-	play_at(&"drill", _streams.get("drill", [] as Array[AudioStream]), pos, drill_db, 0.06)
+	som("sfx/broca", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func ui_open() -> void:
@@ -607,17 +615,16 @@ func ui_close() -> void:
 
 
 func sell() -> void:
-	play_ui(sell_sound)
+	som_global("sfx/vender")  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 func recruit() -> void:
-	play_ui(recruit_sound)
+	som_global("sfx/boas_vindas")  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 ## Bloco 101: migrantes chegando no portão.
 func migrantes(pos: Vector2) -> void:
-	if migrantes_sound:
-		play_at(&"migrantes", [migrantes_sound], pos, ui_db)
+	som("sfx/migrantes_chegando", pos)  # Bloco 115: pelo catálogo (sem arquivo, o som de antes)
 
 
 ## Bloco 112: os sons da INTRODUÇÃO por nome ("explosao", "vento", "caravana", "pedreira", "mina", "fogo", "titulo").
@@ -956,3 +963,104 @@ func _poe_eco(wet: float) -> void:
 ## O quanto de eco o bus Ambience tem agora (0 a 1).
 func eco_atual() -> float:
 	return _eco_fx.wet if _eco_fx else 0.0
+
+
+# ------------------------------------------------------------ Bloco 115: todos os sons do jogo pelo catálogo
+## Um efeito POSICIONAL pelo slot (sfx/..., animais/..., criaturas/...): volume, variação de tom e a reserva (o som de antes)
+## vêm do slot. Devolve se tocou (longe da câmera ou sem som: false).
+func som(id: String, pos: Vector2) -> bool:
+	var arr := _slot_streams(id)
+	if arr.is_empty():
+		return false
+	var sl := Slots.slot(id)
+	return play_at(StringName(id), arr, pos, float(sl.get("db", ui_db)), float(sl.get("pitch", -1.0)))
+
+
+## Um som SEM posição (conquista, alarme, venda...) pelo slot, nas vozes globais do SFX; o "duck" do slot abaixa a música.
+func som_global(id: String) -> void:
+	var st := _slot_stream(id)
+	if st == null:
+		return
+	play_ui(st, _db_slot(id, ui_db))
+	var d := String(Slots.slot(id).get("duck", ""))
+	if d != "":
+		duck(d)
+
+
+## O golpe de uma criatura: cada espécie tem o seu (Lumívoro grita, Ferrugento bate ferro, Gosma, Magmante) e a Matriarca (o
+## chefe) o dela; sem arquivo da Matriarca, vale o da espécie dela.
+func criatura_golpe(kind: String, variant: String, pos: Vector2) -> void:
+	var id: String = {"lumivoro": "sfx/lumivoro_grito", "gosma": "criaturas/gosma_ataque", "magmante": "criaturas/magmante_ataque"}.get(kind, "sfx/ferrugento_golpe")
+	if variant == "chefe" and Slots.tem("criaturas/matriarca_ataque"):
+		id = "criaturas/matriarca_ataque"
+	som(id, pos)
+
+
+## O portão da paliçada abre ou fecha.
+func portao(abre: bool, pos: Vector2) -> void:
+	som("sfx/portao_abre" if abre else "sfx/portao_fecha", pos)
+
+
+## Alguém está sendo irradiado: o contador Geiger (no máximo uma rajada a cada 0,35 s na vila toda).
+func radiacao(pos: Vector2) -> void:
+	var agora := Time.get_ticks_msec()
+	if agora - _geiger_ultimo < 350:
+		return
+	if som("perigo/geiger", pos):
+		_geiger_ultimo = agora
+
+
+# ------------------------------------------------------------ sons soltos pelo contexto (pássaro, coruja, trovão, gota...)
+## Os slots "pontual": cada um toca de vez em quando (intervalo [min, max] s do slot) enquanto o contexto dele vale (dia, noite,
+## mina, s2..s5, ou as camadas chuva e vento), num ponto aleatório perto da câmera. Sem arquivo no slot, nada.
+func _pontuais_tick(delta: float) -> void:
+	_pont_t -= delta
+	if _pont_t > 0.0:
+		return
+	_pont_t = 0.5
+	var cam := get_viewport().get_camera_2d()
+	if cam == null:
+		return
+	var agora := Time.get_ticks_msec()
+	for id in _pont_ids:
+		var sl := Slots.slot(id)
+		if not _ctx_vale(sl.get("ctx", [])):
+			continue
+		var arr := Slots.streams(id)
+		if arr.is_empty():
+			continue
+		var inter: Array = sl.get("intervalo", [10, 25])
+		if not _pont_prox.has(id):  # a primeira vez só agenda (não toca assim que o contexto liga)
+			_pont_prox[id] = agora + int(randf_range(float(inter[0]), float(inter[1])) * 1000.0)
+			continue
+		if agora < int(_pont_prox[id]):
+			continue
+		_pont_prox[id] = agora + int(randf_range(float(inter[0]), float(inter[1])) * 1000.0)
+		var q := _pont_voz()
+		q.stream = arr[_pick_index(StringName(id), arr.size())]
+		q.global_position = cam.get_screen_center_position() + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(120.0, 400.0)
+		q.volume_db = float(sl.get("db", -12.0))
+		q.pitch_scale = randf_range(0.95, 1.05)
+		q.play()
+
+
+func _ctx_vale(lista: Array) -> bool:
+	for c in lista:
+		match String(c):
+			"chuva":
+				if _raining:
+					return true
+			"vento":
+				if _vento:
+					return true
+			_:
+				if ambience_now == String(c):
+					return true
+	return false
+
+
+func _pont_voz() -> AudioStreamPlayer2D:
+	for q in _pont_pool:
+		if not q.playing:
+			return q
+	return _pont_pool[0]

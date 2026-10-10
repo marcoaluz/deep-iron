@@ -80,6 +80,7 @@ func kill() -> void:
 	_clock = 0.0
 	_dead_t = 0.0
 	Audio.hit(global_position)
+	Audio.som("animais/%s_morre" % kind, global_position)  # Bloco 115
 
 
 func _process(delta: float) -> void:
@@ -100,6 +101,8 @@ func _process(delta: float) -> void:
 		_perigo = _nearest_worker(70.0)
 	var perigo: Node2D = _perigo if _perigo != null and is_instance_valid(_perigo) else null
 	if perigo:
+		if state != "fugir":  # Bloco 115: o coelho sai correndo, o javali bufa
+			Audio.som("animais/coelho_foge" if kind == "coelho" else "animais/javali_grunhido", global_position)
 		state = "fugir"
 		var away := (global_position - perigo.global_position).normalized()
 		_target = _clamp_home(global_position + away * 60.0)

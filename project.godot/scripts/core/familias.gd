@@ -254,6 +254,7 @@ func parto(mae: Node, com_medico: bool) -> Node:
 		return null
 	bebe.fase = "bebe"
 	bebe.idade_s = 0.0
+	Audio.som("vida/bebe_nasce", mae.global_position)  # Bloco 115: o primeiro choro
 	bebe.pais = [String(mae.name)] + ([String(pai.name)] if pai else [])
 	bebe.set_job("ocioso")
 	bebe.tracos = []  # (o traço vem na vida adulta: um dos pais + um sorteado)

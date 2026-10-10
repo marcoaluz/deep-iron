@@ -1,9 +1,20 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-10. Branch `isometrico`. Bloco 114 feito (commit local, sem push). Tudo até o Bloco 113 **foi enviado** pro GitHub (push do Marco em 2026-10-10). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
+Atualizado em 2026-10-10. Branch `isometrico`. Bloco 115 feito (commit locais dos Blocos 114 e 115, sem push). Tudo até o Bloco 113 **foi enviado** pro GitHub (push do Marco em 2026-10-10). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
+
+## Bloco 115 — TODOS OS SONS NO CATÁLOGO + PROMPTS DO ELEVENLABS (feito; commit local, sem push)
+
+Pedido do Marco (depois do 114): "escrever os prompts pro ElevenLabs; TODOS os sons do jogo serão criados lá, só a música fica de fora (chuva, mineração, animais,
+pessoal falando, radiação, tudo)". Relatório `docs/BLOCO115_SONS.md`; **`docs/AUDIO_PROMPTS_ELEVENLABS.md`** (prompt + duração + arquivo de cada som); teste
+`b115_sons_do_jogo` (39 OK, registrado no GUT). 128 slots / 193 arquivos (126 slots / 191 arquivos pro ElevenLabs; os 2 de música à parte). Nenhum áudio criado nem ouvido.
+- Os 32 sons antigos viraram slots `sfx/…` (reserva = o sintetizado de antes; `Audio.som(id,pos)` / `som_global(id)`); +10 loops de lugares (poça, ventilador, tocha, conversa nos
+  pontos sociais, oficina, arsenal, laboratório, escavadeira, escola, cozinha); 12 sons soltos por contexto (`tipo "pontual"`); camada da onda solar; animais; Geiger da
+  radiação; criaturas por espécie (+Matriarca); máquinas quebrou/consertada; bebê, casamento, enterro; portão abre/fecha; "oi" ao selecionar. O prompt de cada slot mora no `slots.json`.
+- Testes conferidos: b115 (+GUT), b114, b55, b61, b62, b98, b105, b110, b111, b93, b85, b88, b57. O resto da bateria não.
+- PENDENTE com o Marco: gerar os 191 arquivos no ElevenLabs (e a música à parte); depois ajustar db/intervalo/raio no `slots.json`; push.
 
 ## Bloco 114 — SISTEMAS DE SOM (feito; commit local, sem push)
 

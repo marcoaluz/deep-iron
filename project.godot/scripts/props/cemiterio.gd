@@ -141,6 +141,7 @@ func enterra(info: Dictionary) -> Vector2:
 	var pos := vaga_pos()
 	if not pos.is_finite():
 		return Vector2.INF
+	Audio.som("vida/enterro", pos)  # Bloco 115: a pá na terra
 	var c := {"nome": String(info.get("nome", "?")), "dia": int(info.get("dia", 1)), "estacao": String(info.get("estacao", "")),
 		"causa": String(info.get("causa", "")), "vaga": covas.size()}
 	var h := absi(hash(c.nome + str(c.dia)))

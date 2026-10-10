@@ -3340,6 +3340,7 @@ func radiate(amount: float) -> void:
 		return
 	var before := rad
 	rad += amount
+	Audio.radiacao(global_position)  # Bloco 115: o contador Geiger (limitado: uma rajada a cada 0,35 s)
 	if before < sun.rad_hurt_at * 0.5 and rad >= sun.rad_hurt_at * 0.5:
 		_popup("Queimando!", Color(1.0, 0.6, 0.3))
 	if rad >= sun.rad_hurt_at:

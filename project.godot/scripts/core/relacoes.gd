@@ -466,6 +466,7 @@ func casa_os_dois(a: Node, b: Node) -> void:
 	d.casado = true
 	casamentos += 1
 	casamento_left = casamento_tempo
+	Audio.som("vida/casamento", a.global_position)  # Bloco 115: sino e vivas
 	for w in [a, b]:
 		w._mostra_balao("coracao")
 		if w.get("animo_casamento") != null:

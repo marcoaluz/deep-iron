@@ -476,3 +476,7 @@ func test_b113_dificuldade() -> void:
 
 func test_b114_audio_sistemas() -> void:
 	run_bloco("b114_audio_sistemas.gd")
+
+
+func test_b115_sons_do_jogo() -> void:
+	run_bloco("b115_sons_do_jogo.gd")

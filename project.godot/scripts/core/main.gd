@@ -508,6 +508,8 @@ func set_selection(units: Array) -> void:
 		if is_instance_valid(unit) and not selection.has(unit):
 			selection.append(unit)
 			unit.set_selected(true)
+	if units.size() == 1 and is_instance_valid(units[0]) and units[0].is_in_group("ipezinhos"):
+		Audio.voz(units[0].global_position, "ola", String(units[0].get("gender")))  # Bloco 115: o "oi" (desligável)
 	if _camera.follow_target and not selection.has(_camera.follow_target):
 		_camera.follow_target = null
 	_group_focus = 0

@@ -132,8 +132,8 @@ func quebrou(maq: Node) -> void:
 	quebras[maq.manut_tipo()] = int(quebras.get(maq.manut_tipo(), 0)) + 1
 	_aviso("%s QUEBROU: parou. O mecânico conserta (com material)." % maq.manut_titulo(), Color(1.0, 0.5, 0.4), maq)
 	var au := get_node_or_null("/root/Audio")
-	if au and au.has_method("gate_break"):
-		au.gate_break((maq as Node2D).global_position)
+	if au and au.has_method("som"):
+		au.som("maquinas/quebrou", (maq as Node2D).global_position)  # Bloco 115 (sem arquivo, a quebra de sempre)
 	_tenta_consertos()
 
 

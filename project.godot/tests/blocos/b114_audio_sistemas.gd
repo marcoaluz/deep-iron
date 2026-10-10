@@ -130,7 +130,7 @@ func _roda() -> void:
 	var ruins := []
 	for i in ids:
 		var s := Slots.slot(i)
-		if not (String(s.get("tipo", "")) in ["loop", "loop_predio", "tiro", "tema"]):
+		if not (String(s.get("tipo", "")) in ["loop", "loop_predio", "tiro", "tema", "pontual"]):
 			ruins.append("%s: tipo" % i)
 		if AudioServer.get_bus_index(StringName(String(s.get("bus", "")))) < 0:
 			ruins.append("%s: bus %s" % [i, s.get("bus", "")])

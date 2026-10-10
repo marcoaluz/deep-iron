@@ -118,7 +118,7 @@ func _process(delta: float) -> void:
 		abertura = novo
 	elif novo != _alvo:
 		_alvo = novo
-		Audio.clank(global_position)
+		Audio.portao(novo > 0.5, global_position)  # Bloco 115: abre / fecha (sem arquivo, o clangue de antes)
 	abertura = move_toward(abertura, _alvo, delta / maxf(anima_segundos, 0.01))
 	var livre := _alvo > 0.5 and abertura >= 0.55  # fechando, a passagem some na hora; abrindo, só com a folha aberta
 	if livre != _livre:

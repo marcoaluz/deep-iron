@@ -60,8 +60,8 @@ func _termina() -> void:
 		if maquina.has_method("manut_consertada"):
 			maquina.manut_consertada()
 	var au := get_node_or_null("/root/Audio")
-	if au and au.has_method("build_done"):
-		au.build_done(global_position)
+	if au and au.has_method("som"):
+		au.som("maquinas/consertada", global_position)  # Bloco 115 (sem arquivo, o "obra pronta" de sempre)
 	var m := get_tree().get_first_node_in_group("manutencao")
 	if m:
 		m.conserto_terminou(maquina)
