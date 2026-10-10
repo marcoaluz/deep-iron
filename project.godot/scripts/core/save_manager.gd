@@ -98,6 +98,10 @@ extends Node
 ##     ganha "fase" (adulto/bebe/crianca/aprendiz), "idade_s", "pais" e "filhos" (nomes), "gravidez_s" (-1 = não), "pai_bebe",
 ##     "resguardo_s", "estudo" e "mentor"; o memorial ganha "familia" (texto); o Centro da Vila "escolas"; as políticas a
 ##     "familia" (neutro). Save antigo: todo mundo adulto, sem família, nenhuma escola, a política neutra.
+##   Bloco 113: "dificuldade" {perfil ("tranquilo", "normal", "ferro", "personalizado" ou "criativo"), custom {os 8 números do
+##     Personalizado: primeira_invasao_dia, invasao_a_cada, vida_por_onda, fome_mult, onda_verao, ultimato_greve,
+##     comida_inicial, preco_venda_mult}}; "summary" ganha "dificuldade" (o nome do perfil). Save antigo (sem a chave):
+##     Normal — o jogo de antes, sem escrever nada nos @export (não precisa de _migrate).
 ##   Bloco 110: "relacoes" {pares {"a|b" (nomes dos nós): {p, casal, casado, desde}}, pessoal {nome: {luto, viuvo_ate}},
 ##     marcos [{id, title, text}] (as páginas do diário dos casais), casamentos, casamento_left}; o ipezinho ganha "tracos"
 ##     [ids], "habilidade" {função: 0..1} e "animo_casamento". Save antigo: ninguém se conhece; os traços são sorteados na
@@ -302,6 +306,9 @@ var game_over: bool = false
 ## Bloco 112: a introdução em curso. "" = nenhuma; "novo" = partida nova (os quadros no mapa e depois a Fundação);
 ## "ver" = só rever pelo menu (a partida do mapa NÃO salva nem faz backup e volta pro menu no fim).
 var cinema: String = ""
+## Bloco 113: a dificuldade escolhida na tela de Nova partida ({perfil, custom}); {} = Normal. O main.gd entrega ao nó
+## Dificuldade quando a partida nova começa.
+var dificuldade_nova: Dictionary = {}
 
 
 func _ready() -> void:
@@ -385,7 +392,8 @@ func is_game_running() -> bool:
 
 
 ## Menu: começa do zero. Se havia save, ele vira um backup com data/hora (user://backups).
-func start_new_game() -> void:
+func start_new_game(dificuldade: Dictionary = {}) -> void:
+	dificuldade_nova = dificuldade  # Bloco 113 ({} = Normal: testes, --smoke e a primeira partida sem tela)
 	# Bloco 112: a primeira partida nova passa pela introdução (depois só pelo "Ver a introdução" do menu)
 	if not Settings.get_value("jogo", "intro_vista", false) and not "--smoke" in OS.get_cmdline_user_args():
 		cinema = "novo"
@@ -640,6 +648,7 @@ func _collect() -> Dictionary:
 		"expedicoes": "expedicoes",  # Bloco 104: as regiões, as expedições em curso (com quem está fora), a cadeia do robô
 		"logistica": "logistica",  # Bloco 105: o contador de entregas do carregador (as em curso recomeçam)
 		"manutencao": "manutencao",  # Bloco 105: os consertos abertos, as preventivas, os consertos e as quebras
+		"dificuldade": "dificuldade",  # Bloco 113: o perfil da partida (e os números do Personalizado)
 		"politicas": "politicas",  # Bloco 108: as políticas da vila, as esperas e a fraqueza
 		"relacoes": "relacoes",  # Bloco 110: os pares (pontos, casal, casado), o luto pessoal, os marcos do diário
 		"familias": "familias",  # Bloco 111: os nascimentos e o último filho de cada casal
@@ -699,6 +708,7 @@ func _summary() -> Dictionary:
 		"stage": hub.stage_name() if hub else "",
 		"workers": tree.get_nodes_in_group("ipezinhos").size(),
 		"credits": int(eco.credits) if eco else 0,
+		"dificuldade": String(tree.get_first_node_in_group("dificuldade").nome()) if tree.get_first_node_in_group("dificuldade") else "",
 	}
 
 
@@ -712,6 +722,9 @@ func apply_pending(main: Node) -> void:
 	_pending_data = {}
 
 	# ordem importa: oficina antes das jazidas (desbloqueio), casas antes dos ipezinhos (camas)
+	var dif := get_tree().get_first_node_in_group("dificuldade")  # Bloco 113: antes de Defesa, Sol e Moral (save antigo, sem a chave: Normal)
+	if dif:
+		dif.load_save_data(SaveUtil.dict(data, "dificuldade"))
 	_apply_single("day_night", SaveUtil.dict(data, "day_night"))
 	_apply_single("economy", SaveUtil.dict(data, "economy"))
 	_apply_layout(SaveUtil.dict(data, "layout"))  # Bloco 37: antes das casas e da navegação

@@ -1,9 +1,27 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-10. Branch `isometrico`. Bloco 112 feito (push aprovado pelo Marco; ele mesmo roda o push). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
+Atualizado em 2026-10-10. Branch `isometrico`. Bloco 113 feito (commit local, sem push). Tudo até o Bloco 112 **foi enviado** pro GitHub (push do Marco em 2026-10-10). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
+
+## Bloco 113 — DIFICULDADE + NOVA PARTIDA (feito; commit local, sem push)
+
+Pedido "Prompt 5" (seção 25 do guia). Plano aprovado ("pode"). Relatório `docs/BLOCO113_DIFICULDADE.md`; fotos `docs/arte/bloco113/`
+(`tests/capturas_bloco113.gd`); teste `b113_dificuldade` (67 OK, registrado no GUT).
+- `perfil_dificuldade.gd` + `data/dificuldade/{tranquilo,normal,ferro,criativo}.tres`; nó `Dificuldade` (`dificuldade.gd`, grupos
+  "dificuldade"+"modificadores", chave `dificuldade` no save; save antigo = Normal). Valores absolutos escritos UMA vez nos @export
+  de Defesa/Sol/Moral (`aplica()`); fome e preço de venda pelo `Modificadores` ("fome", "preco_venda"); comida inicial lida pelo
+  comedouro novo. O NORMAL NUNCA escreve nada: o `normal.tres` tem que bater com os @export (o b113 confere).
+- Tela de Nova partida (`ui/nova_partida_panel.gd`, dentro do menu inicial): Tranquilo, Normal, Ferro, Personalizado (sliders),
+  Criativo. O primeiro jogo (sem save) também passa por ela. `SaveManager.start_new_game(escolha)` -> `dificuldade_nova`.
+- Criativo: sem invasão e sem moradores hostis (`defense.sem_invasao()`, `next_invasion_day() == -1`), pacote da Fundação x10 e
+  +50.000 cr. Janela da Defesa: tier das criaturas (`tier_detalhe()`) e a dificuldade.
+- Decisão minha (aceita no "pode"): comida inicial 300 / 240 / 160 (o 100/60/40 do pedido não fecha com o Normal = hoje).
+- Tranquilo e Ferro: números do pedido, SEM simulação de balanceamento (só conferi que são aplicados). Normal intocado.
+- Testes conferidos: b113, b39, b62, b108, p28_save, b100, b112, b52, b37 (falhou 1x "obras não terminaram", passou ao repetir:
+  espera até 400 s por obras). O resto da bateria não.
+- PENDENTE com o Marco: ver a tela jogando; simular Tranquilo/Ferro se quiser; push.
 
 ## Bloco 112 — INTRODUÇÃO + PRIMEIRO DIA GUIADO (feito; push aprovado)
 

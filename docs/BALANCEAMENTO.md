@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1186 valores** em 4 pastas de scripts (80 trocados por alguma cena).
+Total: **1199 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (80)
 
@@ -1056,6 +1056,26 @@ Total: **1186 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `animo` | 0.0 |  | Bloco 71: soma no alvo de ânimo de quem está no nível (o lago azul acalma; negativo = pesa), com o motivo que aparece na janela do ipezinho. |
 | `animo_motivo` | "" |  |  |
 | `titulo_abertura` | "" |  | Bloco 71: a faixa que aparece quando a ligação abre (título; o texto é a descrição). |
+
+## `scripts/core/perfil_dificuldade.gd` (13)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `id` | "" |  | Identificador (o nome do arquivo e a chave do save) e o que a tela de Nova partida mostra. |
+| `nome` | "" |  |  |
+| `primeira_invasao_dia` | 3 |  | Dia (da partida) da PRIMEIRA invasão das criaturas: defense.first_invasion_day. |
+| `invasao_a_cada` | 2 |  | Dias entre uma invasão e a próxima: defense.invasion_every. |
+| `vida_por_onda` | 0.15 |  | Quanto a vida das criaturas cresce por onda (0,15 = +15% por onda): defense.hp_growth. |
+| `fome_mult` | 1.0 |  | Multiplica a fome de todo mundo (1,2 = passa fome 20% mais depressa): chave "fome" do Modificadores. |
+| `onda_verao` | 0.5 |  | Chance (0 a 1) de ter onda solar num dia de VERÃO: sun.season_wave_chance[1]. As outras estações não mudam. |
+| `ultimato_greve` | 300.0 |  | Segundos de ultimato da greve antes de os ipezinhos expulsarem o jogador: morale.strike_ultimatum. |
+| `comida_inicial` | 240.0 |  | Comida que o comedouro novo traz (unidades; o armazém de comida guarda até 300): comedouro.start_food. |
+| `preco_venda_mult` | 1.0 |  | Multiplica o preço de venda de tudo (minério e itens): chave "preco_venda" do Modificadores. |
+| `sem_invasao` | false |  | Criativo: nenhuma invasão (nem os moradores hostis do fundo). |
+| `recursos_pacote_mult` | 1.0 |  | Criativo: o pacote da Fundação (créditos, pedra e madeira) vem multiplicado por isto... |
+| `creditos_extras` | 0 |  | ...e entram estes créditos a mais. |
 
 ## `scripts/core/politicas.gd` (28)
 

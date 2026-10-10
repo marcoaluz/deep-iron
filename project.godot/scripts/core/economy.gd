@@ -19,6 +19,7 @@ const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 96
 const Ores := preload("res://scripts/core/ores.gd")
 const Items := preload("res://scripts/core/items.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const Modificadores := preload("res://scripts/core/modificadores.gd")  # Bloco 113: o preço de venda da dificuldade
 signal ore_sold(amount: float, earned: float)
 
 @export_group("Venda")
@@ -127,7 +128,12 @@ func stored_ore(ore_type: String = "") -> float:
 	return total
 
 
+## Quanto vale uma unidade na venda (Bloco 113: x o multiplicador de venda da dificuldade; o Normal é x1).
 func price_of(ore_type: String) -> float:
+	return _preco_base(ore_type) * Modificadores.mult(get_tree(), "preco_venda")
+
+
+func _preco_base(ore_type: String) -> float:
 	if not Ores.TYPES.has(ore_type) and Items.existe(ore_type):  # Bloco 82: itens do catálogo
 		return float(precos_itens.get(ore_type, Items.preco_base(ore_type)))
 	match ore_type:

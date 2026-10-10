@@ -1,0 +1,20 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/perfil_dificuldade.gd" id="1_perfil"]
+
+[resource]
+script = ExtResource("1_perfil")
+id = "criativo"
+nome = "Criativo"
+descricao = "Sem invasões e com recursos à vontade, para construir e ver a vila crescer sem pressa."
+primeira_invasao_dia = 3
+invasao_a_cada = 2
+vida_por_onda = 0.15
+fome_mult = 1.0
+onda_verao = 0.5
+ultimato_greve = 300.0
+comida_inicial = 300.0
+preco_venda_mult = 1.0
+sem_invasao = true
+recursos_pacote_mult = 10.0
+creditos_extras = 50000

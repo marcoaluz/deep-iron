@@ -91,7 +91,8 @@ func _ready() -> void:
 	if dn and dn.has_signal("day_started"):
 		dn.day_started.connect(_novo_dia)
 	add_child(SocialSpot.criar("refeitorio", "Refeitório", true, 2, 4, Vector2(0, 26)))  # Bloco 85: as mesas
-	food_stock = clampf(start_food, 0.0, food_capacity)
+	var dif := get_tree().get_first_node_in_group("dificuldade")  # Bloco 113: a dificuldade (o Normal devolve o start_food)
+	food_stock = clampf(dif.comida_inicial(start_food) if dif else start_food, 0.0, food_capacity)
 	_update_visual()
 
 

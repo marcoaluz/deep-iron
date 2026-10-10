@@ -115,6 +115,10 @@ func _ready() -> void:
 	fundo.name = "Fundo"
 	add_child(fundo)
 	SaveManager.register_game(self)
+	if not SaveManager.pending_load:  # Bloco 113: a dificuldade da tela de Nova partida (testes e --smoke: Normal)
+		var dif := get_tree().get_first_node_in_group("dificuldade")
+		if dif:
+			dif.escolhe(SaveManager.dificuldade_nova)
 	if SaveManager.pending_load:
 		# espera o ambiente montar (1 frame + navegação) e as estruturas entrarem nos grupos
 		await _environment.navigation_ready

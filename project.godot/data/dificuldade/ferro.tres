@@ -1,0 +1,17 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/perfil_dificuldade.gd" id="1_perfil"]
+
+[resource]
+script = ExtResource("1_perfil")
+id = "ferro"
+nome = "Ferro"
+descricao = "Para quem quer sofrer: invasão logo no começo, criaturas mais duras, fome apertada, pouca comida e venda mais barata."
+primeira_invasao_dia = 2
+invasao_a_cada = 2
+vida_por_onda = 0.22
+fome_mult = 1.2
+onda_verao = 0.65
+ultimato_greve = 200.0
+comida_inicial = 160.0
+preco_venda_mult = 0.85

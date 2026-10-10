@@ -1,0 +1,17 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/perfil_dificuldade.gd" id="1_perfil"]
+
+[resource]
+script = ExtResource("1_perfil")
+id = "tranquilo"
+nome = "Tranquilo"
+descricao = "Para aprender com calma: a primeira invasão demora, as criaturas são mais fracas, a comida sobra e a venda paga mais."
+primeira_invasao_dia = 5
+invasao_a_cada = 3
+vida_por_onda = 0.08
+fome_mult = 0.8
+onda_verao = 0.3
+ultimato_greve = 480.0
+comida_inicial = 300.0
+preco_venda_mult = 1.2

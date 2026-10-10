@@ -295,11 +295,22 @@ func first_day() -> int:
 
 
 func is_invasion_night(day: int) -> bool:
+	if sem_invasao():
+		return false
 	var first := first_day()
 	return day >= first and (day - first) % maxi(invasion_every, 1) == 0
 
 
+## Bloco 113: o Criativo não tem invasão (nem moradores hostis): a dificuldade responde.
+func sem_invasao() -> bool:
+	var dif := get_tree().get_first_node_in_group("dificuldade")
+	return dif != null and dif.sem_invasao()
+
+
+## Dia da próxima invasão; -1 = nunca (Criativo).
 func next_invasion_day() -> int:
+	if sem_invasao():
+		return -1
 	var dn := _dn()
 	var d: int = dn.day if dn else 1
 	if dn and dn.time >= tempo_invasao():
@@ -896,6 +907,17 @@ func tier() -> int:
 	return 1 + int(wave / maxi(tier_every_waves, 1)) + int(pesq / maxi(tier_research_step, 1))
 
 
+## Bloco 113: de onde vem o tier das criaturas (a janela da Defesa mostra): {tier, da_onda, das_pesquisas, pesquisas,
+## prox_onda (a próxima onda que sobe o tier pela onda), prox_pesquisas (quantas pesquisas faltam pra subir pelas pesquisas)}.
+func tier_detalhe() -> Dictionary:
+	var res := get_tree().get_first_node_in_group("research")
+	var pesq: int = (res.done as Array).size() if res else 0
+	var cada_onda := maxi(tier_every_waves, 1)
+	var cada_pesq := maxi(tier_research_step, 1)
+	return {"tier": tier(), "da_onda": int(wave / cada_onda), "das_pesquisas": int(pesq / cada_pesq), "pesquisas": pesq,
+		"prox_onda": (int(wave / cada_onda) + 1) * cada_onda, "prox_pesquisas": cada_pesq - pesq % cada_pesq}
+
+
 func _season_number() -> int:
 	var dn := _dn()
 	var sun := get_tree().get_first_node_in_group("sun")
@@ -1062,7 +1084,7 @@ func texto_onda(comp: Dictionary) -> String:
 # ------------------------------------------------------------ moradores do fundo (Bloco 103)
 ## Nascem quando o andar abre (até o número dele) e repõem moradores_por_dia no amanhecer. Nunca sobem.
 func _moradores_tick(delta: float) -> void:
-	if moradores_desligados:
+	if moradores_desligados or sem_invasao():
 		return
 	_moradores_t -= delta
 	if _moradores_t > 0.0:

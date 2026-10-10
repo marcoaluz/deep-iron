@@ -182,12 +182,15 @@ func _finish() -> void:
 	hub.founded = true
 	var eco := get_tree().get_first_node_in_group("economy")
 	var arm := _armazem()
+	var dif := get_tree().get_first_node_in_group("dificuldade")  # Bloco 113: o Criativo traz um pacote maior
+	var pacote: float = dif.recursos_pacote_mult() if dif else 1.0
+	var extras: int = dif.creditos_extras() if dif else 0
 	if eco:
-		eco.credits += hub.founding_credits
+		eco.credits += roundi(hub.founding_credits * pacote) + extras
 		eco.credits_changed.emit(eco.credits)
 	if arm:
-		arm.stock[hub.house_stone_ore] = arm.stock.get(hub.house_stone_ore, 0.0) + hub.founding_ore
-		arm.wood_stored += hub.founding_wood
+		arm.stock[hub.house_stone_ore] = arm.stock.get(hub.house_stone_ore, 0.0) + hub.founding_ore * pacote
+		arm.wood_stored += hub.founding_wood * pacote
 		arm._recount()
 	if _fresh:
 		completa_populacao()

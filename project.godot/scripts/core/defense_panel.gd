@@ -22,6 +22,8 @@ var _arsenal_label: Label
 var _arsenal_button: Button
 var _forge_label: Label
 var _cri_box: VBoxContainer
+var _tier_label: Label  # Bloco 113: o tier das criaturas e o que o faz subir
+var _dif_label: Label  # Bloco 113: a dificuldade da partida
 var _cri_sig := ""
 var _patrulha_rows := {}  # andar -> {label, qtd}
 
@@ -62,6 +64,14 @@ func _build() -> void:
 	# Bloco 103: o bestiário e a patrulha do fundo
 	vbox.add_child(HSeparator.new())
 	vbox.add_child(_hud._label("CRIATURAS (estude os corpos: Catálogo, R)", Tipo.DETALHE, _hud.COLOR_DIM))
+	_tier_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
+	_tier_label.name = "Tier"
+	_tier_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(_tier_label)
+	_dif_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
+	_dif_label.name = "Dificuldade"
+	_dif_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(_dif_label)
 	_cri_box = VBoxContainer.new()
 	_cri_box.name = "Bestiario"
 	_cri_box.add_theme_constant_override("separation", 4)
@@ -201,6 +211,26 @@ func _muda_patrulha(andar: String, passo: int) -> void:
 	faz.call()
 
 
+## Bloco 113: o TIER das criaturas (de onde vem, o que faz subir e o que ele muda) e a dificuldade da partida.
+func _refresh_tier() -> void:
+	var t: Dictionary = _def.tier_detalhe()
+	var faltam: int = int(t.prox_pesquisas)
+	var elite := "os fortes já vêm como ELITE" if int(t.tier) >= int(_def.elite_from_tier) \
+		else "no tier %d os fortes viram ELITE" % int(_def.elite_from_tier)
+	_tier_label.text = ("TIER %d das criaturas  =  1 base  +  %d pela onda (onda %d)  +  %d pelas pesquisas (%d feitas)\n"
+		+ "Sobe de novo na onda %d ou com mais %d pesquisa%s. Cada tier acima do 1: +%d%% de vida e o forte vem mais vezes; %s.") % [
+		int(t.tier), int(t.da_onda), _def.wave, int(t.das_pesquisas), int(t.pesquisas), int(t.prox_onda), faltam,
+		"s" if faltam != 1 else "", roundi(_def.tier_hp_bonus * 100.0), elite]
+	var dif := get_tree().get_first_node_in_group("dificuldade")
+	if dif == null:
+		_dif_label.text = ""
+	elif _def.sem_invasao():
+		_dif_label.text = "Dificuldade %s: sem invasões nesta partida." % dif.nome()
+	else:
+		_dif_label.text = "Dificuldade %s: 1ª invasão no dia %d, depois a cada %d dias; as criaturas ganham +%d%% de vida por onda." % [
+			dif.nome(), _def.first_invasion_day, _def.invasion_every, roundi(_def.hp_growth * 100.0)]
+
+
 ## Bloco 103: o bestiário e a previsão (remonta só quando muda).
 func _refresh_bestiario() -> void:
 	var cat := get_tree().get_first_node_in_group("catalogo")
@@ -264,6 +294,7 @@ func refresh() -> void:
 	if not visible:
 		return
 	_refresh_bestiario()  # Bloco 103
+	_refresh_tier()  # Bloco 113
 	var dn := get_tree().get_first_node_in_group("day_night")
 	if _def.invasion_active:
 		_status.text = "INVASÃO EM ANDAMENTO (onda %d): %d criaturas, %d já dentro da vila, %d derrubadas." % [
@@ -272,7 +303,7 @@ func refresh() -> void:
 	else:
 		var nd: int = _def.next_invasion_day()
 		var today: bool = dn != null and nd == dn.day and not dn.is_night()
-		_status.text = ("Próxima invasão: HOJE À NOITE!" if today else "Próxima invasão: noite do dia %d" % nd) \
+		_status.text = ("Sem invasões nesta partida (dificuldade Criativo)." if nd < 0 else "Próxima invasão: HOJE À NOITE!" if today else "Próxima invasão: noite do dia %d" % nd) \
 			+ ("  •  Ferrugentos também (o nível 2 está aberto)" if _def.level2_open() else "")  # (Bloco 103: a previsão vem embaixo)
 		_status.add_theme_color_override("font_color", _hud.COLOR_HUNGER_BAD if today else _hud.COLOR_TEXT)
 
@@ -388,6 +419,8 @@ func button_text() -> String:
 		return "INVASÃO! (G)" + tail
 	var dn := get_tree().get_first_node_in_group("day_night")
 	var nd: int = _def.next_invasion_day()
+	if nd < 0:
+		return "Defesa (G)" + tail  # Bloco 113: Criativo, sem invasões
 	if dn and nd == dn.day:
 		return "Defesa: HOJE (G)" + tail
 	return "Defesa: dia %d (G)" % nd + tail

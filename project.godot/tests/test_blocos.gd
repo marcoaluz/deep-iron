@@ -468,3 +468,7 @@ func test_b111_familias() -> void:
 
 func test_b112_intro_primeiro_dia() -> void:
 	run_bloco("b112_intro_primeiro_dia.gd")
+
+
+func test_b113_dificuldade() -> void:
+	run_bloco("b113_dificuldade.gd")

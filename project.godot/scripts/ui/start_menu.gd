@@ -1,7 +1,7 @@
 extends Control
 ## Tela inicial (cena principal do projeto): "Continuar" / "Novo jogo".
 ##
-## - Sem save e sem backups na pasta: vai direto pra um jogo novo.
+## - Sem save e sem backups na pasta: abre a tela de Nova partida (Bloco 113: a escolha da dificuldade).
 ## - Save legível: mostra o resumo (dia, estágio, ipezinhos, quando salvou).
 ##     Continuar  -> carrega o save.
 ##     Novo jogo  -> pede confirmação; o save atual NÃO é apagado: vira um backup
@@ -22,6 +22,9 @@ const COLOR_DIM := Color(0.65, 0.6, 0.55)
 var _confirm: ConfirmationDialog
 var _confirm_backup: ConfirmationDialog
 var _chosen_backup: String = ""
+## Bloco 113: a tela de Nova partida (a dificuldade) e a coluna do menu que ela esconde.
+var _nova: VBoxContainer
+var _box: VBoxContainer
 
 
 func _ready() -> void:
@@ -29,7 +32,8 @@ func _ready() -> void:
 		get_tree().root.theme = UiSkin.theme()  # Prompt 20: a pele nova (botões, painéis, dicas)
 	var status: String = SaveManager.save_status()
 	if status == "none" and SaveManager.list_backups().is_empty():
-		SaveManager.start_new_game.call_deferred()
+		_build(status)
+		_abre_nova()  # Bloco 113: o primeiro jogo também escolhe a dificuldade
 		return
 	_build(status)
 
@@ -66,6 +70,16 @@ func _build(status: String) -> void:
 	box.add_theme_constant_override("separation", 14)
 	box.custom_minimum_size = Vector2(360, 0)
 	moldura.add_child(box)
+	_box = box
+	_nova = preload("res://scripts/ui/nova_partida_panel.gd").new()  # Bloco 113
+	_nova.visible = false
+	moldura.add_child(_nova)
+	_nova.comecar.connect(func(escolha: Dictionary):
+		Audio.click()
+		SaveManager.start_new_game(escolha))
+	_nova.voltar.connect(func():
+		_nova.visible = false
+		_box.visible = true)
 
 	if logo_tex == null:
 		var title := _label("DEEP IRON", Tipo.TELA, COLOR_TITLE)
@@ -79,6 +93,9 @@ func _build(status: String) -> void:
 		var info := "Dia %d  •  %s  •  %d ipezinhos  •  %d créditos\nsalvo em %s" % [
 			int(s.get("day", 1)), str(s.get("stage", "?")), int(s.get("workers", 0)),
 			int(s.get("credits", 0)), str(s.get("saved_at", "?")).replace("T", " ")]
+		if str(s.get("dificuldade", "")) != "":  # Bloco 113
+			info += "
+dificuldade: " + str(s.dificuldade)
 		box.add_child(_label(info, Tipo.CORPO, COLOR_DIM))
 		var cont := _button("Continuar")
 		cont.pressed.connect(func(): SaveManager.load_game())
@@ -92,12 +109,12 @@ func _build(status: String) -> void:
 		_confirm.dialog_text = "Começar uma partida nova?\n\nO save atual NÃO é apagado: ele vira um backup com data/hora\n(em Backups, aqui na tela inicial) e a partida nova passa a salvar no lugar dele."
 		_confirm.ok_button_text = "Começar do zero"
 		_confirm.cancel_button_text = "Voltar"
-		_confirm.confirmed.connect(func(): SaveManager.start_new_game())
+		_confirm.confirmed.connect(_abre_nova)  # Bloco 113: depois de confirmar, escolhe a dificuldade
 		add_child(_confirm)
 	elif status == "none":
 		box.add_child(_label("Nenhum save em andamento.", Tipo.CORPO, COLOR_DIM))
 		var new_game := _button("Novo jogo")
-		new_game.pressed.connect(func(): SaveManager.start_new_game())
+		new_game.pressed.connect(_abre_nova)
 		box.add_child(new_game)
 		new_game.grab_focus.call_deferred()
 	else:
@@ -105,7 +122,7 @@ func _build(status: String) -> void:
 		var new_game := _button("Novo jogo")
 		new_game.pressed.connect(func():
 			SaveManager.quarantine_corrupt_save()
-			SaveManager.start_new_game())
+			_abre_nova())
 		box.add_child(new_game)
 		new_game.grab_focus.call_deferred()
 
@@ -148,6 +165,12 @@ func _build(status: String) -> void:
 	quit.pressed.connect(func(): get_tree().quit())
 	box.add_child(quit)
 	box.add_child(_label("pasta do save: %s" % ProjectSettings.globalize_path("user://"), Tipo.DETALHE, COLOR_DIM))
+
+
+## Bloco 113: a tela de Nova partida no lugar do menu.
+func _abre_nova() -> void:
+	_box.visible = false
+	_nova.visible = true
 
 
 ## Lista de backups: data/hora do backup + o mesmo resumo do "Continuar".

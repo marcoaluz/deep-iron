@@ -1071,6 +1071,7 @@ func _process(delta: float) -> void:
 	var was_starving := hunger <= 0.0
 	var sun := _sun()
 	var decay: float = hunger_decay * (sleep_hunger_mult if _resting else 1.0) * (sun.hunger_mult() if sun else 1.0)  # inverno: mais fome
+	decay *= Modificadores.mult(get_tree(), "fome", self)  # Bloco 113: a dificuldade
 	var rel_f := _relacoes()
 	if rel_f:
 		decay *= rel_f.mult_fome(self)  # Bloco 110: o guloso
