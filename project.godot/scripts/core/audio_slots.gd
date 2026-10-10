@@ -16,6 +16,8 @@ static var _dados: Dictionary = {}  # id -> o slot (o dicionário do .json)
 static var _ordem: Array[String] = []
 static var _cache: Dictionary = {}  # id -> Array[AudioStream] dos arquivos
 static var _falsos: Dictionary = {}  # id -> Array[AudioStream] (testes)
+## Só pros testes: ignora os arquivos de verdade (a pasta assets/audio vai enchendo): só valem os sons falsos e a reserva.
+static var ignora_arquivos := false
 
 
 static func carrega(forca: bool = false) -> void:
@@ -77,6 +79,8 @@ static func streams(id: String) -> Array[AudioStream]:
 	if _falsos.has(id):
 		return _falsos[id]
 	carrega()
+	if ignora_arquivos:
+		return []
 	if _cache.has(id):
 		return _cache[id]
 	var out: Array[AudioStream] = []

@@ -108,6 +108,7 @@ func _fonte(caminho: String) -> String:
 
 
 func _roda() -> void:
+	Slots.ignora_arquivos = true  # (os testes não dependem dos arquivos de som que o Marco vai gerando)
 	await _frames(12)
 	var env = g("environment")
 	var dn = g("day_night")

@@ -96,6 +96,7 @@ func _camera_em(pos: Vector2) -> void:
 
 
 func _roda() -> void:
+	Slots.ignora_arquivos = true  # (os testes não dependem dos arquivos de som que o Marco vai gerando)
 	await _frames(12)
 	var cam = main.get_node("Camera2D")
 	var env = g("environment")
