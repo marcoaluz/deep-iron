@@ -2,8 +2,8 @@ extends PanelContainer
 ## Bloco 108: janela POLÍTICAS DA VILA (tecla F6, menu Janelas; libera no estágio Vilarejo). Um cartão por política com a
 ## opção que vale agora em destaque e as outras como botões. Clicar numa opção abre o DETALHE embaixo (por que escolher, o
 ## que ganha, o que custa, a restrição e o ânimo previsto) e o botão Confirmar — ou o motivo de não poder (espera, campo de
-## treino...). Um cartão reservado pra política de Família (Prompt F). Sem gráficos: leitura rápida. Os quatro cartões ficam
-## numa grade 2x2 (cabe em 720p com o detalhe aberto). O padrão visual é o das janelas do layout v2 (cozinha_panel.gd).
+## treino...). Bloco 111: a 5ª política, a FAMÍLIA (o cartão que estava reservado). Sem gráficos: leitura rápida. Os cartões
+## ficam numa grade de 2 colunas (cabe em 720p com o detalhe aberto). O padrão visual é o das janelas do layout v2 (cozinha_panel.gd).
 const Tipo := preload("res://scripts/ui/tipografia.gd")
 const Politicas := preload("res://scripts/core/politicas.gd")
 const COR_GANHA := Color(0.55, 0.9, 0.5)
@@ -67,9 +67,6 @@ func _build() -> void:
 	vbox.add_child(grade)
 	for p in Politicas.POLITICAS:
 		grade.add_child(_cartao(p))
-	# reservado: a política de Família (Prompt F, o planejamento das famílias)
-	_familia = _hud._label("FAMÍLIA — em breve: vem com o planejamento das famílias.", Tipo.DETALHE, _hud.COLOR_DIM)
-	vbox.add_child(_familia)
 	# o detalhe da opção clicada (some sem nada escolhido)
 	_det_box = VBoxContainer.new()
 	_det_box.add_theme_constant_override("separation", 3)

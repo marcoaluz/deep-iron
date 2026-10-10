@@ -28,20 +28,23 @@ signal mudou(politica: String, opcao: String)
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 
-const POLITICAS := ["jornada", "racao", "seguranca", "migracao"]
+const POLITICAS := ["jornada", "racao", "seguranca", "migracao", "familia"]  # (Bloco 111: a família)
 const OPCOES := {
 	"jornada": ["normal", "estendida", "reduzida"],
 	"racao": ["normal", "reduzida"],
 	"seguranca": ["padrao", "vigilancia", "treinamento"],
 	"migracao": ["aberta", "seletiva", "fechada"],
+	"familia": ["neutro", "desestimular", "incentivar"],
 }
-const PADRAO := {"jornada": "normal", "racao": "normal", "seguranca": "padrao", "migracao": "aberta"}
-const NOME_POLITICA := {"jornada": "Jornada de trabalho", "racao": "Rações", "seguranca": "Segurança", "migracao": "Migração"}
+const PADRAO := {"jornada": "normal", "racao": "normal", "seguranca": "padrao", "migracao": "aberta", "familia": "neutro"}
+const NOME_POLITICA := {"jornada": "Jornada de trabalho", "racao": "Rações", "seguranca": "Segurança", "migracao": "Migração",
+	"familia": "Família"}
 const NOME_OPCAO := {
 	"jornada": {"normal": "Normal", "estendida": "Estendida", "reduzida": "Reduzida"},
 	"racao": {"normal": "Normal", "reduzida": "Reduzida"},
 	"seguranca": {"padrao": "Padrão", "vigilancia": "Vigilância reforçada", "treinamento": "Treinamento"},
 	"migracao": {"aberta": "Aberta", "seletiva": "Seletiva", "fechada": "Fechada"},
+	"familia": {"neutro": "Neutro", "desestimular": "Desestimular", "incentivar": "Incentivar"},
 }
 
 @export_group("Geral")
@@ -98,6 +101,10 @@ const NOME_OPCAO := {
 ## Fora do treinamento, o que passou de 100% cai isto por segundo (até 100%).
 @export var treino_decai: float = 0.002
 
+@export_group("Família (Bloco 111)")
+## Desestimular: ânimo dos casais (queriam filhos). A chance e o auxílio ficam no familias.gd.
+@export var familia_desestimular_animo: float = -3.0
+
 @export_group("Migração")
 ## Seletiva: multiplica o intervalo entre grupos...
 @export var seletiva_intervalo: float = 1.5
@@ -107,7 +114,7 @@ const NOME_OPCAO := {
 ## A opção ativa de cada política.
 var ativa := PADRAO.duplicate()
 ## Segundos de jogo até poder trocar cada política de novo.
-var espera := {"jornada": 0.0, "racao": 0.0, "seguranca": 0.0, "migracao": 0.0}
+var espera := {"jornada": 0.0, "racao": 0.0, "seguranca": 0.0, "migracao": 0.0, "familia": 0.0}
 ## Dias seguidos (amanheceres) na ração reduzida e os dias de recuperação que faltam da fraqueza.
 var racao_dias := 0
 var fraqueza_recupera := 0
@@ -266,6 +273,10 @@ func fatores_animo(w: Node) -> Array:
 		f.append(["ração reduzida", _reacao(w, "racao", racao_reduzida_animo)])
 	if treinamento_ativo() and w != null and w.has_method("is_guard") and w.is_guard():
 		f.append(["treino puxado", _reacao(w, "seguranca", treino_animo)])
+	if opcao("familia") == "desestimular":
+		var rel := get_tree().get_first_node_in_group("relacoes") if is_inside_tree() else null
+		if rel and w != null and rel.parceiro_de(w) != null:
+			f.append(["queriam filhos", _reacao(w, "familia", familia_desestimular_animo)])  # Bloco 111
 	var neg := 0.0
 	for x in f:
 		neg += minf(float(x[1]), 0.0)
@@ -393,7 +404,7 @@ func _greve() -> void:
 	if not greve_derruba:
 		return
 	var caiu: Array = []
-	for p in ["jornada", "racao", "seguranca"]:
+	for p in ["jornada", "racao", "seguranca", "familia"]:
 		var op := opcao(p)
 		if op == PADRAO[p] or not _tira_animo(p, op):
 			continue
@@ -417,6 +428,8 @@ func _tira_animo(politica: String, op: String) -> bool:
 			return racao_reduzida_animo < 0.0
 		["seguranca", "treinamento"]:
 			return treino_animo < 0.0
+		["familia", "desestimular"]:
+			return familia_desestimular_animo < 0.0
 	return false
 
 
@@ -509,6 +522,20 @@ func texto(politica: String, op: String) -> Dictionary:
 				"ganha": ["Só vem grupo com cama livre, do tamanho das camas.", "Prazo no portão %s." % pct.call(seletiva_prazo)],
 				"custa": ["Grupos %s mais espaçados." % pct.call(seletiva_intervalo)],
 				"restricao": "A ajuda de quando a vila fica pequena chega sempre."}
+		["familia", "neutro"]:
+			return {"porque": "Os casais têm filhos no ritmo deles (quando há cama, comida e ânimo).", "ganha": ["Nada muda."], "custa": [], "restricao": ""}
+		["familia", "desestimular"]:
+			var fam1 := get_tree().get_first_node_in_group("familias") if is_inside_tree() else null
+			return {"porque": "Segurar o crescimento numa crise de comida ou de camas.",
+				"ganha": ["Menos nascimentos (%s)." % pct.call(fam1.desestimular_mult if fam1 else 0.3)],
+				"custa": ["Ânimo %+d dos casais (queriam filhos)." % roundi(familia_desestimular_animo)],
+				"restricao": "Não impede: só diminui a chance."}
+		["familia", "incentivar"]:
+			var fam2 := get_tree().get_first_node_in_group("familias") if is_inside_tree() else null
+			return {"porque": "Fazer a vila crescer por dentro (gente que nasce aqui já conhece a vila).",
+				"ganha": ["Mais nascimentos (%s)." % pct.call(fam2.incentivar_mult if fam2 else 2.0)],
+				"custa": ["Auxílio de %d cr por nascimento." % (fam2.incentivar_auxilio if fam2 else 30)],
+				"restricao": "Sem créditos pro auxílio, a chance volta ao normal. Bebê ainda precisa de cama livre, comida e ânimo."}
 		["migracao", "fechada"]:
 			return {"porque": "Segurar a população numa crise de comida ou de camas.",
 				"ganha": ["Ninguém novo chega."],

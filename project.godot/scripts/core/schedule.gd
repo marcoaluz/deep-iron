@@ -252,13 +252,17 @@ func refeicoes_restantes_hoje() -> int:
 		return 0
 	var agora: float = dn.time
 	var fins := {"cafe": dn.tempo_da_hora(cafe_fim), "almoco": dn.tempo_da_hora(almoco_fim), "jantar": dn.tempo_da_hora(dn.hora_dormir)}
-	var total := 0
+	var total := 0.0
+	var fam := get_tree().get_first_node_in_group("familias")
 	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		if w.has_method("e_bebe") and w.e_bebe():
+			continue  # Bloco 111: o bebê não come da cozinha
+		var peso: float = (fam.crianca_porcao if fam else 0.5) if w.has_method("e_crianca") and w.e_crianca() else 1.0
 		var feitas: Dictionary = w.get("refeicoes_hoje") if w.get("refeicoes_hoje") != null else {}
 		for m in MEALS:
 			if not feitas.has(m) and fins[m] > agora:
-				total += 1
-	return total
+				total += peso
+	return ceili(total)
 
 
 ## Porções no estoque (comedouros). Bloco 108: na porção de verdade (prato do cardápio x ração das Políticas).

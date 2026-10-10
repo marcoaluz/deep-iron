@@ -102,8 +102,8 @@ func _camas_livres() -> int:
 
 
 func _populacao() -> int:
-	var eco := get_tree().get_first_node_in_group("economy")
-	return eco.worker_count() if eco else get_tree().get_nodes_in_group("ipezinhos").size()
+	# Bloco 111: a rede de segurança conta ADULTOS (uma vila de 2 adultos e 3 crianças ainda precisa de ajuda)
+	return get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return not (w.has_method("e_crianca") and w.e_crianca())).size()
 
 
 func _process(delta: float) -> void:

@@ -15,6 +15,7 @@ var _tracos: Label
 var _habil: Label
 var _amigos: Label
 var _parceiro: Label
+var _familia: Label  # Bloco 111
 
 
 func setup(hud: CanvasLayer, rel: Node, _economy: Node) -> void:
@@ -61,6 +62,7 @@ func _build() -> void:
 	_habil = _secao(vbox, "HABILIDADES (sobem com a prática)")
 	_amigos = _secao(vbox, "AMIGOS")
 	_parceiro = _secao(vbox, "PARCEIRO")
+	_familia = _secao(vbox, "FAMÍLIA")
 
 
 func _secao(vbox: VBoxContainer, titulo: String) -> Label:
@@ -109,6 +111,32 @@ func refresh() -> void:
 	_amigos.text = "\n".join(al.slice(0, 6)) if not al.is_empty() else "Ainda não fez amigos (a hora social, o trabalho lado a lado e as festas aproximam)."
 	var p: Node = _rel.parceiro_de(_w)
 	_parceiro.text = ("%s — %s" % [_hud._worker_name(p), "casados" if _rel.casado(_w) else "namorando"]) if p != null else "Ninguém (o jogador não escolhe: a convivência decide)."
+	_familia.text = _texto_familia()
+
+
+## Bloco 111: a fase, os pais, os filhos, a gravidez e o estudo.
+func _texto_familia() -> String:
+	var fam := get_tree().get_first_node_in_group("familias")
+	var l: Array = []
+	if _w.e_crianca() and fam:
+		var dias: float = float(_w.idade_s) / maxf(fam._seg_dia(), 1.0)
+		l.append("%s, %d dias%s" % [fam.NOME_FASE.get(_w.fase, _w.fase), int(dias), ("; estudo %d%%" % roundi(float(_w.estudo) * 100.0)) if float(_w.estudo) > 0.0 else ""])
+	var nomes := func(lista: Array) -> String:
+		var out: Array = []
+		for n in lista:
+			for o in get_tree().get_nodes_in_group("ipezinhos"):
+				if String(o.name) == String(n):
+					out.append(_hud._worker_name(o) + (" (%s)" % fam.NOME_FASE.get(o.fase, "") if fam and o.e_crianca() else ""))
+		return ", ".join(out)
+	var ps: String = nomes.call(_w.pais)
+	if ps != "":
+		l.append("Pais: " + ps)
+	var fs: String = nomes.call(_w.filhos)
+	if fs != "":
+		l.append("Filhos: " + fs)
+	if _w.gravida() and fam:
+		l.append("Esperando um filho (faltam %d dias)" % ceili(float(_w.gravidez_s) / maxf(fam._seg_dia(), 1.0)))
+	return "\n".join(l) if not l.is_empty() else "—"
 
 
 ## O grau em palavra (a fonte do jogo não tem estrela).

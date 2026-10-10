@@ -69,6 +69,7 @@
 [ext_resource type="Script" path="res://scripts/core/logistica.gd" id="105_logistica"]
 [ext_resource type="Script" path="res://scripts/core/politicas.gd" id="108_politicas"]
 [ext_resource type="Script" path="res://scripts/core/relacoes.gd" id="110_relacoes"]
+[ext_resource type="Script" path="res://scripts/core/familias.gd" id="111_familias"]
 [ext_resource type="Script" path="res://scripts/core/manutencao.gd" id="105_manutencao"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
@@ -356,6 +357,9 @@ script = ExtResource("108_politicas")
 
 [node name="Relacoes" type="Node" parent="."]
 script = ExtResource("110_relacoes")
+
+[node name="Familias" type="Node" parent="."]
+script = ExtResource("111_familias")
 
 [node name="Manutencao" type="Node" parent="."]
 script = ExtResource("105_manutencao")

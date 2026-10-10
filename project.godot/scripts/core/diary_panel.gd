@@ -73,7 +73,8 @@ func refresh() -> void:
 		_box.add_child(HSeparator.new())
 		_box.add_child(_hud._label("MEMORIAL", Tipo.CORPO, _hud.COLOR_DIM))
 		for m in inf.memorial:
-			_box.add_child(_hud._label("† %s — dia %d" % [str(m.get("name", "?")), int(m.get("day", 1))], Tipo.DETALHE, _hud.COLOR_DIM))
+			var fam_txt := str(m.get("familia", ""))  # Bloco 111
+			_box.add_child(_hud._label("† %s — dia %d%s" % [str(m.get("name", "?")), int(m.get("day", 1)), (" (%s)" % fam_txt) if fam_txt != "" else ""], Tipo.DETALHE, _hud.COLOR_DIM))
 
 
 func button_text() -> String:

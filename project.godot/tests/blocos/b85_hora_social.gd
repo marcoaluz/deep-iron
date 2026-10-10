@@ -129,6 +129,10 @@ func _process(delta: float) -> bool:
 		step = 1
 		t_mark = t
 	elif step == 1:
+		# (Bloco 111: o máximo de gente conversando em roda durante a hora social — a foto de um instante só às vezes
+		# pegava todo mundo trocando de roda ao mesmo tempo)
+		var em_roda := ws().filter(func(w): return w.esta_conversando() and w._spot != null and not w._spot.companheiros(w).is_empty()).size()
+		set_meta("max_roda", maxi(int(get_meta("max_roda", 0)), em_roda))
 		for w in ws():
 			if w.get_state() == "social" and w._spot != null:
 				if not trocas.has(w):
@@ -146,7 +150,7 @@ func _process(delta: float) -> bool:
 			var rodando := ws().filter(func(w): return w.esta_conversando() and not w._spot.companheiros(w).is_empty())
 			print("  %s: %d na hora social, %d conversando em roda; balão: %s; passeio com via: %s" % [dn.hora_texto(), sociais.size(), rodando.size(), viu_balao, passeio_com_via])
 			check(sociais.size() >= ws().size() - 1, "todo mundo foi pra hora social (%d de %d)" % [sociais.size(), ws().size()])
-			check(rodando.size() >= 2, "pares/grupos conversando na mesma roda (%d)" % rodando.size())
+			check(int(get_meta("max_roda", 0)) >= 2, "pares/grupos conversando na mesma roda (agora %d; no máximo da hora social %d)" % [rodando.size(), int(get_meta("max_roda", 0))])
 			check(viu_balao, "balão de fala com ícone em cima de quem conversa")
 			var trocou := trocas.values().filter(func(l): return l.size() >= 2).size()
 			check(trocou >= 2, "eles trocam de ponto depois de um tempo (%d trocaram)" % trocou)

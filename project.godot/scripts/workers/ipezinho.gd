@@ -8,6 +8,8 @@ signal died(worker_name: String)
 const STATE_LABELS := {
 	"esperando_espaco": "esperando espaço no armazém",  # Bloco 106
 	"abrigo": "no abrigo (onda solar)",  # Bloco 109
+	"bebe": "bebê (em casa)", "parto": "dando à luz", "brincando": "brincando", "aprendendo": "aprendendo um ofício",
+	"escola": "na escola",  # Bloco 111
 	"social": "hora social",  # Bloco 85
 	"padre": "na igreja",  # Bloco 88
 	"buscando_corpo": "buscando um corpo",  # Bloco 93
@@ -111,6 +113,7 @@ const OUTFITS_WITH_LAMP := ["mineiro"]
 const ACCESSORY_CHANCE := 0.6
 const STATE_GROUP := {
 	"eating": "comedouros",
+	"escola": "escolas",  # Bloco 111
 	"mining": "minerios",
 	"storing": "armazens",
 	"gathering": "coleta_comida",
@@ -596,6 +599,21 @@ var _com_amigo := false  # Bloco 110: a conversa de agora é com um amigo (anima
 var tracos: Array = []
 var habilidade := {}
 var animo_casamento := 0.0
+## Bloco 111: a FAMÍLIA — a fase da vida ("adulto"; ou "bebe", "crianca", "aprendiz"), a idade (s de jogo, de quem nasceu
+## aqui), os pais e os filhos (nomes dos nós), a gravidez (s que faltam; -1 = não), o pai do bebê, o resguardo depois de um
+## parto sem médico, o ESTUDO (escola, 0..1), o mentor do aprendiz e o ânimo de ter ido à escola/brincado.
+var fase := "adulto"
+var idade_s := 0.0
+var pais: Array = []
+var filhos: Array = []
+var gravidez_s := -1.0
+var pai_bebe := ""
+var resguardo_s := 0.0
+var estudo := 0.0
+var mentor := ""
+var animo_escola := 0.0
+var _parto_t := 0.0
+var _brinca_t := 0.0
 var _passeio: Array[Vector2] = []
 var _balao_t := 0.0
 var _balao: Sprite2D = null
@@ -1055,6 +1073,13 @@ func _process(delta: float) -> void:
 	if rel_f:
 		decay *= rel_f.mult_fome(self)  # Bloco 110: o guloso
 		_pratica(rel_f, delta)
+	if e_crianca():  # Bloco 111: a criança come meia porção e a fome dela cai na mesma fração; o bebê a mãe alimenta
+		var fam_c := _familias()
+		decay *= fam_c.crianca_porcao if fam_c else 0.5
+		if e_bebe():
+			hunger = hunger_max
+			decay = 0.0
+	_familia_tick(delta)
 	hunger = maxf(hunger - decay * delta, 0.0)
 	if int(hunger) != _last_hunger_int:
 		_update_hunger_label()
@@ -1187,9 +1212,15 @@ func _process(delta: float) -> void:
 
 
 func _choose_state() -> String:
+	# Bloco 111: o bebê fica em casa (na cama: só o ícone)
+	if e_bebe():
+		return "bebe"
 	# Bloco 36: caído em combate não anda — espera o médico (ou vai nas costas dele).
 	if downed:
 		return "downed"
+	# Bloco 111: chegou a hora do parto (a enfermaria, se tem; senão em casa)
+	if gravida() and gravidez_s <= 0.0 and not injured:
+		return "parto"
 	# Bloco 104: mandado pra uma expedição: anda até a saída (a expedicoes.gd tira ele do mundo lá)
 	if _expedicao_saida != Vector2.INF and not injured:
 		return "expedicao"
@@ -1239,10 +1270,10 @@ func _choose_state() -> String:
 	# Lazer: triste vai pra taverna (se existir) e fica até se animar.
 	if _ai_state == "leisure" and happiness < leisure_until and _station_ok_for("leisure"):
 		return "leisure"
-	if happiness < leisure_below and _has_usable_station("tavernas"):
+	if happiness < leisure_below and _has_usable_station("tavernas") and not e_crianca():
 		return "leisure"
 	# Greve: ninguém trabalha (só come, dorme, se trata e vai à taverna).
-	if _on_strike():
+	if _on_strike() and not e_crianca():  # (Bloco 111: criança não faz greve)
 		return "strike"
 	# Mandaram buscar o robô antigo: vai, pega e leva pra Oficina.
 	if _robot_task != null:
@@ -1307,6 +1338,10 @@ func _choose_state() -> String:
 
 ## A decisão da FUNÇÃO principal (o que vinha no fim do _choose_state antes do Bloco 109).
 func _estado_funcao() -> String:
+	if e_crianca():
+		return _estado_crianca()  # Bloco 111: escola, brincar, aprender
+	if resguardo_s > 0.0:
+		return "home"  # Bloco 111: o resguardo depois de um parto sem médico
 	# Médico (Bloco 30): plantão DENTRO da enfermaria, tendo internado ou não (esperando
 	# por lá: não sai pra minerar sozinho). Comer, dormir, se tratar etc. vêm antes.
 	if is_doctor():
@@ -1471,6 +1506,34 @@ func _decide_next_action() -> void:
 	var desired := _choose_state()
 	if desired != "abrigo" and _abrigado_em != null:
 		_sai_do_abrigo()  # Bloco 109: a onda passou (ou outra coisa ganhou): sai do abrigo
+	if desired == "bebe":  # Bloco 111: na cama de casa (escondido: só o ícone)
+		if _ai_state != "bebe":
+			_release_station()
+			_set_state("bebe")
+		_go_home()
+		return
+	if desired == "parto":  # Bloco 111
+		if _ai_state != "parto":
+			_release_station()
+			_set_state("parto")
+			_parto_t = 0.0
+		var dp := _destino_parto()
+		if global_position.distance_to(dp) > 40.0 and (not _moving or _target.distance_to(dp) > 4.0):
+			_go_to(dp)
+		return
+	if desired == "brincando":  # Bloco 111
+		if _ai_state != "brincando":
+			_release_station()
+			_set_state("brincando")
+			_brinca_t = 0.0
+		_brinca()
+		return
+	if desired == "aprendendo":  # Bloco 111
+		if _ai_state != "aprendendo":
+			_release_station()
+			_set_state("aprendendo")
+		_acompanha()
+		return
 	if desired == "abrigo":  # Bloco 109: vai pro abrigo mais perto e entra
 		if _ai_state != "abrigo":
 			_release_station()
@@ -2015,6 +2078,8 @@ func _criatura_perto(pos: Vector2, raio: float) -> Node:
 
 ## Bloco 110: o valente não foge de criatura.
 func _valente() -> bool:
+	if e_crianca():
+		return false  # Bloco 111: criança foge sempre
 	var rel := _relacoes()
 	return rel != null and rel.tem(self, "valente")
 
@@ -2385,6 +2450,11 @@ func happiness_factors() -> Array:
 		f.append_array(rel_a.fatores_animo(self))  # Bloco 110: amigos, parceiro, luto pessoal, traços
 	if animo_casamento >= 0.5:
 		f.append(["casou", animo_casamento])  # Bloco 110
+	if animo_escola >= 0.5:
+		f.append(["foi à escola" if estudo > 0.0 else "brincou", animo_escola])  # Bloco 111
+	var fam_a := _familias()
+	if fam_a:
+		f.append_array(fam_a.fatores_animo(self))  # Bloco 111: vai ter um filho
 	if animo_prato >= 0.5:
 		f.append(["comeu um ensopado", animo_prato])  # Bloco 107
 	if animo_fe >= 0.5:
@@ -3187,6 +3257,8 @@ func _apply_outfit() -> void:
 
 ## Nome do outfit que a função atual veste ("mineiro", "lenhador", "cozinheiro", "civil").
 func outfit() -> String:
+	if e_crianca():
+		return "crianca"  # Bloco 111: a arte das crianças (oficios111.py; o aprendiz também)
 	return JOB_OUTFIT.get(secundaria() if _na_secundaria else job, "mineiro")  # Bloco 109: na secundária, a roupa dela
 
 
@@ -3395,6 +3467,9 @@ func has_no_job() -> bool:
 ## trabalho é seguro: o _choose_state() faz ele entregar primeiro o que estiver
 ## carregando (minério -> armazém, comida -> comedouro, madeira -> armazém).
 func set_job(new_job: String) -> void:
+	if e_crianca() and new_job != ROLE_IDLE:
+		_popup("Criança não trabalha", Color(1.0, 0.8, 0.5))  # Bloco 111
+		return
 	if new_job == ROLE_PRIEST and motivo_padre() != "":
 		return  # Bloco 92: só homem vira padre, e a vila tem um só (main.gd avisa o motivo)
 	if new_job != ROLE_PRIEST and not carregando_corpo.is_empty():
@@ -3746,6 +3821,28 @@ func work_mult() -> float:
 		* _mult_pessoal()  # Bloco 108: a jornada e a fraqueza; Bloco 110: os traços e a habilidade
 
 
+## Bloco 111: o parto contando, o aprendiz aprendendo, o resguardo e o ânimo da escola sumindo.
+func _familia_tick(delta: float) -> void:
+	if animo_escola > 0.0:
+		animo_escola = maxf(animo_escola - 0.005 * delta, 0.0)
+	if resguardo_s > 0.0:
+		resguardo_s = maxf(resguardo_s - delta, 0.0)
+	var fam := _familias()
+	if fam == null:
+		return
+	if _ai_state == "parto" and not _moving and global_position.distance_to(_destino_parto()) <= 40.0:
+		_parto_t += delta
+		var precisa: float = fam.parto_segundos * (fam.parto_medico_mult if _medico_no_parto() else 1.0)
+		if _parto_t >= precisa:
+			_parto_t = 0.0
+			fam.parto(self, _medico_no_parto())
+			_decision_timer = 0.0
+	if _ai_state == "aprendendo":
+		var m: Node = fam.mentor_de(self)
+		if m != null and global_position.distance_to((m as Node2D).global_position) <= fam.aprendiz_perto * 1.6:
+			fam.aprende(self, m, delta)
+
+
 ## Bloco 110: trabalhando (o golpe/a martelada de agora), a habilidade da função sobe; o casamento some devagar.
 func _pratica(rel: Node, delta: float) -> void:
 	if animo_casamento > 0.0:
@@ -3759,9 +3856,11 @@ func _pratica(rel: Node, delta: float) -> void:
 ## Bloco 110: traços (preguiçoso/trabalhador) e a habilidade na função que ele está fazendo agora.
 func _mult_pessoal() -> float:
 	var rel := _relacoes()
+	var fam := _familias()
+	var leve: float = fam.trabalho_leve_mult if fam and fam.trabalho_leve(self) else 1.0  # Bloco 111: fim da gravidez
 	if rel == null:
-		return 1.0
-	return rel.mult_producao(self) * (1.0 + rel.habilidade_bonus * float(habilidade.get(funcao_atual(), 0.0)))
+		return leve
+	return leve * rel.mult_producao(self) * (1.0 + rel.habilidade_bonus * float(habilidade.get(funcao_atual(), 0.0)))
 
 
 func _relacoes() -> Node:
@@ -3773,8 +3872,114 @@ func funcao_atual() -> String:
 	return secundaria() if _na_secundaria else job
 
 
+# ------------------------------------------------------------ família (Bloco 111)
+func e_crianca() -> bool:
+	return fase != "adulto"
+
+
+func e_bebe() -> bool:
+	return fase == "bebe"
+
+
+func gravida() -> bool:
+	return gravidez_s >= 0.0
+
+
+func _familias() -> Node:
+	return get_tree().get_first_node_in_group("familias") if is_inside_tree() else null
+
+
+## O bebê puxa o tom de pele de um dos pais (o `look` escolhe o tom: iso_bonecos._tone).
+func herda_tom(p: Node) -> void:
+	if p != null and p.get("look") != null and int(p.look) >= 0:
+		look = int(p.look)
+		_apply_outfit()
+
+
+## familias.gd chama quando ele cresce.
+func muda_fase(nova: String) -> void:
+	var antes := fase
+	fase = nova
+	if antes == "bebe" and nova != "bebe" and _resting:
+		_stop_resting()  # o bebê vira criança: sai da cama e anda
+	if nova == "adulto":
+		_set_state("idle")
+	_apply_outfit()
+	_popup({"crianca": "Já anda!", "aprendiz": "Aprendiz!", "adulto": "Adulto!"}.get(nova, ""), Color(0.8, 0.95, 0.7))
+	_decision_timer = 0.0
+
+
+## A criança no horário de trabalho dos adultos: o aprendiz acompanha o mentor; a criança vai à escola (se tem vaga) ou
+## brinca na praça/parque.
+func _estado_crianca() -> String:
+	var fam := _familias()
+	if fase == "aprendiz" and fam:
+		var m: Node = fam.mentor_de(self)
+		if m != null and is_instance_valid(m) and m.is_inside_tree() and not m.get("fora"):
+			return "aprendendo"
+	if fase == "crianca" and ((_ai_state == "escola" and _station_ok_for("escola")) or _has_usable_station("escolas")):
+		return "escola"
+	return "brincando"
+
+
+## Brinca: vai pra perto de uma praça/parque e pula por ali (a animação "brincar"); troca de lugar de tempos em tempos.
+func _brinca() -> void:
+	if _moving:
+		return
+	_brinca_t -= decision_interval
+	_work_timer = 0.6  # (a animação de brincar)
+	animo_escola = maxf(animo_escola, 2.0)
+	if _brinca_t > 0.0:
+		return
+	_brinca_t = randf_range(6.0, 14.0)
+	var alvo: Vector2 = global_position
+	var spots: Array = get_tree().get_nodes_in_group("social_spots").filter(func(sp): return not sp.coberto or sp.get("tipo") == "praca")
+	var parques: Array = get_tree().get_nodes_in_group("parques")
+	var lugares: Array = []
+	for sp in spots:
+		lugares.append(sp.centro())
+	for pq in parques:
+		lugares.append((pq as Node2D).global_position)
+	if not lugares.is_empty():
+		var perto: Vector2 = lugares[0]
+		for l in lugares:
+			if global_position.distance_to(l) < global_position.distance_to(perto):
+				perto = l
+		alvo = perto + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(10.0, 40.0)
+	else:
+		alvo = global_position + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(10.0, idle_wander_radius)
+	_go_to(alvo)
+
+
+## O aprendiz: fica perto do mentor (a família faz ele aprender no _process).
+func _acompanha() -> void:
+	var fam := _familias()
+	var m: Node = fam.mentor_de(self) if fam else null
+	if m == null:
+		return
+	var alvo: Vector2 = (m as Node2D).global_position + Vector2(-18, 10)
+	if global_position.distance_to(alvo) > (fam.aprendiz_perto if fam else 36.0) and (not _moving or _target.distance_to(alvo) > 12.0):
+		_go_to(alvo)
+
+
+## O parto: na enfermaria (se tem) ou em casa; o _process conta o tempo quando ela chega.
+func _destino_parto() -> Vector2:
+	var ward := _closest_in_group("enfermarias")
+	if ward:
+		return ward.doctor_spot() if ward.has_method("doctor_spot") else (ward as Node2D).global_position
+	return _rest_position()
+
+
+func _medico_no_parto() -> bool:
+	var ward := _closest_in_group("enfermarias")
+	return ward != null and ward.has_method("doctors") and not (ward.doctors() as Array).is_empty() \
+		and global_position.distance_to((ward as Node2D).global_position) < 120.0
+
+
 ## Bloco 110: os traços (sorteia na primeira vez: ipezinho novo, migrante, save antigo).
 func tracos_de() -> Array:
+	if e_crianca():
+		return tracos  # (Bloco 111: a criança ganha os traços quando vira adulta)
 	if tracos.is_empty():
 		var rel := _relacoes()
 		if rel:
@@ -4514,8 +4719,8 @@ const MOTIVO_NOME := {"sem_trabalho": "sem trabalho", "sem_ferramenta": "sem fer
 ##   sem_material       (Bloco 105) o carregador ou o fundidor/carpinteiro sem nada pra levar e uma ordem parada por
 ##                      falta de insumo no armazém
 func motivo_parado() -> String:
-	if downed or injured or _resting or holding_robot != null:
-		return ""
+	if downed or injured or _resting or holding_robot != null or e_crianca():
+		return ""  # (Bloco 111: criança não é "parada": brinca, estuda, aprende)
 	if _moving and _stuck_stage >= 1:
 		return "caminho_bloqueado"
 	if hunger < hunger_threshold:
@@ -5881,6 +6086,8 @@ func get_save_data() -> Dictionary:
 		"combat_skill": combat_skill,
 		"funcao_secundaria": funcao_secundaria,  # Bloco 109
 		"tracos": tracos.duplicate(), "habilidade": habilidade.duplicate(), "animo_casamento": animo_casamento,  # Bloco 110
+		"fase": fase, "idade_s": idade_s, "pais": pais.duplicate(), "filhos": filhos.duplicate(), "gravidez_s": gravidez_s,
+		"pai_bebe": pai_bebe, "resguardo_s": resguardo_s, "estudo": estudo, "mentor": mentor,  # Bloco 111
 		"weapon": weapon,
 		"weapon_durability": weapon_durability,
 		"broken_weapon": broken_weapon,
@@ -5979,6 +6186,17 @@ func load_save_data(d: Dictionary) -> void:
 	for k in hab:
 		habilidade[String(k)] = clampf(float(hab[k]), 0.0, 1.0)
 	animo_casamento = maxf(SaveUtil.num(d, "animo_casamento", 0.0), 0.0)
+	# Bloco 111 (save antigo: todo mundo adulto, sem família)
+	var fs := SaveUtil.text(d, "fase", "adulto")
+	fase = fs if fs in ["bebe", "crianca", "aprendiz", "adulto"] else "adulto"
+	idade_s = maxf(SaveUtil.num(d, "idade_s", 0.0), 0.0)
+	pais = SaveUtil.array(d, "pais").map(func(x): return String(x))
+	filhos = SaveUtil.array(d, "filhos").map(func(x): return String(x))
+	gravidez_s = SaveUtil.num(d, "gravidez_s", -1.0)
+	pai_bebe = SaveUtil.text(d, "pai_bebe", "")
+	resguardo_s = maxf(SaveUtil.num(d, "resguardo_s", 0.0), 0.0)
+	estudo = clampf(SaveUtil.num(d, "estudo", 0.0), 0.0, 1.0)
+	mentor = SaveUtil.text(d, "mentor", "")
 	combat_skill = clampf(SaveUtil.num(d, "combat_skill", 0.0), 0.0, 2.0)  # Bloco 108: acima de 1,0 = treinamento (cai sozinho fora dele)
 	# Bloco 35 (save antigo: o SaveManager já pôs a melhor arma forjada nos guardas)
 	var wpn := SaveUtil.text(d, "weapon", "")

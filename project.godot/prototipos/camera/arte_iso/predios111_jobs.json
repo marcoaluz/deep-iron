@@ -1,0 +1,16 @@
+{
+ "escola": {
+  "job": "02c9cc24-f8e1-40ad-82cf-9012ba39cb2f",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\escola\\pronto.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "escola_obra": {
+  "job": "75b6c434-d805-4456-a055-a9263aeb5dc2",
+  "custo": 10,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\escola\\obra_2.png",
+  "ok": true,
+  "candidatos": 1
+ }
+}

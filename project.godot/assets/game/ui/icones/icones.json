@@ -101,7 +101,8 @@
   "couro_curtido",
   "racao",
   "coracao",
-  "coracao_partido"
+  "coracao_partido",
+  "bebe"
  ],
  "predios": [
   "casa",
@@ -125,6 +126,7 @@
   "carpintaria",
   "estufa",
   "carvoaria",
-  "curtume"
+  "curtume",
+  "escola"
  ]
 }

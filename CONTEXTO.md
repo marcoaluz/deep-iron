@@ -1,11 +1,24 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-10. Branch `isometrico`. Tudo até o Bloco 104 **foi enviado** pro GitHub (push com o OK do Marco); os Blocos 105 a 108 estão só no commit local. Push só com o OK dele.
+Atualizado em 2026-10-10. Branch `isometrico`. Tudo até o Bloco 104 **foi enviado** pro GitHub (push com o OK do Marco); os Blocos 105 a 111 estão só no commit local. Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
-## AGORA (2026-10-10): Bloco 110 — relacionamentos (feito; commit local). FILA: Prompt F (b111)
+## AGORA (2026-10-10): Bloco 111 — famílias (feito; commit local). FIM DO PACOTE 8 → R → F: o Marco valida 108–111
+
+Prompt F. Relatório `docs/BLOCO111_FAMILIAS.md`; simulação de 3 anos `docs/telemetria/bloco111/` (`tests/sim_familias.gd`,
+modelo dia a dia que lê os @export); fotos `docs/arte/bloco111/`.
+- `familias.gd` (gravidez, parto, fases bebê/criança/aprendiz/adulto, herança, mentor, política de Família) + `props/escola.gd`
+  (obra do Centro) + as fases no ipezinho (`fase`, `idade_s`, `pais`, `filhos`…). Família não namora (`relacoes.parentes`); a
+  cama do bebê a caminho fica prometida; criança fora dos alertas de parado.
+- Arte: menino e menina (todas as animações + retratos), escola (obra 1–3 + pronto), ícone do bebê: 151 gerações, saldo 5.562.
+- Simulado: sem casa nova, 4 bebês e para (a cama é o freio); com 1 casa a cada 14 dias, 12 → 42 adultos em 3 anos; adulto aos
+  56 dá fome no 3º ano (por isso 28).
+- Cuidado no commit: os 161 retratos " M" (aviso do LFS) são idênticos ao HEAD — commitar por caminho explícito.
+- Teste: o b85 agora mede o máximo da hora social (a foto de um instante falhava quando todos trocavam de roda).
+
+## Bloco 110 — relacionamentos (feito; commit local)
 
 Prompt R. Relatório `docs/BLOCO110_RELACOES.md`; medição `docs/telemetria/bloco110/` (`tests/bench_relacoes.gd`); fotos
 `docs/arte/bloco110/`.

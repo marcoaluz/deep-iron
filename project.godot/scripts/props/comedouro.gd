@@ -138,11 +138,11 @@ func _process(delta: float) -> void:
 			if body.quer_prato():
 				if food_stock <= 0.0:
 					continue
-				var porcao := _porcao()
+				var porcao := _porcao() * _fracao_de(body)  # Bloco 111: a criança come meia porção
 				var p := minf(porcao, food_stock)
 				food_stock -= p
 				servido_total += p
-				body.recebe_prato(p / porcao * _fome_da_porcao())
+				body.recebe_prato(p / porcao * _fome_da_porcao() * _fracao_de(body))
 				if prato == "ensopado" and p >= porcao * 0.5:  # Bloco 107: o ensopado alegra
 					body.animo_prato = minf(float(body.animo_prato) + ensopado_animo, ensopado_animo_max)
 			if body.come_prato(FEED_RATE * delta) > 0.0:
@@ -162,6 +162,14 @@ func _process(delta: float) -> void:
 		_sound_timer = eat_sound_interval * randf_range(0.8, 1.2)
 		Audio.eat(global_position)
 	_update_visual()
+
+
+## Bloco 111: a fração da porção de quem chega (a criança, meia; o adulto, inteira).
+func _fracao_de(body: Node) -> float:
+	if body.has_method("e_crianca") and body.e_crianca():
+		var fam := get_tree().get_first_node_in_group("familias")
+		return fam.crianca_porcao if fam else 0.5
+	return 1.0
 
 
 ## Bloco 84: a porção e quanto ela enche (do Schedule; sem ele, os padrões).

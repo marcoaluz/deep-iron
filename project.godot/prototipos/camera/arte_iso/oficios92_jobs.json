@@ -201,5 +201,19 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\ui\\icones\\_cand_racao.png",
   "ok": true,
   "candidatos": 64
+ },
+ "crianca_m": {
+  "job": "23d26d90-30f2-453c-8390-abe76d949b67",
+  "custo": 15,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\crianca_m\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "crianca_f": {
+  "job": "f56aab0f-455e-43b3-b974-e662e2966cbf",
+  "custo": 15,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\crianca_f\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
  }
 }

@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1141 valores** em 4 pastas de scripts (80 trocados por alguma cena).
+Total: **1178 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (79)
 
@@ -693,6 +693,62 @@ Total: **1141 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `batedor_alcance_mult` | 3.0 |  | O batedor (sem expedição) avista bichos e lugares de mais longe: alcance do catálogo x isto. |
 | `toca_rastreada_mult` | 1.5 |  | Toca rastreada pelo batedor no dia: os bichos nascem mais rápido (x isto). |
 
+## `scripts/core/familias.gd` (29)
+
+**Tempos (dias de jogo; 1 dia = 9 min reais em 1x)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `gestacao_dias` | 7.0 |  | Dias de gestação. |
+| `bebe_dias` | 7.0 |  | Bebê até este dia de idade; criança até crianca_ate; aprendiz até adulto_aos (aí vira adulto). O Marco pediu 1 a 2 anos (56 a 112 dias; 1 ano = 4 estações de 14 dias): 28 é o padrão rápido (~4 h reais em 1x). |
+| `crianca_ate` | 21.0 |  |  |
+| `adulto_aos` | 28.0 |  |  |
+
+**Gravidez**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `chance_dia` | 0.15 |  | Chance (0..1) por amanhecer de um casal que pode ter filho esperar um. |
+| `casal_estavel_dias` | 3 |  | Dias de casal até ser "estável" (antes disso, nada de filho). |
+| `intervalo_filhos_dias` | 14 |  | Dias mínimos entre dois filhos do mesmo casal e o máximo de filhos por casal. |
+| `max_filhos` | 3 |  |  |
+| `animo_minimo` | 55.0 |  | Ânimo médio da vila mínimo, estágio mínimo do Centro e porções de comida pronta por morador. |
+| `estagio_minimo` | 2 |  |  |
+| `comida_porcoes_por_morador` | 1.0 |  |  |
+| `trabalho_leve_dias` | 2.0 |  | Nos últimos dias da gestação ela trabalha leve: a produção dela x isto. |
+| `trabalho_leve_mult` | 0.6 |  |  |
+
+**Parto**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `parto_segundos` | 45.0 |  | Segundos de jogo do parto (com médico de plantão, x parto_medico_mult) e os dias de resguardo sem médico (em casa). |
+| `parto_medico_mult` | 0.5 |  |  |
+| `resguardo_dias` | 1.0 |  |  |
+| `morte_parto_chance` | 0.0 |  | Chance (0..1) de a mãe morrer no parto. Padrão 0 (o Marco: sem morte no parto); com médico, x0,25. |
+
+**Crianças**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `crianca_porcao` | 0.5 |  | A criança come esta fração da porção (e a fome dela cai nesta fração da de um adulto: a conta fecha igual). |
+| `estudo_por_s` | 0.002 |  | ESTUDO ganho por segundo de aula na escola (0..1). |
+| `animo_escola` | 5.0 |  | Ânimo de quem foi à escola (some devagar). |
+| `aprendiz_ganho` | 0.0008 |  | Aprendiz: habilidade ganha por segundo acompanhando o mentor (x 1 + estudo x aprendiz_estudo_mult). |
+| `aprendiz_estudo_mult` | 0.5 |  |  |
+| `aprendiz_perto` | 36.0 |  | Distância (px) em que o aprendiz fica do mentor. |
+| `heranca_habilidade` | 0.2 |  | Ao virar adulto: a habilidade herdada = esta fração da maior habilidade dos pais (por função) + o estudo x estudo_bonus. |
+| `estudo_bonus` | 0.15 |  |  |
+
+**Política de Família**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `desestimular_mult` | 0.3 |  | Desestimular / Incentivar: multiplicam a chance; Incentivar paga um auxílio por nascimento (sem créditos, a chance volta ao neutro). O ânimo do Desestimular (os casais queriam filhos) fica nas Políticas (politicas.familia_desestimular_animo). |
+| `incentivar_mult` | 2.0 |  |  |
+| `incentivar_auxilio` | 30 |  |  |
+| `animo_esperando` | 5.0 |  | Ânimo do casal que espera um filho. |
+
 ## `scripts/core/finds.gd` (8)
 
 **Chances (por ciclo de mineração)**
@@ -986,7 +1042,7 @@ Total: **1141 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `animo_motivo` | "" |  |  |
 | `titulo_abertura` | "" |  | Bloco 71: a faixa que aparece quando a ligação abre (título; o texto é a descrição). |
 
-## `scripts/core/politicas.gd` (27)
+## `scripts/core/politicas.gd` (28)
 
 **Geral**
 
@@ -1032,6 +1088,12 @@ Total: **1141 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `treino_teto` | 1.25 |  | ...e o teto da habilidade de combate (1,0 = 100%: o padrão). A fórmula de dano e vida é a de sempre, esticada. |
 | `treino_animo` | -6.0 |  | Ânimo dos GUARDAS no treinamento ("treino puxado"). |
 | `treino_decai` | 0.002 |  | Fora do treinamento, o que passou de 100% cai isto por segundo (até 100%). |
+
+**Família (Bloco 111)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `familia_desestimular_animo` | -3.0 |  | Desestimular: ânimo dos casais (queriam filhos). A chance e o auxílio ficam no familias.gd. |
 
 **Migração**
 
@@ -1678,7 +1740,7 @@ Total: **1141 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `level_min_stage` | [0, 2, 3] |  | Pré-requisitos de cada nível [nível 1, 2, 3]: estágio mínimo do Centro da Vila e pesquisa ("" = nenhuma). |
 | `level_research` | ["", "", "medicina"] |  |  |
 
-## `scripts/props/centro_vila.gd` (107)
+## `scripts/props/centro_vila.gd` (114)
 
 **Estágios da vila**
 
@@ -1813,6 +1875,18 @@ Total: **1141 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `curtume_pregos` | 15 |  |  |
 | `curtume_build_time` | 40.0 |  |  |
 | `curtume_estagio` | 2 |  |  |
+
+**Escola (Bloco 111)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `escola_credits` | 140 |  | ESCOLA (dentro da vila; as crianças estudam e se animam; sem professor): créditos, ferro, madeira, pregos, segundos de engenheiro, estágio da vila e o máximo. |
+| `escola_ore` | 20 |  |  |
+| `escola_wood` | 80 |  |  |
+| `escola_pregos` | 10 |  |  |
+| `escola_build_time` | 45.0 |  |  |
+| `escola_estagio` | 2 |  |  |
+| `escola_max` | 2 |  |  |
 | `armazem_credits` | 300 |  | Bloco 97: o ARMAZÉM NOVO (construção nova; o jogador escolhe o lugar). Custo do primeiro, em créditos (os próximos crescem, como as outras construções repetíveis). |
 | `armazem_ore` | 80 |  | Armazém novo: minério de ferro (unidades; como a Carpintaria). |
 | `armazem_wood` | 120 |  | Armazém novo: madeira (unidades). |

@@ -230,6 +230,17 @@ const UPGRADE_NAMES := {
 @export var curtume_pregos: int = 15
 @export var curtume_build_time: float = 40.0
 @export_range(1, 5) var curtume_estagio: int = 2
+
+@export_group("Escola (Bloco 111)")
+## ESCOLA (dentro da vila; as crianças estudam e se animam; sem professor): créditos, ferro, madeira, pregos, segundos de
+## engenheiro, estágio da vila e o máximo.
+@export var escola_credits: int = 140
+@export var escola_ore: int = 20
+@export var escola_wood: int = 80
+@export var escola_pregos: int = 10
+@export var escola_build_time: float = 45.0
+@export_range(1, 5) var escola_estagio: int = 2
+@export var escola_max: int = 2
 ## Bloco 97: o ARMAZÉM NOVO (construção nova; o jogador escolhe o lugar). Custo do primeiro, em créditos
 ## (os próximos crescem, como as outras construções repetíveis).
 @export var armazem_credits: int = 300
@@ -1222,6 +1233,8 @@ const HORTA_SCENE := preload("res://scenes/props/horta.tscn")
 const ESTUFA_SCENE := preload("res://scenes/props/estufa.tscn")
 const CARVOARIA_SCENE := preload("res://scenes/props/carvoaria.tscn")
 const CURTUME_SCENE := preload("res://scenes/props/curtume.tscn")
+const ESCOLA_SCENE := preload("res://scenes/props/escola.tscn")  # Bloco 111
+const ESCOLA_FOOTPRINT := Rect2(-60, -70, 120, 82)
 const HORTA_FOOTPRINT := Rect2(-48, -36, 96, 52)
 const ESTUFA_FOOTPRINT := Rect2(-70, -66, 140, 80)
 ## O que cada construção do Bloco 107 é: grupo dos que existem, nome, textura do fantasma e quadros.
@@ -1230,6 +1243,7 @@ const OBRAS_107 := {
 	"estufa": {"grupo": "estufas", "nome": "a Estufa", "textura": "estufa", "hframes": 2, "dentro": true, "f": true},
 	"carvoaria": {"grupo": "carvoarias", "nome": "a Carvoaria", "textura": "carvoaria", "hframes": 2, "dentro": false, "f": true},
 	"curtume": {"grupo": "curtumes", "nome": "o Curtume", "textura": "curtume", "hframes": 2, "dentro": false, "f": false},
+	"escola": {"grupo": "escolas", "nome": "a Escola", "textura": "escola", "hframes": 2, "dentro": true, "f": true},  # Bloco 111
 }
 
 
@@ -1263,6 +1277,8 @@ func _dados107(kind: String) -> Array:
 			return [estufa_credits, estufa_ore, estufa_wood, {"prego": estufa_pregos}, estufa_build_time, estufa_estagio, estufa_max]
 		"carvoaria":
 			return [carvoaria_credits, carvoaria_ore, carvoaria_wood, {}, carvoaria_build_time, carvoaria_estagio, 99]
+		"escola":
+			return [escola_credits, escola_ore, escola_wood, {"prego": escola_pregos}, escola_build_time, escola_estagio, escola_max]
 	return [curtume_credits, curtume_ore, curtume_wood, {"prego": curtume_pregos}, curtume_build_time, curtume_estagio, 99]
 
 
@@ -1304,7 +1320,7 @@ func obra107_build(kind: String) -> bool:
 		return false
 	var info: Dictionary = OBRAS_107[kind]
 	var tex: Texture2D = load("res://assets/game/%s.png" % info.textura)
-	var opts := {"footprint": (ESTUFA_FOOTPRINT if kind == "estufa" else HORTA_FOOTPRINT) if info.dentro else COLETOR_FOOTPRINT,
+	var opts := {"footprint": ({"estufa": ESTUFA_FOOTPRINT, "escola": ESCOLA_FOOTPRINT}.get(kind, HORTA_FOOTPRINT)) if info.dentro else COLETOR_FOOTPRINT,
 		"start": global_position + Vector2(-150, 70)}
 	if info.dentro:
 		opts["radius"] = house_radius()
@@ -1378,6 +1394,22 @@ func build_curtume() -> bool:
 	return obra107_build("curtume")
 
 
+func escolas() -> Array:
+	return obras107("escola")
+
+
+func escola_cost_text() -> String:
+	return obra107_cost_text("escola")
+
+
+func escola_block_reason() -> String:
+	return obra107_block_reason("escola")
+
+
+func build_escola() -> bool:
+	return obra107_build("escola")
+
+
 ## Carregando o save: se já existe um do mesmo tipo NO MESMO LUGAR (a horta da cena, ou o de antes de recarregar), usa ele em vez
 ## de apagar e recriar (cada criação refaz a malha de navegação: 50 recarregamentos seguidos viravam 50 refeitas à toa).
 func _reaproveita_ou_cria(kind: String, pos: Vector2, vivos: Array) -> Node2D:
@@ -1390,7 +1422,8 @@ func _reaproveita_ou_cria(kind: String, pos: Vector2, vivos: Array) -> Node2D:
 
 ## Nasce um deles (obra pronta ou save). Nome: "Horta2", "Estufa", "Carvoaria"... (único, pro save por nome).
 func spawn_obra107(kind: String, pos: Vector2) -> Node2D:
-	var scene: PackedScene = {"horta": HORTA_SCENE, "estufa": ESTUFA_SCENE, "carvoaria": CARVOARIA_SCENE, "curtume": CURTUME_SCENE}[kind]
+	var scene: PackedScene = {"horta": HORTA_SCENE, "estufa": ESTUFA_SCENE, "carvoaria": CARVOARIA_SCENE, "curtume": CURTUME_SCENE,
+		"escola": ESCOLA_SCENE}[kind]
 	var n: Node2D = scene.instantiate()
 	var base: String = String(kind).capitalize()
 	var i := obras107(kind).size()
@@ -1972,7 +2005,8 @@ func finish_build(kind: String, pos: Vector2) -> void:
 			var dica: String = {"horta": "Dê a função AGRICULTOR a alguém (sem agricultor, o caçador colhe).",
 				"estufa": "Dê a função AGRICULTOR a alguém: no inverno ela rende mais que a horta aberta.",
 				"carvoaria": "Encomende carvão vegetal (clique nela): um LENHADOR opera.",
-				"curtume": "Encomende couro curtido (clique nele): um CAÇADOR opera."}[kind]
+				"curtume": "Encomende couro curtido (clique nele): um CAÇADOR opera.",
+				"escola": "As crianças vêm estudar no horário de trabalho (sem professor): estudam e se animam."}[kind]
 			h107.show_toast("%s pront%s! %s" % [String(OBRAS_107[kind].nome).capitalize(), "a" if OBRAS_107[kind].f else "o", dica], Color(0.55, 1.0, 0.5))
 		return
 	if kind == "carpintaria":  # Bloco 94
@@ -2237,6 +2271,7 @@ func get_save_data() -> Dictionary:
 		"carpintarias": carpintarias().map(func(f): return f.get_save_data()),  # Bloco 94: lugar + fila de ordens
 		"carvoarias": carvoarias().map(func(f): return f.get_save_data()),  # Bloco 107: lugar + fila de ordens
 		"curtumes": curtumes().map(func(f): return f.get_save_data()),  # Bloco 107: lugar + fila de ordens
+		"escolas": escolas().map(func(f): return f.get_save_data()),  # Bloco 111: lugar
 		# Bloco 107: as hortas e estufas que o jogador construiu (a da clareira, da cena, só some na partida nova)
 		"hortas": (hortas() + estufas()).map(func(h): return {"estufa": h.estufa, "position": SaveUtil.vec2_to_array(h.global_position), "dados": h.get_save_data()}),
 		"armazens_novos": armazens_novos().map(func(a): return {"name": String(a.name), "position": SaveUtil.vec2_to_array(a.global_position)}),  # Bloco 97
@@ -2297,7 +2332,7 @@ func load_save_data(d: Dictionary) -> void:
 		if cpos != Vector2.INF:
 			spawn_carpintaria(cpos).load_save_data(cd)
 	# Bloco 107: carvoarias e curtumes (save antigo: nenhum)
-	for par in [["carvoaria", "carvoarias"], ["curtume", "curtumes"]]:
+	for par in [["carvoaria", "carvoarias"], ["curtume", "curtumes"], ["escola", "escolas"]]:  # (Bloco 111: escolas; save antigo: nenhuma)
 		var vivos: Array = obras107(par[0]).filter(func(n): return n.get_parent() == get_parent())  # (só os desta cena: a cena velha, saindo, ainda está nos grupos)
 		for od in SaveUtil.array(d, par[1]):
 			if typeof(od) != TYPE_DICTIONARY:

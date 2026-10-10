@@ -29,6 +29,7 @@ const KIND_OF_SCENE := {
 	"fornalha": "fornalha", "igreja": "igreja",  # Bloco 92: a Fundição do Prompt 12 e a igreja do PixelLab
 	"carpintaria": "carpintaria",  # Bloco 94 (predios94.py)
 	"estufa": "estufa", "carvoaria": "carvoaria", "curtume": "curtume",  # Bloco 107 (predios107.py)
+	"escola": "escola",  # Bloco 111 (predios111.py)
 }
 ## canteiro (canteiro.gd KINDS) -> prédio que vai nascer
 const KIND_OF_CANTEIRO := {
@@ -39,6 +40,7 @@ const KIND_OF_CANTEIRO := {
 	"fornalha": "fornalha", "igreja": "igreja",  # Bloco 92
 	"carpintaria": "carpintaria",  # Bloco 94
 	"estufa": "estufa", "carvoaria": "carvoaria", "curtume": "curtume",  # Bloco 107 (predios107.py)
+	"escola": "escola",  # Bloco 111
 	"armazem": "armazem",  # Bloco 97: o armazém novo sobe pelos desenhos de obra do armazém
 }
 const ESCAVADEIRA_PECAS := ["motor", "hidraulica", "cabine", "broca"]

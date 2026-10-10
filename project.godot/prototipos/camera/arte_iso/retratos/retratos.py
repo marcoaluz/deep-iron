@@ -26,6 +26,9 @@ CRIATURAS = ("lumivoro", "ferrugento")
 ## Bloco 92: nota por personagem somada à frase padrão (a frase fala em "helmet/hat" e o modelo INVENTAVA chapéu
 ## em quem não usa: o ferreiro careca ganhou capacete, o padre um solidéu)
 NOTA = {"ferreiro": " He is BALD: no hat, no helmet, no cap on his bald head.",
+        # Bloco 111: as crianças (rosto de criança; ela sem chapéu)
+        "crianca_m": " He is a young CHILD (about 8 years old) with a faded mustard flat cap: keep exactly this cap and a child's face; no helmet.",
+        "crianca_f": " She is a young CHILD (about 8 years old) with two short braids: a child's face; no hat, no cap, no helmet.",
         "padre": " He has short grey hair and round glasses: keep the glasses; no hat, no cap, no skullcap on his head.",
         # Bloco 94
         "carpinteiro": " He wears a flat brown cloth cap: keep exactly this flat cap; no helmet, no headlamp. He has a thick dark MOUSTACHE: keep the moustache exactly.",

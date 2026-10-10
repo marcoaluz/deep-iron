@@ -113,7 +113,7 @@ func roda() -> void:
 
 	print("-- (A) o padrão é o jogo de antes")
 	check(pol != null and pol.is_in_group("modificadores"), "o nó Politicas existe e está no grupo dos modificadores")
-	check(pol.e_padrao() and pol.resumo() == "jornada=normal racao=normal seguranca=padrao migracao=aberta", "tudo no padrão (%s)" % pol.resumo())
+	check(pol.e_padrao() and pol.resumo() == "jornada=normal racao=normal seguranca=padrao migracao=aberta familia=neutro", "tudo no padrão (%s)" % pol.resumo())
 	var tudo_um := true
 	for k in ["producao", "acidente", "porcao", "fome_refeicao", "migracao_intervalo", "treino", "roubo"]:
 		for quem in [null, mineiro, cozinheiro, guarda]:
@@ -321,7 +321,7 @@ func roda() -> void:
 	for p in pol.POLITICAS:
 		pol.forca(p, pol.PADRAO[p])
 	pol.load_save_data(d)
-	check(pol.resumo() == "jornada=estendida racao=reduzida seguranca=vigilancia migracao=seletiva" and perto(pol.espera["racao"], 123.0) and pol.racao_dias == 2 and pol.trocas == 7, "carregou igual (%s)" % pol.resumo())
+	check(pol.resumo() == "jornada=estendida racao=reduzida seguranca=vigilancia migracao=seletiva familia=neutro" and perto(pol.espera["racao"], 123.0) and pol.racao_dias == 2 and pol.trocas == 7, "carregou igual (%s)" % pol.resumo())
 	pol.load_save_data({})
 	check(pol.e_padrao() and perto(pol.espera["racao"], 0.0) and pol.racao_dias == 0 and not pol.fraqueza_ativa(), "save antigo (sem a chave): tudo no padrão, sem espera")
 	pol.load_save_data({"ativa": {"racao": "farta", "jornada": 3}})

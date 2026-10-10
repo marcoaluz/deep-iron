@@ -257,11 +257,25 @@ func pode_namorar(a: Node, b: Node) -> bool:
 		return false
 	if String(a.get("gender")) == String(b.get("gender")):
 		return false
+	if parentes(a, b):
+		return false
 	var pa := parceiro_de(a)
 	var pb := parceiro_de(b)
 	if (pa != null and pa != b) or (pb != null and pb != a):
 		return false
 	return not _viuvo(a) and not _viuvo(b)
+
+
+## Bloco 111: família não namora — pai/mãe e filho, ou irmãos (um pai ou mãe em comum).
+static func parentes(a: Node, b: Node) -> bool:
+	var pa: Array = a.get("pais") if a.get("pais") != null else []
+	var pb: Array = b.get("pais") if b.get("pais") != null else []
+	if String(a.name) in pb or String(b.name) in pa:
+		return true
+	for x in pa:
+		if x in pb:
+			return true
+	return false
 
 
 func _viuvo(w: Node) -> bool:
@@ -485,6 +499,8 @@ func morreu(w: Node) -> void:
 			continue
 		var n := nivel(w, o)
 		var luto := luto_parceiro if n == 5 else (luto_amigo if n >= 2 else 0.0)
+		if String(o.name) in (w.get("pais") if w.get("pais") != null else []) or String(w.name) in (o.get("pais") if o.get("pais") != null else []):
+			luto = maxf(luto, luto_parceiro)  # Bloco 111: pai, mãe, filho
 		if luto > 0.0:
 			var e: Dictionary = pessoal.get(String(o.name), {})
 			e["luto"] = float(e.get("luto", 0.0)) + luto

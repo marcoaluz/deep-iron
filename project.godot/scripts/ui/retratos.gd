@@ -31,6 +31,8 @@ static func pasta(w: Node) -> String:
 
 
 static func de(w: Node) -> Texture2D:
+	if w.has_method("e_bebe") and w.e_bebe():
+		return preload("res://scripts/ui/icones.gd").tex("bebe")  # Bloco 111: o bebê é só o ícone
 	var tom := IsoBonecos._tone(w)
 	var p := DIR + "%s/%s__%s.png" % [pasta(w), expressao(w), tom if tom != "" else "parda"]
 	if not _tex.has(p):

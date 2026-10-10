@@ -1453,7 +1453,7 @@ func _refresh_top_bar(workers: Array) -> void:
 
 ## Força de trabalho: total (e as camas: a capacidade da vila) e os SEM FUNÇÃO em destaque.
 func _refresh_workforce(workers: Array) -> void:
-	var no_job := workers.filter(func(w): return w.has_method("has_no_job") and w.has_no_job()).size()
+	var no_job := workers.filter(func(w): return w.has_method("has_no_job") and w.has_no_job() and not w.e_crianca()).size()  # (Bloco 111: criança não conta)
 	if no_job > 0:
 		_no_job_label.text = "SEM FUNÇÃO: %d  —  selecione e escolha uma função na barra de baixo" % no_job
 		_no_job_label.add_theme_color_override("font_color", COLOR_NO_JOB)
@@ -1665,7 +1665,7 @@ func _refresh_worker_rows(workers: Array) -> void:
 ## Bloco 95: a ordem da lista — 0 = parado (sem função ou sem o que fazer), 1 = com problema (ferido, caído,
 ## fome, zangado, sem cama), 2 = o resto.
 func prioridade_na_lista(w: Node) -> int:
-	if w.has_method("has_no_job") and (w.has_no_job() or w.get_state() == "idle"):
+	if w.has_method("has_no_job") and (w.has_no_job() or w.get_state() == "idle") and not (w.has_method("e_crianca") and w.e_crianca()):
 		return 0
 	if w.get("injured") or w.get("downed") or w.hunger < w.hunger_threshold or w.mood() > 0 \
 			or (w.has_method("has_home") and not w.has_home()):
@@ -2229,8 +2229,8 @@ func _refresh_alertas(workers: Array) -> void:
 
 ## Parado de verdade: sem função ou sem o que fazer (quem está ferido conta no alerta de feridos).
 func _parado(w: Node) -> bool:
-	if not w.has_method("has_no_job") or w.get("injured") or w.get("downed"):
-		return false
+	if not w.has_method("has_no_job") or w.get("injured") or w.get("downed") or (w.has_method("e_crianca") and w.e_crianca()):
+		return false  # (Bloco 111: criança não é trabalhador parado)
 	return w.has_no_job() or w.get_state() == "idle"
 
 

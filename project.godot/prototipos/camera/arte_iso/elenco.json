@@ -422,5 +422,21 @@
   "char": "8ec2fc7b-ac09-482d-ac9b-9b3fca638b29",
   "estado": "pronto",
   "_obs": "Bloco 92"
+ },
+ "crianca_m": {
+  "genero": "h",
+  "escolhido": 0,
+  "reduzido": 0.68,
+  "char": "53bcddbe-2d6b-4057-bbc3-d3234003e69c",
+  "estado": "pronto",
+  "_obs": "Bloco 111 (criança: candidato reduzido a 2/3)"
+ },
+ "crianca_f": {
+  "genero": "m",
+  "escolhido": 5,
+  "reduzido": 0.68,
+  "char": "e7bea2a9-9e7d-4cf8-a16c-e7261cb53db4",
+  "estado": "pronto",
+  "_obs": "Bloco 111 (criança: candidato reduzido a 2/3)"
  }
 }

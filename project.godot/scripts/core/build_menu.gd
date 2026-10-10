@@ -250,7 +250,12 @@ func _defs(tab: String) -> Array:
 				"cost": func(): return _casa_cost_text(),
 				"reason": func(): return _casa_reason(),
 				"act": func(): _hud.open_panel("casa")})
-			out.append({"name": "Escola", "img": _cartao("escola"), "soon": true, "desc": "Pra quando a vila tiver crianças."})
+			out.append({"name": "Escola", "img": _predio("escola"), "many": true, "scales": true,  # Bloco 111
+				"desc": "As crianças estudam no horário de trabalho e se animam; quem estudou aprende o ofício mais rápido e começa adulto com mais habilidade. Sem professor.",
+				"count": func(): return _count("escolas"),
+				"cost": func(): return hub.escola_cost_text(),
+				"reason": func(): return hub.escola_block_reason(),
+				"act": func(): hub.build_escola()})
 		"Alimentação":
 			if hub:
 				out.append({"name": "Cozinha", "img": _predio("comedouro"), "many": true,

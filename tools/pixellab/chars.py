@@ -22,7 +22,13 @@ def info(cid):
             continue
         m = re.match(r"^    ([a-z-]+): (https://.*)$", line)
         if m and cur:
-            anims[cur]["dirs"][m.group(1)] = [u.strip() for u in m.group(2).split(",")]
+            bruto = m.group(2).strip()
+            # Bloco 111: o PixelLab passou a mandar um MODELO ("…/{i}.png?t=… (i=0..7)") em vez de uma URL por quadro
+            mt = re.match(r"(\S*\{i\}\S*)\s*\(i=(\d+)\.\.(\d+)\)", bruto)
+            if mt:
+                anims[cur]["dirs"][m.group(1)] = [mt.group(1).replace("{i}", str(k)) for k in range(int(mt.group(2)), int(mt.group(3)) + 1)]
+            else:
+                anims[cur]["dirs"][m.group(1)] = [u.strip() for u in bruto.split(",")]
     return {"status": st.group(1) if st else "?", "rot": rot, "anims": anims, "texto": t}
 
 

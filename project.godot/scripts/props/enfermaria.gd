@@ -212,6 +212,25 @@ func without_bed() -> Array:
 
 
 # ------------------------------------------------------------ mortes
+## Bloco 111: "mãe de Ana e Zé" / "filho de Rosa" (o memorial e o diário lembram a família).
+func _familia_de(w: Node) -> String:
+	var nomes := func(lista) -> String:
+		var out: Array = []
+		for n in lista:
+			for o in get_tree().get_nodes_in_group("ipezinhos"):
+				if String(o.name) == String(n):
+					out.append(String(o.display_name))
+		return " e ".join(out)
+	var partes: Array = []
+	var filhos_s: String = nomes.call(w.get("filhos") if w.get("filhos") != null else [])
+	if filhos_s != "":
+		partes.append(("mãe de " if String(w.get("gender")) == "menina" else "pai de ") + filhos_s)
+	var pais_s: String = nomes.call(w.get("pais") if w.get("pais") != null else [])
+	if pais_s != "":
+		partes.append(("filha de " if String(w.get("gender")) == "menina" else "filho de ") + pais_s)
+	return "; ".join(partes)
+
+
 func record_death(worker: Node2D) -> void:
 	var main := primary()
 	if main != self:
@@ -225,6 +244,7 @@ func record_death(worker: Node2D) -> void:
 		"severity": worker.injury_severity,
 		"day": dn.day if dn else 1,
 		"position": SaveUtil.vec2_to_array(pos),
+		"familia": _familia_de(worker),  # Bloco 111
 	}
 	memorial.append(entry)
 	var cal := get_tree().get_first_node_in_group("calendario")

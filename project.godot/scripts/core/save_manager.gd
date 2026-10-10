@@ -91,6 +91,10 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 111: "familias" {nascimentos, viraram_adultos, ultimo_filho {"a|b": dia}, filhos_do_casal {"a|b": n}}; o ipezinho
+##     ganha "fase" (adulto/bebe/crianca/aprendiz), "idade_s", "pais" e "filhos" (nomes), "gravidez_s" (-1 = não), "pai_bebe",
+##     "resguardo_s", "estudo" e "mentor"; o memorial ganha "familia" (texto); o Centro da Vila "escolas"; as políticas a
+##     "familia" (neutro). Save antigo: todo mundo adulto, sem família, nenhuma escola, a política neutra.
 ##   Bloco 110: "relacoes" {pares {"a|b" (nomes dos nós): {p, casal, casado, desde}}, pessoal {nome: {luto, viuvo_ate}},
 ##     marcos [{id, title, text}] (as páginas do diário dos casais), casamentos, casamento_left}; o ipezinho ganha "tracos"
 ##     [ids], "habilidade" {função: 0..1} e "animo_casamento". Save antigo: ninguém se conhece; os traços são sorteados na
@@ -580,6 +584,7 @@ func _collect() -> Dictionary:
 		"manutencao": "manutencao",  # Bloco 105: os consertos abertos, as preventivas, os consertos e as quebras
 		"politicas": "politicas",  # Bloco 108: as políticas da vila, as esperas e a fraqueza
 		"relacoes": "relacoes",  # Bloco 110: os pares (pontos, casal, casado), o luto pessoal, os marcos do diário
+		"familias": "familias",  # Bloco 111: os nascimentos e o último filho de cada casal
 		"missoes": "missoes",  # Bloco 100: a campanha (capítulo liberado, missões cumpridas, objetivos, contadores)
 	}
 	for key in singles:
@@ -730,6 +735,9 @@ func apply_pending(main: Node) -> void:
 	var logi := get_tree().get_first_node_in_group("logistica")  # Bloco 105 (save antigo: 0 entregas)
 	if logi:
 		logi.load_save_data(SaveUtil.dict(data, "logistica"))
+	var fam := get_tree().get_first_node_in_group("familias")  # Bloco 111 (save antigo: ninguém nasceu ainda)
+	if fam:
+		fam.load_save_data(SaveUtil.dict(data, "familias"))
 	var rel := get_tree().get_first_node_in_group("relacoes")  # Bloco 110 (save antigo: ninguém se conhece ainda)
 	if rel:
 		rel.load_save_data(SaveUtil.dict(data, "relacoes"))

@@ -324,10 +324,13 @@ func _is_building(n: Node) -> bool:
 
 func _target_ok(t: Node2D) -> bool:
 	if morador != "":  # Bloco 103: o morador só mira quem está no mesmo andar e perto de casa
-		if not t.is_in_group("ipezinhos") or t.get("injured") or t.get("_inside") or not _mesmo_andar(t):
+		if not t.is_in_group("ipezinhos") or t.get("injured") or t.get("_inside") or not _mesmo_andar(t) \
+				or (t.has_method("e_crianca") and t.e_crianca()):  # Bloco 111: criança nunca é alvo
 			return false
 		return t.global_position.distance_to(casa) <= alcance_casa
 	if t.is_in_group("ipezinhos"):
+		if t.has_method("e_crianca") and t.e_crianca():
+			return false  # Bloco 111: criança nunca é alvo
 		return not t.get("injured") and not t.get("_inside") and _on_surface(t)
 	if t.is_in_group("robos"):
 		return t.can_fight()

@@ -16,7 +16,8 @@ const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre"
 	"hortas", "estufas", "colhido_horta", "colhido_estufa", "carvao_vegetal_feito", "couro_curtido_feito", "prato", "racoes",
 	"pol_jornada", "pol_racao", "pol_seguranca", "pol_migracao", "trocas_politica", "fraqueza", "comida_servida_dia", "acidentes_dia",  # Bloco 108 (servida/acidentes: desde a última linha)
 	"ociosos_expediente", "na_secundaria", "mortes_bobas", "caronas",
-	"amizades", "casais", "casamentos"]  # Bloco 110  # Bloco 109 (ociosos: média no expediente do dia; bobas/caronas: da sessão)  # Bloco 107 (os "feito/colhido": total da partida)  # Bloco 106: os compartimentos cheios em todos os armazéns (separados por "+") e quantos esperam espaço agora  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
+	"amizades", "casais", "casamentos",  # Bloco 110
+	"bebes", "criancas", "aprendizes", "gravidas", "nascimentos", "camas_livres"]  # Bloco 111  # Bloco 109 (ociosos: média no expediente do dia; bobas/caronas: da sessão)  # Bloco 107 (os "feito/colhido": total da partida)  # Bloco 106: os compartimentos cheios em todos os armazéns (separados por "+") e quantos esperam espaço agora  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
 
 var arquivo := ""
 var _t0 := 0
@@ -227,6 +228,10 @@ func registra() -> void:
 	var rel := _g("relacoes")  # Bloco 110
 	var cont: Dictionary = rel.contagem() if rel else {}
 	v.append_array([int(cont.get("amizades", 0)), int(cont.get("casais", 0)), int(cont.get("casamentos", 0))])
+	var fam := _g("familias")  # Bloco 111
+	var cf: Dictionary = fam.contagem() if fam else {}
+	v.append_array([int(cf.get("bebes", 0)), int(cf.get("criancas", 0)), int(cf.get("aprendizes", 0)), int(cf.get("gravidas", 0)),
+		int(cf.get("nascimentos", 0)), int(eco6.free_beds()) if eco6 else 0])
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return
