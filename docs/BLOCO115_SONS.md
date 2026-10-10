@@ -12,9 +12,9 @@ vários eventos do jogo não tinham som nenhum (animais, radiação, poças, por
 
 ## 1) O que o Marco recebe
 
-- **`docs/AUDIO_PROMPTS_ELEVENLABS.md`**: o prompt (em inglês), a duração, o nome do arquivo e onde toca, pra cada um dos 126 sons. Gerado do `slots.json`
-  (`python tools/lista_audio.py`); pra mudar um prompt é só editar o campo `prompt` do slot.
-- **`docs/AUDIO_ARQUIVOS.md`**: a lista de arquivos, com o que já existe.
+- **`docs/audio/PROMPTS_ELEVENLABS.md`**: o prompt (em inglês), a duração, o nome do arquivo e onde toca, pra cada um dos 126 sons. Gerado do `slots.json`
+  (`python tools/elevenlabs/docs_audio.py`); pra mudar um prompt é só editar o campo `prompt` do slot.
+- **`docs/audio/PEDIDO_DE_SONS.md`**: a lista de arquivos, com o que já existe.
 
 ## 2) O que entrou
 
@@ -59,7 +59,7 @@ vários eventos do jogo não tinham som nenhum (animais, radiação, poças, por
 
 ## 6) Os sons foram GERADOS (API do ElevenLabs)
 
-Depois do bloco, o Marco pôs a chave no `.env` (fora do git) e aprovou um piloto de 5 sons ("bem nítido e legal"); aí a ferramenta `tools/gera_audio_elevenlabs.py`
+Depois do bloco, o Marco pôs a chave no `.env` (fora do git) e aprovou um piloto de 5 sons ("bem nítido e legal"); aí a ferramenta `tools/elevenlabs/gerar_sons.py`
 gerou o resto pelos prompts do `slots.json` (modelo `eleven_text_to_sound_v2`, loop ligado nos loops, `prompt_influence` 0,5).
 
 - **191 arquivos WAV, 0 erros**, 1.040 s de áudio, em `project.godot/assets/audio/<pasta>/` (a música não entrou). Gastou **10.756 créditos de 131.000** (cerca de 54 por arquivo).
@@ -68,14 +68,14 @@ gerou o resto pelos prompts do `slots.json` (modelo `eleven_text_to_sound_v2`, l
 - Conferido pelo jogo (script de verificação): os 191 carregam, os loops repetem, mono/estéreo na regra, nenhum curto demais.
 - Os testes `b114` e `b115` ignoram os arquivos reais (`AudioSlots.ignora_arquivos`) pra não dependerem do que está na pasta.
 - **Nada foi ouvido por mim.** O Marco aprovou o piloto de 5 (s2_acido, fornalha, estágio novo, confirmar, explosão); os outros 186 saíram do mesmo prompt e ele ainda vai ouvir.
-- Pra refazer um som: edite o `prompt` no `slots.json` e rode `python tools/gera_audio_elevenlabs.py --ids <slot> --force` (gasta créditos de novo).
+- Pra refazer um som: edite o `prompt` no `slots.json` e rode `python tools/elevenlabs/gerar_sons.py --ids <slot> --force` (gasta créditos de novo).
 
 ### Ajuste de volume (depois de o Marco ouvir)
 
 O Marco avisou que o som do cemitério não dava pra ouvir. A causa: o ElevenLabs entrega cada arquivo num nível (pico de −60 a 0 dBFS) e os dB do `slots.json` foram pensados
 pros sons antigos (loops com RMS ≈ −18 dBFS, picos ≈ −2; curtos com pico entre −1 e −6). O cemitério saiu com RMS −35,7 e ainda ia −14 dB abaixo: ~−50 dBFS efetivo, inaudível.
 
-- `tools/normaliza_audio.py`: leva os arquivos pro nível dos antigos e **só sobe o que está baixo** (loops: RMS −20 dBFS, pico ≤ −2; curtos: pico −3 dBFS; ganho máx. +36 dB).
+- `tools/elevenlabs/posprocessa.py`: leva os arquivos pro nível dos antigos e **só sobe o que está baixo** (loops: RMS −20 dBFS, pico ≤ −2; curtos: pico −3 dBFS; ganho máx. +36 dB).
   74 arquivos subiram (o cemitério +15,7 dB, a escola +23,9, os cliques +20, os passos +14 a +27). O que já estava alto não mudou (os 5 do piloto aprovado ficaram como estavam).
 - Os **passos na pedra** saíam como ruído fraco (sem batida): o prompt mudou pra `One footstep on a solid stone floor, hard shoe heel, loud crisp click, echoing in a cave...` (testei 4 variações e medi
   qual dava batida nítida) e os 3 arquivos foram regerados. Água e gotejar também foram regerados (prompt mais forte no gotejar e na água).

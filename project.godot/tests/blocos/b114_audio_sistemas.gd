@@ -1,6 +1,6 @@
 extends SceneTree
 ## Bloco 114: os SISTEMAS DE SOM (nenhum áudio novo: os testes usam sons FALSOS criados na memória). RODAR SÓ COM APPDATA ISOLADO.
-##   (A) O catálogo data/audio/slots.json: todos os slots do pedido, bus e reserva válidos, a lista docs/AUDIO_ARQUIVOS.md.
+##   (A) O catálogo data/audio/slots.json: todos os slots do pedido, bus e reserva válidos, a lista docs/audio/PEDIDO_DE_SONS.md.
 ##   (B) Sem arquivo o slot fica mudo (sem erro); com som, o loop é forçado.
 ##   (C) Ambiência por andar (S2 a S5), floresta de dia e de noite, vento no inverno e o eco do S5, com troca suave.
 ##   (D) Loops de prédios posicionais: só perto da câmera, só em atividade, no máximo N.
@@ -147,9 +147,9 @@ func _roda() -> void:
 	check(ruins.is_empty(), "cada slot tem tipo, bus que existe, 'quando' e reserva que resolve%s" % ((" — %s" % str(ruins)) if not ruins.is_empty() else ""))
 	for b in BUSES:
 		check(AudioServer.get_bus_index(StringName(b)) >= 0, "bus %s" % b)
-	var doc := FileAccess.get_file_as_string(ProjectSettings.globalize_path("res://").path_join("../docs/AUDIO_ARQUIVOS.md"))
+	var doc := FileAccess.get_file_as_string(ProjectSettings.globalize_path("res://").path_join("../docs/audio/PEDIDO_DE_SONS.md"))
 	var sem_doc := ids.filter(func(i): return not doc.contains("`%s" % i))
-	check(doc != "" and sem_doc.is_empty(), "docs/AUDIO_ARQUIVOS.md lista todos os slots (python tools/lista_audio.py)%s" % ((" — faltam: %s" % str(sem_doc)) if not sem_doc.is_empty() else ""))
+	check(doc != "" and sem_doc.is_empty(), "docs/audio/PEDIDO_DE_SONS.md lista todos os slots (python tools/elevenlabs/docs_audio.py)%s" % ((" — faltam: %s" % str(sem_doc)) if not sem_doc.is_empty() else ""))
 
 	print("== B) sem arquivo é mudo, com som repete")
 	var sem_arq := ids.filter(func(i): return Slots.arquivos(i).is_empty()).size()

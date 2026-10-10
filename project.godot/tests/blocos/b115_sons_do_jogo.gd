@@ -4,7 +4,7 @@ extends SceneTree
 ##   (B) Os loops de TODOS os prédios e lugares do catálogo (grupo + atividade) tocam só perto da câmera.
 ##   (C) Os sons soltos e aleatórios por contexto (pássaro, coruja, trovão, gota...) e a camada da onda solar.
 ##   (D) Eventos novos: criatura por espécie, portão, Geiger da radiação, animais, máquinas, vida na vila, o "oi" ao selecionar.
-##   (E) Cada slot (menos a música) tem prompt e duração, e docs/AUDIO_PROMPTS_ELEVENLABS.md lista todos.
+##   (E) Cada slot (menos a música) tem prompt e duração, e docs/audio/PROMPTS_ELEVENLABS.md lista todos.
 const Slots := preload("res://scripts/core/audio_slots.gd")
 var main: Node
 var audio: Node
@@ -360,7 +360,7 @@ func _roda() -> void:
 	check(soltos.is_empty(), "os %d ganchos dos eventos novos estão ligados%s" % [ganchos.size(), (" — faltam: %s" % str(soltos)) if not soltos.is_empty() else ""])
 
 	print("== E) prompts do ElevenLabs")
-	var doc := FileAccess.get_file_as_string(ProjectSettings.globalize_path("res://").path_join("../docs/AUDIO_PROMPTS_ELEVENLABS.md"))
+	var doc := FileAccess.get_file_as_string(ProjectSettings.globalize_path("res://").path_join("../docs/audio/PROMPTS_ELEVENLABS.md"))
 	var sem_prompt: Array = []
 	var sem_doc: Array = []
 	var musica := 0
@@ -374,7 +374,7 @@ func _roda() -> void:
 		if not doc.contains("`%s`" % id):
 			sem_doc.append(id)
 	check(sem_prompt.is_empty(), "todo som (menos a música) tem prompt e duração%s" % [(" — faltam: %s" % str(sem_prompt)) if not sem_prompt.is_empty() else ""])
-	check(doc != "" and sem_doc.is_empty(), "docs/AUDIO_PROMPTS_ELEVENLABS.md lista todos%s" % [(" — faltam: %s" % str(sem_doc)) if not sem_doc.is_empty() else ""])
+	check(doc != "" and sem_doc.is_empty(), "docs/audio/PROMPTS_ELEVENLABS.md lista todos%s" % [(" — faltam: %s" % str(sem_doc)) if not sem_doc.is_empty() else ""])
 	check(musica == 2 and doc.contains("Fora desta lista: música"), "a música fica de fora da lista de efeitos (2 slots, citados à parte)")
 	var longos := Slots.todos().filter(func(i): return String(Slots.slot(i).get("prompt", "")).length() > 450)
 	check(longos.is_empty(), "nenhum prompt passa de 450 caracteres%s" % [(" — %s" % str(longos)) if not longos.is_empty() else ""])

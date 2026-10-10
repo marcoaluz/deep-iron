@@ -1,19 +1,16 @@
-# Prompts do ElevenLabs — todos os sons do jogo, menos a música (Bloco 115)
+# Prompts do ElevenLabs — todos os sons do jogo, menos a música
 
-Gerado por `python tools/lista_audio.py` a partir de `project.godot/data/audio/slots.json` (campos `prompt` e `duracao`). **Não edite à mão: mude o prompt no `slots.json` e rode a ferramenta.**
+Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/data/audio/slots.json` (campos `prompt` e `duracao`). **Não edite à mão: mude o prompt no `slots.json` e rode a ferramenta.**
 
 **126 sons (191 arquivos)**. A música da abertura e da introdução fica de fora (lista no fim).
 
 ## Como usar
 
-1. No ElevenLabs, **Sound Effects**: cole o prompt, ponha a **duração** indicada e gere. Se a ferramenta tiver a opção de **loop**, ligue nos sons de loop; senão gere 30 a 40 s e emende (cross-fade de 1 a 2 s entre o fim e o começo).
-2. Os prompts estão em inglês (o modelo entende melhor). Termos fixos: *seamless loop*, *no music*, *no voices*, *close-up*, *dry*.
-3. **Variações** (`_0`, `_1`...): gere o mesmo prompt várias vezes e guarde takes **diferentes**; o jogo sorteia entre eles.
-4. Salve com o **nome exato** do título de cada item, em `project.godot/assets/audio/<pasta>/` (`.ogg` ou `.wav`).
-5. Conferir: `godot --headless --path project.godot --import` e `python tools/lista_audio.py` (a lista mostra o que já tem).
-6. Os **stingers** são frases curtas de música/efeito (fanfarra, sino com cordas): se o gerador de efeitos não fizer bem, gere esses oito na ferramenta de música e salve com o mesmo nome.
-7. As **vozes curtas** (`voz/`) podem sair do Text to Speech em português se preferir fala de verdade: use as frases sugeridas entre parênteses, em vozes de homem e de mulher com carácter de trabalhador.
-8. Loops e sons posicionais em **mono**; normalizar em torno de −16 LUFS, pico abaixo de −1 dB.
+1. A ferramenta `tools/elevenlabs/gerar_sons.py` já usa estes prompts pela API (`--dry-run` mostra o custo antes). Pra gerar à mão, no ElevenLabs **Sound Effects**: cole o prompt, ponha a **duração** indicada e ligue **loop** nos sons de loop.
+2. Prompts em inglês: *dark, dusty, industrial*; *isolated sound, no music, no speech*; *close microphone, dry* nos curtos; *seamless loop* nos loops.
+3. **Variações** (`_0`, `_1`...): o mesmo prompt gerado várias vezes; o jogo sorteia entre elas. `--candidatos N` gera N pra você escolher.
+4. Os **stingers** são frases curtas de música/efeito: se o gerador de efeitos não fizer bem, gere na ferramenta de música e salve com o mesmo nome.
+5. As **vozes curtas** (`voz/`) podem sair do Text to Speech em português se preferir fala de verdade (as frases sugeridas estão entre parênteses).
 
 
 ## Ambiência (loops por andar, clima e onda solar)
@@ -1067,8 +1064,6 @@ Gerado por `python tools/lista_audio.py` a partir de `project.godot/data/audio/s
 
 
 ## Fora desta lista: música
-
-Estes slots recebem a música (feita à parte, não é efeito sonoro). O jogo já toca quando o arquivo existe:
 
 - `musica/abertura` (loop): A ABERTURA do jogo: toca na tela inicial (o menu). Loop de 1 a 2 minutos, tema principal do DEEP IRON (sol, ruína, esperança).
 - `musica/intro` (toca uma vez): A INTRODUÇÃO (3 quadros ilustrados + 4 no mapa, uns 60 s): uma peça só, crescendo da explosão até a fogueira e o título. Não repete.

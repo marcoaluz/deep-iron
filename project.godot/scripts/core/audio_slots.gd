@@ -2,7 +2,7 @@ extends RefCounted
 ## Bloco 114: o CATÁLOGO DE SONS (data/audio/slots.json). Cada som do jogo é um SLOT com nome fixo ("ambiencia/s2_acido",
 ## "stingers/amanhecer"...): o jogo procura res://assets/audio/<id>.ogg|wav|mp3 e, nos slots com variações, <id>_0, <id>_1...
 ## Sem arquivo o slot fica MUDO (sem erro) — ou vale o som antigo, a "reserva", que o Audio resolve. Arquivo novo é só pôr na
-## pasta com o nome certo (docs/AUDIO_ARQUIVOS.md lista todos). O loop é forçado por código: o .ogg/.wav não precisa
+## pasta com o nome certo (docs/audio/PEDIDO_DE_SONS.md lista todos). O loop é forçado por código: o .ogg/.wav não precisa
 ## estar marcado como loop no import.
 ## Os testes trocam os arquivos por sons FALSOS na memória (poe_falso) pra conferir o sistema sem nenhum áudio de verdade.
 
@@ -18,6 +18,8 @@ static var _cache: Dictionary = {}  # id -> Array[AudioStream] dos arquivos
 static var _falsos: Dictionary = {}  # id -> Array[AudioStream] (testes)
 ## Só pros testes: ignora os arquivos de verdade (a pasta assets/audio vai enchendo): só valem os sons falsos e a reserva.
 static var ignora_arquivos := false
+## Só pros testes: de onde vêm os arquivos (res://assets/audio/); uma pasta que não existe = o jogo rodando sem nenhum arquivo de som.
+static var pasta_atual := PASTA
 
 
 static func carrega(forca: bool = false) -> void:
@@ -60,7 +62,7 @@ static func slot(id: String) -> Dictionary:
 ## Os caminhos de arquivo que existem de verdade pra esse slot (<id>.ext e <id>_0.._N.ext).
 static func arquivos(id: String) -> Array[String]:
 	var out: Array[String] = []
-	var base := PASTA + id
+	var base := pasta_atual + id
 	for ext in EXTENSOES:
 		if ResourceLoader.exists("%s.%s" % [base, ext]):
 			out.append("%s.%s" % [base, ext])
@@ -94,6 +96,11 @@ static func streams(id: String) -> Array[AudioStream]:
 			out.append(st)
 	_cache[id] = out
 	return out
+
+
+## Esquece o que já foi carregado (os testes de carga trocam a pasta ou ligam o "ignora arquivos").
+static func limpa_cache() -> void:
+	_cache = {}
 
 
 ## Tem arquivo de verdade (ou som falso de teste) neste slot?

@@ -480,3 +480,7 @@ func test_b114_audio_sistemas() -> void:
 
 func test_b115_sons_do_jogo() -> void:
 	run_bloco("b115_sons_do_jogo.gd")
+
+
+func test_b116_audio_carga() -> void:
+	run_bloco("b116_audio_carga.gd")

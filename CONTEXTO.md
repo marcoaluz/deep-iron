@@ -1,29 +1,41 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-10. Branch `isometrico`. Bloco 115 feito (commit locais dos Blocos 114 e 115, sem push). Tudo até o Bloco 113 **foi enviado** pro GitHub (push do Marco em 2026-10-10). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
+Atualizado em 2026-10-10. Branch `isometrico`. Bloco 116 feito (commits locais dos Blocos 114, 115 e 116, sem push). Tudo até o Bloco 113 **foi enviado** pro GitHub (push do Marco em 2026-10-10). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
+## Bloco 116 — FERRAMENTA DE SONS (ElevenLabs): candidatos, cache, teste de carga (feito; commit local, sem push)
+
+Pedido do Marco (prompt colado) depois de aprovar os sons ("ficou muito bom agora"). Boa parte já existia (114/115); este bloco fez o que faltava. Relatório
+`docs/BLOCO116_FERRAMENTA_SONS.md`; teste `b116_audio_carga` (21 OK, registrado no GUT) + `tools/elevenlabs/testa_ferramenta.py` (offline). Nenhum crédito gasto.
+- Tudo em `tools/elevenlabs/` (`gerar_sons.py`, `posprocessa.py`, `docs_audio.py`, `testa_ferramenta.py`) e `docs/audio/` (PEDIDO_DE_SONS, PROMPTS_ELEVENLABS, LISTA_DE_ESCUTA). O manifesto
+  segue `data/audio/slots.json`; o estado em `data/audio/gerados.json` (hash do pedido + aprovado). `--dry-run`, `--so`, `--candidatos N` (em `audio_candidatos/`, fora do git), `--aprovar`,
+  cache de chamadas por hash (nunca paga 2x; `--force` ignora), teto `--max-geracoes` e `--confirma-acima` (sem terminal: `--sim`). Chave: `.env` (gitignored; `.env.example` sem chave);
+  `--confere-segredos` não acha a chave em nenhum arquivo do git.
+- Sem ffmpeg (não instalado): pós-processamento em Python puro (corta silêncio, só sobe volume, emenda de loop); OGG fica indisponível (WAV). 5 loops com estalo na emenda foram corrigidos.
+- Doc oficial x prática: a API devolve PCM ESTÉREO (a doc diz MP3/mono) e pcm_44100 funcionou no plano Creator (a doc diz Pro).
+- PENDENTE com o Marco: a música (abertura e intro) à parte; instalar o ffmpeg se quiser OGG; push.
+
 ## Bloco 115 — TODOS OS SONS NO CATÁLOGO + PROMPTS DO ELEVENLABS (feito; commit local, sem push)
 
 Pedido do Marco (depois do 114): "escrever os prompts pro ElevenLabs; TODOS os sons do jogo serão criados lá, só a música fica de fora (chuva, mineração, animais,
-pessoal falando, radiação, tudo)". Relatório `docs/BLOCO115_SONS.md`; **`docs/AUDIO_PROMPTS_ELEVENLABS.md`** (prompt + duração + arquivo de cada som); teste
+pessoal falando, radiação, tudo)". Relatório `docs/BLOCO115_SONS.md`; **`docs/audio/PROMPTS_ELEVENLABS.md`** (prompt + duração + arquivo de cada som); teste
 `b115_sons_do_jogo` (39 OK, registrado no GUT). 128 slots / 193 arquivos (126 slots / 191 arquivos pro ElevenLabs; os 2 de música à parte). Nenhum áudio criado nem ouvido.
 - Os 32 sons antigos viraram slots `sfx/…` (reserva = o sintetizado de antes; `Audio.som(id,pos)` / `som_global(id)`); +10 loops de lugares (poça, ventilador, tocha, conversa nos
   pontos sociais, oficina, arsenal, laboratório, escavadeira, escola, cozinha); 12 sons soltos por contexto (`tipo "pontual"`); camada da onda solar; animais; Geiger da
   radiação; criaturas por espécie (+Matriarca); máquinas quebrou/consertada; bebê, casamento, enterro; portão abre/fecha; "oi" ao selecionar. O prompt de cada slot mora no `slots.json`.
 - Testes conferidos: b115 (+GUT), b114, b55, b61, b62, b98, b105, b110, b111, b93, b85, b88, b57. O resto da bateria não.
-- GERADO (2026-10-10): a chave está no `.env` (gitignored); `tools/gera_audio_elevenlabs.py` gerou os 191 WAV (0 erros, 10.756 créditos de 131.000). Piloto de 5 aprovado pelo
+- GERADO (2026-10-10): a chave está no `.env` (gitignored); `tools/elevenlabs/gerar_sons.py` gerou os 191 WAV (0 erros, 10.756 créditos de 131.000). Piloto de 5 aprovado pelo
   Marco ("bem nítido e legal"); os outros 186 ainda não foram ouvidos por ele. Refazer um: `--ids <slot> --force`. O PCM da API vem ESTÉREO (a doc diz mono): a ferramenta trata.
-- Volume (Marco: "só o cemitério não ouvi"): o ElevenLabs entrega cada arquivo num nível; `tools/normaliza_audio.py` subiu 74 arquivos pro nível dos antigos (só sobe), passos da pedra/água e
+- Volume (Marco: "só o cemitério não ouvi"): o ElevenLabs entrega cada arquivo num nível; `tools/elevenlabs/posprocessa.py` subiu 74 arquivos pro nível dos antigos (só sobe), passos da pedra/água e
   gotejar regerados com prompt melhor, tocha e cozinha +dB no slot. Ajuste fino = o `db` do slot no `slots.json`; o loop de prédio só toca a até `raio` (600 px) do centro do prédio.
 - PENDENTE com o Marco: ouvir os 186 sons e pedir refazer os ruins; ajustar db/intervalo/raio no `slots.json`; a música (abertura e intro) à parte; push.
 
 ## Bloco 114 — SISTEMAS DE SOM (feito; commit local, sem push)
 
 Pedido "Prompt 6". Plano aprovado ("pode": bus UI sem bus de voz, voz ligada por padrão, nomes da lista). Relatório `docs/BLOCO114_SOM.md`; lista dos
-arquivos de som `docs/AUDIO_ARQUIVOS.md` (`python tools/lista_audio.py`); teste `b114_audio_sistemas` (116 OK, registrado no GUT). NENHUM áudio criado:
+arquivos de som `docs/audio/PEDIDO_DE_SONS.md` (`python tools/elevenlabs/docs_audio.py`); teste `b114_audio_sistemas` (116 OK, registrado no GUT). NENHUM áudio criado:
 os sons são gerados pelo Marco no ElevenLabs (plano Creator, 131 mil créditos) e postos em `project.godot/assets/audio/<pasta>/<nome>` com o nome da lista.
 - Catálogo `data/audio/slots.json` (55 slots, 73 arquivos): `audio_slots.gd` acha `<id>.ogg|wav|mp3` (+ `_0.._N`); sem arquivo = mudo ou a RESERVA (o som de
   antes). Ambiência por andar (s2 a s5 pelo `env.level_at`), floresta dia/noite, camadas de chuva e vento no inverno, eco do S5 (reverb no bus Ambience);

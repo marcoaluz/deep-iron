@@ -3,7 +3,7 @@
 Data: 2026-10-10. Branch `isometrico`. Pedido: "Prompt 6", som, ambiência e sons dos prédios. O plano foi APROVADO pelo Marco ("pode") com:
 - bus novo **UI**, sem bus separado só pra voz (a voz sai no SFX e uma caixa liga e desliga);
 - voz **ligada** por padrão (sem arquivo, não toca nada);
-- os nomes dos arquivos são os da lista `docs/AUDIO_ARQUIVOS.md`; **o Marco gera os sons no ElevenLabs** (plano Creator) e põe nas pastas.
+- os nomes dos arquivos são os da lista `docs/audio/PEDIDO_DE_SONS.md`; **o Marco gera os sons no ElevenLabs** (plano Creator) e põe nas pastas.
 
 E um pedido a mais: a **música da introdução e da abertura** do jogo, que estava pendente. Como este bloco **não cria áudio** (regra do prompt e
 "sem criar som agora"), ela entrou como **dois slots prontos** (`musica/abertura` no menu, `musica/intro` na introdução) + o sistema de temas.
@@ -17,8 +17,8 @@ O arquivo de cada um é só gerar e pôr na pasta.
 Cada som é um **slot com nome fixo** em `data/audio/slots.json` (55 slots, 73 arquivos esperados). O jogo procura
 `assets/audio/<id>.ogg|wav|mp3` (e `<id>_0`, `<id>_1`... nos slots com variações). **Sem arquivo o slot fica mudo** (sem erro) ou, onde já havia
 um som, toca o de antes (a *reserva*): assim nada do jogo atual muda até os arquivos novos chegarem. O loop é forçado por código (o import não
-precisa marcar). A lista completa, com onde cada um toca, a duração esperada, o bus e o dB, é `docs/AUDIO_ARQUIVOS.md`
-(gerada por `python tools/lista_audio.py`; mostra também quais já existem). `.ogg` e `.mp3` já estão no Git LFS.
+precisa marcar). A lista completa, com onde cada um toca, a duração esperada, o bus e o dB, é `docs/audio/PEDIDO_DE_SONS.md`
+(gerada por `python tools/elevenlabs/docs_audio.py`; mostra também quais já existem). `.ogg` e `.mp3` já estão no Git LFS.
 
 ## 2) O que entrou
 
@@ -43,9 +43,9 @@ precisa marcar). A lista completa, com onde cada um toca, a duração esperada, 
 
 ## 4) Pra pôr os arquivos (pro Marco)
 
-1. Gere cada som no ElevenLabs e salve com o **nome exato** de `docs/AUDIO_ARQUIVOS.md`, em `project.godot/assets/audio/<pasta>/` (`ambiencia/`, `predios/`, `stingers/`, `ui/`, `passos/`, `voz/`, `musica/`, `intro/`).
+1. Gere cada som no ElevenLabs e salve com o **nome exato** de `docs/audio/PEDIDO_DE_SONS.md`, em `project.godot/assets/audio/<pasta>/` (`ambiencia/`, `predios/`, `stingers/`, `ui/`, `passos/`, `voz/`, `musica/`, `intro/`).
 2. Rode `godot --headless --path project.godot --import` (ou abra o editor uma vez).
-3. `python tools/lista_audio.py` atualiza a lista com o que já tem.
+3. `python tools/elevenlabs/docs_audio.py` atualiza a lista com o que já tem.
 4. Loops: o começo e o fim têm que emendar. Posicionais (prédios, passos, voz): mono. Normalizar em torno de −16 LUFS, pico abaixo de −1 dB.
 
 ## 5) Testes rodados (um por vez, em primeiro plano, APPDATA isolado; o save real conferido por md5)

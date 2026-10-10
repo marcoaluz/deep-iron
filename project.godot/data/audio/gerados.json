@@ -1,0 +1,960 @@
+{
+ "arquivos": {
+  "ambiencia/chuva": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "72e1688a4ee6ec87"
+  },
+  "ambiencia/floresta_dia": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "65e176ec7cc0da1e"
+  },
+  "ambiencia/floresta_noite": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "75ce6394f2a08c05"
+  },
+  "ambiencia/mina": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "4cee301de49b6721"
+  },
+  "ambiencia/onda_solar": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "6e97d620dc307523"
+  },
+  "ambiencia/s2_acido": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "397af10f284a7826"
+  },
+  "ambiencia/s3_lava": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "58c27d5dea5c8f54"
+  },
+  "ambiencia/s4_cachoeira": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "d4574205fe198edd"
+  },
+  "ambiencia/s5_lago": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "4955cd11306a42de"
+  },
+  "ambiencia/vento_inverno": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "af4769731795322e"
+  },
+  "animais/coelho_foge_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f9046d489acea79b"
+  },
+  "animais/coelho_foge_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f9046d489acea79b"
+  },
+  "animais/coelho_foge_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f9046d489acea79b"
+  },
+  "animais/coelho_morre": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "566d59f624119eb8"
+  },
+  "animais/javali_grunhido_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "285c00c64d1c32fc"
+  },
+  "animais/javali_grunhido_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "285c00c64d1c32fc"
+  },
+  "animais/javali_morre": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "b46e050dd330b061"
+  },
+  "criaturas/gosma_ataque_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "659d8c9df8398c79"
+  },
+  "criaturas/gosma_ataque_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "659d8c9df8398c79"
+  },
+  "criaturas/magmante_ataque_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "573844eacd00f0a0"
+  },
+  "criaturas/magmante_ataque_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "573844eacd00f0a0"
+  },
+  "criaturas/matriarca_ataque_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "26a70f0aa4fce9ef"
+  },
+  "criaturas/matriarca_ataque_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "26a70f0aa4fce9ef"
+  },
+  "intro/caravana": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "eae717fbe6467e22"
+  },
+  "intro/explosao": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "6fdd3ec4763ba70a"
+  },
+  "intro/fogo": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "7641d3ca59648e2b"
+  },
+  "intro/mina": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "be970a1a4299f871"
+  },
+  "intro/pedreira": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "3d32832dbae59e86"
+  },
+  "intro/titulo": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "768f1fecb9b49cce"
+  },
+  "intro/vento": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "dc4a6d3466f9cc30"
+  },
+  "maquinas/consertada": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "c9864bab5daff933"
+  },
+  "maquinas/quebrou": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "603730e4de764e2e"
+  },
+  "passos/agua_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "bcbf3b96d0a450c9"
+  },
+  "passos/agua_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "bcbf3b96d0a450c9"
+  },
+  "passos/agua_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "bcbf3b96d0a450c9"
+  },
+  "passos/cascalho_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "aa4af01ff4799370"
+  },
+  "passos/cascalho_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "aa4af01ff4799370"
+  },
+  "passos/cascalho_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "aa4af01ff4799370"
+  },
+  "passos/madeira_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "3624935c2eba874b"
+  },
+  "passos/madeira_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "3624935c2eba874b"
+  },
+  "passos/madeira_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "3624935c2eba874b"
+  },
+  "passos/pedra_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "5b27551bdbb49394"
+  },
+  "passos/pedra_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "5b27551bdbb49394"
+  },
+  "passos/pedra_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "5b27551bdbb49394"
+  },
+  "passos/terra_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ff049fd7b000800a"
+  },
+  "passos/terra_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ff049fd7b000800a"
+  },
+  "passos/terra_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ff049fd7b000800a"
+  },
+  "perigo/geiger_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "64ea986862f3ad8a"
+  },
+  "perigo/geiger_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "64ea986862f3ad8a"
+  },
+  "perigo/geiger_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "64ea986862f3ad8a"
+  },
+  "perigo/geiger_3": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "64ea986862f3ad8a"
+  },
+  "pontuais/acido_borbulha_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f048ea92a9c8a873"
+  },
+  "pontuais/acido_borbulha_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f048ea92a9c8a873"
+  },
+  "pontuais/acido_borbulha_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f048ea92a9c8a873"
+  },
+  "pontuais/coruja_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ad128fdb35630af8"
+  },
+  "pontuais/coruja_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ad128fdb35630af8"
+  },
+  "pontuais/corvo_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "901974992775f44f"
+  },
+  "pontuais/corvo_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "901974992775f44f"
+  },
+  "pontuais/gota_eco_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "9717f55741f91bab"
+  },
+  "pontuais/gota_eco_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "9717f55741f91bab"
+  },
+  "pontuais/gota_eco_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "9717f55741f91bab"
+  },
+  "pontuais/gotejar_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "90f5a36993e465cb"
+  },
+  "pontuais/gotejar_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "90f5a36993e465cb"
+  },
+  "pontuais/gotejar_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "90f5a36993e465cb"
+  },
+  "pontuais/lava_estalo_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "1ec2af220eafecc4"
+  },
+  "pontuais/lava_estalo_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "1ec2af220eafecc4"
+  },
+  "pontuais/lava_estalo_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "1ec2af220eafecc4"
+  },
+  "pontuais/lobo_uivo_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "b4fae41837c9c3c6"
+  },
+  "pontuais/lobo_uivo_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "b4fae41837c9c3c6"
+  },
+  "pontuais/passaro_canto_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f646bc9c26ec8379"
+  },
+  "pontuais/passaro_canto_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f646bc9c26ec8379"
+  },
+  "pontuais/passaro_canto_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f646bc9c26ec8379"
+  },
+  "pontuais/passaro_canto_3": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f646bc9c26ec8379"
+  },
+  "pontuais/pedra_cai_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "16e374603adc59f7"
+  },
+  "pontuais/pedra_cai_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "16e374603adc59f7"
+  },
+  "pontuais/pedra_cai_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "16e374603adc59f7"
+  },
+  "pontuais/sapo_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "d868927dda2c1166"
+  },
+  "pontuais/sapo_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "d868927dda2c1166"
+  },
+  "pontuais/trovao_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "11460b6029a9a1d8"
+  },
+  "pontuais/trovao_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "11460b6029a9a1d8"
+  },
+  "pontuais/trovao_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "11460b6029a9a1d8"
+  },
+  "pontuais/vento_rajada_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ac2e91f14d14ea9c"
+  },
+  "pontuais/vento_rajada_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ac2e91f14d14ea9c"
+  },
+  "predios/arsenal": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "7424598763ab4950"
+  },
+  "predios/carpintaria": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "7c794eb05ac5f442"
+  },
+  "predios/cemiterio": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "d17aa7fd65f41331"
+  },
+  "predios/coletor_madeira": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "04b906167d41cca6"
+  },
+  "predios/coletor_minerio": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "eb573da175e9ead2"
+  },
+  "predios/conversa": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "d7b9f551545ee285"
+  },
+  "predios/cozinha": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "57e8f3f30d040aa6"
+  },
+  "predios/escavadeira": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "a1ac950ca64680a6"
+  },
+  "predios/escola": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "117672f525891262"
+  },
+  "predios/fornalha": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "5eeaf49d4b0a5948"
+  },
+  "predios/laboratorio": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "30e8ff75ed6d0912"
+  },
+  "predios/oficina": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "8913dc3b24005e45"
+  },
+  "predios/poca_perigo": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "37fa5507e8034cc6"
+  },
+  "predios/sino_funeral": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "2f76b18423bc6e4b"
+  },
+  "predios/sino_missa": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "4cd63e97ba755ebd"
+  },
+  "predios/taverna": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "7f78d409b5af6bc0"
+  },
+  "predios/tocha": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "4bad78f60d5f19c4"
+  },
+  "predios/vagonete": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "9179e92668a218d3"
+  },
+  "predios/ventilador": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "a364f4406b2e0956"
+  },
+  "sfx/achado": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "098fd103f72f727c"
+  },
+  "sfx/alarme_invasao": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "07621a584e17b886"
+  },
+  "sfx/boas_vindas": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "39949d7826765d7a"
+  },
+  "sfx/brinde": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ce5de72c3ca83a5e"
+  },
+  "sfx/broca": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f142425de7e696b1"
+  },
+  "sfx/colher_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "c68366a7cbd8471c"
+  },
+  "sfx/colher_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "c68366a7cbd8471c"
+  },
+  "sfx/colher_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "c68366a7cbd8471c"
+  },
+  "sfx/comer_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "04cab6f9b1a1172b"
+  },
+  "sfx/comer_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "04cab6f9b1a1172b"
+  },
+  "sfx/comer_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "04cab6f9b1a1172b"
+  },
+  "sfx/criatura_cai": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "2082c6849e0e109a"
+  },
+  "sfx/curar": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "493a13e717ff26bb"
+  },
+  "sfx/deposito_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "7a1def619128f0cf"
+  },
+  "sfx/deposito_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "7a1def619128f0cf"
+  },
+  "sfx/deposito_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "7a1def619128f0cf"
+  },
+  "sfx/elevador": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ee9f4a791e756ac8"
+  },
+  "sfx/equipar": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "906d60b64bc5f7d2"
+  },
+  "sfx/explosao": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "c4feef2dfb2e96c4"
+  },
+  "sfx/fanfarra": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "8a30fb15a1609581"
+  },
+  "sfx/ferido": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f9cf8b04c5da2fc7"
+  },
+  "sfx/ferrugento_golpe_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "01933cba30de6050"
+  },
+  "sfx/ferrugento_golpe_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "01933cba30de6050"
+  },
+  "sfx/festa": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "db6ebb99a0f79278"
+  },
+  "sfx/forja": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "a0995e9249948e7f"
+  },
+  "sfx/galho": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ae0c0b21aceafcdc"
+  },
+  "sfx/golpe_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "5df1bf30cc696fae"
+  },
+  "sfx/golpe_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "5df1bf30cc696fae"
+  },
+  "sfx/greve": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "0e6bd9ecc7a6daae"
+  },
+  "sfx/lumivoro_grito_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "406e29261995f45e"
+  },
+  "sfx/lumivoro_grito_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "406e29261995f45e"
+  },
+  "sfx/machadada_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "5eb1831988d1ecb0"
+  },
+  "sfx/machadada_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "5eb1831988d1ecb0"
+  },
+  "sfx/machadada_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "5eb1831988d1ecb0"
+  },
+  "sfx/martelo_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "2185d428ea03d866"
+  },
+  "sfx/martelo_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "2185d428ea03d866"
+  },
+  "sfx/martelo_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "2185d428ea03d866"
+  },
+  "sfx/migrantes_chegando": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "b722a4db6774114f"
+  },
+  "sfx/minerio_esgotado": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "bbd6a10cb64752fa"
+  },
+  "sfx/obra_pronta": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "c8183b21ef66c0e0"
+  },
+  "sfx/picareta_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ba5ae2ca8aaef712"
+  },
+  "sfx/picareta_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ba5ae2ca8aaef712"
+  },
+  "sfx/picareta_2": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ba5ae2ca8aaef712"
+  },
+  "sfx/portao_abre": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "2573f1690263683c"
+  },
+  "sfx/portao_fecha": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "7570c0650a83f3af"
+  },
+  "sfx/portao_quebra": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "eb24f81b904aa934"
+  },
+  "sfx/robo": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "a7999aafdc8f690d"
+  },
+  "sfx/sino_funebre": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "130737d37446a1fe"
+  },
+  "sfx/solar": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "0a304f8190ba9aa7"
+  },
+  "sfx/vender": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "d0062fb3710cee65"
+  },
+  "stingers/amanhecer": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "98f0a3d3e1369a61"
+  },
+  "stingers/derrota": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "bd6e78b4f20b12da"
+  },
+  "stingers/estagio_novo": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ab6c3eb5aacd905f"
+  },
+  "stingers/missao_cumprida": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "77114922732b7ca2"
+  },
+  "stingers/morte": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "bd54b76757452e2b"
+  },
+  "stingers/onda_solar": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "8640279da7cdafac"
+  },
+  "stingers/pesquisa_pronta": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "d32c2448db80b668"
+  },
+  "stingers/vitoria": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f1901b4652e158c8"
+  },
+  "ui/abrir_janela": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "927679c6d15c977e"
+  },
+  "ui/clique": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "ee43ddfec5b2ff5a"
+  },
+  "ui/confirmar": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "c614f32f1fe1af0f"
+  },
+  "ui/erro": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "4f0cc564fdda0b46"
+  },
+  "ui/fechar_janela": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "31c8312e942ba017"
+  },
+  "ui/noticia_boa": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "0d374f0ac6efd342"
+  },
+  "ui/noticia_ruim": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "3d7df0ea627c6a20"
+  },
+  "vida/bebe_nasce_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "a8b196b93059d385"
+  },
+  "vida/bebe_nasce_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "a8b196b93059d385"
+  },
+  "vida/casamento": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "87b21d56d7f27210"
+  },
+  "vida/enterro": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "eabaf8efd6a58b03"
+  },
+  "voz/homem_alegria_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "631a203605756d3a"
+  },
+  "voz/homem_alegria_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "631a203605756d3a"
+  },
+  "voz/homem_cansaco_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f7463a354cde25c6"
+  },
+  "voz/homem_cansaco_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "f7463a354cde25c6"
+  },
+  "voz/homem_dor_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "aa3e02c2aa7f0da1"
+  },
+  "voz/homem_dor_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "aa3e02c2aa7f0da1"
+  },
+  "voz/homem_ola_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "84fc466036bd4166"
+  },
+  "voz/homem_ola_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "84fc466036bd4166"
+  },
+  "voz/homem_ordem_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "148a1c69daefda0d"
+  },
+  "voz/homem_ordem_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "148a1c69daefda0d"
+  },
+  "voz/mulher_alegria_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "8c0f5f5a44841374"
+  },
+  "voz/mulher_alegria_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "8c0f5f5a44841374"
+  },
+  "voz/mulher_cansaco_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "4041b1ca591255b7"
+  },
+  "voz/mulher_cansaco_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "4041b1ca591255b7"
+  },
+  "voz/mulher_dor_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "978e9403ead7b846"
+  },
+  "voz/mulher_dor_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "978e9403ead7b846"
+  },
+  "voz/mulher_ola_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "9f4eea13bb687830"
+  },
+  "voz/mulher_ola_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "9f4eea13bb687830"
+  },
+  "voz/mulher_ordem_0": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "3932f8fc7123fb4f"
+  },
+  "voz/mulher_ordem_1": {
+   "aprovado": true,
+   "gerado_em": "2026-10-10",
+   "hash": "3932f8fc7123fb4f"
+  }
+ },
+ "versao": 1
+}

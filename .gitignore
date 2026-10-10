@@ -31,3 +31,6 @@ fake_appdata*/
 .env
 .env.*
 !.env.example
+
+# Bloco 116: candidatas de som e o cache das chamadas à API (tools/elevenlabs/gerar_sons.py)
+audio_candidatos/
