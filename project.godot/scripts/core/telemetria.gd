@@ -15,7 +15,8 @@ const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre"
 	"compartimentos_cheios", "esperando_espaco",
 	"hortas", "estufas", "colhido_horta", "colhido_estufa", "carvao_vegetal_feito", "couro_curtido_feito", "prato", "racoes",
 	"pol_jornada", "pol_racao", "pol_seguranca", "pol_migracao", "trocas_politica", "fraqueza", "comida_servida_dia", "acidentes_dia",  # Bloco 108 (servida/acidentes: desde a última linha)
-	"ociosos_expediente", "na_secundaria", "mortes_bobas", "caronas"]  # Bloco 109 (ociosos: média no expediente do dia; bobas/caronas: da sessão)  # Bloco 107 (os "feito/colhido": total da partida)  # Bloco 106: os compartimentos cheios em todos os armazéns (separados por "+") e quantos esperam espaço agora  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
+	"ociosos_expediente", "na_secundaria", "mortes_bobas", "caronas",
+	"amizades", "casais", "casamentos"]  # Bloco 110  # Bloco 109 (ociosos: média no expediente do dia; bobas/caronas: da sessão)  # Bloco 107 (os "feito/colhido": total da partida)  # Bloco 106: os compartimentos cheios em todos os armazéns (separados por "+") e quantos esperam espaço agora  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
 
 var arquivo := ""
 var _t0 := 0
@@ -223,6 +224,9 @@ func registra() -> void:
 		int(carv), int(curt), coz.prato if coz else "", int(eco6.quantidade("racao")) if eco6 else 0])
 	v.append_array(politicas_do_dia())  # Bloco 108
 	v.append_array(ia_do_dia())  # Bloco 109
+	var rel := _g("relacoes")  # Bloco 110
+	var cont: Dictionary = rel.contagem() if rel else {}
+	v.append_array([int(cont.get("amizades", 0)), int(cont.get("casais", 0)), int(cont.get("casamentos", 0))])
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return

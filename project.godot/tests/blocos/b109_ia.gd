@@ -139,8 +139,10 @@ func roda() -> void:
 		bicho.global_position = (jaz as Node2D).global_position + Vector2(30, 0)
 		var c_perigo: float = min1._custo_estacao(jaz, "minerios")
 		check(c_perigo > c_sobra + 200.0, "criatura perto da estação = perigo (%.0f x %.0f)" % [c_perigo, c_sobra])
+		var p0: Vector2 = min1.global_position
 		bicho.queue_free()
 		await process_frame
+		min1.global_position = p0  # (ele está sem função e passeia: a distância mudaria entre os quadros)
 		check(perto(min1._custo_estacao(jaz, "minerios"), c_sobra, 1.0), "sem a criatura, volta ao custo de antes")
 
 	print("-- (B) função secundária")

@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1101 valores** em 4 pastas de scripts (80 trocados por alguma cena).
+Total: **1141 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (79)
 
@@ -1039,6 +1039,78 @@ Total: **1101 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 |---|---|---|---|
 | `seletiva_intervalo` | 1.5 |  | Seletiva: multiplica o intervalo entre grupos... |
 | `seletiva_prazo` | 2.0 |  | ...e o prazo de quem espera no portão (mais tempo pra avaliar). |
+
+## `scripts/core/relacoes.gd` (40)
+
+**Traços (Bloco 110)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `chance_segundo_traco` | 0.5 |  | Chance (0..1) de nascer com um 2º traço. |
+| `valente_medo` | 0.5 |  | Valente: multiplica o "medo das criaturas na vila" (0,5 = metade). |
+| `guloso_fome` | 1.15 |  | Guloso: multiplica a queda da fome. |
+| `devoto_missa` | 1.5 |  | Devoto: multiplica o ânimo da missa e os pontos de relação na igreja. |
+| `preguicoso_producao` | 0.92 |  | Preguiçoso / trabalhador / cuidadoso: multiplicam a produção / a produção / a chance de acidente de trabalho. |
+| `trabalhador_producao` | 1.08 |  |  |
+| `cuidadoso_acidente` | 0.7 |  |  |
+| `sociavel_pontos` | 1.3 |  | Sociável / reservado: multiplicam os pontos de relação e o ânimo da conversa. |
+| `reservado_pontos` | 0.7 |  |  |
+| `reservado_animo` | 2.0 |  | Reservado: ânimo a mais por gostar do sossego. |
+| `reacao_forte` | 1.5 |  | Reação às Políticas da Vila (multiplica o efeito no ânimo): preguiçoso na jornada (estendida pesa mais, reduzida alegra mais), trabalhador na estendida, guloso na ração reduzida. |
+| `reacao_fraca` | 0.5 |  |  |
+
+**Habilidade por função (Bloco 110)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `habilidade_ganho` | 0.0006 |  | Habilidade (0..1) ganha por segundo trabalhando na função. Medido (bench_relacoes): com 0,0015 o melhor chegava a 100% no 3º dia; 0,0006 = 100% em ~7 dias de trabalho na mesma função. |
+| `habilidade_bonus` | 0.15 |  | Na habilidade máxima, a produção daquela função rende isto a mais (0,15 = +15%). |
+
+**Relações: pontos (Bloco 110)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `pontos_conversa` | 1.5 |  | Pontos por conversa na roda da hora social (a cada balão olhando pro outro). (Medido no Bloco 110: com 1,0 e os limiares 70/110/150, em 12 dias nenhum par passou de "amigo".) |
+| `mult_festa` | 2.0 |  | Multiplicam a conversa: com festa/festival rolando, e na igreja (missa, aconselhamento). |
+| `mult_missa` | 1.5 |  |  |
+| `pontos_trabalho` | 0.3 |  | Pontos por TRABALHAR LADO A LADO (a cada conferência, quem trabalha a até lado_a_lado px do outro). |
+| `lado_a_lado` | 70.0 |  |  |
+| `confere_trabalho` | 5.0 |  | Segundos entre as conferências do trabalho lado a lado. |
+| `afinidade_igual` | 1.2 |  | Afinidade: o mesmo traço nos dois multiplica por isto; traços opostos (OPOSTOS), por afinidade_oposta. |
+| `afinidade_oposta` | 0.7 |  |  |
+
+**Relações: níveis (Bloco 110)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `limiares` | [5.0, 30.0, 60.0, 80.0, 100.0] |  | Pontos de cada nível: conhecido, amigo, próximo, interesse, casal. |
+| `puxa_parceiro` | 25.0 |  | A roda da hora social puxa quem tem gente querida nela (somado na nota do ponto social): o parceiro, quem está em "próximo"/"interesse" e os amigos. Assim quem gosta se junta e o par forte acelera sozinho (o jogador não escolhe). |
+| `puxa_proximo` | 8.0 |  |  |
+| `puxa_amigo` | 4.0 |  |  |
+
+**Relações: efeitos (Bloco 110)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `animo_por_amigo` | 1.0 |  | Ânimo por amigo (nível amigo ou mais), até amigos_max amigos. |
+| `amigos_max` | 4 |  |  |
+| `conversa_amigo_mult` | 1.5 |  | A conversa com um amigo anima x isto. |
+| `animo_casal` | 3.0 |  | Ânimo de ter um parceiro, e a mais quando estão perto (até perto_parceiro px). |
+| `animo_juntos` | 3.0 |  |  |
+| `perto_parceiro` | 100.0 |  |  |
+| `luto_amigo` | 10.0 |  | Luto pessoal pela morte de um amigo / do parceiro (pontos no alvo) e segundos pra sumir. |
+| `luto_parceiro` | 25.0 |  |  |
+| `luto_tempo` | 900.0 |  |  |
+| `viuvez_dias` | 7 |  | Quem perdeu o parceiro não começa outro namoro por estes dias. |
+
+**Casamento (Bloco 110)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `casamento_dias` | 3 |  | Dias de casal até poderem casar (num domingo, na missa, com igreja e padre). |
+| `casamento_animo` | 3.0 |  | Ânimo da vila toda depois de um casamento e por quantos segundos. |
+| `casamento_tempo` | 540.0 |  |  |
+| `casamento_noivos` | 8.0 |  | Ânimo dos noivos (some devagar, como a festa). |
 
 ## `scripts/core/research.gd` (27)
 

@@ -749,6 +749,9 @@ func _build_janelas() -> void:
 	var exped := get_tree().get_first_node_in_group("expedicoes")
 	if exped:  # Bloco 104: as expedições (tecla ;)
 		_add_panel("expedicoes", preload("res://scripts/core/expedicoes_panel.gd"), exped)
+	var rel := get_tree().get_first_node_in_group("relacoes")
+	if rel:  # Bloco 110: a ficha do ipezinho (botão no cartão do selecionado; fora do menu Janelas)
+		_add_panel("ficha", preload("res://scripts/core/ficha_panel.gd"), rel)
 	var pol := get_tree().get_first_node_in_group("politicas")
 	if pol:  # Bloco 108: as políticas da vila (tecla F6; libera no Vilarejo)
 		_add_panel("politicas", preload("res://scripts/core/politicas_panel.gd"), pol)
@@ -1740,6 +1743,7 @@ var _portrait_info: Label
 ## Bloco 109: a função secundária do selecionado (botão que troca: automática, nenhuma, minerador, lenhador...).
 var _portrait_sec: Button
 var _portrait_sec_w: Node = null
+var _portrait_ficha: Button  # Bloco 110: abre a ficha (traços, habilidades, amigos, parceiro)
 var _portrait_job: Label
 var _portrait_doing: Label
 
@@ -1785,7 +1789,19 @@ func _monta_cartao_selecionado() -> void:
 	_portrait_sec.tooltip_text = "Função SECUNDÁRIA: o que ele faz no expediente quando a função dele não tem trabalho
 (o engenheiro sem obra, o ferreiro sem ordem...). Clique pra trocar."
 	_portrait_sec.pressed.connect(_troca_secundaria)
-	v.add_child(_portrait_sec)
+	var linha_botoes := HBoxContainer.new()
+	linha_botoes.add_theme_constant_override("separation", 4)
+	v.add_child(linha_botoes)
+	_portrait_sec.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	linha_botoes.add_child(_portrait_sec)
+	_portrait_ficha = _button("Ficha")
+	_portrait_ficha.add_theme_font_size_override("font_size", Tipo.DETALHE)
+	_portrait_ficha.tooltip_text = "Traços, habilidades, amigos e parceiro."
+	_portrait_ficha.pressed.connect(func():
+		Audio.click()
+		if _portrait_sec_w != null and is_instance_valid(_portrait_sec_w):
+			open_panel("ficha", _portrait_sec_w))
+	linha_botoes.add_child(_portrait_ficha)
 	_selection_caption = _label("", Tipo.CORPO, COLOR_TITLE)
 	v.add_child(_selection_caption)
 	_selection_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1812,6 +1828,7 @@ func _update_portrait(sel: Array) -> void:
 	_portrait_doing.visible = um
 	_portrait_info.visible = um
 	_portrait_sec.visible = um
+	_portrait_ficha.visible = um and _panels.has("ficha")
 	_selection_caption.visible = not um
 	if not um:
 		return

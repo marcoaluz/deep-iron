@@ -456,3 +456,7 @@ func test_b108_politicas() -> void:
 
 func test_b109_ia() -> void:
 	run_bloco("b109_ia.gd")
+
+
+func test_b110_relacoes() -> void:
+	run_bloco("b110_relacoes.gd")

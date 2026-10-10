@@ -108,6 +108,8 @@ func roda() -> void:
 	var mineiro: Node = w[0]
 	var cozinheiro: Node = w[1]
 	var guarda: Node = w[2]
+	for x in ws():
+		x.tracos = ["valente"]  # (Bloco 110: um traço que não mexe na reação às políticas — aqui o assunto é a política)
 
 	print("-- (A) o padrão é o jogo de antes")
 	check(pol != null and pol.is_in_group("modificadores"), "o nó Politicas existe e está no grupo dos modificadores")

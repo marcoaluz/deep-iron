@@ -363,6 +363,10 @@ ICONES = {
                 "molten metal into an ingot mould",
     "ferreiro": "game UI icon: a dark iron anvil with a smithing hammer resting on it",
     "padre": "game UI icon: a simple wooden cross with a narrow faded purple stole draped over its arms",
+    # Bloco 110 (relacionamentos): gerado com o ícone do ânimo e o do cozinheiro de referência; escolhidos c07 (coracao) e
+    # c13 do mesmo lote (coracao_partido: o luto pelo parceiro)
+    "coracao": "game UI icon: a small warm red heart, simple rounded heart shape with a soft highlight on the upper left, "
+               "slightly worn and muted like the rest of the colony's dusty palette",
 }
 ICONE_DIR = os.path.join(AQUI, "ui", "icones")
 ICONE_DEST = os.path.normpath(os.path.join(AQUI, "..", "..", "..", "assets", "game", "ui", "icones"))

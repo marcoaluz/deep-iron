@@ -91,6 +91,10 @@ extends Node
 ##   Bloco 16: ipezinho.gd injury_cause ("mina"/"galho") e _chopped_since_roll.
 ##   Bloco 90: decoracoes.gd "decoracoes" {pecas: [[id, x, y]]} — a lista própria da decoração do jogador (as
 ##     tochas do mapa sorteadas pela seed não entram). Save antigo: sem decoração.
+##   Bloco 110: "relacoes" {pares {"a|b" (nomes dos nós): {p, casal, casado, desde}}, pessoal {nome: {luto, viuvo_ate}},
+##     marcos [{id, title, text}] (as páginas do diário dos casais), casamentos, casamento_left}; o ipezinho ganha "tracos"
+##     [ids], "habilidade" {função: 0..1} e "animo_casamento". Save antigo: ninguém se conhece; os traços são sorteados na
+##     primeira vez que alguém pergunta (o ipezinho antigo ganha os dele); habilidade zero.
 ##   Bloco 109: o ipezinho ganha "funcao_secundaria" ("" automática pela função, "nenhuma", ou minerador/lenhador/caçador/
 ##     agricultor). Save antigo: automática. O abrigo da onda solar, a fuga e a carona não vão pro save (ele decide de novo).
 ##   Bloco 108: "politicas" {ativa {jornada, racao, seguranca, migracao}, espera {política: s de jogo até poder trocar},
@@ -575,6 +579,7 @@ func _collect() -> Dictionary:
 		"logistica": "logistica",  # Bloco 105: o contador de entregas do carregador (as em curso recomeçam)
 		"manutencao": "manutencao",  # Bloco 105: os consertos abertos, as preventivas, os consertos e as quebras
 		"politicas": "politicas",  # Bloco 108: as políticas da vila, as esperas e a fraqueza
+		"relacoes": "relacoes",  # Bloco 110: os pares (pontos, casal, casado), o luto pessoal, os marcos do diário
 		"missoes": "missoes",  # Bloco 100: a campanha (capítulo liberado, missões cumpridas, objetivos, contadores)
 	}
 	for key in singles:
@@ -725,6 +730,9 @@ func apply_pending(main: Node) -> void:
 	var logi := get_tree().get_first_node_in_group("logistica")  # Bloco 105 (save antigo: 0 entregas)
 	if logi:
 		logi.load_save_data(SaveUtil.dict(data, "logistica"))
+	var rel := get_tree().get_first_node_in_group("relacoes")  # Bloco 110 (save antigo: ninguém se conhece ainda)
+	if rel:
+		rel.load_save_data(SaveUtil.dict(data, "relacoes"))
 	var pol := get_tree().get_first_node_in_group("politicas")  # Bloco 108 (save antigo: tudo no padrão)
 	if pol:
 		pol.load_save_data(SaveUtil.dict(data, "politicas"))

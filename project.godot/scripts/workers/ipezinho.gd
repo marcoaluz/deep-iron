@@ -590,6 +590,12 @@ var _spot_i := -1
 var _social_t := 0.0
 var _conversando := false
 var _com_companhia := false
+var _com_amigo := false  # Bloco 110: a conversa de agora é com um amigo (anima mais)
+## Bloco 110: os TRAÇOS (1 ou 2; vazio = ainda não sorteou: sorteia na primeira pergunta — o save antigo também), a
+## HABILIDADE por função (0..1, sobe com a prática) e o ânimo do próprio casamento (some devagar).
+var tracos: Array = []
+var habilidade := {}
+var animo_casamento := 0.0
 var _passeio: Array[Vector2] = []
 var _balao_t := 0.0
 var _balao: Sprite2D = null
@@ -1045,6 +1051,10 @@ func _process(delta: float) -> void:
 	var was_starving := hunger <= 0.0
 	var sun := _sun()
 	var decay: float = hunger_decay * (sleep_hunger_mult if _resting else 1.0) * (sun.hunger_mult() if sun else 1.0)  # inverno: mais fome
+	var rel_f := _relacoes()
+	if rel_f:
+		decay *= rel_f.mult_fome(self)  # Bloco 110: o guloso
+		_pratica(rel_f, delta)
 	hunger = maxf(hunger - decay * delta, 0.0)
 	if int(hunger) != _last_hunger_int:
 		_update_hunger_label()
@@ -1205,7 +1215,7 @@ func _choose_state() -> String:
 	var def_inv := _defense()
 	if def_inv and (def_inv.invasion_active or (def_inv.has_method("aviso_dado") and def_inv.aviso_dado())) and not is_guard():
 		return "doctor" if is_doctor() and _has_infirmary() else "home"
-	if not is_guard() and not is_doctor() and _foge():
+	if not is_guard() and not is_doctor() and not _valente() and _foge():
 		return "home"
 	# Sem enfermaria na cena (fallback antigo): machucado descansa em casa.
 	if injured:
@@ -2003,6 +2013,12 @@ func _criatura_perto(pos: Vector2, raio: float) -> Node:
 	return null
 
 
+## Bloco 110: o valente não foge de criatura.
+func _valente() -> bool:
+	var rel := _relacoes()
+	return rel != null and rel.tem(self, "valente")
+
+
 ## Bloco 109: viu criatura perto: foge (e continua fugindo por fuga_tempo, pra não ir e voltar).
 func _foge() -> bool:
 	if _criatura_perto(global_position, fuga_raio) != null:
@@ -2364,6 +2380,11 @@ func happiness_factors() -> Array:
 		f.append(["conversou com os amigos", animo_social])  # Bloco 85
 	if animo_descoberta >= 0.5:
 		f.append(["fez uma descoberta", animo_descoberta])  # Bloco 103
+	var rel_a := _relacoes()
+	if rel_a:
+		f.append_array(rel_a.fatores_animo(self))  # Bloco 110: amigos, parceiro, luto pessoal, traços
+	if animo_casamento >= 0.5:
+		f.append(["casou", animo_casamento])  # Bloco 110
 	if animo_prato >= 0.5:
 		f.append(["comeu um ensopado", animo_prato])  # Bloco 107
 	if animo_fe >= 0.5:
@@ -2401,6 +2422,38 @@ func happiness_label() -> String:
 
 func _happiness_work_mult() -> float:
 	return [miserable_work_mult, sad_work_mult, 1.0, happy_work_mult][happiness_level()]
+
+
+# ------------------------------------------------------------ casal (Bloco 110)
+## Muda pra casa do parceiro: larga a cama de agora e pega a livre mais perto da dele. true = mudou.
+func muda_pra_casa(casa: Node, slot_parceiro: int) -> bool:
+	if casa == null or not is_instance_valid(casa) or not casa.has_method("claim_specific_bed"):
+		return false
+	var perto := -1
+	var bd := INF
+	var alvo: Vector2 = casa.get_slot_position(slot_parceiro) if slot_parceiro >= 0 else (casa as Node2D).global_position
+	for i in casa.slot_count:
+		if casa.has_method("_slot_taken") and casa._slot_taken(i):
+			continue  # (cama de outro)
+		var d: float = casa.get_slot_position(i).distance_to(alvo)
+		if d < bd:
+			bd = d
+			perto = i
+	if perto < 0:
+		return false
+	var antiga := _home
+	var antigo_slot := _home_slot
+	if antiga != null and is_instance_valid(antiga):
+		antiga.set_inside(self, false)
+		antiga.release_slot(self)
+	var bed: int = casa.claim_specific_bed(self, perto)
+	if bed < 0:
+		if antiga != null and is_instance_valid(antiga):
+			_home_slot = antiga.claim_specific_bed(self, antigo_slot)
+		return false
+	_home = casa
+	_home_slot = bed
+	return true
 
 
 # ------------------------------------------------------------ guarda / combate
@@ -3624,6 +3677,9 @@ func _roll_branch(chopped: float) -> void:
 		if _is_night():
 			chance *= night_chop_injury_mult
 		chance *= Modificadores.mult(get_tree(), "acidente", self)  # Bloco 108: a jornada e a fraqueza
+		var rel_g := _relacoes()
+		if rel_g:
+			chance *= rel_g.mult_acidente(self)  # Bloco 110: o cuidadoso
 		if randf() < chance:
 			acidentes_trabalho += 1
 			if _station and is_instance_valid(_station) and _station.has_method("drop_branch"):
@@ -3685,7 +3741,45 @@ func mood_label() -> String:
 
 ## Multiplicador da produção pela zanga e pela felicidade.
 func work_mult() -> float:
-	return [1.0, irritated_work_mult, furious_work_mult][_mood] * _happiness_work_mult() * _cold_mult() * _mult_refeicoes() 		* (Modificadores.mult(get_tree(), "producao", self) if is_inside_tree() else 1.0)  # Bloco 108: a jornada e a fraqueza
+	return [1.0, irritated_work_mult, furious_work_mult][_mood] * _happiness_work_mult() * _cold_mult() * _mult_refeicoes() \
+		* (Modificadores.mult(get_tree(), "producao", self) if is_inside_tree() else 1.0) \
+		* _mult_pessoal()  # Bloco 108: a jornada e a fraqueza; Bloco 110: os traços e a habilidade
+
+
+## Bloco 110: trabalhando (o golpe/a martelada de agora), a habilidade da função sobe; o casamento some devagar.
+func _pratica(rel: Node, delta: float) -> void:
+	if animo_casamento > 0.0:
+		animo_casamento = maxf(animo_casamento - rel.casamento_noivos / maxf(rel.casamento_tempo, 1.0) * delta, 0.0)
+	if _work_timer <= 0.0 or is_guard() or has_no_job() or not _ai_state in rel.ESTADOS_TRABALHO:
+		return
+	var f := funcao_atual()
+	habilidade[f] = minf(float(habilidade.get(f, 0.0)) + rel.habilidade_ganho * delta, 1.0)
+
+
+## Bloco 110: traços (preguiçoso/trabalhador) e a habilidade na função que ele está fazendo agora.
+func _mult_pessoal() -> float:
+	var rel := _relacoes()
+	if rel == null:
+		return 1.0
+	return rel.mult_producao(self) * (1.0 + rel.habilidade_bonus * float(habilidade.get(funcao_atual(), 0.0)))
+
+
+func _relacoes() -> Node:
+	return get_tree().get_first_node_in_group("relacoes") if is_inside_tree() else null
+
+
+## Bloco 110: a função que ele está fazendo agora (a secundária em curso ou a principal).
+func funcao_atual() -> String:
+	return secundaria() if _na_secundaria else job
+
+
+## Bloco 110: os traços (sorteia na primeira vez: ipezinho novo, migrante, save antigo).
+func tracos_de() -> Array:
+	if tracos.is_empty():
+		var rel := _relacoes()
+		if rel:
+			tracos = rel.sorteia_tracos()
+	return tracos
 
 
 ## Bloco 84: refeição perdida rende menos (Schedule.perda_por_refeicao cada, até perda_max).
@@ -4002,6 +4096,9 @@ func _worsen() -> void:
 func _die() -> void:
 	if not is_guard() and String(injury_cause) in CAUSAS_BOBAS:
 		mortes_bobas += 1  # Bloco 109: morte "boba" (quem não é guarda, por criatura ou radiação) — telemetria
+	var rel_x := _relacoes()
+	if rel_x:
+		rel_x.morreu(self)  # Bloco 110: o luto dos amigos e do parceiro
 	var inf := _closest_in_group("enfermarias")
 	if inf:
 		inf.record_death(self)  # o HUD mostra a faixa pelo sinal patient_died
@@ -4068,6 +4165,9 @@ func _roll_injury(mined: float) -> void:
 		if cat and cat.has_method("mult_acidente"):
 			leak *= cat.mult_acidente(global_position)  # Bloco 103: andar liberado sem reconhecimento
 		leak *= Modificadores.mult(get_tree(), "acidente", self)  # Bloco 108: a jornada e a fraqueza (políticas da vila)
+		var rel_m := _relacoes()
+		if rel_m:
+			leak *= rel_m.mult_acidente(self)  # Bloco 110: o cuidadoso
 		if randf() < injury_chance * [1.0, irritated_injury_mult, furious_injury_mult][_mood] * depth_danger() * leak:
 			acidentes_trabalho += 1
 			hurt()
@@ -4185,13 +4285,30 @@ func _escolhe_spot(so_ver := false) -> Node:
 			continue
 		var d: float = global_position.distance_to(sp.centro())
 		var gente: int = sp.ocupantes().size()
-		var nota := -d / 40.0 + (6.0 if gente > 0 else 0.0) + randf() * 6.0
+		var nota := -d / 40.0 + (6.0 if gente > 0 else 0.0) + randf() * 6.0 + _nota_social(sp)  # Bloco 110
 		if nota > melhor_nota:
 			melhor_nota = nota
 			melhor = sp
 	if melhor == null and not so_ver and _spot != null and is_instance_valid(_spot):
 		return _spot  # (sem outro: fica onde está)
 	return melhor
+
+
+## Bloco 110: o parceiro e os amigos puxam pra roda deles (sentam juntos).
+func _nota_social(sp: Node) -> float:
+	var rel := _relacoes()
+	if rel == null:
+		return 0.0
+	var n := 0.0
+	for o in sp.ocupantes():
+		var nv: int = rel.nivel(self, o)
+		if nv == 5:
+			n += rel.puxa_parceiro
+		elif nv >= 3:
+			n += rel.puxa_proximo
+		elif nv == 2:
+			n += rel.puxa_amigo
+	return n
 
 
 ## Vai pra um ponto social: reserva o lugar e monta o passeio (passa por outro ponto se o desvio for curto).
@@ -4308,20 +4425,28 @@ func _social_process(delta: float) -> void:
 			var mult := 2.0 if pd != null and pd.get_state() == "padre" else 1.0
 			anger = maxf(anger - cal.aconselhamento_por_segundo * mult * delta, 0.0)
 			if periodo_agenda() == "missa":
-				animo_fe = maxf(animo_fe, cal.missa_animo)
+				var rel_d := _relacoes()
+				animo_fe = maxf(animo_fe, cal.missa_animo * (rel_d.devoto_missa if rel_d and rel_d.tem(self, "devoto") else 1.0))  # Bloco 110
 	_balao_t -= delta
 	if _balao_t <= 0.0:
 		_balao_t = randf_range(s.balao_min, maxf(s.balao_max, s.balao_min))
 		var comp: Array = _spot.companheiros(self)
 		_com_companhia = not comp.is_empty()
+		_com_amigo = false
 		if _com_companhia:
 			var outro: Node2D = comp[randi() % comp.size()]
 			_facing = signf(outro.global_position.x - global_position.x) if absf(outro.global_position.x - global_position.x) > 1.0 else _facing
 			_mostra_balao(_assunto())
+			var rel_s := _relacoes()
+			if rel_s:  # Bloco 110: a conversa conta pra relação (e com amigo anima mais)
+				rel_s.conversou(self, outro, _spot.tipo == "igreja")
+				_com_amigo = rel_s.nivel(self, outro) >= 2
 		if _precisa_coberto() and not _spot.coberto:
 			_social_t = 0.0  # começou a chover: procura um lugar coberto
 	if _com_companhia:
-		animo_social = minf(animo_social + s.animo_por_segundo * _spot.animo_mult * delta, s.animo_max)
+		var rel_c := _relacoes()
+		var mult_amigo: float = rel_c.conversa_amigo_mult if rel_c and _com_amigo else 1.0  # Bloco 110: com amigo anima mais
+		animo_social = minf(animo_social + s.animo_por_segundo * _spot.animo_mult * mult_amigo * delta, s.animo_max)
 	if _social_t <= 0.0:
 		_social_vai()  # troca de ponto (o passeio passa por outro no caminho)
 
@@ -5755,6 +5880,7 @@ func get_save_data() -> Dictionary:
 		"look": look,
 		"combat_skill": combat_skill,
 		"funcao_secundaria": funcao_secundaria,  # Bloco 109
+		"tracos": tracos.duplicate(), "habilidade": habilidade.duplicate(), "animo_casamento": animo_casamento,  # Bloco 110
 		"weapon": weapon,
 		"weapon_durability": weapon_durability,
 		"broken_weapon": broken_weapon,
@@ -5846,6 +5972,13 @@ func load_save_data(d: Dictionary) -> void:
 		job = r if r in [ROLE_COOK, ROLE_LUMBER, ROLE_GUARD, ROLE_RESEARCH] else ROLE_MINER
 	var sec := SaveUtil.text(d, "funcao_secundaria", "")  # Bloco 109 (save antigo: automática pela função)
 	funcao_secundaria = sec if sec in SECUNDARIAS else ""
+	# Bloco 110 (save antigo: sem traços — sorteia na primeira pergunta —, sem habilidade)
+	tracos = SaveUtil.array(d, "tracos").filter(func(x): return x is String and x in load("res://scripts/core/relacoes.gd").TRACOS)
+	habilidade = {}
+	var hab := SaveUtil.dict(d, "habilidade")
+	for k in hab:
+		habilidade[String(k)] = clampf(float(hab[k]), 0.0, 1.0)
+	animo_casamento = maxf(SaveUtil.num(d, "animo_casamento", 0.0), 0.0)
 	combat_skill = clampf(SaveUtil.num(d, "combat_skill", 0.0), 0.0, 2.0)  # Bloco 108: acima de 1,0 = treinamento (cai sozinho fora dele)
 	# Bloco 35 (save antigo: o SaveManager já pôs a melhor arma forjada nos guardas)
 	var wpn := SaveUtil.text(d, "weapon", "")

@@ -99,7 +99,9 @@
   "estufa",
   "carvao_vegetal",
   "couro_curtido",
-  "racao"
+  "racao",
+  "coracao",
+  "coracao_partido"
  ],
  "predios": [
   "casa",

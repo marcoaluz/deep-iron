@@ -5,7 +5,17 @@ Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
-## AGORA (2026-10-10): Bloco 109 — IA (feito; commit local). FILA: Prompt R (b110), F (b111)
+## AGORA (2026-10-10): Bloco 110 — relacionamentos (feito; commit local). FILA: Prompt F (b111)
+
+Prompt R. Relatório `docs/BLOCO110_RELACOES.md`; medição `docs/telemetria/bloco110/` (`tests/bench_relacoes.gd`); fotos
+`docs/arte/bloco110/`.
+- `relacoes.gd` (traços, pares, níveis, casal, casamento na missa, luto pessoal, diário) + `ficha_panel.gd` (botão "Ficha" no
+  cartão) + habilidade por função no ipezinho. Os traços modulam as Políticas (`politicas._reacao`).
+- Arte: ícones coracao e coracao_partido (10 gerações, saldo 5.713).
+- Medido: 1º casal no dia ~14 (2º domingo); a habilidade em ~77% no dia 14. A queda de ânimo do dia 8 no banco é fome.
+- Pro Prompt F: `relacoes.adulto()` já pergunta `w.e_crianca()`; `sorteia_tracos()` pronto pra herança; casais em `parceiro_de`.
+
+## Bloco 109 — IA (feito; commit local)
 
 Prompt 8. Relatório `docs/BLOCO109_IA.md`; medição `docs/telemetria/bloco109/` (`tests/bench_ia.gd`); fotos `docs/arte/bloco109/`.
 - Estação por PONTUAÇÃO (`_custo_estacao`: distância, fila, quanto tem, o que falta no armazém, perigo). FUNÇÃO SECUNDÁRIA

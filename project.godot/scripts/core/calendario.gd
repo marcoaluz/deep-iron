@@ -360,6 +360,9 @@ func nome_festival(d: int) -> String:
 
 
 func nome_festival_hoje() -> String:
+	var rel := get_tree().get_first_node_in_group("relacoes")
+	if rel and rel.has_method("nome_festa_casamento") and rel.nome_festa_casamento() != "":
+		return rel.nome_festa_casamento()  # Bloco 110: o festival do domingo do casamento é a festa dos noivos
 	var dn := _dn()
 	return nome_festival(dn.day) if dn and e_dia_de_festival(dn.day) else "Festival"
 

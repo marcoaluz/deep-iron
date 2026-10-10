@@ -277,9 +277,12 @@ func fatores_animo(w: Node) -> Array:
 	return f
 
 
-## A reação de UMA pessoa ao efeito de uma política no ânimo. Hoje é o valor puro; o Prompt R (traços) modula aqui.
-func _reacao(_w: Node, _politica: String, valor: float) -> float:
-	return valor
+## A reação de UMA pessoa ao efeito de uma política no ânimo: os TRAÇOS dela modulam (Bloco 110, relacoes.reacao_politica).
+func _reacao(w: Node, politica: String, valor: float) -> float:
+	var rel := get_tree().get_first_node_in_group("relacoes") if is_inside_tree() else null
+	if rel == null or w == null:
+		return valor
+	return rel.reacao_politica(w, politica, opcao(politica), valor)
 
 
 ## O ânimo médio previsto se `politica` virar `nova` (a média de hoje + a diferença dos alvos).

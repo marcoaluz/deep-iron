@@ -1,0 +1,28 @@
+dia 1 | 69 s reais | amizades 0 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [17, 0, 0, 0, 0] | ânimo 70.3 | maior habilidade 15% | 12 ipezinhos
+      ânimo pra baixo (média): {  } | estação Primavera
+dia 2 | 67 s reais | amizades 0 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [35, 0, 0, 0, 0] | ânimo 73.2 | maior habilidade 30% | 12 ipezinhos
+      ânimo pra baixo (média): {  } | estação Primavera
+dia 3 | 67 s reais | amizades 3 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [43, 3, 0, 0, 0] | ânimo 73.9 | maior habilidade 43% | 12 ipezinhos
+      ânimo pra baixo (média): {  } | estação Primavera
+dia 4 | 67 s reais | amizades 8 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [41, 8, 0, 0, 0] | ânimo 74.5 | maior habilidade 43% | 12 ipezinhos
+      ânimo pra baixo (média): {  } | estação Primavera
+dia 5 | 67 s reais | amizades 11 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [40, 11, 0, 0, 0] | ânimo 74.9 | maior habilidade 43% | 12 ipezinhos
+      ânimo pra baixo (média): {  } | estação Primavera
+dia 6 | 67 s reais | amizades 14 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [40, 14, 0, 0, 0] | ânimo 75.1 | maior habilidade 44% | 12 ipezinhos
+      ânimo pra baixo (média): { "com fome": -0.8 } | estação Primavera
+dia 7 | 67 s reais | amizades 27 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [34, 25, 2, 0, 0] | ânimo 74.6 | maior habilidade 49% | 12 ipezinhos
+      ânimo pra baixo (média): { "com fome": -5.6, "passando fome": -5.0 } | estação Primavera
+dia 8 | 67 s reais | amizades 33 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [28, 28, 4, 1, 0] | ânimo 56.2 | maior habilidade 53% | 12 ipezinhos
+      ânimo pra baixo (média): { "com fome": -1.6, "passando fome": -22.5 } | estação Primavera
+dia 9 | 67 s reais | amizades 38 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [25, 31, 6, 1, 0] | ânimo 52.7 | maior habilidade 58% | 12 ipezinhos
+      ânimo pra baixo (média): { "com fome": -2.4, "passando fome": -22.5 } | estação Primavera
+dia 10 | 67 s reais | amizades 42 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [22, 33, 7, 2, 0] | ânimo 53.2 | maior habilidade 62% | 12 ipezinhos
+      ânimo pra baixo (média): { "passando fome": -25.0, "com fome": -1.6 } | estação Primavera
+dia 11 | 67 s reais | amizades 44 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [20, 27, 13, 4, 0] | ânimo 52.2 | maior habilidade 65% | 12 ipezinhos
+      ânimo pra baixo (média): { "passando fome": -25.0, "com fome": -0.8 } | estação Primavera
+dia 12 | 67 s reais | amizades 48 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [16, 27, 15, 6, 0] | ânimo 52.8 | maior habilidade 70% | 12 ipezinhos
+      ânimo pra baixo (média): { "passando fome": -22.5, "com fome": -1.6 } | estação Primavera
+dia 13 | 67 s reais | amizades 50 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [14, 26, 18, 6, 0] | ânimo 52.7 | maior habilidade 75% | 12 ipezinhos
+      ânimo pra baixo (média): { "passando fome": -25.0, "com fome": -1.6 } | estação Primavera
+dia 14 | 67 s reais | amizades 52 | casais 3 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [10, 23, 28, 1, 3] | ânimo 53.4 | maior habilidade 77% | 12 ipezinhos
+      ânimo pra baixo (média): { "passando fome": -25.0, "com fome": -0.8 } | estação Verão

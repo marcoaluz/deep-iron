@@ -1,0 +1,12 @@
+dia 1 | 68 s reais | amizades 0 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [12, 0, 0, 0, 0] | ânimo 70.8 | maior habilidade 15% | 12 ipezinhos
+dia 2 | 67 s reais | amizades 0 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [25, 0, 0, 0, 0] | ânimo 73.4 | maior habilidade 31% | 12 ipezinhos
+dia 3 | 67 s reais | amizades 2 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [32, 2, 0, 0, 0] | ânimo 73.9 | maior habilidade 44% | 12 ipezinhos
+dia 4 | 67 s reais | amizades 3 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [36, 3, 0, 0, 0] | ânimo 74.0 | maior habilidade 44% | 12 ipezinhos
+dia 5 | 67 s reais | amizades 5 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [40, 5, 0, 0, 0] | ânimo 74.3 | maior habilidade 44% | 12 ipezinhos
+dia 6 | 67 s reais | amizades 6 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [40, 6, 0, 0, 0] | ânimo 74.1 | maior habilidade 47% | 12 ipezinhos
+dia 7 | 67 s reais | amizades 13 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [44, 13, 0, 0, 0] | ânimo 70.4 | maior habilidade 51% | 12 ipezinhos
+dia 8 | 67 s reais | amizades 15 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [43, 15, 0, 0, 0] | ânimo 56.0 | maior habilidade 56% | 12 ipezinhos
+dia 9 | 67 s reais | amizades 17 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [41, 17, 0, 0, 0] | ânimo 53.4 | maior habilidade 61% | 12 ipezinhos
+dia 10 | 67 s reais | amizades 20 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [38, 20, 0, 0, 0] | ânimo 52.5 | maior habilidade 66% | 12 ipezinhos
+dia 11 | 67 s reais | amizades 26 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [34, 26, 0, 0, 0] | ânimo 54.1 | maior habilidade 71% | 12 ipezinhos
+dia 12 | 67 s reais | amizades 27 | casais 0 | casamentos 0 | pares por nível (conh/amigo/próx/interesse/casal) [33, 27, 0, 0, 0] | ânimo 55.1 | maior habilidade 75% | 12 ipezinhos
