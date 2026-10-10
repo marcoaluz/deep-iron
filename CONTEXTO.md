@@ -1,6 +1,6 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-10. Branch `isometrico`. Tudo até o Bloco 104 **foi enviado** pro GitHub (push com o OK do Marco); os Blocos 105 a 111 estão só no commit local. Push só com o OK dele.
+Atualizado em 2026-10-10. Branch `isometrico`. Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
@@ -15,7 +15,7 @@ modelo dia a dia que lê os @export); fotos `docs/arte/bloco111/`.
 - Arte: menino e menina (todas as animações + retratos), escola (obra 1–3 + pronto), ícone do bebê: 151 gerações, saldo 5.562.
 - Simulado: sem casa nova, 4 bebês e para (a cama é o freio); com 1 casa a cada 14 dias, 12 → 42 adultos em 3 anos; adulto aos
   56 dá fome no 3º ano (por isso 28).
-- Cuidado no commit: os 161 retratos " M" (aviso do LFS) são idênticos ao HEAD — commitar por caminho explícito.
+- Os 161 retratos que apareciam como " M" (aviso do LFS) foram resolvidos no commit a813b0fa do Marco (viraram ponteiros).
 - VALIDADO pelo Marco (2026-10-10): ritmo ok; política mexe no máximo de filhos (Incentivar 4, Desestimular 2: 46/33/17
   nascimentos em 3 anos); complicação no parto LIGADA (6%, x0,25 com médico: machucado grave, morre sem leito); arte ok.
 - Teste: o b85 agora mede o máximo da hora social (a foto de um instante falhava quando todos trocavam de roda).
