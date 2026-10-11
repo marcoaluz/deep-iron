@@ -1,0 +1,12 @@
+# Bloco 126: o EPÍLOGO da vitória (editável). Antes de [texto]: "chave = valor" (imagem = nome em assets/game/ui/ilustracoes/, titulo, subtitulo).
+# Depois de [texto]: os parágrafos, separados por uma linha em branco. Se este arquivo sumir, a tela usa o epílogo de data/missoes/capitulo_6.txt.
+imagem = escudo_vitoria
+titulo = A VILA ESTÁ A SALVO!
+subtitulo = O escudo solar acendeu sobre a mina. Pela primeira vez desde a explosão, o sol não é mais uma ameaça.
+
+[texto]
+Anos depois, a mina ainda sopra o mesmo vento quente, mas ninguém mais olha pra cima com medo. Nas casas há pão, no portão há guardas que dormem em turnos, e na praça um monumento pra quem desceu.
+
+Os filhos da vila aprendem na escola o nome de cada andar e o de cada pessoa que a gente enterrou. O escudo zumbe baixinho, de noite, como um bicho que cuida do sono de todos.
+
+Lá embaixo, a mina continua. A vila também.

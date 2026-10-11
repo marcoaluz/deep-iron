@@ -1,16 +1,51 @@
 extends CanvasLayer
-## Vitória: o escudo solar ficou pronto (criado pelo sun.gd). Pausa o jogo;
-## "Continuar jogando" volta pra partida (sem ondas solares daqui pra frente).
+## Vitória: o escudo solar ficou pronto (criado pelo sun.gd). Pausa o jogo. Bloco 126: o EPÍLOGO (data/epilogo/epilogo.txt, editável, com uma ilustração que
+## já existe), a tela de ESTATÍSTICAS completa (estatisticas.gd) e as duas saídas: "Continuar em modo infinito" (a vila segue com invasões e eventos, sem
+## vitória nova; sun.entra_modo_infinito) e "Voltar ao menu inicial" (salva).
 
 const Icones := preload("res://scripts/ui/icones.gd")
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const Tipo := preload("res://scripts/ui/tipografia.gd")
 const START_MENU := "res://scenes/ui/start_menu.tscn"
+const EPILOGO := "res://data/epilogo/epilogo.txt"
 const COLOR_TITLE := Color(0.6, 0.9, 1.0)
 const COLOR_TEXT := Color(0.92, 0.88, 0.8)
 const COLOR_DIM := Color(0.65, 0.6, 0.55)
 
 var _box: VBoxContainer
+var _altura_max := 640.0
+
+
+## O epílogo do arquivo: {imagem, titulo, subtitulo, paragrafos}. Arquivo ausente = {} (a tela usa o texto que o sun.gd mandar).
+static func carrega_epilogo() -> Dictionary:
+	if not FileAccess.file_exists(EPILOGO):
+		return {}
+	var out := {"imagem": "", "titulo": "", "subtitulo": "", "paragrafos": []}
+	var no_texto := false
+	var atual := ""
+	for linha in FileAccess.get_file_as_string(EPILOGO).split("
+"):
+		var l := linha.strip_edges()
+		if no_texto:
+			if l == "":
+				if atual != "":
+					out.paragrafos.append(atual)
+					atual = ""
+			else:
+				atual = l if atual == "" else atual + " " + l
+			continue
+		if l == "[texto]":
+			no_texto = true
+			continue
+		if l == "" or l.begins_with("#") or not "=" in l:
+			continue
+		var i := l.find("=")
+		var k := l.substr(0, i).strip_edges()
+		if out.has(k) and k != "paragrafos":
+			out[k] = l.substr(i + 1).strip_edges()
+	if atual != "":
+		out.paragrafos.append(atual)
+	return out
 
 
 func _ready() -> void:
@@ -25,6 +60,7 @@ func _ready() -> void:
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
+	_altura_max = clampf(get_viewport().get_visible_rect().size.y * 0.9, 320.0, 760.0)
 	var panel := PanelContainer.new()
 	var style: StyleBox = UiSkin.painel(18)  # Prompt 20: a pele nova
 	if not UiSkin.ok():
@@ -37,15 +73,22 @@ func _ready() -> void:
 		style = f
 	panel.add_theme_stylebox_override("panel", style)
 	center.add_child(panel)
+	var rolagem := ScrollContainer.new()  # (muita estatística: a tela rola, os botões ficam no fim)
+	rolagem.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	rolagem.custom_minimum_size = Vector2(540, 0)
+	panel.add_child(rolagem)
 	_box = VBoxContainer.new()
 	_box.add_theme_constant_override("separation", 10)
-	_box.custom_minimum_size = Vector2(460, 0)
-	panel.add_child(_box)
+	_box.custom_minimum_size = Vector2(520, 0)
+	_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rolagem.add_child(_box)
+	rolagem.custom_minimum_size.y = _altura_max
 	get_tree().paused = true
 
 
 func setup(stats: Dictionary) -> void:
-	var ilu := Icones.ilustracao("escudo_vitoria")
+	var ep := carrega_epilogo()
+	var ilu := Icones.ilustracao(String(ep.get("imagem", "escudo_vitoria")) if String(ep.get("imagem", "")) != "" else "escudo_vitoria")
 	if ilu:  # Prompt 24/26: a cena (2x, pixel inteiro)
 		var img := TextureRect.new()
 		img.texture = ilu
@@ -54,28 +97,39 @@ func setup(stats: Dictionary) -> void:
 		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		img.custom_minimum_size = ilu.get_size() * 2.0
 		_box.add_child(img)
-	_label("A VILA ESTÁ A SALVO!", Tipo.TELA, COLOR_TITLE)
-	var text := _label(
-		"O escudo solar acendeu sobre a mina. Pela primeira vez desde a explosão, o sol "
-		+ "não é mais uma ameaça. Os ipezinhos saem das casas pra olhar o céu azulado.", Tipo.TITULO, COLOR_TEXT)
-	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_label(String(ep.get("titulo", "")) if String(ep.get("titulo", "")) != "" else "A VILA ESTÁ A SALVO!", Tipo.TELA, COLOR_TITLE)
+	var sub := String(ep.get("subtitulo", ""))
+	if sub == "":
+		sub = "O escudo solar acendeu sobre a mina. Pela primeira vez desde a explosão, o sol não é mais uma ameaça. Os ipezinhos saem das casas pra olhar o céu azulado."
+	_label(sub, Tipo.TITULO, COLOR_TEXT).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label("Vitória no dia %d (%s)  •  %d ipezinhos" % [int(stats.get("day", 1)), str(stats.get("season", "")),
 		int(stats.get("workers", 0))], Tipo.DETALHE, COLOR_DIM)
-	var epilogo := String(stats.get("epilogo", ""))  # Bloco 122: o epílogo e as estatísticas da campanha
-	if epilogo != "":
+	var paragrafos: Array = ep.get("paragrafos", [])
+	if paragrafos.is_empty() and String(stats.get("epilogo", "")) != "":
+		paragrafos = [String(stats.get("epilogo", ""))]  # (Bloco 122: o epílogo de data/missoes/capitulo_6.txt)
+	if not paragrafos.is_empty():
 		_box.add_child(HSeparator.new())
-		var ep := _label(epilogo, Tipo.DETALHE, COLOR_TEXT)
-		ep.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		for t in paragrafos:
+			_label(String(t), Tipo.DETALHE, COLOR_TEXT).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var linhas: Array = stats.get("estatisticas", [])
 	if not linhas.is_empty():
 		_box.add_child(HSeparator.new())
-		_label("Estatísticas da vila", Tipo.DETALHE, COLOR_TITLE)
+		_label("Estatísticas da vila", Tipo.TITULO, COLOR_TITLE)
 		for l in linhas:
-			_label(String(l), Tipo.DETALHE, COLOR_DIM)
+			_label(String(l), Tipo.CORPO, COLOR_DIM).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_box.add_child(HSeparator.new())
-	_button("Continuar jogando", func():
-		get_tree().paused = false
-		queue_free())
+	if bool(stats.get("infinito", false)):
+		_label("Modo infinito ligado: a vila segue com invasões e eventos.", Tipo.DETALHE, COLOR_TITLE)
+		_button("Fechar", func():
+			get_tree().paused = false
+			queue_free())
+	else:
+		_button("Continuar em modo infinito", func():
+			var sol := get_tree().get_first_node_in_group("sun")
+			if sol and sol.has_method("entra_modo_infinito"):
+				sol.entra_modo_infinito()
+			get_tree().paused = false
+			queue_free())
 	_button("Voltar ao menu inicial", func():
 		SaveManager.save_game("vitória")
 		get_tree().paused = false

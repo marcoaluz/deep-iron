@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1306 valores** em 4 pastas de scripts (90 trocados por alguma cena).
+Total: **1307 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (97)
 
@@ -741,6 +741,14 @@ Total: **1306 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `repair_cost_mult` | 0.4 |  |  |
 | `repair_time_mult` | 0.5 |  |  |
 | `queue_max` | 6 |  |  |
+
+## `scripts/core/estatisticas.gd` (1)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `varre_a_cada` | 1.0 |  | De quanto em quanto tempo (s) procura ipezinhos novos. |
 
 ## `scripts/core/eventos.gd` (11)
 

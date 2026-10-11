@@ -72,6 +72,8 @@ var wave_left: float = 0.0
 var wave_intensity: float = 1.0
 var warned: bool = false
 var won: bool = false
+## Bloco 126: depois da vitória o jogador escolheu "Continuar em modo infinito" (os eventos e as invasões seguem; a vitória não se repete).
+var infinito: bool = false
 var _last_season: int = -1
 ## Dias por estação (Bloco 83: semanas_por_estacao x 7). Só leitura (o resto do jogo usa este nome).
 var days_per_season: int:
@@ -316,6 +318,17 @@ func win() -> void:
 	var ms := get_tree().get_first_node_in_group("missoes")  # Bloco 122: o capítulo 6 cumpre aqui (o jogo pausa logo depois)
 	if ms:
 		ms.confere()
+	mostra_vitoria()
+	victory.emit()
+
+
+## Bloco 126: a tela do epílogo e das estatísticas (na vitória e quando o jogador abre de novo pela janela do Sol).
+func mostra_vitoria() -> void:
+	if get_tree().get_first_node_in_group("victory_screen") != null:
+		return
+	var dn := _dn()
+	var ms := get_tree().get_first_node_in_group("missoes")
+	var est := get_tree().get_first_node_in_group("estatisticas")
 	var screen: CanvasLayer = VictoryScreen.new()
 	get_tree().root.add_child(screen)
 	screen.setup({
@@ -323,16 +336,21 @@ func win() -> void:
 		"workers": get_tree().get_nodes_in_group("ipezinhos").size(),
 		"season": season_name(),
 		"epilogo": ms.epilogo() if ms else "",
-		"estatisticas": ms.estatisticas() if ms else [],
+		"estatisticas": est.linhas() if est else (ms.estatisticas() if ms else []),
+		"infinito": infinito,
 	})
-	victory.emit()
+
+
+## O jogador escolheu seguir depois da vitória: o escudo continua aceso, mas a vila segue com invasões e eventos (sem vitória nova).
+func entra_modo_infinito() -> void:
+	infinito = true
 
 
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	var d := {
 		"wave_today": wave_today, "wave_at": wave_at, "wave_left": wave_left,
-		"wave_intensity": wave_intensity, "warned": warned, "won": won,
+		"wave_intensity": wave_intensity, "warned": warned, "won": won, "infinito": infinito,
 	}
 	var s := shield()
 	if s:
@@ -346,6 +364,7 @@ func load_save_data(d: Dictionary) -> void:
 	wave_left = clampf(SaveUtil.num(d, "wave_left", 0.0), 0.0, wave_duration)
 	wave_intensity = maxf(SaveUtil.num(d, "wave_intensity", 1.0), 1.0)
 	warned = SaveUtil.boolean(d, "warned", false)
+	infinito = SaveUtil.boolean(d, "infinito", false)  # Bloco 126
 	won = SaveUtil.boolean(d, "won", false)
 	_last_season = season_index()
 	var sd := SaveUtil.dict(d, "shield")

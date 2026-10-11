@@ -395,6 +395,9 @@ func throw_festa(mult: float = 1.0, titulo: String = "") -> bool:
 			"+%d de ânimo pra todo mundo agora, todos na praça, e mais alegria pelos próximos %d minutos." % [
 			roundi(festa_boost * mult), roundi(festa_duration / 60.0)])
 	Audio.party()  # Bloco 55
+	var est_126 := get_tree().get_first_node_in_group("estatisticas")  # Bloco 126: os festivais realizados
+	if est_126:
+		est_126.registra_festa()
 	return true
 
 

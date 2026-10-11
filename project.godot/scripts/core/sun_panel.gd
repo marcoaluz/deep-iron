@@ -11,6 +11,7 @@ var _place_button: Button
 var _stage_rows: Dictionary = {}  # id -> {status, button}
 var _bar: ProgressBar
 var _stages_box: VBoxContainer
+var _epilogo_button: Button
 
 
 func setup(hud: CanvasLayer, sun: Node, _economy: Node) -> void:
@@ -55,6 +56,12 @@ func _build() -> void:
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(info)
 	vbox.add_child(HSeparator.new())
+	_epilogo_button = _hud._button("Ver o epílogo e as estatísticas")  # Bloco 126: depois da vitória
+	_epilogo_button.pressed.connect(func():
+		Audio.click()
+		visible = false
+		_sun.mostra_vitoria())
+	vbox.add_child(_epilogo_button)
 	vbox.add_child(_hud._label("ESCUDO SOLAR (vitória)", Tipo.CORPO, _hud.COLOR_TITLE))
 	_place_button = _hud._button("")
 	_place_button.pressed.connect(func():
@@ -95,7 +102,8 @@ func _build() -> void:
 func refresh() -> void:
 	if not visible:
 		return
-	_season.text = "%s — dia %d de %d da estação" % [_sun.season_name(), _sun.day_in_season(), _sun.days_per_season]
+	_epilogo_button.visible = _sun.won
+	_season.text = "%s — dia %d de %d da estação" % [_sun.season_name(), _sun.day_in_season(), _sun.days_per_season] + ("  •  modo infinito" if _sun.infinito else "")
 	_forecast.text = _sun.forecast_text()
 	_forecast.add_theme_color_override("font_color", _hud.COLOR_HUNGER_BAD if _sun.wave_active() or _sun.time_to_wave() >= 0.0 and _sun.warned else _hud.COLOR_TEXT)
 	var s: Node = _sun.shield()

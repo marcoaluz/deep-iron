@@ -4331,6 +4331,9 @@ func _die() -> void:
 		cal.on_morte(_display())  # Bloco 88: funeral na hora social seguinte
 		if cal.tem_cemiterio() and not has_meta("sem_corpo"):  # (Bloco 104: quem morreu na expedição não volta)
 			cal.novo_corpo(_display(), global_position, String(injury_cause))  # Bloco 93: o padre vem buscar
+	var est_126 := get_tree().get_first_node_in_group("estatisticas")  # Bloco 126: as mortes por causa
+	if est_126:
+		est_126.registra_morte(_display(), String(injury_cause))
 	died.emit(_display())
 	var main := get_tree().get_first_node_in_group("game_main")
 	if main and main.is_selected(self):

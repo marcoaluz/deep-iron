@@ -5,6 +5,10 @@ Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
+## Bloco 126 — EPÍLOGO, ESTATÍSTICAS E MODO INFINITO (feito; commit local, sem push)
+
+Prompt 15. Relatório `docs/BLOCO126_EPILOGO_ESTATISTICAS.md`; teste `b126_epilogo_estatisticas` (0 falhas). `estatisticas.gd`, `data/epilogo/epilogo.txt`, tela de vitória nova, `sun.infinito`, botão na janela do Sol. Nada jogado. FILA DOS PROMPTS 12, 13 e 15 CONCLUÍDA (blocos 124, 125, 126); falta o Marco validar e dar o push.
+
 ## Bloco 125 — POSTO DE TROCA E CARAVANA (feito; commit local, sem push)
 
 Prompt 13. Relatório `docs/BLOCO125_CARAVANA.md`; teste `b125_caravana` (0 falhas). Arte do PixelLab: posto (obra 1/2/3/pronto) e a comerciante Cacilda (animações, retrato, `oficios125.py`/`predios125.py`), `caravana.gd`/`caravana_panel.gd`/`posto_troca.gd`, falas editáveis, encomendas nos pedidos, 3 sons. Nada jogado nem ouvido. Próximos: Bloco 126 = Prompt 15 (epílogo, estatísticas, modo infinito).

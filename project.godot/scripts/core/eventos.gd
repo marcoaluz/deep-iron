@@ -136,7 +136,7 @@ func _ocupado() -> bool:
 	if def and bool(def.get("invasion_active")):
 		return true
 	var sol := get_tree().get_first_node_in_group("sun")
-	if sol and (bool(sol.get("won")) or (sol.has_method("wave_active") and sol.wave_active())):
+	if sol and ((bool(sol.get("won")) and not bool(sol.get("infinito"))) or (sol.has_method("wave_active") and sol.wave_active())):  # (Bloco 126: no modo infinito eles continuam)
 		return true
 	var mor := get_tree().get_first_node_in_group("morale")
 	return mor != null and bool(mor.get("on_strike"))

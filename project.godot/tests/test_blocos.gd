@@ -520,3 +520,7 @@ func test_b124_criaturas_novas() -> void:
 
 func test_b125_caravana() -> void:
 	run_bloco("b125_caravana.gd")
+
+
+func test_b126_epilogo_estatisticas() -> void:
+	run_bloco("b126_epilogo_estatisticas.gd")

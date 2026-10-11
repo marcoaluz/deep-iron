@@ -150,6 +150,8 @@ extends Node
 ##     primeiro grupo no prazo de uma partida nova, a população que tinha.
 ##   Bloco 123: "pedidos" {abertos [{n, tipo, autor, dia, prazo_dia, meta}], historico, proximo_dia, dias_sem_fome, n, festival_gratis, festival_dobro, inverno_ameno, efeitos, ligado} e
 ##     "eventos" {proximo_dia, ultimo_id, ultimo_dia {evento: dia}, historico, efeitos [{t, chave, v, texto, ate_dia}], ligado}. Save antigo: sem pedidos e sem eventos.
+##   Bloco 126: "estatisticas" {passaram, mortes, causas {rótulo: n}, invasoes, festas, pedidos_cumpridos}; "sun" ganha "infinito" (modo infinito depois da vitória).
+##     Save antigo: sem estatísticas (mortes e invasões vêm dos contadores das missões) e sem modo infinito.
 ##   Bloco 125: "caravana" {presente, chegou_dia, parte_dia, proxima_dia, visitas, situacao, estoque/demanda/preco_cobra/preco_paga {id: n}, semente_ate_dia,
 ##     ultima_fala, avisou_sem_posto, vendido_cr, gasto_cr, vendidos/comprados {id: n}, encomendas_cumpridas, ligado}; "pedidos.abertos" ganham item/vendido/bonus nas
 ##     encomendas da caravana (tipo "caravana_encomenda"); o Centro guarda "postos_troca" [{position}] (o posto de troca). Save antigo: sem visita e sem posto.
@@ -662,6 +664,7 @@ func _collect() -> Dictionary:
 		"missoes": "missoes",  # Bloco 100: a campanha (capítulo liberado, missões cumpridas, objetivos, contadores)
 		"pedidos": "pedidos",  # Bloco 123: os pedidos abertos e encerrados, os dias sem fome, o festival guardado
 		"eventos": "eventos",  # Bloco 123: o histórico dos eventos, o próximo, o último, os efeitos que duram
+		"estatisticas": "estatisticas",  # Bloco 126: quem passou, as mortes por causa, os festivais, os pedidos cumpridos
 		"caravana": "caravana",  # Bloco 125: a visita (chegada, partida, ofertas, preços), as sementes e o que a vila negociou
 	}
 	for key in singles:
@@ -831,6 +834,9 @@ func apply_pending(main: Node) -> void:
 	var evs := get_tree().get_first_node_in_group("eventos")  # Bloco 123 (save antigo: nenhum evento ainda)
 	if evs:
 		evs.load_save_data(SaveUtil.dict(data, "eventos"))
+	var est := get_tree().get_first_node_in_group("estatisticas")  # Bloco 126 (save antigo: tudo sai dos contadores das missões)
+	if est:
+		est.load_save_data(SaveUtil.dict(data, "estatisticas"))
 	var car := get_tree().get_first_node_in_group("caravana")  # Bloco 125 (save antigo: nenhuma visita ainda; depois do Centro: o posto)
 	if car:
 		car.load_save_data(SaveUtil.dict(data, "caravana"))
