@@ -1,0 +1,50 @@
+SIM depois;arma=lanca;guardas=3;hab=0.5;onda=4;nivel=1;derrubadas=5/5;guardas_caidos=1;portao_pct=0;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=55;fim=limpou
+SIM depois;arma=lanca;guardas=3;hab=0.5;onda=4;nivel=1;derrubadas=5/5;guardas_caidos=0;portao_pct=0;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=53;fim=limpou
+SIM depois;arma=lanca;guardas=3;hab=0.5;onda=4;nivel=1;derrubadas=5/5;guardas_caidos=0;portao_pct=6;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=47;fim=limpou
+SIM depois;arma=lanca;guardas=4;hab=0.5;onda=4;nivel=1;derrubadas=5/5;guardas_caidos=0;portao_pct=100;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=34;fim=limpou
+SIM depois;arma=lanca;guardas=4;hab=0.5;onda=4;nivel=1;derrubadas=5/5;guardas_caidos=0;portao_pct=54;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=41;fim=limpou
+SIM depois;arma=lanca;guardas=4;hab=0.5;onda=4;nivel=1;derrubadas=5/5;guardas_caidos=0;portao_pct=83;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=44;fim=limpou
+SIM depois;arma=lanca;guardas=4;hab=1.0;onda=5;nivel=1;derrubadas=5/6;guardas_caidos=0;portao_pct=43;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=-383;fim=amanheceu
+# diag (guardas=4 hab=1.0 onda=5, repeticao 1):
+#   t=20 portao=104
+#     criatura lumivoro hp=32 pos=(-661.0, -141.0) alvo=BarricadaTunel inside=false
+#     criatura lumivoro hp=34 pos=(-506.0, -76.0) alvo=Ipezinho inside=false
+#     criatura lumivoro hp=32 pos=(-333.0, -57.0) alvo=BarricadaTunel inside=false
+#     criatura lumivoro hp=52 pos=(-475.0, -88.0) alvo=Ipezinho3 inside=false
+#     guarda Nando pos=(-507.0, -62.0) st=guard hp=37 rec=false caido=false
+#     guarda Chico pos=(-520.0, -67.0) st=guard hp=50 rec=false caido=false
+#     guarda Bia pos=(-498.0, -82.0) st=guard hp=29 rec=false caido=false
+#   t=40 portao=52
+#     criatura lumivoro hp=32 pos=(-661.0, -141.0) alvo=Ipezinho inside=false
+#     criatura lumivoro hp=2 pos=(-331.0, -36.0) alvo=BarricadaTunel inside=false
+#     guarda Nando pos=(-641.0, -136.0) st=guard hp=32 rec=false caido=false
+#     guarda Chico pos=(-270.0, -32.0) st=guard hp=26 rec=true caido=false
+#     guarda Bia pos=(-290.0, -31.0) st=guard hp=35 rec=false caido=false
+#   t=60 portao=52
+#     criatura lumivoro hp=32 pos=(-661.0, -141.0) alvo=Ipezinho inside=false
+#     guarda Nando pos=(-641.0, -136.0) st=guard hp=32 rec=false caido=false
+#     guarda Chico pos=(-370.0, -32.0) st=guard hp=35 rec=false caido=false
+#     guarda Bia pos=(-370.0, -48.0) st=guard hp=35 rec=false caido=false
+#   t=80 portao=52
+#     criatura lumivoro hp=32 pos=(-661.0, -141.0) alvo=Ipezinho inside=false
+#     guarda Nando pos=(-641.0, -136.0) st=guard hp=32 rec=false caido=false
+#     guarda Chico pos=(-370.0, -32.0) st=guard hp=35 rec=false caido=false
+#     guarda Bia pos=(-370.0, -48.0) st=guard hp=35 rec=false caido=false
+#   t=100 portao=52
+#     criatura lumivoro hp=32 pos=(-661.0, -141.0) alvo=Ipezinho inside=false
+#     guarda Nando pos=(-641.0, -136.0) st=guard hp=32 rec=false caido=false
+#     guarda Chico pos=(-370.0, -32.0) st=guard hp=35 rec=false caido=false
+#     guarda Bia pos=(-370.0, -48.0) st=guard hp=35 rec=false caido=false
+#   t=120 portao=52
+#     criatura lumivoro hp=32 pos=(-661.0, -141.0) alvo=Ipezinho inside=false
+#     guarda Nando pos=(-641.0, -136.0) st=guard hp=32 rec=false caido=false
+#     guarda Chico pos=(-370.0, -32.0) st=guard hp=35 rec=false caido=false
+#     guarda Bia pos=(-370.0, -48.0) st=guard hp=35 rec=false caido=false
+#   t=140 portao=52
+#     criatura lumivoro hp=32 pos=(-661.0, -141.0) alvo=Ipezinho inside=false
+#     guarda Nando pos=(-641.0, -136.0) st=guard hp=32 rec=false caido=false
+#     guarda Chico pos=(-370.0, -32.0) st=guard hp=35 rec=false caido=false
+#     guarda Bia pos=(-370.0, -48.0) st=guard hp=35 rec=false caido=false
+SIM depois;arma=lanca;guardas=4;hab=1.0;onda=5;nivel=1;derrubadas=6/6;guardas_caidos=1;portao_pct=0;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=52;fim=limpou
+SIM depois;arma=lanca;guardas=4;hab=1.0;onda=5;nivel=1;derrubadas=6/6;guardas_caidos=0;portao_pct=32;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=57;fim=limpou
+FIM

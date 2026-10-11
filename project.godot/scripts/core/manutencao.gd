@@ -39,7 +39,7 @@ const CONSERTO := preload("res://scripts/props/conserto_maquina.gd")
 	"ventilador": 72.0, "robo": 4.0}
 ## Segundos de jogo de trabalho do mecânico na preventiva, por tipo.
 @export var segundos_preventiva: Dictionary = {"escavadeira": 30.0, "coletor_madeira": 20.0, "coletor_minerio": 20.0,
-	"ventilador": 15.0, "robo": 25.0, "cabine": 20.0, "trilho": 15.0}
+	"ventilador": 15.0, "robo": 25.0, "cabine": 20.0, "trilho": 15.0, "predio": 25.0}  # Bloco 127: "predio" = ferido por invasor
 ## O conserto da QUEBRA por tipo: [créditos, metal (ferro/barra), madeira, segundos de trabalho].
 @export var conserto: Dictionary = {"escavadeira": [120, 30, 10, 45.0], "coletor_madeira": [60, 15, 15, 30.0],
 	"coletor_minerio": [60, 20, 10, 30.0], "ventilador": [80, 15, 0, 25.0], "robo": [100, 20, 0, 40.0]}
@@ -130,7 +130,8 @@ func quebrou(maq: Node) -> void:
 	if maq == null or not is_instance_valid(maq):
 		return
 	quebras[maq.manut_tipo()] = int(quebras.get(maq.manut_tipo(), 0)) + 1
-	_aviso("%s QUEBROU: parou. O mecânico conserta (com material)." % maq.manut_titulo(), Color(1.0, 0.5, 0.4), maq)
+	var txt := String(maq.manut_texto_quebra()) if maq.has_method("manut_texto_quebra") 		else "%s QUEBROU: parou. O mecânico conserta (com material)." % maq.manut_titulo()  # Bloco 127: o prédio em ruínas
+	_aviso(txt, Color(1.0, 0.5, 0.4), maq)
 	var au := get_node_or_null("/root/Audio")
 	if au and au.has_method("som"):
 		au.som("maquinas/quebrou", (maq as Node2D).global_position)  # Bloco 115 (sem arquivo, a quebra de sempre)
@@ -159,6 +160,20 @@ func custo(tipo: String) -> Array:
 	return c
 
 
+## O custo do conserto DESSA máquina: a que sabe o próprio custo (o prédio em ruínas, Bloco 127) manda; senão a tabela do tipo.
+func custo_de(maq: Node) -> Array:
+	if maq != null and is_instance_valid(maq) and maq.has_method("manut_custo"):
+		return maq.manut_custo()
+	return custo(maq.manut_tipo())
+
+
+## A condição até onde a preventiva vale pra essa máquina (o prédio ferido tem o limite dele).
+func limite_de(maq: Node) -> float:
+	if maq.has_method("manut_limite"):
+		return float(maq.manut_limite())
+	return limite_preventiva
+
+
 ## As máquinas quebradas sem obra: paga o conserto se der (tudo) e se tem quem conserte; senão espera.
 func _tenta_consertos() -> void:
 	var eco := get_tree().get_first_node_in_group("economy")
@@ -169,7 +184,7 @@ func _tenta_consertos() -> void:
 			continue
 		if not tem_quem_conserte():
 			continue  # (ninguém pra consertar: não gasta material à toa)
-		var c := custo(maq.manut_tipo())
+		var c := custo_de(maq)
 		if eco.metal_falta(int(c[0]), int(c[1]), "ferro", int(c[2])) != "":
 			continue  # falta material: tenta de novo daqui a pouco (nada é gasto)
 		if not eco.paga_metal(int(c[0]), int(c[1]), "ferro", int(c[2])):
@@ -185,7 +200,7 @@ func _tenta_consertos() -> void:
 ## O que falta pra pagar o conserto dessa máquina ("" = dá).
 func conserto_falta(maq: Node) -> String:
 	var eco := get_tree().get_first_node_in_group("economy")
-	var c := custo(maq.manut_tipo())
+	var c := custo_de(maq)
 	return eco.metal_falta(int(c[0]), int(c[1]), "ferro", int(c[2])) if eco else ""
 
 
@@ -200,11 +215,11 @@ func conserto_terminou(maq: Node) -> void:
 ## A máquina mais gasta (abaixo do limite, não quebrada, sem outro mecânico nela) pra esse mecânico. null = nenhuma.
 func alvo_preventiva(w: Node) -> Node:
 	for maq in _reservas.keys():
-		if _reservas[maq] == w and is_instance_valid(maq) and not maq.manut_quebrada() and maq.manut_condicao() < limite_preventiva:
+		if _reservas[maq] == w and is_instance_valid(maq) and not maq.manut_quebrada() and maq.manut_condicao() < limite_de(maq):
 			return maq
 	var melhor: Node = null
 	for maq in maquinas():
-		if maq.manut_quebrada() or maq.manut_condicao() >= limite_preventiva or _evita.has(maq):
+		if maq.manut_quebrada() or maq.manut_condicao() >= limite_de(maq) or _evita.has(maq):
 			continue
 		var dono = _reservas.get(maq)
 		if dono != null and dono != w and is_instance_valid(dono):

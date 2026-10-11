@@ -315,7 +315,15 @@ func usado_cat(cat: String) -> float:
 
 
 func espaco_cat(cat: String) -> float:
+	if em_ruina():
+		return 0.0  # Bloco 127: em ruínas não recebe mais nada (o que está dentro continua lá, e sai normal)
 	return maxf(capacidade_cat(cat) - usado_cat(cat), 0.0)
+
+
+## Bloco 127: o armazém ferido por invasor caiu em ruínas? (estruturas.gd)
+func em_ruina() -> bool:
+	var e := get_tree().get_first_node_in_group("estruturas") if is_inside_tree() else null
+	return e != null and e.em_ruina(self)
 
 
 func cheio_cat(cat: String) -> bool:

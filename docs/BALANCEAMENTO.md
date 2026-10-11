@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1307 valores** em 4 pastas de scripts (90 trocados por alguma cena).
+Total: **1328 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (97)
 
@@ -403,7 +403,7 @@ Total: **1307 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `beleza_teto` | 6.0 |  | Teto do ânimo de "casa enfeitada". |
 | `nav_espera` | 0.6 |  | Segundos sem pôr/tirar peça grande até refazer a navegação (uma vez só pra várias). |
 
-## `scripts/core/defense.gd` (82)
+## `scripts/core/defense.gd` (89)
 
 **Armas (na ordem de WEAPON_IDS)**
 
@@ -428,6 +428,23 @@ Total: **1307 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 |---|---|---|---|
 | `raid_ore_percent` | 0.12 |  | Guarda caído abre brecha no portão dele: o primeiro invasor dali que chega no armazém leva essa fração do MINÉRIO guardado (de cada tipo)... |
 | `raid_credit_percent` | 0.12 |  | ...e essa fração dos CRÉDITOS. (Uma vez por portão por invasão.) |
+
+**Linha de frente (Bloco 127)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `frente_dist` | 70.0 |  | Distância (px) do portão da floresta até o posto dos guardas, pra FORA da paliçada (a linha de frente). |
+| `guard_recua_pct` | 0.35 |  | Guarda com a vida de luta abaixo desta fração recua pelo postigo pro posto de dentro... |
+| `guard_recuo_regen` | 1.5 |  | ...regenera esta vida de luta por segundo enquanto está recuado... |
+| `guard_volta_pct` | 0.7 |  | ...e só volta pra linha de frente quando chega a esta fração da vida de luta. |
+| `medico_resgate_raio` | 170.0 |  | O médico só sai pra resgatar um guarda caído FORA da paliçada se não houver criatura viva a menos de tantos px dele. |
+
+**Invasão dentro da vila (Bloco 127)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `saque_teto_fracao` | 0.25 |  | Lumívoro/Ferrugento que já passou o portão e bate no armazém leva minério e itens (por golpe: o steal_amount dele), até este teto por noite: esta fração do estoque (minério + itens) de quando a invasão começou... |
+| `saque_teto_piso` | 30.0 |  | ...mas nunca abaixo deste piso (unidades), pra uma vila pobre ainda sentir o roubo. |
 
 **Arsenal (Bloco 35)**
 
@@ -749,6 +766,27 @@ Total: **1307 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `varre_a_cada` | 1.0 |  | De quanto em quanto tempo (s) procura ipezinhos novos. |
+
+## `scripts/core/estruturas.gd` (9)
+
+**Dano dos invasores aos prédios (Bloco 127)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `dano_tier_min` | 2 |  | A partir deste tier da onda até a criatura comum quebra prédio (o forte, o elite e o chefe quebram em qualquer tier). |
+| `dano_por_tier` | 0.25 |  | Por tier acima do mínimo, o dano do golpe cresce esta fração (0,25 = +25% por tier). |
+| `mult_forte` | 1.5 |  | Multiplicadores do dano do golpe (o `dano_predio` do bicho, em fração da condição do prédio): forte, elite e chefe. |
+| `mult_elite` | 2.0 |  |  |
+| `mult_chefe` | 6.0 |  |  |
+| `centro_dano_max` | 0.25 |  | O Centro da Vila nunca vira ruína: o dano nele para neste valor (0,25 = no máximo 25% de dano). |
+
+**Conserto e reconstrução (Bloco 127)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `limite_conserto` | 0.9 |  | A preventiva do mecânico vale até esta condição (0,9 = conserta quem perdeu mais de 10%). |
+| `ruina_custo_pct` | 0.5 |  | Reconstruir um prédio em ruínas custa esta fração do custo original (créditos, ferro e madeira; o tempo também). |
+| `custo_base` | {"casa": [80, 20, 15, 40.0], "armazem": [300, 40, 60, 60.0], "enfermaria": [200, 30, 30, 50.0], |  | O custo original por tipo de prédio: [créditos, ferro, madeira, segundos de trabalho] (os da Centro da Vila e da obra). |
 
 ## `scripts/core/eventos.gd` (11)
 
@@ -1870,7 +1908,7 @@ Total: **1307 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 |---|---|---|---|
 | `forge_sound_interval` | 0.9 |  | Intervalo entre as marteladas enquanto forja. |
 
-## `scripts/props/barricada.gd` (23)
+## `scripts/props/barricada.gd` (26)
 
 **(sem grupo)**
 
@@ -1904,6 +1942,14 @@ Total: **1307 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `espera_espaco` | 10.0 |  | Espaço (px) entre quem espera, ao longo da paliçada. |
 | `faixas` | 3 |  | Quantas faixas de passagem o portão tem (cada uma é um NavigationLink2D). |
 | `faixa_espaco` | 14.0 |  | Distância (px) entre as faixas. |
+
+**Postigo dos guardas (Bloco 127)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `postigo_offset` | 26.0 |  | Distância (px), ao longo da paliçada, do centro do portão até o POSTIGO (a porta só dos guardas, sempre ligada na malha pra quem tem a camada dos guardas; o portão fechado segue fechado pra todos os outros). |
+| `postigo_anima_segundos` | 1.2 |  | Segundos que o portão aparece ENTREABERTO depois que um guarda passa pelo postigo. |
+| `postigo_raio` | 22.0 |  | Raio (px) em volta do postigo em que um guarda conta como "passando". |
 
 ## `scripts/props/campo_treino.gd` (1)
 
@@ -2451,7 +2497,7 @@ Total: **1307 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `kind` | "gas" | **"gas"** (main.tscn); **"radiacao"** (main.tscn); **"calor"** (main.tscn) |  |
+| `kind` | "gas" | **"radiacao"** (main.tscn); **"calor"** (main.tscn) |  |
 | `radius` | 90.0 | **85.0** (main.tscn); **80.0** (main.tscn); **80.0** (main.tscn) | Raio da zona (px do mundo), achatado na vertical como o resto do mapa. |
 | `sign_offset` | Vector2(-70, 60) | **Vector2(-95, 10)** (main.tscn); **Vector2(95, 20)** (main.tscn); **Vector2(-95, -10)** (main.tscn) | Onde fica a placa (em relação ao centro): a "entrada". |
 
@@ -2646,7 +2692,7 @@ Total: **1307 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `min_wood_to_chop` | 4.0 |  | Abaixo disso a árvore não atrai lenhadores novos. |
 | `chop_sound_interval` | 0.55 |  | Intervalo entre as machadadas (som). |
 
-## `scripts/creatures/creature.gd` (35)
+## `scripts/creatures/creature.gd` (37)
 
 **(sem grupo)**
 
@@ -2681,6 +2727,13 @@ Total: **1307 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `luz_dano` | 4.0 | **4.0** (sombra.tscn) |  |
 | `arma_comum_mult` | 0.5 | **0.5** (sombra.tscn) | Sombra: fração do dano que a arma comum faz nela, e o multiplicador da lança de prata. |
 | `prata_mult` | 1.5 | **1.5** (sombra.tscn) |  |
+
+**Linha de frente e dentro da vila (Bloco 127)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `alvo_troca_min` | 0.7 |  | Quanto tempo (s) ele mantém o alvo antes de reconsiderar (guarda x portão); evita trocar a cada quadro. |
+| `dano_predio` | 0.04 |  | Dentro da vila: dano de UM golpe dele num prédio (fração da condição do prédio, 0..1), antes dos multiplicadores de forte, elite e chefe e do tier (estruturas.gd). 0 = este bicho não quebra prédio. |
 
 **Luz (Bloco 90)**
 

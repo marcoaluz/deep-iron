@@ -9,8 +9,10 @@ const ENTRIES := {
 		"title": "Lumívoros",
 		"text": "Criaturas que se alimentam da luz e do calor que sobraram da explosão solar. "
 			+ "De dia somem; à noite são atraídas justamente pelo que nos protege: tochas, janelas "
-			+ "acesas e as lanternas dos capacetes. Descem da clareira pelo túnel. A luz ajuda a "
-			+ "gente a trabalhar... e chama eles.",
+			+ "acesas e as lanternas dos capacetes. Descem da clareira pelo túnel e batem primeiro "
+			+ "nos guardas da frente; sem guarda por perto, no portão. Quem passa rouba o armazém e "
+			+ "assusta as casas, e nas ondas fortes quebra prédio. A luz ajuda a gente a "
+			+ "trabalhar... e chama eles.",
 	},
 	"ferrugentos": {
 		"title": "Ferrugentos",
@@ -18,7 +20,8 @@ const ENTRIES := {
 			+ "um crânio e dois olhos vermelhos. Passam o dia parados, acumulando restos de energia "
 			+ "solar, e despertam à noite. Vivem no fundo da mina e saem pela boca do poço do elevador "
 			+ "desde que abrimos o nível 2 — lá não tem muro, só os guardas. Comem metal: vão direto no "
-			+ "armazém. Ao amanhecer, desligam e desmontam.",
+			+ "armazém: levam minério, depois o que houver de barras e peças. Ao amanhecer, desligam e "
+			+ "desmontam.",
 	},
 	"gosmas": {
 		"title": "Gosmas ácidas",
@@ -75,7 +78,8 @@ const ENTRIES := {
 		"title": "A Matriarca",
 		"text": "Os Lumívoros têm uma rainha. É duas vezes maior, coberta de cristais roxos, e "
 			+ "aparece uma vez por estação. Ela grita e chama os outros, e o golpe dela come o "
-			+ "metal das armas. Quando cai, os cristais dela são solarita pura.",
+			+ "metal das armas. Dentro da vila ela derruba casas em poucos golpes. Quando cai, os "
+			+ "cristais dela são solarita pura.",
 	},
 	"robo": {
 		"title": "O robô antigo",

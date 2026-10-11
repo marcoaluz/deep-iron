@@ -524,3 +524,7 @@ func test_b125_caravana() -> void:
 
 func test_b126_epilogo_estatisticas() -> void:
 	run_bloco("b126_epilogo_estatisticas.gd")
+
+
+func test_b127_linha_de_frente() -> void:
+	run_bloco("b127_linha_de_frente.gd")

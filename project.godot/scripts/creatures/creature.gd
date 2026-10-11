@@ -79,6 +79,13 @@ signal died(killed: bool)
 @export var arma_comum_mult: float = 0.5
 @export var prata_mult: float = 1.5
 
+@export_group("Linha de frente e dentro da vila (Bloco 127)")
+## Quanto tempo (s) ele mantém o alvo antes de reconsiderar (guarda x portão); evita trocar a cada quadro.
+@export var alvo_troca_min: float = 0.7
+## Dentro da vila: dano de UM golpe dele num prédio (fração da condição do prédio, 0..1), antes dos multiplicadores
+## de forte, elite e chefe e do tier (estruturas.gd). 0 = este bicho não quebra prédio.
+@export_range(0.0, 1.0) var dano_predio: float = 0.04
+
 @export_group("Luz (Bloco 90)")
 ## Lumívoro: o quanto uma tocha/lampião aceso da decoração atrai mais que um prédio aceso (a distância conta
 ## dividida por isto: 2 = uma luz a 200 px pesa como um prédio a 100 px).
@@ -303,9 +310,12 @@ func _process(delta: float) -> void:
 		_gate = null
 		inside = true
 	if _gate != null:
-		_target = _gate
+		# Bloco 127: o portão é a SEGUNDA defesa — guarda/defensor ao alcance primeiro, quem me bateu, e só então o portão
+		if _retarget <= 0.0 or _target == null or not is_instance_valid(_target) or not _target_ok(_target) 				or (_target.is_in_group("barricadas") and _defensor_ao_alcance() != null):
+			_retarget = alvo_troca_min
+			_target = _alvo_com_portao()
 	elif _retarget <= 0.0 or _target == null or not is_instance_valid(_target) or not _target_ok(_target):
-		_retarget = 0.7
+		_retarget = alvo_troca_min
 		_target = _pick_target()
 	if _target == null:
 		if morador != "":
@@ -335,6 +345,57 @@ func _process(delta: float) -> void:
 		_attack_cd = attack_interval
 		_attack(_target)
 	queue_redraw()
+
+
+## Bloco 127: com o portão de pé no caminho, o alvo é, nesta ordem: (1) o defensor em pé ao alcance (`notice_range`) que dá
+## pra alcançar, (2) quem me bateu por último, se está perto e alcançável, (3) o portão.
+func _alvo_com_portao() -> Node2D:
+	var d := _defensor_ao_alcance()
+	if d != null:
+		return d
+	if _aggressor != null and is_instance_valid(_aggressor) and _target_ok(_aggressor) and _alcanca(_aggressor) 			and global_position.distance_to(_aggressor.global_position) < notice_range:
+		return _aggressor
+	var def := get_tree().get_first_node_in_group("defense")
+	if def and gate_id != "" and def.breached(gate_id):
+		# Bloco 36/127: a linha de frente deste portão caiu (guarda caído = brecha, o portão abre) e não tem defensor perto:
+		# ele passa e vai saquear, em vez de ficar batendo num portão aberto
+		_gate = null
+		inside = true
+		return _pick_target()
+	return _gate
+
+
+## Bloco 127: o defensor em pé mais perto (guarda de serviço sem estar caído nem ferido, ou robô que luta), dentro do alcance
+## e do MEU lado do portão (um guarda que recuou pelo postigo está atrás da paliçada: eu não chego nele).
+func _defensor_ao_alcance() -> Node2D:
+	var melhor: Node2D = null
+	var melhor_d := notice_range
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		if not _eh_defensor(w):
+			continue
+		var d := global_position.distance_to(w.global_position)
+		if d < melhor_d and _alcanca(w):
+			melhor_d = d
+			melhor = w
+	if melhor == null:
+		for r in get_tree().get_nodes_in_group("robos"):
+			if r.has_method("can_fight") and r.can_fight():
+				var d2 := global_position.distance_to(r.global_position)
+				if d2 < melhor_d and _alcanca(r):
+					melhor_d = d2
+					melhor = r
+	return melhor
+
+
+func _eh_defensor(w: Node) -> bool:
+	return w.has_method("is_guard") and w.is_guard() and w.get("_ai_state") == "guard" and not bool(w.get("downed")) 		and not bool(w.get("injured")) and not bool(w.get("_inside")) and not bool(w.get("recuando")) and _target_ok(w)
+
+
+## Bloco 127: dá pra chegar até esse alvo? (o portão fechado entre nós dois = não; portão caído ou aberto = sim)
+func _alcanca(t: Node2D) -> bool:
+	if _gate == null or not is_instance_valid(_gate) or not _gate.has_method("separa"):
+		return true
+	return not _gate.separa(global_position, t.global_position)
 
 
 ## Bloco 103: o morador sem alvo anda devagar até um ponto perto de casa e espera um pouco.
@@ -433,6 +494,11 @@ func _pick_target() -> Node2D:
 		var who := _nearest(awake, notice_range * 1.8)
 		if who:
 			return who
+		if inside:  # Bloco 127: já dentro da vila, vai ROUBAR o armazém (enquanto tem o que levar nesta noite)
+			var def_s := get_tree().get_first_node_in_group("defense")
+			var arms := get_tree().get_nodes_in_group("armazens")
+			if def_s and def_s.has_method("saque_possivel") and def_s.saque_possivel() and not arms.is_empty():
+				return _nearest(arms)
 		var lit: Array = []
 		for c in get_tree().get_nodes_in_group("casas"):
 			if c.sleeping_count() > 0:
@@ -526,6 +592,13 @@ func _queima_com_luz(delta: float) -> void:
 		queue_redraw()
 
 
+## Bloco 127: o golpe nesse prédio também o machuca? (estruturas.gd decide: forte, elite, chefe ou onda alta)
+func _quebra_predio(t: Node2D) -> void:
+	var est := get_tree().get_first_node_in_group("estruturas")
+	if est and est.has_method("golpe"):
+		est.golpe(self, t)
+
+
 func _attack(t: Node2D) -> void:
 	_attack_at = _anim
 	_visual.position.y = -3.0
@@ -566,6 +639,15 @@ func _attack(t: Node2D) -> void:
 		var def := get_tree().get_first_node_in_group("defense")
 		if def and def.breached(gate_id):
 			def.raid(self, t)  # Bloco 36: saque pela brecha
+		if kind == "lumivoro" and inside and def and def.has_method("saque_invasor"):
+			# Bloco 127: o Lumívoro que passou o portão leva minério e itens por golpe (com teto por noite)
+			var levou: float = def.saque_invasor(t, steal_amount * Modificadores.mult(get_tree(), "roubo"))
+			if levou > 0.0:
+				looted = true
+				t.show_popup("-%d (%s)" % [maxi(roundi(levou), 1), "Matriarca" if variant == "chefe" else "Lumívoro"], Color(1.0, 0.45, 0.35))
+				Audio.clank(global_position)
+	if inside and _is_building(t):
+		_quebra_predio(t)  # Bloco 127: forte, elite, chefe e ondas altas danificam o prédio
 	if t.has_method("take_hit"):
 		var corroi := weapon_corrode if weapon_corrode > 0.0 else (corrosao_gosma if kind == "gosma" else 0.0)
 		if corroi > 0.0 and t.get("weapon") != null and String(t.weapon) != "" and t.has_method("_wear_weapon"):
@@ -593,6 +675,10 @@ func _attack(t: Node2D) -> void:
 			if left <= 0.0:
 				break
 			left -= t.take(left, ore)
+		if left > 0.0:  # Bloco 127: acabou o minério do armazém: leva ITENS (barras, tábuas...), com o teto da noite
+			var def_f := get_tree().get_first_node_in_group("defense")
+			if def_f and def_f.has_method("saque_invasor"):
+				left -= def_f.saque_invasor(t, left)
 		if left < golpe:
 			looted = true
 			t.show_popup("-%d (Ferrugento)" % roundi(golpe - left), Color(1.0, 0.45, 0.35))

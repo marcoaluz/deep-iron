@@ -387,30 +387,36 @@ func residents() -> Array:
 
 
 func has_free_slot_for(worker: Node) -> bool:
-	return built and super(worker)
+	return built and not em_ruina() and super(worker)
+
+
+## Bloco 127: a casa ferida por invasor caiu em ruínas? (sem camas até o conserto; estruturas.gd)
+func em_ruina() -> bool:
+	var e := get_tree().get_first_node_in_group("estruturas") if is_inside_tree() else null
+	return e != null and e.em_ruina(self)
 
 
 ## Reserva uma cama permanente. Retorna o índice ou -1 se a casa estiver cheia.
 func claim_bed(worker: Node2D) -> int:
-	if not built:
+	if not built or em_ruina():
 		return -1
 	return reserve_slot(worker)
 
 
 ## Reserva uma cama específica (ao carregar o save). -1 se estiver ocupada/não existir.
 func claim_specific_bed(worker: Node2D, bed: int) -> int:
-	if not built or bed < 0 or bed >= slot_count or _slot_taken(bed):
+	if not built or em_ruina() or bed < 0 or bed >= slot_count or _slot_taken(bed):
 		return -1
 	_slot_owners[bed] = worker
 	return bed
 
 
 func beds_total() -> int:
-	return slot_count if built else 0
+	return slot_count if built and not em_ruina() else 0
 
 
 func beds_taken() -> int:
-	return occupied_slot_count() if built else 0
+	return occupied_slot_count() if built and not em_ruina() else 0
 
 
 ## Chamado pelo ipezinho ao entrar/sair de casa.

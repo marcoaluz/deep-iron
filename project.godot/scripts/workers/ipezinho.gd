@@ -66,6 +66,7 @@ const Schedule := preload("res://scripts/core/schedule.gd")  # Bloco 84
 const Items := preload("res://scripts/core/items.gd")  # Bloco 86
 const Icones := preload("res://scripts/ui/icones.gd")  # Bloco 85: o balão da hora social
 const Modificadores := preload("res://scripts/core/modificadores.gd")  # Bloco 108: políticas (e a dificuldade, depois)
+const Barricada := preload("res://scripts/props/barricada.gd")  # Bloco 127: a camada do postigo
 const Settings := preload("res://scripts/core/settings.gd")  # Bloco 95: liga/desliga o balão de motivo
 const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 96: o material da obra
 const BALAO := preload("res://assets/game/ui/balao.png")
@@ -711,6 +712,8 @@ const FILA_DESISTE := 120.0
 ## Bloco 98: o destino de verdade (o _target vira o lugar de espera no portão fechado) e se está esperando o portão.
 var _alvo_final := Vector2.ZERO
 var _esperando_portao := false
+## Bloco 127: o guarda que RECUOU pelo postigo (vida de luta baixa) pro posto de dentro; regenera e volta pra linha de frente.
+var recuando := false
 
 @onready var _agent: NavigationAgent2D = $Agent
 ## Acessórios (Bloco 24): camadas filhas do Body, com os mesmos 4 quadros de caminhada.
@@ -818,10 +821,24 @@ func _go_to(pos: Vector2) -> void:
 ## esperar encostado no portão, do lado dele (e não ao longo da cerca, que é o ponto mais perto do destino).
 func _ate_o_portao(pos: Vector2) -> Vector2:
 	var b := get_tree().get_first_node_in_group("barricadas")
-	if b == null or not b.has_method("separa") or not b.separa(global_position, pos):
+	if b == null or not b.has_method("separa") or not b.separa(global_position, pos, self):
 		return pos
 	_esperando_portao = true
 	return b.espera_pos(self, global_position)
+
+
+## Bloco 127: pode passar pelo POSTIGO do portão fechado? (guarda; e o médico indo buscar o caído que ficou lá fora)
+func pode_postigo() -> bool:
+	if is_guard():
+		return true
+	return is_doctor() and (_ai_state == "rescue" or _rescue != null or carrying_patient != null)
+
+
+## Bloco 127: a camada de navegação do agente: a da malha (1) mais a dos guardas (2) quando ele pode usar o postigo.
+func _atualiza_camadas() -> void:
+	var c := 1 | (Barricada.CAMADA_GUARDA if pode_postigo() else 0)
+	if _agent.navigation_layers != c:
+		_agent.navigation_layers = c
 
 
 ## Bloco 98: o portão abriu ou fechou (o Barricada avisa todo mundo). Quem esperava segue pro destino; quem andava
@@ -1509,6 +1526,7 @@ func _estado_funcao() -> String:
 
 
 func _decide_next_action() -> void:
+	_atualiza_camadas()  # Bloco 127: o guarda (e o médico a caminho do caído lá fora) passa pelo postigo
 	var desired := _choose_state()
 	if desired != "abrigo" and _abrigado_em != null:
 		_sai_do_abrigo()  # Bloco 109: a onda passou (ou outra coisa ganhou): sai do abrigo
@@ -1785,6 +1803,9 @@ func _idle_at_hub() -> void:
 func _station_ok_for(state: String) -> bool:
 	if _station == null or not is_instance_valid(_station) or _slot < 0:
 		return false
+	var estr := get_tree().get_first_node_in_group("estruturas")  # Bloco 127: a estação ruiu com ele lá: sai
+	if estr and estr.em_ruina(_station):
+		return false
 	if state in ["mining", "chopping", "foraging", "hunting"] and not _area_permite(_station, STATE_GROUP[state]):
 		return false  # Bloco 77: a área mudou (desligaram a mina, tiraram ele da área)
 	if state == "mining":
@@ -1976,7 +1997,10 @@ func depth_danger() -> float:
 ## virou toco ou horta colhida não contam — aí o lenhador/cozinheiro vai descarregar.)
 func _has_usable_station(group_name: String) -> bool:
 	var env := get_tree().get_first_node_in_group("environment")
+	var estr := get_tree().get_first_node_in_group("estruturas")  # Bloco 127
 	for node in get_tree().get_nodes_in_group(group_name):
+		if estr and estr.em_ruina(node):
+			continue
 		if node.has_method("is_usable") and not node.is_usable():
 			continue
 		if env and env.has_method("trancado") and env.trancado((node as Node2D).global_position):
@@ -1996,7 +2020,10 @@ func _find_best_station(group_name: String) -> Node2D:
 	var best: Node2D = null
 	var best_score := INF
 	var env := get_tree().get_first_node_in_group("environment")
+	var estr := get_tree().get_first_node_in_group("estruturas")  # Bloco 127: prédio em ruínas não é escolhido
 	for node in get_tree().get_nodes_in_group(group_name):
+		if estr and estr.em_ruina(node):
+			continue
 		if node.has_method("is_usable") and not node.is_usable() and node != _station:
 			continue
 		if env and env.has_method("trancado") and env.trancado((node as Node2D).global_position):
@@ -2571,6 +2598,8 @@ func _guard_tick(delta: float) -> void:
 	if combat_hp < 0.0:
 		combat_hp = guard_max_hp()
 	var def := _defense()
+	if def and _recuo_tick(def, delta):
+		return  # Bloco 127: recuou pelo postigo (não luta até regenerar)
 	if _foe != null and (not is_instance_valid(_foe) or not _foe.is_alive() \
 			or global_position.distance_to(_foe.global_position) > guard_aggro * 1.5):
 		_foe = null
@@ -2586,11 +2615,40 @@ func _guard_tick(delta: float) -> void:
 	if _foe == null and def and def.has_method("rato_perto"):
 		_foe = def.rato_perto(global_position)  # Bloco 124: o guarda de vigia também caça rato na vila
 	if _foe == null:
-		var post: Vector2 = def.guard_post(self) if def else global_position
+		var post: Vector2 = def.guard_post_ativo(self) if def else global_position  # Bloco 127: a linha de frente, fora
 		if global_position.distance_to(post) > 10.0 and (not _moving or _target.distance_to(post) > 4.0):
 			_go_to(post)
 		return
 	_golpeia(def)
+
+
+## Bloco 127: o RECUO. Na linha de frente (fora do portão fechado), com a vida de luta abaixo de `guard_recua_pct`, o guarda larga
+## o inimigo e volta pelo postigo pro posto de dentro; lá regenera (`guard_recuo_regen` por segundo) e só sai quando chega a
+## `guard_volta_pct`. Portão caído, ele já dentro ou invasor em cima dele: não adianta recuar, luta. Retorna true = recuando.
+func _recuo_tick(def: Node, delta: float) -> bool:
+	var mx := guard_max_hp()
+	var g: Node2D = def.gate("tunel")
+	var vale: bool = g != null and g.is_standing() and def.invasion_active and g.has_method("lado_de")
+	if not recuando:
+		if vale and g.lado_de(global_position) < 0 and combat_hp / maxf(mx, 1.0) < def.guard_recua_pct:
+			recuando = true
+			_foe = null
+			_popup("Recuando!", Color(1.0, 0.8, 0.4))
+			_moving = false
+		else:
+			return false
+	if not vale or def.invasores_dentro().any(func(c): return c.global_position.distance_to(global_position) < guard_aggro):
+		recuando = false  # o portão caiu ou tem invasor em cima: luta
+		return false
+	combat_hp = minf(combat_hp + def.guard_recuo_regen * delta, mx)
+	if combat_hp / maxf(mx, 1.0) >= def.guard_volta_pct:
+		recuando = false
+		_popup("De volta!", Color(0.6, 1.0, 0.5))
+		return false
+	var dentro: Vector2 = def.guard_post(self)
+	if global_position.distance_to(dentro) > 10.0 and (not _moving or _target.distance_to(dentro) > 4.0):
+		_go_to(dentro)
+	return true
 
 
 ## Bloco 103: chega no _foe e bate (o mesmo do posto, separado pra patrulha usar).
@@ -2745,6 +2803,10 @@ func take_hit(amount: float, attacker: Node2D) -> void:
 ## Perdeu a luta: cai GRAVE ali mesmo, não anda, e abre a brecha no portão dele.
 func _fall_in_combat(cause: String) -> void:
 	downed = true
+	recuando = false  # Bloco 127
+	var def_c := _defense()
+	if def_c and def_c.has_method("guarda_caiu"):
+		def_c.guarda_caiu(self)  # Bloco 127: a telemetria da noite
 	hurt(cause, "grave")
 	var res := _research()
 	_care_left = downed_untreated_time * (res.untreated_mult() if res else 1.0)
@@ -2823,6 +2885,8 @@ func _pick_rescue() -> Node:
 		var r = w._rescuer
 		if r != null and is_instance_valid(r) and r != self and r.get("_rescue") == w:
 			continue  # outro médico já vai buscar esse
+		if _resgate_perigoso(w):
+			continue  # Bloco 127: tem criatura viva perto dele: o médico espera (o relógio do caído corre como sempre)
 		var d := global_position.distance_to(w.global_position)
 		if d < best_d:
 			best_d = d
@@ -2831,6 +2895,18 @@ func _pick_rescue() -> Node:
 		_rescue = best
 		best._rescuer = self
 	return best
+
+
+## Bloco 127: tem criatura viva a menos de `medico_resgate_raio` do caído? (o médico não vai servir de alvo)
+func _resgate_perigoso(w: Node) -> bool:
+	var def := _defense()
+	if def == null:
+		return false
+	for c in get_tree().get_nodes_in_group("criaturas"):
+		if is_instance_valid(c) and c.is_alive() and String(c.get("morador")) == "" \
+				and c.global_position.distance_to(w.global_position) < def.medico_resgate_raio:
+			return true
+	return false
 
 
 func _rescue_dest() -> Vector2:
@@ -3120,6 +3196,23 @@ func _go_protest() -> void:
 
 func has_home() -> bool:
 	return _home != null and is_instance_valid(_home)
+
+
+## Bloco 127: a casa dele caiu em ruínas: perde a cama (acorda e sai, se estava dormindo lá dentro). Procura outra pela
+## decisão de sempre; sem cama livre, dorme ao relento até o conserto.
+func perde_a_cama() -> void:
+	if _home != null and is_instance_valid(_home):
+		_home.set_inside(self, false)
+		_home.release_slot(self)
+	_home = null
+	_home_slot = -1
+	_camp_pos = null
+	if _inside and _on_duty == null and _at_taverna == null:
+		_inside = false
+		_resting = false
+		_agent.avoidance_enabled = avoidance_enabled
+		queue_redraw()
+	_decision_timer = 0.0
 
 
 ## Pega uma cama (se ainda não tem casa). Vindo do save, tenta a mesma cama de antes;

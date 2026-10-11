@@ -557,8 +557,8 @@ func sync_static(view_rect: Rect2) -> bool:
 	if src.is_in_group("canteiros") or src.is_in_group("parques") or src.is_in_group("obras"):
 		_top.queue_redraw()
 		queue_redraw()
-	elif src.is_in_group("maquinas"):
-		_top.queue_redraw()  # Bloco 105: a barra do desgaste
+	elif src.is_in_group("maquinas") or src.has_node("Integridade"):
+		_top.queue_redraw()  # Bloco 105: a barra do desgaste (Bloco 127: e a do prédio ferido por invasor)
 	var changed := _update_box()
 	position = Iso.iso(_view.art(src.global_position), box.zb).round()
 	return changed
@@ -977,7 +977,7 @@ func _draw_top() -> void:
 		_top.draw_set_transform(Vector2.ZERO)
 		_desenha_pilha(k)
 		return
-	if src.is_in_group("maquinas"):
+	if src.is_in_group("maquinas") or src.has_node("Integridade"):
 		_draw_desgaste()
 	if not src.is_in_group("criaturas"):
 		return
@@ -1005,12 +1005,20 @@ func _draw_top() -> void:
 ## Bloco 105: a barra do DESGASTE em cima da máquina gasta (abaixo do limite da preventiva): verde -> amarelo ->
 ## vermelho; quebrada, a barra vazia e o "!" (o mecânico conserta com material).
 func _draw_desgaste() -> void:
+	var m: Node = src
+	var predio := false
 	if not src.has_method("manut_condicao"):
-		return
+		# Bloco 127: o prédio ferido por invasor guarda a condição num filho "Integridade" (estruturas.gd)
+		m = src.get_node_or_null("Integridade") if src.has_node("Integridade") else null
+		if m == null or not m.has_method("manut_condicao"):
+			return
+		predio = true
 	var mt := src.get_tree().get_first_node_in_group("manutencao")
 	var limite: float = float(mt.limite_preventiva) if mt else 0.6
-	var quebrada: bool = src.manut_quebrada()
-	var c: float = 0.0 if quebrada else clampf(src.manut_condicao(), 0.0, 1.0)
+	if predio:
+		limite = 0.995  # (o prédio mostra qualquer dano: a barra e, em ruínas, o "!")
+	var quebrada: bool = m.manut_quebrada()
+	var c: float = 0.0 if quebrada else clampf(m.manut_condicao(), 0.0, 1.0)
 	if c >= limite and not quebrada:
 		return
 	var y := -56.0

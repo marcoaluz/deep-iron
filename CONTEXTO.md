@@ -1,9 +1,18 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-11. Branch `isometrico`. Último Bloco: **126**. TUDO até o Bloco 126 (e o `.docx` da documentação do jogo) **está enviado** pro GitHub: `HEAD == origin/isometrico` (e0871e9c1). Push só com o OK do Marco. Fila de prompts vazia; o que falta é o Marco VALIDAR jogando/ouvindo os blocos 114–126 (nada deles foi jogado nem ouvido) e conferir a licença da Eleven Music.
+Atualizado em 2026-10-11. Branch `isometrico`. Último Bloco: **127** (commit local, sem push). TUDO até o Bloco 126 está enviado pro GitHub. Push só com o OK do Marco. Fila de prompts vazia; o que falta é o Marco VALIDAR jogando/ouvindo os blocos 114–126 (nada deles foi jogado nem ouvido) e conferir a licença da Eleven Music.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
+
+## Bloco 127 — LINHA DE FRENTE, PORTÃO COMO 2ª DEFESA E INVASÃO DENTRO DA VILA (feito; commit local, sem push)
+
+Pedido do Marco (plano aprovado, com as respostas: médico só resgata sem criatura perto; Centro nunca vira ruína; posto externo também em noite comum; ícone: reaproveitado). Relatório `docs/BLOCO127_LINHA_DE_FRENTE.md`; teste `b127_linha_de_frente` (registrado no GUT); simulação `tools/sim_invasao.gd` + `docs/telemetria/bloco127/`.
+- `barricada.gd`: o POSTIGO (NavigationLink2D na camada 2, `CAMADA_GUARDA`; só agente com `pode_postigo()`), `separa(a, b, quem)`, `abertura_visual()` (entreaberto por ~1 s quando um guarda cruza; `iso_art._portao_estado` lê).
+- `defense.gd`: `guard_post_ativo` (linha de frente FORA, `frente_dist`) x `guard_post` (dentro, o do recuo); `portao_cedeu`, `guarda_caiu`, `invasores_dentro`, `_frente_tick` (banners), `saque_invasor` (teto por noite), `last_result` com a noite. `ipezinho.gd`: camadas de navegação, `_recuo_tick`, médico só resgata sem criatura perto (`_resgate_perigoso`), `perde_a_cama`, estação em ruínas fora da escolha.
+- `creature.gd`: `_alvo_com_portao` (defensor > quem bateu > portão; brecha = entra e saqueia), roubo do Lumívoro dentro, `_quebra_predio`. NOVO `estruturas.gd` + `props/integridade_predio.gd` (Desgaste do Bloco 105 nos prédios), `manutencao.gd` (`custo_de`, `limite_de`), `casa.gd`/`armazem.gd` (ruína), save `estruturas`, telemetria (6 colunas), F3 "Linha de frente", textos do catálogo e do diário, `hud` (alerta de invasão conta os de dentro), `iso_billboard` (barra do prédio ferido).
+- Tirou a igreja de enfeite (`igreja_0`) do `MAP_DECOR_V3` (a do leste, ruína da vila antiga, ficou).
+- Nada jogado nem visto na tela; os números do equilíbrio são da simulação headless (ver o relatório).
 
 ## Bloco 126 — EPÍLOGO, ESTATÍSTICAS E MODO INFINITO (feito; enviado)
 

@@ -17,7 +17,8 @@ const COLUNAS := ["dia", "estacao", "tempo_real_s", "creditos", "ferro", "cobre"
 	"pol_jornada", "pol_racao", "pol_seguranca", "pol_migracao", "trocas_politica", "fraqueza", "comida_servida_dia", "acidentes_dia",  # Bloco 108 (servida/acidentes: desde a última linha)
 	"ociosos_expediente", "na_secundaria", "mortes_bobas", "caronas",
 	"amizades", "casais", "casamentos",  # Bloco 110
-	"bebes", "criancas", "aprendizes", "gravidas", "nascimentos", "camas_livres"]  # Bloco 111  # Bloco 109 (ociosos: média no expediente do dia; bobas/caronas: da sessão)  # Bloco 107 (os "feito/colhido": total da partida)  # Bloco 106: os compartimentos cheios em todos os armazéns (separados por "+") e quantos esperam espaço agora  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
+	"bebes", "criancas", "aprendizes", "gravidas", "nascimentos", "camas_livres",  # Bloco 111
+	"noite_guardas_caidos", "noite_portao_cedeu", "noite_saque", "noite_predios_feridos", "predios_feridos_agora", "predios_ruinas"]  # Bloco 127 (noite_*: a última invasão)  # Bloco 109 (ociosos: média no expediente do dia; bobas/caronas: da sessão)  # Bloco 107 (os "feito/colhido": total da partida)  # Bloco 106: os compartimentos cheios em todos os armazéns (separados por "+") e quantos esperam espaço agora  # Bloco 104 (os 3 últimos: total da partida)  # Bloco 99: o minério que entrou nos armazéns no dia, quanto veio de vagonete e quem está dentro da mina agora
 
 var arquivo := ""
 var _t0 := 0
@@ -232,6 +233,10 @@ func registra() -> void:
 	var cf: Dictionary = fam.contagem() if fam else {}
 	v.append_array([int(cf.get("bebes", 0)), int(cf.get("criancas", 0)), int(cf.get("aprendizes", 0)), int(cf.get("gravidas", 0)),
 		int(cf.get("nascimentos", 0)), int(eco6.free_beds()) if eco6 else 0])
+	var lr: Dictionary = defe.last_result if defe and defe.get("last_result") != null else {}  # Bloco 127: a linha de frente e a vila
+	var estr := get_tree().get_first_node_in_group("estruturas")
+	v.append_array([int(lr.get("guardas_caidos", 0)), 1 if lr.get("portao_cedeu", false) else 0, int(lr.get("saque", 0)),
+		int(lr.get("predios_danificados", 0)), estr.feridos().size() if estr else 0, int(estr.ruinas_total) if estr else 0])
 	var f := FileAccess.open(arquivo, FileAccess.READ_WRITE)
 	if f == null:
 		return

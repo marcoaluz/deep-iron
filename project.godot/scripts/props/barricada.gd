@@ -70,6 +70,15 @@ const LEVEL_NAMES := ["sem muro", "Paliçada de madeira", "Muro de pedra", "Port
 ## Distância (px) entre as faixas.
 @export var faixa_espaco: float = 14.0
 
+@export_group("Postigo dos guardas (Bloco 127)")
+## Distância (px), ao longo da paliçada, do centro do portão até o POSTIGO (a porta só dos guardas, sempre ligada
+## na malha pra quem tem a camada dos guardas; o portão fechado segue fechado pra todos os outros).
+@export var postigo_offset: float = 26.0
+## Segundos que o portão aparece ENTREABERTO depois que um guarda passa pelo postigo.
+@export var postigo_anima_segundos: float = 1.2
+## Raio (px) em volta do postigo em que um guarda conta como "passando".
+@export var postigo_raio: float = 22.0
+
 var panel_id := "defesa"
 var level: int = 0
 var hp: float = 0.0
@@ -88,7 +97,12 @@ var _vigia_t := 0.0
 var _livre := true
 var _snap := true  # no 1º quadro (e depois de carregar o save) vai direto pro estado certo, sem animar nem fazer barulho
 var _faixas: Array[NavigationLink2D] = []
+## Bloco 127: o postigo (link só da camada dos guardas) e o tempo do "entreaberto" (um guarda cruzando).
+var _postigo: NavigationLink2D = null
+var _postigo_t := 0.0
 const VIGIA_INTERVALO := 0.25
+## Camada de navegação só dos guardas (bit 2 do bitmask; a malha e os agentes comuns usam o bit 1).
+const CAMADA_GUARDA := 2
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _label: Label = $StatusLabel
@@ -120,6 +134,7 @@ func _process(delta: float) -> void:
 		_alvo = novo
 		Audio.portao(novo > 0.5, global_position)  # Bloco 115: abre / fecha (sem arquivo, o clangue de antes)
 	abertura = move_toward(abertura, _alvo, delta / maxf(anima_segundos, 0.01))
+	_postigo_t = maxf(_postigo_t - delta, 0.0)
 	var livre := _alvo > 0.5 and abertura >= 0.55  # fechando, a passagem some na hora; abrindo, só com a folha aberta
 	if livre != _livre:
 		_livre = livre
@@ -166,6 +181,9 @@ func damage(amount: float) -> void:
 		var hud := get_tree().get_first_node_in_group("hud")
 		if hud:
 			hud.show_toast("%s foi derrubado! As criaturas estão entrando." % display_name, Color(1.0, 0.4, 0.35))
+		var def := get_tree().get_first_node_in_group("defense")
+		if def and def.has_method("portao_cedeu"):
+			def.portao_cedeu(self)  # Bloco 127: o banner "O portão cedeu" e a contagem da noite
 		broken.emit()
 	_update_visual()
 
@@ -286,8 +304,11 @@ func lado_de(p: Vector2) -> int:
 
 
 ## Esses dois pontos (na superfície) ficam em lados opostos de um portão FECHADO? (então o caminho precisa do portão)
-func separa(a: Vector2, b: Vector2) -> bool:
+## Bloco 127: pra um GUARDA (quem) não: ele passa pelo postigo.
+func separa(a: Vector2, b: Vector2, quem: Node = null) -> bool:
 	if _livre or lado_de(a) == lado_de(b):
+		return false
+	if quem != null and quem.has_method("pode_postigo") and quem.pode_postigo():
 		return false
 	var env := get_tree().get_first_node_in_group("environment")
 	return env == null or (env.level_at(a) == 0 and env.level_at(b) == 0)
@@ -339,8 +360,37 @@ func _alguem_no_vao() -> bool:
 	return false
 
 
+## Bloco 127: o quanto o portão APARECE aberto: a abertura, mas com a folha a meio caminho (nunca menos) enquanto um guarda
+## cruza o postigo. A vista isométrica desenha por este; a passagem de verdade (as faixas) segue a `abertura`.
+func abertura_visual() -> float:
+	if _postigo_t > 0.0 and is_standing():
+		return maxf(abertura, 0.5)
+	return abertura
+
+
+## Bloco 127: onde fica o postigo (o centro das duas pontas), ao longo da paliçada.
+func postigo_pos() -> Vector2:
+	var along := inside_dir()
+	return global_position + Vector2(along.y, along.x) * postigo_offset
+
+
+## Bloco 127: um guarda está cruzando o postigo agora? (o portão entreabre pra ele, sem abrir as faixas dos outros)
+func _vigia_postigo() -> void:
+	if _livre or not is_standing():
+		return
+	var p := postigo_pos()
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		if is_instance_valid(w) and w.has_method("pode_postigo") and w.pode_postigo() \
+				and w.global_position.distance_to(p) <= postigo_raio:
+			if _postigo_t <= 0.0:
+				Audio.portao(true, global_position)  # (o clangue da folha; sem arquivo novo)
+			_postigo_t = postigo_anima_segundos
+			return
+
+
 ## A cada 0,25 s: a janela do guarda corre; quem espera com o portão fechado chama (um guarda abre, ou alguém ouve).
 func _vigia_espera(dt: float) -> void:
+	_vigia_postigo()  # Bloco 127
 	_janela = maxf(_janela - dt, 0.0)
 	if _livre or _alvo_aberto() or _criatura_perto():
 		_espera_t = 0.0
@@ -375,6 +425,14 @@ func _cria_faixas() -> void:
 		l.end_position = along * alcance + perp * off
 		add_child(l)
 		_faixas.append(l)
+	# Bloco 127: o POSTIGO — mais um link, ao lado das faixas, só da camada dos guardas e sempre ligado
+	_postigo = NavigationLink2D.new()
+	_postigo.name = "Postigo"
+	_postigo.bidirectional = true
+	_postigo.navigation_layers = CAMADA_GUARDA
+	_postigo.start_position = -along * alcance + perp * postigo_offset
+	_postigo.end_position = along * alcance + perp * postigo_offset
+	add_child(_postigo)
 
 
 func _liga_faixas() -> void:

@@ -106,6 +106,25 @@ const WEAPON_DESCRIPTIONS := {
 ## ...e essa fração dos CRÉDITOS. (Uma vez por portão por invasão.)
 @export_range(0.0, 1.0) var raid_credit_percent: float = 0.12
 
+@export_group("Linha de frente (Bloco 127)")
+## Distância (px) do portão da floresta até o posto dos guardas, pra FORA da paliçada (a linha de frente).
+@export var frente_dist: float = 70.0
+## Guarda com a vida de luta abaixo desta fração recua pelo postigo pro posto de dentro...
+@export_range(0.0, 1.0) var guard_recua_pct: float = 0.35
+## ...regenera esta vida de luta por segundo enquanto está recuado...
+@export var guard_recuo_regen: float = 1.5
+## ...e só volta pra linha de frente quando chega a esta fração da vida de luta.
+@export_range(0.0, 1.0) var guard_volta_pct: float = 0.7
+## O médico só sai pra resgatar um guarda caído FORA da paliçada se não houver criatura viva a menos de tantos px dele.
+@export var medico_resgate_raio: float = 170.0
+
+@export_group("Invasão dentro da vila (Bloco 127)")
+## Lumívoro/Ferrugento que já passou o portão e bate no armazém leva minério e itens (por golpe: o steal_amount dele),
+## até este teto por noite: esta fração do estoque (minério + itens) de quando a invasão começou...
+@export_range(0.0, 1.0) var saque_teto_fracao: float = 0.25
+## ...mas nunca abaixo deste piso (unidades), pra uma vila pobre ainda sentir o roubo.
+@export var saque_teto_piso: float = 30.0
+
 @export_group("Arsenal (Bloco 35)")
 @export var arsenal_credits: int = 150
 ## Pedra (minério de ferro) e madeira pra erguer o Arsenal.
@@ -247,6 +266,16 @@ var _warned_day: int = -1
 var _spawn_queue: Array = []  # [{kind, at}]
 ## Bloco 36: portões que já foram saqueados nesta invasão (brecha rouba uma vez só).
 var _raided_gates: Array = []
+## Bloco 127: o que aconteceu nesta noite (telemetria e banners): guardas caídos, o portão cedeu, o que foi roubado dentro
+## da vila e o teto, e os avisos já dados.
+var guardas_caidos_noite := 0
+var portao_cedeu_noite := false
+var saque_noite := 0.0
+var _saque_teto := 0.0
+var _estoque_cache := 0.0
+var _frente_avisada := false
+var _dentro_avisado := false
+var _dentro_t := 0.0
 var _night_time: float = 0.0
 var _sound_timer := 0.0
 ## Bloco 62: chefe por estação da partida: {"<n>": "veio" | "derrotado" | "fugiu"}.
@@ -423,6 +452,111 @@ func unarmed_guards() -> Array:
 	return guards().filter(func(w): return w.weapon == "")
 
 
+# ------------------------------------------------------------ linha de frente e invasão dentro da vila (Bloco 127)
+## O portão cedeu (barricada.gd chama no golpe que zera a vida): banner e a contagem da noite.
+func portao_cedeu(g: Node) -> void:
+	if invasion_active:
+		portao_cedeu_noite = true
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_banner("O PORTÃO CEDEU", "%s caiu: o que está lá fora entra na vila. Os guardas seguram o que der (G: Defesa)." % [
+			String(g.get("display_name")) if g.get("display_name") != null else "O portão"])
+	Audio.alarm()
+
+
+## Um guarda caiu em combate (ipezinho.gd chama): a telemetria da noite.
+func guarda_caiu(_w: Node) -> void:
+	if invasion_active:
+		guardas_caidos_noite += 1
+
+
+## Os invasores que estão DENTRO da vila agora (passaram o portão ou saíram do poço), vivos, na superfície.
+## Rato, morcego, sombra e os moradores do fundo têm o sistema deles e não entram aqui.
+func invasores_dentro() -> Array:
+	var env := get_tree().get_first_node_in_group("environment")
+	return creatures().filter(func(c):
+		if not is_instance_valid(c) or not c.is_alive() or not bool(c.inside) or c.kind not in ["lumivoro", "ferrugento"]:
+			return false
+		return env == null or not env.has_method("level_at") or env.level_at(c.global_position) == 0)
+
+
+## Os guardas que estão no posto da linha de frente (fora da paliçada) agora.
+func guardas_na_frente() -> Array:
+	return guards().filter(func(w): return w.get("_ai_state") == "guard" and not w.get("downed") and not w.get("injured") and not bool(w.get("recuando")) and w.global_position.distance_to(guard_post_ativo(w)) < 40.0)
+
+
+## Uma vez por segundo, na invasão: o banner dos guardas na frente e o dos invasores dentro.
+func _frente_tick(delta: float) -> void:
+	_dentro_t -= delta
+	if _dentro_t > 0.0:
+		return
+	_dentro_t = 1.0
+	_estoque_cache = _estoque_saqueavel()
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud == null:
+		return
+	if not _frente_avisada and linha_de_frente_ativa():
+		var n := guardas_na_frente().size()
+		if n > 0:
+			_frente_avisada = true
+			hud.show_banner("OS GUARDAS SEGURAM O PORTÃO", "%d guarda%s na linha de frente, do lado de fora. O portão é a segunda defesa." % [n, "s" if n != 1 else ""])
+	if not _dentro_avisado:
+		var dentro := invasores_dentro().filter(func(c): return c.kind == "lumivoro")
+		if not dentro.is_empty():
+			_dentro_avisado = true
+			hud.show_banner("INVASORES DENTRO DA VILA",
+				"%d invasor%s passou%s: vão roubar o armazém e, nas ondas fortes, quebrar prédios. Guardas, na vila!" % [
+					dentro.size(), "es" if dentro.size() != 1 else "", "ram" if dentro.size() != 1 else ""])
+			Audio.alarm()
+
+
+## O que um invasor pode levar do armazém agora (minério + itens soltos; o que está reservado pra obra fica).
+func _estoque_saqueavel() -> float:
+	var eco := get_tree().get_first_node_in_group("economy")
+	if eco == null:
+		return 0.0
+	var total := 0.0
+	for id in preload("res://scripts/core/items.gd").ITENS:
+		var onde := String(preload("res://scripts/core/items.gd").onde(id))
+		if onde in ["stock", "itens"]:
+			total += float(eco.livre(id))
+	return total
+
+
+## Bloco 127: o invasor que JÁ ESTÁ dentro (portão caído, brecha, poço) bate no armazém e leva minério e itens, até o
+## teto da noite. `golpe` é a quantidade do golpe (já com o `roubo` da vigilância). Retorna o que levou.
+func saque_invasor(armazem: Node, golpe: float) -> float:
+	if not invasion_active or golpe <= 0.0 or _saque_noite_cheio():
+		return 0.0
+	var eco := get_tree().get_first_node_in_group("economy")
+	var Items := preload("res://scripts/core/items.gd")
+	var left := minf(golpe, maxf(_saque_teto - saque_noite, 0.0))
+	var levou := 0.0
+	for id in Items.ITENS:  # (primeiro o minério, depois os itens: a ordem da grade)
+		if left <= 0.0:
+			break
+		var onde := String(Items.onde(id))
+		if onde not in ["stock", "itens"]:
+			continue
+		var pode := minf(left, float(eco.livre(id))) if eco else 0.0
+		if pode <= 0.0:
+			continue
+		var tirou: float = float(eco.tira_do_armazem(armazem, id, pode))
+		left -= tirou
+		levou += tirou
+	saque_noite += levou
+	return levou
+
+
+## Ainda tem o que um invasor dentro da vila levar nesta noite? (o teto da noite e o estoque livre, de 1 em 1 s)
+func saque_possivel() -> bool:
+	return invasion_active and not _saque_noite_cheio() and _estoque_cache >= 1.0
+
+
+func _saque_noite_cheio() -> bool:
+	return saque_noite >= _saque_teto - 0.01
+
+
 # ------------------------------------------------------------ brecha (Bloco 36)
 ## Quem está caído em combate esperando o médico.
 func downed_guards() -> Array:
@@ -514,26 +648,54 @@ func raid(creature: Node, armazem: Node) -> void:
 
 ## Posto de cada guarda: metade no portão da floresta, metade na boca do poço (Bloco 80: lá não tem
 ## muro; o posto só existe com o nível 2 aberto). Os postos: [ponto, lado da vila].
+## Bloco 127: este é o posto de DENTRO (o do recuo); o que o guarda usa de noite é `guard_post_ativo`.
 func guard_post(worker: Node) -> Vector2:
+	return _posto_de(worker, false)
+
+
+## Bloco 127: a LINHA DE FRENTE — o posto de verdade da vigília e da invasão: no portão da floresta, FORA da paliçada
+## (`frente_dist` px à frente do portão; o guarda passa pelo postigo); o do poço continua onde era (lá não tem muro).
+func guard_post_ativo(worker: Node) -> Vector2:
+	return _posto_de(worker, linha_de_frente_ativa())
+
+
+## Tem portão da floresta pra fazer a linha de frente por fora?
+func linha_de_frente_ativa() -> bool:
+	return gate("tunel") != null
+
+
+func _posto_de(worker: Node, externo: bool) -> Vector2:
 	var list := guards()
 	var i := maxi(list.find(worker), 0)
 	var postos: Array = []
 	var t := gate("tunel")
 	if t:
 		var dt: Vector2 = t.inside_dir() if t.has_method("inside_dir") else Vector2.DOWN  # Bloco 74: o lado da vila
-		postos.append([t.global_position + dt * 30.0, dt])
+		postos.append([t.global_position + dt * 30.0, dt, true])
 	var pp := posto_poco()
 	if pp != Vector2.INF:
-		postos.append([pp, _poco_dentro()])
+		postos.append([pp, _poco_dentro(), false])
 	if postos.is_empty():
 		var hub := get_tree().get_first_node_in_group("village_hub")
-		postos.append([hub.global_position + Vector2(0, 60) if hub else Vector2.ZERO, Vector2.DOWN])
+		postos.append([hub.global_position + Vector2(0, 60) if hub else Vector2.ZERO, Vector2.DOWN, false])
 	var posto: Array = postos[i % postos.size()]
 	var base: Vector2 = posto[0]
 	var dentro: Vector2 = posto[1]
+	var fundo := dentro  # pra que lado as fileiras de trás andam
 	var slot := i / postos.size()
 	var lado := Vector2(dentro.y, -dentro.x)  # ao longo do portão (ou da boca do poço)
-	return base + lado * (-24.0 + 16.0 * (slot % 4)) + dentro * (10.0 * floorf(slot / 4.0))
+	if externo and bool(posto[2]) and t:
+		base = t.global_position - dentro * frente_dist
+		fundo = -dentro
+	var p: Vector2 = base + lado * (-24.0 + 16.0 * (slot % 4)) + fundo * (10.0 * floorf(slot / 4.0))
+	if externo and bool(posto[2]):
+		var env := get_tree().get_first_node_in_group("environment")
+		var hub2 := get_tree().get_first_node_in_group("village_hub")
+		if env and hub2 and hub2.get_parent() != null and hub2.get_parent() is Node2D:
+			var q := NavigationServer2D.map_get_closest_point((hub2.get_parent() as Node2D).get_world_2d().navigation_map, p)
+			if q != Vector2.ZERO:  # (a malha ainda não sincronizou: fica o ponto calculado)
+				p = q
+	return p
 
 
 # ------------------------------------------------------------ armas / Arsenal (Bloco 35)
@@ -914,6 +1076,7 @@ func _process(delta: float) -> void:
 			else:
 				_spawn(k)
 		_boss_tick(delta)
+		_frente_tick(delta)  # Bloco 127
 	_moradores_tick(delta)  # Bloco 103
 	_ratos_tick(dn)  # Bloco 124
 
@@ -1054,6 +1217,13 @@ func start_invasion() -> void:
 	_night_time = 0.0
 	_spawn_queue = []
 	_spawned = 0
+	guardas_caidos_noite = 0  # Bloco 127
+	portao_cedeu_noite = false
+	saque_noite = 0.0
+	_estoque_cache = _estoque_saqueavel()
+	_saque_teto = maxf(saque_teto_piso, saque_teto_fracao * _estoque_cache)
+	_frente_avisada = false
+	_dentro_avisado = false
 	var comp := composicao(wave)  # Bloco 103: a mesma conta da previsão
 	var lumi: int = comp.lumivoro
 	var ferr: int = comp.ferrugento
@@ -1071,7 +1241,8 @@ func start_invasion() -> void:
 	if chefe:
 		_spawn_queue.append({"kind": "chefe", "at": spawn_spread * 0.6})
 	_spawn_queue.sort_custom(func(a, b): return a.at < b.at)
-	last_result = {"onda": wave, "tier": tier(), "total": lumi + ferr + gosmas + magmantes + (1 if chefe else 0), "derrubadas": 0, "chefe": "veio" if chefe else ""}
+	last_result = {"onda": wave, "tier": tier(), "total": lumi + ferr + gosmas + magmantes + (1 if chefe else 0), "derrubadas": 0, "chefe": "veio" if chefe else "",
+		"guardas_caidos": 0, "portao_cedeu": false, "saque": 0, "predios_danificados": 0}  # Bloco 127
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
 		hud.show_banner("INVASÃO! (onda %d, tier %d)" % [wave, tier()], "%s. Aguentem até o amanhecer." % texto_onda(comp))
@@ -1432,6 +1603,11 @@ func end_invasion() -> void:
 		last_result.derrubadas = killed_tonight
 		if last_result.chefe != "":
 			last_result.chefe = bosses.get(str(_season_number()), last_result.chefe)
+		last_result["guardas_caidos"] = guardas_caidos_noite  # Bloco 127: a noite pra telemetria
+		last_result["portao_cedeu"] = portao_cedeu_noite
+		last_result["saque"] = roundi(saque_noite)
+		var est := get_tree().get_first_node_in_group("estruturas")
+		last_result["predios_danificados"] = int(est.danificados_noite) if est else 0
 	_boss = null
 	for c in left:  # (Bloco 103: creatures() já deixa os moradores do fundo de fora: eles ficam)
 		c.leave_at_dawn()

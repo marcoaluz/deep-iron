@@ -1723,7 +1723,7 @@ const MAP_DECOR := [
 ## (andaime e escada de mão no paredão, guindaste no 2º degrau, casinha de pedra no 1º, vagonete na 2ª
 ## abertura, entulho no pé, carvão e caixotes na frente do armazém) e os pinheiros da montanha.
 const MAP_DECOR_V3 := [
-	["igreja_0", Vector2(330, -640), true], ["poco", Vector2(190, -130), true], ["banco", Vector2(-30, -70), false],
+	["poco", Vector2(190, -130), true], ["banco", Vector2(-30, -70), false],  # (Bloco 127: saiu a igreja de enfeite: a igreja é o prédio do Bloco 88)
 	["banco", Vector2(140, -320), false], ["varal", Vector2(-220, -270), false], ["horta_espantalho", Vector2(-250, -540), false],
 	["horta_pronto", Vector2(-215, -500), false], ["horta_crescendo", Vector2(-170, -520), false],
 	["placa_direcao", Vector2(-255, -2), false], ["caixotes_2", Vector2(250, 70), false], ["barris_2", Vector2(-110, 210), false],

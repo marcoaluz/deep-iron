@@ -40,6 +40,7 @@ func setup(main: Node) -> void:
 	_linha(v, "Eventos:", [["invasão agora", _invasao], ["chuva liga/desliga", _chuva], ["curar todos", _curar], ["liberar pesquisas", _pesquisas]])
 	_linha(v, "Andares:", [["abrir todos", _abre_andares]])
 	_linha(v, "Criaturas:", [["invasão com todos os tipos", _todas_criaturas]])  # Bloco 91
+	_linha(v, "Linha de frente:", [["derrubar o portão", _derruba_portao], ["ferir prédio mais perto", _fere_predio], ["consertar tudo", _conserta_predios]])  # Bloco 127
 	_linha(v, "Vila:", [["evento agora", _evento], ["pedido novo", _pedido], ["caravana: chega/parte", _caravana]])  # Bloco 123 / 125
 	_linha(v, "Ir para:", [["vila", func(): _vai(Vector2(40, -260))], ["S2", func(): _vai(Vector2(-300, 3730))],
 		["S3", func(): _vai(Vector2(-460, 4110))], ["S4", func(): _vai(Vector2(-340, 4530))], ["S5", func(): _vai(Vector2(-460, 4920))],
@@ -185,6 +186,38 @@ func _todas_criaturas() -> void:
 	if not d.boss_alive():
 		d._spawn_boss()
 	d.spawn_todas_novas()  # Bloco 124: rato-de-cinza (x2), sombra solar e o morcego de brasa do S3
+
+
+## Bloco 127: zera a vida do portão da floresta (o banner "O portão cedeu" e as criaturas entram).
+func _derruba_portao() -> void:
+	var g := get_tree().get_first_node_in_group("barricadas")
+	if g and g.is_standing():
+		g.damage(g.hp + 1.0)
+
+
+## Bloco 127: machuca em 40% o prédio mais perto da câmera (casa, armazém, enfermaria, taverna ou Centro), pra ver a barra e o conserto.
+func _fere_predio() -> void:
+	var est := get_tree().get_first_node_in_group("estruturas")
+	var cam := get_viewport().get_camera_2d()
+	if est == null or cam == null:
+		return
+	var melhor: Node2D = null
+	var melhor_d := INF
+	for g in ["casas", "armazens", "enfermarias", "tavernas", "village_hub"]:
+		for n in get_tree().get_nodes_in_group(g):
+			var d := (n as Node2D).global_position.distance_to(cam.global_position)
+			if d < melhor_d:
+				melhor_d = d
+				melhor = n
+	if melhor:
+		est._integ(melhor, true).gasta(0.4)
+
+
+## Bloco 127: devolve todos os prédios feridos a 100%.
+func _conserta_predios() -> void:
+	for a in get_tree().get_nodes_in_group("integridades"):
+		if is_instance_valid(a):
+			a._desgaste.restaura()
 
 
 ## Bloco 123: abre um cartão de evento (o próximo que faz sentido; senão qualquer um, forçado) e abre um pedido da vila.

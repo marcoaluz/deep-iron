@@ -1,0 +1,182 @@
+SIM depois;guardas=2;hab=0.0;onda=1;nivel=1;derrubadas=2/2;guardas_caidos=0;portao_pct=77;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=47;fim=limpou
+SIM depois;guardas=2;hab=0.0;onda=1;nivel=1;derrubadas=2/2;guardas_caidos=0;portao_pct=73;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=41;fim=limpou
+SIM depois;guardas=2;hab=0.0;onda=1;nivel=1;derrubadas=2/2;guardas_caidos=0;portao_pct=3;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=56;fim=limpou
+SIM depois;guardas=3;hab=0.0;onda=1;nivel=1;derrubadas=2/2;guardas_caidos=0;portao_pct=100;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=33;fim=limpou
+SIM depois;guardas=3;hab=0.0;onda=1;nivel=1;derrubadas=2/2;guardas_caidos=0;portao_pct=100;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=28;fim=limpou
+SIM depois;guardas=3;hab=0.0;onda=1;nivel=1;derrubadas=2/2;guardas_caidos=0;portao_pct=100;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=29;fim=limpou
+SIM depois;guardas=2;hab=0.5;onda=1;nivel=1;derrubadas=2/2;guardas_caidos=0;portao_pct=47;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=45;fim=limpou
+SIM depois;guardas=2;hab=0.5;onda=1;nivel=1;derrubadas=2/2;guardas_caidos=0;portao_pct=100;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=33;fim=limpou
+SIM depois;guardas=2;hab=0.5;onda=1;nivel=1;derrubadas=2/2;guardas_caidos=0;portao_pct=100;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=21;fim=limpou
+SIM depois;guardas=3;hab=0.5;onda=1;nivel=1;derrubadas=2/2;guardas_caidos=0;portao_pct=100;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=22;fim=limpou
+SIM depois;guardas=3;hab=0.5;onda=1;nivel=1;derrubadas=2/2;guardas_caidos=0;portao_pct=100;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=27;fim=limpou
+SIM depois;guardas=3;hab=0.5;onda=1;nivel=1;derrubadas=2/2;guardas_caidos=0;portao_pct=100;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=23;fim=limpou
+SIM depois;guardas=3;hab=0.5;onda=2;nivel=1;derrubadas=3/3;guardas_caidos=0;portao_pct=100;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=27;fim=limpou
+SIM depois;guardas=3;hab=0.5;onda=2;nivel=1;derrubadas=3/3;guardas_caidos=0;portao_pct=100;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=28;fim=limpou
+SIM depois;guardas=3;hab=0.5;onda=2;nivel=1;derrubadas=3/3;guardas_caidos=0;portao_pct=100;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=28;fim=limpou
+SIM depois;guardas=3;hab=0.5;onda=3;nivel=1;derrubadas=4/4;guardas_caidos=0;portao_pct=100;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=35;fim=limpou
+SIM depois;guardas=3;hab=0.5;onda=3;nivel=1;derrubadas=4/4;guardas_caidos=1;portao_pct=0;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=58;fim=limpou
+SIM depois;guardas=3;hab=0.5;onda=3;nivel=1;derrubadas=4/4;guardas_caidos=1;portao_pct=10;minerio_perdido=0;creditos_perdidos=0;predios_feridos=0;segundos=48;fim=limpou
+SIM depois;guardas=3;hab=0.5;onda=4;nivel=1;derrubadas=2/5;guardas_caidos=3;portao_pct=0;minerio_perdido=148;creditos_perdidos=60;predios_feridos=2;segundos=-383;fim=amanheceu
+# diag (guardas=3 hab=0.5 onda=4, repeticao 1):
+#   t=20 portao=120
+#     criatura lumivoro hp=22 pos=(-493.0, -99.0) alvo=Ipezinho inside=false
+#     criatura lumivoro hp=9 pos=(-482.0, -96.0) alvo=Ipezinho inside=false
+#     criatura lumivoro hp=29 pos=(-493.0, -98.0) alvo=Ipezinho inside=false
+#     criatura lumivoro hp=47 pos=(-467.0, -273.0) alvo=BarricadaTunel inside=false
+#     criatura lumivoro hp=29 pos=(-532.0, -492.0) alvo=BarricadaTunel inside=false
+#     guarda Didi pos=(-489.0, -87.0) st=guard hp=24 rec=false caido=false
+#     guarda Nando pos=(-445.0, -79.0) st=guard hp=9 rec=true caido=false
+#     guarda Tuco pos=(-270.0, -48.0) st=guard hp=14 rec=true caido=false
+#   t=40 portao=0
+#     criatura lumivoro hp=18 pos=(-311.0, -29.0) alvo=Ipezinho2 inside=true
+#     criatura lumivoro hp=9 pos=(-311.0, -11.0) alvo=Ipezinho inside=true
+#     criatura lumivoro hp=13 pos=(-311.0, 1.0) alvo=Ipezinho3 inside=true
+#     criatura lumivoro hp=47 pos=(-476.0, -103.0) alvo=Ipezinho2 inside=true
+#     criatura lumivoro hp=29 pos=(-472.0, -102.0) alvo=Ipezinho2 inside=true
+#     guarda Didi pos=(-296.0, -5.0) st=guard hp=10 rec=false caido=false
+#     guarda Nando pos=(-291.0, -30.0) st=guard hp=6 rec=false caido=false
+#     guarda Tuco pos=(-265.0, -7.0) st=guard hp=3 rec=false caido=false
+#   t=60 portao=0
+#     criatura lumivoro hp=9 pos=(703.0, -5.0) alvo=Ipezinho inside=true
+#     criatura lumivoro hp=47 pos=(671.0, -5.0) alvo=Ipezinho inside=true
+#     criatura lumivoro hp=16 pos=(729.0, -4.0) alvo=Ipezinho inside=true
+#     guarda Didi pos=(721.0, -5.0) st=guard hp=5 rec=false caido=false
+#     guarda Nando pos=(731.0, -6.0) st=guard hp=6 rec=false caido=false
+#     guarda Tuco pos=(-316.0, -14.0) st=downed hp=40 rec=false caido=true
+#   t=80 portao=0
+#     criatura lumivoro hp=9 pos=(404.0, -217.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=47 pos=(404.0, -217.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=11 pos=(371.0, -236.0) alvo=CentroVila inside=true
+#     guarda Didi pos=(721.0, -5.0) st=downed hp=40 rec=false caido=true
+#     guarda Nando pos=(731.0, -6.0) st=downed hp=40 rec=false caido=true
+#     guarda Tuco pos=(-316.0, -14.0) st=downed hp=40 rec=false caido=true
+#   t=100 portao=0
+#     criatura lumivoro hp=9 pos=(89.0, -237.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=47 pos=(89.0, -237.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=11 pos=(92.0, -238.0) alvo=CentroVila inside=true
+#     guarda Didi pos=(721.0, -5.0) st=downed hp=40 rec=false caido=true
+#     guarda Nando pos=(731.0, -6.0) st=downed hp=40 rec=false caido=true
+#     guarda Tuco pos=(-316.0, -14.0) st=downed hp=40 rec=false caido=true
+#   t=120 portao=0
+#     criatura lumivoro hp=9 pos=(89.0, -237.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=47 pos=(89.0, -237.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=11 pos=(92.0, -238.0) alvo=CentroVila inside=true
+#     guarda Didi pos=(721.0, -5.0) st=downed hp=40 rec=false caido=true
+#     guarda Nando pos=(731.0, -6.0) st=downed hp=40 rec=false caido=true
+#     guarda Tuco pos=(-316.0, -14.0) st=downed hp=40 rec=false caido=true
+#   t=140 portao=0
+#     criatura lumivoro hp=9 pos=(89.0, -237.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=47 pos=(89.0, -237.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=11 pos=(92.0, -238.0) alvo=CentroVila inside=true
+#     guarda Didi pos=(721.0, -5.0) st=downed hp=40 rec=false caido=true
+#     guarda Nando pos=(731.0, -6.0) st=downed hp=40 rec=false caido=true
+#     guarda Tuco pos=(-316.0, -14.0) st=downed hp=40 rec=false caido=true
+SIM depois;guardas=3;hab=0.5;onda=4;nivel=1;derrubadas=2/5;guardas_caidos=3;portao_pct=0;minerio_perdido=148;creditos_perdidos=60;predios_feridos=2;segundos=-383;fim=amanheceu
+# diag (guardas=3 hab=0.5 onda=4, repeticao 2):
+#   t=20 portao=120
+#     criatura lumivoro hp=47 pos=(-526.0, -245.0) alvo=BarricadaTunel inside=false
+#     criatura lumivoro hp=29 pos=(-489.0, -111.0) alvo=BarricadaTunel inside=false
+#     criatura lumivoro hp=40 pos=(-437.0, 69.0) alvo=Ipezinho3 inside=false
+#     criatura lumivoro hp=18 pos=(-454.0, 84.0) alvo=Ipezinho2 inside=false
+#     guarda Jana pos=(-292.0, -14.0) st=guard hp=17 rec=true caido=false
+#     guarda Tuca pos=(-460.0, 84.0) st=guard hp=28 rec=false caido=false
+#     guarda Zé pos=(-441.0, 75.0) st=guard hp=31 rec=false caido=false
+#   t=40 portao=0
+#     criatura lumivoro hp=47 pos=(-345.0, -32.0) alvo=Ipezinho inside=true
+#     criatura lumivoro hp=25 pos=(-312.0, -11.0) alvo=Ipezinho3 inside=true
+#     criatura lumivoro hp=22 pos=(-313.0, -20.0) alvo=Ipezinho2 inside=true
+#     criatura lumivoro hp=2 pos=(-319.0, -28.0) alvo=Ipezinho inside=true
+#     guarda Jana pos=(-330.0, -24.0) st=guard hp=10 rec=false caido=false
+#     guarda Tuca pos=(-305.0, -26.0) st=guard hp=17 rec=false caido=false
+#     guarda Zé pos=(-300.0, -10.0) st=guard hp=11 rec=false caido=false
+#   t=60 portao=0
+#     criatura lumivoro hp=42 pos=(729.0, -4.0) alvo=Armazem inside=true
+#     criatura lumivoro hp=2 pos=(726.0, -5.0) alvo=Armazem inside=true
+#     criatura lumivoro hp=2 pos=(724.0, -5.0) alvo=Armazem inside=true
+#     guarda Jana pos=(-330.0, -24.0) st=downed hp=40 rec=false caido=true
+#     guarda Tuca pos=(634.0, -6.0) st=downed hp=40 rec=false caido=true
+#     guarda Zé pos=(698.0, -5.0) st=downed hp=40 rec=false caido=true
+#   t=80 portao=0
+#     criatura lumivoro hp=42 pos=(229.0, -270.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=2 pos=(175.0, -260.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=2 pos=(229.0, -270.0) alvo=CentroVila inside=true
+#     guarda Jana pos=(-330.0, -24.0) st=downed hp=40 rec=false caido=true
+#     guarda Tuca pos=(634.0, -6.0) st=downed hp=40 rec=false caido=true
+#     guarda Zé pos=(698.0, -5.0) st=downed hp=40 rec=false caido=true
+#   t=100 portao=0
+#     criatura lumivoro hp=42 pos=(88.0, -237.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=2 pos=(75.0, -233.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=2 pos=(88.0, -237.0) alvo=CentroVila inside=true
+#     guarda Jana pos=(-330.0, -24.0) st=downed hp=40 rec=false caido=true
+#     guarda Tuca pos=(634.0, -6.0) st=downed hp=40 rec=false caido=true
+#     guarda Zé pos=(698.0, -5.0) st=downed hp=40 rec=false caido=true
+#   t=120 portao=0
+#     criatura lumivoro hp=42 pos=(88.0, -237.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=2 pos=(75.0, -233.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=2 pos=(88.0, -237.0) alvo=CentroVila inside=true
+#     guarda Jana pos=(-330.0, -24.0) st=downed hp=40 rec=false caido=true
+#     guarda Tuca pos=(634.0, -6.0) st=downed hp=40 rec=false caido=true
+#     guarda Zé pos=(698.0, -5.0) st=downed hp=40 rec=false caido=true
+#   t=140 portao=0
+#     criatura lumivoro hp=42 pos=(88.0, -237.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=2 pos=(75.0, -233.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=2 pos=(88.0, -237.0) alvo=CentroVila inside=true
+#     guarda Jana pos=(-330.0, -24.0) st=downed hp=40 rec=false caido=true
+#     guarda Tuca pos=(634.0, -6.0) st=downed hp=40 rec=false caido=true
+#     guarda Zé pos=(698.0, -5.0) st=downed hp=40 rec=false caido=true
+SIM depois;guardas=3;hab=0.5;onda=4;nivel=1;derrubadas=2/5;guardas_caidos=3;portao_pct=0;minerio_perdido=148;creditos_perdidos=60;predios_feridos=2;segundos=-383;fim=amanheceu
+# diag (guardas=3 hab=0.5 onda=4, repeticao 3):
+#   t=20 portao=107
+#     criatura lumivoro hp=29 pos=(-335.0, -53.0) alvo=BarricadaTunel inside=false
+#     criatura lumivoro hp=11 pos=(-333.0, -41.0) alvo=BarricadaTunel inside=false
+#     criatura lumivoro hp=29 pos=(-531.0, -277.0) alvo=BarricadaTunel inside=false
+#     criatura lumivoro hp=47 pos=(-328.0, -15.0) alvo=BarricadaTunel inside=false
+#     criatura lumivoro hp=29 pos=(-327.0, -17.0) alvo=BarricadaTunel inside=false
+#     guarda Mel pos=(-305.0, -25.0) st=guard hp=17 rec=true caido=false
+#     guarda Dora pos=(-276.0, -26.0) st=guard hp=22 rec=true caido=false
+#     guarda Nina pos=(-270.0, -48.0) st=guard hp=26 rec=true caido=false
+#   t=40 portao=0
+#     criatura lumivoro hp=7 pos=(261.0, -10.0) alvo=Armazem inside=true
+#     criatura lumivoro hp=11 pos=(170.0, -11.0) alvo=Armazem inside=true
+#     criatura lumivoro hp=29 pos=(364.0, -9.0) alvo=Armazem inside=true
+#     criatura lumivoro hp=47 pos=(217.0, -11.0) alvo=Armazem inside=true
+#     criatura lumivoro hp=7 pos=(210.0, -11.0) alvo=Armazem inside=true
+#     guarda Mel pos=(184.0, -12.0) st=guard hp=0 rec=false caido=false
+#     guarda Dora pos=(-298.0, -17.0) st=downed hp=40 rec=false caido=true
+#     guarda Nina pos=(242.0, -10.0) st=guard hp=17 rec=false caido=false
+#   t=60 portao=0
+#     criatura lumivoro hp=11 pos=(731.0, -4.0) alvo=Armazem inside=true
+#     criatura lumivoro hp=29 pos=(724.0, -5.0) alvo=Armazem inside=true
+#     criatura lumivoro hp=45 pos=(728.0, -5.0) alvo=Armazem inside=true
+#     guarda Mel pos=(553.0, -7.0) st=downed hp=40 rec=false caido=true
+#     guarda Dora pos=(-298.0, -17.0) st=downed hp=40 rec=false caido=true
+#     guarda Nina pos=(580.0, -6.0) st=downed hp=40 rec=false caido=true
+#   t=80 portao=0
+#     criatura lumivoro hp=11 pos=(91.0, -237.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=29 pos=(94.0, -238.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=45 pos=(93.0, -238.0) alvo=CentroVila inside=true
+#     guarda Mel pos=(553.0, -7.0) st=downed hp=40 rec=false caido=true
+#     guarda Dora pos=(-298.0, -17.0) st=downed hp=40 rec=false caido=true
+#     guarda Nina pos=(580.0, -6.0) st=downed hp=40 rec=false caido=true
+#   t=100 portao=0
+#     criatura lumivoro hp=11 pos=(91.0, -237.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=29 pos=(94.0, -238.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=45 pos=(93.0, -238.0) alvo=CentroVila inside=true
+#     guarda Mel pos=(553.0, -7.0) st=downed hp=40 rec=false caido=true
+#     guarda Dora pos=(-298.0, -17.0) st=downed hp=40 rec=false caido=true
+#     guarda Nina pos=(580.0, -6.0) st=downed hp=40 rec=false caido=true
+#   t=120 portao=0
+#     criatura lumivoro hp=11 pos=(91.0, -237.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=29 pos=(94.0, -238.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=45 pos=(93.0, -238.0) alvo=CentroVila inside=true
+#     guarda Mel pos=(553.0, -7.0) st=downed hp=40 rec=false caido=true
+#     guarda Dora pos=(-298.0, -17.0) st=downed hp=40 rec=false caido=true
+#     guarda Nina pos=(580.0, -6.0) st=downed hp=40 rec=false caido=true
+#   t=140 portao=0
+#     criatura lumivoro hp=11 pos=(91.0, -237.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=29 pos=(94.0, -238.0) alvo=CentroVila inside=true
+#     criatura lumivoro hp=45 pos=(93.0, -238.0) alvo=CentroVila inside=true
+#     guarda Mel pos=(553.0, -7.0) st=downed hp=40 rec=false caido=true
+#     guarda Dora pos=(-298.0, -17.0) st=downed hp=40 rec=false caido=true
+#     guarda Nina pos=(580.0, -6.0) st=downed hp=40 rec=false caido=true
+FIM

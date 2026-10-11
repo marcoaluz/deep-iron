@@ -79,14 +79,17 @@ nome = Lumívoro
 texto = A amostra derrete em luz no vidro do laboratório: eles são feitos do calor que sobrou do sol. Por isso vêm
   atrás das tochas e das janelas acesas.
 uso = Saber o que são ajuda a esperar por eles: vêm de noite, pela floresta, até o portão.
-comportamento = Vem nas noites de invasão, da floresta, e precisa passar pelo portão. Vai atrás de quem está acordado lá
-  fora, das casas com gente dentro e das tochas acesas; nas casas, quem está dentro morre de medo (o ânimo cai). Foge da
-  luz do dia ao amanhecer.
+comportamento = Vem nas noites de invasão, da floresta, e precisa passar pelo portão. Ataca primeiro o guarda (ou o robô)
+  em pé que estiver ao alcance e quem bateu nele por último; só sem defensor por perto é que ele bate no portão. Se o
+  portão cai e ele passa, vai atrás de quem está acordado, ROUBA minério e itens do armazém (até um teto por noite) e
+  assusta quem está nas casas acesas (o ânimo cai). Nas ondas fortes (os fortes, os elites e a partir do 2º tier) também
+  machuca o prédio em que bate: em ruínas, o prédio para até ser consertado. Foge da luz do dia ao amanhecer.
 fraqueza = A luz forte: os Holofotes deixam eles 30% mais lentos e os guardas batem 30% mais forte.
 porque = A LUZ. Gente acordada lá fora (a lanterna do capacete), casas com gente, enfermaria e taverna ocupadas, e as
   tochas e lampiões da decoração: uma tocha acesa puxa como uma casa duas vezes mais perto.
-dica = Tire as tochas da decoração do caminho entre o portão e as casas, ou ponha perto do posto dos guardas: elas
-  puxam os Lumívoros pra lá.
+dica = Guardas armados e treinados na linha de frente (fora do portão): enquanto eles estão de pé, o portão fica em
+  segundo plano; o ferido recua pelo postigo e volta. Tire as tochas da decoração do caminho entre o portão e as casas,
+  ou ponha perto do posto dos guardas: elas puxam os Lumívoros pra lá.
 historia = No vidro, a amostra ainda brilhava fraquinho, como brasa de fogueira. A pesquisadora apagou a vela pra
   olhar melhor, e a luz do bicho se apagou junto.
 
@@ -95,8 +98,9 @@ nome = Ferrugento
 texto = Debaixo da ferrugem há placas solares minúsculas: o Ferrugento passa o dia carregando e acorda de noite. Come
   metal.
 uso = Sobem pelo poço do elevador e vão direto no armazém. Às vezes viram sucata com peça rara dentro.
-comportamento = Nas noites de invasão sai da boca do poço do elevador (desde que o S2 abriu). Ataca quem está perto;
-  sem ninguém, vai no armazém roubar minério. Ao amanhecer desliga e vira pó de ferrugem.
+comportamento = Nas noites de invasão sai da boca do poço do elevador (desde que o S2 abriu), já dentro da vila. Ataca
+  quem está perto; sem ninguém, vai no armazém roubar minério e, acabando o minério, itens (até um teto por noite).
+  Nas ondas fortes também machuca o armazém em que bate. Ao amanhecer desliga e vira pó de ferrugem.
 fraqueza = A lança de prata bate 60% mais forte neles.
 porque = O POÇO. O poço do elevador não tem muro: desde que a vila abriu o S2, eles sobem por ali e vão atrás do metal
   do armazém.
@@ -135,11 +139,13 @@ nome = Matriarca
 texto = A rainha dos Lumívoros: duas vezes maior, coberta de cristais roxos. A amostra dela é solarita pura.
 uso = Aparece uma vez por estação junto da invasão. O golpe dela come o metal das armas.
 comportamento = Vem com a invasão uma vez por estação. Dentro da vila, grita de tempos em tempos e chama mais
-  Lumívoros. O golpe dela corrói a arma do guarda.
-fraqueza = A luz forte (os Holofotes) e o portão: lá fora ela não chama ninguém.
+  Lumívoros. O golpe dela corrói a arma do guarda e DESTRÓI prédios: cada golpe num prédio machuca seis vezes mais que o
+  de um Lumívoro comum e uma casa vira ruínas em poucos golpes (o Centro da Vila aguenta: só perde até 25%).
+fraqueza = A luz forte (os Holofotes) e a linha de frente: lá fora, com guardas e portão, ela não chama ninguém.
 porque = A ESTAÇÃO. Ela vem uma vez a cada estação, junto com a invasão, e só GRITA (chama mais Lumívoros) depois de
   entrar na vila.
-dica = Segure ela no portão: barricada forte e os melhores guardas lá. Enquanto não entra, ela não chama ninguém.
+dica = Segure ela na linha de frente: os melhores guardas fora do portão e a barricada forte atrás. Se ela entra, as
+  casas é que pagam: tenha mecânico e material pra reconstruir.
 historia = Os cristais da coroa dela ainda zumbiam quando a pesquisadora chegou. Encostando o ouvido, dava pra ouvir os
   outros Lumívoros respondendo, bem longe, na floresta.
 

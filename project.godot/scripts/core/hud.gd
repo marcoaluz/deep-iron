@@ -2175,7 +2175,14 @@ func _refresh_alertas(workers: Array) -> void:
 			var cs: Array = _defense.creatures()
 			inv_n = maxi(cs.size(), 1)
 			inv_dica = "Invasão! %d criatura%s na vila. Guardas no portão (tecla X)." % [cs.size(), "s" if cs.size() != 1 else ""]
-			inv_alvos = cs + portoes
+			var dentro: Array = _defense.invasores_dentro() if _defense.has_method("invasores_dentro") else []
+			if not dentro.is_empty():  # Bloco 127: invasor que já passou o portão (rouba o armazém e quebra prédios)
+				inv_dica = "INVASORES DENTRO DA VILA: %d. Eles roubam o armazém e, nas ondas fortes, quebram prédios. %s" % [
+					dentro.size(), "O portão caiu." if _defense.portao_cedeu_noite else "A linha de frente cedeu."]
+				inv_txt = "%d" % dentro.size()
+				inv_alvos = dentro + portoes
+			else:
+				inv_alvos = cs + portoes
 		elif _defense.is_invasion_night(_day_night.day) and int(_defense.get("_warned_day")) == _day_night.day:
 			inv_n = 1
 			inv_txt = "%dh" % int(_defense.hora_invasao)

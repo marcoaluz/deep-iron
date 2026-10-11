@@ -76,6 +76,7 @@
 [ext_resource type="Script" uid="uid://cqoa0h87ek30d" path="res://scripts/core/pedidos.gd" id="123_pedidos"]
 [ext_resource type="Script" uid="uid://cufeornm5wh3g" path="res://scripts/core/caravana.gd" id="125_caravana"]
 [ext_resource type="Script" uid="uid://4wvuyclyff1i" path="res://scripts/core/estatisticas.gd" id="126_estatisticas"]
+[ext_resource type="Script" path="res://scripts/core/estruturas.gd" id="127_estruturas"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
@@ -381,6 +382,9 @@ script = ExtResource("111_familias")
 
 [node name="Manutencao" type="Node" parent="." unique_id=452415498]
 script = ExtResource("105_manutencao")
+
+[node name="Estruturas" type="Node" parent="." unique_id=1270127001]
+script = ExtResource("127_estruturas")
 
 [node name="Research" type="Node" parent="." unique_id=1876427760]
 script = ExtResource("54_research")

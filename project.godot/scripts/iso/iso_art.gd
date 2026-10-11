@@ -234,6 +234,8 @@ static func _portao_estado(node: Node, lvp: int, standing: bool) -> Dictionary:
 		return q if not q.is_empty() else state("portao", "quebrado")
 	var n := clampi(lvp, 1, 3)
 	var ab := float(node.get("abertura")) if node.get("abertura") != null else 0.0
+	if node.has_method("abertura_visual"):  # Bloco 127: entreaberto enquanto um guarda cruza o postigo
+		ab = float(node.abertura_visual())
 	var quadro := "nivel_%d" % n
 	if ab >= PORTAO_ABERTO_DE:
 		quadro = "aberto_%d" % n

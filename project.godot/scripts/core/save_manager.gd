@@ -150,6 +150,10 @@ extends Node
 ##     primeiro grupo no prazo de uma partida nova, a população que tinha.
 ##   Bloco 123: "pedidos" {abertos [{n, tipo, autor, dia, prazo_dia, meta}], historico, proximo_dia, dias_sem_fome, n, festival_gratis, festival_dobro, inverno_ameno, efeitos, ligado} e
 ##     "eventos" {proximo_dia, ultimo_id, ultimo_dia {evento: dia}, historico, efeitos [{t, chave, v, texto, ate_dia}], ligado}. Save antigo: sem pedidos e sem eventos.
+##   Bloco 127: "estruturas" {predios [{path, pos [x,y], d {c, q}}] (só os prédios feridos por invasor: a condição 1..0 e se caiu em
+##     ruínas), ruinas (quantos já caíram na partida)}. Save antigo = nenhum prédio ferido (100%); o filho "Integridade" de cada
+##     ferido volta ANTES da manutenção (o conserto salvo aponta pra ele). "defense" ganha last_result guardas_caidos/portao_cedeu/
+##     saque/predios_danificados (só telemetria; ausente = 0).
 ##   Bloco 126: "estatisticas" {passaram, mortes, causas {rótulo: n}, invasoes, festas, pedidos_cumpridos}; "sun" ganha "infinito" (modo infinito depois da vitória).
 ##     Save antigo: sem estatísticas (mortes e invasões vêm dos contadores das missões) e sem modo infinito.
 ##   Bloco 125: "caravana" {presente, chegou_dia, parte_dia, proxima_dia, visitas, situacao, estoque/demanda/preco_cobra/preco_paga {id: n}, semente_ate_dia,
@@ -665,6 +669,7 @@ func _collect() -> Dictionary:
 		"pedidos": "pedidos",  # Bloco 123: os pedidos abertos e encerrados, os dias sem fome, o festival guardado
 		"eventos": "eventos",  # Bloco 123: o histórico dos eventos, o próximo, o último, os efeitos que duram
 		"estatisticas": "estatisticas",  # Bloco 126: quem passou, as mortes por causa, os festivais, os pedidos cumpridos
+		"estruturas": "estruturas",  # Bloco 127: os prédios feridos por invasor (condição, ruínas)
 		"caravana": "caravana",  # Bloco 125: a visita (chegada, partida, ofertas, preços), as sementes e o que a vila negociou
 	}
 	for key in singles:
@@ -843,6 +848,9 @@ func apply_pending(main: Node) -> void:
 	var pol := get_tree().get_first_node_in_group("politicas")  # Bloco 108 (save antigo: tudo no padrão)
 	if pol:
 		pol.load_save_data(SaveUtil.dict(data, "politicas"))
+	var estr := get_tree().get_first_node_in_group("estruturas")  # Bloco 127: antes da manutenção (o conserto salvo aponta pra Integridade do prédio)
+	if estr:
+		estr.load_save_data(SaveUtil.dict(data, "estruturas"))
 	var manut := get_tree().get_first_node_in_group("manutencao")  # Bloco 105: depois das máquinas (o conserto aponta pra elas)
 	if manut:
 		manut.load_save_data(SaveUtil.dict(data, "manutencao"))
