@@ -6,33 +6,33 @@
 [ext_resource type="PackedScene" uid="uid://cjmviden6vp81" path="res://scenes/props/comedouro.tscn" id="2_uaf1y"]
 [ext_resource type="PackedScene" uid="uid://jc5mskwsjdq5" path="res://scenes/props/mineral_node.tscn" id="5_j7lav"]
 [ext_resource type="PackedScene" uid="uid://h3b62xw5yax3" path="res://scenes/props/armazem.tscn" id="6_g38uy"]
-[ext_resource type="Script" path="res://scripts/core/environment.gd" id="7_env"]
-[ext_resource type="Script" path="res://scripts/core/hud.gd" id="8_hud"]
-[ext_resource type="Texture2D" path="res://assets/game/floor_cave.png" id="9_floor"]
-[ext_resource type="Texture2D" path="res://assets/game/wall_rock.png" id="10_wall"]
-[ext_resource type="Texture2D" path="res://assets/game/boulder_0.png" id="11_b0"]
-[ext_resource type="Texture2D" path="res://assets/game/boulder_1.png" id="12_b1"]
-[ext_resource type="Texture2D" path="res://assets/game/boulder_2.png" id="13_b2"]
-[ext_resource type="Texture2D" path="res://assets/game/boulder_3.png" id="14_b3"]
-[ext_resource type="Texture2D" path="res://assets/game/boulder_4.png" id="15_b4"]
-[ext_resource type="Texture2D" path="res://assets/game/pebble_0.png" id="16_p0"]
-[ext_resource type="Texture2D" path="res://assets/game/pebble_1.png" id="17_p1"]
-[ext_resource type="Texture2D" path="res://assets/game/pebble_2.png" id="18_p2"]
-[ext_resource type="Texture2D" path="res://assets/game/pebble_3.png" id="19_p3"]
-[ext_resource type="Texture2D" path="res://assets/game/crystal_0.png" id="20_c0"]
-[ext_resource type="Texture2D" path="res://assets/game/crystal_1.png" id="21_c1"]
-[ext_resource type="Texture2D" path="res://assets/game/crystal_2.png" id="22_c2"]
-[ext_resource type="Texture2D" path="res://assets/game/crystal_3.png" id="23_c3"]
-[ext_resource type="Texture2D" path="res://assets/game/torch.png" id="24_torch"]
-[ext_resource type="Texture2D" path="res://assets/game/torch_unlit.png" id="24_torch_unlit"]
-[ext_resource type="Texture2D" path="res://assets/game/support_beam.png" id="25_support"]
+[ext_resource type="Script" uid="uid://chtvk55prhnoh" path="res://scripts/core/environment.gd" id="7_env"]
+[ext_resource type="Script" uid="uid://ll3jfuts6g0a" path="res://scripts/core/hud.gd" id="8_hud"]
+[ext_resource type="Texture2D" uid="uid://prnht5u0m60s" path="res://assets/game/floor_cave.png" id="9_floor"]
+[ext_resource type="Texture2D" uid="uid://dne748ykvj0wk" path="res://assets/game/wall_rock.png" id="10_wall"]
+[ext_resource type="Texture2D" uid="uid://btf3fx1d84lxj" path="res://assets/game/boulder_0.png" id="11_b0"]
+[ext_resource type="Texture2D" uid="uid://cd1ocyu6egamp" path="res://assets/game/boulder_1.png" id="12_b1"]
+[ext_resource type="Texture2D" uid="uid://dtiluexfff7pb" path="res://assets/game/boulder_2.png" id="13_b2"]
+[ext_resource type="Texture2D" uid="uid://iukapivpjdjb" path="res://assets/game/boulder_3.png" id="14_b3"]
+[ext_resource type="Texture2D" uid="uid://c3fw0t4gce03x" path="res://assets/game/boulder_4.png" id="15_b4"]
+[ext_resource type="Texture2D" uid="uid://j6ndfsytkioy" path="res://assets/game/pebble_0.png" id="16_p0"]
+[ext_resource type="Texture2D" uid="uid://degeiqmn28v6s" path="res://assets/game/pebble_1.png" id="17_p1"]
+[ext_resource type="Texture2D" uid="uid://cajb6li7sgyf2" path="res://assets/game/pebble_2.png" id="18_p2"]
+[ext_resource type="Texture2D" uid="uid://p8paj272yefb" path="res://assets/game/pebble_3.png" id="19_p3"]
+[ext_resource type="Texture2D" uid="uid://cf3h0bmicffhm" path="res://assets/game/crystal_0.png" id="20_c0"]
+[ext_resource type="Texture2D" uid="uid://i2ub2a4uf4og" path="res://assets/game/crystal_1.png" id="21_c1"]
+[ext_resource type="Texture2D" uid="uid://cycqepiwb8ltf" path="res://assets/game/crystal_2.png" id="22_c2"]
+[ext_resource type="Texture2D" uid="uid://bdgyex3ysathx" path="res://assets/game/crystal_3.png" id="23_c3"]
+[ext_resource type="Texture2D" uid="uid://ob5rtc5kd42f" path="res://assets/game/torch.png" id="24_torch"]
+[ext_resource type="Texture2D" uid="uid://wvsg5onur145" path="res://assets/game/torch_unlit.png" id="24_torch_unlit"]
+[ext_resource type="Texture2D" uid="uid://cgii6uq31pxet" path="res://assets/game/support_beam.png" id="25_support"]
 [ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="26_light"]
-[ext_resource type="Texture2D" path="res://assets/game/ore_chunk.png" id="27_chunk"]
-[ext_resource type="Script" path="res://scripts/core/economy.gd" id="28_eco"]
-[ext_resource type="Texture2D" path="res://assets/game/coin.png" id="29_coin"]
-[ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="30_shadow"]
+[ext_resource type="Texture2D" uid="uid://b7428b3dtd0we" path="res://assets/game/ore_chunk.png" id="27_chunk"]
+[ext_resource type="Script" uid="uid://jcdeaa3fgfl5" path="res://scripts/core/economy.gd" id="28_eco"]
+[ext_resource type="Texture2D" uid="uid://d1l24oa7g4k1s" path="res://assets/game/coin.png" id="29_coin"]
+[ext_resource type="Texture2D" uid="uid://6ek6n1umgt10" path="res://assets/game/shadow_blob.png" id="30_shadow"]
 [ext_resource type="PackedScene" path="res://scenes/props/casa.tscn" id="31_casa"]
-[ext_resource type="Script" path="res://scripts/core/day_night.gd" id="32_daynight"]
+[ext_resource type="Script" uid="uid://ccrosjundrtx4" path="res://scripts/core/day_night.gd" id="32_daynight"]
 [ext_resource type="PackedScene" path="res://scenes/props/centro_vila.tscn" id="33_hub"]
 [ext_resource type="PackedScene" path="res://scenes/props/escavadeira.tscn" id="34_dig"]
 [ext_resource type="PackedScene" path="res://scenes/props/oficina.tscn" id="35_oficina"]
@@ -40,78 +40,78 @@
 [ext_resource type="PackedScene" path="res://scenes/props/jazida_carvao.tscn" id="37_carvao"]
 [ext_resource type="PackedScene" path="res://scenes/props/horta.tscn" id="38_horta"]
 [ext_resource type="PackedScene" path="res://scenes/props/arvore.tscn" id="39_arvore"]
-[ext_resource type="PackedScene" path="res://scenes/props/toca.tscn" id="90_toca"]
-[ext_resource type="Texture2D" path="res://assets/game/floor_clareira.png" id="40_floor_clareira"]
-[ext_resource type="Texture2D" path="res://assets/game/arvore.png" id="41_arvore_tex"]
+[ext_resource type="Texture2D" uid="uid://da1be0at0bpmf" path="res://assets/game/floor_clareira.png" id="40_floor_clareira"]
+[ext_resource type="Texture2D" uid="uid://b56iblmr1u101" path="res://assets/game/arvore.png" id="41_arvore_tex"]
 [ext_resource type="PackedScene" path="res://scenes/props/elevador.tscn" id="42_elevador"]
 [ext_resource type="PackedScene" path="res://scenes/props/jazida_prata.tscn" id="43_prata"]
-[ext_resource type="Texture2D" path="res://assets/game/floor_deep.png" id="44_floor_deep"]
+[ext_resource type="Texture2D" uid="uid://d4xul0tl6qak" path="res://assets/game/floor_deep.png" id="44_floor_deep"]
 [ext_resource type="PackedScene" path="res://scenes/props/enfermaria.tscn" id="45_enfermaria"]
-[ext_resource type="Script" path="res://scripts/core/morale.gd" id="46_morale"]
-[ext_resource type="Script" path="res://scripts/core/finds.gd" id="47_finds"]
-[ext_resource type="Texture2D" path="res://assets/game/floor_abyss.png" id="48_floor_abyss"]
+[ext_resource type="Script" uid="uid://b7h3lkqmleg3e" path="res://scripts/core/morale.gd" id="46_morale"]
+[ext_resource type="Script" uid="uid://dnbfdhqiyamsl" path="res://scripts/core/finds.gd" id="47_finds"]
+[ext_resource type="Texture2D" uid="uid://uowe1jf62u4g" path="res://assets/game/floor_abyss.png" id="48_floor_abyss"]
 [ext_resource type="PackedScene" path="res://scenes/props/elevador_abismo.tscn" id="49_abismo"]
 [ext_resource type="PackedScene" path="res://scenes/props/jazida_solarita.tscn" id="50_solarita"]
-[ext_resource type="Script" path="res://scripts/core/defense.gd" id="51_defense"]
-[ext_resource type="Script" path="res://scripts/core/diary.gd" id="52_diary"]
-[ext_resource type="Script" path="res://scripts/core/missoes.gd" id="52_missoes"]
-[ext_resource type="Script" path="res://scripts/core/migrantes.gd" id="52_migrantes"]
-[ext_resource type="Script" path="res://scripts/core/pedidos.gd" id="123_pedidos"]
-[ext_resource type="Script" path="res://scripts/core/eventos.gd" id="123_eventos"]
-[ext_resource type="Script" path="res://scripts/core/caravana.gd" id="125_caravana"]
-[ext_resource type="Script" path="res://scripts/core/estatisticas.gd" id="126_estatisticas"]
-[ext_resource type="Script" path="res://scripts/core/catalogo.gd" id="53_catalogo"]
-[ext_resource type="Script" path="res://scripts/core/expedicoes.gd" id="53_expedicoes"]
+[ext_resource type="Script" uid="uid://doojhs1sgw64q" path="res://scripts/core/defense.gd" id="51_defense"]
+[ext_resource type="Script" uid="uid://bjn2l2xoughf5" path="res://scripts/core/diary.gd" id="52_diary"]
+[ext_resource type="Script" uid="uid://chgfeiegpipy3" path="res://scripts/core/migrantes.gd" id="52_migrantes"]
+[ext_resource type="Script" uid="uid://d2rs3l0cvkuad" path="res://scripts/core/missoes.gd" id="52_missoes"]
 [ext_resource type="PackedScene" path="res://scenes/props/barricada.tscn" id="53_barricada"]
-[ext_resource type="Script" path="res://scripts/core/research.gd" id="54_research"]
-[ext_resource type="Script" path="res://scripts/core/sun.gd" id="55_sun"]
-[ext_resource type="Script" path="res://scripts/core/equipment.gd" id="56_equip"]
-[ext_resource type="Script" path="res://scripts/props/hazard_zone.gd" id="57_zone"]
+[ext_resource type="Script" uid="uid://61kglopkpui2" path="res://scripts/core/catalogo.gd" id="53_catalogo"]
+[ext_resource type="Script" uid="uid://dwiwgjg4gmnp0" path="res://scripts/core/expedicoes.gd" id="53_expedicoes"]
+[ext_resource type="Script" uid="uid://ps64bukycid3" path="res://scripts/core/research.gd" id="54_research"]
+[ext_resource type="Script" uid="uid://dn68xa37o31ep" path="res://scripts/core/sun.gd" id="55_sun"]
+[ext_resource type="Script" uid="uid://bcwh6bv80nqui" path="res://scripts/core/equipment.gd" id="56_equip"]
+[ext_resource type="Script" uid="uid://c7ygwb3yntucb" path="res://scripts/props/hazard_zone.gd" id="57_zone"]
 [ext_resource type="PackedScene" path="res://scenes/props/coletor_madeira.tscn" id="70_coletor"]
-[ext_resource type="Script" path="res://scripts/core/schedule.gd" id="71_agenda"]
-[ext_resource type="Script" path="res://scripts/core/calendario.gd" id="72_cal"]
-[ext_resource type="Script" path="res://scripts/core/logistica.gd" id="105_logistica"]
-[ext_resource type="Script" path="res://scripts/core/politicas.gd" id="108_politicas"]
-[ext_resource type="Script" path="res://scripts/core/dificuldade.gd" id="113_dificuldade"]
-[ext_resource type="Script" path="res://scripts/core/relacoes.gd" id="110_relacoes"]
-[ext_resource type="Script" path="res://scripts/core/familias.gd" id="111_familias"]
-[ext_resource type="Script" path="res://scripts/core/manutencao.gd" id="105_manutencao"]
+[ext_resource type="Script" uid="uid://dr3imxrn8jn7w" path="res://scripts/core/schedule.gd" id="71_agenda"]
+[ext_resource type="Script" uid="uid://cu1j6fff8wpym" path="res://scripts/core/calendario.gd" id="72_cal"]
+[ext_resource type="PackedScene" path="res://scenes/props/toca.tscn" id="90_toca"]
+[ext_resource type="Script" uid="uid://dh0xic4g2rlmj" path="res://scripts/core/logistica.gd" id="105_logistica"]
+[ext_resource type="Script" uid="uid://b88a0u8fh4dsw" path="res://scripts/core/manutencao.gd" id="105_manutencao"]
+[ext_resource type="Script" uid="uid://mwoyebcei0fw" path="res://scripts/core/politicas.gd" id="108_politicas"]
+[ext_resource type="Script" uid="uid://dqjs02q1ho27w" path="res://scripts/core/relacoes.gd" id="110_relacoes"]
+[ext_resource type="Script" uid="uid://7csh4vvtckh6" path="res://scripts/core/familias.gd" id="111_familias"]
+[ext_resource type="Script" uid="uid://de0d2jostrnv5" path="res://scripts/core/dificuldade.gd" id="113_dificuldade"]
+[ext_resource type="Script" uid="uid://pj2i6wc13lup" path="res://scripts/core/eventos.gd" id="123_eventos"]
+[ext_resource type="Script" uid="uid://cqoa0h87ek30d" path="res://scripts/core/pedidos.gd" id="123_pedidos"]
+[ext_resource type="Script" uid="uid://cufeornm5wh3g" path="res://scripts/core/caravana.gd" id="125_caravana"]
+[ext_resource type="Script" uid="uid://4wvuyclyff1i" path="res://scripts/core/estatisticas.gd" id="126_estatisticas"]
 
 [node name="Main" type="Node2D" unique_id=1762750082]
 script = ExtResource("1_yd8kv")
 
-[node name="Ambient" type="CanvasModulate" parent="."]
+[node name="Ambient" type="CanvasModulate" parent="." unique_id=2034086470]
 color = Color(0.4, 0.42, 0.54, 1)
 
-[node name="DayNight" type="Node" parent="."]
+[node name="DayNight" type="Node" parent="." unique_id=1204339802]
 script = ExtResource("32_daynight")
 day_color = Color(1, 0.99, 0.96, 1)
 dusk_color = Color(1, 0.8, 0.62, 1)
 night_color = Color(0.34, 0.4, 0.62, 1)
 dawn_color = Color(1, 0.92, 0.84, 1)
 
-[node name="World" type="Node2D" parent="."]
+[node name="World" type="Node2D" parent="." unique_id=661130148]
 y_sort_enabled = true
 
-[node name="Environment" type="Node2D" parent="World"]
+[node name="Environment" type="Node2D" parent="World" unique_id=284170346]
 y_sort_enabled = true
 script = ExtResource("7_env")
+map_rect = Rect2(-700, -454, 1452, 884)
 floor_texture = ExtResource("9_floor")
 wall_texture = ExtResource("10_wall")
+clearing_rect = Rect2(-700, -1040, 1452, 570)
+clearing_floor_texture = ExtResource("40_floor_clareira")
+clearing_tree_texture = ExtResource("41_arvore_tex")
+deep_floor_texture = ExtResource("44_floor_deep")
+abyss_floor_texture = ExtResource("48_floor_abyss")
 boulder_textures = Array[Texture2D]([ExtResource("11_b0"), ExtResource("12_b1"), ExtResource("13_b2"), ExtResource("14_b3"), ExtResource("15_b4")])
 pebble_textures = Array[Texture2D]([ExtResource("16_p0"), ExtResource("17_p1"), ExtResource("18_p2"), ExtResource("19_p3")])
 crystal_textures = Array[Texture2D]([ExtResource("20_c0"), ExtResource("21_c1"), ExtResource("22_c2"), ExtResource("23_c3")])
 torch_texture = ExtResource("24_torch")
 torch_unlit_texture = ExtResource("24_torch_unlit")
-clearing_floor_texture = ExtResource("40_floor_clareira")
-clearing_tree_texture = ExtResource("41_arvore_tex")
-deep_floor_texture = ExtResource("44_floor_deep")
-abyss_floor_texture = ExtResource("48_floor_abyss")
 support_texture = ExtResource("25_support")
-light_texture = ExtResource("26_light")
 shadow_texture = ExtResource("30_shadow")
-map_rect = Rect2(-700, -454, 1452, 884)
-clearing_rect = Rect2(-700, -1040, 1452, 570)
+light_texture = ExtResource("26_light")
 iso_map_file = "res://assets/game/iso/mapa/mapa.json"
 
 [node name="Armazem" parent="World" unique_id=758176732 instance=ExtResource("6_g38uy")]
@@ -123,195 +123,193 @@ position = Vector2(180, 80)
 [node name="MineralNode" parent="World" unique_id=1887962547 instance=ExtResource("5_j7lav")]
 position = Vector2(650, 60)
 
-[node name="MineralNode2" parent="World" instance=ExtResource("5_j7lav")]
+[node name="MineralNode2" parent="World" unique_id=452712588 instance=ExtResource("5_j7lav")]
 position = Vector2(720, 160)
 
-[node name="MineralNode3" parent="World" instance=ExtResource("5_j7lav")]
+[node name="MineralNode3" parent="World" unique_id=924167735 instance=ExtResource("5_j7lav")]
 position = Vector2(960, 60)
 
-[node name="MineralNode4" parent="World" instance=ExtResource("5_j7lav")]
+[node name="MineralNode4" parent="World" unique_id=1920717453 instance=ExtResource("5_j7lav")]
 position = Vector2(1050, 140)
 
-[node name="MineralNode5" parent="World" instance=ExtResource("5_j7lav")]
+[node name="MineralNode5" parent="World" unique_id=1098691102 instance=ExtResource("5_j7lav")]
 position = Vector2(1160, 120)
 ore_total = 350.0
 
-[node name="MineralNode6" parent="World" instance=ExtResource("5_j7lav")]
+[node name="MineralNode6" parent="World" unique_id=510328773 instance=ExtResource("5_j7lav")]
 position = Vector2(1000, -60)
 ore_total = 120.0
 
-[node name="Casa" parent="World" instance=ExtResource("31_casa")]
+[node name="Casa" parent="World" unique_id=743202571 instance=ExtResource("31_casa")]
 position = Vector2(-150, -330)
 
-[node name="Casa2" parent="World" instance=ExtResource("31_casa")]
+[node name="Casa2" parent="World" unique_id=117212812 instance=ExtResource("31_casa")]
 position = Vector2(-200, -170)
 
-[node name="Casa3" parent="World" instance=ExtResource("31_casa")]
+[node name="Casa3" parent="World" unique_id=1048870258 instance=ExtResource("31_casa")]
 position = Vector2(260, -230)
 
-[node name="CentroVila" parent="World" instance=ExtResource("33_hub")]
+[node name="CentroVila" parent="World" unique_id=2102243915 instance=ExtResource("33_hub")]
 position = Vector2(40, -190)
 
-[node name="Escavadeira" parent="World" instance=ExtResource("34_dig")]
+[node name="Escavadeira" parent="World" unique_id=1139735457 instance=ExtResource("34_dig")]
 position = Vector2(-140, 320)
 
-[node name="Oficina" parent="World" instance=ExtResource("35_oficina")]
+[node name="Oficina" parent="World" unique_id=379881947 instance=ExtResource("35_oficina")]
 position = Vector2(-160, 110)
 
-[node name="Enfermaria" parent="World" instance=ExtResource("45_enfermaria")]
+[node name="Enfermaria" parent="World" unique_id=1031861668 instance=ExtResource("45_enfermaria")]
 position = Vector2(320, -420)
 
-[node name="JazidaCobre" parent="World" instance=ExtResource("36_cobre")]
+[node name="JazidaCobre" parent="World" unique_id=26759707 instance=ExtResource("36_cobre")]
 position = Vector2(975, -130)
 
-[node name="JazidaCobre2" parent="World" instance=ExtResource("36_cobre")]
+[node name="JazidaCobre2" parent="World" unique_id=1181721889 instance=ExtResource("36_cobre")]
 position = Vector2(1130, 30)
 
-[node name="JazidaCarvao" parent="World" instance=ExtResource("37_carvao")]
+[node name="JazidaCarvao" parent="World" unique_id=492034407 instance=ExtResource("37_carvao")]
 position = Vector2(770, -125)
 
-[node name="JazidaCarvao2" parent="World" instance=ExtResource("37_carvao")]
+[node name="JazidaCarvao2" parent="World" unique_id=31555349 instance=ExtResource("37_carvao")]
 position = Vector2(620, -70)
 
-[node name="GaleriaOeste" parent="World" instance=ExtResource("5_j7lav")]
+[node name="GaleriaOeste" parent="World" unique_id=1219058215 instance=ExtResource("5_j7lav")]
 position = Vector2(691, -160)
 ore_total = 300.0
 min_village_level = 2
 gallery_name = "oeste"
 
-[node name="GaleriaSudeste" parent="World" instance=ExtResource("36_cobre")]
+[node name="GaleriaSudeste" parent="World" unique_id=2119740027 instance=ExtResource("36_cobre")]
 position = Vector2(1075, -182)
 min_village_level = 3
 gallery_name = "sudeste"
 
-[node name="GaleriaNorte" parent="World" instance=ExtResource("37_carvao")]
+[node name="GaleriaNorte" parent="World" unique_id=1064790912 instance=ExtResource("37_carvao")]
 position = Vector2(1139, -331)
 min_village_level = 4
 gallery_name = "norte"
 
-[node name="GaleriaNordeste" parent="World" instance=ExtResource("5_j7lav")]
+[node name="GaleriaNordeste" parent="World" unique_id=41621497 instance=ExtResource("5_j7lav")]
 position = Vector2(861, -459)
 ore_total = 500.0
 regen_rate = 0.8
 min_village_level = 5
 gallery_name = "nordeste"
 
-[node name="Arvore" parent="World" instance=ExtResource("39_arvore")]
+[node name="Arvore" parent="World" unique_id=740334948 instance=ExtResource("39_arvore")]
 position = Vector2(-640, -700)
 
-[node name="Arvore2" parent="World" instance=ExtResource("39_arvore")]
+[node name="Arvore2" parent="World" unique_id=746140224 instance=ExtResource("39_arvore")]
 position = Vector2(-520, -560)
 
-[node name="Arvore3" parent="World" instance=ExtResource("39_arvore")]
+[node name="Arvore3" parent="World" unique_id=1223395712 instance=ExtResource("39_arvore")]
 position = Vector2(-440, -840)
 
-[node name="Arvore4" parent="World" instance=ExtResource("39_arvore")]
+[node name="Arvore4" parent="World" unique_id=1676033763 instance=ExtResource("39_arvore")]
 position = Vector2(-610, -300)
 
-[node name="Arvore5" parent="World" instance=ExtResource("39_arvore")]
+[node name="Arvore5" parent="World" unique_id=1354281620 instance=ExtResource("39_arvore")]
 position = Vector2(-500, -170)
 
-[node name="Arvore6" parent="World" instance=ExtResource("39_arvore")]
+[node name="Arvore6" parent="World" unique_id=2011576008 instance=ExtResource("39_arvore")]
 position = Vector2(-420, -420)
 
-[node name="ColetorMadeira" parent="World" instance=ExtResource("70_coletor")]
+[node name="ColetorMadeira" parent="World" unique_id=1956267386 instance=ExtResource("70_coletor")]
 position = Vector2(-420, 260)
 fixo = true
 etapa_inicial = 0
 
-[node name="Toca" parent="World" instance=ExtResource("90_toca")]
+[node name="Toca" parent="World" unique_id=1773263869 instance=ExtResource("90_toca")]
 position = Vector2(-640, 140)
 
-[node name="Toca2" parent="World" instance=ExtResource("90_toca")]
+[node name="Toca2" parent="World" unique_id=1337499503 instance=ExtResource("90_toca")]
 position = Vector2(-560, -900)
 animal = "javali"
 
-[node name="Elevador" parent="World" instance=ExtResource("42_elevador")]
+[node name="Elevador" parent="World" unique_id=270030776 instance=ExtResource("42_elevador")]
 position = Vector2(580, 320)
-bottom_position = Vector2(630.0, 3732.6)
+bottom_position = Vector2(630, 3732.6)
 
-[node name="JazidaPrata" parent="World" instance=ExtResource("43_prata")]
+[node name="JazidaPrata" parent="World" unique_id=467624591 instance=ExtResource("43_prata")]
 position = Vector2(-390, 3685.1)
 
-[node name="JazidaPrata2" parent="World" instance=ExtResource("43_prata")]
+[node name="JazidaPrata2" parent="World" unique_id=1145390922 instance=ExtResource("43_prata")]
 position = Vector2(61.2, 3747.2)
 
-[node name="JazidaPrata3" parent="World" instance=ExtResource("43_prata")]
+[node name="JazidaPrata3" parent="World" unique_id=2065403783 instance=ExtResource("43_prata")]
 position = Vector2(338.8, 3788.3)
 
-[node name="JazidaCobreFundo" parent="World" instance=ExtResource("36_cobre")]
+[node name="JazidaCobreFundo" parent="World" unique_id=1158832639 instance=ExtResource("36_cobre")]
 position = Vector2(-225, 3788.3)
 
-[node name="JazidaCarvaoFundo" parent="World" instance=ExtResource("37_carvao")]
+[node name="JazidaCarvaoFundo" parent="World" unique_id=1408012335 instance=ExtResource("37_carvao")]
 position = Vector2(205, 3688.9)
 
-[node name="BarricadaTunel" parent="World" instance=ExtResource("53_barricada")]
+[node name="BarricadaTunel" parent="World" unique_id=1299983338 instance=ExtResource("53_barricada")]
 position = Vector2(-300, -40)
-gate_id = "tunel"
-display_name = "Portão da floresta"
 vertical = true
+display_name = "Portão da floresta"
 
-[node name="ElevadorAbismo" parent="World" instance=ExtResource("49_abismo")]
+[node name="ElevadorAbismo" parent="World" unique_id=1093004851 instance=ExtResource("49_abismo")]
 position = Vector2(476.2, 3691)
-bottom_position = Vector2(630.0, 4132.6)
+bottom_position = Vector2(630, 4132.6)
 
-[node name="JazidaSolarita" parent="World" instance=ExtResource("50_solarita")]
+[node name="JazidaSolarita" parent="World" unique_id=1934552884 instance=ExtResource("50_solarita")]
 position = Vector2(-142.9, 4099.4)
 
-[node name="JazidaSolarita2" parent="World" instance=ExtResource("50_solarita")]
+[node name="JazidaSolarita2" parent="World" unique_id=203059121 instance=ExtResource("50_solarita")]
 position = Vector2(250.8, 4152.8)
 
-[node name="JazidaSolarita3" parent="World" instance=ExtResource("50_solarita")]
+[node name="JazidaSolarita3" parent="World" unique_id=215839481 instance=ExtResource("50_solarita")]
 position = Vector2(395.2, 4069.2)
 
-[node name="JazidaPrataAbismo" parent="World" instance=ExtResource("43_prata")]
+[node name="JazidaPrataAbismo" parent="World" unique_id=908989097 instance=ExtResource("43_prata")]
 position = Vector2(-335.4, 4183.4)
 
-[node name="ZonaGas" type="Node2D" parent="World"]
+[node name="ZonaGas" type="Node2D" parent="World" unique_id=1653868868]
 position = Vector2(466.2, 3809.3)
 script = ExtResource("57_zone")
-kind = "gas"
 radius = 85.0
 sign_offset = Vector2(-95, 10)
 
-[node name="JazidaGasCarvao" parent="World" instance=ExtResource("37_carvao")]
+[node name="JazidaGasCarvao" parent="World" unique_id=1906265906 instance=ExtResource("37_carvao")]
 position = Vector2(492.5, 3814.3)
 ore_total = 450.0
 regen_rate = 0.8
 hazard = "gas"
 
-[node name="JazidaGasPrata" parent="World" instance=ExtResource("43_prata")]
+[node name="JazidaGasPrata" parent="World" unique_id=878366698 instance=ExtResource("43_prata")]
 position = Vector2(432.5, 3804.2)
 ore_total = 300.0
 hazard = "gas"
 
-[node name="ZonaRadiacao" type="Node2D" parent="World"]
+[node name="ZonaRadiacao" type="Node2D" parent="World" unique_id=2025916698]
 position = Vector2(-481.2, 3647.4)
 script = ExtResource("57_zone")
 kind = "radiacao"
 radius = 80.0
 sign_offset = Vector2(95, 20)
 
-[node name="JazidaRadPrata" parent="World" instance=ExtResource("43_prata")]
+[node name="JazidaRadPrata" parent="World" unique_id=1934190199 instance=ExtResource("43_prata")]
 position = Vector2(-481.2, 3649.5)
 ore_total = 500.0
 regen_rate = 0.9
 hazard = "radiacao"
 
-[node name="ZonaCalor" type="Node2D" parent="World"]
+[node name="ZonaCalor" type="Node2D" parent="World" unique_id=37087871]
 position = Vector2(466.7, 4204.3)
 script = ExtResource("57_zone")
 kind = "calor"
 radius = 80.0
 sign_offset = Vector2(-95, -10)
 
-[node name="JazidaCalorSolarita" parent="World" instance=ExtResource("50_solarita")]
+[node name="JazidaCalorSolarita" parent="World" unique_id=155059461 instance=ExtResource("50_solarita")]
 position = Vector2(475.4, 4206.1)
 ore_total = 450.0
 regen_rate = 0.7
 hazard = "calor"
 
-[node name="Horta" parent="World" instance=ExtResource("38_horta")]
+[node name="Horta" parent="World" unique_id=391020961 instance=ExtResource("38_horta")]
 position = Vector2(-560, -420)
 
 [node name="Ipezinho" parent="World" unique_id=1756047734 instance=ExtResource("2_oekm8")]
@@ -323,83 +321,83 @@ position = Vector2(50, -50)
 [node name="Ipezinho3" parent="World" unique_id=1911002235 instance=ExtResource("2_oekm8")]
 position = Vector2(-50, -50)
 
-[node name="Economy" type="Node" parent="."]
+[node name="Economy" type="Node" parent="." unique_id=2136547349]
 script = ExtResource("28_eco")
 worker_scene = ExtResource("2_oekm8")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=768909553]
 script = ExtResource("1_llaio")
 
-[node name="Morale" type="Node" parent="."]
+[node name="Morale" type="Node" parent="." unique_id=198029466]
 script = ExtResource("46_morale")
 
-[node name="Finds" type="Node" parent="."]
+[node name="Finds" type="Node" parent="." unique_id=1379500837]
 script = ExtResource("47_finds")
 
-[node name="Defense" type="Node" parent="."]
+[node name="Defense" type="Node" parent="." unique_id=1623069219]
 script = ExtResource("51_defense")
 
-[node name="Diary" type="Node" parent="."]
+[node name="Diary" type="Node" parent="." unique_id=1854816469]
 script = ExtResource("52_diary")
 
-[node name="Missoes" type="Node" parent="."]
+[node name="Missoes" type="Node" parent="." unique_id=925136776]
 script = ExtResource("52_missoes")
 
-[node name="Migrantes" type="Node" parent="."]
+[node name="Migrantes" type="Node" parent="." unique_id=27677574]
 script = ExtResource("52_migrantes")
 
-[node name="Pedidos" type="Node" parent="."]
+[node name="Pedidos" type="Node" parent="." unique_id=346623403]
 script = ExtResource("123_pedidos")
 
-[node name="Eventos" type="Node" parent="."]
+[node name="Eventos" type="Node" parent="." unique_id=1626574972]
 script = ExtResource("123_eventos")
 
-[node name="Caravana" type="Node" parent="."]
+[node name="Caravana" type="Node" parent="." unique_id=1700912671]
 script = ExtResource("125_caravana")
 
-[node name="Estatisticas" type="Node" parent="."]
+[node name="Estatisticas" type="Node" parent="." unique_id=1918858106]
 script = ExtResource("126_estatisticas")
 
-[node name="Catalogo" type="Node" parent="."]
+[node name="Catalogo" type="Node" parent="." unique_id=702270748]
 script = ExtResource("53_catalogo")
 
-[node name="Expedicoes" type="Node" parent="."]
+[node name="Expedicoes" type="Node" parent="." unique_id=1237853584]
 script = ExtResource("53_expedicoes")
 
-[node name="Logistica" type="Node" parent="."]
+[node name="Logistica" type="Node" parent="." unique_id=1417567908]
 script = ExtResource("105_logistica")
 
-[node name="Dificuldade" type="Node" parent="."]
+[node name="Dificuldade" type="Node" parent="." unique_id=416277084]
 script = ExtResource("113_dificuldade")
 
-[node name="Politicas" type="Node" parent="."]
+[node name="Politicas" type="Node" parent="." unique_id=166552878]
 script = ExtResource("108_politicas")
 
-[node name="Relacoes" type="Node" parent="."]
+[node name="Relacoes" type="Node" parent="." unique_id=1252350050]
 script = ExtResource("110_relacoes")
 
-[node name="Familias" type="Node" parent="."]
+[node name="Familias" type="Node" parent="." unique_id=769040243]
 script = ExtResource("111_familias")
 
-[node name="Manutencao" type="Node" parent="."]
+[node name="Manutencao" type="Node" parent="." unique_id=452415498]
 script = ExtResource("105_manutencao")
 
-[node name="Research" type="Node" parent="."]
+[node name="Research" type="Node" parent="." unique_id=1876427760]
 script = ExtResource("54_research")
 
-[node name="Sun" type="Node" parent="."]
+[node name="Sun" type="Node" parent="." unique_id=1820391801]
 script = ExtResource("55_sun")
 
-[node name="Schedule" type="Node" parent="."]
+[node name="Schedule" type="Node" parent="." unique_id=406636064]
 script = ExtResource("71_agenda")
 
-[node name="Calendario" type="Node" parent="."]
+[node name="Calendario" type="Node" parent="." unique_id=1952796015]
 script = ExtResource("72_cal")
 
-[node name="Equipment" type="Node" parent="."]
+[node name="Equipment" type="Node" parent="." unique_id=686060753]
 script = ExtResource("56_equip")
 
-[node name="HUD" type="CanvasLayer" parent="."]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1824129865]
 script = ExtResource("8_hud")
 ore_icon = ExtResource("27_chunk")
 coin_icon = ExtResource("29_coin")
