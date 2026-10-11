@@ -2,7 +2,7 @@
 
 Gerado por `python tools/elevenlabs/docs_audio.py`. A ordem é a de prioridade (ambiência por andar, fornalha, igreja, stingers, interface, depois o resto). **Marque `[x]` o que você ouviu e aprovou.** O estado de aprovação gravado pela ferramenta está em `project.godot/data/audio/gerados.json`.
 
-**Resumo:** 200 arquivos de efeitos, 191 marcados como aprovados.
+**Resumo:** 203 arquivos de efeitos, 191 marcados como aprovados.
 
 ## Como ouvir e trocar um som
 
@@ -372,6 +372,15 @@ Gerado por `python tools/elevenlabs/docs_audio.py`. A ordem é a de prioridade (
   - arquivo: `assets/audio/vida/casamento.wav`  •  ouça: se está claro e no volume certo, sem cortar
 - [x] `vida/enterro` — 3 s — O padre enterra um morto no cemitério.
   - arquivo: `assets/audio/vida/enterro.wav`  •  ouça: se está claro e no volume certo, sem cortar
+
+## Caravana de comerciantes (chegada e troca de moedas)
+
+- [ ] `caravana/chegada_0` — 3.0 s — A caravana da comerciante chega ao posto de troca (rodas de carroça, arreios e um sininho de latão).
+  - arquivo: `assets/audio/caravana/chegada_0.wav`  •  ouça: se está claro e no volume certo, sem cortar
+- [ ] `caravana/moedas_0` — 1.0 s cada — Uma troca na janela da caravana (moedas contadas na mão, uma gaveta de caixa de madeira).
+  - arquivo: `assets/audio/caravana/moedas_0.wav`  •  ouça: se está claro e no volume certo, sem cortar
+- [ ] `caravana/moedas_1` — 1.0 s cada — Uma troca na janela da caravana (moedas contadas na mão, uma gaveta de caixa de madeira).
+  - arquivo: `assets/audio/caravana/moedas_1.wav`  •  ouça: se está claro e no volume certo, sem cortar
 
 ## Sons soltos pelo ambiente (aleatórios)
 

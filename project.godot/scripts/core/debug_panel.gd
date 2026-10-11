@@ -40,7 +40,7 @@ func setup(main: Node) -> void:
 	_linha(v, "Eventos:", [["invasão agora", _invasao], ["chuva liga/desliga", _chuva], ["curar todos", _curar], ["liberar pesquisas", _pesquisas]])
 	_linha(v, "Andares:", [["abrir todos", _abre_andares]])
 	_linha(v, "Criaturas:", [["invasão com todos os tipos", _todas_criaturas]])  # Bloco 91
-	_linha(v, "Vila:", [["evento agora", _evento], ["pedido novo", _pedido]])  # Bloco 123
+	_linha(v, "Vila:", [["evento agora", _evento], ["pedido novo", _pedido], ["caravana: chega/parte", _caravana]])  # Bloco 123 / 125
 	_linha(v, "Ir para:", [["vila", func(): _vai(Vector2(40, -260))], ["S2", func(): _vai(Vector2(-300, 3730))],
 		["S3", func(): _vai(Vector2(-460, 4110))], ["S4", func(): _vai(Vector2(-340, 4530))], ["S5", func(): _vai(Vector2(-460, 4920))],
 		["ferrovia", _vai_ferrovia]])
@@ -195,6 +195,21 @@ func _evento() -> void:
 	if ev.sorteia() == "":
 		var ids: Array = ev.catalogo().map(func(e): return String(e.id)).filter(func(i): return i != "casamento")
 		ev.dispara(String(ids[randi() % ids.size()]), true)
+
+
+## Bloco 125: a caravana chega agora (se não há posto de troca, o debug põe um perto do Centro); se já está aqui, parte.
+func _caravana() -> void:
+	var car := _g("caravana")
+	if car == null:
+		return
+	if car.presente:
+		car.parte()
+		return
+	if car.posto() == null:
+		var hub := _g("village_hub")
+		if hub and hub.has_method("spawn_obra107"):
+			hub.spawn_obra107("posto_troca", (hub as Node2D).global_position + Vector2(-170, 90))
+	car.chega()
 
 
 func _pedido() -> void:

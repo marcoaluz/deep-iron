@@ -640,86 +640,90 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\crianca_m\\ferido.png"
  },
  "carregadora_contente": {
-  "job": "c9b5e96f-7ded-4671-8bef-c08a04894b95",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregadora\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregadora\\contente.png"
  },
  "carregadora_cansado": {
-  "job": "e4c9b5aa-d6fc-4bda-83e7-e1ff8d547a15",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregadora\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregadora\\cansado.png"
  },
  "carregadora_bravo": {
-  "job": "93ef88ba-23e2-4a25-9302-ad8b50f72bc0",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregadora\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregadora\\bravo.png"
  },
  "carregadora_ferido": {
-  "job": "50ce60e5-e8f8-488b-b53a-387a915fd94d",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregadora\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\carregadora\\ferido.png"
  },
  "mecanica_contente": {
-  "job": "91a4a0fe-6be4-4f2b-b4a6-7b6e0133e381",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanica\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanica\\contente.png"
  },
  "mecanica_cansado": {
-  "job": "65eeec42-a4d9-4ee7-bc81-6f51e3492c79",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanica\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanica\\cansado.png"
  },
  "mecanica_bravo": {
-  "job": "713eed0d-38d7-4a91-90ea-4462f7a6a0d0",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanica\\bravo.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanica\\bravo.png"
  },
  "mecanica_ferido": {
-  "job": "4a80c8a4-103a-4965-8d19-4ccf60def3ed",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanica\\ferido.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanica\\ferido.png"
  },
  "mecanico_contente": {
-  "job": "8dcf003b-2f63-4b1f-9458-66c236d9a2bb",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanico\\contente.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanico\\contente.png"
  },
  "mecanico_cansado": {
-  "job": "9b7b613d-7833-4bd9-9269-5f2589236166",
-  "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanico\\cansado.png",
   "ok": true,
-  "candidatos": 1
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanico\\cansado.png"
  },
  "mecanico_bravo": {
-  "job": "a5bc68f7-6def-4b23-b988-2a50c3b69171",
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanico\\bravo.png"
+ },
+ "mecanico_ferido": {
+  "ok": true,
+  "pulado": true,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanico\\ferido.png"
+ },
+ "comerciante_contente": {
+  "job": "5ae33267-4d5d-488e-95e0-865ba8e8d48c",
   "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanico\\bravo.png",
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\comerciante\\contente.png",
   "ok": true,
   "candidatos": 1
  },
- "mecanico_ferido": {
-  "job": "5957d930-acf4-4b1c-ae90-bc99734f3900",
+ "comerciante_cansado": {
+  "job": "551b5b7f-150d-4900-945a-dc28a231da54",
   "custo": 1,
-  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\mecanico\\ferido.png",
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\comerciante\\cansado.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "comerciante_bravo": {
+  "job": "3ddcedf3-a661-44d3-96f3-99bec20d492e",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\comerciante\\bravo.png",
+  "ok": true,
+  "candidatos": 1
+ },
+ "comerciante_ferido": {
+  "job": "322091a0-def2-4cc8-bef7-9a9214b63644",
+  "custo": 1,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\retratos\\expressoes\\comerciante\\ferido.png",
   "ok": true,
   "candidatos": 1
  }

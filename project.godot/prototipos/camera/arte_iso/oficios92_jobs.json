@@ -236,5 +236,12 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mecanica\\candidatos.png",
   "ok": true,
   "candidatos": 16
+ },
+ "comerciante": {
+  "job": "bd3e13ca-d91f-4b6e-8b42-1f2c7f1ecfa3",
+  "custo": 15,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\comerciante\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
  }
 }

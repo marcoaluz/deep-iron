@@ -25,10 +25,11 @@ const OUTFIT_FUNCAO := {"mineiro": "minerador", "civil": "civil", "cozinheiro": 
 	"batedor": "batedor",  # Bloco 104 (oficios104.py)
 	"carregador": "carregador", "mecanico": "mecanico",
 	"agricultor": "agricultor",  # Bloco 107 (oficios107.py)
+	"comerciante": "comerciante",  # Bloco 125 (oficios125.py): a caravana
 	"crianca": "crianca"}  # Bloco 111 (oficios111.py): crianças e aprendizes  # Bloco 105 (oficios105.py)
 ## Bloco 105: PROVISÓRIO enquanto a arte própria não foi aprovada (o Marco aprova o piloto antes do lote): a função que
 ## ainda não está no bonecos.json usa esta. Sai sozinho quando o `integra.py bonecos` puser a função lá.
-const PROVISORIO := {"carregador": "civil", "mecanico": "engenheiro"}
+const PROVISORIO := {"carregador": "civil", "mecanico": "engenheiro", "comerciante": "civil"}
 ## desenho antigo da mão (assets/game/<nome>.png) -> ferramenta nova (Prompt 4)
 const ITEM_OF := {"pickaxe": "picareta", "pickaxe_aco": "picareta_aco", "axe": "machado", "hammer": "martelo",
 	"porrete": "porrete", "lanca": "lanca", "lanca_prata": "lanca_prata", "besta": "besta", "bow": "arco"}

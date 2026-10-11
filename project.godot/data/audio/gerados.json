@@ -85,6 +85,21 @@
    "gerado_em": "2026-10-10",
    "hash": "b46e050dd330b061"
   },
+  "caravana/chegada_0": {
+   "aprovado": false,
+   "gerado_em": "2026-10-11",
+   "hash": "a9b542dc56b6a6b5"
+  },
+  "caravana/moedas_0": {
+   "aprovado": false,
+   "gerado_em": "2026-10-11",
+   "hash": "e39c6512f9dc0857"
+  },
+  "caravana/moedas_1": {
+   "aprovado": false,
+   "gerado_em": "2026-10-11",
+   "hash": "e39c6512f9dc0857"
+  },
   "criaturas/gosma_ataque_0": {
    "aprovado": true,
    "gerado_em": "2026-10-10",

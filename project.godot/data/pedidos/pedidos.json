@@ -78,6 +78,17 @@
 				"festival_dobro": true
 			},
 			"recompensa_texto": "o próximo festival rende o dobro"
+		},
+		{
+			"id": "caravana_encomenda",
+			"caravana": true,
+			"titulo": "Encomenda da caravana",
+			"dias": 3,
+			"texto": "\"{nome} tem um cliente do outro lado das montanhas.\" Venda à caravana {meta} {item} antes dela partir (janela da Caravana: clique no posto de troca).",
+			"recompensa": {
+				"creditos_do_pedido": true
+			},
+			"recompensa_texto": "um bônus de {bonus} cr da caravana"
 		}
 	]
 }

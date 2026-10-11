@@ -106,6 +106,7 @@ const OUTFIT_FILES := {
 	"carregador": "res://assets/game/ipezinho_civil_%s%d.png",  # Bloco 105 (na vista iso: a arte do PixelLab, oficios105.py)
 	"mecanico": "res://assets/game/ipezinho_engenheiro_%s%d.png",
 	"agricultor": "res://assets/game/ipezinho_civil_%s%d.png",  # Bloco 107 (na vista iso: a arte do PixelLab, oficios107.py)
+	"comerciante": "res://assets/game/ipezinho_civil_%s%d.png",  # Bloco 125 (na vista iso: a arte do PixelLab, oficios125.py)
 }
 ## Só o capacete de mineiro tem lanterna (a PointLight2D HeadLamp).
 const OUTFITS_WITH_LAMP := ["mineiro"]
@@ -695,6 +696,8 @@ var _espera_carregador := false
 ## Bloco 101: MIGRANTE esperando no portão (migrantes.gd): fora do grupo "ipezinhos" (não come, não ocupa cama, não conta)
 ## e sem IA nem necessidades — só anda até onde mandarem. Aceito: vira_morador().
 var visitante := false
+## Bloco 125: a COMERCIANTE da caravana (caravana.gd): visitante com a roupa e o retrato próprios (não vai pro save do ipezinho: a caravana a recria).
+var e_comerciante := false
 
 ## Bloco 99: a cabine do elevador em que ele está (na fila ou dentro), se já embarcou e há quanto tempo espera; e a
 ## boca da mina onde ele trabalha DENTRO (estacao_vagonete.gd com interior).
@@ -3265,6 +3268,8 @@ func _apply_outfit() -> void:
 
 ## Nome do outfit que a função atual veste ("mineiro", "lenhador", "cozinheiro", "civil").
 func outfit() -> String:
+	if e_comerciante:
+		return "comerciante"
 	if e_crianca():
 		return "crianca"  # Bloco 111: a arte das crianças (oficios111.py; o aprendiz também)
 	return JOB_OUTFIT.get(secundaria() if _na_secundaria else job, "mineiro")  # Bloco 109: na secundária, a roupa dela

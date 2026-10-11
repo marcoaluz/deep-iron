@@ -40,6 +40,8 @@ NOTA = {"ferreiro": " He is BALD: no hat, no helmet, no cap on his bald head.",
         "agricultora": " She wears a wide-brimmed faded straw hat tied under the chin and has a long braid over one shoulder: keep exactly this hat and the braid; no helmet, no headlamp.",
         "agricultor": " He wears a wide-brimmed faded straw hat and has a short grey-brown beard: keep exactly this hat and the beard; no helmet, no headlamp.",
         "carregador": " He wears a faded indigo-blue knitted beanie and has a short dark beard: keep exactly this beanie and the beard; the wooden carrying frame on his back stays; no helmet, no headlamp.",
+        # Bloco 125
+        "comerciante": " She wears a wide-brimmed sun-faded ochre hat with a dull red band and has grey streaks in her dark hair: keep exactly this hat; no helmet, no headlamp.",
         # Bloco 119
         "carregadora": " She wears a faded indigo-blue knitted headband with two short braids and has freckles: keep exactly this headband and the braids; the wooden carrying frame on her back stays; no helmet, no hat, no headlamp.",
         "mecanico": " He wears a dark teal flat cap worn backwards, round clear safety goggles hanging around his neck and a thin moustache: keep exactly this cap, the goggles and the moustache; no helmet, no headlamp.",

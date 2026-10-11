@@ -77,7 +77,8 @@ func _roda() -> void:
 	check(ev_ok, "cada evento tem 2 ou 3 opções (com custo, efeitos e resultado), texto e uma ilustração que existe")
 	var ids := ev.map(func(e): return String(e.id))
 	check("refugiados" in ids and "tempestade_poeira" in ids and "desabamento" in ids and "febre" in ids and "casamento" in ids and "mapa_antigo" in ids, "os 6 eventos do pedido estão lá")
-	check(Pedidos.catalogo().size() == 7, "7 pedidos: banco, sem fome, casaco, enterrar, 3 guardas, caminho de pedra e Festival das Lanternas (%d)" % Pedidos.catalogo().size())
+	var da_vila: Array = Pedidos.catalogo().filter(func(t): return not bool(t.get("caravana", false)))  # (Bloco 125: a encomenda da caravana é um tipo à parte)
+	check(da_vila.size() == 7, "7 pedidos: banco, sem fome, casaco, enterrar, 3 guardas, caminho de pedra e Festival das Lanternas (%d)" % da_vila.size())
 	var peds_ok := true
 	for t in Pedidos.catalogo():
 		if String(t.titulo) == "" or String(t.texto) == "" or not t.has("recompensa") or int(t.dias) <= 0:

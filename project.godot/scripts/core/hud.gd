@@ -726,6 +726,9 @@ func _build_janelas() -> void:
 	var pedidos := get_tree().get_first_node_in_group("pedidos")
 	if pedidos:  # Bloco 123: os pedidos da vila (F7)
 		_add_panel("pedidos", preload("res://scripts/core/pedidos_panel.gd"), pedidos)
+	var caravana := get_tree().get_first_node_in_group("caravana")
+	if caravana:  # Bloco 125: a caravana (clique no posto de troca)
+		_add_panel("caravana", preload("res://scripts/core/caravana_panel.gd"), caravana)
 	_missoes_mgr = get_tree().get_first_node_in_group("missoes")
 	if _missoes_mgr:  # Bloco 100: a janela e o rastreador do canto
 		_add_panel("missoes", preload("res://scripts/core/missoes_panel.gd"), _missoes_mgr)

@@ -150,6 +150,9 @@ extends Node
 ##     primeiro grupo no prazo de uma partida nova, a população que tinha.
 ##   Bloco 123: "pedidos" {abertos [{n, tipo, autor, dia, prazo_dia, meta}], historico, proximo_dia, dias_sem_fome, n, festival_gratis, festival_dobro, inverno_ameno, efeitos, ligado} e
 ##     "eventos" {proximo_dia, ultimo_id, ultimo_dia {evento: dia}, historico, efeitos [{t, chave, v, texto, ate_dia}], ligado}. Save antigo: sem pedidos e sem eventos.
+##   Bloco 125: "caravana" {presente, chegou_dia, parte_dia, proxima_dia, visitas, situacao, estoque/demanda/preco_cobra/preco_paga {id: n}, semente_ate_dia,
+##     ultima_fala, avisou_sem_posto, vendido_cr, gasto_cr, vendidos/comprados {id: n}, encomendas_cumpridas, ligado}; "pedidos.abertos" ganham item/vendido/bonus nas
+##     encomendas da caravana (tipo "caravana_encomenda"); o Centro guarda "postos_troca" [{position}] (o posto de troca). Save antigo: sem visita e sem posto.
 ##   Bloco 122: "missoes" ganha "titulos" [textos], "decoracoes_gratis" {id: quantas} (as recompensas de decoração ainda por pôr) e "contadores.armas" {arma: forjadas}. Save antigo: vazio.
 ##   Bloco 100: "missoes" {capitulo_liberado, cumpridas [ids], feitos {id: [índices dos objetivos]}, contadores
 ##     {invasoes, vendido, mortes, obras {tipo: n}}}. Save antigo (sem a chave): a campanha começa no capítulo certo —
@@ -659,6 +662,7 @@ func _collect() -> Dictionary:
 		"missoes": "missoes",  # Bloco 100: a campanha (capítulo liberado, missões cumpridas, objetivos, contadores)
 		"pedidos": "pedidos",  # Bloco 123: os pedidos abertos e encerrados, os dias sem fome, o festival guardado
 		"eventos": "eventos",  # Bloco 123: o histórico dos eventos, o próximo, o último, os efeitos que duram
+		"caravana": "caravana",  # Bloco 125: a visita (chegada, partida, ofertas, preços), as sementes e o que a vila negociou
 	}
 	for key in singles:
 		var node := tree.get_first_node_in_group(singles[key])
@@ -827,6 +831,9 @@ func apply_pending(main: Node) -> void:
 	var evs := get_tree().get_first_node_in_group("eventos")  # Bloco 123 (save antigo: nenhum evento ainda)
 	if evs:
 		evs.load_save_data(SaveUtil.dict(data, "eventos"))
+	var car := get_tree().get_first_node_in_group("caravana")  # Bloco 125 (save antigo: nenhuma visita ainda; depois do Centro: o posto)
+	if car:
+		car.load_save_data(SaveUtil.dict(data, "caravana"))
 	var pol := get_tree().get_first_node_in_group("politicas")  # Bloco 108 (save antigo: tudo no padrão)
 	if pol:
 		pol.load_save_data(SaveUtil.dict(data, "politicas"))

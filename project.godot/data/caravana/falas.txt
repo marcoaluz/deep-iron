@@ -1,0 +1,24 @@
+# Bloco 125: as FALAS da comerciante da caravana (editável). Formato: "chave = frase | outra frase | ..." (sorteia uma).
+# {nome} = o nome dela; {dias} = quantos dias ela fica; {item} = a mercadoria; {meta} = a quantidade da encomenda.
+# Chaves: chegada, chegada_primeira, sem_posto, saudacao, venda, compra, sem_dinheiro, sem_estoque, sem_demanda, sem_item, encomenda, encomenda_cumprida,
+#   despedida, e uma por situação do mercado (mercado_<id>).
+
+chegada = Boa tarde, vila! {nome} e a caravana, de volta com a estrada empoeirada nas botas. | A carroça chegou inteira, que é mais do que se pode dizer de metade da estrada. | Abram a porteira: traguei sementes, couro velho e notícia ruim barata.
+chegada_primeira = Ninguém me avisou que tinha gente viva nesta pedreira! Sou {nome}, comerciante. Se tiver barra ou gema, eu pago; se tiver crédito, eu vendo. | Primeira vez por aqui? Armem a banca: {nome} vai ficar {dias} dias, e não faço fiado.
+sem_posto = Uma caravana passou ao largo: não havia onde descarregar a carroça. Sem um posto de troca ela segue viagem e tenta de novo mais tarde.
+saudacao = Olhe à vontade. Eu pesei tudo duas vezes. | Se achar caro, procure em outra caravana. | A balança nunca mente, mas eu escolho onde pôr o dedo.
+venda = Negócio fechado. Os melhores lucros são os que ninguém conta. | Gosto de quem não pechincha em dia de chuva. | Pesado, contado e pago. Volte sempre.
+compra = Foi um prazer. Cuida bem disso, que não se acha em qualquer estrada. | Levou? Levou. Não devolvo, só troco por mais caro. | Tenha uma boa colheita.
+sem_dinheiro = Sem crédito eu só vendo conversa, e essa eu dou de graça.
+sem_estoque = Acabou. A carroça não é um poço.
+sem_demanda = Já enchi o que tinha de espaço pra isso. Na próxima visita eu volto a querer.
+sem_item = Você não tem isso no armazém, ipezinho. Eu não compro promessa.
+encomenda = Tenho uma encomenda de um cliente do outro lado das montanhas: {meta} de {item}. Quem me entrega até eu partir leva um bônus.
+encomenda_cumprida = Encomenda entregue, e na hora. Vou falar bem desta vila nas estradas.
+despedida = A estrada não espera. Volto em duas semanas, se o sol deixar. | Guardem o troco: tem gente que paga em dobro pelo que vocês acham que não vale nada. | Até a próxima, vila. Façam barulho que eu volto.
+
+mercado_normal = Os preços estão do jeito de sempre: justos pra mim, aceitáveis pra você.
+mercado_escassez = A estrada ficou perigosa e a carga encareceu: tudo o que eu trago está mais caro, e eu pago melhor por metal.
+mercado_excedente = Voltei com o carro cheio e preciso desocupar: tudo o que trago está mais barato, mas eu pago menos por metal.
+mercado_demanda = Tem gente grande comprando metal nas minas do norte: pago mais por barra e por gema nesta semana.
+mercado_festa = Uma feira grande está chegando na capital: carne e sementes sobem, mas barras e gemas também valem mais.

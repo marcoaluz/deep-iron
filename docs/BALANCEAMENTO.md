@@ -9,9 +9,9 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1214 valores** em 4 pastas de scripts (80 trocados por alguma cena).
+Total: **1306 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 
-## `scripts/core/audio_manager.gd` (91)
+## `scripts/core/audio_manager.gd` (97)
 
 **Volumes (0 a 1)**
 
@@ -130,6 +130,17 @@ Total: **1214 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `noticia_intervalo` | 0.6 |  | Intervalo mínimo entre dois sons de notícia (aviso verde ou vermelho). |
 | `eco_sala` | 0.85 |  | Tamanho da sala do reverb (eco) que o bus Ambience ganha nos andares com "eco" no slot (0 a 1). |
 
+**Zoom (Bloco 118)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `zoom_perto_mudo` | 0.6 |  | O modelo do Frostpunk: o mundo só faz barulho com a câmera perto. A medida é cam.art_pixel_screen (quantos pixels de TELA 1 pixel de arte ocupa; as paradas do zoom são 0,5 = a vista "longe", 1 = a vista de sempre, 2 e 3 = bem perto); não depende do tamanho da janela. Classe "perto" (passos, voz, ferramentas, bichos, loops de prédio): muda abaixo de `zoom_perto_mudo`, toca inteiro de `zoom_perto_cheio` pra cima. |
+| `zoom_perto_cheio` | 1.5 |  |  |
+| `zoom_medio_mudo` | 0.5 |  | Classe "medio" (criatura, portão, máquina, trovão): o mesmo, mais longe. |
+| `zoom_medio_cheio` | 1.0 |  |  |
+| `zoom_ambiencia_longe_db` | -9.0 |  | O fundo (a ambiência) desce tanto (dB) na vista mais longe, e sobe de volta conforme a câmera chega. |
+| `destaque_segundos` | 4.0 |  | Por quanto tempo (s) o prédio clicado se ouve de qualquer zoom (o clique "mostra" o som dele). |
+
 **Limites**
 
 | valor | padrão | na cena | o quê |
@@ -246,6 +257,46 @@ Total: **1214 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `rota_entrada` | 140.0 |  | Rota do passeio: só usa caminho que comece/termine até esta distância (px) de quem sai e do destino. |
 | `rota_passo` | 3 |  | Rota do passeio: um waypoint a cada tantas células. |
 
+## `scripts/core/caravana.gd` (18)
+
+**Visita**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `ligado` | true |  | Liga a caravana (o Criativo e os testes desligam). |
+| `primeiro_dia` | 8 |  | A primeira visita só a partir deste dia (precisa do posto de troca). |
+| `intervalo_dias` | 14 |  | Dias entre uma chegada e a seguinte. |
+| `permanencia_dias` | 3 |  | Dias que ela fica no posto. |
+| `nome_comerciante` | "Cacilda" |  |  |
+| `saida_limite_s` | 90.0 |  | Segundos que ela espera pra sair do mapa antes de sumir de qualquer jeito (travada no caminho). |
+
+**Preços**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `margem_cobra` | 1.3 |  | O que ela COBRA da vila, em vezes o preço base (a vila compra dela). |
+| `margem_paga` | 1.2 |  | O que ela PAGA à vila, em vezes o preço base de venda (ela compra barras e gemas). |
+| `variacao` | 0.12 |  | Variação sorteada por item a cada visita (± fração). |
+| `estacao_cobra` | [0.95, 1.0, 1.05, 1.25] |  | Por estação (primavera, verão, outono, inverno): o que ela cobra. O inverno encarece a comida e as sementes. |
+| `estacao_paga` | [0.95, 1.0, 1.15, 1.25] |  | Por estação: o que ela paga pelo metal e as gemas (no outono e no inverno o metal vale mais). |
+| `chance_situacao` | 0.5 |  | Chance (0..1) de a visita ter uma situação de mercado diferente da normal. |
+
+**Mercadoria**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `semente_bonus` | 0.5 |  | O que um pacote de sementes faz na horta: + fração do crescimento, por tantos dias. |
+| `semente_dias` | 10 |  |  |
+| `carne_comida` | 24.0 |  | Quanta comida crua (unidades do armazém; uma porção = 8) vem numa carne defumada. |
+| `demanda_visita` | {"barra_ferro": 40, "barra_cobre": 25, "barra_prata": 12, "aco": 10, |  | Quanto ela quer comprar de cada coisa numa visita (unidades). O que passa disso ela recusa até a próxima. |
+
+**Encomendas**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `encomenda_bonus` | 0.6 |  | O bônus da encomenda cumprida, em vezes o valor da mercadoria (preço base). |
+| `segunda_encomenda_visita` | 3 |  | Da visita N em diante ela traz duas encomendas. |
+
 ## `scripts/core/catalogo.gd` (14)
 
 **Avistar**
@@ -352,7 +403,7 @@ Total: **1214 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `beleza_teto` | 6.0 |  | Teto do ânimo de "casa enfeitada". |
 | `nav_espera` | 0.6 |  | Segundos sem pôr/tirar peça grande até refazer a navegação (uma vez só pra várias). |
 
-## `scripts/core/defense.gd` (63)
+## `scripts/core/defense.gd` (82)
 
 **Armas (na ordem de WEAPON_IDS)**
 
@@ -422,6 +473,35 @@ Total: **1214 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `strong_every` | 3 |  |  |
 | `strong_hp_mult` | 1.6 |  |  |
 | `strong_damage_mult` | 1.3 |  |  |
+
+**Rato-de-cinza (Bloco 124)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `rato_ligado` | true |  | A "ratada": uma invasão pequena em noite SEM invasão grande; só vem se há comida pra roubar. |
+| `rato_primeiro_dia` | 5 |  |  |
+| `rato_cada_min` | 3 |  | Dias entre uma ratada e a outra (sorteado entre os dois). |
+| `rato_cada_max` | 5 |  |  |
+| `rato_base` | 3 |  | Quantos ratos: base + por ratada já vinda (até o máximo). |
+| `rato_por_ratada` | 1 |  |  |
+| `rato_max` | 6 |  |  |
+| `rato_hora` | 20.0 |  | A hora do relógio em que eles entram (antes da hora da invasão). |
+| `rato_porcoes_min` | 3.0 |  | Só vem se a vila tem ao menos tantas porções de comida por morador (a telemetria mostra 3 a 7). |
+| `rato_roubo_fracao` | 0.2 |  | Teto do roubo por noite: esta fração da comida crua de quando a ratada começou, e nunca deixa a comida crua abaixo deste piso. |
+| `rato_roubo_piso` | 20.0 |  |  |
+| `rato_caca_raio` | 420.0 |  | O guarda de vigia caça rato a até esta distância (px). |
+
+**Morcego de brasa e Sombra solar (Bloco 124)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `escuro_acidente_por_luz` | 0.15 |  | A escuridão do S3: cada luz que o morcego apagou sobe o risco de acidente do S3 nesta fração, até o teto. |
+| `escuro_acidente_teto` | 1.6 |  |  |
+| `sombra_ligada` | true |  | Sombra solar: só em onda solar com esta intensidade (dia ~26 em diante) ou mais, com a vila neste estágio ou mais. |
+| `sombra_intensidade_min` | 3.0 |  |  |
+| `sombra_estagio_min` | 4 |  |  |
+| `sombra_a_cada_intensidade` | 2.0 |  | Quantas sombras: 1 + uma a cada tanto de intensidade acima do mínimo (até o máximo). |
+| `sombra_max` | 4 |  |  |
 
 **Moradores do fundo (Bloco 103)**
 
@@ -661,6 +741,29 @@ Total: **1214 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `repair_cost_mult` | 0.4 |  |  |
 | `repair_time_mult` | 0.5 |  |  |
 | `queue_max` | 6 |  |  |
+
+## `scripts/core/eventos.gd` (11)
+
+**Frequência**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `primeiro_dia` | 4 |  | Os eventos só começam a partir deste dia. |
+| `intervalo_dias_min` | 3 |  | Dias entre um cartão e o seguinte (sorteado entre os dois). |
+| `intervalo_dias_max` | 7 |  |  |
+| `cooldown_dias` | 8 |  | Dias até o MESMO evento poder voltar (e ele nunca vem duas vezes em sequência). |
+| `pesos` | {"refugiados": 3.0, "tempestade_poeira": 2.0, "desabamento": 2.0, "febre": 2.0, "casamento": 2.0, "mapa_antigo": 1.5} |  | Peso de cada evento no sorteio (maior = mais comum). |
+| `ligado` | true |  | Desliga os eventos (o Criativo, os testes). |
+| `pausa_no_cartao` | true |  | O cartão pausa o jogo enquanto não for decidido. |
+
+**Condições**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `refugiados_camas_min` | 2 |  | O refugiado só vem se couber ao menos isto de gente nas camas. |
+| `desabamento_mineradores_min` | 3 |  | O desabamento pede ao menos tantos mineradores. |
+| `febre_populacao_min` | 8 |  | A febre pede uma vila deste tamanho. |
+| `mapa_estagio_min` | 2 |  | O mapa antigo pede a vila neste estágio. |
 
 ## `scripts/core/expedicoes.gd` (26)
 
@@ -946,9 +1049,9 @@ Total: **1214 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `titulo` | "" |  | Título e texto (os do arquivo do capítulo ganham destes). |
 | `capitulo` | 1 |  | Capítulo (1..6) e a ordem da missão dentro dele. |
 | `ordem` | 0 |  |  |
-| `objetivos` | [] |  | Objetivos: [tipo, alvo, quantidade]. Tipos (os que a Missoes sabe medir; ver missoes.gd `valor_do_objetivo`): "fundar_vila"      a vila foi fundada (alvo e quantidade ignorados) "casas"            casas construídas (quantidade) "construcao"       prédios de um grupo do jogo (alvo = grupo: "comedouros" = cozinha, "tavernas"...; quantidade) "minerio_armazem"  minério guardado nos armazéns (alvo = "" qualquer, ou o minério; quantidade) "item"             itens processados no armazém (alvo = id do item: barra_ferro...; quantidade) "invasoes"         invasões que acabaram (quantidade) "estagio"          estágio da vila (quantidade = o número do estágio) "pesquisa"         pesquisa pronta (alvo = id da pesquisa) "vendido"          minério vendido, no total (quantidade) "obras"            obras prontas de um tipo (alvo = tipo do canteiro: "taverna"...; quantidade) "mortes"           mortes na vila (quantidade) "funcoes"          Bloco 112: adultos com função (alvo = "" qualquer função, ou a função: "engenheiro"...; quantidade) |
+| `objetivos` | [] |  | Objetivos: [tipo, alvo, quantidade]. Tipos (os que a Missoes sabe medir; ver missoes.gd `valor_do_objetivo`): "fundar_vila"      a vila foi fundada (alvo e quantidade ignorados) "casas"            casas construídas (quantidade) "construcao"       prédios de um grupo do jogo (alvo = grupo: "comedouros" = cozinha, "tavernas"...; quantidade) "minerio_armazem"  minério guardado nos armazéns (alvo = "" qualquer, ou o minério; quantidade) "item"             itens processados no armazém (alvo = id do item: barra_ferro...; quantidade) "invasoes"         invasões que acabaram (quantidade) "estagio"          estágio da vila (quantidade = o número do estágio) "pesquisa"         pesquisa pronta (alvo = id da pesquisa) "vendido"          minério vendido, no total (quantidade) "obras"            obras prontas de um tipo (alvo = tipo do canteiro: "taverna"...; quantidade) "mortes"           mortes na vila (quantidade) "funcoes"          Bloco 112: adultos com função (alvo = "" qualquer função, ou a função: "engenheiro"...; quantidade) "desbloqueio"      Bloco 122: um andar/plataforma abriu (alvo = o grupo da ligação: elevador, elevador_abismo, elevador_s4, elevador_s5) "escavadeira_pecas" Bloco 122: peças da Escavadeira montadas (quantidade) "arma_forjada"     Bloco 122: armas forjadas no Arsenal (alvo = lanca, besta...; quantidade) "chefe"            Bloco 122: chefes derrotados (a Matriarca; quantidade) "escudo_etapas"    Bloco 122: etapas do escudo solar prontas (quantidade, 4 = vitória) |
 | `em_ordem` | false |  | Bloco 112: os objetivos valem EM ORDEM (o próximo só conta depois do anterior) — o primeiro dia guiado do capataz. |
-| `recompensa` | {} |  | Recompensa: {"creditos": 150, "diario": "id da página", "libera_capitulo": 2, "itens": {id: qtd}}. |
+| `recompensa` | {} |  | Recompensa: {"creditos": 150, "diario": "id da página", "libera_capitulo": 2, "itens": {id: qtd}} e (Bloco 122) "colonos": N (chega um grupo pela floresta), "pecas_raras": N, "decoracoes": {id: N} (peças de graça), "titulo": "...", "stinger": "estagio_novo", "vitoria": true. |
 | `prerequisitos` | PackedStringArray() |  | Ids das missões que precisam estar cumpridas antes desta aparecer. |
 
 ## `scripts/core/missoes.gd` (1)
@@ -1032,6 +1135,32 @@ Total: **1214 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `park_rate` | 0.5 |  | Ânimo ganho por segundo por quem está no raio (ao ar livre). |
 | `park_cap` | 100.0 |  | O parque só leva o ânimo até aqui (o teto geral é 100). |
 
+## `scripts/core/musica_dinamica.gd` (14)
+
+**Camadas (dB)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `melodia_dia_db` | -3.0 |  | Melodia (violão e sanfona) de dia. |
+| `melodia_noite_db` | -60.0 |  | Melodia de noite: mudo (de noite quem canta é o pad). |
+| `melodia_fundo_db` | -14.0 |  | Somado à melodia no fundo da mina (S2 a S5): menos melodia. |
+| `melodia_perigo_db` | -8.0 |  | Somado à melodia no perigo: ela cede à percussão. |
+| `pad_dia_db` | -9.0 |  | Pad (drones) de dia: a base, baixa. |
+| `pad_noite_db` | -2.0 |  | Pad de noite: sobe e assume. |
+| `pad_fundo_db` | 3.0 |  | Somado ao pad no fundo da mina: mais drone. |
+| `percussao_perigo_db` | -3.0 |  | Percussão com a invasão em andamento (fora dela, mudo). |
+
+**Tempo**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `camada_fade_s` | 2.5 |  | Segundos que uma camada leva pra subir ou descer (a velocidade é 60 dB nesse tempo). |
+| `crossfade_s` | 3.0 |  | Duração do crossfade entre clipes (estação nova, tema). O stream WAV não tem BPM: o Godot conta 1 batida = 1 s. |
+| `bpm` | 80.0 |  | BPM e batidas por compasso das faixas (data/audio/musica.json): o compasso dura 60 / bpm * batidas. |
+| `batidas_por_compasso` | 4 |  |  |
+| `tema_fim_segundos` | 60.0 |  | Quanto dura o tema de vitória ou de derrota antes de a música do jogo voltar (s). |
+| `fade_geral_s` | 2.0 |  | Fade de entrada e de saída de tudo (s). |
+
 ## `scripts/core/nivel_mina.gd` (34)
 
 **(sem grupo)**
@@ -1072,6 +1201,29 @@ Total: **1214 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `animo` | 0.0 |  | Bloco 71: soma no alvo de ânimo de quem está no nível (o lago azul acalma; negativo = pesa), com o motivo que aparece na janela do ipezinho. |
 | `animo_motivo` | "" |  |  |
 | `titulo_abertura` | "" |  | Bloco 71: a faixa que aparece quando a ligação abre (título; o texto é a descrição). |
+
+## `scripts/core/pedidos.gd` (11)
+
+**Frequência**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `primeiro_dia` | 3 |  | Os pedidos só começam a partir deste dia e quando a vila já tem esta gente adulta. |
+| `adultos_minimo` | 5 |  |  |
+| `intervalo_dias_min` | 2 |  | Dias entre um pedido novo e o seguinte (sorteado entre os dois). |
+| `intervalo_dias_max` | 4 |  |  |
+| `max_abertos` | 3 |  | No máximo tantos pedidos abertos de uma vez. |
+| `ligado` | true |  | Desliga os pedidos (o Criativo, os testes). |
+
+**Condições**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `banco_raio` | 110.0 |  | Banco "perto de casa": a distância máxima (px do mundo). |
+| `fome_braba` | 0.25 |  | Quem tem menos que esta fração da fome (0 a 1) está com "fome braba" (o pedido "ninguém passando fome"). |
+| `treino_cheio` | 0.99 |  | Habilidade de combate que vale "100% de treino" (0 a 1). |
+| `lanternas_raio` | 170.0 |  | Lampiões do Festival das Lanternas: a distância máxima da praça (px do mundo). |
+| `inverno_ameno_cancela` | true |  | O que o inverno deste ano perde de ânimo quando o pedido do casaco foi cumprido (o -3 vira 0). |
 
 ## `scripts/core/perfil_dificuldade.gd` (13)
 
@@ -1802,7 +1954,7 @@ Total: **1214 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `level_min_stage` | [0, 2, 3] |  | Pré-requisitos de cada nível [nível 1, 2, 3]: estágio mínimo do Centro da Vila e pesquisa ("" = nenhuma). |
 | `level_research` | ["", "", "medicina"] |  |  |
 
-## `scripts/props/centro_vila.gd` (114)
+## `scripts/props/centro_vila.gd` (121)
 
 **Estágios da vila**
 
@@ -1949,6 +2101,18 @@ Total: **1214 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `escola_build_time` | 45.0 |  |  |
 | `escola_estagio` | 2 |  |  |
 | `escola_max` | 2 |  |  |
+
+**Posto de troca (Bloco 125)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `troca_credits` | 220 |  |  |
+| `troca_ore` | 30 |  |  |
+| `troca_wood` | 100 |  |  |
+| `troca_pregos` | 12 |  |  |
+| `troca_build_time` | 50.0 |  |  |
+| `troca_estagio` | 2 |  |  |
+| `troca_max` | 1 |  | Um só posto por vila (a caravana para nele). |
 | `armazem_credits` | 300 |  | Bloco 97: o ARMAZÉM NOVO (construção nova; o jogador escolhe o lugar). Custo do primeiro, em créditos (os próximos crescem, como as outras construções repetíveis). |
 | `armazem_ore` | 80 |  | Armazém novo: minério de ferro (unidades; como a Carpintaria). |
 | `armazem_wood` | 120 |  | Armazém novo: madeira (unidades). |
@@ -2474,30 +2638,41 @@ Total: **1214 valores** em 4 pastas de scripts (80 trocados por alguma cena).
 | `min_wood_to_chop` | 4.0 |  | Abaixo disso a árvore não atrai lenhadores novos. |
 | `chop_sound_interval` | 0.55 |  | Intervalo entre as machadadas (som). |
 
-## `scripts/creatures/creature.gd` (29)
+## `scripts/creatures/creature.gd` (35)
 
 **(sem grupo)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `kind` | "lumivoro" | **"ferrugento"** (ferrugento.tscn); **"gosma"** (gosma.tscn); **"lumivoro"** (lumivoro.tscn); **"magmante"** (magmante.tscn) |  |
-| `max_hp` | 18.0 | **42.0** (ferrugento.tscn); **24.0** (gosma.tscn); **18.0** (lumivoro.tscn); **70.0** (magmante.tscn) |  |
-| `speed` | 68.0 | **44.0** (ferrugento.tscn); **62.0** (gosma.tscn); **72.0** (lumivoro.tscn); **34.0** (magmante.tscn) |  |
-| `damage` | 4.0 | **7.0** (ferrugento.tscn); **5.0** (gosma.tscn); **4.0** (lumivoro.tscn); **10.0** (magmante.tscn) |  |
-| `attack_interval` | 1.0 | **1.4** (ferrugento.tscn); **1.1** (gosma.tscn); **1.0** (lumivoro.tscn); **1.8** (magmante.tscn) |  |
-| `attack_range` | 18.0 |  |  |
-| `grave_chance` | 0.15 | **0.4** (ferrugento.tscn); **0.2** (gosma.tscn); **0.15** (lumivoro.tscn); **0.45** (magmante.tscn) | Ipezinho (não guarda) atingido: chance do machucado ser grave. |
-| `steal_amount` | 3.0 | **4.0** (gosma.tscn); **5.0** (magmante.tscn) | Ferrugento no armazém: minério roubado por golpe. |
-| `scare_amount` | 1.0 |  | Lumívoro num prédio aceso: ânimo tirado de cada um lá dentro, por golpe. |
-| `notice_range` | 150.0 |  | Distância em que ele larga o alvo e parte pra cima de quem está perto. |
+| `kind` | "lumivoro" | **"ferrugento"** (ferrugento.tscn); **"gosma"** (gosma.tscn); **"lumivoro"** (lumivoro.tscn); **"magmante"** (magmante.tscn); **"morcego"** (morcego.tscn); **"rato"** (rato.tscn); **"sombra"** (sombra.tscn) |  |
+| `max_hp` | 18.0 | **42.0** (ferrugento.tscn); **24.0** (gosma.tscn); **18.0** (lumivoro.tscn); **70.0** (magmante.tscn); **5.0** (morcego.tscn); **6.0** (rato.tscn); **30.0** (sombra.tscn) |  |
+| `speed` | 68.0 | **44.0** (ferrugento.tscn); **62.0** (gosma.tscn); **72.0** (lumivoro.tscn); **34.0** (magmante.tscn); **96.0** (morcego.tscn); **82.0** (rato.tscn); **52.0** (sombra.tscn) |  |
+| `damage` | 4.0 | **7.0** (ferrugento.tscn); **5.0** (gosma.tscn); **4.0** (lumivoro.tscn); **10.0** (magmante.tscn); **2.0** (morcego.tscn); **1.0** (rato.tscn); **6.0** (sombra.tscn) |  |
+| `attack_interval` | 1.0 | **1.4** (ferrugento.tscn); **1.1** (gosma.tscn); **1.0** (lumivoro.tscn); **1.8** (magmante.tscn); **1.0** (morcego.tscn); **1.2** (rato.tscn); **1.4** (sombra.tscn) |  |
+| `attack_range` | 18.0 | **16.0** (morcego.tscn); **14.0** (rato.tscn); **20.0** (sombra.tscn) |  |
+| `grave_chance` | 0.15 | **0.4** (ferrugento.tscn); **0.2** (gosma.tscn); **0.15** (lumivoro.tscn); **0.45** (magmante.tscn); **0.05** (morcego.tscn); **0.0** (rato.tscn); **0.35** (sombra.tscn) | Ipezinho (não guarda) atingido: chance do machucado ser grave. |
+| `steal_amount` | 3.0 | **4.0** (gosma.tscn); **5.0** (magmante.tscn); **2.0** (rato.tscn) | Ferrugento no armazém: minério roubado por golpe. |
+| `scare_amount` | 1.0 | **1.0** (sombra.tscn) | Lumívoro num prédio aceso: ânimo tirado de cada um lá dentro, por golpe. |
+| `notice_range` | 150.0 | **150.0** (morcego.tscn); **0.0** (rato.tscn) | Distância em que ele larga o alvo e parte pra cima de quem está perto. |
 | `barricade_mult` | 1.0 | **1.5** (gosma.tscn); **2.0** (magmante.tscn) | Bloco 70: multiplica o dano na barricada (o ácido e a lava derretem). |
-| `drop_ore` | "" | **"cristal_verde"** (gosma.tscn); **"cristal_rubro"** (magmante.tscn) | Bloco 70: derrubado, chance de deixar cristal (minério, quantidade) no armazém (Bloco 103: no corpo, até o estudo). |
-| `drop_amount` | 0 | **2** (gosma.tscn); **3** (magmante.tscn) |  |
-| `drop_chance` | 0.0 | **0.35** (gosma.tscn); **0.5** (magmante.tscn) |  |
+| `drop_ore` | "" | **"cristal_verde"** (gosma.tscn); **"cristal_rubro"** (magmante.tscn); **"cristal_rubro"** (morcego.tscn); **"solarita"** (sombra.tscn) | Bloco 70: derrubado, chance de deixar cristal (minério, quantidade) no armazém (Bloco 103: no corpo, até o estudo). |
+| `drop_amount` | 0 | **2** (gosma.tscn); **3** (magmante.tscn); **1** (morcego.tscn); **2** (sombra.tscn) |  |
+| `drop_chance` | 0.0 | **0.35** (gosma.tscn); **0.5** (magmante.tscn); **0.25** (morcego.tscn); **0.2** (sombra.tscn) |  |
 | `corrosao_gosma` | 1.0 |  | Bloco 103: durabilidade que o golpe da Gosma tira a mais da arma do guarda (a corrosão do ácido; 0 = nenhuma). |
-| `alcance_casa` | 260.0 |  | Bloco 103: morador do fundo: distância (px) de casa até onde ele persegue alguém (depois volta). |
+| `alcance_casa` | 260.0 | **300.0** (morcego.tscn) | Bloco 103: morador do fundo: distância (px) de casa até onde ele persegue alguém (depois volta). |
 | `passeio_raio` | 90.0 |  | Bloco 103: morador do fundo: raio (px) e intervalo (s) do passeio em volta de casa quando não tem ninguém por perto. |
 | `passeio_intervalo` | 6.0 |  |  |
+
+**Rato, morcego e sombra (Bloco 124)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `carga_max` | 6.0 | **6.0** (rato.tscn) | Rato: quanta comida ele leva de uma vez (depois foge). |
+| `voa` | false | **true** (morcego.tscn); **true** (sombra.tscn) | Morcego e sombra: voam/flutuam em linha reta (ignoram a malha de navegação). |
+| `luz_raio` | 140.0 | **140.0** (sombra.tscn) | Sombra: até que distância (px) uma luz acesa a queima e a afasta, e quanto de vida a luz tira por segundo. |
+| `luz_dano` | 4.0 | **4.0** (sombra.tscn) |  |
+| `arma_comum_mult` | 0.5 | **0.5** (sombra.tscn) | Sombra: fração do dano que a arma comum faz nela, e o multiplicador da lança de prata. |
+| `prata_mult` | 1.5 | **1.5** (sombra.tscn) |  |
 
 **Luz (Bloco 90)**
 

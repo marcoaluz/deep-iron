@@ -30,6 +30,7 @@ const KIND_OF_SCENE := {
 	"carpintaria": "carpintaria",  # Bloco 94 (predios94.py)
 	"estufa": "estufa", "carvoaria": "carvoaria", "curtume": "curtume",  # Bloco 107 (predios107.py)
 	"escola": "escola",  # Bloco 111 (predios111.py)
+	"posto_troca": "posto_troca",  # Bloco 125 (predios125.py)
 }
 ## canteiro (canteiro.gd KINDS) -> prédio que vai nascer
 const KIND_OF_CANTEIRO := {
@@ -41,6 +42,7 @@ const KIND_OF_CANTEIRO := {
 	"carpintaria": "carpintaria",  # Bloco 94
 	"estufa": "estufa", "carvoaria": "carvoaria", "curtume": "curtume",  # Bloco 107 (predios107.py)
 	"escola": "escola",  # Bloco 111
+	"posto_troca": "posto_troca",  # Bloco 125
 	"armazem": "armazem",  # Bloco 97: o armazém novo sobe pelos desenhos de obra do armazém
 }
 const ESCAVADEIRA_PECAS := ["motor", "hidraulica", "cabine", "broca"]

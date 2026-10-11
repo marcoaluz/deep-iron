@@ -249,6 +249,13 @@
    "cansado": "mecanico/cansado",
    "bravo": "mecanico/bravo",
    "ferido": "mecanico/ferido"
+  },
+  "comerciante": {
+   "neutro": "comerciante/neutro",
+   "contente": "comerciante/contente",
+   "cansado": "comerciante/cansado",
+   "bravo": "comerciante/bravo",
+   "ferido": "comerciante/ferido"
   }
  }
 }

@@ -256,6 +256,12 @@ func _defs(tab: String) -> Array:
 				"cost": func(): return hub.escola_cost_text(),
 				"reason": func(): return hub.escola_block_reason(),
 				"act": func(): hub.build_escola()})
+			out.append({"name": "Posto de troca", "img": _predio("posto_troca"), "many": false,  # Bloco 125
+				"desc": "Onde a caravana de comerciantes para (uma visita a cada duas semanas). Vende peças raras, sementes e carne defumada; compra barras e gemas. Só um por vila. Nada compra nem vende sozinho.",
+				"count": func(): return _count("postos_troca"),
+				"cost": func(): return hub.troca_cost_text(),
+				"reason": func(): return hub.troca_block_reason(),
+				"act": func(): hub.build_posto_troca()})
 		"Alimentação":
 			if hub:
 				out.append({"name": "Cozinha", "img": _predio("comedouro"), "many": true,

@@ -15,6 +15,7 @@ signal pedido_vencido(p: Dictionary)
 
 const DATA := "res://data/pedidos/pedidos.json"
 const SaveUtil := preload("res://scripts/core/save_util.gd")
+const Items := preload("res://scripts/core/items.gd")
 
 @export_group("Frequência")
 ## Os pedidos só começam a partir deste dia e quando a vila já tem esta gente adulta.
@@ -98,6 +99,11 @@ func _acha(nome: String) -> Node:
 	for w in get_tree().get_nodes_in_group("ipezinhos"):
 		if String(w.display_name) == nome:
 			return w
+	var car := get_tree().get_first_node_in_group("caravana")  # Bloco 125: a comerciante da caravana (visitante)
+	if car != null and car.has_method("comerciante"):
+		var c: Node = car.comerciante()
+		if c != null and String(c.get("display_name")) == nome:
+			return c
 	return null
 
 
@@ -133,7 +139,7 @@ func _novo_dia(dia: int) -> void:
 		var vence: bool = dia > int(p.prazo_dia) or (String(p.tipo) == "casaco_todos" and estacao == 3)
 		if vence and not _cumprido(p):
 			_encerra(p, "vencido")
-	if ligado and dia >= primeiro_dia and abertos.size() < max_abertos:
+	if ligado and dia >= primeiro_dia and _n_da_vila() < max_abertos:
 		if proximo_dia < 0:
 			proximo_dia = dia
 		if dia >= proximo_dia:
@@ -238,6 +244,8 @@ func progresso(p: Dictionary) -> Array:
 			v = mini(_pedras(), meta)
 		"festival_lanternas":
 			v = mini(_lampioes(), meta)
+		"caravana_encomenda":
+			v = mini(int(p.get("vendido", 0)), meta)
 	return [v, meta]
 
 
@@ -249,7 +257,7 @@ func _cumprido(p: Dictionary) -> bool:
 # ------------------------------------------------------------ o sorteio
 ## Sorteia um pedido que faz sentido (e abre). {} = nenhum agora.
 func sorteia() -> Dictionary:
-	if abertos.size() >= max_abertos:
+	if _n_da_vila() >= max_abertos:
 		return {}
 	var adultos := _adultos()
 	if adultos.size() < adultos_minimo:
@@ -259,7 +267,7 @@ func sorteia() -> Dictionary:
 	var cand: Array = []
 	for t in catalogo():
 		var id := String(t.id)
-		if id in abertos_tipos:
+		if id in abertos_tipos or bool(t.get("caravana", false)):  # (Bloco 125: a encomenda só entra pela caravana)
 			continue
 		var pessoas := adultos.filter(func(w): return not (String(w.display_name) in autores))
 		pessoas.shuffle()
@@ -295,9 +303,46 @@ func abre(id: String, autor: Node) -> Dictionary:
 	return p
 
 
+## Quantos pedidos da vila estão abertos (as encomendas da caravana não contam pro teto).
+func _n_da_vila() -> int:
+	return abertos.filter(func(p): return String(p.tipo) != "caravana_encomenda").size()
+
+
+## Bloco 125: a caravana abre uma encomenda (a comerciante é a autora): vender `meta` do `item` até `prazo_dia`, com `bonus` cr de recompensa.
+func abre_encomenda(autor: String, item: String, meta: int, prazo_dia: int, bonus: int) -> Dictionary:
+	if tipo("caravana_encomenda").is_empty() or meta <= 0:
+		return {}
+	_n += 1
+	var p := {"n": _n, "tipo": "caravana_encomenda", "autor": autor, "dia": _dia(), "prazo_dia": prazo_dia, "meta": meta, "item": item, "vendido": 0, "bonus": bonus}
+	abertos.append(p)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("%s encomendou %d %s (F7)." % [autor, meta, Items.plural(item)], Color(1.0, 0.9, 0.55), _acha(autor))
+	pedido_novo.emit(p)
+	mudou.emit()
+	return p
+
+
+## Bloco 125: a vila vendeu `qtd` do `item` à caravana: conta nas encomendas abertas dele.
+func registra_venda_caravana(item: String, qtd: int) -> void:
+	for p in abertos:
+		if String(p.tipo) == "caravana_encomenda" and String(p.get("item", "")) == item:
+			p["vendido"] = int(p.get("vendido", 0)) + qtd
+	mudou.emit()
+
+
+## Bloco 125: a caravana partiu: o que não foi entregue vence agora.
+func vence_da_caravana() -> void:
+	for p in abertos.duplicate():
+		if String(p.tipo) == "caravana_encomenda":
+			_encerra(p, "cumprido" if _cumprido(p) else "vencido")
+
+
 func texto_de(p: Dictionary) -> String:
 	var t := tipo(String(p.tipo))
-	return String(t.get("texto", "")).replace("{nome}", String(p.autor)).replace("{meta}", str(int(p.meta))).replace("{raio}", str(roundi(banco_raio)))
+	var item: String = String(p.get("item", ""))
+	return String(t.get("texto", "")).replace("{nome}", String(p.autor)).replace("{meta}", str(int(p.meta))).replace("{raio}", str(roundi(banco_raio))) \
+		.replace("{item}", Items.plural(item) if item != "" else "")
 
 
 func titulo_de(p: Dictionary) -> String:
@@ -305,7 +350,7 @@ func titulo_de(p: Dictionary) -> String:
 
 
 func recompensa_texto(p: Dictionary) -> String:
-	return String(tipo(String(p.tipo)).get("recompensa_texto", "")).replace("{nome}", String(p.autor))
+	return String(tipo(String(p.tipo)).get("recompensa_texto", "")).replace("{nome}", String(p.autor)).replace("{bonus}", str(int(p.get("bonus", 0))))
 
 
 ## Dias que faltam pro prazo.
@@ -332,7 +377,10 @@ func _encerra(p: Dictionary, estado: String) -> void:
 		pedido_cumprido.emit(p)
 	else:
 		if hud:
-			hud.show_toast("%s desistiu do pedido: %s." % [String(p.autor), titulo_de(p)], Color(0.85, 0.7, 0.6), autor)
+			if String(p.tipo) == "caravana_encomenda":
+				hud.show_toast("%s partiu sem a encomenda de %s." % [String(p.autor), Items.plural(String(p.get("item", "")))], Color(0.85, 0.7, 0.6), autor)
+			else:
+				hud.show_toast("%s desistiu do pedido: %s." % [String(p.autor), titulo_de(p)], Color(0.85, 0.7, 0.6), autor)
 		pedido_vencido.emit(p)
 	_diario(h)
 	mudou.emit()
@@ -347,6 +395,10 @@ func _recompensa(p: Dictionary) -> void:
 		_efeitos.append({"alvo": "*", "v": float(r.animo_vila), "texto": "pedido da vila cumprido", "ate_dia": dia + int(r.get("dias", 3))})
 	if r.has("animo_funcao"):
 		_efeitos.append({"alvo": "job:" + String(r.animo_funcao), "v": float(r.get("v", 8)), "texto": "o caminho de pedra ficou pronto", "ate_dia": dia + int(r.get("dias", 3))})
+	if bool(r.get("creditos_do_pedido", false)):  # Bloco 125: o bônus da encomenda da caravana
+		var eco := get_tree().get_first_node_in_group("economy")
+		if eco and int(p.get("bonus", 0)) > 0:
+			eco.ganha_creditos(float(p.bonus))
 	if bool(r.get("festival_gratis", false)):
 		festival_gratis = true
 	if bool(r.get("festival_dobro", false)):
@@ -370,7 +422,10 @@ func _diario(h: Dictionary) -> void:
 		return
 	var pid := "pedido_%d" % int(h.n)
 	var txt := ""
-	if String(h.estado) == "cumprido":
+	if String(h.tipo) == "caravana_encomenda":
+		txt = ("A comerciante %s pediu uma encomenda: %s. A vila entregou no dia %d. %s." % [String(h.autor), String(h.titulo).to_lower(), int(h.dia), String(h.recompensa).capitalize()]
+			if String(h.estado) == "cumprido" else "A comerciante %s partiu no dia %d sem a encomenda: a vila não deu conta a tempo." % [String(h.autor), int(h.dia)])
+	elif String(h.estado) == "cumprido":
 		txt = "%s tinha pedido: %s. A vila deu um jeito e o pedido foi cumprido no dia %d. %s." % [String(h.autor), String(h.titulo).to_lower(), int(h.dia), String(h.recompensa).capitalize()]
 	else:
 		txt = "%s tinha pedido: %s. O prazo passou no dia %d sem que a vila desse conta. Ninguém reclamou alto." % [String(h.autor), String(h.titulo).to_lower(), int(h.dia)]
@@ -427,8 +482,13 @@ func load_save_data(d: Dictionary) -> void:
 	abertos = []
 	for p in SaveUtil.array(d, "abertos"):
 		if typeof(p) == TYPE_DICTIONARY and not tipo(String(p.get("tipo", ""))).is_empty() and String(p.get("autor", "")) != "":
-			abertos.append({"n": int(p.get("n", 0)), "tipo": String(p.tipo), "autor": String(p.autor), "dia": int(p.get("dia", 1)),
-				"prazo_dia": int(p.get("prazo_dia", 99999)), "meta": int(p.get("meta", 1))})
+			var ab := {"n": int(p.get("n", 0)), "tipo": String(p.tipo), "autor": String(p.autor), "dia": int(p.get("dia", 1)),
+				"prazo_dia": int(p.get("prazo_dia", 99999)), "meta": int(p.get("meta", 1))}
+			if String(p.tipo) == "caravana_encomenda":  # Bloco 125: o item, o quanto já entregou e o bônus
+				ab["item"] = String(p.get("item", ""))
+				ab["vendido"] = int(p.get("vendido", 0))
+				ab["bonus"] = int(p.get("bonus", 0))
+			abertos.append(ab)
 	historico = []
 	for h in SaveUtil.array(d, "historico"):
 		if typeof(h) == TYPE_DICTIONARY and not tipo(String(h.get("tipo", ""))).is_empty():

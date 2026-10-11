@@ -11,6 +11,8 @@ extends "res://scripts/props/station.gd"
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 
+const Modificadores := preload("res://scripts/core/modificadores.gd")  # Bloco 125: as sementes da caravana
+
 @export_group("Estufa e cuidado (Bloco 107)")
 ## Esta é uma ESTUFA (horta coberta): a estação conta pelo `sun.season_estufa_mult` (no inverno rende mais que a horta
 ## aberta) em vez de `season_garden_mult`.
@@ -73,6 +75,7 @@ func regen_por_segundo() -> float:
 	var season: float = (sun.estufa_mult() if estufa else sun.garden_mult()) if sun else 1.0  # inverno quase para a horta
 	if not estufa and _tem_agricultor():
 		season *= cuidado_mult
+	season *= Modificadores.mult(get_tree(), "horta")  # Bloco 125: o pacote de sementes da caravana (a estufa também)
 	return regen_rate * season
 
 

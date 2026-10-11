@@ -462,5 +462,13 @@
   "char": "bf58c8e8-16c6-4693-821e-04345facb425",
   "estado": "pronto",
   "_obs": "Bloco 92"
+ },
+ "comerciante": {
+  "genero": "m",
+  "job": "bd3e13ca-d91f-4b6e-8b42-1f2c7f1ecfa3",
+  "escolhido": 0,
+  "char": "3535870b-dfbf-428d-a5d4-a741ae34c975",
+  "estado": "pronto",
+  "_obs": "Bloco 92"
  }
 }

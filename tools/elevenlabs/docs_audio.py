@@ -22,7 +22,7 @@ SAIDA_PROMPTS = os.path.join(RAIZ, "docs", "audio", "PROMPTS_ELEVENLABS.md")
 SAIDA_ESCUTA = os.path.join(RAIZ, "docs", "audio", "LISTA_DE_ESCUTA.md")
 EXTENSOES = ["ogg", "wav", "mp3"]
 
-ORDEM = ["ambiencia", "predios", "stingers", "ui", "sfx", "animais", "perigo", "criaturas", "maquinas", "vida", "passos", "voz", "pontuais", "intro", "musica"]
+ORDEM = ["ambiencia", "predios", "stingers", "ui", "sfx", "animais", "perigo", "criaturas", "maquinas", "vida", "caravana", "passos", "voz", "pontuais", "intro", "musica"]
 TITULOS = {
     "ambiencia": "Ambiência (loops por andar, clima e onda solar)",
     "predios": "Prédios e lugares (loops posicionais e sinos)",
@@ -34,6 +34,7 @@ TITULOS = {
     "criaturas": "Criaturas (um som de ataque por espécie)",
     "maquinas": "Máquinas",
     "vida": "Vida na vila (nascimento, casamento, enterro)",
+    "caravana": "Caravana de comerciantes (chegada e troca de moedas)",
     "passos": "Passos por tipo de chão",
     "voz": "Voz curta dos ipezinhos (desligável)",
     "pontuais": "Sons soltos pelo ambiente (aleatórios)",
@@ -43,11 +44,11 @@ TITULOS = {
 TIPOS = {"loop": "loop", "loop_predio": "loop posicional", "tiro": "toca uma vez", "pontual": "solto e aleatório", "tema": "música"}
 ## Termos de busca por pasta (pra procurar o som num banco de sons, se o gerado não servir).
 BUSCA = {"ambiencia": "ambience loop", "predios": "loop machinery ambience", "stingers": "stinger jingle", "ui": "ui sound game", "sfx": "sound effect",
-         "animais": "animal sound", "perigo": "geiger counter", "criaturas": "monster creature", "maquinas": "machine", "vida": "village",
+         "animais": "animal sound", "perigo": "geiger counter", "criaturas": "monster creature", "maquinas": "machine", "vida": "village", "caravana": "cart wheels coins",
          "passos": "footstep", "voz": "voice grunt", "pontuais": "nature one shot", "intro": "cinematic", "musica": "game music loop"}
 ## A ordem em que se ouve (a mesma da geração): o que mais pesa na experiência primeiro.
 PRIORIDADE = ["ambiencia/", "predios/fornalha", "predios/sino", "stingers/", "ui/", "predios/", "sfx/", "passos/", "voz/", "animais/", "criaturas/",
-              "perigo/", "maquinas/", "vida/", "pontuais/", "intro/", "musica/"]
+              "perigo/", "maquinas/", "vida/", "caravana/", "pontuais/", "intro/", "musica/"]
 
 
 def nomes_esperados(s):

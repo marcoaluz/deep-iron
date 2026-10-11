@@ -47,6 +47,7 @@ PREDIOS = {
     "carpintaria": ("carpintaria", None),  # Bloco 94 (predios94.py)
     "estufa": ("estufa", None), "carvoaria": ("carvoaria", None), "curtume": ("curtume", None),  # Bloco 107 (predios107.py)
     "escola": ("escola", None),  # Bloco 111 (predios111.py)
+    "posto_troca": ("posto_troca", None),  # Bloco 125 (predios125.py)
     "escudo": ("escudo", {"etapa_%d" % (k + 1): "../%s/escudo_%d_%s.png" % (MAQ, k + 1, n)
                           for k, n in enumerate(["fundacao", "bobinas", "nucleo", "emissor"])}),
     "escavadeira": ("escavadeira", {"estrutura": "../%s/escavadeira_1_estrutura.png" % MAQ,
@@ -286,6 +287,7 @@ FUNCOES = {"minerador": ("minerador", "mineradora", "minerar"), "guarda": ("guar
            "agricultor": ("agricultor", "agricultora", "colher"),  # Bloco 107 (oficios107.py)
            "carregador": ("carregador", "carregadora", "carregar"),  # Bloco 105/119 (oficios105.py)
            "mecanico": ("mecanico", "mecanica", "consertar"),  # Bloco 105/119 (oficios105.py)
+           "comerciante": ("comerciante", "comerciante", "negociar"),  # Bloco 125 (oficios125.py): só mulher, a caravana
            "crianca": ("crianca_m", "crianca_f", "brincar")}  # Bloco 111 (oficios111.py): as crianças (e os aprendizes)
 COMUNS = ["caminhada", "comer", "ferido", "deitar", "mancar_esq", "com_picareta"]
 # pendências dos Prompts 2 e 29: colher fruta (caçador sem arco), treinar no campo e o ataque com a

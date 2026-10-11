@@ -4,7 +4,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 O jogo roda **sem** os arquivos: o slot sem arquivo fica mudo (ou toca o som sintetizado de antes), sem erro. Arquivo novo é só pôr em `project.godot/assets/audio/<nome>.ogg|wav|mp3` com o nome exato e rodar `godot --headless --path project.godot --import`.
 
-**Resumo:** 134 slots, 204 arquivos esperados, **204 prontos, 0 faltam**.
+**Resumo:** 136 slots, 207 arquivos esperados, **207 prontos, 0 faltam**.
 
 ## O que falta
 
@@ -159,6 +159,13 @@ A **música** (abertura e introdução) não é gerada pela ferramenta de efeito
 | `vida/bebe_nasce_0`<br>`vida/bebe_nasce_1` | 2 s cada | não | SFX | -8.0 | Nasce um bebê. | A newborn baby's first cry, small and fragile; village | mudo | pronto |
 | `vida/casamento` | 4 s | não | SFX | -6.0 | Um casal se casa. | A village wedding celebration: a short cheerful bell ring with the crowd cheering and clap; village | mudo | pronto |
 | `vida/enterro` | 3 s | não | SFX | -8.0 | O padre enterra um morto no cemitério. | Digging a grave: a shovel cutting into earth and soil dropping; village | mudo | pronto |
+
+## Caravana de comerciantes (chegada e troca de moedas)
+
+| Arquivo(s) em `assets/audio/` | Duração | Loop | Bus | dB | Descrição | Termos de busca | Sem arquivo | Estado |
+|---|---|---|---|---|---|---|---|---|
+| `caravana/chegada_0` | 3.0 s | não | SFX | -8.0 | A caravana da comerciante chega ao posto de troca (rodas de carroça, arreios e um sininho de latão). | A heavy wooden cart rolling slowly over gravel, harness leather creaking; cart wheels coins | mudo | pronto |
+| `caravana/moedas_0`<br>`caravana/moedas_1` | 1.0 s cada | não | SFX | -10.0 | Uma troca na janela da caravana (moedas contadas na mão, uma gaveta de caixa de madeira). | A handful of old metal coins being counted and dropped into a wooden cash box, a short cli; cart wheels coins | mudo | pronto |
 
 ## Passos por tipo de chão
 

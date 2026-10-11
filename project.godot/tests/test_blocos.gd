@@ -516,3 +516,7 @@ func test_b123_pedidos_eventos() -> void:
 
 func test_b124_criaturas_novas() -> void:
 	run_bloco("b124_criaturas_novas.gd")
+
+
+func test_b125_caravana() -> void:
+	run_bloco("b125_caravana.gd")
