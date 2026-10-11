@@ -1,42 +1,42 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-10. Branch `isometrico`. Bloco 117 feito (commit local, sem push). Os Blocos 114, 115 e 116 já foram enviados (push do Marco em 2026-10-10). Tudo até o Bloco 113 **foi enviado** pro GitHub (push do Marco em 2026-10-10). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
+Atualizado em 2026-10-11. Branch `isometrico`. Último Bloco: **126**. TUDO até o Bloco 126 (e o `.docx` da documentação do jogo) **está enviado** pro GitHub: `HEAD == origin/isometrico` (e0871e9c1). Push só com o OK do Marco. Fila de prompts vazia; o que falta é o Marco VALIDAR jogando/ouvindo os blocos 114–126 (nada deles foi jogado nem ouvido) e conferir a licença da Eleven Music.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
-## Bloco 126 — EPÍLOGO, ESTATÍSTICAS E MODO INFINITO (feito; commit local, sem push)
+## Bloco 126 — EPÍLOGO, ESTATÍSTICAS E MODO INFINITO (feito; enviado)
 
 Prompt 15. Relatório `docs/BLOCO126_EPILOGO_ESTATISTICAS.md`; teste `b126_epilogo_estatisticas` (0 falhas). `estatisticas.gd`, `data/epilogo/epilogo.txt`, tela de vitória nova, `sun.infinito`, botão na janela do Sol. Nada jogado. FILA DOS PROMPTS 12, 13 e 15 CONCLUÍDA (blocos 124, 125, 126); falta o Marco validar e dar o push.
 
-## Bloco 125 — POSTO DE TROCA E CARAVANA (feito; commit local, sem push)
+## Bloco 125 — POSTO DE TROCA E CARAVANA (feito; enviado)
 
 Prompt 13. Relatório `docs/BLOCO125_CARAVANA.md`; teste `b125_caravana` (0 falhas). Arte do PixelLab: posto (obra 1/2/3/pronto) e a comerciante Cacilda (animações, retrato, `oficios125.py`/`predios125.py`), `caravana.gd`/`caravana_panel.gd`/`posto_troca.gd`, falas editáveis, encomendas nos pedidos, 3 sons. Nada jogado nem ouvido. Próximos: Bloco 126 = Prompt 15 (epílogo, estatísticas, modo infinito).
 
-## Bloco 124 — CRIATURAS NOVAS: rato-de-cinza, morcego de brasa, sombra solar (feito; commit local, sem push)
+## Bloco 124 — CRIATURAS NOVAS: rato-de-cinza, morcego de brasa, sombra solar (feito; enviado)
 
 Prompt 12. Relatório `docs/BLOCO124_CRIATURAS.md` (com o plano e os prompts de arte); teste `b124_criaturas_novas` (registrado no GUT). Arte do PixelLab (`criaturas/novas124.py`, ~135 gerações), 3 cenas em `scenes/creatures/`, `creature.gd` (kinds novos, flags `voa`, `carga_max`, luz da sombra), `defense.gd` (`rato_*`, `sombra_*`, `start_ratada`, `mult` de acidente no S3, F3 `spawn_todas_novas`),
 `S3_lava.tres` (morador morcego), catálogo + diário, 3 sons (6 arquivos). Nada jogado nem ouvido; equilíbrio é palpite com tetos de justiça testados.
 
-## Bloco 123 — PEDIDOS DA VILA e EVENTOS COM ESCOLHA (feito; commit local, sem push)
+## Bloco 123 — PEDIDOS DA VILA e EVENTOS COM ESCOLHA (feito; enviado)
 
 Prompt 11. Relatório `docs/BLOCO123_PEDIDOS_EVENTOS.md`; teste `b123_pedidos_eventos` (registrado no GUT). `pedidos.gd` + `pedidos_panel.gd` (F7, `data/pedidos/pedidos.json`: 7 pedidos com nome e retrato, prazo, só o que faz sentido, recompensas), `eventos.gd` + `ui/evento_cartao.gd` (`data/eventos/eventos.json`: 6 eventos, cartão que pausa, 2 ou 3 opções com custo e consequência; frequência/peso nos `@export`; nunca o mesmo em sequência);
 ganchos em `morale.gd` (fatores de ânimo e festival de graça/em dobro), `relacoes.gd` (ânimo pessoal), `hud.gd`, `main.gd`, `teclas.gd` (F7), `save_manager.gd` (chaves "pedidos" e "eventos"), `debug_panel.gd` (F3: evento agora, pedido novo), nós novos no `main.tscn`. Ilustração da febre = a da greve (não há de doença).
 Skills novas do projeto (a pedido do Marco): `passagem`, `retomar`, `estilo-arte`, `som`, `balanceamento` em `.claude/skills/` (as outras duas do rascunho dele, `regra-da-justa` e `supabase-jogo`, são de outro jogo: não foram criadas).
 
-## Bloco 122 — A CAMPANHA, capítulos 2 a 6 (feito; commit local, sem push)
+## Bloco 122 — A CAMPANHA, capítulos 2 a 6 (feito; enviado)
 
 Prompt 10. Relatório `docs/BLOCO122_CAMPANHA.md`; teste `b122_campanha` (registrado no GUT). Cinco `.tres` em `data/missoes/` (cap2_fogo_e_ferro, cap3_o_poco, cap4_o_abismo, cap5_agua_e_fogo, cap6_o_escudo) + `capitulo_2..6.txt` (textos, diário, epílogo); tipos de objetivo novos (`desbloqueio`, `escavadeira_pecas`, `arma_forjada`, `chefe`, `escudo_etapas`), sinal `defense.arma_forjada`,
 recompensas novas (colono, 4 lampiões de graça, peças raras, lingotes solares, título "Vila que não dorme", o Monumento), o Monumento (decoração única com arte do PixelLab, 4 candidatos, c00), `sun.win()` cumpre o cap. 6 e mostra epílogo + estatísticas. b100 ajustado (o cap. 2 existe).
 Achados: o ventilador (cap. 3) exige a pesquisa Ventilação, que exige Trajes (1º objetivo do cap. 4: chega cumprido); o S4 abre só no estágio 5 (o cap. 5 pede o 4).
 
-## Bloco 121 — MÚSICA DINÂMICA: camadas por estação, temas e fallback (feito; commit local, sem push)
+## Bloco 121 — MÚSICA DINÂMICA: camadas por estação, temas e fallback (feito; enviado)
 
 Prompt 7 (sistema). Relatório `docs/BLOCO121_MUSICA_DINAMICA.md`; teste `b121_musica_dinamica` (registrado no GUT). `scripts/core/musica_dinamica.gd` (filho do `Audio`): cada estação = `AudioStreamSynchronized` de 3 camadas (pad `_noite`, melodia `_dia`, percussão `_perigo`) com volume por situação (dia, noite, perigo, fundo da mina: mais drone e menos melodia; `@export`),
 estações + temas (menu, vitória, derrota) = clipes de um `AudioStreamInteractive` com crossfade de 3 s; troca de estação na virada do compasso (o Godot não acha o compasso sem BPM no WAV: a classe conta os 3 s do compasso; sem BPM 1 batida = 1 s no `fade_beats`). Configurações: caixa "Música em camadas" e 3 sliders (melodia, base/pad, percussão).
 FALLBACK: sem camadas, desligada ou em headless (sem `MusicaDinamica.forcar`) o jogo toca as 2 músicas de antes (jogo e perigo). Nada ouvido: os dB e os tempos são palpite para o Marco ajustar.
 
-## Bloco 120 — MÚSICA EM CAMADAS pela Eleven Music: a ferramenta, as 15 faixas e o veredito de sincronia (feito; commit local, sem push)
+## Bloco 120 — MÚSICA EM CAMADAS pela Eleven Music: a ferramenta, as 15 faixas e o veredito de sincronia (feito; enviado)
 
 Prompt 7 (ferramenta; o SISTEMA de música dinâmica é o próximo bloco). Relatório `docs/BLOCO120_MUSICA_CAMADAS.md`; teste `b120_musica_ferramenta` (registrado no GUT).
 - `tools/elevenlabs/gerar_musica.py` (estende o do Bloco 117): manifesto `project.godot/data/audio/musica.json` (15 faixas: `tema_menu`, `tema_vitoria`, `tema_derrota` e, por estação, `<estacao>_dia` (melodia), `_noite` (pad/drone), `_perigo` (percussão), TODAS no mesmo BPM (80) e no mesmo tom (D minor), 120 s = 40 compassos, instrumental, folk sombrio + industrial);
@@ -47,13 +47,13 @@ Prompt 7 (ferramenta; o SISTEMA de música dinâmica é o próximo bloco). Relat
   um **Indie Game** (a receita do jogo, com todas as versões, edições e DLCs, abaixo de **US$ 500.000** desde o lançamento comercial, e a receita de todos os jogos de quem desenvolve ou publica abaixo de **US$ 1.000.000** no último ano fiscal, líquidas de taxas da loja e reembolsos) **não** é Studio Game. Se o jogo deixar de ser Indie, há **60 dias** para ter um plano que permita Studio Games ou parar de usar a música nele (as cópias já distribuídas podem continuar). Quem decide se é Indie é o desenvolvedor.
   Uma busca na web mostrou um espelho antigo (ago/2025, v1) que listava "videogames comerciais" como proibido nos planos pagos sem autorização escrita; a versão atual (out/2026) NÃO tem isso. Os efeitos sonoros (`sound-generation`) têm termos próprios que NÃO foram lidos. Não é aconselhamento jurídico: o Marco deve ler o termo e guardar uma cópia.
 
-## Bloco 119 — ARTE PRÓPRIA do carregador e do mecânico (feito; commit local, sem push)
+## Bloco 119 — ARTE PRÓPRIA do carregador e do mecânico (feito; enviado)
 
 Pedido do Marco: "o carregador fica com a roupa igual a quando está sem função e a do mecânico também não muda". Causa: os dois ofícios do Bloco 105 nunca tiveram arte (o piloto do carregador esperava a aprovação) e o jogo usava `iso_bonecos.PROVISORIO` (civil e engenheiro).
 Feito no PixelLab (~100 gerações; saldo 5.487 antes): carregadora, mecânico e mecânica completos (8 poses, caminhada de 8 quadros, comer, ferido, deitar, mancar, carregar/consertar, casaco de inverno, retrato com 5 expressões × 3 tons) e o carregador homem do piloto integrado; `integra.py FUNCOES` ganhou as duas funções.
 Relatório `docs/BLOCO119_ARTE_CARREGADOR_MECANICO.md`; folhas em `docs/arte/bloco119/`; teste `b119_arte_carregador_mecanico`. Ficou: o ÍCONE da barra de funções (provisório) e o "carregar" de frente do carregador homem perde um pouco a armação.
 
-## Bloco 118 — O SOM SEGUE O ZOOM, modelo Frostpunk (feito; commit local, sem push)
+## Bloco 118 — O SOM SEGUE O ZOOM, modelo Frostpunk (feito; enviado)
 
 Pedido do Marco: som "igual Frostpunk": o jogo só faz barulho quando clica na área ou dá zoom. Relatório `docs/BLOCO118_SOM_ZOOM.md`; teste `b118_audio_zoom` (registrado no GUT).
 - Cada slot tem uma classe de zoom (`audio_slots.gd zoom_de`: perto / medio / global) e `Audio.fator_zoom(classe)` (0 a 1, pela medida `cam.art_pixel_screen`; paradas 0,5 longe / 1 de sempre / 2-3 perto; `@export` `zoom_*` no `Audio`)
@@ -61,7 +61,7 @@ Pedido do Marco: som "igual Frostpunk": o jogo só faz barulho quando clica na �
 - Clicar num prédio (`hud.open_panel_for` → `Audio.selecionar_predio`) põe o som dele em destaque por 4 s (de qualquer zoom) + o toque `ui/selecionar_predio` (3 variações novas); clicar num ipezinho (`Audio.selecionar_gente`) faz ele responder.
 - Em headless o zoom é 99 (tudo se ouve). Limiares são palpite: o Marco precisa ouvir e ajustar os `zoom_*`.
 
-## Bloco 117 — MÚSICA do jogo pela API do ElevenLabs (feito; commit local, sem push)
+## Bloco 117 — MÚSICA do jogo pela API do ElevenLabs (feito; enviado)
 
 Pedido do Marco: "a música de loop do jogo vai ser alterada, pode tentar fazer na API do ElevenLabs da mesma chave" (as músicas da abertura e da intro estavam pendentes; os .ogg que ele criou estavam VAZIOS e numa pasta aninhada errada, removidos).
 Relatório `docs/BLOCO117_MUSICA.md`; teste `b117_musica` (registrado no GUT). A API de música (`POST /v1/music`, `music_v1`, `force_instrumental`) funciona no plano Creator.
@@ -70,7 +70,7 @@ Relatório `docs/BLOCO117_MUSICA.md`; teste `b117_musica` (registrado no GUT). A
 - Achado: o WAV importado é QOA (`compress/mode=2`, `format=3`), então `stream.data` não são amostras: o b116 media bytes comprimidos (a checagem de volume/emenda era vazia). Agora b116 e b117 leem o ARQUIVO .wav. Real: `predios/tocha` (RMS -37, pico 0) e `cozinha` (RMS -34) são fogo estalando; o critério passou a ser RMS baixo E pico baixo.
 - Não ouvi nada; o Marco precisa ouvir as 4 músicas (principalmente se a abertura repete sem emenda audível e se a de perigo não cansa). Trocar uma: `--so musica/jogo --candidatos 3` e `--aprovar musica/jogo N`.
 
-## Bloco 116 — FERRAMENTA DE SONS (ElevenLabs): candidatos, cache, teste de carga (feito; commit local, sem push)
+## Bloco 116 — FERRAMENTA DE SONS (ElevenLabs): candidatos, cache, teste de carga (feito; enviado)
 
 Pedido do Marco (prompt colado) depois de aprovar os sons ("ficou muito bom agora"). Boa parte já existia (114/115); este bloco fez o que faltava. Relatório
 `docs/BLOCO116_FERRAMENTA_SONS.md`; teste `b116_audio_carga` (21 OK, registrado no GUT) + `tools/elevenlabs/testa_ferramenta.py` (offline). Nenhum crédito gasto.
@@ -82,7 +82,7 @@ Pedido do Marco (prompt colado) depois de aprovar os sons ("ficou muito bom agor
 - Doc oficial x prática: a API devolve PCM ESTÉREO (a doc diz MP3/mono) e pcm_44100 funcionou no plano Creator (a doc diz Pro).
 - PENDENTE com o Marco: a música (abertura e intro) à parte; instalar o ffmpeg se quiser OGG; push.
 
-## Bloco 115 — TODOS OS SONS NO CATÁLOGO + PROMPTS DO ELEVENLABS (feito; commit local, sem push)
+## Bloco 115 — TODOS OS SONS NO CATÁLOGO + PROMPTS DO ELEVENLABS (feito; enviado)
 
 Pedido do Marco (depois do 114): "escrever os prompts pro ElevenLabs; TODOS os sons do jogo serão criados lá, só a música fica de fora (chuva, mineração, animais,
 pessoal falando, radiação, tudo)". Relatório `docs/BLOCO115_SONS.md`; **`docs/audio/PROMPTS_ELEVENLABS.md`** (prompt + duração + arquivo de cada som); teste
@@ -97,7 +97,7 @@ pessoal falando, radiação, tudo)". Relatório `docs/BLOCO115_SONS.md`; **`docs
   gotejar regerados com prompt melhor, tocha e cozinha +dB no slot. Ajuste fino = o `db` do slot no `slots.json`; o loop de prédio só toca a até `raio` (600 px) do centro do prédio.
 - PENDENTE com o Marco: ouvir os 186 sons e pedir refazer os ruins; ajustar db/intervalo/raio no `slots.json`; a música (abertura e intro) à parte; push.
 
-## Bloco 114 — SISTEMAS DE SOM (feito; commit local, sem push)
+## Bloco 114 — SISTEMAS DE SOM (feito; enviado)
 
 Pedido "Prompt 6". Plano aprovado ("pode": bus UI sem bus de voz, voz ligada por padrão, nomes da lista). Relatório `docs/BLOCO114_SOM.md`; lista dos
 arquivos de som `docs/audio/PEDIDO_DE_SONS.md` (`python tools/elevenlabs/docs_audio.py`); teste `b114_audio_sistemas` (116 OK, registrado no GUT). NENHUM áudio criado:

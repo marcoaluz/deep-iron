@@ -34,3 +34,6 @@ fake_appdata*/
 
 # Bloco 116: candidatas de som e o cache das chamadas à API (tools/elevenlabs/gerar_sons.py)
 audio_candidatos/
+
+# Arquivos de trava do Word (documento aberto)
+~$*
