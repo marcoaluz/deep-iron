@@ -1,0 +1,83 @@
+{
+	"_obs": "Bloco 123: os PEDIDOS DA VILA (pedidos.gd): desejos de ipezinhos com nome e retrato. dias = o prazo. A condição de cada um está em pedidos.gd _progresso(); o sorteio só pede o que faz sentido (_pode()). Pedido novo = uma entrada aqui + a condição em pedidos.gd.",
+	"tipos": [
+		{
+			"id": "banco_perto",
+			"titulo": "Um banco perto de casa",
+			"dias": 6,
+			"texto": "\"Queria um banco perto de casa pra sentar no fim do dia.\" Ponha um banco a até {raio} px da casa de {nome}.",
+			"recompensa": {
+				"animo_pessoa": 15,
+				"dias": 2
+			},
+			"recompensa_texto": "{nome} fica bem mais animado(a) por 2 dias"
+		},
+		{
+			"id": "sem_fome",
+			"titulo": "Ninguém passando fome",
+			"dias": 10,
+			"meta": 3,
+			"texto": "\"Já não lembro quando foi a última vez que o estômago ficou quieto.\" {nome} quer {meta} dias seguidos sem ninguém na vila com fome braba.",
+			"recompensa": {
+				"festival_gratis": true
+			},
+			"recompensa_texto": "o próximo festival sai de graça"
+		},
+		{
+			"id": "casaco_todos",
+			"titulo": "Casaco para todos antes do inverno",
+			"dias": 12,
+			"texto": "\"Este ano o inverno não leva ninguém.\" {nome} pede casaco pra todos os adultos antes do frio chegar.",
+			"recompensa": {
+				"inverno_ameno": true
+			},
+			"recompensa_texto": "o inverno deste ano sem o -3 de ânimo"
+		},
+		{
+			"id": "enterrar",
+			"titulo": "Enterrar com dignidade",
+			"dias": 12,
+			"texto": "\"Nossos mortos merecem mais que uma vala.\" {nome} pede um cemitério na vila e os Ritos fúnebres pesquisados.",
+			"recompensa": {
+				"animo_vila": 6,
+				"dias": 3
+			},
+			"recompensa_texto": "a vila toda se sente mais em paz por 3 dias"
+		},
+		{
+			"id": "guardas_100",
+			"titulo": "3 guardas bem treinados",
+			"dias": 14,
+			"meta": 3,
+			"texto": "\"Quem guarda o portão precisa saber o que faz.\" {nome} quer {meta} guardas com 100% de treino.",
+			"recompensa": {
+				"arma": "besta"
+			},
+			"recompensa_texto": "uma besta de graça no cavalete do Arsenal"
+		},
+		{
+			"id": "caminho_pedra",
+			"titulo": "Caminho de pedra até a mina",
+			"dias": 12,
+			"meta": 25,
+			"texto": "\"Minha bota nova não aguenta mais essa lama.\" {nome} quer um caminho de pedra (pelo menos {meta} trechos) da vila até a mina.",
+			"recompensa": {
+				"animo_funcao": "minerador",
+				"v": 8,
+				"dias": 3
+			},
+			"recompensa_texto": "os mineradores ficam mais animados por 3 dias"
+		},
+		{
+			"id": "festival_lanternas",
+			"titulo": "Festival das Lanternas",
+			"dias": 14,
+			"meta": 5,
+			"texto": "\"Uma praça acesa é uma praça que ninguém tem medo de cruzar.\" {nome} quer {meta} lampiões em volta da praça.",
+			"recompensa": {
+				"festival_dobro": true
+			},
+			"recompensa_texto": "o próximo festival rende o dobro"
+		}
+	]
+}

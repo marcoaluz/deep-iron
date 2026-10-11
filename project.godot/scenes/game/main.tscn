@@ -56,6 +56,8 @@
 [ext_resource type="Script" path="res://scripts/core/diary.gd" id="52_diary"]
 [ext_resource type="Script" path="res://scripts/core/missoes.gd" id="52_missoes"]
 [ext_resource type="Script" path="res://scripts/core/migrantes.gd" id="52_migrantes"]
+[ext_resource type="Script" path="res://scripts/core/pedidos.gd" id="123_pedidos"]
+[ext_resource type="Script" path="res://scripts/core/eventos.gd" id="123_eventos"]
 [ext_resource type="Script" path="res://scripts/core/catalogo.gd" id="53_catalogo"]
 [ext_resource type="Script" path="res://scripts/core/expedicoes.gd" id="53_expedicoes"]
 [ext_resource type="PackedScene" path="res://scenes/props/barricada.tscn" id="53_barricada"]
@@ -343,6 +345,12 @@ script = ExtResource("52_missoes")
 
 [node name="Migrantes" type="Node" parent="."]
 script = ExtResource("52_migrantes")
+
+[node name="Pedidos" type="Node" parent="."]
+script = ExtResource("123_pedidos")
+
+[node name="Eventos" type="Node" parent="."]
+script = ExtResource("123_eventos")
 
 [node name="Catalogo" type="Node" parent="."]
 script = ExtResource("53_catalogo")

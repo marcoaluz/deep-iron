@@ -5,6 +5,12 @@ Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
+## Bloco 123 — PEDIDOS DA VILA e EVENTOS COM ESCOLHA (feito; commit local, sem push)
+
+Prompt 11. Relatório `docs/BLOCO123_PEDIDOS_EVENTOS.md`; teste `b123_pedidos_eventos` (registrado no GUT). `pedidos.gd` + `pedidos_panel.gd` (F7, `data/pedidos/pedidos.json`: 7 pedidos com nome e retrato, prazo, só o que faz sentido, recompensas), `eventos.gd` + `ui/evento_cartao.gd` (`data/eventos/eventos.json`: 6 eventos, cartão que pausa, 2 ou 3 opções com custo e consequência; frequência/peso nos `@export`; nunca o mesmo em sequência);
+ganchos em `morale.gd` (fatores de ânimo e festival de graça/em dobro), `relacoes.gd` (ânimo pessoal), `hud.gd`, `main.gd`, `teclas.gd` (F7), `save_manager.gd` (chaves "pedidos" e "eventos"), `debug_panel.gd` (F3: evento agora, pedido novo), nós novos no `main.tscn`. Ilustração da febre = a da greve (não há de doença).
+Skills novas do projeto (a pedido do Marco): `passagem`, `retomar`, `estilo-arte`, `som`, `balanceamento` em `.claude/skills/` (as outras duas do rascunho dele, `regra-da-justa` e `supabase-jogo`, são de outro jogo: não foram criadas).
+
 ## Bloco 122 — A CAMPANHA, capítulos 2 a 6 (feito; commit local, sem push)
 
 Prompt 10. Relatório `docs/BLOCO122_CAMPANHA.md`; teste `b122_campanha` (registrado no GUT). Cinco `.tres` em `data/missoes/` (cap2_fogo_e_ferro, cap3_o_poco, cap4_o_abismo, cap5_agua_e_fogo, cap6_o_escudo) + `capitulo_2..6.txt` (textos, diário, epílogo); tipos de objetivo novos (`desbloqueio`, `escavadeira_pecas`, `arma_forjada`, `chefe`, `escudo_etapas`), sinal `defense.arma_forjada`,

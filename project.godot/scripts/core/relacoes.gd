@@ -538,6 +538,9 @@ func fatores_animo(w: Node) -> Array:
 			f.append(["valente: o medo pesa menos", 10.0 * (1.0 - valente_medo)])  # (compensa parte do "medo das criaturas" da vila)
 	if casamento_left > 0.0:
 		f.append(["casamento na vila", casamento_animo])
+	var ped := get_tree().get_first_node_in_group("pedidos")  # Bloco 123: o pedido dela cumprido / a função dele
+	if ped and ped.has_method("fatores_animo_de"):
+		f.append_array(ped.fatores_animo_de(w))
 	return f
 
 

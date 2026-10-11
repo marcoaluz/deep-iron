@@ -40,6 +40,7 @@ func setup(main: Node) -> void:
 	_linha(v, "Eventos:", [["invasão agora", _invasao], ["chuva liga/desliga", _chuva], ["curar todos", _curar], ["liberar pesquisas", _pesquisas]])
 	_linha(v, "Andares:", [["abrir todos", _abre_andares]])
 	_linha(v, "Criaturas:", [["invasão com todos os tipos", _todas_criaturas]])  # Bloco 91
+	_linha(v, "Vila:", [["evento agora", _evento], ["pedido novo", _pedido]])  # Bloco 123
 	_linha(v, "Ir para:", [["vila", func(): _vai(Vector2(40, -260))], ["S2", func(): _vai(Vector2(-300, 3730))],
 		["S3", func(): _vai(Vector2(-460, 4110))], ["S4", func(): _vai(Vector2(-340, 4530))], ["S5", func(): _vai(Vector2(-460, 4920))],
 		["ferrovia", _vai_ferrovia]])
@@ -183,6 +184,26 @@ func _todas_criaturas() -> void:
 		d._spawn(k)
 	if not d.boss_alive():
 		d._spawn_boss()
+
+
+## Bloco 123: abre um cartão de evento (o próximo que faz sentido; senão qualquer um, forçado) e abre um pedido da vila.
+func _evento() -> void:
+	var ev := _g("eventos")
+	if ev == null or not ev.ativo.is_empty():
+		return
+	if ev.sorteia() == "":
+		var ids: Array = ev.catalogo().map(func(e): return String(e.id)).filter(func(i): return i != "casamento")
+		ev.dispara(String(ids[randi() % ids.size()]), true)
+
+
+func _pedido() -> void:
+	var pe := _g("pedidos")
+	if pe == null:
+		return
+	if pe.sorteia().is_empty():
+		var ws: Array = _main.get_tree().get_nodes_in_group("ipezinhos")
+		if not ws.is_empty():
+			pe.abre("sem_fome", ws[randi() % ws.size()])
 
 
 func _abre_andares() -> void:

@@ -508,3 +508,7 @@ func test_b121_musica_dinamica() -> void:
 
 func test_b122_campanha() -> void:
 	run_bloco("b122_campanha.gd")
+
+
+func test_b123_pedidos_eventos() -> void:
+	run_bloco("b123_pedidos_eventos.gd")

@@ -723,6 +723,9 @@ func _build_janelas() -> void:
 	var migr := get_tree().get_first_node_in_group("migrantes")
 	if migr:  # Bloco 101: a janela dos migrantes que esperam no portão
 		_add_panel("migrantes", preload("res://scripts/core/migrantes_panel.gd"), migr)
+	var pedidos := get_tree().get_first_node_in_group("pedidos")
+	if pedidos:  # Bloco 123: os pedidos da vila (F7)
+		_add_panel("pedidos", preload("res://scripts/core/pedidos_panel.gd"), pedidos)
 	_missoes_mgr = get_tree().get_first_node_in_group("missoes")
 	if _missoes_mgr:  # Bloco 100: a janela e o rastreador do canto
 		_add_panel("missoes", preload("res://scripts/core/missoes_panel.gd"), _missoes_mgr)
@@ -854,7 +857,7 @@ func _porcao_real(sched: Node) -> float:
 const TECLA_JANELA := {"hub": "painel_hub", "trabalho": "painel_trabalho", "escavadeira": "painel_escavadeira",
 	"oficina": "painel_oficina", "enfermaria": "painel_enfermaria", "moral": "painel_moral", "defesa": "painel_defesa",
 	"lab": "painel_lab", "sol": "painel_sol", "diario": "painel_diario", "missoes": "painel_missoes",
-	"catalogo": "painel_catalogo", "expedicoes": "painel_expedicoes", "politicas": "painel_politicas"}
+	"catalogo": "painel_catalogo", "expedicoes": "painel_expedicoes", "politicas": "painel_politicas", "pedidos": "painel_pedidos"}
 const ID_CORTE := 1000
 
 

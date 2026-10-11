@@ -1,0 +1,330 @@
+{
+	"_obs": "Bloco 123: os EVENTOS COM ESCOLHA (eventos.gd). Cada evento: uma ilustração que já existe (assets/game/ui/ilustracoes), texto, 2 ou 3 opções com custo e consequência. Custo: creditos, comida, madeira. Efeitos: ver eventos.gd _aplica(). A frequência e o peso ficam nos @export do eventos.gd. Evento novo = uma entrada aqui + a condição em eventos.gd _pode().",
+	"eventos": [
+		{
+			"id": "refugiados",
+			"titulo": "Refugiados no portão",
+			"ilustracao": "expulso_derrota",
+			"texto": "Uma família de ipezinhos chegou ao portão, fugindo do sol: magros, com os pés em carne viva. Pedem abrigo. A decisão é sua, e as camas da vila são poucas.",
+			"opcoes": [
+				{
+					"texto": "Abrigar a todos (4 pessoas)",
+					"custo": {
+						"comida": 30
+					},
+					"efeitos": [
+						{
+							"t": "migrantes",
+							"n": 4
+						},
+						{
+							"t": "animo_dias",
+							"v": 3,
+							"dias": 2,
+							"texto": "acolheram os refugiados"
+						}
+					],
+					"resultado": "O portão abriu e a vila dividiu a sopa. Quem chegou jura nunca esquecer."
+				},
+				{
+					"texto": "Abrigar só uma família (2 pessoas)",
+					"custo": {
+						"comida": 10
+					},
+					"efeitos": [
+						{
+							"t": "migrantes",
+							"n": 2
+						}
+					],
+					"resultado": "Duas pessoas entraram; as outras seguiram viagem com um pouco de pão."
+				},
+				{
+					"texto": "Fechar o portão",
+					"custo": {},
+					"efeitos": [
+						{
+							"t": "animo_dias",
+							"v": -4,
+							"dias": 2,
+							"texto": "o portão fechado pesou na consciência"
+						}
+					],
+					"resultado": "O portão ficou fechado. De noite ainda se ouvia o choro lá fora."
+				}
+			]
+		},
+		{
+			"id": "tempestade_poeira",
+			"titulo": "Tempestade de poeira",
+			"ilustracao": "onda_solar",
+			"texto": "Uma parede de poeira vermelha desce da serra e engole o céu. Ninguém enxerga a três passos. Os capatazes esperam a sua ordem.",
+			"opcoes": [
+				{
+					"texto": "Parar tudo e esperar passar",
+					"custo": {},
+					"efeitos": [
+						{
+							"t": "mult",
+							"chave": "producao",
+							"v": 0.4,
+							"dias": 1
+						}
+					],
+					"resultado": "A vila se trancou em casa. Perdeu o dia, mas ninguém se machucou."
+				},
+				{
+					"texto": "Estender lonas e seguir devagar",
+					"custo": {
+						"creditos": 120,
+						"madeira": 20
+					},
+					"efeitos": [
+						{
+							"t": "mult",
+							"chave": "producao",
+							"v": 0.8,
+							"dias": 1
+						}
+					],
+					"resultado": "As lonas seguraram o pior. A produção caiu pouco."
+				},
+				{
+					"texto": "Trabalhar assim mesmo",
+					"custo": {},
+					"efeitos": [
+						{
+							"t": "mult",
+							"chave": "acidente",
+							"v": 2.0,
+							"dias": 1
+						},
+						{
+							"t": "ferir",
+							"n": 1,
+							"grau": "leve",
+							"causa": "mina"
+						}
+					],
+					"resultado": "A poeira nos olhos custou um machucado e o dobro de sustos."
+				}
+			]
+		},
+		{
+			"id": "desabamento",
+			"titulo": "Desabamento numa galeria",
+			"ilustracao": "acidente_mina",
+			"texto": "Um trecho da galeria cedeu com gente dentro. Dá pra ouvir as marteladas de quem ficou preso. O que fazer primeiro?",
+			"opcoes": [
+				{
+					"texto": "Resgate com tudo: escoras, corda e médico",
+					"custo": {
+						"creditos": 150,
+						"madeira": 30
+					},
+					"efeitos": [
+						{
+							"t": "ferir",
+							"n": 1,
+							"grau": "leve",
+							"causa": "mina"
+						}
+					],
+					"resultado": "Escoraram e tiraram todo mundo. Um se machucou, mas respira."
+				},
+				{
+					"texto": "Resgate rápido, no braço",
+					"custo": {},
+					"efeitos": [
+						{
+							"t": "ferir",
+							"n": 2,
+							"grau": "grave",
+							"causa": "mina"
+						}
+					],
+					"resultado": "Tiraram os dois a tempo, mas bem machucados."
+				},
+				{
+					"texto": "Selar a galeria e seguir",
+					"custo": {},
+					"efeitos": [
+						{
+							"t": "ferir",
+							"n": 3,
+							"grau": "grave",
+							"causa": "mina"
+						},
+						{
+							"t": "animo_dias",
+							"v": -6,
+							"dias": 3,
+							"texto": "a galeria foi selada com gente dentro"
+						}
+					],
+					"resultado": "A galeria foi selada. A vila não esquece."
+				}
+			]
+		},
+		{
+			"id": "febre",
+			"titulo": "Febre na vila",
+			"ilustracao": "greve",
+			"texto": "Uma febre corre pelos alojamentos. Os primeiros tremem junto à fogueira e já tem quem desconfie da água. Como tratar?",
+			"opcoes": [
+				{
+					"texto": "Tratar todos com remédio e caldo",
+					"custo": {
+						"creditos": 180
+					},
+					"efeitos": [
+						{
+							"t": "animo_dias",
+							"v": 2,
+							"dias": 1,
+							"texto": "cuidaram de todos na febre"
+						}
+					],
+					"resultado": "Remédio, caldo quente e repouso. Ninguém passou da cama."
+				},
+				{
+					"texto": "Isolar os doentes",
+					"custo": {
+						"creditos": 60,
+						"comida": 20
+					},
+					"efeitos": [
+						{
+							"t": "doentes",
+							"n": 2
+						},
+						{
+							"t": "mult",
+							"chave": "producao",
+							"v": 0.9,
+							"dias": 2
+						}
+					],
+					"resultado": "Dois ficaram de cama, isolados. O resto trabalhou com máscara de pano."
+				},
+				{
+					"texto": "Esperar passar",
+					"custo": {},
+					"efeitos": [
+						{
+							"t": "doentes",
+							"n": 5
+						},
+						{
+							"t": "animo_dias",
+							"v": -6,
+							"dias": 2,
+							"texto": "a febre se espalhou sem cuidado"
+						}
+					],
+					"resultado": "A febre se espalhou: cinco de cama e a vila com medo."
+				}
+			]
+		},
+		{
+			"id": "casamento",
+			"titulo": "Um casamento pedido",
+			"ilustracao": "festa",
+			"texto": "{a} e {b} querem se casar agora, na praça, sem esperar o domingo. A vila inteira já está sabendo.",
+			"opcoes": [
+				{
+					"texto": "Fazer uma festa de casamento",
+					"custo": {
+						"creditos": 80,
+						"comida": 30
+					},
+					"efeitos": [
+						{
+							"t": "casar"
+						},
+						{
+							"t": "animo_dias",
+							"v": 10,
+							"dias": 2,
+							"texto": "a festa do casamento"
+						}
+					],
+					"resultado": "Casaram sob lampiões e música. A praça dançou até tarde."
+				},
+				{
+					"texto": "Cerimônia simples",
+					"custo": {},
+					"efeitos": [
+						{
+							"t": "casar"
+						},
+						{
+							"t": "animo_dias",
+							"v": 3,
+							"dias": 1,
+							"texto": "um casamento simples"
+						}
+					],
+					"resultado": "O padre abençoou os dois ao pé do poço. Simples e bonito."
+				},
+				{
+					"texto": "Pedir que esperem o domingo",
+					"custo": {},
+					"efeitos": [
+						{
+							"t": "animo_dias",
+							"v": -2,
+							"dias": 1,
+							"texto": "o casal teve que esperar"
+						}
+					],
+					"resultado": "Os dois concordaram, de cara fechada. O domingo vem."
+				}
+			]
+		},
+		{
+			"id": "mapa_antigo",
+			"titulo": "Um mapa antigo",
+			"ilustracao": "reator_achado",
+			"texto": "Um minerador achou, dentro de uma gaveta de ferro, um mapa dobrado e manchado de óleo. Marca um lugar além da floresta, com um X e uma data de antes do sol gritar.",
+			"opcoes": [
+				{
+					"texto": "Marcar o lugar no mapa da vila",
+					"custo": {
+						"creditos": 100
+					},
+					"efeitos": [
+						{
+							"t": "regiao"
+						}
+					],
+					"resultado": "O lugar foi riscado no mapa. Dá pra mandar uma expedição."
+				},
+				{
+					"texto": "Vender o mapa a quem pagar",
+					"custo": {},
+					"efeitos": [
+						{
+							"t": "creditos",
+							"v": 120
+						}
+					],
+					"resultado": "Um comprador de passagem deixou 120 créditos e levou o papel."
+				},
+				{
+					"texto": "Guardar no diário",
+					"custo": {},
+					"efeitos": [
+						{
+							"t": "animo_dias",
+							"v": 3,
+							"dias": 2,
+							"texto": "o mapa guardado no diário"
+						}
+					],
+					"resultado": "O mapa foi colado numa página do diário. Alguém sempre vai olhar pra ele."
+				}
+			]
+		}
+	]
+}

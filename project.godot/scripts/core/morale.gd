@@ -173,6 +173,10 @@ func village_factors() -> Array:
 		f.append(["festa recente", festa_bonus])
 	if funeral_left > 0.0:
 		f.append(["funeral digno", funeral_bonus])
+	for grupo in ["eventos", "pedidos"]:  # Bloco 123: os efeitos que duram dos eventos e dos pedidos da vila
+		var no := get_tree().get_first_node_in_group(grupo)
+		if no and no.has_method("fatores_animo"):
+			f.append_array(no.fatores_animo())
 	var cat := get_tree().get_first_node_in_group("catalogo")
 	if cat and float(cat.get("desconforto")) > 0.0:
 		f.append(["corpos de criatura na vila", -float(cat.desconforto)])  # Bloco 103
@@ -350,6 +354,9 @@ func festa_block_reason() -> String:
 		return "já teve festa hoje"
 	var parts: Array[String] = []
 	var eco := _economy()
+	var ped := get_tree().get_first_node_in_group("pedidos")
+	if ped != null and bool(ped.festival_gratis):  # Bloco 123: o pedido cumprido paga o festival
+		return ""
 	if eco and eco.credits < festa_credits:
 		parts.append("%d cr" % ceili(festa_credits - eco.credits))
 	if total_food() < festa_food:
@@ -364,9 +371,12 @@ func throw_festa(mult: float = 1.0, titulo: String = "") -> bool:
 		Audio.error()
 		return false
 	var eco := _economy()
-	if not eco.spend(festa_credits, 0):
+	var ped := get_tree().get_first_node_in_group("pedidos")
+	var bonus: Dictionary = ped.consome_festival() if ped != null and ped.has_method("consome_festival") else {"gratis": false, "mult": 1.0}  # Bloco 123
+	mult *= float(bonus.mult)
+	if not bool(bonus.gratis) and not eco.spend(festa_credits, 0):
 		return false
-	var left := festa_food
+	var left := 0.0 if bool(bonus.gratis) else festa_food
 	for c in get_tree().get_nodes_in_group("comedouros"):
 		var take := minf(left, c.food_stock)
 		c.food_stock -= take
