@@ -415,6 +415,8 @@ func _defs(tab: String) -> Array:
 			if dm:
 				for did in dm.Catalogo.CATALOGO:
 					var info: Dictionary = dm.Catalogo.info(did)
+					if dm.Catalogo.so_recompensa(did) and dm.motivo(did) != "" and not dm._gratis(did):  # Bloco 122: o monumento só aparece depois da recompensa
+						continue
 					var extra: Array[String] = []
 					if dm.Catalogo.tem_luz(did):
 						extra.append("luz à noite (atrai Lumívoros)")

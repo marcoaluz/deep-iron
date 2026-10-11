@@ -184,14 +184,14 @@ func _roda() -> void:
 	check(m.cumprida("cap1_cinzas") and fim.cumpriu, "todos os objetivos: a missão está cumprida")
 	check(is_equal_approx(eco.credits - cr0, 150.0), "recompensa: +150 créditos (%+.0f)" % (eco.credits - cr0))
 	check(diary.has_page("cap1_cinzas") and diary.entrada("cap1_cinzas").title == "Cap. 1 — Cinzas", "recompensa: a página do diário, com o texto do arquivo ('%s')" % diary.entrada("cap1_cinzas").get("title", ""))
-	check(m.capitulo_liberado == 2 and not m.capitulo_existe(2), "libera o capítulo 2 (ainda não escrito)")
+	check(m.capitulo_liberado == 2 and m.capitulo_existe(2), "libera o capítulo 2 (que existe desde o Bloco 122)")
 	await process_frame
-	check(not rast.visible, "sem missão valendo, o rastreador some")
+	check(rast.visible and m.capitulo_atual() == 2, "o capítulo 2 vale agora: o rastreador mostra a missão dele (Bloco 122)")
 	m.confere()
 	check(is_equal_approx(eco.credits - cr0, 150.0), "a recompensa não é paga duas vezes")
 	hud.open_panel("missoes")
 	await process_frame
-	check("Capítulo 2" in hud._panels.missoes._conteudo.get_children().map(func(c): return c.text if c is Label else "").reduce(func(a, b): return a + "|" + b, ""), "a janela fala do capítulo 2 que vem aí")
+	check("Cap. 2" in String(hud._panels.missoes._titulo.text), "a janela fala do capítulo 2 (a missão que vale agora)")
 	hud.close_panels()
 	# os outros sinais que o sistema escuta
 	var o0: int = int(m.contadores.mortes)

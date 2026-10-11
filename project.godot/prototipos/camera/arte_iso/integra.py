@@ -835,7 +835,7 @@ for k in range(3):
     PROPS["cem_cruz_%d" % k] = "cemiterio/cruz_%d.png" % k
     PROPS["cem_lapide_%d" % k] = "cemiterio/lapide_%d.png" % k
 # Bloco 92: a decoração do jogador que faltava (predios92.py; banco, mesa e tocha já existiam)
-for nome in ("lampiao", "cerca", "canteiro_flores", "bandeira"):
+for nome in ("lampiao", "cerca", "canteiro_flores", "bandeira", "monumento"):  # (Bloco 122: o monumento do capítulo 5)
     PROPS["decor_" + nome] = "decor92/%s.png" % nome
 # Bloco 78: os marcos de cada andar (fundo78/marcos.py)
 for nome in ("fossil_gigante", "bica_vapor", "lampiao_cristal", "cabana_mina", "boca_tunel"):

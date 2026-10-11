@@ -1,0 +1,25 @@
+# CAPÍTULO 6 — textos. Edite à vontade: o jogo lê este arquivo quando abre (formato igual ao capitulo_1.txt).
+#   [secao] começa uma seção (o nome é o id da missão em data/missoes/*.tres); chave = valor (as linhas seguintes continuam o texto);
+#   {n} no texto de um objetivo vira a quantidade; objetivo.0 é o primeiro objetivo do .tres, objetivo.1 o segundo...
+
+[capitulo]
+numero = 6
+titulo = O escudo
+subtitulo = O céu
+intro = Falta o mais importante: o céu. Entender o que foi a explosão, desenhar o escudo e construir, etapa por etapa, a máquina que vai impedir o sol de cair de novo.
+
+[cap6_o_escudo]
+titulo = O escudo
+texto = Estudar a explosão, desenhar o projeto do escudo e construir as 4 etapas: Fundação, Bobinas, Núcleo de solarita e Emissor. Quando o Emissor acender, a vila está a salvo.
+objetivo.0 = Pesquisar o Estudo da explosão solar
+objetivo.1 = Pesquisar o Projeto do escudo
+objetivo.2 = Construir as {n} etapas do escudo
+recompensa = A vitória, o epílogo e as estatísticas da vila
+
+[diario.cap6_o_escudo]
+titulo = Cap. 6 — O escudo
+texto = O Emissor acendeu e o céu escureceu num azul que a gente já tinha esquecido. As ondas do sol bateram no escudo e se desfizeram em luz. Hoje, quando alguém pergunta como a vila sobreviveu, os ipezinhos mostram o céu.
+
+# O epílogo e as estatísticas aparecem na tela de vitória.
+[epilogo]
+texto = Anos depois, a mina ainda sopra o mesmo vento quente, mas ninguém mais olha pra cima com medo. Nas casas há pão, no portão há guardas que dormem em turnos, e na praça um monumento pra quem desceu. Os filhos da vila aprendem na escola o nome de cada andar e o de cada pessoa que a gente enterrou. O escudo zumbe baixinho, de noite, como um bicho que cuida do sono de todos.

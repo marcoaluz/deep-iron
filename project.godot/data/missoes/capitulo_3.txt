@@ -1,0 +1,23 @@
+# CAPÍTULO 3 — textos. Edite à vontade: o jogo lê este arquivo quando abre (formato igual ao capitulo_1.txt).
+#   [secao] começa uma seção (o nome é o id da missão em data/missoes/*.tres); chave = valor (as linhas seguintes continuam o texto);
+#   {n} no texto de um objetivo vira a quantidade; objetivo.0 é o primeiro objetivo do .tres, objetivo.1 o segundo...
+
+[capitulo]
+numero = 3
+titulo = O poço
+subtitulo = O primeiro andar
+intro = O poço velho vai fundo e o minério bom está lá embaixo. Pra descer é preciso entender a mina (um laboratório), montar a Escavadeira peça por peça e levar ar limpo pro fundo.
+
+[cap3_o_poco]
+titulo = O poço
+texto = Montar a Escavadeira, abrir o primeiro andar da mina e pôr um ventilador no ar ruim. O ventilador pede a pesquisa de Ventilação, que depende dos Trajes: a pesquisa dos Trajes já vale também no capítulo seguinte.
+objetivo.0 = Construir o laboratório
+objetivo.1 = Pesquisar Carrinhos de mina
+objetivo.2 = Montar {n} peças da Escavadeira
+objetivo.3 = Abrir o primeiro andar (S2)
+objetivo.4 = Pôr um ventilador no S2
+recompensa = 6 peças raras, o toque novo do S2 e o Capítulo 4
+
+[diario.cap3_o_poco]
+titulo = Cap. 3 — O poço
+texto = A Escavadeira engoliu o poço e abriu o S2. Lá embaixo o ar é ácido e o chão chia, mas o primeiro ventilador pegou e deu pra respirar. A música da mina mudou: ficou mais grave, mais longa, como se a rocha escutasse.

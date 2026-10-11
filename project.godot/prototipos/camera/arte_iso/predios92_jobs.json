@@ -40,5 +40,12 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\decor92\\bandeira_grade.png",
   "ok": true,
   "candidatos": 16
+ },
+ "monumento": {
+  "job": "24a3f224-9ee0-440f-8977-b06114d1e229",
+  "custo": 15,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\decor92\\monumento_grade.png",
+  "ok": true,
+  "candidatos": 4
  }
 }

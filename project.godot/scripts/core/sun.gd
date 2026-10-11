@@ -313,12 +313,17 @@ func win() -> void:
 	wave_left = 0.0
 	Audio.stinger("vitoria")  # Bloco 114 (sem arquivo: a fanfarra de sempre)
 	var dn := _dn()
+	var ms := get_tree().get_first_node_in_group("missoes")  # Bloco 122: o capítulo 6 cumpre aqui (o jogo pausa logo depois)
+	if ms:
+		ms.confere()
 	var screen: CanvasLayer = VictoryScreen.new()
 	get_tree().root.add_child(screen)
 	screen.setup({
 		"day": dn.day if dn else 1,
 		"workers": get_tree().get_nodes_in_group("ipezinhos").size(),
 		"season": season_name(),
+		"epilogo": ms.epilogo() if ms else "",
+		"estatisticas": ms.estatisticas() if ms else [],
 	})
 	victory.emit()
 

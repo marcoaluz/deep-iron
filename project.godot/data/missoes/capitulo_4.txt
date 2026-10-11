@@ -1,0 +1,22 @@
+# CAPÍTULO 4 — textos. Edite à vontade: o jogo lê este arquivo quando abre (formato igual ao capitulo_1.txt).
+#   [secao] começa uma seção (o nome é o id da missão em data/missoes/*.tres); chave = valor (as linhas seguintes continuam o texto);
+#   {n} no texto de um objetivo vira a quantidade; objetivo.0 é o primeiro objetivo do .tres, objetivo.1 o segundo...
+
+[capitulo]
+numero = 4
+titulo = O abismo
+subtitulo = O fundo
+intro = Debaixo do ácido há um poço sem luz, e a plataforma que desce até ele está em ruína. Lá embaixo moram o calor, a solarita e a rainha dos Lumívoros, a Matriarca. Quem vai precisa de traje e de coragem.
+
+[cap4_o_abismo]
+titulo = O abismo
+texto = Vestir a vila pro fundo, consertar a plataforma do abismo, juntar solarita e derrubar a Matriarca. A vila que enfrenta a rainha de olhos abertos não dorme mais do mesmo jeito.
+objetivo.0 = Pesquisar os Trajes de proteção
+objetivo.1 = Consertar a plataforma do abismo
+objetivo.2 = Ter {n} de solarita no armazém
+objetivo.3 = Derrotar a Matriarca
+recompensa = 4 lingotes solares, o título "Vila que não dorme" e o Capítulo 5
+
+[diario.cap4_o_abismo]
+titulo = Cap. 4 — O abismo
+texto = A plataforma desceu. No fundo, a solarita brilhava como brasa e a Matriarca esperava. Foi a noite mais longa da vila: os guardas não saíram do portão e ninguém dormiu. Ao amanhecer ela estava caída e o apelido pegou: a Vila que não dorme.

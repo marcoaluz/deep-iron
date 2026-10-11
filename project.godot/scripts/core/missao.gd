@@ -27,10 +27,16 @@ extends Resource
 ##   "obras"            obras prontas de um tipo (alvo = tipo do canteiro: "taverna"...; quantidade)
 ##   "mortes"           mortes na vila (quantidade)
 ##   "funcoes"          Bloco 112: adultos com função (alvo = "" qualquer função, ou a função: "engenheiro"...; quantidade)
+##   "desbloqueio"      Bloco 122: um andar/plataforma abriu (alvo = o grupo da ligação: elevador, elevador_abismo, elevador_s4, elevador_s5)
+##   "escavadeira_pecas" Bloco 122: peças da Escavadeira montadas (quantidade)
+##   "arma_forjada"     Bloco 122: armas forjadas no Arsenal (alvo = lanca, besta...; quantidade)
+##   "chefe"            Bloco 122: chefes derrotados (a Matriarca; quantidade)
+##   "escudo_etapas"    Bloco 122: etapas do escudo solar prontas (quantidade, 4 = vitória)
 @export var objetivos: Array = []
 ## Bloco 112: os objetivos valem EM ORDEM (o próximo só conta depois do anterior) — o primeiro dia guiado do capataz.
 @export var em_ordem: bool = false
-## Recompensa: {"creditos": 150, "diario": "id da página", "libera_capitulo": 2, "itens": {id: qtd}}.
+## Recompensa: {"creditos": 150, "diario": "id da página", "libera_capitulo": 2, "itens": {id: qtd}} e (Bloco 122) "colonos": N (chega um
+## grupo pela floresta), "pecas_raras": N, "decoracoes": {id: N} (peças de graça), "titulo": "...", "stinger": "estagio_novo", "vitoria": true.
 @export var recompensa: Dictionary = {}
 ## Ids das missões que precisam estar cumpridas antes desta aparecer.
 @export var prerequisitos: PackedStringArray = PackedStringArray()
@@ -80,6 +86,16 @@ func objetivo_padrao(i: int) -> String:
 			return "Voltar de uma expedição: %s" % alvo if alvo != "" else "%d expedições" % q
 		"regiao":
 			return "Revelar a região: %s" % alvo
+		"desbloqueio":  # Bloco 122
+			return "Abrir: %s" % alvo
+		"escavadeira_pecas":
+			return "%d peças da Escavadeira montadas" % q
+		"arma_forjada":
+			return "Forjar %d: %s" % [q, alvo]
+		"chefe":
+			return "Derrotar %d chefe(s)" % q
+		"escudo_etapas":
+			return "%d etapas do escudo" % q
 		"reconhecer":  # Bloco 103 (os andares)
 			return "Reconhecer o %s" % alvo if alvo != "" else "Reconhecer %d andares" % q
 	return String(o[0])

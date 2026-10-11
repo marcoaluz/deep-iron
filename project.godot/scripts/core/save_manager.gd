@@ -148,6 +148,7 @@ extends Node
 ##     condicao, funcao, prazo}]}. Acabou o "Recrutar": "economy" ainda guarda max_workers e recruited_count (o save
 ##     antigo carrega), mas eles não mandam em nada — a capacidade são as camas. Save antigo: ninguém no portão, o
 ##     primeiro grupo no prazo de uma partida nova, a população que tinha.
+##   Bloco 122: "missoes" ganha "titulos" [textos], "decoracoes_gratis" {id: quantas} (as recompensas de decoração ainda por pôr) e "contadores.armas" {arma: forjadas}. Save antigo: vazio.
 ##   Bloco 100: "missoes" {capitulo_liberado, cumpridas [ids], feitos {id: [índices dos objetivos]}, contadores
 ##     {invasoes, vendido, mortes, obras {tipo: n}}}. Save antigo (sem a chave): a campanha começa no capítulo certo —
 ##     refaz os contadores do estado (invasões que já passaram, mortes) e entrega o que a vila já tinha cumprido.

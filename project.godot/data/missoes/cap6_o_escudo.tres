@@ -1,0 +1,17 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/missao.gd" id="1_missao"]
+
+[resource]
+script = ExtResource("1_missao")
+id = "cap6_o_escudo"
+titulo = "O escudo"
+texto = "Entender a explosão, desenhar o escudo e construir as 4 etapas."
+capitulo = 6
+ordem = 0
+objetivos = [["pesquisa", "estudo_solar", 1], ["pesquisa", "escudo", 1], ["escudo_etapas", "", 4]]
+recompensa = {
+"vitoria": true,
+"diario": "cap6_o_escudo"
+}
+prerequisitos = PackedStringArray("cap5_agua_e_fogo")

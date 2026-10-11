@@ -140,7 +140,7 @@ def escolhe(pares):
 ## Cartão de sprite que já existe no jogo (nada novo do PixelLab): enquadrado e centrado no mesmo 96x64.
 REAPROVEITA = {"decor_tocha": "props/tocha_chao_f0.png", "decor_lampiao": "props/decor_lampiao.png",
                "decor_banco": "props/banco.png", "decor_mesa": "props/mesa.png", "decor_cerca": "props/decor_cerca.png",
-               "decor_canteiro_flores": "props/decor_canteiro_flores.png", "decor_bandeira": "props/decor_bandeira.png",
+               "decor_canteiro_flores": "props/decor_canteiro_flores.png", "decor_bandeira": "props/decor_bandeira.png", "decor_monumento": "props/decor_monumento.png",
                "vagonete": "props/vagonete_cheio_SE.png",
                "armazem_ampliar": "predios/armazem/nivel_2.png"}  # Bloco 97
 

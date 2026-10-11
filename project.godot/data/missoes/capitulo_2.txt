@@ -1,0 +1,25 @@
+# CAPÍTULO 2 — textos. Edite à vontade: o jogo lê este arquivo quando abre (formato igual ao capitulo_1.txt).
+#   [secao] começa uma seção (o nome é o id da missão em data/missoes/*.tres); chave = valor (as linhas seguintes continuam o texto);
+#   {n} no texto de um objetivo vira a quantidade; objetivo.0 é o primeiro objetivo do .tres, objetivo.1 o segundo...
+
+[capitulo]
+numero = 2
+titulo = Fogo e ferro
+subtitulo = Vilarejo
+intro = A vila tem teto e comida, mas ferro é o que separa um acampamento de uma cidade. Uma fornalha pra derreter o minério, um arsenal pra fazer lanças e uma igreja pra segurar a esperança.
+
+[cap2_fogo_e_ferro]
+titulo = Fogo e ferro
+texto = Crescer pra Vilarejo, acender a fornalha, armar os guardas e erguer a igreja. Sem ferro nas mãos a vila só aguenta as noites; com ele, começa a escolher.
+objetivo.0 = Expandir a vila para o Vilarejo
+objetivo.1 = Construir a fornalha
+objetivo.2 = Ter {n} barras de ferro no armazém
+objetivo.3 = Construir o arsenal
+objetivo.4 = Forjar {n} lanças
+objetivo.5 = Construir a igreja
+objetivo.6 = Ter um padre
+recompensa = Um colono novo e 4 lampiões de graça (e o Capítulo 3)
+
+[diario.cap2_fogo_e_ferro]
+titulo = Cap. 2 — Fogo e ferro
+texto = A fornalha acendeu e a primeira barra saiu vermelha. Os guardas ganharam lanças de ferro; o portão deixou de ser só madeira. Construímos a igreja de pedra e o padre chegou numa tarde de vento. Pela primeira vez a vila cheira a fumaça de ferro, e ninguém reclamou.

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/missao.gd" id="1_missao"]
+
+[resource]
+script = ExtResource("1_missao")
+id = "cap5_agua_e_fogo"
+titulo = "Água e fogo"
+texto = "Segurar a água, abrir a cachoeira e o lago azul e crescer pra Vila Mineira."
+capitulo = 5
+ordem = 0
+objetivos = [["pesquisa", "bombas", 1], ["desbloqueio", "elevador_s4", 1], ["desbloqueio", "elevador_s5", 1], ["minerio_armazem", "gema_azul", 10], ["estagio", "", 4]]
+recompensa = {
+"decoracoes": {
+"monumento": 1
+},
+"diario": "cap5_agua_e_fogo",
+"libera_capitulo": 6
+}
+prerequisitos = PackedStringArray("cap4_o_abismo")

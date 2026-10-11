@@ -1,0 +1,21 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/missao.gd" id="1_missao"]
+
+[resource]
+script = ExtResource("1_missao")
+id = "cap2_fogo_e_ferro"
+titulo = "Fogo e ferro"
+texto = "Crescer pra Vilarejo, acender a fornalha, armar os guardas e erguer a igreja."
+capitulo = 2
+ordem = 0
+objetivos = [["estagio", "", 2], ["construcao", "fornalhas", 1], ["item", "barra_ferro", 10], ["construcao", "arsenais", 1], ["arma_forjada", "lanca", 2], ["construcao", "igrejas", 1], ["funcoes", "padre", 1]]
+recompensa = {
+"colonos": 1,
+"decoracoes": {
+"lampiao": 4
+},
+"diario": "cap2_fogo_e_ferro",
+"libera_capitulo": 3
+}
+prerequisitos = PackedStringArray("cap1_cinzas")

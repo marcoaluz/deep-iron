@@ -5,6 +5,12 @@ Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
+## Bloco 122 — A CAMPANHA, capítulos 2 a 6 (feito; commit local, sem push)
+
+Prompt 10. Relatório `docs/BLOCO122_CAMPANHA.md`; teste `b122_campanha` (registrado no GUT). Cinco `.tres` em `data/missoes/` (cap2_fogo_e_ferro, cap3_o_poco, cap4_o_abismo, cap5_agua_e_fogo, cap6_o_escudo) + `capitulo_2..6.txt` (textos, diário, epílogo); tipos de objetivo novos (`desbloqueio`, `escavadeira_pecas`, `arma_forjada`, `chefe`, `escudo_etapas`), sinal `defense.arma_forjada`,
+recompensas novas (colono, 4 lampiões de graça, peças raras, lingotes solares, título "Vila que não dorme", o Monumento), o Monumento (decoração única com arte do PixelLab, 4 candidatos, c00), `sun.win()` cumpre o cap. 6 e mostra epílogo + estatísticas. b100 ajustado (o cap. 2 existe).
+Achados: o ventilador (cap. 3) exige a pesquisa Ventilação, que exige Trajes (1º objetivo do cap. 4: chega cumprido); o S4 abre só no estágio 5 (o cap. 5 pede o 4).
+
 ## Bloco 121 — MÚSICA DINÂMICA: camadas por estação, temas e fallback (feito; commit local, sem push)
 
 Prompt 7 (sistema). Relatório `docs/BLOCO121_MUSICA_DINAMICA.md`; teste `b121_musica_dinamica` (registrado no GUT). `scripts/core/musica_dinamica.gd` (filho do `Audio`): cada estação = `AudioStreamSynchronized` de 3 camadas (pad `_noite`, melodia `_dia`, percussão `_perigo`) com volume por situação (dia, noite, perigo, fundo da mina: mais drone e menos melodia; `@export`),

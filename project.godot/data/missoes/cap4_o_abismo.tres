@@ -1,0 +1,21 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/missao.gd" id="1_missao"]
+
+[resource]
+script = ExtResource("1_missao")
+id = "cap4_o_abismo"
+titulo = "O abismo"
+texto = "Vestir a vila pro fundo, consertar a plataforma do abismo e derrubar a Matriarca."
+capitulo = 4
+ordem = 0
+objetivos = [["pesquisa", "trajes", 1], ["desbloqueio", "elevador_abismo", 1], ["minerio_armazem", "solarita", 50], ["chefe", "", 1]]
+recompensa = {
+"itens": {
+"lingote_solar": 4
+},
+"titulo": "Vila que não dorme",
+"diario": "cap4_o_abismo",
+"libera_capitulo": 5
+}
+prerequisitos = PackedStringArray("cap3_o_poco")

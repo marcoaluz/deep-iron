@@ -1,0 +1,23 @@
+# CAPÍTULO 5 — textos. Edite à vontade: o jogo lê este arquivo quando abre (formato igual ao capitulo_1.txt).
+#   [secao] começa uma seção (o nome é o id da missão em data/missoes/*.tres); chave = valor (as linhas seguintes continuam o texto);
+#   {n} no texto de um objetivo vira a quantidade; objetivo.0 é o primeiro objetivo do .tres, objetivo.1 o segundo...
+
+[capitulo]
+numero = 5
+titulo = Água e fogo
+subtitulo = A cachoeira e o lago
+intro = Abaixo da lava o mundo muda: uma cachoeira despenca sobre o chão quente e, mais fundo, um lago azul guarda as gemas. Pra chegar lá é preciso segurar a água e crescer: a vila vira uma Vila Mineira.
+
+[cap5_agua_e_fogo]
+titulo = Água e fogo
+texto = Pesquisar as bombas d'água, abrir a cachoeira (S4) e o lago azul (S5), tirar as primeiras gemas e crescer pra Vila Mineira.
+objetivo.0 = Pesquisar as Bombas d'água
+objetivo.1 = Abrir a cachoeira (S4)
+objetivo.2 = Abrir o lago azul (S5)
+objetivo.3 = Ter {n} gemas azuis no armazém
+objetivo.4 = Expandir a vila para a Vila Mineira
+recompensa = O Monumento da vila (decoração única, de graça) e o Capítulo 6
+
+[diario.cap5_agua_e_fogo]
+titulo = Cap. 5 — Água e fogo
+texto = As bombas seguraram a cachoeira e o elevador desceu até o lago. A água era azul de um jeito que ninguém tinha visto, e as gemas brilhavam no fundo. Voltamos com as mãos cheias e erguemos, no meio da praça, um monumento pra quem desceu.

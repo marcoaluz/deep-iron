@@ -36,7 +36,10 @@ static var _textos_cache := {}
 var capitulo_liberado := 1
 var cumpridas: Array[String] = []
 var feitos := {}
-var contadores := {"invasoes": 0, "vendido": 0.0, "mortes": 0, "obras": {}}
+var contadores := {"invasoes": 0, "vendido": 0.0, "mortes": 0, "obras": {}, "armas": {}}
+## Bloco 122: títulos que a vila ganhou ("Vila que não dorme"), e as decorações de recompensa que ainda não foram postas ({id: quantas}: de graça).
+var titulos: Array[String] = []
+var decoracoes_gratis := {}
 var _t := 0.0
 var _silencio := false
 
@@ -55,6 +58,12 @@ func _liga() -> void:
 	if def and def.has_signal("invasion_ended"):
 		def.invasion_ended.connect(func(_mortos: int):
 			contadores.invasoes = int(contadores.invasoes) + 1
+			confere())
+	if def and def.has_signal("arma_forjada"):  # Bloco 122: o objetivo "2 lanças"
+		def.arma_forjada.connect(func(id: String):
+			var a: Dictionary = contadores.get("armas", {})
+			a[id] = int(a.get(id, 0)) + 1
+			contadores["armas"] = a
 			confere())
 	var res := get_tree().get_first_node_in_group("research")
 	if res and res.has_signal("researched"):
@@ -187,6 +196,18 @@ func recompensa_texto(m: Resource) -> String:
 	var partes: Array[String] = []
 	if int(m.recompensa.get("creditos", 0)) > 0:
 		partes.append("%d créditos" % int(m.recompensa.creditos))
+	if int(m.recompensa.get("colonos", 0)) > 0:
+		partes.append("%d colono" % int(m.recompensa.colonos) + ("s" if int(m.recompensa.colonos) > 1 else ""))
+	if int(m.recompensa.get("pecas_raras", 0)) > 0:
+		partes.append("%d peças raras" % int(m.recompensa.pecas_raras))
+	if m.recompensa.get("decoracoes") is Dictionary:
+		for k in m.recompensa.decoracoes:
+			partes.append("%d x %s (decoração de graça)" % [int(m.recompensa.decoracoes[k]), String(k)])
+	if m.recompensa.get("itens") is Dictionary:
+		for k in m.recompensa.itens:
+			partes.append("%d x %s" % [int(m.recompensa.itens[k]), String(k)])
+	if String(m.recompensa.get("titulo", "")) != "":
+		partes.append("o título \"%s\"" % String(m.recompensa.titulo))
 	if String(m.recompensa.get("diario", "")) != "":
 		partes.append("uma página do diário")
 	if int(m.recompensa.get("libera_capitulo", 0)) > 0:
@@ -294,6 +315,22 @@ func valor_do_objetivo(o: Array) -> float:
 			return float((contadores.obras as Dictionary).get(alvo, 0))
 		"mortes":
 			return float(contadores.mortes)
+		"desbloqueio":  # Bloco 122: um andar ou plataforma abriu (alvo = o grupo da ligação: elevador, elevador_abismo, elevador_s4, elevador_s5)
+			var lig := get_tree().get_first_node_in_group(alvo)
+			return 1.0 if lig != null and bool(lig.get("unlocked")) else 0.0
+		"escavadeira_pecas":  # Bloco 122: peças da Escavadeira montadas
+			var esc := get_tree().get_first_node_in_group("escavadeira")
+			return float(esc.installed_count()) if esc != null and esc.has_method("installed_count") else 0.0
+		"arma_forjada":  # Bloco 122: armas forjadas no Arsenal (alvo = a arma: lanca...; só forjar conta, não consertar)
+			return float((contadores.get("armas", {}) as Dictionary).get(alvo, 0))
+		"chefe":  # Bloco 122: chefes derrotados (a Matriarca); alvo "" = qualquer
+			var dfn := get_tree().get_first_node_in_group("defense")
+			if dfn == null or dfn.get("bosses") == null:
+				return 0.0
+			return float((dfn.bosses as Dictionary).values().filter(func(v): return String(v) == "derrotado").size())
+		"escudo_etapas":  # Bloco 122: etapas do escudo solar prontas (as 4 = vitória)
+			var esd := get_tree().get_first_node_in_group("escudos")
+			return float(esd.built) if esd != null and esd.get("built") != null else 0.0
 		"estudar":  # Bloco 102: alvo = id da entrada (1 = estudada), uma categoria (quantas) ou "" (quantas no total)
 			var cat := get_tree().get_first_node_in_group("catalogo")
 			if cat == null:
@@ -370,6 +407,20 @@ func _cumpre(m: Resource) -> void:
 	if eco and r.get("itens") is Dictionary:
 		for k in r.itens:
 			eco.add_item(String(k), float(r.itens[k]))
+	# Bloco 122: as recompensas da campanha
+	if int(r.get("colonos", 0)) > 0 and not _silencio:
+		var mig := get_tree().get_first_node_in_group("migrantes")
+		if mig and mig.has_method("chama_grupo"):
+			mig.chama_grupo(int(r.colonos), "recompensa")
+	if int(r.get("pecas_raras", 0)) > 0:
+		var fnd := get_tree().get_first_node_in_group("finds")
+		if fnd and fnd.get("rare_parts") != null:
+			fnd.rare_parts = int(fnd.rare_parts) + int(r.pecas_raras)
+	if r.get("decoracoes") is Dictionary:
+		for k in r.decoracoes:
+			ganha_decoracao(String(k), int(r.decoracoes[k]))
+	if String(r.get("titulo", "")) != "" and not titulos.has(String(r.titulo)):
+		titulos.append(String(r.titulo))
 	var pag := String(r.get("diario", ""))
 	if pag != "":
 		_pagina_do_diario(m, pag)
@@ -378,10 +429,10 @@ func _cumpre(m: Resource) -> void:
 		capitulo_liberado = mini(lib, ULTIMO_CAPITULO)
 	missao_cumprida.emit(m.id)
 	var hud := get_tree().get_first_node_in_group("hud")
-	if hud and not _silencio:
+	if hud and not _silencio and not bool(r.get("vitoria", false)):  # (Bloco 122: a vitória tem a tela dela)
 		var som := get_node_or_null("/root/Audio")  # (o autoload por caminho: o teste carrega este script antes dos autoloads)
 		if som:
-			som.stinger("missao_cumprida")  # Bloco 114 (sem arquivo: a fanfarra)
+			som.stinger(String(r.get("stinger", "missao_cumprida")))  # Bloco 114 (sem arquivo: a fanfarra)
 		var sub := "Recompensa: %s." % recompensa_texto(m)
 		if lib > 0:
 			sub += (" O Capítulo %d está liberado." % lib) if capitulo_existe(lib) else " O Capítulo %d ainda está sendo escrito." % lib
@@ -405,10 +456,68 @@ func _aviso(texto: String, cor: Color) -> void:
 		hud.show_toast(texto, cor)
 
 
+# ------------------------------------------------------------ Bloco 122: recompensas de decoração, títulos, epílogo e estatísticas
+## A recompensa dá `n` peças de decoração de graça (o Decoracoes usa ao pôr).
+func ganha_decoracao(id: String, n: int) -> void:
+	decoracoes_gratis[id] = int(decoracoes_gratis.get(id, 0)) + n
+
+
+func decoracao_gratis(id: String) -> int:
+	return int(decoracoes_gratis.get(id, 0))
+
+
+## Gasta uma peça de graça (true = tinha).
+func usa_decoracao(id: String) -> bool:
+	if decoracao_gratis(id) <= 0:
+		return false
+	decoracoes_gratis[id] = int(decoracoes_gratis[id]) - 1
+	if int(decoracoes_gratis[id]) <= 0:
+		decoracoes_gratis.erase(id)
+	return true
+
+
+## Devolve uma peça de graça (a peça foi removida: a recompensa não se perde).
+func devolve_decoracao(id: String) -> void:
+	ganha_decoracao(id, 1)
+
+
+## O título mais novo da vila ("" = nenhum).
+func titulo_atual() -> String:
+	return titulos.back() if not titulos.is_empty() else ""
+
+
+## O epílogo do último capítulo (o texto vem de capitulo_6.txt, seção [epilogo]).
+func epilogo() -> String:
+	return String(textos(ULTIMO_CAPITULO).get("epilogo", {}).get("texto", ""))
+
+
+## As estatísticas da partida (a tela de vitória e o epílogo): [linhas de texto].
+func estatisticas() -> Array:
+	var out: Array = []
+	var dn := get_tree().get_first_node_in_group("day_night")
+	var res := get_tree().get_first_node_in_group("research")
+	var dfn := get_tree().get_first_node_in_group("defense")
+	var feitas := cumpridas.filter(func(i): return String(i) != PRIMEIRO_DIA).size()
+	var total := todas().filter(func(m): return m.id != PRIMEIRO_DIA).size()
+	out.append("Missões cumpridas: %d de %d" % [feitas, total])
+	out.append("Invasões vencidas: %d" % int(contadores.invasoes))
+	out.append("Mortes na vila: %d" % int(contadores.mortes))
+	out.append("Minério vendido: %d" % roundi(float(contadores.vendido)))
+	if res != null and res.get("done") != null:
+		out.append("Pesquisas prontas: %d" % (res.done as Array).size())
+	if dfn != null and dfn.get("bosses") != null:
+		out.append("Matriarcas derrubadas: %d" % int(valor_do_objetivo(["chefe", "", 1])))
+	if dn != null and dn.get("day") != null:
+		out.append("Dias de vila: %d" % int(dn.day))
+	if not titulos.is_empty():
+		out.append("Títulos: %s" % ", ".join(titulos))
+	return out
+
+
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	return {"capitulo_liberado": capitulo_liberado, "cumpridas": cumpridas.duplicate(), "feitos": feitos.duplicate(true),
-		"contadores": contadores.duplicate(true), "primeiro_dia": true}
+		"contadores": contadores.duplicate(true), "primeiro_dia": true, "titulos": titulos.duplicate(), "decoracoes_gratis": decoracoes_gratis.duplicate()}
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -432,9 +541,20 @@ func load_save_data(d: Dictionary) -> void:
 		feitos[String(id)] = lista
 	var c := SaveUtil.dict(d, "contadores")
 	contadores = {"invasoes": SaveUtil.integer(c, "invasoes", 0), "vendido": SaveUtil.num(c, "vendido", 0.0),
-		"mortes": SaveUtil.integer(c, "mortes", 0), "obras": {}}
+		"mortes": SaveUtil.integer(c, "mortes", 0), "obras": {}, "armas": {}}
 	for k in SaveUtil.dict(c, "obras"):
 		contadores.obras[String(k)] = SaveUtil.integer(SaveUtil.dict(c, "obras"), String(k), 0)
+	for k in SaveUtil.dict(c, "armas"):  # Bloco 122
+		contadores.armas[String(k)] = SaveUtil.integer(SaveUtil.dict(c, "armas"), String(k), 0)
+	titulos.clear()
+	for t in SaveUtil.array(d, "titulos"):
+		if typeof(t) == TYPE_STRING and String(t) != "" and not titulos.has(String(t)):
+			titulos.append(String(t))
+	decoracoes_gratis = {}
+	var dg := SaveUtil.dict(d, "decoracoes_gratis")
+	for k in dg:
+		if SaveUtil.integer(dg, String(k), 0) > 0:
+			decoracoes_gratis[String(k)] = SaveUtil.integer(dg, String(k), 0)
 	# as páginas do diário das missões cumpridas voltam com o texto do arquivo
 	for id in cumpridas:
 		var m2 := por_id(id)
@@ -468,7 +588,12 @@ func depois_de_carregar(tinha: bool) -> void:
 	var mortes := 0
 	for e in get_tree().get_nodes_in_group("enfermarias"):
 		mortes += (e.get("memorial") as Array).size() if e.get("memorial") != null else 0
-	contadores = {"invasoes": passadas, "vendido": 0.0, "mortes": mortes, "obras": {}}
+	contadores = {"invasoes": passadas, "vendido": 0.0, "mortes": mortes, "obras": {}, "armas": {}}
+	if def and def.get("weapons") != null:  # Bloco 122: save de antes das armas contadas: as que a vila já fez contam 1 (ou as do cavalete)
+		for id in def.weapons:
+			contadores.armas[String(id)] = maxi(1, int(def.rack_count(String(id)))) if def.has_method("rack_count") else 1
+	titulos.clear()
+	decoracoes_gratis = {}
 	_silencio = true  # (um aviso só, no fim: não uma chuva de "objetivo cumprido")
 	_primeiro_dia_ja_passou()  # Bloco 112: save sem missões é de antes do guia
 	var antes := cumpridas.size()

@@ -43,6 +43,8 @@ extends Node
 
 signal invasion_started(wave: int)
 signal invasion_ended(killed: int)
+## Bloco 122: uma arma foi FORJADA no Arsenal (não conserto). Só avisa: as missões contam.
+signal arma_forjada(id: String)
 
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const Modificadores := preload("res://scripts/core/modificadores.gd")  # Bloco 108: a vigilância reforçada
@@ -687,6 +689,8 @@ func forge_work(seconds: float) -> void:
 	var first := not weapons.has(id)
 	if first:
 		weapons.append(id)
+	if o.what == "forjar":
+		arma_forjada.emit(id)
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
 		hud.show_toast("%s %s! Está no cavalete do Arsenal: os guardas vêm buscar." % [

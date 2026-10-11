@@ -27,7 +27,20 @@ const CATALOGO := {
 		"custo": Vector3i(8, 0, 4), "luz": {}, "assentos": 0, "beleza": 2.5},
 	"bandeira": {"iso": "decor_bandeira", "nome": "Bandeira", "textura": "res://assets/game/decor/bandeira.png", "pegada": Vector2(8, 8),
 		"custo": Vector3i(10, 0, 3), "luz": {}, "assentos": 0, "beleza": 2.0},
+	# Bloco 122: o MONUMENTO do capítulo 5 (Água e fogo): peça ÚNICA, só existe como recompensa da missão (de graça, uma só).
+	"monumento": {"iso": "decor_monumento", "nome": "Monumento da vila", "textura": "res://assets/game/decor/monumento.png", "pegada": Vector2(36, 24),
+		"custo": Vector3i(0, 0, 0), "luz": {}, "assentos": 0, "beleza": 6.0, "unica": true, "so_recompensa": true},
 }
+
+
+## Peça que só pode haver uma na vila (o monumento).
+static func e_unica(id: String) -> bool:
+	return bool(info(id).get("unica", false))
+
+
+## Peça que só se ganha como recompensa da campanha (sem recompensa, não dá pra pôr).
+static func so_recompensa(id: String) -> bool:
+	return bool(info(id).get("so_recompensa", false))
 
 
 static func existe(id: String) -> bool:

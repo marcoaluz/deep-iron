@@ -1,0 +1,19 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/missao.gd" id="1_missao"]
+
+[resource]
+script = ExtResource("1_missao")
+id = "cap3_o_poco"
+titulo = "O poço"
+texto = "Montar a Escavadeira, abrir o primeiro andar da mina e pôr um ventilador no ar ruim."
+capitulo = 3
+ordem = 0
+objetivos = [["construcao", "laboratorios", 1], ["pesquisa", "carrinhos", 1], ["escavadeira_pecas", "", 5], ["desbloqueio", "elevador", 1], ["construcao", "ventiladores", 1]]
+recompensa = {
+"pecas_raras": 6,
+"stinger": "estagio_novo",
+"diario": "cap3_o_poco",
+"libera_capitulo": 4
+}
+prerequisitos = PackedStringArray("cap2_fogo_e_ferro")

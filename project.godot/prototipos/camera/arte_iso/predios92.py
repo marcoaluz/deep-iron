@@ -48,6 +48,13 @@ IGREJA_OBRA = ("CONSTRUCTION of the SAME church as the reference, exactly on the
 
 # nome -> (largura, altura, descrição, acento)
 DECOR = {
+    # Bloco 122: o monumento do capítulo 5 (Água e fogo): decoração única, recompensa da campanha
+    "monumento": (112, 144, "a MONUMENT for the village square of a poor mining colony, dedicated to the miners who went down: "
+                            "a tall stepped dark stone base carrying a slim stone pillar split down the middle: on one half "
+                            "inlaid blue gems and a thin trickle of water running into a little stone basin at its foot, on the other half "
+                            "glowing orange cracks like embers and a small iron brazier; a rusty iron plaque on the base, a small "
+                            "pickaxe carved at the top; weathered, soot-stained, dignified",
+                  "two accents only: deep blue gems and dull orange embers"),
     "lampiao": (32, 84, "a village STREET LAMP: a single slim black iron post on a small square stone base, with a "
                         "four-sided iron lantern with amber glass panes and a little peaked iron cap on top, a small "
                         "hook; the glass is unlit (light is added in code, no glow, no rays)",

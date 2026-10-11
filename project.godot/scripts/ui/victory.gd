@@ -61,6 +61,17 @@ func setup(stats: Dictionary) -> void:
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label("Vitória no dia %d (%s)  •  %d ipezinhos" % [int(stats.get("day", 1)), str(stats.get("season", "")),
 		int(stats.get("workers", 0))], Tipo.DETALHE, COLOR_DIM)
+	var epilogo := String(stats.get("epilogo", ""))  # Bloco 122: o epílogo e as estatísticas da campanha
+	if epilogo != "":
+		_box.add_child(HSeparator.new())
+		var ep := _label(epilogo, Tipo.DETALHE, COLOR_TEXT)
+		ep.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var linhas: Array = stats.get("estatisticas", [])
+	if not linhas.is_empty():
+		_box.add_child(HSeparator.new())
+		_label("Estatísticas da vila", Tipo.DETALHE, COLOR_TITLE)
+		for l in linhas:
+			_label(String(l), Tipo.DETALHE, COLOR_DIM)
 	_box.add_child(HSeparator.new())
 	_button("Continuar jogando", func():
 		get_tree().paused = false

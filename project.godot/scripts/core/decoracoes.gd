@@ -66,14 +66,34 @@ func pecas() -> Array:
 func motivo(id: String) -> String:
 	if not Catalogo.existe(id):
 		return "peça desconhecida"
+	if Catalogo.e_unica(id) and get_tree().get_nodes_in_group("decoracoes").any(func(n): return n.get("id") == id):  # Bloco 122
+		return "a vila só pode ter um: %s" % Catalogo.nome(id).to_lower()
+	if _gratis(id):
+		return ""
+	if Catalogo.so_recompensa(id):
+		return "é uma recompensa da campanha (Capítulo 5)"
 	var eco := get_tree().get_first_node_in_group("economy")
 	var c := Catalogo.custo(id)
 	return eco.missing_text(c.x, c.y, "ferro", c.z) if eco else ""
 
 
 func custo_texto(id: String) -> String:
+	if _gratis(id):  # Bloco 122
+		return "de graça (recompensa: %d)" % int(_missoes().decoracao_gratis(id))
+	if Catalogo.so_recompensa(id):
+		return "recompensa do Capítulo 5"
 	var eco := get_tree().get_first_node_in_group("economy")
 	return eco.cost_text(Catalogo.custo(id), "ferro") if eco else ""
+
+
+## Bloco 122: o nó das missões (as recompensas de decoração de graça ficam lá).
+func _missoes() -> Node:
+	return get_tree().get_first_node_in_group("missoes")
+
+
+func _gratis(id: String) -> bool:
+	var m := _missoes()
+	return m != null and m.has_method("decoracao_gratis") and int(m.decoracao_gratis(id)) > 0
 
 
 ## Abre o posicionador pra pôr várias peças `id` em sequência.
@@ -103,7 +123,9 @@ func colocar(id: String, pos: Vector2) -> Node2D:
 		return null
 	var c := Catalogo.custo(id)
 	var eco := get_tree().get_first_node_in_group("economy")
-	if eco and not eco.spend(c.x, c.y, "ferro", c.z):
+	if _gratis(id):  # Bloco 122: a recompensa da campanha paga a peça
+		_missoes().usa_decoracao(id)
+	elif eco and not eco.spend(c.x, c.y, "ferro", c.z):
 		return null
 	return _cria(id, pos)
 
@@ -128,7 +150,11 @@ func remover(n: Node) -> bool:
 		return false
 	var c := Catalogo.custo(n.id)
 	var eco := get_tree().get_first_node_in_group("economy")
-	if eco:
+	if Catalogo.so_recompensa(n.id):  # Bloco 122: a recompensa volta pra mão (não se perde)
+		var ms := _missoes()
+		if ms and ms.has_method("devolve_decoracao"):
+			ms.devolve_decoracao(n.id)
+	elif eco:
 		eco._add_credits(floorf(c.x * reembolso))
 		var arm := get_tree().get_first_node_in_group("armazens")
 		if arm:
