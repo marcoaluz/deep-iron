@@ -215,5 +215,26 @@
   "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\crianca_f\\candidatos.png",
   "ok": true,
   "candidatos": 16
+ },
+ "carregadora": {
+  "job": "d644e2eb-eafd-416a-9a68-62a3828d6511",
+  "custo": 15,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\carregadora\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "mecanico": {
+  "job": "06fe63c7-53a8-4528-936c-e2148a29abeb",
+  "custo": 15,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mecanico\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
+ },
+ "mecanica": {
+  "job": "511e5541-758b-4208-8a45-ff39abbaedec",
+  "custo": 15,
+  "destino": "D:\\DEV\\deep-iron\\project.godot\\prototipos\\camera\\arte_iso\\mecanica\\candidatos.png",
+  "ok": true,
+  "candidatos": 16
  }
 }

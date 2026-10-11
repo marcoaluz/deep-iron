@@ -438,5 +438,29 @@
   "char": "e7bea2a9-9e7d-4cf8-a16c-e7261cb53db4",
   "estado": "pronto",
   "_obs": "Bloco 111 (criança: candidato reduzido a 2/3)"
+ },
+ "carregadora": {
+  "genero": "m",
+  "job": "d644e2eb-eafd-416a-9a68-62a3828d6511",
+  "escolhido": 0,
+  "char": "be5091c2-c498-4821-8006-c94bc8d11dc1",
+  "estado": "pronto",
+  "_obs": "Bloco 92"
+ },
+ "mecanico": {
+  "genero": "h",
+  "job": "06fe63c7-53a8-4528-936c-e2148a29abeb",
+  "escolhido": 6,
+  "char": "46810003-c5d3-42de-a78d-14f5cc47d7dd",
+  "estado": "pronto",
+  "_obs": "Bloco 92"
+ },
+ "mecanica": {
+  "genero": "m",
+  "job": "511e5541-758b-4208-8a45-ff39abbaedec",
+  "escolhido": 0,
+  "char": "bf58c8e8-16c6-4693-821e-04345facb425",
+  "estado": "pronto",
+  "_obs": "Bloco 92"
  }
 }

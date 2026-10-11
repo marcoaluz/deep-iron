@@ -420,5 +420,47 @@
    "colher"
   ],
   "_obs": "Bloco 92"
+ },
+ "casaco_carregadora": {
+  "char": "c599b3fc-8ff2-4dca-ad62-e614cfa32cf2",
+  "base": "carregadora",
+  "trabalho": "carregar",
+  "enviado": [
+   "caminhada",
+   "carregar"
+  ],
+  "processado": [
+   "caminhada",
+   "carregar"
+  ],
+  "_obs": "Bloco 92"
+ },
+ "casaco_mecanico": {
+  "char": "52440ab5-a942-4e9c-bc7a-181ef389c63c",
+  "base": "mecanico",
+  "trabalho": "consertar",
+  "enviado": [
+   "caminhada",
+   "consertar"
+  ],
+  "processado": [
+   "caminhada",
+   "consertar"
+  ],
+  "_obs": "Bloco 92"
+ },
+ "casaco_mecanica": {
+  "char": "89b916db-98d1-423e-b02b-c056f6992945",
+  "base": "mecanica",
+  "trabalho": "consertar",
+  "enviado": [
+   "caminhada",
+   "consertar"
+  ],
+  "processado": [
+   "caminhada",
+   "consertar"
+  ],
+  "_obs": "Bloco 92"
  }
 }

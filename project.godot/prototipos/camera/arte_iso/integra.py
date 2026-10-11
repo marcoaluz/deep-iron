@@ -284,6 +284,8 @@ FUNCOES = {"minerador": ("minerador", "mineradora", "minerar"), "guarda": ("guar
            "carpinteiro": ("carpinteiro", "carpinteira", "serrar"),  # Bloco 94 (oficios94.py)
            "batedor": ("batedor", "batedora", "bater"),  # Bloco 104 (oficios104.py)
            "agricultor": ("agricultor", "agricultora", "colher"),  # Bloco 107 (oficios107.py)
+           "carregador": ("carregador", "carregadora", "carregar"),  # Bloco 105/119 (oficios105.py)
+           "mecanico": ("mecanico", "mecanica", "consertar"),  # Bloco 105/119 (oficios105.py)
            "crianca": ("crianca_m", "crianca_f", "brincar")}  # Bloco 111 (oficios111.py): as crianças (e os aprendizes)
 COMUNS = ["caminhada", "comer", "ferido", "deitar", "mancar_esq", "com_picareta"]
 # pendências dos Prompts 2 e 29: colher fruta (caçador sem arco), treinar no campo e o ataque com a

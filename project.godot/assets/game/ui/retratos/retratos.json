@@ -221,6 +221,34 @@
    "cansado": "agricultora/cansado",
    "bravo": "agricultora/bravo",
    "ferido": "agricultora/ferido"
+  },
+  "carregador": {
+   "neutro": "carregador/neutro",
+   "contente": "carregador/contente",
+   "cansado": "carregador/cansado",
+   "bravo": "carregador/bravo",
+   "ferido": "carregador/ferido"
+  },
+  "carregadora": {
+   "neutro": "carregadora/neutro",
+   "contente": "carregadora/contente",
+   "cansado": "carregadora/cansado",
+   "bravo": "carregadora/bravo",
+   "ferido": "carregadora/ferido"
+  },
+  "mecanica": {
+   "neutro": "mecanica/neutro",
+   "contente": "mecanica/contente",
+   "cansado": "mecanica/cansado",
+   "bravo": "mecanica/bravo",
+   "ferido": "mecanica/ferido"
+  },
+  "mecanico": {
+   "neutro": "mecanico/neutro",
+   "contente": "mecanico/contente",
+   "cansado": "mecanico/cansado",
+   "bravo": "mecanico/bravo",
+   "ferido": "mecanico/ferido"
   }
  }
 }
