@@ -219,3 +219,38 @@ A **música** (abertura e introdução) não é gerada pela ferramenta de efeito
 | `musica/intro` | 60 s | não | Music | 0.0 | A INTRODUÇÃO (3 quadros ilustrados + 4 no mapa, uns 60 s): uma peça só, crescendo da explosão até a fogueira e o título. Não repete. | Instrumental cinematic piece with one single arc, about; game music loop | mudo | pronto |
 | `musica/jogo` | loop 120 s | sim | Music | 0.0 | A MÚSICA DO JOGO (a partida normal): toca por baixo de tudo, de dia e de noite. Substitui o loop antigo (music_loop.wav). Calma, sem clímax, pra ouvir horas. | Calm instrumental background music for a colony-building survival game in a mining village; game music loop | o som de antes | pronto |
 | `musica/perigo` | loop 60 s | sim | Music | 0.0 | A MÚSICA DE PERIGO: toca enquanto há invasão de criaturas (troca com a música do jogo e volta depois). Substitui music_danger.wav. | Tense instrumental battle music for a colony defending against night creatures, about 120 ; game music loop | o som de antes | pronto |
+
+## Música em camadas (Bloco 120)
+
+Estilo: **folk sombrio + industrial** (violão de aço, sanfona, percussão de metal e correntes, drones graves), tudo instrumental. Todas as faixas de estação têm o MESMO BPM (80) e o MESMO tom (D minor), 120 s = 40 compassos, preparadas para repetir. **No fundo da mina: mais drone, menos melodia** (o jogo abaixa a melodia e sobe o pad lá).
+
+| Arquivo | Papel | Duração | Loop | Estado |
+|---|---|---|---|---|
+| `musica/primavera_dia.wav` | melodia | 120 s | sim | pronto |
+| `musica/primavera_noite.wav` | pad | 120 s | sim | pronto |
+| `musica/primavera_perigo.wav` | percussao | 120 s | sim | pronto |
+| `musica/verao_dia.wav` | melodia | 120 s | sim | pronto |
+| `musica/verao_noite.wav` | pad | 120 s | sim | pronto |
+| `musica/verao_perigo.wav` | percussao | 120 s | sim | pronto |
+| `musica/outono_dia.wav` | melodia | 120 s | sim | pronto |
+| `musica/outono_noite.wav` | pad | 120 s | sim | pronto |
+| `musica/outono_perigo.wav` | percussao | 120 s | sim | pronto |
+| `musica/inverno_dia.wav` | melodia | 120 s | sim | pronto |
+| `musica/inverno_noite.wav` | pad | 120 s | sim | pronto |
+| `musica/inverno_perigo.wav` | percussao | 120 s | sim | pronto |
+| `musica/tema_menu.wav` | menu | 120 s | sim | pronto |
+| `musica/tema_vitoria.wav` | vitoria | 60 s | não | pronto |
+| `musica/tema_derrota.wav` | derrota | 60 s | não | pronto |
+
+### Como gerar (Eleven Music)
+
+- Ferramenta: `python tools/elevenlabs/gerar_musica.py --lista | --confere | --so estacao:primavera --dry-run | --so estacao:primavera --sim | --sincronia primavera` (a chave vem do `.env`; cache, teto de chamadas e de créditos e confirmação de custo, como a de efeitos).
+- API: `POST https://api.elevenlabs.io/v1/music` (`prompt`, `music_length_ms` de 3000 a 600000, `model_id`, `force_instrumental`); plano pago. Custo medido: ~13,7 créditos por segundo de música.
+- Dicas (da documentação da Eleven Music): fixe **BPM e tom** no prompt ("80 BPM", "key of D minor") e o número de compassos; diga "instrumental only, no vocals"; nomeie os instrumentos; para camadas diga o que NÃO tem ("no melody", "no drums"); narre as seções em ordem; a faixa que repete deve ter energia estável do primeiro ao último compasso (sem intro nem final).
+- **Camadas** (mesmo BPM e tom): `dia` = melodia (violão + sanfona), `noite` = pad (só drones), `perigo` = percussão (metal e correntes). Depois de gerar, `--sincronia <estação>` mede tempo, tom e deriva entre elas (`docs/audio/SINCRONIA_MUSICA.md`): se ficarem sincronizadas o jogo as toca juntas (AudioStreamSynchronized); se não, troca faixas inteiras com crossfade (AudioStreamInteractive).
+- Outras IAs de música (Suno, Udio...): peça o mesmo BPM e tom e **confira a licença comercial do plano** antes de usar num jogo.
+
+### Licença (o Marco precisa conferir)
+
+Termos da Eleven Music: https://elevenlabs.io/eleven-music-model-specific-terms (a página `eleven-music-v1-terms` saiu do ar; última atualização lida: 09/10/2026). Resumo do que foi lido: nos planos Free, Starter, Creator, Pro e Scale o uso comercial é permitido **exceto** cinema, TV, rádio e **"Studio Games"**; um **Indie Game** (receita do jogo, com todas as versões e DLCs, abaixo de US$ 500.000 desde o lançamento comercial, e receita de todos os jogos de quem desenvolve ou publica abaixo de US$ 1.000.000 no último ano fiscal, líquidas de taxas da loja e reembolsos) **não** é Studio Game. Se o jogo deixar de ser Indie, há 60 dias para ter um plano que permita Studio Games ou parar de usar a música nele (as cópias já distribuídas podem continuar). Quem decide se o jogo é Indie é o desenvolvedor. **Não é aconselhamento jurídico: leia o termo e guarde uma cópia da versão da data em que a música foi gerada.**
+

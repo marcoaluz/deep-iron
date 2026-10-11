@@ -137,8 +137,36 @@ def pedido(slots, por_pasta):
             out.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
                 "<br>".join("`%s`" % n for n in nomes), s.get("duracao", "—") or "—", "sim" if e_loop(s) else "não", s.get("bus", ""), s.get("db", 0),
                 quando.replace("|", "/"), termos_de_busca(s).replace("|", "/"), "o som de antes" if s.get("reserva") else "mudo", estado))
+    out += secao_musica()
     return "\n".join(out) + "\n"
 
+
+def secao_musica():
+    """Bloco 120: a música em camadas (data/audio/musica.json) e como gerar (Eleven Music), com a licença."""
+    caminho = os.path.join(RAIZ, "project.godot", "data", "audio", "musica.json")
+    if not os.path.exists(caminho):
+        return []
+    m = json.load(open(caminho, encoding="utf-8"))
+    out = ["\n## Música em camadas (Bloco 120)\n",
+           "Estilo: **folk sombrio + industrial** (violão de aço, sanfona, percussão de metal e correntes, drones graves), tudo instrumental. Todas as faixas de estação têm o MESMO BPM (%d) e o MESMO tom (%s), "
+           "120 s = 40 compassos, preparadas para repetir. **No fundo da mina: mais drone, menos melodia** (o jogo abaixa a melodia e sobe o pad lá).\n" % (m["bpm"], m["tom"]),
+           "| Arquivo | Papel | Duração | Loop | Estado |", "|---|---|---|---|---|"]
+    for f in m["faixas"]:
+        out.append("| `%s.wav` | %s | %d s | %s | %s |" % (f["id"], f.get("papel", ""), f["seg"], "sim" if f.get("loop") else "não", "pronto" if existe(f["id"]) else "falta"))
+    out += ["\n### Como gerar (Eleven Music)\n",
+            "- Ferramenta: `python tools/elevenlabs/gerar_musica.py --lista | --confere | --so estacao:primavera --dry-run | --so estacao:primavera --sim | --sincronia primavera` (a chave vem do `.env`; cache, teto de chamadas e de créditos e confirmação de custo, como a de efeitos).",
+            "- API: `POST https://api.elevenlabs.io/v1/music` (`prompt`, `music_length_ms` de 3000 a 600000, `model_id`, `force_instrumental`); plano pago. Custo medido: ~13,7 créditos por segundo de música.",
+            "- Dicas (da documentação da Eleven Music): fixe **BPM e tom** no prompt (\"80 BPM\", \"key of D minor\") e o número de compassos; diga \"instrumental only, no vocals\"; nomeie os instrumentos; para camadas diga o que NÃO tem (\"no melody\", \"no drums\"); "
+            "narre as seções em ordem; a faixa que repete deve ter energia estável do primeiro ao último compasso (sem intro nem final).",
+            "- **Camadas** (mesmo BPM e tom): `dia` = melodia (violão + sanfona), `noite` = pad (só drones), `perigo` = percussão (metal e correntes). Depois de gerar, `--sincronia <estação>` mede tempo, tom e deriva entre elas "
+            "(`docs/audio/SINCRONIA_MUSICA.md`): se ficarem sincronizadas o jogo as toca juntas (AudioStreamSynchronized); se não, troca faixas inteiras com crossfade (AudioStreamInteractive).",
+            "- Outras IAs de música (Suno, Udio...): peça o mesmo BPM e tom e **confira a licença comercial do plano** antes de usar num jogo.",
+            "\n### Licença (o Marco precisa conferir)\n",
+            "Termos da Eleven Music: https://elevenlabs.io/eleven-music-model-specific-terms (a página `eleven-music-v1-terms` saiu do ar; última atualização lida: 09/10/2026). Resumo do que foi lido: nos planos Free, Starter, Creator, Pro e Scale o uso comercial é permitido "
+            "**exceto** cinema, TV, rádio e **\"Studio Games\"**; um **Indie Game** (receita do jogo, com todas as versões e DLCs, abaixo de US$ 500.000 desde o lançamento comercial, e receita de todos os jogos de quem desenvolve ou publica abaixo de US$ 1.000.000 no último ano fiscal, "
+            "líquidas de taxas da loja e reembolsos) **não** é Studio Game. Se o jogo deixar de ser Indie, há 60 dias para ter um plano que permita Studio Games ou parar de usar a música nele (as cópias já distribuídas podem continuar). "
+            "Quem decide se o jogo é Indie é o desenvolvedor. **Não é aconselhamento jurídico: leia o termo e guarde uma cópia da versão da data em que a música foi gerada.**\n"]
+    return out
 
 def prompts(slots, por_pasta):
     sem_musica = [s for s in slots if s["id"].split("/")[0] != "musica"]

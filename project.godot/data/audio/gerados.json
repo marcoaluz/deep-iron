@@ -835,6 +835,21 @@
    "gerado_em": "2026-10-10",
    "hash": "3d7df0ea627c6a20"
   },
+  "ui/selecionar_predio_0": {
+   "aprovado": false,
+   "gerado_em": "2026-10-10",
+   "hash": "88ecc22b031c9d88"
+  },
+  "ui/selecionar_predio_1": {
+   "aprovado": false,
+   "gerado_em": "2026-10-10",
+   "hash": "88ecc22b031c9d88"
+  },
+  "ui/selecionar_predio_2": {
+   "aprovado": false,
+   "gerado_em": "2026-10-10",
+   "hash": "88ecc22b031c9d88"
+  },
   "vida/bebe_nasce_0": {
    "aprovado": true,
    "gerado_em": "2026-10-10",

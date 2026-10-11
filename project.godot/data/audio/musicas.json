@@ -12,17 +12,107 @@
 			"ganho_db": -1.4,
 			"hash": "c828d2482e"
 		},
+		"musica/inverno_dia": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -3.8,
+			"hash": "19a8d93ce4"
+		},
+		"musica/inverno_noite": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -6.0,
+			"hash": "fef29ccc78"
+		},
+		"musica/inverno_perigo": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -7.2,
+			"hash": "b77a9f237e"
+		},
 		"musica/jogo": {
 			"aprovado": false,
 			"candidata": 0,
 			"ganho_db": -4.7,
 			"hash": "6ecd187038"
 		},
+		"musica/outono_dia": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -4.1,
+			"hash": "37ec8b0708"
+		},
+		"musica/outono_noite": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -3.1,
+			"hash": "ea6abce95e"
+		},
+		"musica/outono_perigo": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -3.8,
+			"hash": "5324350144"
+		},
 		"musica/perigo": {
 			"aprovado": false,
 			"candidata": 0,
 			"ganho_db": -7.3,
 			"hash": "19203a4f3c"
+		},
+		"musica/primavera_dia": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": 8.7,
+			"hash": "fbade1fff8"
+		},
+		"musica/primavera_noite": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -5.6,
+			"hash": "c9cc45a15d"
+		},
+		"musica/primavera_perigo": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -5.3,
+			"hash": "df761da32f"
+		},
+		"musica/tema_derrota": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -4.0,
+			"hash": "3d40fcf82c"
+		},
+		"musica/tema_menu": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -4.7,
+			"hash": "4ddbcd6ed4"
+		},
+		"musica/tema_vitoria": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -3.9,
+			"hash": "01122bc538"
+		},
+		"musica/verao_dia": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -5.5,
+			"hash": "0796cd9b72"
+		},
+		"musica/verao_noite": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -5.8,
+			"hash": "eae080ff5e"
+		},
+		"musica/verao_perigo": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -5.1,
+			"hash": "cceb4449bf"
 		}
 	}
 }
