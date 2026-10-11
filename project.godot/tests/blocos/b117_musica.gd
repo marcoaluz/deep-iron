@@ -115,16 +115,26 @@ func _roda() -> void:
 	check(FileAccess.file_exists(raiz.path_join("tools/elevenlabs/gerar_musica.py")), "tools/elevenlabs/gerar_musica.py existe")
 	check(FileAccess.file_exists(raiz.path_join("project.godot/data/audio/musicas.json")), "musicas.json (o que foi gerado) existe")
 	var reg := JSON.parse_string(FileAccess.get_file_as_string("res://data/audio/musicas.json")) as Dictionary
-	check((reg["arquivos"] as Dictionary).size() == 4, "musicas.json registra as 4 músicas")
+	var registradas := 0
+	for id in ["musica/abertura", "musica/intro", "musica/jogo", "musica/perigo"]:
+		if (reg["arquivos"] as Dictionary).has(id):
+			registradas += 1
+	check(registradas == 4, "musicas.json registra as 4 músicas")
 	var saida: Array = []
 	var cod := OS.execute("python", [raiz.path_join("tools/elevenlabs/gerar_musica.py"), "--lista"], saida, true)
 	if cod == -1:
 		print("    (python não encontrado: a ferramenta não rodou)")
 	else:
 		var txt := String(saida[0]) if saida.size() > 0 else ""
-		check(cod == 0 and txt.count("TEM arquivo") == 4, "gerar_musica.py --lista: as 4 têm arquivo (código %d) %s" % [cod, txt.left(300)])
+		var com_arquivo := 0
+		for id in ["musica/abertura", "musica/intro", "musica/jogo", "musica/perigo"]:
+			for linha in txt.split("
+"):
+				if linha.begins_with(id + " ") and linha.contains("TEM arquivo"):
+					com_arquivo += 1
+		check(cod == 0 and com_arquivo == 4, "gerar_musica.py --lista: as 4 músicas do Bloco 117 têm arquivo (código %d)" % cod)
 		saida = []
-		cod = OS.execute("python", [raiz.path_join("tools/elevenlabs/gerar_musica.py"), "--tudo", "--dry-run"], saida, true)
+		cod = OS.execute("python", [raiz.path_join("tools/elevenlabs/gerar_musica.py"), "--so", "abertura", "intro", "jogo", "perigo", "--dry-run"], saida, true)
 		txt = String(saida[0]) if saida.size() > 0 else ""
 		check(cod == 0 and txt.contains("0 arquivo(s) no plano"), "pedir de novo não gasta nada: 0 arquivos no plano (já gerados)")
 

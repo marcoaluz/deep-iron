@@ -68,6 +68,17 @@ func _build_main() -> void:
 		Audio.voz_ligada = on
 		Audio.save_settings())
 	left.add_child(voz)
+	var camadas := CheckBox.new()  # Bloco 121: a música em camadas (estação, dia, noite e perigo)
+	camadas.text = "Música em camadas (estação, dia, noite, perigo)"
+	camadas.button_pressed = Audio.musica_dinamica
+	camadas.toggled.connect(func(on: bool):
+		Audio.musica_dinamica = on
+		Audio.aplica_musica_dinamica())
+	left.add_child(camadas)
+	for linha in [["  Melodia (dia)", "mix_melodia"], ["  Base e pad (noite)", "mix_pad"], ["  Percussão (perigo)", "mix_percussao"]]:
+		_percent(left, linha[0], float(Audio.get(linha[1])), 0.0, 1.0, 0.05, func(v: float):
+			Audio.set(linha[1], v)
+			Audio.aplica_musica_dinamica())
 	# Bloco 48: tela cheia (F11 / Alt+Enter também alternam; a escolha fica salva)
 	_fullscreen = CheckBox.new()
 	_fullscreen.text = "Tela cheia  (F11 / Alt+Enter)"

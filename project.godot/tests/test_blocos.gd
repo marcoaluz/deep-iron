@@ -492,3 +492,15 @@ func test_b117_musica() -> void:
 
 func test_b118_audio_zoom() -> void:
 	run_bloco("b118_audio_zoom.gd")
+
+
+func test_b119_arte_carregador_mecanico() -> void:
+	run_bloco("b119_arte_carregador_mecanico.gd")
+
+
+func test_b120_musica_ferramenta() -> void:
+	run_bloco("b120_musica_ferramenta.gd")
+
+
+func test_b121_musica_dinamica() -> void:
+	run_bloco("b121_musica_dinamica.gd")

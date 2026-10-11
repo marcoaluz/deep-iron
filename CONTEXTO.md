@@ -5,6 +5,29 @@ Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
+## Bloco 121 — MÚSICA DINÂMICA: camadas por estação, temas e fallback (feito; commit local, sem push)
+
+Prompt 7 (sistema). Relatório `docs/BLOCO121_MUSICA_DINAMICA.md`; teste `b121_musica_dinamica` (registrado no GUT). `scripts/core/musica_dinamica.gd` (filho do `Audio`): cada estação = `AudioStreamSynchronized` de 3 camadas (pad `_noite`, melodia `_dia`, percussão `_perigo`) com volume por situação (dia, noite, perigo, fundo da mina: mais drone e menos melodia; `@export`),
+estações + temas (menu, vitória, derrota) = clipes de um `AudioStreamInteractive` com crossfade de 3 s; troca de estação na virada do compasso (o Godot não acha o compasso sem BPM no WAV: a classe conta os 3 s do compasso; sem BPM 1 batida = 1 s no `fade_beats`). Configurações: caixa "Música em camadas" e 3 sliders (melodia, base/pad, percussão).
+FALLBACK: sem camadas, desligada ou em headless (sem `MusicaDinamica.forcar`) o jogo toca as 2 músicas de antes (jogo e perigo). Nada ouvido: os dB e os tempos são palpite para o Marco ajustar.
+
+## Bloco 120 — MÚSICA EM CAMADAS pela Eleven Music: a ferramenta, as 15 faixas e o veredito de sincronia (feito; commit local, sem push)
+
+Prompt 7 (ferramenta; o SISTEMA de música dinâmica é o próximo bloco). Relatório `docs/BLOCO120_MUSICA_CAMADAS.md`; teste `b120_musica_ferramenta` (registrado no GUT).
+- `tools/elevenlabs/gerar_musica.py` (estende o do Bloco 117): manifesto `project.godot/data/audio/musica.json` (15 faixas: `tema_menu`, `tema_vitoria`, `tema_derrota` e, por estação, `<estacao>_dia` (melodia), `_noite` (pad/drone), `_perigo` (percussão), TODAS no mesmo BPM (80) e no mesmo tom (D minor), 120 s = 40 compassos, instrumental, folk sombrio + industrial);
+  `--confere` (BPM, tom, compassos, "no vocals"), `--lista`, `--dry-run`, `--so estacao:<nome>|menu|vitoria|derrota`, `--candidatos`, `--aprovar`, cache, `--max-geracoes` (8), `--max-creditos` (10000) e `--confirma-acima` (1500), `--sincronia <estação>` (mede tempo, tom e deriva entre as camadas -> `docs/audio/SINCRONIA_MUSICA.md`). Só parâmetros da documentação (`prompt`, `music_length_ms`, `model_id` music_v1, `force_instrumental`, `output_format`).
+- **Veredito da sincronia: as 4 estações ficaram SINCRONIZADAS** (tempos entre 79,6 e 80,5 BPM, deriva dos ataques 0 ms em 117 s — o controle com uma faixa esticada 0,1% acusa 46 a 70 ms —, tons compatíveis: o pad e a percussão firmam na quinta A, a melodia em D). Dá para tocar juntas com `AudioStreamSynchronized` (o Bloco 121 faz isso; a troca de faixa inteira com crossfade, `AudioStreamInteractive`, é o plano B). Limite: o alinhamento de COMPASSO (a batida 1) não dá para medir só por números; só ouvindo.
+- Custo: o piloto (primavera) e o resto gastaram ~23.000 créditos (1.680 s de música; 13,7 créditos por segundo). Saldo ElevenLabs depois: 92.172 de 131.000.
+- **LICENÇA que o Marco precisa conferir:** termos da Eleven Music https://elevenlabs.io/eleven-music-model-specific-terms (a página antiga `eleven-music-v1-terms` deu 404; "Last updated: 09 October 2026"). Lido: nos planos Free, Starter, Creator, Pro, Scale (e Business e Enterprise Music Lite) o uso comercial online e offline é permitido **exceto cinema, TV, rádio e "Studio Games"**;
+  um **Indie Game** (a receita do jogo, com todas as versões, edições e DLCs, abaixo de **US$ 500.000** desde o lançamento comercial, e a receita de todos os jogos de quem desenvolve ou publica abaixo de **US$ 1.000.000** no último ano fiscal, líquidas de taxas da loja e reembolsos) **não** é Studio Game. Se o jogo deixar de ser Indie, há **60 dias** para ter um plano que permita Studio Games ou parar de usar a música nele (as cópias já distribuídas podem continuar). Quem decide se é Indie é o desenvolvedor.
+  Uma busca na web mostrou um espelho antigo (ago/2025, v1) que listava "videogames comerciais" como proibido nos planos pagos sem autorização escrita; a versão atual (out/2026) NÃO tem isso. Os efeitos sonoros (`sound-generation`) têm termos próprios que NÃO foram lidos. Não é aconselhamento jurídico: o Marco deve ler o termo e guardar uma cópia.
+
+## Bloco 119 — ARTE PRÓPRIA do carregador e do mecânico (feito; commit local, sem push)
+
+Pedido do Marco: "o carregador fica com a roupa igual a quando está sem função e a do mecânico também não muda". Causa: os dois ofícios do Bloco 105 nunca tiveram arte (o piloto do carregador esperava a aprovação) e o jogo usava `iso_bonecos.PROVISORIO` (civil e engenheiro).
+Feito no PixelLab (~100 gerações; saldo 5.487 antes): carregadora, mecânico e mecânica completos (8 poses, caminhada de 8 quadros, comer, ferido, deitar, mancar, carregar/consertar, casaco de inverno, retrato com 5 expressões × 3 tons) e o carregador homem do piloto integrado; `integra.py FUNCOES` ganhou as duas funções.
+Relatório `docs/BLOCO119_ARTE_CARREGADOR_MECANICO.md`; folhas em `docs/arte/bloco119/`; teste `b119_arte_carregador_mecanico`. Ficou: o ÍCONE da barra de funções (provisório) e o "carregar" de frente do carregador homem perde um pouco a armação.
+
 ## Bloco 118 — O SOM SEGUE O ZOOM, modelo Frostpunk (feito; commit local, sem push)
 
 Pedido do Marco: som "igual Frostpunk": o jogo só faz barulho quando clica na área ou dá zoom. Relatório `docs/BLOCO118_SOM_ZOOM.md`; teste `b118_audio_zoom` (registrado no GUT).

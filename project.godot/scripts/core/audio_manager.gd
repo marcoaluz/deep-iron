@@ -192,6 +192,15 @@ var _destaque: Dictionary = {}  # instance_id do prédio clicado -> (ms) até qu
 var _voz_ultima := -100000
 var _noticia_ultima := -100000
 var predios: Node  # os loops posicionais dos prédios (sons_predios.gd)
+# Bloco 121: a música dinâmica (camadas por estação, dia, noite e perigo; musica_dinamica.gd)
+var dinamica: Node
+## Ligada: a música do jogo vem das camadas por estação (se os arquivos existirem). Desligada: as 2 músicas de antes (jogo e perigo).
+var musica_dinamica := true
+## O mix das camadas (Configurações, 0 a 1: 1 = o volume padrão do @export do musica_dinamica.gd).
+var mix_melodia := 1.0
+var mix_pad := 1.0
+var mix_percussao := 1.0
+var _dyn_ligada := false  # a dinâmica é quem toca a música do jogo agora (as 2 de antes ficam mudas)
 var _streams := {}  # nome -> AudioStream (sons novos, carregados no _ready)
 const NOVOS := {
 	"build": ["build_hit_0", "build_hit_1", "build_hit_2"], "build_done": ["build_done"],
@@ -205,6 +214,7 @@ const NOVOS := {
 const Settings := preload("res://scripts/core/settings.gd")
 const Slots := preload("res://scripts/core/audio_slots.gd")  # Bloco 114: o catálogo de sons (data/audio/slots.json)
 const SonsPredios := preload("res://scripts/core/sons_predios.gd")
+const MusicaDinamica := preload("res://scripts/core/musica_dinamica.gd")  # Bloco 121
 ## Bloco 114: o contexto da câmera -> o slot da ambiência dele (o andar vem de environment.level_at: 2 = S2... 5 = S5).
 const CTX_SLOT := {"mina": "ambiencia/mina", "dia": "ambiencia/floresta_dia", "noite": "ambiencia/floresta_noite",
 	"s2": "ambiencia/s2_acido", "s3": "ambiencia/s3_lava", "s4": "ambiencia/s4_cachoeira", "s5": "ambiencia/s5_lago"}
@@ -283,6 +293,9 @@ func _ready() -> void:
 	predios = SonsPredios.new()
 	predios.name = "SonsPredios"
 	add_child(predios)
+	dinamica = MusicaDinamica.new()  # Bloco 121
+	dinamica.name = "MusicaDinamica"
+	add_child(dinamica)
 	if music_enabled and _music_player.stream:
 		_fade_in(_music_player)
 	if _ambience_player.stream:
@@ -339,6 +352,8 @@ func _update_context() -> void:
 		if _dia_visto >= 0 and dia != _dia_visto:
 			stinger("amanhecer")
 		_dia_visto = dia
+	dinamica.atualiza(_estacao_atual(), _e_noite(), _danger, _no_fundo(), dnn != null)  # Bloco 121
+	_reconcilia_musica()
 
 
 func set_ambience(ctx: String, rain: bool = false, vento: bool = false, onda: bool = false) -> void:
@@ -387,11 +402,54 @@ func _db_slot(id: String, padrao: float) -> float:
 	return float(Slots.slot(id).get("db", padrao))
 
 
+## Bloco 121: quem toca a música do jogo agora, a dinâmica (camadas) ou as 2 de antes (jogo e perigo): só uma por vez.
+func _reconcilia_musica() -> void:
+	var dyn: bool = music_enabled and _tema_atual == "" and _jogando() and dinamica.ativa()
+	if dyn == _dyn_ligada:
+		return
+	_dyn_ligada = dyn
+	if dyn:
+		_xfade(_music_player, false, 0.0, music_crossfade)
+		_xfade(_danger_player, false, 0.0, music_crossfade)
+	elif music_enabled and _tema_atual == "":
+		_xfade(_danger_player if _danger else _music_player, true, 0.0, music_crossfade)
+
+
+## Foi mexido nas Configurações (música em camadas ligada/desligada, mix das camadas): refaz quem toca.
+func aplica_musica_dinamica() -> void:
+	dinamica.atualiza(_estacao_atual(), _e_noite(), _danger, _no_fundo(), _jogando())
+	_reconcilia_musica()
+	save_settings()
+
+
+func dinamica_ligada() -> bool:
+	return _dyn_ligada
+
+
+func _jogando() -> bool:
+	return get_tree().get_first_node_in_group("day_night") != null
+
+
+func _estacao_atual() -> int:
+	var sol := get_tree().get_first_node_in_group("sun")
+	return int(sol.season_index()) if sol != null and sol.has_method("season_index") else 0
+
+
+func _e_noite() -> bool:
+	var dn := get_tree().get_first_node_in_group("day_night")
+	return dn != null and dn.has_method("is_night") and bool(dn.is_night())
+
+
+## Nos andares fundos (S2 a S5) a música tem mais drone e menos melodia.
+func _no_fundo() -> bool:
+	return ambience_now in ["s2", "s3", "s4", "s5"]
+
+
 func set_danger(on: bool) -> void:
 	if on == _danger:
 		return
 	_danger = on
-	if not music_enabled or _tema_atual != "":  # Bloco 114: com a abertura/intro tocando, o perigo espera
+	if not music_enabled or _tema_atual != "" or _dyn_ligada:  # Bloco 114: com a abertura/intro tocando, o perigo espera; Bloco 121: a dinâmica tem a percussão
 		return
 	_xfade(_danger_player, on, 0.0, music_crossfade)
 	_xfade(_music_player, not on, 0.0, music_crossfade)
@@ -463,11 +521,15 @@ func _set_bus_volume(bus_name: StringName, linear: float) -> void:
 func toggle_music() -> void:
 	music_enabled = not music_enabled
 	if music_enabled:
-		_fade_in(_tema_player if _tema_atual != "" else (_danger_player if _danger else _music_player))
+		if not (_dyn_ligada or (_tema_atual == "" and _jogando() and dinamica.ativa())):
+			_fade_in(_tema_player if _tema_atual != "" else (_danger_player if _danger else _music_player))
 	else:
 		_music_player.stop()
 		_danger_player.stop()
 		_tema_player.stop()
+		_dyn_ligada = false
+	dinamica.atualiza(_estacao_atual(), _e_noite(), _danger, _no_fundo(), _jogando())  # (desligada, ela para; ligada, ela volta)
+	_reconcilia_musica()
 	save_settings()
 
 
@@ -480,10 +542,14 @@ func _load_settings() -> void:
 	music_enabled = Settings.get_value("audio", "music_enabled", music_enabled)
 	ui_volume = Settings.get_value("audio", "ui_volume", ui_volume)  # Bloco 114
 	voz_ligada = Settings.get_value("audio", "voz_ligada", voz_ligada)
+	musica_dinamica = Settings.get_value("audio", "musica_dinamica", musica_dinamica)  # Bloco 121
+	mix_melodia = Settings.get_value("audio", "mix_melodia", mix_melodia)
+	mix_pad = Settings.get_value("audio", "mix_pad", mix_pad)
+	mix_percussao = Settings.get_value("audio", "mix_percussao", mix_percussao)
 
 
 func save_settings() -> void:
-	for key in ["master_volume", "music_volume", "ambience_volume", "sfx_volume", "music_enabled", "ui_volume", "voz_ligada"]:
+	for key in ["master_volume", "music_volume", "ambience_volume", "sfx_volume", "music_enabled", "ui_volume", "voz_ligada", "musica_dinamica", "mix_melodia", "mix_pad", "mix_percussao"]:
 		Settings.set_value("audio", key, get(key))
 
 
@@ -808,6 +874,8 @@ func stinger(nome: String) -> void:
 	var d := String(Slots.slot(id).get("duck", ""))
 	if d != "":
 		duck(d)
+	if nome == "vitoria" or nome == "derrota":
+		dinamica.toca_tema(nome)  # Bloco 121: depois do stinger entra o tema (se as camadas existirem)
 
 
 ## O sino da igreja (tipo "missa" ou "funeral"): posicional; só abaixa a música se deu pra ouvir.
@@ -856,6 +924,14 @@ func noticia_cor(cor: Color) -> void:
 func tema(nome: String) -> void:
 	if nome == _tema_atual:
 		return
+	if nome == "abertura" and music_enabled and dinamica.ativa() and dinamica.tem_tema("menu"):
+		# Bloco 121: o tema do menu das camadas (musica/tema_menu) no lugar da abertura de antes
+		_tema_atual = nome
+		_xfade(_music_player, false, 0.0, music_crossfade)
+		_xfade(_danger_player, false, 0.0, music_crossfade)
+		_dyn_ligada = false
+		dinamica.menu(true)
+		return
 	if nome != "":
 		var id := "musica/" + nome
 		var st := _slot_stream(id)
@@ -872,7 +948,8 @@ func tema(nome: String) -> void:
 	else:
 		_tema_atual = ""
 		_xfade(_tema_player, false, 0.0, music_crossfade)
-		if music_enabled:
+		dinamica.menu(false)  # Bloco 121
+		if music_enabled and not dinamica.ativa():
 			_xfade(_danger_player if _danger else _music_player, true, 0.0, music_crossfade)
 
 
