@@ -124,6 +124,21 @@ extends Node
 ## Tamanho da sala do reverb (eco) que o bus Ambience ganha nos andares com "eco" no slot (0 a 1).
 @export_range(0.0, 1.0) var eco_sala: float = 0.85
 
+@export_group("Zoom (Bloco 118)")
+## O modelo do Frostpunk: o mundo só faz barulho com a câmera perto. A medida é cam.art_pixel_screen (quantos pixels de TELA 1 pixel
+## de arte ocupa; as paradas do zoom são 0,5 = a vista "longe", 1 = a vista de sempre, 2 e 3 = bem perto); não depende do tamanho da
+## janela. Classe "perto" (passos, voz,
+## ferramentas, bichos, loops de prédio): muda abaixo de `zoom_perto_mudo`, toca inteiro de `zoom_perto_cheio` pra cima.
+@export var zoom_perto_mudo: float = 0.6
+@export var zoom_perto_cheio: float = 1.5
+## Classe "medio" (criatura, portão, máquina, trovão): o mesmo, mais longe.
+@export var zoom_medio_mudo: float = 0.5
+@export var zoom_medio_cheio: float = 1.0
+## O fundo (a ambiência) desce tanto (dB) na vista mais longe, e sobe de volta conforme a câmera chega.
+@export var zoom_ambiencia_longe_db: float = -9.0
+## Por quanto tempo (s) o prédio clicado se ouve de qualquer zoom (o clique "mostra" o som dele).
+@export var destaque_segundos: float = 4.0
+
 @export_group("Limites")
 @export var max_voices: int = 24
 ## Máximo de passos tocando por segundo somando todos os ipezinhos.
@@ -168,6 +183,12 @@ var _duck_alvo := 0.0
 var _duck_ate := 0  # (ms) segura o ducking até aqui
 var _duck_t := 0  # (ms) da última conta do ducking
 var _dia_visto := -1
+# Bloco 118
+var _zoom_px := 99.0  # pixels de tela por pixel de arte (99 = sem câmera: tudo se ouve, como nos testes)
+var _zoom_t := 0.0
+var _zoom_fx: AudioEffectAmplify
+var _zoom_db := 0.0  # o quanto o fundo está abaixado pelo zoom agora (dB, <= 0)
+var _destaque: Dictionary = {}  # instance_id do prédio clicado -> (ms) até quando ele se ouve de qualquer zoom
 var _voz_ultima := -100000
 var _noticia_ultima := -100000
 var predios: Node  # os loops posicionais dos prédios (sons_predios.gd)
@@ -233,6 +254,7 @@ func _ready() -> void:
 	_setup_limiter()
 	_setup_duck()
 	_setup_eco()
+	_setup_zoom_fx()
 	apply_volumes()
 
 	# Bloco 117: a música do jogo e a de perigo também são slots (musica/jogo, musica/perigo; sem arquivo, o loop antigo)
@@ -274,6 +296,7 @@ func _process(delta: float) -> void:
 		_ctx_timer = 0.5
 		_update_context()
 	_duck_tick()
+	_zoom_tick(delta)
 	_pontuais_tick(delta)
 
 
@@ -496,7 +519,7 @@ func step(pos: Vector2) -> void:
 		return
 	_step_tokens -= 1.0
 	var id := "passos/" + chao_de(pos)  # Bloco 114: o chão decide o som (sem arquivo, o passo de sempre)
-	play_at(&"step", _slot_streams(id), pos, _db_slot(id, step_db), 0.12)
+	play_at(&"step", _slot_streams(id), pos, _db_slot(id, step_db), 0.12, Slots.zoom_de(id))
 
 
 func deposit(pos: Vector2) -> void:
@@ -661,9 +684,15 @@ func error() -> void:
 	ui("erro")
 
 
-func play_at(key: StringName, streams: Array[AudioStream], pos: Vector2, volume_db: float, pitch_var: float = -1.0) -> bool:
+## `classe` ("perto", "medio" ou "global"; vazio = sem regra de zoom): com a câmera longe demais pra classe, não toca; no meio do caminho, mais baixo.
+func play_at(key: StringName, streams: Array[AudioStream], pos: Vector2, volume_db: float, pitch_var: float = -1.0, classe: String = "") -> bool:
 	if streams.is_empty() or _pool.is_empty():
 		return false
+	if classe != "":
+		var fz := fator_zoom(classe)
+		if fz < ZOOM_MIN_AUDIVEL:
+			return false
+		volume_db += linear_to_db(fz)
 	var cam := get_viewport().get_camera_2d()
 	if cam and cam.get_screen_center_position().distance_to(pos) > sfx_max_distance:
 		return false
@@ -853,7 +882,7 @@ func tema_atual() -> String:
 
 ## Voz curta de um ipezinho (emoção: ordem, dor, alegria, cansaco; gênero do jogo: "menino" ou "menina"). Desligável nas
 ## Configurações; sem arquivo, nada toca.
-func voz(pos: Vector2, emocao: String, genero: String = "menino") -> void:
+func voz(pos: Vector2, emocao: String, genero: String = "menino", ignora_zoom: bool = false) -> void:
 	if not voz_ligada:
 		return
 	var agora := Time.get_ticks_msec()
@@ -863,7 +892,7 @@ func voz(pos: Vector2, emocao: String, genero: String = "menino") -> void:
 	var arr := _slot_streams(id)
 	if arr.is_empty():
 		return
-	if play_at(&"voz", arr, pos, _db_slot(id, -14.0), 0.04):
+	if play_at(&"voz", arr, pos, _db_slot(id, -14.0), 0.04, "" if ignora_zoom else Slots.zoom_de(id)):
 		_voz_ultima = agora
 
 
@@ -983,7 +1012,7 @@ func som(id: String, pos: Vector2) -> bool:
 	if arr.is_empty():
 		return false
 	var sl := Slots.slot(id)
-	return play_at(StringName(id), arr, pos, float(sl.get("db", ui_db)), float(sl.get("pitch", -1.0)))
+	return play_at(StringName(id), arr, pos, float(sl.get("db", ui_db)), float(sl.get("pitch", -1.0)), Slots.zoom_de(id))
 
 
 ## Um som SEM posição (conquista, alarme, venda...) pelo slot, nas vozes globais do SFX; o "duck" do slot abaixa a música.
@@ -1020,6 +1049,96 @@ func radiacao(pos: Vector2) -> void:
 		_geiger_ultimo = agora
 
 
+# ------------------------------------------------------------ Bloco 118: o ZOOM decide o que se ouve (modelo Frostpunk)
+## Abaixo disso um som é considerado mudo (nem toca: poupa as vozes).
+const ZOOM_MIN_AUDIVEL := 0.03
+
+
+## Quanto da classe de zoom se ouve agora (0 = nada, 1 = inteiro), pela distância da câmera ("global" = sempre 1).
+func fator_zoom(classe: String) -> float:
+	var mudo := zoom_perto_mudo
+	var cheio := zoom_perto_cheio
+	match classe:
+		"global", "":
+			return 1.0
+		"medio":
+			mudo = zoom_medio_mudo
+			cheio = zoom_medio_cheio
+	return smoothstep(mudo, cheio, _zoom_px)
+
+
+func zoom_px() -> float:
+	return _zoom_px
+
+
+## A cada 0,1 s lê o zoom da câmera (pixels de tela por pixel de arte) e leva o volume do fundo (bus Ambience) pro valor dele.
+func _zoom_tick(delta: float) -> void:
+	_zoom_t -= delta
+	if _zoom_t > 0.0:
+		return
+	_zoom_t = 0.1
+	var cam := get_viewport().get_camera_2d()
+	if DisplayServer.get_name() == "headless":
+		_zoom_px = 99.0  # (sem tela não há quem ouça: os testes seguem com tudo audível; o b118 manda no zoom à mão)
+	elif cam != null and cam.has_method("art_pixel_screen"):
+		_zoom_px = float(cam.art_pixel_screen(cam.zoom.x))
+	else:
+		_zoom_px = 99.0
+	_aplica_zoom_ambiencia(0.1)
+
+
+## Leva o fundo (bus Ambience) pro volume do zoom atual: até 12 dB por segundo.
+func _aplica_zoom_ambiencia(dt: float) -> void:
+	if _zoom_fx == null:
+		return
+	var alvo := lerpf(zoom_ambiencia_longe_db, 0.0, fator_zoom("medio"))
+	_zoom_db = move_toward(_zoom_db, alvo, dt * 12.0)
+	_zoom_fx.volume_db = _zoom_db
+
+
+func zoom_ambiencia_atual() -> float:
+	return _zoom_db
+
+
+func _setup_zoom_fx() -> void:
+	var idx := AudioServer.get_bus_index(&"Ambience")
+	if idx < 0:
+		return
+	for i in AudioServer.get_bus_effect_count(idx):
+		var e := AudioServer.get_bus_effect(idx, i)
+		if e is AudioEffectAmplify and e.resource_name == "zoom":
+			_zoom_fx = e
+			return
+	_zoom_fx = AudioEffectAmplify.new()
+	_zoom_fx.resource_name = "zoom"
+	_zoom_fx.volume_db = 0.0
+	AudioServer.add_bus_effect(idx, _zoom_fx)
+
+
+## O jogador clicou num prédio: o som dele se ouve de qualquer zoom por `destaque_segundos`, e um toque curto confirma o clique
+## ("ui/selecionar_predio"; sem arquivo, o clique de sempre).
+func selecionar_predio(no: Node) -> void:
+	if no != null:
+		_destaque[no.get_instance_id()] = Time.get_ticks_msec() + int(destaque_segundos * 1000.0)
+	ui("selecionar_predio")
+
+
+## O prédio está em destaque (foi clicado há pouco)? O sons_predios usa pra ignorar o zoom.
+func destacado(no: Object) -> bool:
+	if no == null or not _destaque.has(no.get_instance_id()):
+		return false
+	if Time.get_ticks_msec() > int(_destaque[no.get_instance_id()]):
+		_destaque.erase(no.get_instance_id())
+		return false
+	return true
+
+
+## O jogador clicou num ipezinho: ele "responde" (a voz curta de ordem, sem a regra de zoom: quem clica está olhando pra ele).
+func selecionar_gente(unit: Node2D) -> void:
+	if unit != null and is_instance_valid(unit):
+		voz(unit.global_position, "ordem", String(unit.get("gender")), true)
+
+
 # ------------------------------------------------------------ sons soltos pelo contexto (pássaro, coruja, trovão, gota...)
 ## Os slots "pontual": cada um toca de vez em quando (intervalo [min, max] s do slot) enquanto o contexto dele vale (dia, noite,
 ## mina, s2..s5, ou as camadas chuva e vento), num ponto aleatório perto da câmera. Sem arquivo no slot, nada.
@@ -1049,7 +1168,10 @@ func _pontuais_tick(delta: float) -> void:
 		var q := _pont_voz()
 		q.stream = arr[_pick_index(StringName(id), arr.size())]
 		q.global_position = cam.get_screen_center_position() + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(120.0, 400.0)
-		q.volume_db = float(sl.get("db", -12.0))
+		var fz := fator_zoom(Slots.zoom_de(id))  # Bloco 118: o som solto também some com a câmera longe
+		if fz < ZOOM_MIN_AUDIVEL:
+			continue
+		q.volume_db = float(sl.get("db", -12.0)) + linear_to_db(fz)
 		q.pitch_scale = randf_range(0.95, 1.05)
 		q.play()
 

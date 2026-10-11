@@ -46,12 +46,16 @@ func atualiza() -> void:
 				if not (n is Node2D) or not is_instance_valid(n) or not n.is_inside_tree():
 					continue
 				var d: float = (n as Node2D).global_position.distance_to(centro)
-				if d > raio:
+				if d > raio and not _destacado(n):
 					continue
 				var metodo := String(s.get("ativo", ""))
 				if metodo != "" and n.has_method(metodo) and not bool(n.call(metodo)):
 					continue
-				querem.append({"no": n, "slot": id, "dist": d, "raio": raio})
+				# Bloco 118: o zoom decide (a câmera longe = mudo), menos o prédio que o jogador acabou de clicar
+				var fz := 1.0 if _destacado(n) else _fator(id)
+				if fz < 0.03:
+					continue
+				querem.append({"no": n, "slot": id, "dist": d, "raio": maxf(raio, 400.0 if _destacado(n) else raio), "fator": fz})
 	querem.sort_custom(func(a, b): return a.dist < b.dist)
 	if querem.size() > max_loops:
 		querem.resize(max_loops)
@@ -65,9 +69,32 @@ func atualiza() -> void:
 				_solta(k)
 			_vozes[k] = _cria(q)
 		_vozes[k].player.global_position = (q.no as Node2D).global_position
+		_ajusta_volume(k, q)
 	for k in _vozes.keys():
 		if not vivos.has(k):
 			_solta(k)
+
+
+## Bloco 118: o fator de zoom da classe do slot (1 sem o Audio, nos testes).
+func _fator(id: String) -> float:
+	var a := get_parent()
+	return float(a.fator_zoom(Slots.zoom_de(id))) if a != null and a.has_method("fator_zoom") else 1.0
+
+
+func _destacado(no: Object) -> bool:
+	var a := get_parent()
+	return a != null and a.has_method("destacado") and bool(a.destacado(no))
+
+
+## Leva o volume do loop pro do slot + o zoom (suave, a cada conferência).
+func _ajusta_volume(k: int, q: Dictionary) -> void:
+	var v: Dictionary = _vozes[k]
+	var p: AudioStreamPlayer2D = v.player
+	var alvo := float(Slots.slot(q.slot).get("db", 0.0)) + linear_to_db(maxf(float(q.get("fator", 1.0)), 0.001))
+	if v.get("db", NAN) != alvo:
+		v["db"] = alvo
+		var tw := create_tween()
+		tw.tween_property(p, "volume_db", alvo, confere * 1.2)
 
 
 func _cria(q: Dictionary) -> Dictionary:
@@ -82,8 +109,9 @@ func _cria(q: Dictionary) -> Dictionary:
 	add_child(p)
 	p.global_position = (q.no as Node2D).global_position
 	p.play()
-	_sobe(p, float(s.get("db", 0.0)))
-	return {"player": p, "slot": q.slot}
+	var alvo := float(s.get("db", 0.0)) + linear_to_db(maxf(float(q.get("fator", 1.0)), 0.001))
+	_sobe(p, alvo)
+	return {"player": p, "slot": q.slot, "db": alvo, "subindo": true}
 
 
 func _sobe(p: AudioStreamPlayer2D, db: float) -> void:

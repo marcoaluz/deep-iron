@@ -2,7 +2,7 @@
 
 Gerado por `python tools/elevenlabs/docs_audio.py`. A ordem é a de prioridade (ambiência por andar, fornalha, igreja, stingers, interface, depois o resto). **Marque `[x]` o que você ouviu e aprovou.** O estado de aprovação gravado pela ferramenta está em `project.godot/data/audio/gerados.json`.
 
-**Resumo:** 191 arquivos de efeitos, 191 marcados como aprovados.
+**Resumo:** 194 arquivos de efeitos, 191 marcados como aprovados.
 
 ## Como ouvir e trocar um som
 
@@ -79,6 +79,12 @@ Gerado por `python tools/elevenlabs/docs_audio.py`. A ordem é a de prioridade (
   - arquivo: `assets/audio/ui/noticia_boa.wav`  •  ouça: se está claro e no volume certo, sem cortar
 - [x] `ui/noticia_ruim` — 0.6 s — Aviso ruim (aviso vermelho): dois toques descendentes, 0,5 s.
   - arquivo: `assets/audio/ui/noticia_ruim.wav`  •  ouça: se está claro e no volume certo, sem cortar
+- [ ] `ui/selecionar_predio_0` — 0.5 s cada — O jogador clica num prédio (ou obra, ou estação): um toque curto e seco de madeira e metal, que confirma o clique (o som do próprio prédio se ouve de qualquer zoom por 4 s).
+  - arquivo: `assets/audio/ui/selecionar_predio_0.wav`  •  ouça: se está claro e no volume certo, sem cortar
+- [ ] `ui/selecionar_predio_1` — 0.5 s cada — O jogador clica num prédio (ou obra, ou estação): um toque curto e seco de madeira e metal, que confirma o clique (o som do próprio prédio se ouve de qualquer zoom por 4 s).
+  - arquivo: `assets/audio/ui/selecionar_predio_1.wav`  •  ouça: se está claro e no volume certo, sem cortar
+- [ ] `ui/selecionar_predio_2` — 0.5 s cada — O jogador clica num prédio (ou obra, ou estação): um toque curto e seco de madeira e metal, que confirma o clique (o som do próprio prédio se ouve de qualquer zoom por 4 s).
+  - arquivo: `assets/audio/ui/selecionar_predio_2.wav`  •  ouça: se está claro e no volume certo, sem cortar
 
 ## Prédios e lugares (loops posicionais e sinos)
 

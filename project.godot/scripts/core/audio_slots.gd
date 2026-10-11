@@ -59,6 +59,33 @@ static func slot(id: String) -> Dictionary:
 	return _dados.get(id, {})
 
 
+## Bloco 118: a CLASSE DE ZOOM de cada som (o modelo do Frostpunk: o mundo só faz barulho quando a câmera está perto).
+##   "perto"  = detalhe (passo, voz, picareta, martelo, bicho, loop de prédio): só se ouve com a câmera bem perto;
+##   "medio"  = acontecimento (criatura, portão, máquina quebrou, trovão): se ouve com a câmera a meia distância;
+##   "global" = sempre (interface, stinger, alarme, sino, vitória, ambiência de fundo).
+## Vale o campo "zoom" do slot; senão a exceção por id; senão o padrão da pasta.
+const ZOOM_PASTA := {"passos": "perto", "voz": "perto", "sfx": "perto", "animais": "perto", "vida": "medio", "maquinas": "medio",
+	"criaturas": "medio", "pontuais": "medio", "predios": "perto", "perigo": "medio", "ambiencia": "global", "stingers": "global",
+	"ui": "global", "intro": "global", "musica": "global"}
+const ZOOM_EXCECOES := {
+	"sfx/fanfarra": "global", "sfx/sino_funebre": "global", "sfx/alarme_invasao": "global", "sfx/solar": "global", "sfx/festa": "global",
+	"sfx/vender": "global", "sfx/boas_vindas": "global", "sfx/explosao": "global", "sfx/obra_pronta": "medio", "sfx/greve": "medio",
+	"sfx/achado": "medio", "sfx/robo": "medio", "sfx/elevador": "medio", "sfx/lumivoro_grito": "medio", "sfx/ferrugento_golpe": "medio",
+	"sfx/criatura_cai": "medio", "sfx/portao_quebra": "medio", "sfx/portao_abre": "medio", "sfx/portao_fecha": "medio",
+	"sfx/migrantes_chegando": "medio", "sfx/minerio_esgotado": "medio", "sfx/golpe": "medio",
+	"predios/sino_missa": "global", "predios/sino_funeral": "global", "predios/escavadeira": "medio", "predios/cemiterio": "medio",
+	"predios/vagonete": "medio", "predios/poca_perigo": "medio", "pontuais/passaro_canto": "perto", "pontuais/trovao": "global"}
+
+
+static func zoom_de(id: String) -> String:
+	var z := String(slot(id).get("zoom", ""))
+	if z != "":
+		return z
+	if ZOOM_EXCECOES.has(id):
+		return ZOOM_EXCECOES[id]
+	return ZOOM_PASTA.get(id.get_slice("/", 0), "perto")
+
+
 ## Os caminhos de arquivo que existem de verdade pra esse slot (<id>.ext e <id>_0.._N.ext).
 static func arquivos(id: String) -> Array[String]:
 	var out: Array[String] = []

@@ -5,11 +5,19 @@ Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
 
+## Bloco 118 — O SOM SEGUE O ZOOM, modelo Frostpunk (feito; commit local, sem push)
+
+Pedido do Marco: som "igual Frostpunk": o jogo só faz barulho quando clica na área ou dá zoom. Relatório `docs/BLOCO118_SOM_ZOOM.md`; teste `b118_audio_zoom` (registrado no GUT).
+- Cada slot tem uma classe de zoom (`audio_slots.gd zoom_de`: perto / medio / global) e `Audio.fator_zoom(classe)` (0 a 1, pela medida `cam.art_pixel_screen`; paradas 0,5 longe / 1 de sempre / 2-3 perto; `@export` `zoom_*` no `Audio`)
+  cala ou abaixa efeitos, passos, voz, sons soltos e loops de prédio; o fundo (bus Ambience, efeito Amplify "zoom") desce 9 dB na vista longe; música, interface, stingers e alarme não mudam.
+- Clicar num prédio (`hud.open_panel_for` → `Audio.selecionar_predio`) põe o som dele em destaque por 4 s (de qualquer zoom) + o toque `ui/selecionar_predio` (3 variações novas); clicar num ipezinho (`Audio.selecionar_gente`) faz ele responder.
+- Em headless o zoom é 99 (tudo se ouve). Limiares são palpite: o Marco precisa ouvir e ajustar os `zoom_*`.
+
 ## Bloco 117 — MÚSICA do jogo pela API do ElevenLabs (feito; commit local, sem push)
 
 Pedido do Marco: "a música de loop do jogo vai ser alterada, pode tentar fazer na API do ElevenLabs da mesma chave" (as músicas da abertura e da intro estavam pendentes; os .ogg que ele criou estavam VAZIOS e numa pasta aninhada errada, removidos).
 Relatório `docs/BLOCO117_MUSICA.md`; teste `b117_musica` (registrado no GUT). A API de música (`POST /v1/music`, `music_v1`, `force_instrumental`) funciona no plano Creator.
-- 4 músicas geradas (1 chamada cada, 315 s, ~2.130 créditos medidos; restam ~116.900): `abertura` (72 s, loop), `intro` (60 s, uma vez, fade-out), `jogo` (117 s, loop), `perigo` (57 s, loop) em `assets/audio/musica/*.wav` (WAV estéreo 44,1 kHz, RMS -18, loops com crossfade de 3 s). `tools/elevenlabs/gerar_musica.py` (--lista, --dry-run, --so, --candidatos, --aprovar, --force, cache, teto; precisa de numpy pra gerar), registro em `data/audio/musicas.json`, prompts em `slots.json` (campo `seg`).
+- 4 músicas geradas (1 chamada cada, 315 s, ~4.600 créditos medidos (o contador demora a atualizar); restam ~114.400): `abertura` (72 s, loop), `intro` (60 s, uma vez, fade-out), `jogo` (117 s, loop), `perigo` (57 s, loop) em `assets/audio/musica/*.wav` (WAV estéreo 44,1 kHz, RMS -18, loops com crossfade de 3 s). `tools/elevenlabs/gerar_musica.py` (--lista, --dry-run, --so, --candidatos, --aprovar, --force, cache, teto; precisa de numpy pra gerar), registro em `data/audio/musicas.json`, prompts em `slots.json` (campo `seg`).
 - `audio_manager.gd`: a música do jogo e a de perigo vêm dos slots `musica/jogo` e `musica/perigo` (reserva = o loop antigo); a ambiência da MINA também vem do slot (antes o som antigo da caverna entrava no `_ready` e o novo nunca o trocava: commit 2845e217).
 - Achado: o WAV importado é QOA (`compress/mode=2`, `format=3`), então `stream.data` não são amostras: o b116 media bytes comprimidos (a checagem de volume/emenda era vazia). Agora b116 e b117 leem o ARQUIVO .wav. Real: `predios/tocha` (RMS -37, pico 0) e `cozinha` (RMS -34) são fogo estalando; o critério passou a ser RMS baixo E pico baixo.
 - Não ouvi nada; o Marco precisa ouvir as 4 músicas (principalmente se a abertura repete sem emenda audível e se a de perigo não cansa). Trocar uma: `--so musica/jogo --candidatos 3` e `--aprovar musica/jogo N`.

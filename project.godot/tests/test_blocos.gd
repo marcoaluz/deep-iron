@@ -488,3 +488,7 @@ func test_b116_audio_carga() -> void:
 
 func test_b117_musica() -> void:
 	run_bloco("b117_musica.gd")
+
+
+func test_b118_audio_zoom() -> void:
+	run_bloco("b118_audio_zoom.gd")

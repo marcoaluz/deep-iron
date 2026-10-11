@@ -10,7 +10,7 @@ Data: 2026-10-10. Branch `isometrico`. Pedido do Marco: "a música de loop do jo
 
 `POST https://api.elevenlabs.io/v1/music` (documentação oficial conferida): `prompt`, `music_length_ms` (3 a 600 s), `model_id` (`music_v1`), `force_instrumental`, query `output_format`.
 **Funciona no plano Creator.** Pedimos `pcm_44100`, que aqui vem em estéreo de verdade, 16 bits: dá para medir e corrigir volume e emendar o loop em Python.
-Custo medido: as 4 músicas (315 s) gastaram cerca de **2.130 créditos** (~6,7 por segundo); sobram ~116.900. (O contador do plano não mostrou o custo dos dois testes de 10 s na hora; o custo aparece depois.)
+Custo medido (corrigido depois: o contador do plano demora a atualizar): as 4 músicas e os 2 testes de 10 s gastaram cerca de **4.600 créditos** (~13,7 por segundo de música); sobram ~114.400.
 
 ## 2) As 4 músicas (`assets/audio/musica/`)
 

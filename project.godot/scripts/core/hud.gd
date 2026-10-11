@@ -967,6 +967,7 @@ func _foco_mapa(n: Node) -> void:
 
 ## Abre a janela da estrutura clicada no mapa (ela diz qual pelo panel_id).
 func open_panel_for(node: Node) -> void:
+	Audio.selecionar_predio(node)  # Bloco 118: o clique mostra o som do prédio (de qualquer zoom) e dá um toque
 	open_panel(node.get("panel_id"), node)
 
 

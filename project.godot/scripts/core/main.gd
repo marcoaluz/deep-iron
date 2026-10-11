@@ -316,6 +316,7 @@ func _finish_left_click() -> void:
 			toggle_selected(clicked_unit)
 		else:
 			select(clicked_unit)
+			Audio.selecionar_gente(clicked_unit)  # Bloco 118: ele responde ao clique
 		return
 	if not additive:
 		for building in get_tree().get_nodes_in_group("clickable"):
@@ -338,6 +339,7 @@ func _finish_left_click_iso(additive: bool) -> void:
 			toggle_selected(clicked_unit)
 		else:
 			select(clicked_unit)
+			Audio.selecionar_gente(clicked_unit)  # Bloco 118: ele responde ao clique
 		return
 	if not additive:
 		if node and node.is_in_group("clickable"):

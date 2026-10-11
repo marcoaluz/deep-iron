@@ -4,7 +4,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 O jogo roda **sem** os arquivos: o slot sem arquivo fica mudo (ou toca o som sintetizado de antes), sem erro. Arquivo novo é só pôr em `project.godot/assets/audio/<nome>.ogg|wav|mp3` com o nome exato e rodar `godot --headless --path project.godot --import`.
 
-**Resumo:** 130 slots, 195 arquivos esperados, **195 prontos, 0 faltam**.
+**Resumo:** 131 slots, 198 arquivos esperados, **198 prontos, 0 faltam**.
 
 ## O que falta
 
@@ -74,6 +74,7 @@ A **música** (abertura e introdução) não é gerada pela ferramenta de efeito
 | `ui/fechar_janela` | 0.3 s | não | UI | -14.0 | Fechar uma janela: o oposto do abrir, menos de 0,3 s. | Soft game UI sound: a wooden panel sliding closed with a light paper rustle, very short; ui sound game | o som de antes | pronto |
 | `ui/confirmar` | 0.5 s | não | UI | -8.0 | Confirmar (pôr um prédio, marcar uma área, comprar): toque firme e satisfatório. | Satisfying UI confirm sound: a firm wooden stamp thud with a tiny metallic ring; ui sound game | o som de antes | pronto |
 | `ui/erro` | 0.4 s | não | UI | -6.0 | Ação negada (sem recurso, lugar inválido): buzz curto e seco. | Negative UI sound: a short dull low buzzer thunk; ui sound game | o som de antes | pronto |
+| `ui/selecionar_predio_0`<br>`ui/selecionar_predio_1`<br>`ui/selecionar_predio_2` | 0.5 s cada | não | UI | -8.0 | O jogador clica num prédio (ou obra, ou estação): um toque curto e seco de madeira e metal, que confirma o clique (o som do próprio prédio se ouve de qualquer zoom por 4 s). | A single short wooden latch click with a small low thud, like knocking once on a heavy woo; ui sound game | o som de antes | pronto |
 | `ui/clique` | 0.15 s | não | UI | -12.0 | Clique de botão: tec curto e suave. | Subtle UI button click: a small wooden tick, extremely short; ui sound game | o som de antes | pronto |
 | `ui/noticia_boa` | 0.6 s | não | UI | -8.0 | Aviso bom (aviso verde): dois toques ascendentes, 0,5 s. | Positive notification: two ascending soft bell notes; ui sound game | mudo | pronto |
 | `ui/noticia_ruim` | 0.6 s | não | UI | -8.0 | Aviso ruim (aviso vermelho): dois toques descendentes, 0,5 s. | Negative notification: two descending dull bell notes; ui sound game | mudo | pronto |
