@@ -235,8 +235,9 @@ func _ready() -> void:
 	_setup_eco()
 	apply_volumes()
 
-	_music_player = _make_loop_player(music, &"Music")
-	_danger_player = _make_loop_player(_first("music_danger"), &"Music")
+	# Bloco 117: a música do jogo e a de perigo também são slots (musica/jogo, musica/perigo; sem arquivo, o loop antigo)
+	_music_player = _make_loop_player(_musica_slot("musica/jogo"), &"Music")
+	_danger_player = _make_loop_player(_musica_slot("musica/perigo"), &"Music")
 	_ambience_player = _make_loop_player(null, &"Ambience")
 	_amb_stream(_ambience_player, CTX_SLOT["mina"])  # a mina também vem do slot (o arquivo novo; sem ele, a reserva = o som de antes). Antes o som antigo entrava aqui e o novo nunca o trocava (já estava tocando)
 	for i in 4:  # Bloco 115: os sons soltos pelo contexto (pássaro, trovão, gota...) saem no bus Ambience
@@ -395,6 +396,14 @@ func _xfade(p: AudioStreamPlayer, on: bool, on_db: float, secs: float) -> void:
 	else:
 		tw.tween_property(p, "volume_db", -40.0, secs)
 		tw.tween_callback(p.stop)
+
+
+## O loop de música de um slot (arquivo novo ou, sem ele, a reserva), já marcado pra repetir.
+func _musica_slot(id: String) -> AudioStream:
+	var st := _slot_stream(id)
+	if st != null:
+		Slots.forca_loop(st)
+	return st
 
 
 func _first(k: String) -> AudioStream:

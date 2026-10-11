@@ -1067,3 +1067,5 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 - `musica/abertura` (loop): A ABERTURA do jogo: toca na tela inicial (o menu). Loop de 1 a 2 minutos, tema principal do DEEP IRON (sol, ruína, esperança).
 - `musica/intro` (toca uma vez): A INTRODUÇÃO (3 quadros ilustrados + 4 no mapa, uns 60 s): uma peça só, crescendo da explosão até a fogueira e o título. Não repete.
+- `musica/jogo` (loop): A MÚSICA DO JOGO (a partida normal): toca por baixo de tudo, de dia e de noite. Substitui o loop antigo (music_loop.wav). Calma, sem clímax, pra ouvir horas.
+- `musica/perigo` (loop): A MÚSICA DE PERIGO: toca enquanto há invasão de criaturas (troca com a música do jogo e volta depois). Substitui music_danger.wav.

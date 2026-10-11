@@ -4,14 +4,12 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 O jogo roda **sem** os arquivos: o slot sem arquivo fica mudo (ou toca o som sintetizado de antes), sem erro. Arquivo novo é só pôr em `project.godot/assets/audio/<nome>.ogg|wav|mp3` com o nome exato e rodar `godot --headless --path project.godot --import`.
 
-**Resumo:** 128 slots, 193 arquivos esperados, **191 prontos, 2 faltam**.
+**Resumo:** 130 slots, 195 arquivos esperados, **195 prontos, 0 faltam**.
 
 ## O que falta
 
-| Arquivo | Duração | Loop | Descrição | Termos de busca |
-|---|---|---|---|---|
-| `musica/abertura` | Música (fora desta lista de efeitos) | sim | A ABERTURA do jogo: toca na tela inicial (o menu). Loop de 1 a 2 minutos, tema principal do DEEP IRON (sol, ruína, esperança). | A ABERTURA do jogo: toca na tela inicial . Loop de 1 a 2 minutos, tema principal do DEEP I; game music loop |
-| `musica/intro` | Música (fora desta lista de efeitos) | não | A INTRODUÇÃO (3 quadros ilustrados + 4 no mapa, uns 60 s): uma peça só, crescendo da explosão até a fogueira e o título. Não repete. | A INTRODUÇÃO : uma peça só, crescendo da explosão até a fogueira e o título. Não repete; game music loop |
+Nenhum som de efeito falta: os arquivos de efeitos estão todos na pasta.
+
 
 A **música** (abertura e introdução) não é gerada pela ferramenta de efeitos: os slots estão no catálogo e o jogo toca quando o arquivo existir.
 
@@ -216,5 +214,7 @@ A **música** (abertura e introdução) não é gerada pela ferramenta de efeito
 
 | Arquivo(s) em `assets/audio/` | Duração | Loop | Bus | dB | Descrição | Termos de busca | Sem arquivo | Estado |
 |---|---|---|---|---|---|---|---|---|
-| `musica/abertura` | Música (fora desta lista de efeitos) | sim | Music | 0.0 | A ABERTURA do jogo: toca na tela inicial (o menu). Loop de 1 a 2 minutos, tema principal do DEEP IRON (sol, ruína, esperança). | A ABERTURA do jogo: toca na tela inicial . Loop de 1 a 2 minutos, tema principal do DEEP I; game music loop | mudo | falta |
-| `musica/intro` | Música (fora desta lista de efeitos) | não | Music | 0.0 | A INTRODUÇÃO (3 quadros ilustrados + 4 no mapa, uns 60 s): uma peça só, crescendo da explosão até a fogueira e o título. Não repete. | A INTRODUÇÃO : uma peça só, crescendo da explosão até a fogueira e o título. Não repete; game music loop | mudo | falta |
+| `musica/abertura` | loop 75 s | sim | Music | 0.0 | A ABERTURA do jogo: toca na tela inicial (o menu). Loop de 1 a 2 minutos, tema principal do DEEP IRON (sol, ruína, esperança). | Instrumental main menu theme for a pixel-art colony survival game set in a ruined mining c; game music loop | mudo | pronto |
+| `musica/intro` | 60 s | não | Music | 0.0 | A INTRODUÇÃO (3 quadros ilustrados + 4 no mapa, uns 60 s): uma peça só, crescendo da explosão até a fogueira e o título. Não repete. | Instrumental cinematic piece with one single arc, about; game music loop | mudo | pronto |
+| `musica/jogo` | loop 120 s | sim | Music | 0.0 | A MÚSICA DO JOGO (a partida normal): toca por baixo de tudo, de dia e de noite. Substitui o loop antigo (music_loop.wav). Calma, sem clímax, pra ouvir horas. | Calm instrumental background music for a colony-building survival game in a mining village; game music loop | o som de antes | pronto |
+| `musica/perigo` | loop 60 s | sim | Music | 0.0 | A MÚSICA DE PERIGO: toca enquanto há invasão de criaturas (troca com a música do jogo e volta depois). Substitui music_danger.wav. | Tense instrumental battle music for a colony defending against night creatures, about 120 ; game music loop | o som de antes | pronto |

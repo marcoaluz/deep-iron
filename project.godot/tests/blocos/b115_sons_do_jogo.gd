@@ -375,7 +375,7 @@ func _roda() -> void:
 			sem_doc.append(id)
 	check(sem_prompt.is_empty(), "todo som (menos a música) tem prompt e duração%s" % [(" — faltam: %s" % str(sem_prompt)) if not sem_prompt.is_empty() else ""])
 	check(doc != "" and sem_doc.is_empty(), "docs/audio/PROMPTS_ELEVENLABS.md lista todos%s" % [(" — faltam: %s" % str(sem_doc)) if not sem_doc.is_empty() else ""])
-	check(musica == 2 and doc.contains("Fora desta lista: música"), "a música fica de fora da lista de efeitos (2 slots, citados à parte)")
+	check(musica == 4 and doc.contains("Fora desta lista: música"), "a música fica de fora da lista de efeitos (4 slots: abertura, intro, jogo e perigo — citados à parte)")
 	var longos := Slots.todos().filter(func(i): return String(Slots.slot(i).get("prompt", "")).length() > 450)
 	check(longos.is_empty(), "nenhum prompt passa de 450 caracteres%s" % [(" — %s" % str(longos)) if not longos.is_empty() else ""])
 

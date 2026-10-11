@@ -1,9 +1,18 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-10. Branch `isometrico`. Bloco 116 feito (commits locais dos Blocos 114, 115 e 116, sem push). Tudo até o Bloco 113 **foi enviado** pro GitHub (push do Marco em 2026-10-10). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
+Atualizado em 2026-10-10. Branch `isometrico`. Bloco 117 feito (commit local, sem push). Os Blocos 114, 115 e 116 já foram enviados (push do Marco em 2026-10-10). Tudo até o Bloco 113 **foi enviado** pro GitHub (push do Marco em 2026-10-10). Tudo até o Bloco 111 **foi enviado** pro GitHub (push de 2026-10-10 com o OK do Marco, junto com o commit dele que pôs os 161 retratos no LFS). Push só com o OK dele.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
+
+## Bloco 117 — MÚSICA do jogo pela API do ElevenLabs (feito; commit local, sem push)
+
+Pedido do Marco: "a música de loop do jogo vai ser alterada, pode tentar fazer na API do ElevenLabs da mesma chave" (as músicas da abertura e da intro estavam pendentes; os .ogg que ele criou estavam VAZIOS e numa pasta aninhada errada, removidos).
+Relatório `docs/BLOCO117_MUSICA.md`; teste `b117_musica` (registrado no GUT). A API de música (`POST /v1/music`, `music_v1`, `force_instrumental`) funciona no plano Creator.
+- 4 músicas geradas (1 chamada cada, 315 s, ~2.130 créditos medidos; restam ~116.900): `abertura` (72 s, loop), `intro` (60 s, uma vez, fade-out), `jogo` (117 s, loop), `perigo` (57 s, loop) em `assets/audio/musica/*.wav` (WAV estéreo 44,1 kHz, RMS -18, loops com crossfade de 3 s). `tools/elevenlabs/gerar_musica.py` (--lista, --dry-run, --so, --candidatos, --aprovar, --force, cache, teto; precisa de numpy pra gerar), registro em `data/audio/musicas.json`, prompts em `slots.json` (campo `seg`).
+- `audio_manager.gd`: a música do jogo e a de perigo vêm dos slots `musica/jogo` e `musica/perigo` (reserva = o loop antigo); a ambiência da MINA também vem do slot (antes o som antigo da caverna entrava no `_ready` e o novo nunca o trocava: commit 2845e217).
+- Achado: o WAV importado é QOA (`compress/mode=2`, `format=3`), então `stream.data` não são amostras: o b116 media bytes comprimidos (a checagem de volume/emenda era vazia). Agora b116 e b117 leem o ARQUIVO .wav. Real: `predios/tocha` (RMS -37, pico 0) e `cozinha` (RMS -34) são fogo estalando; o critério passou a ser RMS baixo E pico baixo.
+- Não ouvi nada; o Marco precisa ouvir as 4 músicas (principalmente se a abertura repete sem emenda audível e se a de perigo não cansa). Trocar uma: `--so musica/jogo --candidatos 3` e `--aprovar musica/jogo N`.
 
 ## Bloco 116 — FERRAMENTA DE SONS (ElevenLabs): candidatos, cache, teste de carga (feito; commit local, sem push)
 

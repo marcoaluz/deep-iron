@@ -142,11 +142,11 @@ func _roda() -> void:
 			segundos += w.get_length()
 			if loop and w.loop_mode == AudioStreamWAV.LOOP_DISABLED:
 				estalo.append("%s não repete" % id)
-			var m := _medidas(w)
+			var m := _medidas_arq(w.resource_path)
 			if loop:
 				if m.razao > 6.0:
 					estalo.append("%s (emenda %.1f)" % [id, m.razao])
-				if m.rms < -34.0:
+				if m.rms < -34.0 and m.pico < -12.0:  # (fogo e brasa estalam: RMS baixo e pico alto não é inaudível)
 					inaudiveis.append("%s rms %.0f dBFS" % [id, m.rms])
 			elif m.pico < -20.0:
 				inaudiveis.append("%s pico %.0f dBFS" % [id, m.pico])
@@ -154,7 +154,7 @@ func _roda() -> void:
 	check(sem_arquivo.is_empty(), "os %d slots de efeitos têm todos os arquivos%s" % [_sem_musica().size(), (" — faltam: %s" % str(sem_arquivo)) if not sem_arquivo.is_empty() else ""])
 	check(nao_wav.is_empty() and arquivos >= 191, "%d arquivos carregam (%.0f s de áudio)%s" % [arquivos, segundos, (" — não WAV: %s" % str(nao_wav)) if not nao_wav.is_empty() else ""])
 	check(estalo.is_empty(), "os loops repetem e emendam sem estalo%s" % [(" — %s" % str(estalo)) if not estalo.is_empty() else ""])
-	check(inaudiveis.is_empty(), "nenhum som está quase inaudível (loops: RMS acima de −34 dBFS; curtos: pico acima de −20)%s" % [(" — %s" % str(inaudiveis)) if not inaudiveis.is_empty() else ""])
+	check(inaudiveis.is_empty(), "nenhum som está quase inaudível (loops: RMS acima de −34 dBFS ou pico acima de −12; curtos: pico acima de −20)%s" % [(" — %s" % str(inaudiveis)) if not inaudiveis.is_empty() else ""])
 	print("    (memória estática do motor depois de carregar tudo: +%.0f MB; o contador não garante contar o áudio inteiro)" % (float(mem1 - mem0) / 1048576.0))
 	var tocou_com := await _toca_tudo()
 	check(tocou_com >= 80, "o jogo tocou %d slots em sequência, sem erro" % tocou_com)
@@ -228,17 +228,31 @@ func _roda() -> void:
 	quit(1 if fails > 0 else 0)
 
 
-## Pico e RMS (dBFS) e a razão do estalo do loop de um WAV de 16 bits, olhando 1 amostra em cada 8 (rápido).
-func _medidas(w: AudioStreamWAV) -> Dictionary:
-	var d := w.data
-	var canais := 2 if w.stereo else 1
-	var n := d.size() / (2 * canais)
+## Pico e RMS (dBFS) e a razão do estalo do loop, lidos do ARQUIVO .wav (16 bits) — o stream importado é QOA (comprimido), então os bytes dele não são amostras.
+## Olha 1 amostra em cada 8 (rápido).
+func _medidas_arq(caminho: String) -> Dictionary:
+	var b := FileAccess.get_file_as_bytes(caminho)
+	var canais := b.decode_u16(22)
+	var pos := 12
+	var ini := -1
+	var tam := 0
+	while pos + 8 <= b.size():
+		var tag := b.slice(pos, pos + 4).get_string_from_ascii()
+		var t := b.decode_u32(pos + 4)
+		if tag == "data":
+			ini = pos + 8
+			tam = mini(t, b.size() - ini)
+			break
+		pos += 8 + t + (t & 1)
+	if ini < 0:
+		return {"pico": -99.0, "rms": -99.0, "razao": 99.0}
+	var n := tam / (2 * canais)
 	var pico := 1
 	var soma := 0.0
 	var k := 0
 	var i := 0
 	while i < n:
-		var v := d.decode_s16(i * 2 * canais)
+		var v := b.decode_s16(ini + i * 2 * canais)
 		var a := absi(v)
 		if a > pico:
 			pico = a
@@ -246,11 +260,10 @@ func _medidas(w: AudioStreamWAV) -> Dictionary:
 		k += 1
 		i += 8
 	var rms := sqrt(soma / float(maxi(k, 1)))
-	# a razão do estalo: o salto entre o fim e o começo / a diferença típica entre amostras vizinhas
-	var salto := absf(float(d.decode_s16(0)) - float(d.decode_s16((n - 1) * 2 * canais)))
+	var salto := absf(float(b.decode_s16(ini)) - float(b.decode_s16(ini + (n - 1) * 2 * canais)))
 	var tip := 0.0
 	var m := mini(n - 1, 40000)
 	for j in m:
-		tip += absf(float(d.decode_s16((j + 1) * 2 * canais)) - float(d.decode_s16(j * 2 * canais)))
+		tip += absf(float(b.decode_s16(ini + (j + 1) * 2 * canais)) - float(b.decode_s16(ini + j * 2 * canais)))
 	tip /= float(maxi(m, 1))
 	return {"pico": 20.0 * log(maxf(float(pico), 1.0) / 32768.0) / log(10.0), "rms": 20.0 * log(maxf(rms, 1.0) / 32768.0) / log(10.0), "razao": salto / maxf(tip, 1.0)}

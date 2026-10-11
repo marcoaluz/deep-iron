@@ -1,0 +1,28 @@
+{
+	"arquivos": {
+		"musica/abertura": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -0.6,
+			"hash": "34e1e19540"
+		},
+		"musica/intro": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -1.4,
+			"hash": "c828d2482e"
+		},
+		"musica/jogo": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -4.7,
+			"hash": "6ecd187038"
+		},
+		"musica/perigo": {
+			"aprovado": false,
+			"candidata": 0,
+			"ganho_db": -7.3,
+			"hash": "19203a4f3c"
+		}
+	}
+}
