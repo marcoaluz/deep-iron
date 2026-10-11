@@ -139,7 +139,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 
 **`scripts/creatures`**
 
-- `creature.gd`: invasores criados pela Defesa (lumívoro, ferrugento, magmante, gosma, chefes).
+- `creature.gd`: invasores criados pela Defesa (lumívoro, ferrugento, magmante, gosma, chefes). Bloco 124: o RATO-DE-CINZA (ratada pequena em noite sem invasão, só com comida pra roubar: rouba comida crua do armazém/cozinha com teto por noite e foge; `defense.start_ratada`, `rato_*`), o MORCEGO DE BRASA (morador do S3, voa, apaga luzes de decoração; a escuridão sobe o acidente do S3 pelo grupo "modificadores" do `defense.mult`) e a SOMBRA SOLAR (só em onda solar com intensidade >= 3 e vila no estágio 4+, persegue quem está fora de abrigo, a luz a queima, lança de prata x1,5 e arma comum x0,5); cada uma tem arte do PixelLab (`criaturas/novas124.py`), cena, entrada no catálogo e página no diário.
 - `animal.gd`: bichos da floresta caçados pelo caçador.
 
 ## Regras fixas
@@ -147,7 +147,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b123**; o próximo é o **b124**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b124**; o próximo é o **b125**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:

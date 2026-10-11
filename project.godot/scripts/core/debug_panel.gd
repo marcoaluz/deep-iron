@@ -184,6 +184,7 @@ func _todas_criaturas() -> void:
 		d._spawn(k)
 	if not d.boss_alive():
 		d._spawn_boss()
+	d.spawn_todas_novas()  # Bloco 124: rato-de-cinza (x2), sombra solar e o morcego de brasa do S3
 
 
 ## Bloco 123: abre um cartão de evento (o próximo que faz sentido; senão qualquer um, forçado) e abre um pedido da vila.

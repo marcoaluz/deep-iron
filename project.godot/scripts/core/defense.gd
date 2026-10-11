@@ -53,7 +53,10 @@ const FERRUGENTO := preload("res://scenes/creatures/ferrugento.tscn")
 ## Bloco 70: as criaturas do fundo (saem do poço como o Ferrugento).
 const GOSMA := preload("res://scenes/creatures/gosma.tscn")
 const MAGMANTE := preload("res://scenes/creatures/magmante.tscn")
-const CENA := {"lumivoro": LUMIVORO, "ferrugento": FERRUGENTO, "gosma": GOSMA, "magmante": MAGMANTE}
+const RATO := preload("res://scenes/creatures/rato.tscn")  # Bloco 124
+const MORCEGO := preload("res://scenes/creatures/morcego.tscn")
+const SOMBRA := preload("res://scenes/creatures/sombra.tscn")
+const CENA := {"lumivoro": LUMIVORO, "ferrugento": FERRUGENTO, "gosma": GOSMA, "magmante": MAGMANTE, "rato": RATO, "morcego": MORCEGO, "sombra": SOMBRA}
 const CAMPO_SCENE := preload("res://scenes/props/campo_treino.tscn")
 const CAMPO_TEXTURE := preload("res://assets/game/campo_treino.png")
 const Canteiro := preload("res://scripts/props/canteiro.gd")
@@ -152,6 +155,39 @@ const WEAPON_DESCRIPTIONS := {
 @export var strong_hp_mult: float = 1.6
 @export var strong_damage_mult: float = 1.3
 
+@export_group("Rato-de-cinza (Bloco 124)")
+## A "ratada": uma invasão pequena em noite SEM invasão grande; só vem se há comida pra roubar.
+@export var rato_ligado: bool = true
+@export var rato_primeiro_dia: int = 5
+## Dias entre uma ratada e a outra (sorteado entre os dois).
+@export var rato_cada_min: int = 3
+@export var rato_cada_max: int = 5
+## Quantos ratos: base + por ratada já vinda (até o máximo).
+@export var rato_base: int = 3
+@export var rato_por_ratada: int = 1
+@export var rato_max: int = 6
+## A hora do relógio em que eles entram (antes da hora da invasão).
+@export_range(0.0, 24.0, 0.25) var rato_hora: float = 20.0
+## Só vem se a vila tem ao menos tantas porções de comida por morador (a telemetria mostra 3 a 7).
+@export var rato_porcoes_min: float = 3.0
+## Teto do roubo por noite: esta fração da comida crua de quando a ratada começou, e nunca deixa a comida crua abaixo deste piso.
+@export_range(0.0, 1.0) var rato_roubo_fracao: float = 0.2
+@export var rato_roubo_piso: float = 20.0
+## O guarda de vigia caça rato a até esta distância (px).
+@export var rato_caca_raio: float = 420.0
+
+@export_group("Morcego de brasa e Sombra solar (Bloco 124)")
+## A escuridão do S3: cada luz que o morcego apagou sobe o risco de acidente do S3 nesta fração, até o teto.
+@export var escuro_acidente_por_luz: float = 0.15
+@export var escuro_acidente_teto: float = 1.6
+## Sombra solar: só em onda solar com esta intensidade (dia ~26 em diante) ou mais, com a vila neste estágio ou mais.
+@export var sombra_ligada: bool = true
+@export var sombra_intensidade_min: float = 3.0
+@export var sombra_estagio_min: int = 4
+## Quantas sombras: 1 + uma a cada tanto de intensidade acima do mínimo (até o máximo).
+@export var sombra_a_cada_intensidade: float = 2.0
+@export var sombra_max: int = 4
+
 @export_group("Moradores do fundo (Bloco 103)")
 ## Quantos moradores nascem por dia (no amanhecer) num andar abaixo do número dele (nivel_mina.moradores).
 @export var moradores_por_dia: int = 1
@@ -195,6 +231,12 @@ var broken: Dictionary = {}
 ## a que o engenheiro está fazendo.
 var queue: Array = []
 var wave: int = 0
+## Bloco 124: a ratada (o próximo dia, quantas já vieram, o que já roubaram esta noite e a comida crua de quando ela começou).
+var rato_proximo_dia: int = -1
+var ratadas: int = 0
+var rato_roubado_noite: float = 0.0
+var _rato_base_comida: float = 0.0
+var _rato_dia := -1
 ## Dia em que a defesa começou nesta partida (-1 = ainda não sabe).
 var start_day: int = -1
 var invasion_active: bool = false
@@ -226,6 +268,7 @@ var _moradores_dia := -1
 
 func _ready() -> void:
 	add_to_group("defense")
+	add_to_group("modificadores")  # Bloco 124: a escuridão do S3 (mult)
 	_connect_cycle.call_deferred()
 
 
@@ -233,6 +276,10 @@ func _connect_cycle() -> void:
 	var dn := get_tree().get_first_node_in_group("day_night")
 	if dn:
 		dn.phase_changed.connect(_on_phase_changed)
+	var sol := get_tree().get_first_node_in_group("sun")  # Bloco 124: a sombra solar vem e vai com a onda forte
+	if sol:
+		sol.wave_started.connect(_onda_solar_comecou)
+		sol.wave_ended.connect(_onda_solar_acabou)
 
 
 # ------------------------------------------------------------ consultas
@@ -868,6 +915,7 @@ func _process(delta: float) -> void:
 				_spawn(k)
 		_boss_tick(delta)
 	_moradores_tick(delta)  # Bloco 103
+	_ratos_tick(dn)  # Bloco 124
 
 
 ## Bloco 109: o aviso da invasão desta noite já tocou (quem não é guarda já recolhe, antes do ataque)?
@@ -902,6 +950,9 @@ func tempo_invasao() -> float:
 func _on_phase_changed(night: bool) -> void:
 	if not night and invasion_active:
 		end_invasion()
+	if not night:
+		for c in ratos():  # Bloco 124: amanheceu: o resto da ratada foge
+			c.leave_at_dawn()
 
 
 # ------------------------------------------------------------ tiers e chefe (Bloco 62)
@@ -1034,6 +1085,21 @@ func _spawn(kind: String) -> Node2D:
 	var c: Node2D = (CENA.get(kind, FERRUGENTO) as PackedScene).instantiate()
 	var pos: Vector2
 	var g: Node2D
+	if kind == "rato" or kind == "sombra":  # Bloco 124: nem a vida cresce com a onda nem vem como "forte": os tetos são deles
+		var hub := get_tree().get_first_node_in_group("village_hub") as Node2D
+		var a := randf() * TAU
+		var dist: float = randf_range(260.0, 340.0) if kind == "rato" else randf_range(380.0, 460.0)
+		pos = hub.global_position + Vector2(cos(a), sin(a) * 0.6) * dist
+		if env:
+			pos = NavigationServer2D.map_get_closest_point(world.get_world_2d().navigation_map, pos)
+		c.position = pos
+		world.add_child(c)
+		c.setup(null, 1.0 if kind == "rato" else 1.0 + 0.1 * maxf((sun_intensidade() - sombra_intensidade_min), 0.0))
+		c.died.connect(func(killed: bool):
+			if killed:
+				killed_tonight += 1)
+		return c
+
 	if kind == "lumivoro":
 		var r: Rect2 = env.clearing_rect.grow(-60.0) if env else Rect2(-200, -850, 400, 300)
 		pos = Vector2(randf_range(r.position.x, r.end.x), randf_range(r.position.y, r.end.y - 60.0))
@@ -1191,6 +1257,171 @@ func ponto_patrulha(andar: String) -> Vector2:
 	return Vector2(float(p[0]), float(p[1])) if p.size() >= 2 else Vector2.ZERO
 
 
+# ------------------------------------------------------------ Bloco 124: rato-de-cinza, morcego de brasa e sombra solar
+## Comida da vila que o rato pode levar: a comida crua dos armazéns (e a cozinha, que ele rói por último).
+func comida_crua() -> float:
+	var t := 0.0
+	for a in get_tree().get_nodes_in_group("armazens"):
+		t += float(a.raw_stored)
+	return t
+
+
+func _porcoes_por_morador() -> float:
+	var mor := get_tree().get_first_node_in_group("morale")
+	var gente := maxi(get_tree().get_nodes_in_group("ipezinhos").size(), 1)
+	var comida: float = comida_crua() + (mor.total_food() if mor else 0.0)
+	return comida / float(gente)
+
+
+## A ratada pode vir hoje? ("" = pode; senão por que não: pros testes e pra janela.)
+func rato_motivo(dia: int) -> String:
+	if not rato_ligado or sem_invasao():
+		return "desligada"
+	if dia < rato_primeiro_dia:
+		return "cedo"
+	if is_invasion_night(dia) or invasion_active:
+		return "é noite de invasão"
+	if rato_proximo_dia > dia:
+		return "ainda não é a vez"
+	if _porcoes_por_morador() < rato_porcoes_min:
+		return "pouca comida: não há o que roubar"
+	if comida_crua() < rato_roubo_piso:
+		return "pouca comida crua"
+	return ""
+
+
+func _ratos_tick(dn: Node) -> void:
+	var t_rato: float = hora_para_tempo(dn, rato_hora)
+	var antes := _t_rato_antes
+	_t_rato_antes = dn.time
+	if antes == INF or not (antes < t_rato and dn.time >= t_rato and dn.time - antes < dn.cycle_length() * 0.5):
+		return
+	if _rato_dia == dn.day:
+		return
+	if rato_proximo_dia < 0:
+		rato_proximo_dia = maxi(rato_primeiro_dia, dn.day)
+	if rato_motivo(dn.day) == "":
+		start_ratada()
+
+
+var _t_rato_antes := INF
+
+
+## O tempo do relógio (segundos desde o amanhecer) de uma hora.
+func hora_para_tempo(dn: Node, hora: float) -> float:
+	return dn.tempo_da_hora(hora) if dn.has_method("tempo_da_hora") else hora * dn.segundos_por_hora()
+
+
+## Começa uma ratada: `n` ratos entram pela borda da vila (já dentro da paliçada), com um aviso curto.
+func start_ratada(n: int = -1) -> Array:
+	var dn := _dn()
+	_rato_dia = dn.day if dn else 1
+	if n < 0:
+		n = mini(rato_base + rato_por_ratada * ratadas, rato_max)
+	ratadas += 1
+	rato_roubado_noite = 0.0
+	_rato_base_comida = comida_crua()
+	rato_proximo_dia = _rato_dia + randi_range(rato_cada_min, maxi(rato_cada_min, rato_cada_max))
+	var out: Array = []
+	for i in n:
+		var c := _spawn("rato")
+		if c:
+			out.append(c)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Ratos no armazém! %d ratos-de-cinza atrás da comida. Os guardas de vigia caçam; a vigilância reforçada rouba menos." % out.size(), Color(1.0, 0.75, 0.4))
+	return out
+
+
+## Quanto do que o rato quer ele pode levar (o teto da noite e o piso): o resto ele não consegue.
+func rato_permite(quer: float) -> float:
+	var teto := maxf(_rato_base_comida * rato_roubo_fracao - rato_roubado_noite, 0.0)
+	var sobra := maxf(comida_crua() - rato_roubo_piso, 0.0)
+	return clampf(minf(quer, minf(teto, sobra)), 0.0, quer)
+
+
+func rato_roubou(q: float) -> void:
+	rato_roubado_noite += q
+
+
+func ratos() -> Array:
+	return get_tree().get_nodes_in_group("criaturas").filter(func(c): return c.is_alive() and str(c.get("kind")) == "rato")
+
+
+## O rato vivo mais perto de um ponto (pro guarda de vigia), dentro de `rato_caca_raio`.
+func rato_perto(pos: Vector2) -> Node:
+	var melhor: Node = null
+	var bd := rato_caca_raio
+	for c in ratos():
+		var d := pos.distance_to(c.global_position)
+		if d < bd:
+			bd = d
+			melhor = c
+	return melhor
+
+
+## A sombra solar vem nesta onda? (intensidade, estágio e escudo ainda não pronto.)
+func sombra_pode(intensidade: float) -> bool:
+	var sol := get_tree().get_first_node_in_group("sun")
+	var hub := get_tree().get_first_node_in_group("village_hub")
+	return sombra_ligada and intensidade >= sombra_intensidade_min and hub != null and int(hub.level) >= sombra_estagio_min \
+		and not (sol != null and bool(sol.get("won"))) and not sem_invasao()
+
+
+func sombra_quantas(intensidade: float) -> int:
+	return clampi(1 + int((intensidade - sombra_intensidade_min) / maxf(sombra_a_cada_intensidade, 0.1)), 1, sombra_max)
+
+
+func sombras() -> Array:
+	return get_tree().get_nodes_in_group("criaturas").filter(func(c): return c.is_alive() and str(c.get("kind")) == "sombra")
+
+
+func _onda_solar_comecou(intensidade: float) -> void:
+	if not sombra_pode(intensidade):
+		return
+	for i in sombra_quantas(intensidade):
+		_spawn("sombra")
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_toast("Sombras no calor! A onda forte trouxe sombras solares: fiquem nos abrigos; luz e lança de prata as afastam.", Color(1.0, 0.85, 0.5))
+
+
+func _onda_solar_acabou() -> void:
+	for c in sombras():
+		c.leave_at_dawn()
+
+
+func sun_intensidade() -> float:
+	var sol := get_tree().get_first_node_in_group("sun")
+	return float(sol.wave_intensity) if sol else 1.0
+
+
+## O grupo "modificadores": a escuridão do S3 (luzes apagadas pelo morcego) sobe o acidente de quem trabalha lá.
+func mult(chave: String, quem: Node = null) -> float:
+	if chave != "acidente":
+		return 1.0
+	var apagadas := 0
+	var env := get_tree().get_first_node_in_group("environment")
+	for d in get_tree().get_nodes_in_group("decor_luzes"):
+		if bool(d.get("apagada")) and env != null and env.has_method("level_at") and env.level_at(d.global_position) == 3:
+			apagadas += 1
+	if apagadas == 0:
+		return 1.0
+	if quem != null and env != null and env.has_method("level_at") and env.level_at(quem.global_position) != 3:
+		return 1.0
+	return minf(1.0 + escuro_acidente_por_luz * float(apagadas), escuro_acidente_teto)
+
+
+## F3: uma de cada (e as três novas).
+func spawn_todas_novas() -> void:
+	_spawn("rato")
+	_spawn("rato")
+	_spawn("sombra")
+	var nv = preload("res://scripts/core/niveis.gd").por_id("S3")
+	if nv != null and not moradores("S3").any(func(c): return c.kind == "morcego"):
+		spawn_morador(nv, "morcego")
+
+
 func end_invasion() -> void:
 	invasion_active = false
 	_spawn_queue = []
@@ -1226,6 +1457,7 @@ func get_save_data() -> Dictionary:
 		"bosses": bosses.duplicate(),  # Bloco 62
 		"last_result": last_result.duplicate(),
 		"patrulhas": patrulhas.duplicate(),  # Bloco 103
+		"ratada": {"proximo_dia": rato_proximo_dia, "ratadas": ratadas},  # Bloco 124
 	}
 	# Bloco 47: listas (antes: "campo" e "arsenal" com um só)
 	d["campos"] = campos().map(func(c): return SaveUtil.vec2_to_array(c.global_position))
@@ -1234,6 +1466,9 @@ func get_save_data() -> Dictionary:
 
 
 func load_save_data(d: Dictionary) -> void:
+	var rt := SaveUtil.dict(d, "ratada")  # Bloco 124 (save antigo: a primeira ratada ainda não veio)
+	rato_proximo_dia = SaveUtil.integer(rt, "proximo_dia", -1)
+	ratadas = SaveUtil.integer(rt, "ratadas", 0)
 	patrulhas = {}  # Bloco 103 (save antigo: nenhuma)
 	var pt := SaveUtil.dict(d, "patrulhas")
 	for k in pt:

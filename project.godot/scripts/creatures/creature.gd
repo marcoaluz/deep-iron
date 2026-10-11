@@ -20,6 +20,10 @@ extends Node2D
 ## (defense.gd: raid — uma parte do minério e dos créditos, uma vez por invasão). Bloco 80: o único
 ## portão é o da floresta ("tunel"); quem sai do poço não tem portão (gate_id "") e não abre brecha.
 ## Ao amanhecer: o Lumívoro foge da luz e o Ferrugento desliga.
+## Bloco 124: três criaturas novas. RATO-DE-CINZA: pequeno, rápido, ignora gente: vai no armazém (comida crua) ou na cozinha, rouba até `carga_max` e
+##   foge; abatido, devolve o que levava. MORCEGO DE BRASA: MORA no S3, voa reto (ignora a malha), apaga as luzes (lampiões e tochas) do andar e
+##   importuna quem trabalha lá. SOMBRA SOLAR: só nas ondas solares fortes do fim do jogo; flutua atrás de quem está FORA de abrigo; a LUZ a queima
+##   (lampião/tocha acesos a até `luz_raio` a machucam e a afastam), arma comum faz pouco dano nela e a lança de prata o dobro.
 ## Bloco 80: VISUAL CONFIGURÁVEL (grupo "Visual (folha de quadros)"): com `visual_textura`, a criatura
 ## se desenha por uma folha — uma linha por animação (`visual_anims`), `visual_quadros` quadros em cada,
 ## quadros de `visual_quadro` px, virada pra direita. Trocar os sprites (PixelLab) = trocar esses campos
@@ -34,7 +38,7 @@ const Ores := preload("res://scripts/core/ores.gd")
 const Modificadores := preload("res://scripts/core/modificadores.gd")  # Bloco 108: a vigilância reforçada
 signal died(killed: bool)
 
-@export_enum("lumivoro", "ferrugento", "gosma", "magmante") var kind: String = "lumivoro"
+@export_enum("lumivoro", "ferrugento", "gosma", "magmante", "rato", "morcego", "sombra") var kind: String = "lumivoro"
 @export var max_hp: float = 18.0
 @export var speed: float = 68.0
 @export var damage: float = 4.0
@@ -62,6 +66,18 @@ signal died(killed: bool)
 ## Bloco 103: morador do fundo: raio (px) e intervalo (s) do passeio em volta de casa quando não tem ninguém por perto.
 @export var passeio_raio: float = 90.0
 @export var passeio_intervalo: float = 6.0
+
+@export_group("Rato, morcego e sombra (Bloco 124)")
+## Rato: quanta comida ele leva de uma vez (depois foge).
+@export var carga_max: float = 6.0
+## Morcego e sombra: voam/flutuam em linha reta (ignoram a malha de navegação).
+@export var voa: bool = false
+## Sombra: até que distância (px) uma luz acesa a queima e a afasta, e quanto de vida a luz tira por segundo.
+@export var luz_raio: float = 140.0
+@export var luz_dano: float = 4.0
+## Sombra: fração do dano que a arma comum faz nela, e o multiplicador da lança de prata.
+@export var arma_comum_mult: float = 0.5
+@export var prata_mult: float = 1.5
 
 @export_group("Luz (Bloco 90)")
 ## Lumívoro: o quanto uma tocha/lampião aceso da decoração atrai mais que um prédio aceso (a distância conta
@@ -101,6 +117,7 @@ var _gate: Node2D = null
 var _target: Node2D = null
 var _aggressor: Node2D = null
 var _attack_cd := 0.0
+var _foge := false
 var _retarget := 0.0
 var _anim := 0.0
 var _dying := false
@@ -127,6 +144,10 @@ var morador := ""
 var casa := Vector2.ZERO
 var _passeio := Vector2.INF
 var _passeio_t := 0.0
+## Bloco 124: o rato leva comida (carga) e foge pro ponto de onde veio (_saida); o morcego esvoaça (_voo_t).
+var carga := 0.0
+var _saida := Vector2.ZERO
+var _voo_t := 0.0
 
 @onready var _visual: Sprite2D = $Visual
 @onready var _agent: NavigationAgent2D = $Agent
@@ -204,6 +225,11 @@ func setup(gate: Node2D, hp_mult: float) -> void:
 	max_hp *= hp_mult
 	hp = max_hp
 	inside = gate == null or not gate.is_standing()
+	_saida = global_position  # Bloco 124: o rato foge pra onde nasceu
+	if kind == "sombra":
+		var res := get_tree().get_first_node_in_group("research") if is_inside_tree() else null
+		if res and res.has_method("lumivoro_speed_mult"):
+			speed *= res.lumivoro_speed_mult()  # os holofotes também a seguram
 
 
 ## Prompt 17: a variante forte (mais vida e dano, um pouco mais lenta).
@@ -263,6 +289,16 @@ func _process(delta: float) -> void:
 		return
 	_attack_cd -= delta
 	_retarget -= delta
+	if kind == "sombra":
+		_queima_com_luz(delta)
+		if _dying:
+			return
+	if kind == "rato" and carga > 0.0 and _foge:
+		_foge_rato(delta)  # Bloco 124: roubou: corre pra saída
+		return
+	if kind == "morcego":
+		_voo_t += delta
+		_visual.position.y = -6.0 + sin(_voo_t * 7.0) * 2.0  # (o desenho da vista antiga balança)
 	if _gate != null and (not is_instance_valid(_gate) or not _gate.is_standing()):
 		_gate = null
 		inside = true
@@ -284,9 +320,11 @@ func _process(delta: float) -> void:
 		d = global_position.distance_to(global_position.clamp(wall.position, wall.end))
 		reach = attack_range + 10.0
 	if d > reach:
-		if _agent.target_position.distance_to(tpos) > 8.0:
-			_agent.target_position = tpos
-		var next := _agent.get_next_path_position()
+		var next := tpos  # Bloco 124: quem voa vai em linha reta
+		if not voa:
+			if _agent.target_position.distance_to(tpos) > 8.0:
+				_agent.target_position = tpos
+			next = _agent.get_next_path_position()
 		var step := (next - global_position).limit_length(speed * delta)
 		global_position += step
 		_andando = step.length() > 0.05
@@ -323,6 +361,17 @@ func _is_building(n: Node) -> bool:
 
 
 func _target_ok(t: Node2D) -> bool:
+	match kind:  # Bloco 124
+		"rato":
+			return (t.is_in_group("armazens") and float(t.get("raw_stored")) >= 0.5) or (t.is_in_group("comedouros") and float(t.get("food_stock")) >= 0.5)
+		"morcego":
+			if t.is_in_group("decor_luzes"):
+				return t.acesa() and _mesmo_andar(t)
+			return t.is_in_group("ipezinhos") and not t.get("injured") and not t.get("_inside") and _mesmo_andar(t) \
+				and not (t.has_method("e_crianca") and t.e_crianca())
+		"sombra":
+			return t.is_in_group("ipezinhos") and not t.get("injured") and not t.get("_inside") and _on_surface(t) \
+				and not (t.has_method("e_crianca") and t.e_crianca())
 	if morador != "":  # Bloco 103: o morador só mira quem está no mesmo andar e perto de casa
 		if not t.is_in_group("ipezinhos") or t.get("injured") or t.get("_inside") or not _mesmo_andar(t) \
 				or (t.has_method("e_crianca") and t.e_crianca()):  # Bloco 111: criança nunca é alvo
@@ -359,6 +408,13 @@ func _nearest(candidates: Array, max_d: float = INF) -> Node2D:
 
 
 func _pick_target() -> Node2D:
+	match kind:  # Bloco 124
+		"rato":
+			return _alvo_rato()
+		"morcego":
+			return _alvo_morcego()
+		"sombra":
+			return _alvo_sombra()
 	# Bloco 36: guarda do meu portão caído = brecha: direto pro armazém
 	var def := get_tree().get_first_node_in_group("defense")
 	if def and def.breached(gate_id):
@@ -409,6 +465,67 @@ func _pick_target() -> Node2D:
 	return _nearest(awake)
 
 
+## Bloco 124: o rato vai pro armazém (comida crua) ou pra cozinha, o que tiver mais perto.
+func _alvo_rato() -> Node2D:
+	var cand: Array = []
+	for a in get_tree().get_nodes_in_group("armazens"):
+		if _target_ok(a):
+			cand.append(a)
+	for c in get_tree().get_nodes_in_group("comedouros"):
+		if _target_ok(c):
+			cand.append(c)
+	return _nearest(cand)
+
+
+## Bloco 124: o morcego vai nas luzes acesas do andar dele; sem luz, em quem trabalha lá (perto).
+func _alvo_morcego() -> Node2D:
+	var luzes: Array = get_tree().get_nodes_in_group("decor_luzes").filter(func(d): return _target_ok(d))
+	var luz := _nearest(luzes, maxf(alcance_casa, 1.0) * 1.6)
+	if luz:
+		return luz
+	var gente: Array = get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return _target_ok(w))
+	return _nearest(gente, notice_range)
+
+
+## Bloco 124: a sombra segue quem está fora de abrigo (a mais perto, de qualquer distância na superfície).
+func _alvo_sombra() -> Node2D:
+	if _aggressor != null and is_instance_valid(_aggressor) and _target_ok(_aggressor):
+		return _aggressor
+	var gente: Array = get_tree().get_nodes_in_group("ipezinhos").filter(func(w): return _target_ok(w))
+	return _nearest(gente)
+
+
+## Bloco 124: o rato foge com a comida pro ponto de onde veio e some (escapou).
+func _foge_rato(delta: float) -> void:
+	var step := (_saida - global_position).limit_length(speed * 1.15 * delta)
+	global_position += step
+	_andando = step.length() > 0.05
+	_andado = fmod(_andado + step.length(), 100000.0)
+	if absf(step.x) > 0.01:
+		_visual.flip_h = step.x < 0.0
+	if global_position.distance_to(_saida) < 6.0:
+		_dying = true
+		died.emit(false)  # escapou com a comida
+		queue_free()
+
+
+## Bloco 124: a luz queima a sombra e a empurra pra longe da luz.
+func _queima_com_luz(delta: float) -> void:
+	for d in get_tree().get_nodes_in_group("decor_luzes"):
+		if not d.acesa():
+			continue
+		var dist := global_position.distance_to(d.global_position)
+		if dist > luz_raio:
+			continue
+		global_position += (global_position - d.global_position).normalized() * speed * 1.3 * delta
+		hp -= luz_dano * delta
+		_hit_at = _anim if int(_anim * 4.0) != int((_anim - delta) * 4.0) else _hit_at
+		if hp <= 0.0:
+			die(true)
+			return
+		queue_redraw()
+
+
 func _attack(t: Node2D) -> void:
 	_attack_at = _anim
 	_visual.position.y = -3.0
@@ -416,6 +533,34 @@ func _attack(t: Node2D) -> void:
 	if t.is_in_group("barricadas"):
 		t.damage(damage * barricade_mult)
 		Audio.criatura_golpe(kind, variant, global_position)  # Bloco 115: cada criatura bate no seu jeito
+		return
+	if kind == "rato":  # Bloco 124: a mordida é no estoque de comida (não em gente)
+		var def_r := get_tree().get_first_node_in_group("defense")
+		var quer := minf(steal_amount * Modificadores.mult(get_tree(), "roubo"), carga_max - carga)  # a vigilância reforçada rouba menos
+		if def_r and def_r.has_method("rato_permite"):
+			quer = def_r.rato_permite(quer)
+		var tirou := 0.0
+		if quer > 0.0:
+			if t.is_in_group("armazens"):
+				tirou = minf(quer, float(t.raw_stored))
+				t.raw_stored -= tirou
+				if t.has_method("_update_label"):
+					t._update_label()
+			else:
+				tirou = minf(quer, float(t.food_stock))
+				t.food_stock -= tirou
+				if t.has_method("_update_visual"):
+					t._update_visual()
+		carga += tirou
+		if tirou > 0.0:
+			looted = true
+			if def_r and def_r.has_method("rato_roubou"):
+				def_r.rato_roubou(tirou)
+			if t.has_method("show_popup"):
+				t.show_popup("-%d comida (Rato)" % maxi(roundi(tirou), 1), Color(1.0, 0.7, 0.4))
+		if carga >= carga_max - 0.01 or tirou <= 0.0:
+			_foge = true
+		Audio.criatura_golpe(kind, variant, global_position)
 		return
 	if t.is_in_group("armazens"):
 		var def := get_tree().get_first_node_in_group("defense")
@@ -453,7 +598,7 @@ func _attack(t: Node2D) -> void:
 			t.show_popup("-%d (Ferrugento)" % roundi(golpe - left), Color(1.0, 0.45, 0.35))
 		Audio.clank(global_position)
 		return
-	if kind == "lumivoro":
+	if kind == "lumivoro" or kind == "sombra":
 		# prédio aceso: quem está lá dentro morre de medo
 		for w in get_tree().get_nodes_in_group("ipezinhos"):
 			if w.get("_inside") and w.global_position.distance_to(t.global_position) < 90.0:
@@ -464,6 +609,9 @@ func _attack(t: Node2D) -> void:
 func take_hit(amount: float, attacker: Node2D) -> void:
 	if not is_alive():
 		return
+	if kind == "sombra":  # Bloco 124: arma comum faz pouco; a lança de prata, o dobro (relativo)
+		var prata: bool = attacker != null and attacker.get("weapon") != null and String(attacker.weapon) == "lanca_prata"
+		amount *= prata_mult if prata else arma_comum_mult
 	hp -= amount
 	_hit_at = _anim
 	_aggressor = attacker
@@ -480,6 +628,16 @@ func die(killed: bool) -> void:
 	_dying = true
 	_died_at = _anim
 	_light.enabled = false
+	if killed and kind == "rato" and carga > 0.0:  # Bloco 124: o rato abatido solta o que levava
+		var arms := get_tree().get_nodes_in_group("armazens")
+		var arm: Node2D = _nearest(arms)
+		if arm:
+			arm.raw_stored = float(arm.raw_stored) + carga
+			if arm.has_method("show_popup"):
+				arm.show_popup("+%d comida (recuperada)" % maxi(roundi(carga), 1), Color(0.6, 1.0, 0.5))
+			if arm.has_method("_update_label"):
+				arm._update_label()
+		carga = 0.0
 	if killed:
 		Audio.creature_down(global_position)  # Bloco 55
 	died.emit(killed)
@@ -546,7 +704,11 @@ func leave_at_dawn() -> void:
 	_leaving = true
 	_left_at = _anim
 	var t := create_tween()
-	if kind == "lumivoro":
+	if kind == "rato":  # Bloco 124: o rato sai correndo antes do dia clarear
+		t.set_parallel(true)
+		t.tween_property(self, "global_position", _saida, 1.2)
+		t.tween_property(self, "modulate:a", 0.0, 1.2)
+	elif kind == "lumivoro":
 		t.set_parallel(true)
 		t.tween_property(self, "global_position", global_position + Vector2(randf_range(-60, 60), -160), 1.6)
 		t.tween_property(self, "modulate:a", 0.0, 1.6)

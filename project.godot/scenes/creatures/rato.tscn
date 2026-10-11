@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/creatures/creature.gd" id="1_cr"]
+[ext_resource type="Texture2D" path="res://assets/game/iso/bonecos/criatura_rato/parado_SE.png" id="2_sprite"]
+[ext_resource type="Texture2D" path="res://assets/game/light_radial.tres" id="3_light"]
+[ext_resource type="Texture2D" path="res://assets/game/shadow_blob.png" id="4_shadow"]
+
+[node name="Rato" type="Node2D"]
+script = ExtResource("1_cr")
+kind = "rato"
+max_hp = 6.0
+speed = 82.0
+damage = 1.0
+attack_interval = 1.2
+attack_range = 14.0
+grave_chance = 0.0
+steal_amount = 2.0
+carga_max = 6.0
+notice_range = 0.0
+
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -4
+scale = Vector2(0.5, 0.35)
+texture = ExtResource("4_shadow")
+
+[node name="Visual" type="Sprite2D" parent="."]
+texture = ExtResource("2_sprite")
+offset = Vector2(0, -14)
+
+[node name="Light" type="PointLight2D" parent="."]
+position = Vector2(0, -16)
+color = Color(0.9, 0.55, 0.3, 1)
+energy = 0.0
+texture = ExtResource("3_light")
+texture_scale = 0.3
+
+[node name="Agent" type="NavigationAgent2D" parent="."]
+path_desired_distance = 6.0
+target_desired_distance = 6.0

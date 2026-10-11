@@ -186,3 +186,36 @@ texto = Lá de cima, o sinal some quando ela vira pro céu e volta quando vira p
 [escuta_poco]
 nome = Escuta na boca do poço
 texto = Na boca do poço o chiado fica forte, e as linhas das três escutas se cruzam embaixo da mina.
+
+[rato]
+nome = Rato-de-cinza
+texto = Pequeno, rápido e esperto: o cheiro de comida estocada o trouxe até a vila. Tem cinza no focinho de tanto roer onde não devia.
+uso = Rouba a comida crua do armazém e a da cozinha em ratadas pequenas. Abatido, devolve o que levava.
+comportamento = Entra na vila numa noite sem invasão e vai direto no armazém (ou na cozinha), rouba até 6 de comida por vez e foge pro ponto de onde veio.
+  Ignora a gente; só a comida importa. Nunca leva mais que uma parte do estoque numa noite.
+fraqueza = Quase nada de vida: um golpe de guarda basta. Vigilância reforçada (Políticas) faz ele levar metade.
+porque = A comida estocada. Quanto mais comida a vila guarda, mais cedo as ratadas voltam; sem comida pra roubar, ele nem vem.
+dica = Guardas de vigia à noite caçam rato na vila. Não deixe a comida crua amontoada num armazém só e tenha a vigilância reforçada nas Políticas.
+historia = A pesquisadora segurou o corpo pelo rabo: ainda tinha farelo de pão nos dentes. Anotou: "muito esperto, muito pequeno, muito faminto".
+
+[morcego]
+nome = Morcego de brasa
+texto = As asas ainda brilham como carvão. Voa em círculos em volta da luz e, quando chega, a luz apaga.
+uso = Mora no S3 e apaga as luzes da mina: no escuro o trabalho é mais perigoso. Às vezes deixa cristal rubro.
+comportamento = MORA no S3 (nunca sai). Voa reto de lâmpada em lâmpada e apaga cada uma até o amanhecer; sem luz, importuna quem trabalha lá.
+  Cada luz apagada sobe o risco de acidente do andar.
+fraqueza = Pouca vida e muito rápido: guardas na patrulha do S3 derrubam. A luz volta no amanhecer.
+porque = O S3 É A CASA DELE. A brasa das paredes o esquenta e a luz das lâmpadas o atrai e o irrita.
+dica = Mande guardas caçar no S3 (Defesa, G: patrulha) antes de pôr lampiões lá, ou aceite acender de novo toda manhã.
+historia = A pesquisadora tentou prender um num frasco: queimou a luva. A brasa das asas dura mais de um dia depois que ele morre.
+
+[sombra]
+nome = Sombra solar
+texto = Não tem rosto, só dois pontos brancos. Onde a onda do sol bateu mais forte, o ar ficou com uma silhueta escura e quente.
+uso = Só nas ondas solares fortes do fim do jogo: persegue quem está fora de abrigo. Deixa solarita.
+comportamento = Aparece quando a onda solar é forte (vila grande, dias tarde). Flutua atrás de quem está fora de abrigo e assusta os prédios acesos.
+  A LUZ a queima: lampião ou tocha acesos a até 140 px a machucam e a afastam. Some quando a onda passa.
+fraqueza = Arma comum faz pouco dano; a lança de prata faz o dobro. Lampiões, holofotes e abrigo a vencem.
+porque = A onda forte: ela é o calor do sol com forma. Só quem estava fora de abrigo no momento errado a vê de perto.
+dica = Todo mundo no abrigo quando a onda for forte, lampiões acesos em volta da praça e do portão, lanças de prata nos guardas.
+historia = A pesquisadora não conseguiu estudar o corpo: virou cinza e faíscas antes de chegar ao laboratório. Só ficou um grão de solarita.

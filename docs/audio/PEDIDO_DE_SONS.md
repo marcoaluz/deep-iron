@@ -4,7 +4,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 O jogo roda **sem** os arquivos: o slot sem arquivo fica mudo (ou toca o som sintetizado de antes), sem erro. Arquivo novo é só pôr em `project.godot/assets/audio/<nome>.ogg|wav|mp3` com o nome exato e rodar `godot --headless --path project.godot --import`.
 
-**Resumo:** 131 slots, 198 arquivos esperados, **198 prontos, 0 faltam**.
+**Resumo:** 134 slots, 204 arquivos esperados, **204 prontos, 0 faltam**.
 
 ## O que falta
 
@@ -141,6 +141,9 @@ A **música** (abertura e introdução) não é gerada pela ferramenta de efeito
 | `criaturas/gosma_ataque_0`<br>`criaturas/gosma_ataque_1` | 0.8 s cada | não | SFX | -10.0 | A Gosma ataca. | An acidic slime creature attack: a wet splat with a sizzling hiss; monster creature | o som de antes | pronto |
 | `criaturas/magmante_ataque_0`<br>`criaturas/magmante_ataque_1` | 1 s cada | não | SFX | -10.0 | O Magmante ataca. | A molten magma creature strike: a heavy fiery thump with a lava hiss and a rock crack; monster creature | o som de antes | pronto |
 | `criaturas/matriarca_ataque_0`<br>`criaturas/matriarca_ataque_1` | 2 s cada | não | SFX | -6.0 | A Matriarca (a chefe) ataca. | A huge boss monster roar and heavy claw slam: a deep guttural roar with metallic resonance; monster creature | o som de antes | pronto |
+| `criaturas/rato_ataque_0`<br>`criaturas/rato_ataque_1` | 0.6 s cada | não | SFX | -10.0 | O rato-de-cinza morde o estoque de comida (um guincho curto e um roer rápido). | A small rat's sharp angry squeak followed by a quick chittering gnaw; monster creature | mudo | pronto |
+| `criaturas/morcego_ataque_0`<br>`criaturas/morcego_ataque_1` | 0.8 s cada | não | SFX | -10.0 | O morcego de brasa mergulha numa luz ou em alguém (um grito agudo e o bater de asas de couro). | A bat's high-pitched screech with a flutter of leathery wings and a faint crackle of ember; monster creature | mudo | pronto |
+| `criaturas/sombra_ataque_0`<br>`criaturas/sombra_ataque_1` | 1.2 s cada | não | SFX | -8.0 | A sombra solar ataca (um sussurro grave e um chiado de calor). | A low eerie whispering hiss with a faint crackle of heat, like a shadow burning in sunligh; monster creature | mudo | pronto |
 
 ## Máquinas
 

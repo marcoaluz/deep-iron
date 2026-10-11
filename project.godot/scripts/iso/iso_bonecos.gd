@@ -392,7 +392,8 @@ static func robo_pose(r: Node, iso_dir: int, clock: float, moving: bool, andado:
 ## (Bloco 80: o Ferrugento saiu daqui — virou robô e se desenha pela folha de quadros dele, creature.gd
 ## visual_textura; a arte antiga de máquina ficou só nos arquivos.)
 const CRIATURA_PASTA := {"lumivoro": ["criatura_lumivoro", "criatura_lumivoro_bruto"],
-	"gosma": ["criatura_gosma", "criatura_gosma"], "magmante": ["criatura_magmante", "criatura_magmante"]}  # Bloco 70
+	"gosma": ["criatura_gosma", "criatura_gosma"], "magmante": ["criatura_magmante", "criatura_magmante"],  # Bloco 70
+	"rato": ["criatura_rato", "criatura_rato"], "morcego": ["criatura_morcego", "criatura_morcego"], "sombra": ["criatura_sombra", "criatura_sombra"]}  # Bloco 124
 ## Bloco 62: a arte do chefe de cada tipo.
 const CRIATURA_CHEFE := {"lumivoro": "criatura_lumivoro_matriarca"}
 ## Quanto tempo (s) cada reação fica na tela.

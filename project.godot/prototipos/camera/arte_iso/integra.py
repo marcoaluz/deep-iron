@@ -516,7 +516,9 @@ CRIATURAS = {"lumivoro": {"SE": "east", "NE": "north-east"}, "lumivoro_bruto": {
              "ferrugento": {"SE": "east", "NE": "north-east"}, "ferrugento_carregador": {"SE": "south-east", "NE": "east"},
              "lumivoro_matriarca": {"SE": "south-east", "NE": "north-east"},  # Bloco 62: o chefe
              "gosma": {"SE": "south-east", "NE": "north-east"},  # Bloco 70: criaturas do fundo (criaturas/fundo.py)
-             "magmante": {"SE": "south-east", "NE": "north-east"}}
+             "magmante": {"SE": "south-east", "NE": "north-east"},
+             "rato": {"SE": "south-east", "NE": "north-east"},  # Bloco 124 (criaturas/novas124.py)
+             "morcego": {"SE": "south-east", "NE": "north-east"}, "sombra": {"SE": "south-east", "NE": "north-east"}}
 ANIMS_CRIATURA = ["caminhada", "atacar", "dano", "morrer"]
 
 

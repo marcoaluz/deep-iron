@@ -2,7 +2,7 @@
 
 Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/data/audio/slots.json` (campos `prompt` e `duracao`). **Não edite à mão: mude o prompt no `slots.json` e rode a ferramenta.**
 
-**127 sons (194 arquivos)**. A música da abertura e da introdução fica de fora (lista no fim).
+**130 sons (200 arquivos)**. A música da abertura e da introdução fica de fora (lista no fim).
 
 ## Como usar
 
@@ -740,10 +740,34 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A huge boss monster roar and heavy claw slam: a deep guttural roar with metallic resonance, 2 seconds.
 
+### 89. `criaturas/rato_ataque`
+
+- **Arquivo(s):** `criaturas/rato_ataque_0`, `criaturas/rato_ataque_1`
+- **Duração:** 0.6 s cada  •  **Tipo:** toca uma vez
+- **Onde toca:** O rato-de-cinza morde o estoque de comida (um guincho curto e um roer rápido).
+
+> A small rat's sharp angry squeak followed by a quick chittering gnaw, close microphone, dry, 0.6 seconds.
+
+### 90. `criaturas/morcego_ataque`
+
+- **Arquivo(s):** `criaturas/morcego_ataque_0`, `criaturas/morcego_ataque_1`
+- **Duração:** 0.8 s cada  •  **Tipo:** toca uma vez
+- **Onde toca:** O morcego de brasa mergulha numa luz ou em alguém (um grito agudo e o bater de asas de couro).
+
+> A bat's high-pitched screech with a flutter of leathery wings and a faint crackle of embers, close microphone, 0.8 seconds.
+
+### 91. `criaturas/sombra_ataque`
+
+- **Arquivo(s):** `criaturas/sombra_ataque_0`, `criaturas/sombra_ataque_1`
+- **Duração:** 1.2 s cada  •  **Tipo:** toca uma vez
+- **Onde toca:** A sombra solar ataca (um sussurro grave e um chiado de calor).
+
+> A low eerie whispering hiss with a faint crackle of heat, like a shadow burning in sunlight, ghostly, 1.2 seconds.
+
 
 ## Máquinas
 
-### 89. `maquinas/quebrou`
+### 92. `maquinas/quebrou`
 
 - **Arquivo(s):** `maquinas/quebrou`
 - **Duração:** 3 s  •  **Tipo:** toca uma vez
@@ -751,7 +775,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A heavy machine breaking down: a loud metallic snap, grinding gears seizing and a sad winding-down clunk with a steam hiss, 3 seconds.
 
-### 90. `maquinas/consertada`
+### 93. `maquinas/consertada`
 
 - **Arquivo(s):** `maquinas/consertada`
 - **Duração:** 3 s  •  **Tipo:** toca uma vez
@@ -762,7 +786,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 ## Vida na vila (nascimento, casamento, enterro)
 
-### 91. `vida/bebe_nasce`
+### 94. `vida/bebe_nasce`
 
 - **Arquivo(s):** `vida/bebe_nasce_0`, `vida/bebe_nasce_1`
 - **Duração:** 2 s cada  •  **Tipo:** toca uma vez
@@ -770,7 +794,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A newborn baby's first cry, small and fragile, 2 seconds.
 
-### 92. `vida/casamento`
+### 95. `vida/casamento`
 
 - **Arquivo(s):** `vida/casamento`
 - **Duração:** 4 s  •  **Tipo:** toca uma vez
@@ -778,7 +802,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A village wedding celebration: a short cheerful bell ring with the crowd cheering and clapping, 4 seconds.
 
-### 93. `vida/enterro`
+### 96. `vida/enterro`
 
 - **Arquivo(s):** `vida/enterro`
 - **Duração:** 3 s  •  **Tipo:** toca uma vez
@@ -789,7 +813,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 ## Passos por tipo de chão
 
-### 94. `passos/terra`
+### 97. `passos/terra`
 
 - **Arquivo(s):** `passos/terra_0`, `passos/terra_1`, `passos/terra_2`
 - **Duração:** 0.3 s cada  •  **Tipo:** toca uma vez
@@ -797,7 +821,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A single footstep of a heavy work boot on packed dirt, short soft thud with slight grit, close microphone, 0.3 seconds, no echo, no other sounds.
 
-### 95. `passos/cascalho`
+### 98. `passos/cascalho`
 
 - **Arquivo(s):** `passos/cascalho_0`, `passos/cascalho_1`, `passos/cascalho_2`
 - **Duração:** 0.3 s cada  •  **Tipo:** toca uma vez
@@ -805,7 +829,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A single footstep of a work boot on loose gravel, crunchy stones shifting, close microphone, 0.3 seconds, no other sounds.
 
-### 96. `passos/pedra`
+### 99. `passos/pedra`
 
 - **Arquivo(s):** `passos/pedra_0`, `passos/pedra_1`, `passos/pedra_2`
 - **Duração:** 0.5 s cada  •  **Tipo:** toca uma vez
@@ -813,7 +837,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > One footstep on a solid stone floor, hard shoe heel, loud crisp click, echoing in a cave, close microphone, 0.5 seconds.
 
-### 97. `passos/madeira`
+### 100. `passos/madeira`
 
 - **Arquivo(s):** `passos/madeira_0`, `passos/madeira_1`, `passos/madeira_2`
 - **Duração:** 0.35 s cada  •  **Tipo:** toca uma vez
@@ -821,7 +845,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A single footstep on an old wooden plank platform, hollow thud with a slight creak, 0.3 seconds, no other sounds.
 
-### 98. `passos/agua`
+### 101. `passos/agua`
 
 - **Arquivo(s):** `passos/agua_0`, `passos/agua_1`, `passos/agua_2`
 - **Duração:** 0.4 s cada  •  **Tipo:** toca uma vez
@@ -832,7 +856,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 ## Voz curta dos ipezinhos (desligável)
 
-### 99. `voz/homem_ordem`
+### 102. `voz/homem_ordem`
 
 - **Arquivo(s):** `voz/homem_ordem_0`, `voz/homem_ordem_1`
 - **Duração:** 0.7 s cada  •  **Tipo:** toca uma vez
@@ -840,7 +864,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A short gruff male worker voice acknowledging an order, an energetic 'yes, sir!' style exclamation, dry, 0.7 seconds. (Alternativa: Text to Speech em português: 'Sim, senhor!' / 'Pode deixar!')
 
-### 100. `voz/homem_dor`
+### 103. `voz/homem_dor`
 
 - **Arquivo(s):** `voz/homem_dor_0`, `voz/homem_dor_1`
 - **Duração:** 0.5 s cada  •  **Tipo:** toca uma vez
@@ -848,7 +872,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A short male grunt of pain, 'ugh!', sharp and quick, no words, dry, 0.5 seconds.
 
-### 101. `voz/homem_alegria`
+### 104. `voz/homem_alegria`
 
 - **Arquivo(s):** `voz/homem_alegria_0`, `voz/homem_alegria_1`
 - **Duração:** 0.8 s cada  •  **Tipo:** toca uma vez
@@ -856,7 +880,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A short happy male laugh followed by a cheerful 'hey!', dry, 0.8 seconds.
 
-### 102. `voz/homem_cansaco`
+### 105. `voz/homem_cansaco`
 
 - **Arquivo(s):** `voz/homem_cansaco_0`, `voz/homem_cansaco_1`
 - **Duração:** 1.3 s cada  •  **Tipo:** toca uma vez
@@ -864,7 +888,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A long tired male sigh followed by a small yawn, dry, 1.3 seconds.
 
-### 103. `voz/mulher_ordem`
+### 106. `voz/mulher_ordem`
 
 - **Arquivo(s):** `voz/mulher_ordem_0`, `voz/mulher_ordem_1`
 - **Duração:** 0.7 s cada  •  **Tipo:** toca uma vez
@@ -872,7 +896,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A short determined female worker voice acknowledging an order, an energetic 'yes!' style exclamation, dry, 0.7 seconds. (Alternativa: Text to Speech em português: 'Pode deixar!' / 'Sim!')
 
-### 104. `voz/mulher_dor`
+### 107. `voz/mulher_dor`
 
 - **Arquivo(s):** `voz/mulher_dor_0`, `voz/mulher_dor_1`
 - **Duração:** 0.5 s cada  •  **Tipo:** toca uma vez
@@ -880,7 +904,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A short female gasp of pain, 'ah!', sharp and quick, no words, dry, 0.5 seconds.
 
-### 105. `voz/mulher_alegria`
+### 108. `voz/mulher_alegria`
 
 - **Arquivo(s):** `voz/mulher_alegria_0`, `voz/mulher_alegria_1`
 - **Duração:** 0.8 s cada  •  **Tipo:** toca uma vez
@@ -888,7 +912,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A short happy female laugh followed by a cheerful 'oh!', dry, 0.8 seconds.
 
-### 106. `voz/mulher_cansaco`
+### 109. `voz/mulher_cansaco`
 
 - **Arquivo(s):** `voz/mulher_cansaco_0`, `voz/mulher_cansaco_1`
 - **Duração:** 1.3 s cada  •  **Tipo:** toca uma vez
@@ -896,7 +920,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A long tired female sigh followed by a small yawn, dry, 1.3 seconds.
 
-### 107. `voz/homem_ola`
+### 110. `voz/homem_ola`
 
 - **Arquivo(s):** `voz/homem_ola_0`, `voz/homem_ola_1`
 - **Duração:** 0.6 s cada  •  **Tipo:** toca uma vez
@@ -904,7 +928,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A short friendly male greeting, a casual 'hey there!', dry, 0.6 seconds. (Alternativa: Text to Speech em português: 'Oi!' / 'Pois não?')
 
-### 108. `voz/mulher_ola`
+### 111. `voz/mulher_ola`
 
 - **Arquivo(s):** `voz/mulher_ola_0`, `voz/mulher_ola_1`
 - **Duração:** 0.6 s cada  •  **Tipo:** toca uma vez
@@ -915,7 +939,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 ## Sons soltos pelo ambiente (aleatórios)
 
-### 109. `pontuais/passaro_canto`
+### 112. `pontuais/passaro_canto`
 
 - **Arquivo(s):** `pontuais/passaro_canto_0`, `pontuais/passaro_canto_1`, `pontuais/passaro_canto_2`, `pontuais/passaro_canto_3`
 - **Duração:** 3 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 5 a 12 s enquanto vale: dia
@@ -923,7 +947,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A single bird song phrase in a forest, clear and melodic, 3 seconds, no other sounds.
 
-### 110. `pontuais/corvo`
+### 113. `pontuais/corvo`
 
 - **Arquivo(s):** `pontuais/corvo_0`, `pontuais/corvo_1`
 - **Duração:** 2 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 20 a 45 s enquanto vale: dia
@@ -931,7 +955,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A crow cawing one or two harsh caws, distant, 2 seconds.
 
-### 111. `pontuais/coruja`
+### 114. `pontuais/coruja`
 
 - **Arquivo(s):** `pontuais/coruja_0`, `pontuais/coruja_1`
 - **Duração:** 3 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 15 a 35 s enquanto vale: noite
@@ -939,7 +963,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > An owl hooting, deep and soft, two hoots, night forest, 3 seconds.
 
-### 112. `pontuais/lobo_uivo`
+### 115. `pontuais/lobo_uivo`
 
 - **Arquivo(s):** `pontuais/lobo_uivo_0`, `pontuais/lobo_uivo_1`
 - **Duração:** 5 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 40 a 90 s enquanto vale: noite
@@ -947,7 +971,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A distant wolf howling at night, long and mournful, 5 seconds.
 
-### 113. `pontuais/sapo`
+### 116. `pontuais/sapo`
 
 - **Arquivo(s):** `pontuais/sapo_0`, `pontuais/sapo_1`
 - **Duração:** 3 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 12 a 30 s enquanto vale: noite
@@ -955,7 +979,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A few frogs croaking by a pond at night, 3 seconds.
 
-### 114. `pontuais/trovao`
+### 117. `pontuais/trovao`
 
 - **Arquivo(s):** `pontuais/trovao_0`, `pontuais/trovao_1`, `pontuais/trovao_2`
 - **Duração:** 6 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 20 a 50 s enquanto vale: chuva
@@ -963,7 +987,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > Rolling thunder, a distant to medium rumble that builds and fades, 6 seconds, no rain.
 
-### 115. `pontuais/vento_rajada`
+### 118. `pontuais/vento_rajada`
 
 - **Arquivo(s):** `pontuais/vento_rajada_0`, `pontuais/vento_rajada_1`
 - **Duração:** 4 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 10 a 25 s enquanto vale: vento
@@ -971,7 +995,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A cold wind gust sweeping past, rising and fading, 4 seconds.
 
-### 116. `pontuais/pedra_cai`
+### 119. `pontuais/pedra_cai`
 
 - **Arquivo(s):** `pontuais/pedra_cai_0`, `pontuais/pedra_cai_1`, `pontuais/pedra_cai_2`
 - **Duração:** 2 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 25 a 60 s enquanto vale: mina
@@ -979,7 +1003,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A few small stones falling and rattling down a mine wall with a dusty echo, 2 seconds.
 
-### 117. `pontuais/gotejar`
+### 120. `pontuais/gotejar`
 
 - **Arquivo(s):** `pontuais/gotejar_0`, `pontuais/gotejar_1`, `pontuais/gotejar_2`
 - **Duração:** 1.5 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 8 a 20 s enquanto vale: mina/s2
@@ -987,7 +1011,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A single clear, loud water drip falling into a pool in a cave, a distinct plink with a short echo, close microphone, strong and clearly audible, 1.5 seconds, no other sounds.
 
-### 118. `pontuais/acido_borbulha`
+### 121. `pontuais/acido_borbulha`
 
 - **Arquivo(s):** `pontuais/acido_borbulha_0`, `pontuais/acido_borbulha_1`, `pontuais/acido_borbulha_2`
 - **Duração:** 1.5 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 6 a 15 s enquanto vale: s2
@@ -995,7 +1019,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A large acid bubble popping with a hiss in a cavern, 1.5 seconds.
 
-### 119. `pontuais/lava_estalo`
+### 122. `pontuais/lava_estalo`
 
 - **Arquivo(s):** `pontuais/lava_estalo_0`, `pontuais/lava_estalo_1`, `pontuais/lava_estalo_2`
 - **Duração:** 1.5 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 5 a 14 s enquanto vale: s3
@@ -1003,7 +1027,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > Cooling lava rock cracking loudly with an ember pop and a hiss, 1.5 seconds.
 
-### 120. `pontuais/gota_eco`
+### 123. `pontuais/gota_eco`
 
 - **Arquivo(s):** `pontuais/gota_eco_0`, `pontuais/gota_eco_1`, `pontuais/gota_eco_2`
 - **Duração:** 3 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 7 a 18 s enquanto vale: s5
@@ -1014,7 +1038,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 ## Sons da introdução
 
-### 121. `intro/explosao`
+### 124. `intro/explosao`
 
 - **Arquivo(s):** `intro/explosao`
 - **Duração:** 6 s  •  **Tipo:** toca uma vez
@@ -1022,7 +1046,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > Cinematic massive solar flare explosion over a city: a huge deep boom with a rising roar and crackling fire, then debris falling, 6 seconds.
 
-### 122. `intro/vento`
+### 125. `intro/vento`
 
 - **Arquivo(s):** `intro/vento`
 - **Duração:** 6 s  •  **Tipo:** toca uma vez
@@ -1030,7 +1054,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > Lonely wind through a ruined abandoned city, distant creaking metal and drifting dust, eerie and silent, 6 seconds.
 
-### 123. `intro/caravana`
+### 126. `intro/caravana`
 
 - **Arquivo(s):** `intro/caravana`
 - **Duração:** 6 s  •  **Tipo:** toca uma vez
@@ -1038,7 +1062,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A caravan of people and a wooden cart moving along a gravel road: footsteps, cart wheels creaking, a faint murmur (no words), 6 seconds.
 
-### 124. `intro/pedreira`
+### 127. `intro/pedreira`
 
 - **Arquivo(s):** `intro/pedreira`
 - **Duração:** 6 s  •  **Tipo:** toca uma vez
@@ -1046,7 +1070,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > Quarry atmosphere: distant hammering on stone, wind, the echo of a pickaxe and rocks shifting, 6 seconds.
 
-### 125. `intro/mina`
+### 128. `intro/mina`
 
 - **Arquivo(s):** `intro/mina`
 - **Duração:** 6 s  •  **Tipo:** toca uma vez
@@ -1054,7 +1078,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > Cinematic descent into a deep mine: a low rumble that deepens, falling rocks and metal elevator cables creaking, 6 seconds.
 
-### 126. `intro/fogo`
+### 129. `intro/fogo`
 
 - **Arquivo(s):** `intro/fogo`
 - **Duração:** 6 s  •  **Tipo:** toca uma vez
@@ -1062,7 +1086,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A campfire crackling warmly with a few people murmuring around it (no words) and night insects, calm, 6 seconds.
 
-### 127. `intro/titulo`
+### 130. `intro/titulo`
 
 - **Arquivo(s):** `intro/titulo`
 - **Duração:** 3 s  •  **Tipo:** toca uma vez

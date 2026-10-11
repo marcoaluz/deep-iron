@@ -32,6 +32,21 @@ const ENTRIES := {
 			+ "duros de derrubar, cada golpe deles machuca feio quem estiver no andar. Quando caem, sobra "
 			+ "cristal rubro no meio da casca.",
 	},
+	"ratos": {
+		"title": "Ratos-de-cinza",
+		"text": "A comida estocada atraiu um bicho novo: o rato-de-cinza, pequeno e esperto, que entra de noite no armazém e na cozinha. "
+			+ "Rouba pouco por vez e foge. Guardas de vigia e a vigilância reforçada resolvem; abatido, ele devolve o que levava.",
+	},
+	"morcegos": {
+		"title": "Morcegos de brasa",
+		"text": "No S3 moram morcegos de asas incandescentes. Voam de lâmpada em lâmpada e apagam cada uma: no escuro os acidentes "
+			+ "ficam mais comuns. Guardas na patrulha do andar os derrubam; a luz volta no amanhecer. Às vezes deixam cristal rubro.",
+	},
+	"sombras": {
+		"title": "Sombras solares",
+		"text": "Nas ondas solares mais fortes, sombras sem rosto andam pela superfície atrás de quem ficou fora do abrigo. "
+			+ "A luz as queima e a lança de prata as fere; arma comum quase não adianta. Quando a onda passa, elas se desfazem em cinza.",
+	},
 	"cristais": {
 		"title": "Cristais do fundo",
 		"text": "O cristal verde cresce nas galerias de ácido do nível 2; o rubro, em volta dos "

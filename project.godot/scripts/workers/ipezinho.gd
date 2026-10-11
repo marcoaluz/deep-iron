@@ -2071,6 +2071,8 @@ func _criatura_perto(pos: Vector2, raio: float) -> Node:
 	for c in get_tree().get_nodes_in_group("criaturas"):
 		if not c.has_method("is_alive") or not c.is_alive():
 			continue
+		if str(c.get("kind")) == "rato":
+			continue  # Bloco 124: rato não faz a vila fugir (ele só quer a comida)
 		if pos.distance_to(c.global_position) > raio:
 			continue
 		if env and env.has_method("level_at") and env.level_at(c.global_position) != andar:
@@ -2578,6 +2580,8 @@ func _guard_tick(delta: float) -> void:
 			if d < best_d:
 				best_d = d
 				_foe = c
+	if _foe == null and def and def.has_method("rato_perto"):
+		_foe = def.rato_perto(global_position)  # Bloco 124: o guarda de vigia também caça rato na vila
 	if _foe == null:
 		var post: Vector2 = def.guard_post(self) if def else global_position
 		if global_position.distance_to(post) > 10.0 and (not _moving or _target.distance_to(post) > 4.0):

@@ -1106,7 +1106,8 @@ func som_global(id: String) -> void:
 ## O golpe de uma criatura: cada espécie tem o seu (Lumívoro grita, Ferrugento bate ferro, Gosma, Magmante) e a Matriarca (o
 ## chefe) o dela; sem arquivo da Matriarca, vale o da espécie dela.
 func criatura_golpe(kind: String, variant: String, pos: Vector2) -> void:
-	var id: String = {"lumivoro": "sfx/lumivoro_grito", "gosma": "criaturas/gosma_ataque", "magmante": "criaturas/magmante_ataque"}.get(kind, "sfx/ferrugento_golpe")
+	var id: String = {"lumivoro": "sfx/lumivoro_grito", "gosma": "criaturas/gosma_ataque", "magmante": "criaturas/magmante_ataque",
+		"rato": "criaturas/rato_ataque", "morcego": "criaturas/morcego_ataque", "sombra": "criaturas/sombra_ataque"}.get(kind, "sfx/ferrugento_golpe")
 	if variant == "chefe" and Slots.tem("criaturas/matriarca_ataque"):
 		id = "criaturas/matriarca_ataque"
 	som(id, pos)

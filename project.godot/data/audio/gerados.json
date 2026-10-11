@@ -115,6 +115,36 @@
    "gerado_em": "2026-10-10",
    "hash": "26a70f0aa4fce9ef"
   },
+  "criaturas/morcego_ataque_0": {
+   "aprovado": false,
+   "gerado_em": "2026-10-11",
+   "hash": "26636ed4628faa97"
+  },
+  "criaturas/morcego_ataque_1": {
+   "aprovado": false,
+   "gerado_em": "2026-10-11",
+   "hash": "26636ed4628faa97"
+  },
+  "criaturas/rato_ataque_0": {
+   "aprovado": false,
+   "gerado_em": "2026-10-11",
+   "hash": "fcb10c848cdb359c"
+  },
+  "criaturas/rato_ataque_1": {
+   "aprovado": false,
+   "gerado_em": "2026-10-11",
+   "hash": "fcb10c848cdb359c"
+  },
+  "criaturas/sombra_ataque_0": {
+   "aprovado": false,
+   "gerado_em": "2026-10-11",
+   "hash": "2c25772075c42aab"
+  },
+  "criaturas/sombra_ataque_1": {
+   "aprovado": false,
+   "gerado_em": "2026-10-11",
+   "hash": "2c25772075c42aab"
+  },
   "intro/caravana": {
    "aprovado": true,
    "gerado_em": "2026-10-10",

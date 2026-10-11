@@ -2,7 +2,7 @@
 
 Gerado por `python tools/elevenlabs/docs_audio.py`. A ordem é a de prioridade (ambiência por andar, fornalha, igreja, stingers, interface, depois o resto). **Marque `[x]` o que você ouviu e aprovou.** O estado de aprovação gravado pela ferramenta está em `project.godot/data/audio/gerados.json`.
 
-**Resumo:** 194 arquivos de efeitos, 191 marcados como aprovados.
+**Resumo:** 200 arquivos de efeitos, 191 marcados como aprovados.
 
 ## Como ouvir e trocar um som
 
@@ -331,6 +331,18 @@ Gerado por `python tools/elevenlabs/docs_audio.py`. A ordem é a de prioridade (
   - arquivo: `assets/audio/criaturas/matriarca_ataque_0.wav`  •  ouça: se está claro e no volume certo, sem cortar
 - [x] `criaturas/matriarca_ataque_1` — 2 s cada — A Matriarca (a chefe) ataca.
   - arquivo: `assets/audio/criaturas/matriarca_ataque_1.wav`  •  ouça: se está claro e no volume certo, sem cortar
+- [ ] `criaturas/morcego_ataque_0` — 0.8 s cada — O morcego de brasa mergulha numa luz ou em alguém (um grito agudo e o bater de asas de couro).
+  - arquivo: `assets/audio/criaturas/morcego_ataque_0.wav`  •  ouça: se está claro e no volume certo, sem cortar
+- [ ] `criaturas/morcego_ataque_1` — 0.8 s cada — O morcego de brasa mergulha numa luz ou em alguém (um grito agudo e o bater de asas de couro).
+  - arquivo: `assets/audio/criaturas/morcego_ataque_1.wav`  •  ouça: se está claro e no volume certo, sem cortar
+- [ ] `criaturas/rato_ataque_0` — 0.6 s cada — O rato-de-cinza morde o estoque de comida (um guincho curto e um roer rápido).
+  - arquivo: `assets/audio/criaturas/rato_ataque_0.wav`  •  ouça: se está claro e no volume certo, sem cortar
+- [ ] `criaturas/rato_ataque_1` — 0.6 s cada — O rato-de-cinza morde o estoque de comida (um guincho curto e um roer rápido).
+  - arquivo: `assets/audio/criaturas/rato_ataque_1.wav`  •  ouça: se está claro e no volume certo, sem cortar
+- [ ] `criaturas/sombra_ataque_0` — 1.2 s cada — A sombra solar ataca (um sussurro grave e um chiado de calor).
+  - arquivo: `assets/audio/criaturas/sombra_ataque_0.wav`  •  ouça: se está claro e no volume certo, sem cortar
+- [ ] `criaturas/sombra_ataque_1` — 1.2 s cada — A sombra solar ataca (um sussurro grave e um chiado de calor).
+  - arquivo: `assets/audio/criaturas/sombra_ataque_1.wav`  •  ouça: se está claro e no volume certo, sem cortar
 
 ## Perigos (radiação)
 

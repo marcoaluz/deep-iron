@@ -569,7 +569,7 @@ func _roda() -> void:
 		["res://scripts/core/sun.gd", 'Audio.stinger("onda_solar")'], ["res://scripts/core/sun.gd", 'Audio.stinger("vitoria")'],
 		["res://scripts/props/centro_vila.gd", 'Audio.stinger("estagio_novo")'], ["res://scripts/core/research.gd", 'Audio.stinger("pesquisa_pronta")'],
 		["res://scripts/workers/ipezinho.gd", 'Audio.stinger("morte")'], ["res://scripts/core/morale.gd", 'Audio.stinger("derrota")'],
-		["res://scripts/core/missoes.gd", 'stinger("missao_cumprida")'], ["res://scripts/core/hud.gd", "Audio.noticia_cor(color)"],
+		["res://scripts/core/missoes.gd", '"missao_cumprida"'], ["res://scripts/core/hud.gd", "Audio.noticia_cor(color)"],
 		["res://scripts/core/hud.gd", 'Audio.duck("aviso")'], ["res://scripts/core/calendario.gd", "Audio.sino("],
 		["res://scripts/workers/ipezinho.gd", '"dor", gender'], ["res://scripts/workers/ipezinho.gd", '"cansaco", gender'],
 		["res://scripts/props/taverna.gd", '"alegria"'], ["res://scripts/core/main.gd", '"ordem"'],
