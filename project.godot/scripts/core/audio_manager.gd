@@ -237,7 +237,8 @@ func _ready() -> void:
 
 	_music_player = _make_loop_player(music, &"Music")
 	_danger_player = _make_loop_player(_first("music_danger"), &"Music")
-	_ambience_player = _make_loop_player(ambience, &"Ambience")
+	_ambience_player = _make_loop_player(null, &"Ambience")
+	_amb_stream(_ambience_player, CTX_SLOT["mina"])  # a mina também vem do slot (o arquivo novo; sem ele, a reserva = o som de antes). Antes o som antigo entrava aqui e o novo nunca o trocava (já estava tocando)
 	for i in 4:  # Bloco 115: os sons soltos pelo contexto (pássaro, trovão, gota...) saem no bus Ambience
 		var q := AudioStreamPlayer2D.new()
 		q.bus = &"Ambience"
