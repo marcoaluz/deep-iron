@@ -18,6 +18,7 @@ extends PanelContainer
 ## "img"); sem ela aparece um "?" e o teste b95b avisa.
 
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
+const Canteiro := preload("res://scripts/props/canteiro.gd")  # Bloco 135: o estado dos prédios únicos (em obra)
 const Icones := preload("res://scripts/ui/icones.gd")
 const Tipo := preload("res://scripts/ui/tipografia.gd")
 const Settings := preload("res://scripts/core/settings.gd")
@@ -261,7 +262,8 @@ func _defs(tab: String) -> Array:
 				"count": func(): return _count("postos_troca"),
 				"cost": func(): return hub.troca_cost_text(),
 				"reason": func(): return hub.troca_block_reason(),
-				"act": func(): hub.build_posto_troca()})
+				"act": func(): hub.build_posto_troca(),
+				"unico": func(): return _unico_estado("postos_troca", "posto_troca")})
 		"Alimentação":
 			if hub:
 				out.append({"name": "Cozinha", "img": _predio("comedouro"), "many": true,
@@ -355,20 +357,15 @@ func _defs(tab: String) -> Array:
 					"desc": "Guarda casacos e trajes (a Oficina faz). Um só: o estoque é da vila toda.",
 					"cost": func(): return "%d cr + %d ferro + %d madeira" % [eq.vestiario_credits, eq.vestiario_ore, eq.vestiario_wood],
 					"reason": func(): return eq.vestiario_block_reason(),
-					"act": func(): eq.build_vestiario()})
-			var ofi := _g("oficina")
-			if ofi and ofi.has_method("is_built") and not ofi.is_built() and hub:
-				out.append({"name": "Oficina (forja)", "img": _predio("oficina"), "tag": "uma só",
+					"act": func(): eq.build_vestiario(),
+					"unico": func(): return _unico_estado("vestiarios", "vestiario")})
+			if hub:  # Bloco 135: UM cartão, com o estado (✔ Construído / Em obra / disponível)
+				out.append({"name": "Oficina (forja)", "img": _predio("oficina"),
 					"desc": "Ferramentas (liberam minérios novos) e equipamento. O engenheiro ergue.",
 					"cost": func(): return hub.oficina_cost_text(),
 					"reason": func(): return hub.oficina_block_reason(),
-					"act": func(): hub.build_oficina()})
-			else:
-				out.append({"name": "Oficina (forja)", "img": _predio("oficina"), "open": "oficina", "tag": "construída (uma só)",
-					"desc": "Ferramentas e equipamento.",
-					"cost": func(): return "",
-					"reason": func(): return "",
-					"act": func(): _hud.open_panel("oficina"), "label": "Abrir"})
+					"act": func(): hub.build_oficina(),
+					"unico": func(): return _unico_estado("oficina", "oficina", true)})
 		"Coleta automática":
 			if hub and hub.coletor_restaurado():  # Bloco 81: o primeiro é a ruína da floresta; extras só depois dela
 				out.append({"name": "Coletor de madeira", "img": _predio("coletor_madeira"), "many": true, "scales": true,
@@ -454,18 +451,13 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return "por tamanho (%d cr + %d por vaga; ferro e madeira por trecho de cerca)" % [hub.cemiterio_credits_base, hub.cemiterio_credits_por_vaga],
 					"reason": func(): return hub.cemiterio_block_reason(),
 					"act": func(): hub.build_cemiterio(), "label": "Marcar"})
-			if hub and hub.igreja() == null:
-				out.append({"name": "Igreja", "img": _predio("igreja"), "tag": "uma só",
+			if hub:  # Bloco 135: UM cartão, com o estado
+				out.append({"name": "Igreja", "img": _predio("igreja"),
 					"desc": "Missa no domingo (todos vão), funeral pra quem se for (alivia o luto) e o padre aconselha quem anda zangado. Também é ponto da hora social.",
 					"cost": func(): return hub.igreja_cost_text(),
 					"reason": func(): return hub.igreja_block_reason(),
-					"act": func(): hub.build_igreja()})
-			elif hub:
-				out.append({"name": "Igreja", "img": _predio("igreja"), "open": "calendario", "tag": "construída (uma só)",
-					"desc": "O calendário: missa, funerais, domingo à tarde e os festivais.",
-					"cost": func(): return "",
-					"reason": func(): return "",
-					"act": func(): _hud.open_panel("calendario"), "label": "Abrir"})
+					"act": func(): hub.build_igreja(),
+					"unico": func(): return _unico_estado("igrejas", "igreja")})
 		"Vila":
 			var cam := _g("caminhos")
 			if cam:  # Bloco 89: pintar caminhos (arrastar)
@@ -517,7 +509,8 @@ func _defs(tab: String) -> Array:
 					"desc": "O projeto final: protege a vila do sol pra sempre.",
 					"cost": func(): return "pago por etapa, no gerador",
 					"reason": func(): return sun.shield_block_reason(),
-					"act": func(): sun.place_shield()})
+					"act": func(): sun.place_shield(),
+					"unico": func(): return _unico_estado("escudos", "escudo")})
 	return out
 
 
@@ -754,13 +747,26 @@ func _make_card(d: Dictionary) -> Dictionary:
 	else:
 		btn.pressed.connect(func():
 			Audio.click()
+			if d.has("unico") and _aciona_unico(d):  # Bloco 135: pronto abre, em obra não pede outro
+				if visible:
+					refresh()
+				return
 			if not d.has("open"):
 				visible = false  # o posicionador assume
 			d.act.call()
 			if visible:
 				refresh())
+	var barra: ProgressBar = null
+	if d.has("unico"):  # Bloco 135: a barra das etapas da obra (só aparece "Em obra")
+		barra = ProgressBar.new()
+		barra.name = "BarraObra"
+		barra.custom_minimum_size = Vector2(0, 10)
+		barra.show_percentage = false
+		barra.visible = false
+		v.add_child(barra)
+		v.move_child(barra, btn.get_index())
 	return {"def": d, "status": req.label, "req": req, "button": btn, "cost": cost.label, "custo": cost, "tag": tag,
-		"panel": panel, "lock": lock, "img": img, "locked": null, "estado": ""}
+		"panel": panel, "lock": lock, "img": img, "locked": null, "estado": "", "barra": barra}
 
 
 ## Estado do cartão (Bloco 95): "" = dá pra construir; "falta" = sem recurso (o custo que falta em destaque,
@@ -805,6 +811,82 @@ func refresh() -> void:
 			c.locked = est != ""
 		if d.has("label_fn"):
 			c.button.text = d.label_fn.call()
+		if d.has("unico"):
+			_mostra_unico(c, d.unico.call())
+
+
+## Bloco 135: os PRÉDIOS ÚNICOS (Oficina, Igreja, Vestiário, Posto de troca, Escudo) mostram o estado no cartão: "✔ Construído"
+## (botão Abrir: a janela do prédio), "Em obra" (a barra das etapas; o botão não pede outro) ou disponível. Nunca dá pra pedir
+## um segundo — nem pelo cartão, nem pelo atalho (cada build_* confere o mesmo *_block_reason).
+## `grupo` = onde o prédio pronto fica; `kind` = o tipo do canteiro (obra); `oficina` = a Oficina já existe no mapa (vale o
+## is_built()).
+func _unico_estado(grupo: String, kind: String, oficina: bool = false) -> Dictionary:
+	var c = Canteiro.pending(get_tree(), kind)
+	if c:
+		return {"estado": "obra", "p": float(c.obra_progress()), "txt": String(c._obra.status(c.obra_progress())) if c.get("_obra") else "", "no": c}
+	for n in get_tree().get_nodes_in_group(grupo):
+		if oficina and n.has_method("is_built") and not n.is_built():
+			continue
+		if n.has_method("obra_pending") and n.obra_pending():
+			return {"estado": "obra", "p": float(n.obra_progress()) if n.has_method("obra_progress") else 0.0, "txt": "", "no": n}
+		return {"estado": "pronto", "no": n}
+	return {"estado": ""}
+
+
+func _mostra_unico(c: Dictionary, u: Dictionary) -> void:
+	var e := String(u.get("estado", ""))
+	var barra: ProgressBar = c.get("barra")
+	if barra:
+		barra.visible = e == "obra"
+	if e != "":  # pronto ou em obra não é "trancado": sem cadeado, sem custo, a imagem normal
+		c.cost.text = ""
+		c.custo.icone.visible = false
+		c.req.icone.visible = false
+		c.lock.visible = false
+		c.img.modulate = Color.WHITE
+		if UiSkin.ok():
+			c.panel.add_theme_stylebox_override("panel", UiSkin.cartao(""))
+		c.estado = "unico_" + e  # (o refresh normal volta a pintar se o estado mudar)
+	match e:
+		"pronto":
+			c.tag.text = "✔ Construído"
+			c.button.text = "Abrir"
+			c.button.disabled = false
+			c.status.text = ""
+			c.cost.text = ""
+			c.custo.icone.visible = false
+			c.req.icone.visible = false
+			c.lock.visible = false
+			c.img.modulate = Color.WHITE
+		"obra":
+			c.tag.text = "Em obra"
+			c.button.text = "Em obra"
+			c.button.disabled = true
+			c.status.text = String(u.get("txt", ""))
+			if barra:
+				barra.value = float(u.get("p", 0.0)) * 100.0
+		_:
+			c.tag.text = "uma só (disponível)"
+			c.button.text = String(c.def.get("label", "Construir"))
+
+
+## O clique no cartão de um prédio único: pronto = abre a janela dele; em obra = nada; senão constrói.
+func _aciona_unico(d: Dictionary) -> bool:
+	var u: Dictionary = d.unico.call()
+	match String(u.get("estado", "")):
+		"pronto":
+			var n: Node = u.no
+			if n and n.get("panel_id") != null:
+				_hud.open_panel_for(n)
+			elif n and n.is_in_group("oficina"):
+				_hud.open_panel("oficina")
+			elif n and n.is_in_group("igrejas"):
+				_hud.open_panel("calendario")
+			return true
+		"obra":
+			Audio.error()
+			return true
+	return false
 
 
 ## Bloco 95 (teste e capturas): o retângulo da janela e se algum cartão sai da área visível ou da largura.

@@ -320,8 +320,7 @@ func _roda() -> void:
 	main.selection.append(cac)
 	hud._update_portrait([cac])
 	check(hud._portrait_req.visible and hud._portrait_req.text.find("✗") >= 0, "o cartão do selecionado mostra os ✗ (%s)" % hud._portrait_req.text.replace("\n", " | "))
-	hud._req_dica_t = 99.0
-	hud._refresh_order_bar(get_nodes_in_group("ipezinhos"))
+	hud._job_buttons["caçador"].button.mouse_entered.emit()  # (Bloco 135: a dica é montada quando o mouse chega no botão)
 	var tip: String = hud._job_buttons["caçador"].button.tooltip_text
 	check(tip.find("O que ela precisa") >= 0 and tip.find("✗ Falta o arco") >= 0, "a dica do botão do caçador lista os requisitos")
 

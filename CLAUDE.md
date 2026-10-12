@@ -151,7 +151,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b134**; o próximo é o **b135**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b135**; o próximo é o **b136**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:
@@ -202,7 +202,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
    | Custo com itens (pregos, ferragens, aço, couro…) | o parâmetro `itens` desses três, ou `Economy.itens_falta` / `paga_itens` / `itens_texto`; pregos e ferragens antes da fornalha viram ferro (`itens_efetivos`); `Economy.tira`/`devolve` pra qualquer item |
    | Horário e agenda | `DayNight.hora()` / `tempo_da_hora()` / sinal `marco`; `Schedule.periodo(ipezinho)` |
    | Lugar pra conversar | `social_spot.gd` (`SocialSpot.criar(...)` no `_ready` do prédio) |
-   | Janela | `hud._add_panel` (padrão `setup` / `refresh` / `button_text` / `has_available_action`); ela entra sozinha no menu "Janelas" |
+   | Janela | `hud._add_panel` (padrão `setup` / `refresh` / `button_text` / `has_available_action`); ela entra sozinha no menu "Janelas". Bloco 135: o GERENTE DE JANELAS (`ui/gerente_janelas.gd`, `hud.gerente`) põe dentro da tela, sem cobrir outra (colunas lado a lado; sem lugar, cascata), fecha a anterior do mesmo tipo e o Esc fecha a de cima (`hud.fecha_janela_de_cima`). Janela flutuante nova: `hud.gerente.registra(janela, tipo)`; cartão fixo que não pode ser coberto: grupo `janela_fixa` |
 
 7. **Rodar os testes** (ver `TESTING.md`).
    - **Sempre** com `APPDATA` / `LOCALAPPDATA` / `XDG_DATA_HOME` numa pasta com `fake_appdata` no caminho.

@@ -57,12 +57,36 @@ static func texture(img: String) -> Texture2D:
 	if not _tex.has(img):
 		var path := DIR + img
 		warm_folder(img.get_base_dir())
-		# Prompt 30: já pedida em segundo plano? pega de lá (espera só se ainda estiver carregando)
-		if ResourceLoader.load_threaded_get_status(path) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+		# Prompt 30: já pedida em segundo plano? pega de lá. Bloco 135: SEM ESPERAR — ainda carregando, o boneco usa a mesma
+		# tira da roupa base (minerador/mineradora) por alguns quadros. Antes ele esperava a pasta inteira da roupa nova: dar
+		# uma função pela 1ª vez travava o jogo de 100 ms a 1,3 s.
+		var st := ResourceLoader.load_threaded_get_status(path)
+		if st == ResourceLoader.THREAD_LOAD_IN_PROGRESS and not espera_carga and DisplayServer.get_name() != "headless":
+			return _reserva(img)
+		if st != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
 			_tex[img] = ResourceLoader.load_threaded_get(path)
 		else:
 			_tex[img] = load(path)
 	return _tex[img]
+
+
+## Bloco 135: true = esperar a tira carregar (o jeito antigo; os testes de arte e as capturas ligam).
+static var espera_carga := false
+## As pastas da roupa base, em que a reserva procura a mesma tira.
+const PASTAS_RESERVA := ["minerador", "mineradora"]
+
+
+## A mesma tira (o mesmo arquivo) numa roupa base já carregada, ou null (o boneco fica um quadro sem a camada).
+static func _reserva(img: String) -> Texture2D:
+	var arq := img.get_file()
+	var pasta := img.get_base_dir()
+	for base in PASTAS_RESERVA:
+		if base == pasta:
+			continue
+		var k: String = String(base) + "/" + arq
+		if _tex.has(k) and _tex[k] != null:
+			return _tex[k]
+	return null
 
 
 ## Prompt 30: cada tira levava ~6 ms (até 60) pra carregar na 1ª vez que aparecia, e com a vila

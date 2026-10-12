@@ -82,7 +82,9 @@ func _cria(id: String, icone: String, nome: String) -> void:
 	b.add_child(n)
 	b.pressed.connect(func():
 		Audio.click()
-		vai(id))
+		vai(id)
+		if id == "migrantes" and _hud.has_method("open_panel"):
+			_hud.open_panel("migrantes"))  # Bloco 135: o ícone abre a janela (aceitar / recusar / aceitar todos)
 	_botoes[id] = {"button": b, "count": n, "nome": nome}
 
 

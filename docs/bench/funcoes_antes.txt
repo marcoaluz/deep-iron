@@ -1,0 +1,1 @@
+MEDIDA Windows | uma por uma (24): pior 1514.8 ms, mediana 105.4 ms, quadros > 50 ms: 14 de 192 | as 12 de uma vez (4x): pior 620.5 ms

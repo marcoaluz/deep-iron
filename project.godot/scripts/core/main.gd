@@ -202,7 +202,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					_camera.follow_target = null if _camera.follow_target == selected else selected
 			"voltar":
 				# Esc fecha o que estiver aberto; sem nada pra fechar/soltar, pausa
-				if _hud.close_panels():
+				if _hud.fecha_janela_de_cima():  # Bloco 135: a janela de cima primeiro
 					pass
 				elif not selection.is_empty():
 					select(null)
@@ -335,6 +335,13 @@ func _finish_left_click() -> void:
 func _finish_left_click_iso(additive: bool) -> void:
 	var hit: Dictionary = _iso.pick(_press_canvas)
 	var node: Node2D = hit.node
+	# Bloco 135: clicar num migrante (na frente do portão, de noite também) abre a janela deles — antes do portão e dos
+	# prédios, com um raio maior (o portão, clicável, ficava com o clique)
+	var mig := _migrante_no_canvas(_press_canvas) if not additive else null
+	if mig:
+		_hud.open_panel("migrantes")
+		Audio.selecionar_gente(mig)
+		return
 	var clicked_unit: Node2D = node if node and node.is_in_group("ipezinhos") else _find_ipezinho_at_canvas(_press_canvas)
 	if clicked_unit:
 		if additive:
@@ -363,6 +370,24 @@ func _open_area_at(pos: Vector2) -> bool:
 	if panel:
 		panel.focus_area(a)
 	return true
+
+
+## Bloco 135: o raio (px da tela iso) do clique num migrante — maior que o de um ipezinho da vila (eles ficam amontoados
+## na frente do portão e o portão disputava o clique).
+@export var raio_clique_migrante: float = 34.0
+
+
+func _migrante_no_canvas(canvas_pos: Vector2) -> Node2D:
+	var best: Node2D = null
+	var best_dist := raio_clique_migrante
+	for ip in get_tree().get_nodes_in_group("migrantes_gente"):
+		if not ip.visible or bool(ip.get("e_comerciante")):
+			continue
+		var d: float = (_iso.to_screen(ip.global_position) + Vector2(0, -14)).distance_to(canvas_pos)
+		if d <= best_dist:
+			best_dist = d
+			best = ip
+	return best
 
 
 func _find_ipezinho_at_canvas(canvas_pos: Vector2) -> Node2D:
@@ -557,8 +582,9 @@ func toggle_job(job: String, label: String, color: Color) -> void:
 		_hud.show_toast("Selecione ipezinhos pra virar %s" % label.to_lower(), Color(1.0, 0.6, 0.45))
 		return
 	var make := selection.any(func(w): return w.job != job)
+	var um := selection.size() == 1  # Bloco 135: vários de uma vez = sem balão em cada um (o aviso do canto basta)
 	for unit in selection:
-		unit.set_job(job if make else Worker.ROLE_IDLE)
+		unit.set_job(job if make else Worker.ROLE_IDLE, um)
 	if make:
 		Audio.voz(selection[0].global_position, "ordem", String(selection[0].gender))  # Bloco 114: "Sim!" (desligável)
 	Audio.click()

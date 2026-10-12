@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1335 valores** em 4 pastas de scripts (90 trocados por alguma cena).
+Total: **1336 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (98)
 
@@ -1040,13 +1040,14 @@ Total: **1335 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 |---|---|---|---|
 | `espera_carregador` | 30.0 |  | Segundos de jogo que uma entrega espera um carregador antes de quem precisa ir buscar ele mesmo. |
 
-## `scripts/core/main.gd` (1)
+## `scripts/core/main.gd` (2)
 
 **(sem grupo)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `founding_on_new_game` | true |  | Bloco 37: partida nova começa com a FUNDAÇÃO (o jogador escolhe onde ficam o Centro da Vila e o Armazém; ver founding.gd). false = começa com o layout da cena (testes). |
+| `raio_clique_migrante` | 34.0 |  | Bloco 135: o raio (px da tela iso) do clique num migrante — maior que o de um ipezinho da vila (eles ficam amontoados na frente do portão e o portão disputava o clique). |
 
 ## `scripts/core/manutencao.gd` (10)
 

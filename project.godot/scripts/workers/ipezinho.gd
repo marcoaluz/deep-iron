@@ -3574,7 +3574,10 @@ func has_no_job() -> bool:
 ## Designa a função (teclas/botões com os ipezinhos selecionados). Trocar no meio do
 ## trabalho é seguro: o _choose_state() faz ele entregar primeiro o que estiver
 ## carregando (minério -> armazém, comida -> comedouro, madeira -> armazém).
-func set_job(new_job: String) -> void:
+## Bloco 135: `balao` = o nome da função sobe num balão em cima dele. Dando função a VÁRIOS de uma vez o main desliga: cada
+## balão é um filho novo, e o espelho da vista iso se refaz a cada filho que entra/sai (12 balões = ~70 ms no quadro); o
+## aviso do canto ("Lenhador: 12 ipezinhos") já diz o mesmo.
+func set_job(new_job: String, balao: bool = true) -> void:
 	if e_crianca() and new_job != ROLE_IDLE:
 		_popup("Criança não trabalha", Color(1.0, 0.8, 0.5))  # Bloco 111
 		return
@@ -3618,7 +3621,8 @@ func set_job(new_job: String) -> void:
 		_my_coletor_minerio().release()  # Bloco 57: deixou de ser minerador: a broca para
 	job = new_job
 	_na_secundaria = false  # Bloco 109: a secundária recomeça pela função nova
-	_popup(JOB_LABELS[job], Color(0.95, 0.9, 0.6) if job != ROLE_IDLE else Color(0.75, 0.75, 0.8))
+	if balao:
+		_popup(JOB_LABELS[job], Color(0.95, 0.9, 0.6) if job != ROLE_IDLE else Color(0.75, 0.75, 0.8))
 	# Bloco 35: o primeiro porrete vem de casa; depois disso, arma nova só no Arsenal
 	if job == ROLE_GUARD and weapon == "" and not got_porrete:
 		got_porrete = true

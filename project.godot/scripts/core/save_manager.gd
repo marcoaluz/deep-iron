@@ -151,6 +151,8 @@ extends Node
 ##     condicao, funcao, prazo}]}. Acabou o "Recrutar": "economy" ainda guarda max_workers e recruited_count (o save
 ##     antigo carrega), mas eles não mandam em nada — a capacidade são as camas. Save antigo: ninguém no portão, o
 ##     primeiro grupo no prazo de uma partida nova, a população que tinha.
+##   Bloco 135: "migrantes" + grupo_n e, em cada um que espera, "grupo" (a família: quem chegou junto). Save antigo: cada um
+##     no seu grupo (sem família no cartão).
 ##   Bloco 123: "pedidos" {abertos [{n, tipo, autor, dia, prazo_dia, meta}], historico, proximo_dia, dias_sem_fome, n, festival_gratis, festival_dobro, inverno_ameno, efeitos, ligado} e
 ##     "eventos" {proximo_dia, ultimo_id, ultimo_dia {evento: dia}, historico, efeitos [{t, chave, v, texto, ate_dia}], ligado}. Save antigo: sem pedidos e sem eventos.
 ##   Bloco 127: "estruturas" {predios [{path, pos [x,y], d {c, q}}] (só os prédios feridos por invasor: a condição 1..0 e se caiu em

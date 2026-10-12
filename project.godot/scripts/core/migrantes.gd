@@ -262,6 +262,7 @@ func chama_grupo(n: int = -1, motivo: String = "") -> Array:
 	if n <= 0:
 		n = randi_range(grupo_min, maxi(grupo_max, grupo_min))
 	var chegaram_agora: Array = []
+	_grupo_n += 1  # Bloco 135: quem chegou junto é a mesma família (o cartão mostra)
 	var parent := get_tree().get_first_node_in_group("village_hub").get_parent() if get_tree().get_first_node_in_group("village_hub") else get_parent()
 	var base := _origem()
 	for i in n:
@@ -271,7 +272,7 @@ func chama_grupo(n: int = -1, motivo: String = "") -> Array:
 		w.name = "Migrante%d" % (Time.get_ticks_usec() % 1000000 + i)
 		w.position = base + Vector2(randf_range(-16, 16), randf_range(-16, 16) + i * 10.0)
 		parent.add_child(w)
-		var e := {"w": w, "condicao": _sorteia_condicao(), "funcao": FUNCOES[randi() % FUNCOES.size()], "prazo": prazo_dias * _seg_por_dia() * (_politicas().prazo_mult() if _politicas() else 1.0)}  # Bloco 108: seletiva = mais prazo
+		var e := {"w": w, "condicao": _sorteia_condicao(), "funcao": FUNCOES[randi() % FUNCOES.size()], "prazo": prazo_dias * _seg_por_dia() * (_politicas().prazo_mult() if _politicas() else 1.0), "grupo": _grupo_n}  # Bloco 108: seletiva = mais prazo
 		if e.condicao == "com_fome":
 			w.hunger = w.hunger_max * 0.25
 		esperando.append(e)
@@ -291,9 +292,39 @@ func chama_grupo(n: int = -1, motivo: String = "") -> Array:
 	var som := get_node_or_null("/root/Audio")
 	if som and som.has_method("migrantes"):
 		som.migrantes(_lugar_de_espera(0))
+	if som and som.has_method("ui"):
+		som.ui("noticia_boa")  # Bloco 135: um toque curto de aviso que se ouve de qualquer lugar (o de cima é no portão)
 	chegaram.emit(n)
 	mudou.emit()
 	return chegaram_agora
+
+
+## Bloco 135: o número do grupo (família) de quem chega; o cartão mostra com quem cada um veio.
+var _grupo_n := 0
+
+
+## Os outros que chegaram junto com `w` (a família dele), pelos nomes.
+func familia_de(w: Node) -> Array[String]:
+	var g := -1
+	for e in esperando:
+		if e.w == w:
+			g = int(e.get("grupo", -1))
+	var out: Array[String] = []
+	if g < 0:
+		return out
+	for e in esperando:
+		if e.w != w and int(e.get("grupo", -2)) == g and is_instance_valid(e.w):
+			out.append(String(e.w.display_name))
+	return out
+
+
+## Bloco 135: aceita todos que dá (enquanto houver cama). Devolve quantos entraram.
+func aceita_todos() -> int:
+	var n := 0
+	for e in esperando.duplicate():
+		if is_instance_valid(e.w) and motivo_aceitar(e.w) == "" and aceita(e.w):
+			n += 1
+	return n
 
 
 func _sorteia_condicao() -> String:
@@ -385,8 +416,8 @@ func get_save_data() -> Dictionary:
 	for e in esperando:
 		if is_instance_valid(e.w):
 			lista.append({"ipezinho": e.w.get_save_data(), "name": String(e.w.name), "condicao": e.condicao, "funcao": e.funcao,
-				"prazo": snappedf(float(e.prazo), 0.1)})
-	return {"proximo": snappedf(proximo, 0.1), "esperando": lista}
+				"prazo": snappedf(float(e.prazo), 0.1), "grupo": int(e.get("grupo", 0))})
+	return {"proximo": snappedf(proximo, 0.1), "esperando": lista, "grupo_n": _grupo_n}
 
 
 ## Save antigo (sem a chave): ninguém esperando, o primeiro grupo no prazo de uma partida nova.
@@ -396,6 +427,7 @@ func load_save_data(d: Dictionary) -> void:
 			e.w.queue_free()
 	esperando.clear()
 	proximo = SaveUtil.num(d, "proximo", primeiro_grupo_dias * _seg_por_dia())
+	_grupo_n = SaveUtil.integer(d, "grupo_n", 0)  # Bloco 135 (save antigo: cada um sozinho)
 	var eco := get_tree().get_first_node_in_group("economy")
 	var hub := get_tree().get_first_node_in_group("village_hub")
 	if eco == null or eco.worker_scene == null or hub == null:
@@ -413,6 +445,7 @@ func load_save_data(d: Dictionary) -> void:
 		hub.get_parent().add_child(w)
 		var cond := SaveUtil.text(x, "condicao", "saudavel")
 		esperando.append({"w": w, "condicao": cond if cond in CONDICOES else "saudavel",
-			"funcao": SaveUtil.text(x, "funcao", Worker.ROLE_MINER), "prazo": maxf(SaveUtil.num(x, "prazo", prazo_dias * _seg_por_dia()), 1.0)})
+			"funcao": SaveUtil.text(x, "funcao", Worker.ROLE_MINER), "prazo": maxf(SaveUtil.num(x, "prazo", prazo_dias * _seg_por_dia()), 1.0),
+			"grupo": SaveUtil.integer(x, "grupo", -1 - i)})
 		i += 1
 	mudou.emit()

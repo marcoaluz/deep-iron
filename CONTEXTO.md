@@ -1,6 +1,11 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **134** (commits locais do 131 ao 134, sem push). TUDO até o Bloco 130 está enviado pro GitHub. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele vai jogar e testar os blocos 129–133 (pediu que o 133 fosse aplicado SEM rodar testes). Falta: o retorno dele do jogo, aprovar as variações dos pisos.
+Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **135** (commits locais do 131 ao 135, sem push). Fila do Marco (mesma mensagem): Bloco 136 (vender no armazém com caixa, janela das funções, pesquisador com fila) e Bloco 137 (som da noite com sons pontuais e candidatas no F3 — ele disse "pode gastar" —, a chegada do padre ferido, refeições do padre e dos guardas). TUDO até o Bloco 130 está enviado pro GitHub. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele vai jogar e testar os blocos 129–133 (pediu que o 133 fosse aplicado SEM rodar testes). Falta: o retorno dele do jogo, aprovar as variações dos pisos.
+
+## Bloco 135 — CORREÇÕES: CONFIGURAÇÕES, JANELAS, TRAVADA AO DAR FUNÇÃO, JAZIDA, MIGRANTES, ÚNICOS (feito; commit local, sem push)
+
+Relatório `docs/BLOCO135_CORRECOES_HUD.md`; teste `b135_correcoes_hud` (54 OK); capturas `docs/arte/bloco135/`; medição `tests/bench_funcoes.gd` (`docs/bench/funcoes_*.txt`).
+- Configurações com rolagem e rodapé fixo (Cancelar/Esc desfaz, Concluir guarda); gerente de janelas `ui/gerente_janelas.gd`; dar função: dica da barra só no mouse, roupas/retratos/sons em segundo plano, sem balão com várias selecionadas (pior 1.515 -> 47 ms, 12 de uma vez 620 -> 24 ms); postos da jazida virados pra câmera e fora da caixa de desenho; migrantes (ícone abre a janela, idade/família, Aceitar todos, clique no mapa, toque de aviso, save `grupo`); prédios únicos com estado no CONSTRUIR.
 
 ## Bloco 134 — O CHÃO DA VILA COM ARTE DO PIXELLAB (feito; commit local, sem push; SEM testes, a pedido)
 

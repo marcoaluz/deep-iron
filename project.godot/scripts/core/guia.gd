@@ -85,6 +85,7 @@ func _monta() -> void:
 	add_child(_setas)
 	_cartao = PanelContainer.new()
 	_cartao.name = "CartaoCapataz"
+	_cartao.add_to_group("janela_fixa")  # Bloco 135: as janelas flutuantes não abrem por cima dele
 	if UiSkin.ok():
 		_cartao.add_theme_stylebox_override("panel", UiSkin.painel(8))
 	_cartao.position = Vector2(56, 64)

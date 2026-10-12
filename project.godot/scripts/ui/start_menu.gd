@@ -64,7 +64,9 @@ func _build(status: String) -> void:
 		logo.offset_bottom = 28.0 + logo_tex.get_height() * 1.5
 		logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(logo)
+		_logo = logo
 	var center := CenterContainer.new()
+	_centro = center
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.offset_top = 150.0 if logo_tex else 0.0
 	add_child(center)
@@ -167,15 +169,29 @@ dificuldade: " + str(s.dificuldade)
 	settings_button.pressed.connect(func():
 		Audio.click()
 		box.visible = false
+		_tela_cheia_config(true)  # Bloco 135: as Configurações usam a altura toda (o logo sai da frente)
 		settings.visible = true)
 	settings.back_pressed.connect(func():
 		settings.visible = false
+		_tela_cheia_config(false)
 		box.visible = true)
 
 	var quit := _button("Sair")
 	quit.pressed.connect(func(): get_tree().quit())
 	box.add_child(quit)
 	box.add_child(_label("arquivo do save: %s" % SaveManager.caminho_legivel(), Tipo.DETALHE, COLOR_DIM))
+
+
+## Bloco 135: com as Configurações abertas a janela usa a tela toda (o logo some e o conteúdo sobe pro topo); ao voltar, como antes.
+var _logo: Control
+var _centro: Control
+
+
+func _tela_cheia_config(on: bool) -> void:
+	if _logo:
+		_logo.visible = not on
+	if _centro:
+		_centro.offset_top = 0.0 if on or _logo == null else 150.0
 
 
 ## Bloco 113: a tela de Nova partida no lugar do menu.

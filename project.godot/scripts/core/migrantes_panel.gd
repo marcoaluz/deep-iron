@@ -3,6 +3,9 @@ extends PanelContainer
 ## que gostaria, e os botões Aceitar (precisa de cama livre: sem ela, desabilitado com a dica "falta cama"), Recusar e
 ## Esperar. Embaixo, a atratividade da vila (o que faz vir mais gente) e quando chega o próximo grupo. Abre sozinha quando
 ## um grupo chega; também pelo alerta e pelo menu "Janelas".
+## Bloco 135: o cartão mostra também a idade e a família (quem chegou junto), e em cima o botão ACEITAR TODOS (enquanto houver
+## cama). Abre pelo ícone da coluna da direita (com o contador) e clicando neles no mapa (main.gd: raio maior, na frente do
+## portão, de noite também).
 const Tipo := preload("res://scripts/ui/tipografia.gd")
 const Retratos := preload("res://scripts/ui/retratos.gd")
 const NOME_FUNCAO := {"minerador": "minerador", "caçador": "caçador", "cozinheiro": "cozinheiro", "lenhador": "lenhador",
@@ -16,6 +19,7 @@ var _mig: Node
 var _lista: VBoxContainer
 var _rodape: Label
 var _assinatura := ""
+var _todos: Button
 
 
 func setup(hud: CanvasLayer, migrantes: Node, _economy: Node) -> void:
@@ -55,6 +59,14 @@ func _build() -> void:
 	lore.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lore.custom_minimum_size.x = 480.0
 	vbox.add_child(lore)
+	_todos = _hud._button("Aceitar todos")
+	_todos.name = "AceitarTodos"
+	_todos.pressed.connect(func():
+		Audio.click()
+		var n: int = _mig.aceita_todos()
+		_hud.show_toast("%d migrante%s entr%s na vila" % [n, "s" if n != 1 else "", "aram" if n != 1 else "ou"], Color(0.7, 1.0, 0.6))
+		refresh())
+	vbox.add_child(_todos)
 	_lista = VBoxContainer.new()
 	_lista.add_theme_constant_override("separation", 6)
 	vbox.add_child(_lista)
@@ -86,6 +98,10 @@ func _cartao(e: Dictionary) -> Control:
 	info.add_child(_hud._label("%s  (%s)" % [w.display_name, sexo], Tipo.TITULO, _hud.COLOR_TEXT))
 	info.add_child(_hud._label("Condição: %s" % _mig.texto_condicao(e), Tipo.DETALHE, COR_CONDICAO.get(String(e.condicao), _hud.COLOR_TEXT)))
 	info.add_child(_hud._label("Gostaria de ser: %s" % NOME_FUNCAO.get(String(e.funcao), String(e.funcao)), Tipo.DETALHE, _hud.COLOR_DIM))
+	var fase := String(w.get("fase")) if w.get("fase") != null else "adulto"
+	info.add_child(_hud._label("Idade: %s" % {"bebe": "bebê", "crianca": "criança", "aprendiz": "jovem (aprendiz)"}.get(fase, "adulto"), Tipo.DETALHE, _hud.COLOR_DIM))
+	var fam: Array[String] = _mig.familia_de(w) if _mig.has_method("familia_de") else []
+	info.add_child(_hud._label("Família: %s" % ("chegou com " + ", ".join(fam) if not fam.is_empty() else "veio sozinho" if w.get("gender") != "menina" else "veio sozinha"), Tipo.DETALHE, _hud.COLOR_DIM))
 	var horas := float(e.prazo) / maxf(_mig._seg_por_dia() / 24.0, 0.01)
 	info.add_child(_hud._label("Vai embora em %dh" % ceili(horas), Tipo.DETALHE, _hud.COLOR_DIM))
 	var botoes := VBoxContainer.new()
@@ -134,6 +150,10 @@ func refresh() -> void:
 			_lista.add_child(_hud._label("Ninguém esperando no portão agora.", Tipo.CORPO, _hud.COLOR_TEXT))
 		for e in esp:
 			_lista.add_child(_cartao(e))
+	var podem := esp.filter(func(e): return _mig.motivo_aceitar(e.w) == "").size()
+	_todos.visible = esp.size() > 1
+	_todos.disabled = podem == 0
+	_todos.text = "Aceitar todos (%d com cama livre)" % mini(podem, camas) if podem > 0 else "Aceitar todos (sem cama livre)"
 	var a: float = _mig.atratividade()
 	var dias := maxf(float(_mig.proximo), 0.0) / maxf(_mig._seg_por_dia(), 1.0)
 	_rodape.text = "Camas livres: %d   •   Atratividade da vila: %d%%   •   Próximo grupo: %s" % [camas, roundi(a * 100.0),

@@ -116,13 +116,28 @@ static func streams(id: String) -> Array[AudioStream]:
 	var s := slot(id)
 	var repete := String(s.get("tipo", "")) in ["loop", "loop_predio"] or (String(s.get("tipo", "")) == "tema" and bool(s.get("loop", false)))
 	for p in arquivos(id):
-		var st = load(p)
+		# Bloco 135: já pedido em segundo plano (aquece)? pega de lá (sem carregar de novo no meio do quadro)
+		var st = ResourceLoader.load_threaded_get(p) if ResourceLoader.load_threaded_get_status(p) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE else load(p)
 		if st is AudioStream:
 			if repete:
 				forca_loop(st)
 			out.append(st)
 	_cache[id] = out
 	return out
+
+
+## Bloco 135: pede em SEGUNDO PLANO os arquivos dos slots `ids` (o Audio chama no começo com todos os sons curtos). Antes
+## a 1ª voz "Sim!" de cada gênero carregava os arquivos dentro do quadro (até 70 ms ao dar uma função).
+static func aquece(ids: Array) -> void:
+	carrega()
+	if ignora_arquivos:
+		return
+	for id in ids:
+		if _cache.has(id):
+			continue
+		for p in arquivos(String(id)):
+			if ResourceLoader.load_threaded_get_status(p) == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE and not ResourceLoader.has_cached(p):
+				ResourceLoader.load_threaded_request(p, "AudioStream")
 
 
 ## Esquece o que já foi carregado (os testes de carga trocam a pasta ou ligam o "ignora arquivos").

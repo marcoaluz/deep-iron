@@ -162,3 +162,12 @@ O chão novo (`iso_chao_vila.gd`, ~2.830 células + ~670 detalhes) e os caminhos
 posição das células são calculadas uma vez; refazer (só quando a vila muda: estágio, Centro, prédios) troca a peça no buffer
 de uma vez: ~9 ms. `bench_cena -Rapido`: A 10,76 / 11,11 · B 14,63 / 16,67 · C 23,92 / 26,15 (méd / p99, ms), contra
 10,62 / 12,12 · 14,61 / 16,67 · 23,75 / 29,49 no Bloco 131 (`docs/bench/bench_2026-10-12_b134.txt`).
+
+## Bloco 135 — dar função sem travar — 2026-10-12
+
+`tests/bench_funcoes.gd` (com janela): 12 pessoas, uma por uma e as 12 de uma vez. ANTES: pior 1.514,8 ms, mediana 105,4,
+14 quadros > 50 ms em 192, as 12 de uma vez 620,5 ms. DEPOIS: pior 46,8–49,4 ms, mediana 26–28, nenhum quadro > 50 ms, as 12
+de uma vez 23,8–27,2 ms. Causas: a dica da barra de funções reavaliava os requisitos de todas as funções 1x/s (40–55 ms,
+sempre), a roupa nova esperava a pasta inteira de animações, o retrato e a 1ª voz carregavam no quadro, e 12 balões refaziam
+12 espelhos. Ver `docs/BLOCO135_CORRECOES_HUD.md`.
+

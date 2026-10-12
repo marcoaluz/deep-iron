@@ -255,6 +255,10 @@ func _process(delta: float) -> void:
 
 # =================================================================== montagem
 func _build() -> void:
+	Retratos.aquece_todos()  # Bloco 135: os retratos carregam em segundo plano desde já (o cartão do selecionado não trava)
+	gerente = preload("res://scripts/ui/gerente_janelas.gd").new()  # Bloco 135: antes das janelas (elas se registram)
+	add_child(gerente)
+	gerente.setup(self)
 	_build_top_bar()
 	_build_order_bar()
 	_monta_cartao_selecionado()
@@ -266,6 +270,11 @@ func _build() -> void:
 	_build_hints()
 	_build_avisos()
 	_build_requisitos()  # Bloco 128
+	gerente.registra(_req_card, "requisitos")
+	gerente.registra(_hint_panel, "ajuda")
+	for id in ["casa", "galeria"]:
+		if _panels.has(id):
+			gerente.registra(_panels[id], "predio")
 	set_hints_visible(Settings.get_value("hud", "show_hints", false))
 	set_collapsed.call_deferred(Settings.get_value("hud", "collapsed", false), false)
 	_reposiciona.call_deferred()
@@ -439,6 +448,10 @@ func _build_order_bar() -> void:
 			info.button.pressed.connect(Callable(_main, entry[4]))
 			info["grupo"] = g[0]
 			_job_buttons[job] = info
+			# Bloco 135: a lista de requisitos (✓/✗) da dica é montada só quando o mouse chega no botão
+			var b0: Button = info.button
+			b0.set_meta("dica_base", b0.tooltip_text)
+			b0.mouse_entered.connect(func(): b0.tooltip_text = _dica_funcao(job, String(b0.get_meta("dica_base"))))
 	var g_ordem := _grupo_barra(row, "ORDENS")
 	var none := _order_button(g_ordem, "Sem função", "0", _ic("sem_funcao", null, false), COLOR_NO_JOB,
 		"Tira a função: entregam o que estiverem carregando e esperam no Centro da Vila.")
@@ -792,7 +805,7 @@ func _build_hints() -> void:
 	panel.set_anchors_preset(Control.PRESET_CENTER)
 	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	panel.grow_vertical = Control.GROW_DIRECTION_BOTH
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP  # (Bloco 135: tem o X agora)
 	add_child(panel)
 	_hint_panel = panel
 	var v := VBoxContainer.new()
@@ -812,7 +825,17 @@ func _fill_hints() -> void:
 	for c in _hint_box.get_children():
 		c.queue_free()
 	var k := func(a: String) -> String: return Teclas.nome(a)
-	_hint_box.add_child(_label("ATALHOS  (%s fecha)" % k.call("dicas"), Tipo.TITULO, COLOR_TITLE))
+	var topo := HBoxContainer.new()  # Bloco 135: o título e o X
+	_hint_box.add_child(topo)
+	var tt := _label("ATALHOS  (%s fecha)" % k.call("dicas"), Tipo.TITULO, COLOR_TITLE)
+	tt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	topo.add_child(tt)
+	var fx: Button = _button("X")
+	fx.pressed.connect(func():
+		Audio.click()
+		set_hints_visible(false)
+		Settings.set_value("hud", "show_hints", false))
+	topo.add_child(fx)
 	var lines := [
 		"Seleção:  clique  •  arrastar = vários  •  Shift+clique = somar/tirar  •  Esc = soltar  •  %s = próximo  •  %s = seguir" % [k.call("proximo"), k.call("seguir")],
 		"Ordens:  botão direito = mover / minerar a jazida clicada",
@@ -832,7 +855,10 @@ func _fill_hints() -> void:
 		"Teclas: Configurações > Teclas (remapear e restaurar o padrão)",
 	]
 	for line in lines:
-		_hint_box.add_child(_label(line, Tipo.DETALHE, COLOR_TEXT))
+		var l := _label(line, Tipo.DETALHE, COLOR_TEXT)
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # Bloco 135: quebra (antes passava da tela)
+		l.custom_minimum_size.x = 820
+		_hint_box.add_child(l)
 
 
 # =================================================================== janelas das estruturas
@@ -854,12 +880,27 @@ func _add_panel(id: String, script: GDScript, target: Node) -> void:
 	_wrap_scroll(panel)
 	_panels[id] = panel
 	_panel_ordem.append(id)  # Bloco 95: a ordem no menu "Janelas"
+	if gerente:
+		gerente.registra(panel, "ficha" if id == "ficha" else "predio")  # Bloco 135
 
 
 ## Bloco 108: a porção servida de verdade (prato do cardápio x ração das Políticas).
 func _porcao_real(sched: Node) -> float:
 	var c := get_tree().get_first_node_in_group("comedouros")
 	return float(c._porcao()) if c and c.has_method("_porcao") else float(sched.porcao)
+
+
+## Bloco 135: o gerente das janelas flutuantes (gerente_janelas.gd): dentro da tela, sem cobrir outra, X, Esc fecha a de cima.
+var gerente: Node
+
+
+## Bloco 135: o Esc fecha a janela de CIMA primeiro; sem janela flutuante aberta, o resto (menu, gavetas...).
+func fecha_janela_de_cima() -> bool:
+	if gerente and gerente.fecha_de_cima():
+		Audio.ui_close()
+		_foco_mapa(null)
+		return true
+	return close_panels()
 
 
 ## Bloco 95: tecla de cada janela no menu (a ação de teclas.gd).
@@ -924,6 +965,8 @@ func _fit_panel(panel: Control) -> void:
 	var sb := panel.get_theme_stylebox("panel")
 	var borda: float = sb.get_minimum_size().y if sb else 0.0
 	var max_h := maxf(vis.y - 2.0 * (TOP_BAR_H + 6.0) - borda, 120.0)
+	if gerente:
+		max_h = maxf(minf(max_h, gerente.area().size.y - borda), 120.0)  # Bloco 135: cabe entre as barras de cima e de baixo
 	var want := minf(content.get_combined_minimum_size().y, max_h)
 	if not is_equal_approx(sc.custom_minimum_size.y, want):
 		sc.custom_minimum_size.y = want
@@ -935,6 +978,8 @@ func _fit_panel(panel: Control) -> void:
 		panel.offset_right = panel.size.x * 0.5
 		panel.offset_top = -panel.size.y * 0.5
 		panel.offset_bottom = panel.size.y * 0.5
+	if gerente:
+		gerente.posiciona.call_deferred(panel)  # Bloco 135: mudou de tamanho: continua dentro da tela e sem cobrir outra
 
 
 ## Bloco 128: abre o menu CONSTRUIR já na aba `aba` (o único lugar onde se constrói prédio novo). As janelas dos prédios
@@ -975,10 +1020,10 @@ func open_panel(id: String, focus: Node = null) -> void:
 	if not _panels.has(id):
 		return
 	_build_menu.visible = false
-	for other in _panels:
-		if other != id:
-			_panels[other].visible = false
 	var panel: PanelContainer = _panels[id]
+	for other in _panels:  # Bloco 135: só fecha as do MESMO tipo (a ficha abre ao lado da janela do prédio)
+		if other != id and (gerente == null or gerente.tipo_de(_panels[other]) == gerente.tipo_de(panel)):
+			_panels[other].visible = false
 	if panel.has_method("focus"):
 		panel.focus(focus)
 	if not panel.visible:
@@ -1587,20 +1632,13 @@ func _refresh_order_bar(workers: Array) -> void:
 			counts[w.job] = counts.get(w.job, 0) + 1
 	var sel: Array = _main.selection.filter(func(u): return is_instance_valid(u))
 	var grupos_vivos := {}
-	_req_dica_t += 1.0 / maxf(refresh_rate, 1.0)
-	var dicas := _req_dica_t >= 1.0  # Bloco 128: a lista de requisitos na dica, conferida uma vez por segundo
-	if dicas:
-		_req_dica_t = 0.0
+	# (Bloco 135: a dica com os requisitos de cada função NÃO é mais refeita aqui uma vez por segundo — eram ~19 funções
+	# avaliadas de uma vez, 40–55 ms num quadro; agora ela é montada quando o mouse chega no botão)
 	for job in _job_buttons:
 		var info: Dictionary = _job_buttons[job]
 		var n: int = counts.get(job, 0)
 		_set_text(info.count, str(n) if n > 0 else "")
 		info.button.set_pressed_no_signal(not sel.is_empty() and sel.all(func(u): return u.job == job))
-		if dicas:
-			var b0: Button = info.button
-			if not b0.has_meta("dica_base"):
-				b0.set_meta("dica_base", b0.tooltip_text)
-			b0.tooltip_text = _dica_funcao(job, String(b0.get_meta("dica_base")))
 		var liberada := n > 0 or funcao_liberada(job)  # Bloco 95: só as funções já liberadas aparecem
 		if info.button.visible != liberada:
 			info.button.visible = liberada

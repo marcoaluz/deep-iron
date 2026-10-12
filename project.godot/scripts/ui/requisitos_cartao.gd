@@ -81,9 +81,15 @@ func mostra(p_job: String, p_nome: String, cor: Color, w: Node = null) -> void:
 	# em cima da barra de ordens (que cresce com a escala da interface)
 	var ordem = _hud.get("_order_bar")
 	var base: float = (ordem.size.y if ordem != null else 90.0) + 20.0
+	set_anchors_preset(Control.PRESET_CENTER_BOTTOM)  # (Bloco 135: o gerente pode ter solto as âncoras)
+	grow_horizontal = Control.GROW_DIRECTION_BOTH
+	grow_vertical = Control.GROW_DIRECTION_BEGIN
 	offset_bottom = -base
 	offset_top = -base
 	reset_size.call_deferred()
+	var ger = _hud.get("gerente")
+	if ger:
+		ger.posiciona.call_deferred(self, true)  # Bloco 135: sem cobrir a ficha nem outra janela
 
 
 ## O texto de cada linha (pro teste): "✓ ..." / "✗ ...".

@@ -92,6 +92,45 @@ func _ready() -> void:
 	_update_visual()
 
 
+## Bloco 135: quem espera a vez (ou o carregador que vem buscar) fica na FRENTE da pedra, do lado da câmera — nunca atrás,
+## onde o desenho da pedra cobre o corpo e ele parece atravessá-la. Do lado de onde vem (esquerda ou direita da tela).
+## (Os postos de trabalho já ficam na frente: mineral_node.tscn, arco de 150° centrado em 45°, o lado de baixo da tela.)
+func get_wait_position(worker: Node2D) -> Vector2:
+	var tela_x := (worker.global_position - global_position).x - (worker.global_position - global_position).y
+	var ang := deg_to_rad(45.0 + (40.0 if tela_x < 0.0 else -40.0))
+	var e := _slot_ellipse()
+	return global_position + e.position + Vector2(cos(ang), sin(ang)) * (maxf(e.size.x, e.size.y) + 24.0)
+
+
+## Bloco 135: o posto sai da caixa de desenho da pedra (a da vista iso, que varia: a entrada de galeria é maior) com folga,
+## pra o mineiro nunca empatar com ela na ordem de desenho. Guardado por posto (a pedra não se move).
+var _postos_livres := {}
+## px (do chão) de folga entre o posto e a caixa de desenho da pedra.
+const FOLGA_POSTO := 6.0
+
+
+func get_slot_position(i: int) -> Vector2:
+	if _postos_livres.has(i):
+		return _postos_livres[i]
+	var p := super(i)
+	var iso := get_tree().get_first_node_in_group("iso_view") if is_inside_tree() else null
+	var bb = iso.billboard_of(self) if iso and iso.has_method("billboard_of") else null
+	if bb == null or bb.get("box") == null:
+		return p
+	var k: float = float(iso.get("S")) if iso.get("S") != null else 1.5
+	var r: Rect2 = (bb.box.rect as Rect2)
+	r = Rect2(r.position / k, r.size / k).grow(FOLGA_POSTO)
+	var dir := (p - r.get_center()).normalized()
+	if dir == Vector2.ZERO:
+		dir = Vector2(1, 1).normalized()
+	for _n in 40:
+		if not r.has_point(p):
+			break
+		p += dir * 1.5
+	_postos_livres[i] = p
+	return p
+
+
 func _accepts(body: Node2D) -> bool:
 	return body.has_method("mine")
 

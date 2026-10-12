@@ -286,6 +286,9 @@ func _ready() -> void:
 	for id in Slots.todos():
 		if String(Slots.slot(id).get("tipo", "")) == "pontual":
 			_pont_ids.append(id)
+	# Bloco 135: os sons curtos (efeitos, voz, interface, soltos...) carregam em segundo plano desde já; a música e as
+	# ambiências entram pelo caminho delas
+	Slots.aquece(Slots.todos().filter(func(i): return not String(i).begins_with("musica/") and not String(i).begins_with("ambiencia/")))
 	_amb = {"mina": _ambience_player}
 	for ctx in CTX_SLOT:
 		if ctx != "mina":
