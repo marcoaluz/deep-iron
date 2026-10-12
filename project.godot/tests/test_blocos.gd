@@ -544,3 +544,7 @@ func test_b130_pisos_flicker() -> void:
 
 func test_b131_travadas_som() -> void:
 	run_bloco("b131_travadas_som.gd")
+
+
+func test_b132_grade_construcao() -> void:
+	run_bloco("b132_grade_construcao.gd")

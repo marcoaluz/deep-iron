@@ -94,6 +94,7 @@ func _process(delta: float) -> bool:
 		var q := spot_near(g("village_hub").global_position, 120.0, 400.0)
 		var placer = g("house_placer")
 		placer.move_to(q)
+		q = placer._pos  # (Bloco 132: o fantasma encaixa na grade)
 		var c0: float = eco.credits
 		var f0: float = arm.stock["ferro"]
 		var w0: float = arm.wood_stored
@@ -115,7 +116,7 @@ func _process(delta: float) -> bool:
 		if eq.vestiario() != null:
 			Engine.time_scale = 1.0
 			var v = eq.vestiario()
-			check(v.global_position == get_meta("pos"), "engenheiro ergueu o Vestiário no lugar")
+			check(v.global_position.distance_to(get_meta("pos")) < 0.5, "engenheiro ergueu o Vestiário no lugar")
 			check(v.is_in_group("clickable") and v.panel_id == "oficina" and v.contains_point(v.global_position + Vector2(0, -30)), "clicar nele abre a janela da Oficina")
 			var hud = main.get_node("HUD")
 			hud.open_panel(v.panel_id)
@@ -132,7 +133,7 @@ func _process(delta: float) -> bool:
 			step = 99
 	elif step == 3 and t - t_mark > 1.5:
 		var v = eq.vestiario()
-		check(v != null and v.global_position == get_meta("pos") and get_nodes_in_group("vestiarios").size() == 1, "save/load: Vestiário no mesmo lugar (um só)")
+		check(v != null and v.global_position.distance_to(get_meta("pos")) < 0.5 and get_nodes_in_group("vestiarios").size() == 1, "save/load: Vestiário no mesmo lugar (um só)")
 		check(eq.order_block_reason("casaco") == "", "save/load: continua funcionando")
 		step = 99
 	if step == 99:

@@ -188,8 +188,49 @@ func get_slot_position(i: int) -> Vector2:
 		var dir := Vector2(cos(angle) * slot_radius.x, sin(angle) * slot_radius.y).normalized()
 		var half := art.size * 0.5 + Vector2.ONE * IsoArt.FRONT_GAP
 		var k := minf(half.x / maxf(absf(dir.x), 0.001), half.y / maxf(absf(dir.y), 0.001))
-		return art.get_center() + dir * k
+		return _slot_livre(i, art.get_center() + dir * k, art)
 	return global_position + Vector2(cos(angle) * slot_radius.x, sin(angle) * slot_radius.y)
+
+
+## Bloco 132: com os prédios ENCOSTADOS (grade, folga zero), o posto do lado colado no vizinho cairia dentro dele. O posto
+## que cai em outra estrutura vai pra FRENTE (a porta, que a grade de construção mantém livre), espalhado na largura.
+## Guardado por versão das estruturas (environment.nav_pedidos: todo prédio que nasce ou sai pede uma malha nova).
+var _slots_livres := {}
+var _slots_versao := -1
+var _env_slots: Node
+
+
+func _slot_livre(i: int, p: Vector2, art: Rect2) -> Vector2:
+	if _env_slots == null or not is_instance_valid(_env_slots):
+		_env_slots = get_tree().get_first_node_in_group("environment") if is_inside_tree() else null
+	if _env_slots == null or _env_slots.get("nav_pedidos") == null:
+		return p
+	var v: int = _env_slots.nav_pedidos
+	if v != _slots_versao:
+		_slots_livres.clear()
+		_slots_versao = v
+	if not _slots_livres.has(i):
+		var q := p
+		if _posto_bloqueado(p):
+			var n := maxi(slot_count, 1)
+			var passo := minf(18.0, (art.size.x - 12.0) / maxf(float(n - 1), 1.0))
+			var dx := (float(i) - float(n - 1) * 0.5) * passo
+			q = IsoArt.front(self, Vector2(art.get_center().x - global_position.x + dx, 0.0))
+		_slots_livres[i] = q
+	return _slots_livres[i]
+
+
+## O ponto cai dentro da base de OUTRA estrutura (com a folga de quem anda)?
+func _posto_bloqueado(p: Vector2) -> bool:
+	var raio: float = float(_env_slots.get("nav_agent_radius")) if _env_slots.get("nav_agent_radius") != null else 7.0
+	for g in _env_slots.STATION_GROUPS + _env_slots.NAV_EXTRA_GROUPS:
+		for n in get_tree().get_nodes_in_group(g):
+			if n == self:
+				continue
+			var r := IsoArt.base_rect(n)
+			if r.has_area() and r.grow(raio).has_point(p):
+				return true
+	return false
 
 
 ## Ponto de espera, fora da estação, do lado de onde o worker está vindo.

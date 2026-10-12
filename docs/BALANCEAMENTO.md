@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1330 valores** em 4 pastas de scripts (90 trocados por alguma cena).
+Total: **1335 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (98)
 
@@ -247,13 +247,21 @@ Total: **1330 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `bounds` | Rect2() |  | Área onde o centro da câmera pode ficar (normalmente o mapa). Tamanho zero = sem limite. |
 | `bounds_margin` | 80.0 |  |  |
 
+## `scripts/core/caminho_placer.gd` (1)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `max_retangulo` | 600 |  | Bloco 132: o maior retângulo de rua de uma vez (células). |
+
 ## `scripts/core/caminhos.gd` (5)
 
 **(sem grupo)**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `tamanho` | 64.0 / 3.0 |  | Lado de uma célula da grade (px do chão). Bloco 130: 64/3 — com a escala 1,5 da vista, o losango da célula tem exatamente 64x32 px de arte: o tamanho dos ladrilhos do PixelLab (iso_pisos.gd), sem escalar o desenho. |
+| `tamanho` | 64.0 / 3.0 |  | Lado de uma célula da grade (px do chão). Bloco 130: 64/3 — com a escala 1,5 da vista, o losango da célula tem exatamente 64x32 px de arte: o tamanho dos ladrilhos do PixelLab (iso_pisos.gd), sem escalar o desenho. Bloco 132: é a GRADE ÚNICA (grade.gd): prédios, casas e decoração encaixam nas mesmas células. |
 | `custos` | {"terra": Vector3i(2, 0, 0), "cascalho": Vector3i(3, 1, 0), "pedra": Vector3i(5, 2, 0)} |  | Custo por célula: x = créditos, y = ferro (pedra/cascalho), z = madeira. |
 | `bonus` | {"terra": 0.12, "cascalho": 0.2, "pedra": 0.3} |  | Bônus de velocidade de quem anda sobre o caminho (0.15 = +15%), por tipo. |
 | `rota_entrada` | 140.0 |  | Rota do passeio: só usa caminho que comece/termine até esta distância (px) de quem sai e do destino. |
@@ -609,7 +617,7 @@ Total: **1330 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 |---|---|---|---|
 | `obras_com_material` | true |  | Liga as obras com material: na encomenda o material fica RESERVADO no armazém e o engenheiro leva (desligado = como antes: tudo sai do armazém na hora). Serve também pra medir o antes e o depois (tests/bench_obras.gd). |
 
-## `scripts/core/environment.gd` (55)
+## `scripts/core/environment.gd` (58)
 
 **Mapa**
 
@@ -705,6 +713,9 @@ Total: **1330 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `palisade_y` | -462.0 |  | Paliçada entre a floresta e a vila: y da linha e meia largura da abertura do portão. (Bloco 74: com o mapa da maquete v3 a paliçada corre de norte a sul — ver palisade_x; o y fica sendo a beira da floresta do leste.) |
 | `gate_half_width` | 34.0 |  | Meia largura do vão do portão (px do mundo). Bloco 98: é a largura do DESENHO do portão (68 px de ponta a ponta): a paliçada começa onde o portão acaba, sem fresta nem sobra. Quem passa vai pelas faixas do portão (barricada.gd). |
 | `cliff_thickness` | 6.0 |  | Espessura (px do mundo) da "parede" que a navegação vê na beira de um penhasco. |
+| `area_vila_meia` | [Vector2(260, 260), Vector2(320, 320), Vector2(380, 380), Vector2(440, 440), Vector2(500, 500)] |  | A ÁREA DA VILA: um retângulo em volta do Centro da Vila que cresce com o estágio (meia largura x meia altura, px do chão, um por estágio). Dentro dela a decoração REMOVÍVEL (pedra solta, mato, entulho, escoras soltas) sai quando o mapa é montado, ao carregar e quando a vila cresce; a grade de construção é desenhada nela. Fica sempre do lado de dentro da paliçada e antes da vila antiga do leste. |
+| `area_vila_raio_entradas` | 70.0 |  | Raio (px) em volta das ENTRADAS (portão, boca da mina, escada em espiral, elevadores) onde nada é tirado sozinho. |
+| `custo_limpar` | 5 |  | Créditos pra LIMPAR uma peça que atrapalha a construção (clique nela no modo de construção; não devolve nada). |
 
 ## `scripts/core/equipment.gd` (28)
 
@@ -1001,6 +1012,14 @@ Total: **1330 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `confere_cada` | 0.25 |  | Segundos entre as conferências do passo (as setas andam a cada quadro). |
 | `seta_pulso_hz` | 1.6 |  | Pulsar das setas: ciclos por segundo e quantos px ela sobe e desce. |
 | `seta_pulso_px` | 6.0 |  |  |
+
+## `scripts/core/house_placer.gd` (1)
+
+**(sem grupo)**
+
+| valor | padrão | na cena | o quê |
+|---|---|---|---|
+| `porta_celulas` | 1 |  | Bloco 132: fileiras de células livres na frente (+y) de cada prédio: a porta/entrada e o ponto do trabalhador. |
 
 ## `scripts/core/hud.gd` (4)
 

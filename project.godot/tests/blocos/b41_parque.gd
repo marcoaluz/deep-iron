@@ -92,6 +92,7 @@ func _process(delta: float) -> bool:
 		check(placer._radius == hub.house_radius() and (placer._radius == 0.0 or placer._radius_center == hub.global_position), "segue o raio das casas (%d px do Centro; 0 = sem raio)" % placer._radius)
 		var q := spot_near(hub.global_position, 110.0, maxf(hub.house_radius(), 400.0) - 5.0)  # (Prompt 29: sem raio)
 		placer.move_to(q)
+		q = placer._pos  # (Bloco 132: o fantasma encaixa na grade)
 		var c0: float = eco.credits
 		var f0: float = arm.stock["ferro"]
 		var w0: float = arm.wood_stored
@@ -113,7 +114,7 @@ func _process(delta: float) -> bool:
 		if not mor.parks().is_empty():
 			Engine.time_scale = 1.0
 			var p = mor.parks()[0]
-			check(p.global_position == get_meta("pos"), "engenheiro ergueu o parque no lugar")
+			check(p.global_position.distance_to(get_meta("pos")) < 0.5, "engenheiro ergueu o parque no lugar")
 			print("== ânimo passivo")
 			var ws := get_nodes_in_group("ipezinhos")
 			freeze(ws[1], p.global_position + Vector2(40, 10))
@@ -164,7 +165,7 @@ func _process(delta: float) -> bool:
 		var ps: Array = mor.parks().map(func(p): return p.global_position)
 		var both: Array = get_meta("both")
 		print("  parques depois do load: ", ps)
-		check(ps.size() == 2 and ps.has(both[0]) and ps.has(both[1]), "save/load: os 2 parques no lugar")
+		check(ps.size() == 2 and both.all(func(b): return ps.any(func(q): return q.distance_to(b) < 0.5)), "save/load: os 2 parques no lugar")  # (Bloco 132: grade fracionária, save com 1 casa decimal)
 		var w = get_nodes_in_group("ipezinhos")[1]
 		freeze(w, both[1] + Vector2(20, 20))
 		step = 6

@@ -48,7 +48,7 @@ const LIVRE := Vector2(100, -600)
 func free_spot(near: Vector2) -> Vector2:
 	var placer = g("house_placer")
 	placer._collect_blockers()
-	placer._footprint = Rect2(-64, -104, 128, 124)  # (Bloco 74: a pegada de um prédio grande — um não encosta no outro)
+	placer._footprint = Rect2(-64, -104, 128, 148)  # (Bloco 74: a pegada de um prédio grande — um não encosta no outro. Bloco 132: até +44, a base de verdade do Arsenal/Campo + a porta; sem a folga antiga de 6 px a pegada genérica tem que cobrir a base inteira)
 	for r in range(1, 20):
 		for a in range(16):
 			var p: Vector2 = (near + Vector2.RIGHT.rotated(a * TAU / 16.0) * (60.0 + r * 28.0)).round()

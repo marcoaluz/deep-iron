@@ -445,6 +445,9 @@ func _finish_expansion() -> void:
 			names.append(_gallery_text(m))
 		hud.show_banner("A VILA AGORA É: %s" % stage_name().to_upper(),
 			"Galeria aberta dentro da mina: %s." % ", ".join(names))
+	var env := get_tree().get_first_node_in_group("environment")
+	if env and env.has_method("limpa_area_vila"):
+		env.limpa_area_vila()  # Bloco 132: a área da vila cresceu: o terreno novo fica sem a decoração removível
 	level_changed.emit(level)
 
 

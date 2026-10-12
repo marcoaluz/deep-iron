@@ -9,10 +9,6 @@ extends Node2D
 ##   Esc ou botão direito              -> cancela (nada é gasto)
 ## A roda do mouse e WASD continuam movendo a câmera enquanto isso.
 ##
-## Lugar válido: a "pegada" da casa (base + degrau da porta, onde ficam as camas)
-## tem que caber na área andável do mapa e não pode encostar em nenhuma estrutura
-## (e na área de trabalho dela), jazida, horta, casa ou decoração que bloqueia.
-##
 ## Bloco 37: begin() aceita `opts` —
 ##   footprint: Rect2   pegada de outro prédio (Centro da Vila, Armazém, Comedouro)
 ##   ignore: Array      nós que não contam como obstáculo (o próprio prédio sendo mudado)
@@ -23,23 +19,45 @@ extends Node2D
 ##   area: Rect2        onde pode (em vez da área da mina) — Bloco 45: coletor na clareira
 ##   area_name: String  como chamar essa área no aviso ("fora da clareira")
 ##   repeat: bool       Bloco 90: depois de confirmar, continua no modo (decoração: várias em sequência)
+##
+## Bloco 132: a GRADE ÚNICA (grade.gd). O prédio ocupa CÉLULAS INTEIRAS (a pegada da base arredondada pra cima) e o
+## fantasma encaixa na grade. A folga entre prédios é ZERO (casas encostadas); o que fica livre é a PORTA: `porta_celulas`
+## fileira(s) de células na frente da base (+y, o lado da arte onde fica a entrada e o ponto de trabalho — IsoArt.front),
+## na largura do prédio. Regras (check_spot):
+##   - a pegada não cobre célula ocupada (base de estrutura, decoração que bloqueia) nem a PORTA de outro prédio;
+##   - a porta do prédio novo cai em chão livre;
+##   - depois de posto, a porta dele e as portas que já chegavam ao Centro continuam ligadas à porta do Centro por células
+##     livres (busca em largura na grade da área da vila): ninguém fica preso.
+## A área de trabalho das estações deixou de bloquear o vizinho: o trabalhador fica na frente da base (dentro da porta).
+## Peça do mapa que atrapalha e dá pra LIMPAR (pedra, mato, entulho, tocha solta): o clique paga `custo_limpar` (environment)
+## e tira a peça (poeira, sem reembolso); o próximo clique constrói. A tecla da Defesa (G) liga/desliga a GRADE enquanto
+## posiciona (a vista iso desenha: iso_grade.gd).
 
 signal finished(confirmed: bool)
 
 const CASA_TEXTURE := preload("res://assets/game/casa.png")
 const IsoArt := preload("res://scripts/iso/iso_art.gd")
 const Tipo := preload("res://scripts/ui/tipografia.gd")
+const Grade := preload("res://scripts/core/grade.gd")
+const Teclas := preload("res://scripts/core/teclas.gd")
+const Settings := preload("res://scripts/core/settings.gd")
 ## Pegada da casa em volta do ponto clicado (o ponto é o pé da casa): do telhado
 ## (-54) até o degrau da porta, onde ficam as camas (+24).
 const FOOTPRINT := Rect2(-32, -54, 64, 78)
 const COLOR_OK := Color(0.45, 1.0, 0.5)
 const COLOR_BAD := Color(1.0, 0.35, 0.3)
 
+## Bloco 132: fileiras de células livres na frente (+y) de cada prédio: a porta/entrada e o ponto do trabalhador.
+@export var porta_celulas: int = 1
+
+## Bloco 132: a grade aparece enquanto posiciona (liga/desliga na tecla da Defesa; fica nas configurações).
+static var grade_ligada := true
+
 var active := false
 var _on_confirm: Callable
 var _pos := Vector2.ZERO
 var _reason := ""
-var _blockers: Array = []  # [{rect: Rect2, name: String}]
+var _blockers: Array = []  # [{rect: Rect2, name: String}] (o retângulo de cada obstáculo; a conferência é por célula)
 var _ghost: Sprite2D
 var _hint_layer: CanvasLayer
 var _hint: Label
@@ -57,10 +75,34 @@ var art_name := ""
 ## Bloco 76: o fantasma está encaixado num lote livre
 var no_lote := false
 
+# ---- Bloco 132: a ocupação da grade (calculada ao entrar no modo; nada se move enquanto escolhe)
+## célula -> quem ocupa ("outra casa", "uma pedra"...)
+var ocupadas := {}
+## célula -> de quem é a porta
+var portas := {}
+## [{nome, celulas: Array[Vector2i]}] as portas de cada prédio
+var _portas_lista: Array = []
+## célula -> a peça do mapa que dá pra limpar ali
+var _limpaveis := {}
+## muda quando a ocupação muda (a vista redesenha)
+var versao_ocupacao := 0
+## o fantasma em células: a pegada, a porta e as células em conflito (vermelhas)
+var fantasma_celulas := Rect2i()
+var fantasma_porta := Rect2i()
+var celulas_ruins := {}
+var _ruins := {}
+var _limpar_pendentes: Array = []
+# a busca em largura (porta -> Centro)
+var _regiao := Rect2i()
+var _chao := {}
+var _fonte: Array[Vector2i] = []
+var _portas_ok0: Array = []
+
 
 func _ready() -> void:
 	add_to_group("house_placer")
 	z_index = 60
+	grade_ligada = bool(Settings.get_value("jogo", "grade_construcao", true))
 	_ghost = Sprite2D.new()
 	_ghost.texture = CASA_TEXTURE
 	_ghost.hframes = 3
@@ -97,9 +139,9 @@ func begin(on_confirm: Callable, texture: Texture2D = CASA_TEXTURE, hframes: int
 	_what = what
 	_footprint = opts.get("footprint", FOOTPRINT)
 	art_name = IsoArt.name_for_texture(texture)
-	var af := IsoArt.placer_footprint(get_tree(), art_name)
+	var af := IsoArt.footprint_of(get_tree(), art_name)
 	if af.has_area():
-		_footprint = af  # o prédio novo tem fundo de verdade (a pegada antiga era o desenho de frente)
+		_footprint = af  # Bloco 132: a BASE do desenho, sem folga (a porta é conferida à parte, na frente)
 	_ignore = opts.get("ignore", [])
 	_cancelable = opts.get("cancelable", true)
 	_radius = opts.get("radius", 0.0)
@@ -134,6 +176,9 @@ func _end(confirmed: bool) -> void:
 	_radius = 0.0
 	_area = Rect2()
 	_repeat = false
+	art_name = ""
+	fantasma_celulas = Rect2i()
+	fantasma_porta = Rect2i()
 	finished.emit(confirmed)
 
 
@@ -162,11 +207,23 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE:
 		get_viewport().set_input_as_handled()
 		cancel()
+	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == Teclas.tecla("painel_defesa"):
+		get_viewport().set_input_as_handled()  # Bloco 132: enquanto posiciona, a tecla da Defesa liga/desliga a grade
+		alterna_grade()
+
+
+## Bloco 132: liga/desliga a grade de construção (fica nas configurações).
+static func alterna_grade() -> void:
+	grade_ligada = not grade_ligada
+	Settings.set_value("jogo", "grade_construcao", grade_ligada)
 
 
 ## Tenta construir na posição atual do fantasma.
 func try_confirm() -> bool:
 	if not active:
+		return false
+	if _reason != "" and not _limpar_pendentes.is_empty():
+		_limpa_pendentes()  # Bloco 132: o clique LIMPA a peça que atrapalha; o próximo constrói
 		return false
 	if _reason != "":
 		Audio.error()
@@ -185,6 +242,34 @@ func try_confirm() -> bool:
 	return false
 
 
+## Bloco 132: paga e tira as peças do mapa que atrapalham o fantasma (sem reembolso).
+func _limpa_pendentes() -> bool:
+	var env := get_tree().get_first_node_in_group("environment")
+	var eco := get_tree().get_first_node_in_group("economy")
+	var hud := get_tree().get_first_node_in_group("hud")
+	if env == null or eco == null:
+		return false
+	var custo := float(int(env.custo_limpar) * _limpar_pendentes.size())
+	if not eco.spend(custo, 0.0):
+		Audio.error()
+		if hud and hud.has_method("show_toast"):
+			hud.show_toast("Limpar custa %d cr (faltam créditos)" % int(custo), COLOR_BAD)
+		return false
+	var iso := get_tree().get_first_node_in_group("iso_view")
+	var n := 0
+	for p in _limpar_pendentes:
+		if is_instance_valid(p) and env.limpar_decor(p):
+			n += 1
+			if iso and iso.has_method("poeira_em"):
+				iso.poeira_em((p as Node2D).global_position)
+	Audio.place_sound()
+	if hud and hud.has_method("show_toast"):
+		hud.show_toast("Terreno limpo: %d peça%s (−%d cr)" % [n, "" if n == 1 else "s", int(custo)], Color(0.95, 0.85, 0.5))
+	_collect_blockers()
+	_refresh()
+	return n > 0
+
+
 ## Move o fantasma pra uma posição do mundo (usado pelos testes e pelo mouse).
 func move_to(world_pos: Vector2) -> void:
 	_pos = world_pos
@@ -196,6 +281,8 @@ var _extra_check := Callable()
 
 
 func check_spot(pos: Vector2) -> String:
+	_ruins = {}
+	_limpar_pendentes = []
 	var fp := Rect2(pos + _footprint.position, _footprint.size)
 	var env := get_tree().get_first_node_in_group("environment")
 	if _area.has_area():
@@ -215,10 +302,108 @@ func check_spot(pos: Vector2) -> String:
 			return extra
 	if _radius > 0.0 and pos.distance_to(_radius_center) > _radius:
 		return "longe demais do Centro da Vila (a vila cresce e o raio aumenta)"
-	for b in _blockers:
-		if fp.intersects(b.rect):
-			return "em cima de %s" % b.name
+	# Bloco 132: por célula
+	var cs := Grade.celulas(fp)
+	var motivo := ""
+	var limpar := {}
+	for c in Grade.lista(cs):
+		if ocupadas.has(c):
+			_ruins[c] = true
+			if _limpaveis.has(c):
+				limpar[_limpaveis[c]] = true
+			elif motivo == "":
+				motivo = "em cima de %s" % ocupadas[c]
+		elif portas.has(c):
+			_ruins[c] = true
+			if motivo == "":
+				motivo = "na frente da porta de %s (a entrada precisa ficar livre)" % portas[c]
+	var porta := _porta_de(cs)
+	for c in Grade.lista(porta):
+		if ocupadas.has(c):
+			_ruins[c] = true
+			if _limpaveis.has(c):
+				limpar[_limpaveis[c]] = true
+			elif motivo == "":
+				motivo = "a entrada ficaria bloqueada por %s" % ocupadas[c]
+		elif not _chao_ok(c):
+			_ruins[c] = true
+			if motivo == "":
+				motivo = "a entrada daria pra fora do chão"
+	if motivo != "":
+		return motivo
+	if not limpar.is_empty():
+		_limpar_pendentes = limpar.keys()
+		var custo := 0
+		if env and env.get("custo_limpar") != null:
+			custo = int(env.custo_limpar) * limpar.size()
+		return "%s no caminho — clique pra LIMPAR (%d cr)" % ["uma peça" if limpar.size() == 1 else "%d peças" % limpar.size(), custo]
+	return _confere_acesso(cs, porta)
+
+
+## Bloco 132: a porta de um prédio de células `cs` (vazio = sem porta: decoração, prédio sem arte).
+func _porta_de(cs: Rect2i) -> Rect2i:
+	if art_name == "" or porta_celulas <= 0:
+		return Rect2i()
+	return Rect2i(cs.position.x, cs.end.y, cs.size.x, porta_celulas)
+
+
+## Bloco 132: com o prédio posto em `cs`, a porta dele e as portas que chegavam ao Centro continuam ligadas à porta do
+## Centro? "" = sim.
+func _confere_acesso(cs: Rect2i, porta: Rect2i) -> String:
+	if _fonte.is_empty():
+		return ""
+	var tampa := {}
+	for c in Grade.lista(cs):
+		tampa[c] = true
+	var alcance := _alcance(tampa)
+	if porta.has_area() and _regiao.intersects(porta):
+		var chega := false
+		for c in Grade.lista(porta):
+			if alcance.has(c):
+				chega = true
+				break
+		if not chega:
+			for c in Grade.lista(porta):
+				_ruins[c] = true
+			return "a entrada ficaria sem caminho até o Centro da Vila"
+	for p in _portas_ok0:
+		var ok := false
+		for c in p.celulas:
+			if alcance.has(c):
+				ok = true
+				break
+		if not ok:
+			return "fecharia o acesso de %s" % p.nome
 	return ""
+
+
+## Células livres alcançadas a partir da porta do Centro (4 vizinhos), com `tampa` também ocupada.
+func _alcance(tampa: Dictionary) -> Dictionary:
+	var visto := {}
+	var fila: Array[Vector2i] = []
+	for c in _fonte:
+		if not tampa.has(c):
+			visto[c] = true
+			fila.append(c)
+	var i := 0
+	while i < fila.size():
+		var c: Vector2i = fila[i]
+		i += 1
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var v: Vector2i = c + d
+			if visto.has(v) or not _regiao.has_point(v) or ocupadas.has(v) or tampa.has(v) or not _chao_ok(v):
+				continue
+			visto[v] = true
+			fila.append(v)
+	return visto
+
+
+## A célula é chão por onde se anda (fora de paredão, paliçada e do mapa)? Guardado por célula.
+func _chao_ok(c: Vector2i) -> bool:
+	if not _chao.has(c):
+		var env := get_tree().get_first_node_in_group("environment")
+		_chao[c] = env == null or not env.has_method("spot_ok") or env.spot_ok(Grade.centro(c), 0.0, true)
+	return _chao[c]
 
 
 func _refresh() -> void:
@@ -231,13 +416,22 @@ func _refresh() -> void:
 		if l != Vector2.INF and check_spot(l) == "":
 			_pos = l
 			no_lote = true
+	if not no_lote:
+		_pos = Grade.encaixa(_pos, _footprint)  # Bloco 132: células inteiras (o lote livre é um terreno marcado: vai no meio dele)
 	_reason = check_spot(_pos)
+	fantasma_celulas = Grade.celulas(Rect2(_pos + _footprint.position, _footprint.size))
+	fantasma_porta = _porta_de(fantasma_celulas)
+	celulas_ruins = _ruins
 	_ghost.position = _pos
 	_ghost.modulate = Color(COLOR_OK, 0.6) if _reason == "" else Color(COLOR_BAD, 0.6)
 	var cancel_txt := "  •  Esc ou botão direito cancela" if _cancelable else ""
+	var grade_txt := "  •  %s: grade" % Teclas.nome("painel_defesa")
 	if _reason == "":
-		_hint.text = "Onde fica %s?  Clique pra construir%s%s" % [_what, "  •  no LOTE LIVRE" if no_lote else "", cancel_txt]
+		_hint.text = "Onde fica %s?  Clique pra construir%s%s%s" % [_what, "  •  no LOTE LIVRE" if no_lote else "", cancel_txt, grade_txt]
 		_hint.add_theme_color_override("font_color", Color(0.95, 0.9, 0.75))
+	elif not _limpar_pendentes.is_empty():
+		_hint.text = "%s%s" % [_reason, ("\n" + cancel_txt.trim_prefix("  •  ")) if _cancelable else ""]
+		_hint.add_theme_color_override("font_color", Color(1.0, 0.8, 0.4))
 	else:
 		_hint.text = "Não dá pra construir aqui: %s%s" % [_reason, ("\n" + cancel_txt.trim_prefix("  •  ")) if _cancelable else ""]
 		_hint.add_theme_color_override("font_color", COLOR_BAD)
@@ -260,30 +454,37 @@ func _draw() -> void:
 	draw_rect(fp, Color(c, 0.9), false, 1.5)
 
 
-## Áreas proibidas: base + área de trabalho de cada estrutura e as pedras/cristais/tochas.
-## (Calculado ao entrar no modo: nada se move enquanto você escolhe.)
+## A ocupação da grade: a BASE de cada estrutura (sem folga), a porta na frente dela, as pedras/tochas e a decoração do
+## jogador; e, pra busca do acesso, a porta do Centro e as portas que já chegam nele. (Calculado ao entrar no modo: nada se
+## move enquanto você escolhe.)
 func _collect_blockers() -> void:
 	_blockers.clear()
+	ocupadas.clear()
+	portas.clear()
+	_portas_lista.clear()
+	_limpaveis.clear()
+	_chao.clear()
 	var env := get_tree().get_first_node_in_group("environment")
 	var groups: Array = env.STATION_GROUPS + env.NAV_EXTRA_GROUPS if env else ["casas"]
+	var vistos := {}
 	for group in groups:
 		for node in get_tree().get_nodes_in_group(group):
-			if _ignore.has(node):
+			if _ignore.has(node) or vistos.has(node):
 				continue
-			var r := Rect2(node.global_position, Vector2.ZERO)
+			vistos[node] = true
+			var nome := _display_name(node)
 			var art := IsoArt.blocker_rect(node)
 			if art.has_area():
-				# Prompt 29: a pegada do desenho novo + a faixa dos slots em volta (a porta/o acesso)
-				r = art
-				if int(node.get("slot_count") if node.get("slot_count") != null else 0) > 0:
-					r = art.grow(IsoArt.FRONT_GAP + 2.0)
-				_blockers.append({"rect": r.grow(6.0), "name": _display_name(node)})
+				# Prompt 29: a pegada do desenho novo. Bloco 132: sem folga em volta; a porta na frente fica livre.
+				_ocupa(art, nome)
+				_porta(Grade.celulas(art), nome, node.is_in_group("village_hub"))
 				continue
+			var r := Rect2(node.global_position, Vector2.ZERO)
 			if node.has_method("get_obstacle_outline"):
 				var outline: PackedVector2Array = node.get_obstacle_outline()
 				if outline.size() >= 3:
 					r = _bbox(outline)
-			# área de trabalho (slots) em volta: não pode tapar a porta/o acesso
+			# área de trabalho (slots) em volta, nos que não têm a arte nova (jazida, árvore, horta, toca)
 			var slots: int = node.get("slot_count") if node.get("slot_count") != null else 0
 			if slots > 0:
 				var sr: Vector2 = node.slot_radius
@@ -297,13 +498,93 @@ func _collect_blockers() -> void:
 				var cc: Vector2 = node.get_clear_center()
 				var cr: float = node.get_clear_radius() * 0.8
 				r = r.merge(Rect2(cc - Vector2(cr, cr), Vector2(cr, cr) * 2.0))
-			_blockers.append({"rect": r.grow(6.0), "name": _display_name(node)})
+			if r.has_area():
+				_ocupa(r, nome)
 	if env:
+		var pecas: Array = env.pecas_limpaveis() if env.has_method("pecas_limpaveis") else []
 		for o in env.decoration_obstacles():
-			_blockers.append({"rect": _bbox(o).grow(4.0), "name": "uma pedra/decoração"})
+			var bb := _bbox(o)
+			var peca := _peca_perto(pecas, bb.get_center())
+			_ocupa(bb, "uma pedra/decoração" if peca == null else "uma peça do mapa", peca)
 	for dec in get_tree().get_nodes_in_group("decoracoes"):  # Bloco 90: a decoração do jogador
 		if not _ignore.has(dec):
-			_blockers.append({"rect": dec.pegada_rect().grow(3.0), "name": "a decoração (%s)" % String(dec.get("id"))})
+			_ocupa(dec.pegada_rect(), "a decoração (%s)" % String(dec.get("id")))
+	_prepara_acesso(env)
+	versao_ocupacao += 1
+
+
+## A peça limpável a até 16 px de `p` (o obstáculo dela fica uns px acima do pé), ou null.
+func _peca_perto(pecas: Array, p: Vector2) -> Node2D:
+	var melhor: Node2D = null
+	for n in pecas:
+		var d := (n as Node2D).global_position.distance_to(p)
+		if d <= 16.0 and (melhor == null or d < melhor.global_position.distance_to(p)):
+			melhor = n
+	return melhor
+
+
+func _ocupa(r: Rect2, nome: String, limpavel: Node2D = null) -> void:
+	_blockers.append({"rect": r, "name": nome})
+	for c in Grade.lista(Grade.celulas(r)):
+		if not ocupadas.has(c) or (limpavel == null and _limpaveis.has(c)):
+			ocupadas[c] = nome
+			if limpavel:
+				_limpaveis[c] = limpavel
+			else:
+				_limpaveis.erase(c)
+
+
+func _porta(cs: Rect2i, nome: String, do_centro := false) -> void:
+	if porta_celulas <= 0:
+		return
+	var lst := Grade.lista(Rect2i(cs.position.x, cs.end.y, cs.size.x, porta_celulas))
+	for c in lst:
+		if not portas.has(c):
+			portas[c] = nome
+	_portas_lista.append({"nome": nome, "celulas": lst, "centro": do_centro})
+
+
+## A busca do acesso: a região (área da vila no maior estágio, com margem), a porta do Centro (a fonte) e as portas que já
+## chegam nela (só essas são cobradas: uma porta que já estava tapada antes não trava o jogador).
+func _prepara_acesso(env: Node) -> void:
+	_fonte.clear()
+	_portas_ok0.clear()
+	_regiao = Rect2i()
+	if env == null or not env.has_method("area_vila"):
+		return
+	var area: Rect2 = env.area_vila(5)
+	if not area.has_area():
+		return
+	_regiao = Grade.celulas(area.grow(Grade.CELULA * 4.0))
+	for p in _portas_lista:
+		if p.centro:
+			for c in p.celulas:
+				if not ocupadas.has(c) and _chao_ok(c):
+					_fonte.append(c)
+	if _fonte.is_empty():
+		return
+	var alcance := _alcance({})
+	for p in _portas_lista:
+		if p.centro:
+			continue
+		for c in p.celulas:
+			if alcance.has(c):
+				_portas_ok0.append(p)
+				break
+
+
+## Bloco 132: o prédio posto em `pos` conta como ocupado (a medição de quantos cabem; o jogo refaz pela árvore).
+func ocupa_simulado(pos: Vector2) -> void:
+	var cs := Grade.celulas(Rect2(pos + _footprint.position, _footprint.size))
+	_ocupa(Grade.rect_de(cs), "simulado")
+	var porta := _porta_de(cs)
+	if porta.has_area():
+		_porta(cs, "simulado")
+		for c in Grade.lista(porta):
+			if _regiao.has_point(c):
+				_portas_ok0.append(_portas_lista[-1])
+				break
+	versao_ocupacao += 1
 
 
 func _display_name(node: Node) -> String:

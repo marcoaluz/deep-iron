@@ -220,7 +220,7 @@ func _process(delta: float) -> bool:
 		iso._process(0.016)
 		var gb: Sprite2D = iso._ghost_bb
 		check(gb != null and gb.visible, "o fantasma aparece em pé na vista iso")
-		check(gb != null and gb.position.distance_to(iso.to_screen(spot)) < 1.0, "no ponto isométrico do mouse")
+		check(gb != null and gb.position.distance_to(iso.to_screen(placer._pos).round()) < 1.0, "no ponto isométrico do mouse (encaixado na grade: Bloco 132)")
 		check(placer._ghost.visibility_layer == iso.LAYER_STANDING, "fora da textura do chão (não fica deitado)")
 		check(gb != null and gb.modulate == placer._ghost.modulate, "mesma cor de pode/não pode")
 		# mirando na PAREDE do Centro da Vila: o chão embaixo do mouse é o pé da parede -> recusa

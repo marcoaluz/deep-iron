@@ -1316,6 +1316,7 @@ func _process(_delta: float) -> void:
 	_sync_trilhos()
 	_sync_areas()  # Bloco 77
 	_sync_caminhos()  # Bloco 89
+	_sync_grade()  # Bloco 132
 	_sync_ferrovia()  # Bloco 79
 	_pulsa_luzes()
 	_overlay.queue_redraw()
@@ -1634,6 +1635,41 @@ func _sync_caminhos() -> void:
 	if cam.versao != _caminhos_versao:
 		_caminhos_versao = cam.versao
 		_pisos.refaz(cam)
+
+
+# ------------------------------------------------------------ Bloco 132: a grade de construção
+const IsoGrade := preload("res://scripts/iso/iso_grade.gd")
+var _grade: Node2D
+
+
+## A visão de construção: a grade em losangos (iso_grade.gd), acima dos caminhos e abaixo das áreas de trabalho.
+func _sync_grade() -> void:
+	if _grade == null:
+		_grade = IsoGrade.new()
+		_grade.z_as_relative = false
+		_grade.z_index = Order.BASE - 45
+		_things.add_child(_grade)
+		_grade.setup(self)
+	_grade.sincroniza()
+
+
+## O desenho da grade (pro teste e pras capturas).
+func grade() -> Node2D:
+	return _grade
+
+
+## Bloco 132: a poeira de uma peça limpa no modo de construção (ponto do chão).
+func poeira_em(ground: Vector2) -> void:
+	if _poeira_chao == null:
+		_poeira_chao = Node2D.new()
+		_poeira_chao.name = "PoeiraLimpar"
+		_poeira_chao.z_as_relative = false
+		_poeira_chao.z_index = Order.BASE - 40  # (acima do chão, da grade e das áreas)
+		_things.add_child(_poeira_chao)
+	IsoFx.puff(_poeira_chao, to_screen(ground), "poeira", 14)
+
+
+var _poeira_chao: Node2D
 
 
 ## O fantasma do pincel de caminho (o ladrilho de verdade na célula do mouse). `cam` = o nó Caminhos.

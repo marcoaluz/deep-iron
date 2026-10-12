@@ -194,6 +194,9 @@ extends Node
 ##     "funeral_left". Save antigo: sem cemitério, sem corpos, funeral na igreja.
 ##   Bloco 89: caminhos.gd "caminhos" {tamanho, terra [[x, y]], cascalho [...], pedra [...]} (células da grade;
 ##     save antigo: sem caminhos).
+##   Bloco 132: environment.gd "decor_limpa" [[x, y]] — as peças do mapa que o jogador LIMPOU no modo de construção (a
+##     decoração do mapa é refeita pela semente a cada carga; a removível de dentro da área da vila sai sozinha). Save
+##     antigo: nenhuma limpa à mão (a área da vila já sai limpa na carga).
 ##   Bloco 88: calendario.gd "calendario" {padre_chegou, escolha, escolha_dia, funerais [{nome, dia}], avisou_dia,
 ##     igreja [x, y]}; o padre é um ipezinho (job "padre", salvo com os outros); ipezinho.gd "animo_fe".
 ##     Save antigo: sem padre (chega no estágio), sem igreja, nenhum funeral.
@@ -758,6 +761,9 @@ func _collect() -> Dictionary:
 	for c in tree.get_nodes_in_group("canteiros"):
 		canteiros.append(c.get_save_data())
 	data["canteiros"] = canteiros
+	var env_d := tree.get_first_node_in_group("environment")
+	if env_d and env_d.has_method("get_decor_limpa_save"):
+		data["decor_limpa"] = env_d.get_decor_limpa_save()  # Bloco 132
 	var workers := []
 	for w in tree.get_nodes_in_group("ipezinhos"):
 		workers.append(w.get_save_data())
@@ -827,6 +833,9 @@ func apply_pending(main: Node) -> void:
 	_apply_single("fundo", SaveUtil.dict(data, "fundo"))  # Bloco 70: ventiladores (save antigo: nenhum)
 	_apply_single("calendario", SaveUtil.dict(data, "calendario"))  # Bloco 88: refaz a igreja (antes dos ipezinhos)
 	_apply_single("caminhos", SaveUtil.dict(data, "caminhos"))  # Bloco 89 (save antigo: sem caminhos)
+	var env_l := get_tree().get_first_node_in_group("environment")
+	if env_l and env_l.has_method("load_decor_limpa"):
+		env_l.load_decor_limpa(SaveUtil.array(data, "decor_limpa"))  # Bloco 132 (save antigo: nenhuma limpa à mão)
 	_apply_single("decoracoes_mgr", SaveUtil.dict(data, "decoracoes"))  # Bloco 90 (save antigo: sem decoração)
 	for c in get_tree().get_nodes_in_group("canteiros"):  # (troca pelos do save)
 		c.remove_from_group("canteiros")

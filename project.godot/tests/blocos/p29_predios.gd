@@ -302,7 +302,7 @@ func _step_placer_migracao() -> void:
 	var placer := group("house_placer")
 	var hub := group("village_hub")
 	placer.begin(func(_p): return false, preload("res://assets/game/casa.png"), 3, "teste", hub.house_placer_opts())
-	var want := IsoArt.placer_footprint(main.get_tree(), "casa")
+	var want := IsoArt.footprint_of(main.get_tree(), "casa")  # (Bloco 132: a BASE sem folga; a porta é conferida à parte)
 	check(placer.art_name == "casa" and placer._footprint.is_equal_approx(want), "posicionador da casa com a pegada nova (%s)" % placer._footprint)
 	# colado numa casa da cena: recusado por causa da casa (sem o raio do Centro no caminho)
 	placer.cancel()

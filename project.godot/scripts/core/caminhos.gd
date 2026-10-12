@@ -17,8 +17,10 @@ const TIPOS := ["terra", "cascalho", "pedra"]
 const NOMES := {"terra": "Terra batida", "cascalho": "Cascalho", "pedra": "Pedra"}
 
 ## Lado de uma célula da grade (px do chão). Bloco 130: 64/3 — com a escala 1,5 da vista, o losango da célula tem
-## exatamente 64x32 px de arte: o tamanho dos ladrilhos do PixelLab (iso_pisos.gd), sem escalar o desenho.
-@export var tamanho: float = 64.0 / 3.0
+## exatamente 64x32 px de arte: o tamanho dos ladrilhos do PixelLab (iso_pisos.gd), sem escalar o desenho. Bloco 132: é a
+## GRADE ÚNICA (grade.gd): prédios, casas e decoração encaixam nas mesmas células.
+@export var tamanho: float = 64.0 / 3.0  # (= Grade.CELULA)
+const Grade := preload("res://scripts/core/grade.gd")
 ## Custo por célula: x = créditos, y = ferro (pedra/cascalho), z = madeira.
 @export var custos: Dictionary = {"terra": Vector3i(2, 0, 0), "cascalho": Vector3i(3, 1, 0), "pedra": Vector3i(5, 2, 0)}
 ## Bônus de velocidade de quem anda sobre o caminho (0.15 = +15%), por tipo.
@@ -141,7 +143,7 @@ func _celula_livre(c: Vector2i) -> bool:
 	if env and env.get("map_rect") != null and not (env.map_rect as Rect2).grow(400.0).has_point(centro_de(c)):
 		return false
 	for r in _pegadas_de_predios():
-		if r.intersects(rect_de(c)):
+		if r.grow(-Grade.FOLGA_BORDA).intersects(rect_de(c)):  # (Bloco 132: o contorno da base não tapa a rua colada)
 			return false
 	return true
 
@@ -177,7 +179,7 @@ func remover_sob_predios() -> int:
 		for y in range(c0.y, c1.y + 1):
 			for x in range(c0.x, c1.x + 1):
 				var c := Vector2i(x, y)
-				if celulas.has(c) and r.intersects(rect_de(c)):
+				if celulas.has(c) and r.grow(-Grade.FOLGA_BORDA).intersects(rect_de(c)):
 					celulas.erase(c)
 					tirou += 1
 	if tirou > 0:

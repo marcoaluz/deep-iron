@@ -101,6 +101,7 @@ func _process(delta: float) -> bool:
 		check(placer._reason == "fora da clareira", "só pode na clareira")
 		var q := spot_in(env.clearing_rect.grow(-40.0))
 		placer.move_to(q)
+		q = placer._pos  # (Bloco 132: o fantasma encaixa na grade)
 		var c0: float = eco.credits
 		var f0: float = arm.stock["ferro"]
 		var w0: float = arm.wood_stored
@@ -123,7 +124,7 @@ func _process(delta: float) -> bool:
 		if novo(hub) != null:
 			Engine.time_scale = 1.0
 			var c = novo(hub)
-			check(c.global_position == get_meta("pos"), "engenheiro ergueu o coletor no lugar")
+			check(c.global_position.distance_to(get_meta("pos")) < 0.5, "engenheiro ergueu o coletor no lugar")
 			ws()[0].set_job("ocioso")
 			print("== operar")
 			ws()[1].set_job("lenhador")
@@ -194,7 +195,7 @@ func _process(delta: float) -> bool:
 		var c = novo(hub)
 		var snap: Array = get_meta("snap")
 		print("  depois do load: ", [c.global_position, c.total_produced, c.operator.display_name if c and c.operator else "-"])
-		check(c != null and c.global_position == snap[0] and absf(c.total_produced - snap[1]) < 2.0, "save/load: coletor no lugar, total mantido")
+		check(c != null and c.global_position.distance_to(snap[0]) < 0.5 and absf(c.total_produced - snap[1]) < 2.0, "save/load: coletor no lugar, total mantido")
 		check(c.operator != null and c.operator.display_name == snap[2], "save/load: o mesmo operador voltou pro posto")
 		step = 99
 	if step == 99:

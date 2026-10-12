@@ -8,7 +8,18 @@ extends Node2D
 ##   soltar                              -> continua no modo (dá pra pintar outro trecho)
 ##   Esc ou botão direito                -> termina
 ## A roda do mouse e WASD continuam movendo a câmera.
+## Bloco 132: a mesma GRADE dos prédios (grade.gd; a célula do caminho é a célula da grade) e dois jeitos de traçar rua:
+##   Shift + arrastar -> uma RETA (no eixo em que o mouse andou mais), pintada ao soltar
+##   Ctrl + arrastar  -> um RETÂNGULO cheio, pintado ao soltar (até `max_retangulo` células)
+## Enquanto arrasta, a prévia aparece na grade (iso_grade.gd). A rua pode passar na faixa entre prédios (só a base do
+## prédio é proibida) e não conta como obstáculo pra construir (prédio por cima apaga o trecho). A tecla da Defesa (G)
+## liga/desliga a grade.
 const Tipo := preload("res://scripts/ui/tipografia.gd")
+const Teclas := preload("res://scripts/core/teclas.gd")
+const HousePlacer := preload("res://scripts/core/house_placer.gd")
+
+## Bloco 132: o maior retângulo de rua de uma vez (células).
+@export var max_retangulo: int = 600
 
 signal finished
 
@@ -19,6 +30,10 @@ var arrastando := false
 var feitas := 0
 var reason := ""
 var _ultimo := Vector2.INF
+## Bloco 132: o traço em curso ("livre", "reta", "retangulo"), de onde começou e as células da prévia (Array[Vector2i]).
+var modo := "livre"
+var _inicio := Vector2.INF
+var previa: Array[Vector2i] = []
 var _hint_layer: CanvasLayer
 var _hint: Label
 
@@ -102,17 +117,31 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseMotion:
 		_fantasma(_to_world(event.position))  # Bloco 130: o ladrilho de verdade na célula do mouse
-		if arrastando:
+		if arrastando and modo == "livre":
 			pinta_ate(_to_world(event.position))
+		elif arrastando:
+			_atualiza_previa(_to_world(event.position))
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		get_viewport().set_input_as_handled()
 		if event.pressed:
 			arrastando = true
 			_ultimo = Vector2.INF
-			pinta_ate(_to_world(event.position))
+			_inicio = _to_world(event.position)
+			modo = "retangulo" if event.ctrl_pressed else ("reta" if event.shift_pressed else "livre")
+			if modo == "livre":
+				pinta_ate(_inicio)
+			else:
+				_atualiza_previa(_inicio)
 		else:
+			if arrastando and modo != "livre":
+				pinta_celulas(previa)
 			arrastando = false
 			_ultimo = Vector2.INF
+			previa = []
+			modo = "livre"
+	elif event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == Teclas.tecla("painel_defesa"):
+		get_viewport().set_input_as_handled()  # Bloco 132: liga/desliga a grade
+		HousePlacer.alterna_grade()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
 		get_viewport().set_input_as_handled()
 		if event.pressed:
@@ -120,6 +149,68 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE:
 		get_viewport().set_input_as_handled()
 		cancel()
+
+
+## Bloco 132: as células de uma RETA de `a` até `b` (no eixo em que andou mais, a partir da célula de `a`).
+func celulas_reta(a: Vector2, b: Vector2) -> Array[Vector2i]:
+	var cam := _cam()
+	var out: Array[Vector2i] = []
+	if cam == null:
+		return out
+	var ca: Vector2i = cam.celula_de(a)
+	var cb: Vector2i = cam.celula_de(b)
+	if absi(cb.x - ca.x) >= absi(cb.y - ca.y):
+		for x in range(mini(ca.x, cb.x), maxi(ca.x, cb.x) + 1):
+			out.append(Vector2i(x, ca.y))
+	else:
+		for y in range(mini(ca.y, cb.y), maxi(ca.y, cb.y) + 1):
+			out.append(Vector2i(ca.x, y))
+	return out
+
+
+## Bloco 132: as células do RETÂNGULO entre `a` e `b` (cheio; vazio se passar de max_retangulo).
+func celulas_retangulo(a: Vector2, b: Vector2) -> Array[Vector2i]:
+	var cam := _cam()
+	var out: Array[Vector2i] = []
+	if cam == null:
+		return out
+	var ca: Vector2i = cam.celula_de(a)
+	var cb: Vector2i = cam.celula_de(b)
+	var r := Rect2i(Vector2i(mini(ca.x, cb.x), mini(ca.y, cb.y)), (ca - cb).abs() + Vector2i.ONE)
+	if r.get_area() > max_retangulo:
+		return out
+	for y in range(r.position.y, r.end.y):
+		for x in range(r.position.x, r.end.x):
+			out.append(Vector2i(x, y))
+	return out
+
+
+func _atualiza_previa(p: Vector2) -> void:
+	previa = celulas_reta(_inicio, p) if modo == "reta" else celulas_retangulo(_inicio, p)
+	reason = "" if not previa.is_empty() else "retângulo grande demais (até %d células)" % max_retangulo
+	_refresh()
+
+
+## Bloco 132: pinta (ou apaga) uma lista de células de uma vez (a reta e o retângulo). Devolve quantas.
+func pinta_celulas(cs: Array) -> int:
+	var cam := _cam()
+	if cam == null:
+		return 0
+	var n := 0
+	reason = ""
+	for c in cs:
+		if tipo == "apagar":
+			if cam.apagar(c):
+				n += 1
+		elif cam.pintar(c, tipo):
+			n += 1
+		elif cam.celulas.get(c, "") != tipo and reason == "":
+			reason = cam.motivo_celula(c, tipo)
+	if n > 0:
+		feitas += n
+		Audio.place_sound()
+	_refresh()
+	return n
 
 
 ## Pinta/apaga do último ponto até `p` (no chão). Usado pelo mouse e pelos testes.
@@ -154,8 +245,11 @@ func _refresh() -> void:
 		return
 	var txt := "Apagando caminhos (sem devolução)" if tipo == "apagar" else "Caminho de %s: %s por célula" % [
 		cam.NOMES.get(tipo, tipo).to_lower(), cam.custo_texto(tipo)]
-	txt += "  •  %d célula%s  •  arraste pra %s, Esc / botão direito termina" % [feitas, "s" if feitas != 1 else "",
-		"apagar" if tipo == "apagar" else "pintar"]
+	txt += "  •  %d célula%s  •  arraste pra %s (Shift: reta, Ctrl: retângulo), Esc / botão direito termina" % [feitas,
+		"s" if feitas != 1 else "", "apagar" if tipo == "apagar" else "pintar"]
+	if arrastando and modo != "livre":
+		txt += "\n%s: %d célula%s (solte pra %s)" % ["Reta" if modo == "reta" else "Retângulo", previa.size(),
+			"s" if previa.size() != 1 else "", "apagar" if tipo == "apagar" else "pintar"]
 	if reason != "":
 		txt += "\n" + reason
 	_hint.text = txt

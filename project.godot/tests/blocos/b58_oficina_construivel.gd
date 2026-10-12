@@ -139,10 +139,12 @@ func _constroi() -> void:
 	placer._collect_blockers()
 	for r in range(2, 16):
 		for a in 16:
-			var p: Vector2 = hub.global_position + Vector2.RIGHT.rotated(a * TAU / 16.0) * (60.0 + r * 26.0)
+			# (Bloco 132: a busca começa entre o Centro e o armazém — com a folga zero o 1º lugar livre caía a oeste, longe do
+			# material, e as viagens do engenheiro não cabiam no tempo do teste; o lugar é o que encaixou na grade)
+			var p: Vector2 = hub.global_position.lerp(arm.global_position, 0.4) + Vector2.RIGHT.rotated(a * TAU / 16.0) * (r * 26.0)
 			placer.move_to(p)
 			if placer._reason == "":
-				lugar = p
+				lugar = placer._pos
 				break
 		if lugar != Vector2.INF:
 			break

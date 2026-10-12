@@ -35,9 +35,10 @@ const PADRAO := {
 	# fixas (não aparecem pra remapear): Esc, e as de teste/depuração
 	"voltar": [KEY_ESCAPE], "caixas": [KEY_F4], "pular_fase": [KEY_N],
 }
-## Teclas que não podem virar atalho (câmera WASD/setas/Home, tela cheia, corte da mina, debug, Esc).
+## Teclas que não podem virar atalho (câmera WASD/setas/Home, tela cheia, corte da mina, debug, Esc). Bloco 132: + F8 — com
+## o jogo rodando pelo editor do Godot, o F8 é o "parar o projeto" da depuração e FECHA o jogo.
 const RESERVADAS := [KEY_ESCAPE, KEY_W, KEY_A, KEY_S, KEY_D, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_HOME,
-	KEY_F2, KEY_F3, KEY_F11, KEY_ENTER, KEY_KP_ENTER, KEY_SHIFT, KEY_CTRL, KEY_ALT, KEY_META]
+	KEY_F2, KEY_F3, KEY_F8, KEY_F11, KEY_ENTER, KEY_KP_ENTER, KEY_SHIFT, KEY_CTRL, KEY_ALT, KEY_META]
 ## Nome de cada ação na tela de configurações (a ordem é a da lista).
 const NOMES := [
 	["construir", "Menu de construção"], ["minerador", "Função: minerador"], ["cacador", "Função: caçador"],
@@ -49,7 +50,7 @@ const NOMES := [
 	["pessoas", "Lista de pessoas (abre/fecha)"], ["proximo", "Próximo ipezinho"], ["seguir", "Câmera segue"], ["pausa", "Pausa"], ["dicas", "Atalhos (ajuda)"],
 	["musica", "Música liga/desliga"], ["painel_hub", "Centro da Vila"], ["painel_escavadeira", "Escavadeira"],
 	["painel_oficina", "Oficina"], ["painel_enfermaria", "Enfermaria"], ["painel_moral", "Bem-estar"],
-	["painel_defesa", "Defesa"], ["painel_diario", "Diário"], ["painel_lab", "Laboratório"], ["painel_sol", "O Sol"],
+	["painel_defesa", "Defesa (no modo de construção: liga/desliga a grade)"], ["painel_diario", "Diário"], ["painel_lab", "Laboratório"], ["painel_sol", "O Sol"],
 	["painel_trabalho", "Trabalhadores (áreas de trabalho)"], ["painel_missoes", "Missões"], ["painel_catalogo", "Catálogo"], ["painel_expedicoes", "Expedições"], ["painel_politicas", "Políticas da Vila"], ["painel_pedidos", "Pedidos da vila"],
 	["salvar", "Salvar"], ["carregar", "Carregar"],
 ]

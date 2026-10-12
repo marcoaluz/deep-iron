@@ -176,7 +176,7 @@ func _ready() -> void:
 		_build_leste()  # Bloco 67: o conteúdo da área nova (trancada até desbravar)
 		_build_decoracao_niveis()  # Bloco 69: a decoração declarada em cada nível (data/niveis)
 	_build_estacao_mina()  # Bloco 74: o vagonete da boca da mina até o armazém
-	clear_decor_under_extras()
+	clear_decor_under_extras(true)  # (na hora: a malha logo abaixo já sai sem os obstáculos limpos)
 	_build_navigation()
 	_build_espirais.call_deferred()  # Bloco 99: depois da malha (os patamares se ligam nela)
 
@@ -1410,7 +1410,9 @@ func _migrate_overlaps() -> int:
 
 func _overlaps(r: Rect2, others: Array) -> bool:
 	for o in others:
-		if r.grow(-2.0).intersects(o):
+		# Bloco 132: prédios ENCOSTADOS na grade dividem até 2 px de contorno de cada lado (Grade.FOLGA_BORDA): não é
+		# sobreposição (antes, a carga empurrava as casas encostadas pra longe)
+		if r.grow(-2.0 * GradeConstrucao.FOLGA_BORDA).intersects(o):
 			return true
 	return false
 
@@ -1674,6 +1676,7 @@ func _limpa_decor_agora() -> void:
 			_limpa_decor_uma_vez(area)
 	for r in lotes():  # Bloco 76: o chão dos lotes livres fica limpo (terreno pronto pra construir)
 		_limpa_decor_uma_vez(r)
+	_limpa_area_vila()  # Bloco 132: o terreno da vila sem a decoração removível
 	var cam := get_tree().get_first_node_in_group("caminhos")
 	if cam:
 		cam.remover_sob_predios()  # Bloco 89: prédio por cima de caminho apaga o trecho
@@ -1705,6 +1708,180 @@ func _limpa_decor(area: Rect2) -> void:
 			center += v
 		if o.size() > 0 and area.has_point(center / o.size()):
 			_obstacles.remove_at(i)
+
+
+# ------------------------------------------------------------ Bloco 132: o terreno livre da vila
+const GradeConstrucao := preload("res://scripts/core/grade.gd")
+## A ÁREA DA VILA: um retângulo em volta do Centro da Vila que cresce com o estágio (meia largura x meia altura, px do chão,
+## um por estágio). Dentro dela a decoração REMOVÍVEL (pedra solta, mato, entulho, escoras soltas) sai quando o mapa é
+## montado, ao carregar e quando a vila cresce; a grade de construção é desenhada nela. Fica sempre do lado de dentro da
+## paliçada e antes da vila antiga do leste.
+@export var area_vila_meia: Array[Vector2] = [Vector2(260, 260), Vector2(320, 320), Vector2(380, 380), Vector2(440, 440), Vector2(500, 500)]
+## Raio (px) em volta das ENTRADAS (portão, boca da mina, escada em espiral, elevadores) onde nada é tirado sozinho.
+@export var area_vila_raio_entradas: float = 70.0
+## Créditos pra LIMPAR uma peça que atrapalha a construção (clique nela no modo de construção; não devolve nada).
+@export var custo_limpar: int = 5
+
+## Os desenhos (iso_prop) que são decoração removível: mato e entulho solto. O resto (poço, placas, marcos, a vila antiga do
+## leste, o fóssil, o vagonete, as peças dos andares) é peça do mapa e fica.
+const DECOR_REMOVIVEL := ["arbusto_", "capim_", "flores_", "samambaia_", "cogumelos_", "moita_", "tronco_musgo_", "pedra_p",
+	"pedra_m", "tabuas", "caixote", "caixotes_2", "barril", "barris_2", "sacos", "entulho", "palete", "sucata", "pneus"]
+## Os desenhos antigos (Sprite2D da montagem) que são removíveis: a pedra solta, o seixo e a escora solta.
+const SPRITE_REMOVIVEL := ["boulder_", "pebble_", "support_beam"]
+## As posições (px do chão) das peças que o JOGADOR limpou (vão pro save: a decoração do mapa é refeita pela semente a cada
+## carga, então só o que foi limpo à mão precisa ser lembrado).
+var decor_limpa: Array[Vector2] = []
+var _area_vila_limpa := Rect2()
+
+
+## A área da vila no estágio `estagio` (1 a 5; 0 = o estágio de agora). Vazia sem o Centro.
+func area_vila(estagio: int = 0) -> Rect2:
+	if not is_inside_tree():
+		return Rect2()
+	var hub := get_tree().get_first_node_in_group("village_hub") as Node2D
+	if hub == null or area_vila_meia.is_empty():
+		return Rect2()
+	var e := estagio if estagio > 0 else int(hub.get("level") if hub.get("level") != null else 1)
+	var meia: Vector2 = area_vila_meia[clampi(e - 1, 0, area_vila_meia.size() - 1)]
+	var r := Rect2(hub.global_position - meia, meia * 2.0)
+	var chao := walkable_rect()
+	if has_iso_map():
+		chao = iso_ground_rect()
+		if vertical_palisade():
+			chao = chao.intersection(Rect2(palisade_x + 8.0, chao.position.y, chao.end.x - palisade_x - 8.0, chao.size.y))
+			if has_leste():
+				chao = chao.intersection(Rect2(chao.position.x, chao.position.y, leste_x() - chao.position.x, chao.size.y))
+	return r.intersection(chao)
+
+
+## A peça do mapa `n` (filho deste nó) é decoração removível?
+func decor_removivel(n: Node) -> bool:
+	if not (n is Node2D) or n.is_in_group("mata") or n.is_in_group("nivel_deco") or n.is_in_group("tochas"):
+		return false
+	var nome := ""
+	if n.has_meta("iso_prop"):
+		nome = String(n.get_meta("iso_prop"))
+		for p in DECOR_REMOVIVEL:
+			if nome == p or (String(p).ends_with("_") and nome.begins_with(p)):
+				return true
+		return false
+	var s := n as Sprite2D
+	if s == null or s.texture == null or s.region_enabled:
+		return false
+	nome = s.texture.resource_path.get_file().get_basename()
+	for p in SPRITE_REMOVIVEL:
+		if nome.begins_with(p):
+			return not is_deep(s.global_position)
+	return false
+
+
+## Dá pra LIMPAR à mão (no modo de construção)? A removível e também a tocha solta.
+func decor_limpavel(n: Node) -> bool:
+	return decor_removivel(n) or (n is Sprite2D and n.is_in_group("tochas"))
+
+
+## As peças limpáveis visíveis (o posicionador procura nelas a de cada obstáculo).
+func pecas_limpaveis() -> Array:
+	var out: Array = []
+	for c in get_children():
+		if c is Node2D and (c as Node2D).visible and decor_limpavel(c):
+			out.append(c)
+	return out
+
+
+## A peça limpável visível mais perto de `p` (até `raio` px), ou null.
+func decor_limpavel_perto(p: Vector2, raio: float = 16.0) -> Node2D:
+	var melhor: Node2D = null
+	for c in get_children():
+		if c is Node2D and (c as Node2D).visible and (c as Node2D).global_position.distance_to(p) <= raio and decor_limpavel(c):
+			if melhor == null or (c as Node2D).global_position.distance_to(p) < melhor.global_position.distance_to(p):
+				melhor = c
+	return melhor
+
+
+## Perto de uma entrada (portão, boca da mina, espiral, elevador)? Ali nada sai sozinho.
+func _perto_de_entrada(p: Vector2) -> bool:
+	var pontos: Array[Vector2] = []
+	if has_iso_map() and vertical_palisade():
+		pontos.append(Vector2(palisade_x, gate_y))
+	pontos.append(ESPIRAL_SUPERFICIE)
+	for g in ["bocas_mina", "elevadores", "elevador_abismo", "barricadas"]:
+		for n in get_tree().get_nodes_in_group(g):
+			if n is Node2D:
+				pontos.append((n as Node2D).global_position)
+	for q in pontos:
+		if p.distance_to(q) < area_vila_raio_entradas:
+			return true
+	return false
+
+
+## Tira a decoração removível de dentro da área da vila (ao montar o mapa, ao carregar e quando a vila cresce). Esconde o
+## desenho e o obstáculo; a malha é refeita por quem pediu a limpeza (obra pronta, carga, subida).
+func _limpa_area_vila() -> int:
+	var area := area_vila()
+	if not area.has_area() or area == _area_vila_limpa:
+		return 0
+	_area_vila_limpa = area
+	var tirou := 0
+	for c in get_children():
+		if c is Node2D and (c as Node2D).visible and area.has_point((c as Node2D).global_position) \
+				and decor_removivel(c) and not _perto_de_entrada((c as Node2D).global_position):
+			_tira_peca(c as Node2D)
+			tirou += 1
+	for p in decor_limpa:  # o que o jogador limpou (save)
+		var n := decor_limpavel_perto(p, 2.0)
+		if n:
+			_tira_peca(n)
+			tirou += 1
+	return tirou
+
+
+## A vila cresceu (subida de estágio): a decoração removível do terreno novo sai e, se saiu alguma, a malha é refeita.
+func limpa_area_vila() -> int:
+	var n := _limpa_area_vila()
+	if n > 0:
+		rebuild_navigation()
+	return n
+
+
+## Esconde uma peça e o obstáculo dela (os contornos com o centro a até 16 px do pé dela).
+func _tira_peca(n: Node2D) -> void:
+	n.visible = false
+	for i in range(_obstacles.size() - 1, -1, -1):
+		var o: PackedVector2Array = _obstacles[i]
+		var centro := Vector2.ZERO
+		for v in o:
+			centro += v
+		if o.size() > 0 and (centro / o.size()).distance_to(n.global_position) <= 16.0:
+			_obstacles.remove_at(i)
+
+
+## LIMPAR à mão (posicionador): tira a peça e lembra no save. Quem chama paga (custo_limpar).
+func limpar_decor(n: Node2D) -> bool:
+	if n == null or not n.visible or not decor_limpavel(n):
+		return false
+	_tira_peca(n)
+	decor_limpa.append(n.global_position.round())
+	rebuild_navigation()
+	return true
+
+
+func get_decor_limpa_save() -> Array:
+	return decor_limpa.map(func(p): return [p.x, p.y])
+
+
+## O save das peças limpas à mão (Bloco 132; save antigo = nenhuma). Aplicado na hora: a decoração já foi montada.
+func load_decor_limpa(lista: Array) -> void:
+	decor_limpa.clear()
+	for e in lista:
+		if e is Array and e.size() >= 2:
+			decor_limpa.append(Vector2(float(e[0]), float(e[1])))
+	for p in decor_limpa:
+		var n := decor_limpavel_perto(p, 2.0)
+		if n:
+			_tira_peca(n)
+	_area_vila_limpa = Rect2()  # (a área da vila é conferida de novo com o Centro do save)
+	_limpa_area_vila()
 
 
 func _deep_spot_free(p: Vector2, spacing: float, placed: Array[Vector2], avoid: Array[Vector2], clear: float = -1.0) -> bool:

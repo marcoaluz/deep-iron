@@ -1,0 +1,23 @@
+Bloco 132: quantos prédios cabem na vila — regras ANTIGAS (pixel livre, folgas) (2026-10-12T14:23:07)
+cada tamanho medido sozinho, com a vila da partida nova; conta só o que cabe INTEIRO na região
+
+vila toda (paliçada até a pedreira): [P: (-300.0, -1040.0), S: (920.0, 1480.0)]
+  pequeno (carvoaria)    base  57x 46 px: cabem 151
+  casa                   base  88x 76 px: cabem  90
+  médio (armazém)        base 104x 92 px: cabem  46
+  grande (taverna)       base 116x 97 px: cabem  39
+  alto (igreja)          base  97x102 px: cabem  46
+
+área da vila, estágio 1: [P: (-220.0, -450.0), S: (520.0, 520.0)]
+  pequeno (carvoaria)    base  57x 46 px: cabem  20
+  casa                   base  88x 76 px: cabem   9
+  médio (armazém)        base 104x 92 px: cabem   4
+  grande (taverna)       base 116x 97 px: cabem   4
+  alto (igreja)          base  97x102 px: cabem   4
+
+área da vila, estágio 5: [P: (-292.0, -690.0), S: (832.0, 1000.0)]
+  pequeno (carvoaria)    base  57x 46 px: cabem  82
+  casa                   base  88x 76 px: cabem  45
+  médio (armazém)        base 104x 92 px: cabem  26
+  grande (taverna)       base 116x 97 px: cabem  21
+  alto (igreja)          base  97x102 px: cabem  26
