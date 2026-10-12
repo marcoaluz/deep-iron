@@ -143,6 +143,15 @@ func setup(n: Node2D, is_dynamic: bool, view: Node) -> void:
 
 
 # ------------------------------------------------------------ espelho
+## Bloco 130: refaz o espelho E sincroniza no MESMO quadro. Antes, quem chamava só refazia e saía: o espelho novo
+## nascia com o desenho ANTIGO (o pronto de antes da arte nova, a pilha, os rótulos soltos) e a arte nova só voltava na
+## próxima vez em que o prédio era sincronizado (de 6 em 6 quadros: `STATIC_SYNC_EVERY`). Todo "+N" de depósito (um filho
+## novo no Armazém, e de novo quando ele some) piscava o prédio por ~6 quadros: o flicker do Armazém e do Centro da Vila.
+func _rebuild_e_sincroniza() -> void:
+	_build_mirror()
+	_sync_props()  # (agora as contagens de filhos batem: não volta a refazer)
+
+
 func _build_mirror() -> void:
 	for c in get_children():
 		c.queue_free()
@@ -234,13 +243,13 @@ func _sync_props() -> void:
 		# não aceita instância liberada)
 		var s = pr[0]
 		if not is_instance_valid(s) or not is_instance_valid(pr[1]):
-			_build_mirror()
+			_rebuild_e_sincroniza()
 			return
 		if s.get_child_count() != pr[2]:
-			_build_mirror()  # entrou/saiu um filho (ícone, ferramenta, popup): espelha de novo
+			_rebuild_e_sincroniza()  # entrou/saiu um filho (ícone, ferramenta, popup): espelha de novo
 			return
 	if not only_standing and src.get_child_count() != _root_children:
-		_build_mirror()  # filho novo direto na coisa (popup "+1", poeira)
+		_rebuild_e_sincroniza()  # filho novo direto na coisa (popup "+1", poeira)
 		return
 	for pr in _pairs:
 		var s: CanvasItem = pr[0]

@@ -1,0 +1,14 @@
+{
+ "largura": 64,
+ "altura": 32,
+ "celula_h": 64,
+ "espessura": 16,
+ "colunas": 8,
+ "variantes": 8,
+ "tipos": [
+  "terra",
+  "cascalho",
+  "pedra"
+ ],
+ "linhas_por_tipo": 4
+}

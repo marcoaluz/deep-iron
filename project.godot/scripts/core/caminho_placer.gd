@@ -63,11 +63,35 @@ func begin(novo_tipo: String) -> void:
 	_refresh()
 
 
+## Bloco 130: o fantasma do pincel — o ladrilho do tipo (a mesma arte do jogo) na célula do mouse, verde se dá e vermelho
+## se não, com o custo (ou o que falta) escrito.
+func _fantasma(p: Vector2) -> void:
+	var cam := _cam()
+	var iso := get_tree().get_first_node_in_group("iso_view")
+	if cam == null or iso == null or not iso.enabled or not iso.has_method("pisos_fantasma"):
+		return
+	var c: Vector2i = cam.celula_de(p)
+	var motivo: String = cam.motivo_celula(c, tipo)
+	var texto := ""
+	if tipo == "apagar":
+		texto = "apagar (não devolve)" if motivo == "" else motivo
+	else:
+		texto = cam.custo_texto(tipo) if motivo == "" else motivo
+	iso.pisos_fantasma(cam, c, "terra" if tipo == "apagar" else tipo, motivo == "", texto)
+
+
+func _sem_fantasma() -> void:
+	var iso := get_tree().get_first_node_in_group("iso_view")
+	if iso and iso.has_method("pisos_sem_fantasma"):
+		iso.pisos_sem_fantasma()
+
+
 func cancel() -> void:
 	if not active:
 		return
 	active = false
 	arrastando = false
+	_sem_fantasma()
 	_hint_layer.visible = false
 	Audio.click()
 	finished.emit()
@@ -77,6 +101,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not active:
 		return
 	if event is InputEventMouseMotion:
+		_fantasma(_to_world(event.position))  # Bloco 130: o ladrilho de verdade na célula do mouse
 		if arrastando:
 			pinta_ate(_to_world(event.position))
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:

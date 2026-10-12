@@ -9,15 +9,16 @@ extends Node
 ##   quem sai até o mais perto do destino).
 ## - Caminhos NÃO bloqueiam a navegação nem pedem rebuild_navigation. Construir um prédio por cima apaga o
 ##   trecho (environment.clear_decor_under_extras chama remover_sob_predios).
-## - Desenho: camada própria no chão da vista iso (iso_view._draw_caminhos), abaixo dos personagens,
-##   provisório (cores e pontinhos); refaz só quando muda (`versao`).
+## - Desenho (Bloco 130): a arte do PixelLab (iso_pisos.gd: atlas com topo, borda e canto escolhidos pelos vizinhos), em
+##   lote (um MultiMesh), abaixo dos personagens; refaz só quando muda (`versao`).
 ## - Save compacto: lista de células por tipo.
 
 const TIPOS := ["terra", "cascalho", "pedra"]
 const NOMES := {"terra": "Terra batida", "cascalho": "Cascalho", "pedra": "Pedra"}
 
-## Lado de uma célula da grade (px do chão).
-@export var tamanho: float = 20.0
+## Lado de uma célula da grade (px do chão). Bloco 130: 64/3 — com a escala 1,5 da vista, o losango da célula tem
+## exatamente 64x32 px de arte: o tamanho dos ladrilhos do PixelLab (iso_pisos.gd), sem escalar o desenho.
+@export var tamanho: float = 64.0 / 3.0
 ## Custo por célula: x = créditos, y = ferro (pedra/cascalho), z = madeira.
 @export var custos: Dictionary = {"terra": Vector3i(2, 0, 0), "cascalho": Vector3i(3, 1, 0), "pedra": Vector3i(5, 2, 0)}
 ## Bônus de velocidade de quem anda sobre o caminho (0.15 = +15%), por tipo.
@@ -83,6 +84,22 @@ func motivo_pintar(tipo: String) -> String:
 	var eco := get_tree().get_first_node_in_group("economy")
 	var c := custo(tipo)
 	return eco.missing_text(c.x, c.y, "ferro", c.z) if eco else ""
+
+
+## Bloco 130: "" se a célula `c` aceita o pincel `tipo` ("apagar" também) agora; senão o motivo. (O fantasma do pincel.)
+func motivo_celula(c: Vector2i, tipo: String) -> String:
+	if tipo == "apagar":
+		return "" if celulas.has(c) else "sem caminho aqui"
+	if tipo not in TIPOS:
+		return "tipo desconhecido"
+	if celulas.get(c, "") == tipo:
+		return "já é %s" % String(NOMES[tipo]).to_lower()
+	var m := motivo_pintar(tipo)
+	if m != "":
+		return m
+	if not _celula_livre(c):
+		return "aí não dá (prédio ou fora do mapa)"
+	return ""
 
 
 ## Pinta uma célula (paga). false = já era desse tipo, lugar ruim ou sem recursos.
@@ -228,12 +245,18 @@ func get_save_data() -> Dictionary:
 	return d
 
 
-## Save antigo: sem caminhos. Células de tamanho diferente do de agora são descartadas (a grade mudou).
+## Save antigo: sem caminhos. Bloco 130: a grade era de 20 px; células de outro tamanho vão pra célula nova que cobre o
+## centro da antiga (a trilha continua onde estava; uma célula velha pode cair em duas novas ou duas virar uma só).
 func load_save_data(d: Dictionary) -> void:
 	celulas.clear()
-	if absf(float(d.get("tamanho", tamanho)) - tamanho) < 0.01:
-		for t in TIPOS:
-			for p in d.get(t, []):
-				if p is Array and p.size() == 2:
-					celulas[Vector2i(int(p[0]), int(p[1]))] = t
+	var t_salvo := float(d.get("tamanho", tamanho))
+	var mesmo := absf(t_salvo - tamanho) < 0.01
+	for t in TIPOS:
+		for p in d.get(t, []):
+			if p is Array and p.size() == 2:
+				var c := Vector2i(int(p[0]), int(p[1]))
+				if mesmo:
+					celulas[c] = t
+				elif t_salvo > 0.5:
+					celulas[celula_de((Vector2(c) + Vector2(0.5, 0.5)) * t_salvo)] = t
 	versao += 1

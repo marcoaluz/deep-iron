@@ -532,3 +532,11 @@ func test_b127_linha_de_frente() -> void:
 
 func test_b128_paineis_roda_requisitos() -> void:
 	run_bloco("b128_paineis_roda_requisitos.gd")
+
+
+func test_b129_save_arquivo_intro() -> void:
+	run_bloco("b129_save_arquivo_intro.gd")
+
+
+func test_b130_pisos_flicker() -> void:
+	run_bloco("b130_pisos_flicker.gd")

@@ -47,13 +47,13 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 | `main.gd` | Entrada do jogador: seleção, ordens, atalhos (via `teclas.gd`, remapeável). Cria `house_placer`, `area_placer`, `WorkAreas`, `founding` e `weather`. |
 | `environment.gd` | Monta o mapa: superfície, faixas dos andares, decoração, navegação, níveis por dados, lotes. |
 | `economy.gd` | Créditos, vender (minério e itens); Bloco 106: `ritmo_mineracao` (multiplica o `MINE_RATE` de toda jazida), `armazens_cheios(compartimento)`, `categorias_cheias()`; Bloco 101: NÃO compra ipezinho (acabou o "Recrutar"), `novo_ipezinho()` é o nascimento interno e a capacidade da vila são as camas (`free_beds`); `quantidade(id)`, `add_item`/`take_item`; custos em metal (`metal_falta`, `paga_metal`, `custo_metal_texto`: barra a partir do estágio da fornalha, Bloco 87). |
-| `save_manager.gd` + `save_util.gd` | Save em JSON (`user://savegame.json`), backups, migração de versões, leitura tolerante. |
+| `save_manager.gd` + `save_util.gd` | Save em JSON, backups, migração de versões, leitura tolerante. Bloco 129: o ARQUIVO do save é do jogador (`caminho_save`, padrão `user://savegame.json`; `set_caminho_save`, `load_arquivo`; guardado em `settings.cfg` `jogo/caminho_save`): autosave, F5, salvar-ao-sair, backup e Continuar usam SEMPRE ele; seletor de arquivo do sistema em `ui/escolhe_arquivo.gd` (Nova partida: "Escolher onde salvar…"; menu inicial: "Carregar de um arquivo…"; pausa: "Salvar como…"). A introdução roda em TODA partida nova (`intro_ligada()`, Configurações; sem botão à parte). |
 | `day_night.gd` | Relógio de 24 h (Bloco 83): `hora()`, `hora_texto()`, semana (o 7º dia é domingo), marcos (amanhecer, fim do expediente, anoitecer, dormir), `is_night()`, "Pular dia". `time` = segundos reais desde o amanhecer. |
 | `schedule.gd` | A AGENDA dos ipezinhos (Bloco 84): `periodo(ipezinho)`, refeições (porção por refeição, refeição perdida), exceções (médico, guardas, cozinheiro), números da hora social (Bloco 85). |
 | `calendario.gd` | Padre, igreja, missa de domingo, funeral, escolha do domingo à tarde e festivais por estação (Bloco 88). |
 | `items.gd` | Catálogo de itens (Bloco 82): id, nome, categoria, ícone, preço e onde fica guardado (`stock` de minério ou `itens` processados). |
 | `production_queue.gd` | Ordens de produção genéricas (Bloco 86): receita + quantidade, insumo pago quando a unidade começa, pausa sem insumo, cancelar devolve. |
-| `caminhos.gd` + `caminho_placer.gd` | Caminhos pintados na grade (Bloco 89): bônus de velocidade, rota do passeio, save compacto. |
+| `caminhos.gd` + `caminho_placer.gd` + `iso/iso_pisos.gd` | Caminhos pintados na grade (Bloco 89): bônus de velocidade, rota do passeio, save compacto. Bloco 130: a célula é 64/3 px do chão (o losango = 64x32 de arte; save de grade antiga migra) e o desenho é a ARTE do PixelLab (`assets/game/iso/pisos/pisos.png`, `prototipos/camera/arte_iso/pisos/pisos130.py`): variação por hash da célula + laje só onde o caminho acaba, em LOTE (um MultiMesh, refaz só quando `versao` muda); o fantasma do pincel mostra o ladrilho de verdade com custo/o que falta (`caminho_placer._fantasma`, `caminhos.motivo_celula`); os cartões do CONSTRUIR (`cam_*.png`) saem do mesmo atlas. |
 | `decor.gd` + `decoracoes.gd` | Decoração do jogador (Bloco 90): catálogo, pôr/remover, luz, beleza, rebuild agrupado. |
 | `sun.gd` | Estações, ondas solares, escudo e vitória. |
 | `morale.gd` | Ânimo, greve, festa, luto, taverna. |
@@ -151,7 +151,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b128**; o próximo é o **b129**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b130**; o próximo é o **b131**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:

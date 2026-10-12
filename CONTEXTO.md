@@ -1,9 +1,24 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-11. Branch `isometrico`. Último Bloco: **128** (commit local, sem push). TUDO até o Bloco 126 está enviado pro GitHub; o 127 e o 128 estão só locais. Push só com o OK do Marco. Fila de prompts vazia; o que falta é o Marco VALIDAR jogando/ouvindo os blocos 114–128 (nada deles foi jogado nem ouvido) e conferir a licença da Eleven Music.
+Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **130** (commit local, sem push). TUDO até o Bloco 128 está enviado pro GitHub; o 129 e o 130 estão só locais. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele apagou os saves e vai começar do zero. Falta: ver na tela os blocos 129/130 e aprovar as variações dos pisos.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
+
+## Bloco 130 — FLICKER DO ARMAZÉM/CENTRO E PISOS COM A ARTE DO PIXELLAB (feito; commit local, sem push)
+
+Pedido do Marco (a numeração dele dizia b129; vira b130). Relatório `docs/BLOCO130_PISOS_FLICKER.md`; teste `b130_pisos_flicker` (52 OK; registrado no GUT); capturas `docs/arte/bloco130/` (antes/depois do flicker e dos pisos; `folha_atlas.png`).
+- FLICKER: causa na raiz em `iso_billboard._sync_props`: filho novo/saindo no prédio ("+6" do depósito) refazia o espelho e SAÍA, deixando o desenho antigo visível até a próxima sincronização (6 quadros). Agora `_rebuild_e_sincroniza` refaz e sincroniza no mesmo quadro. As outras hipóteses (camadas, ordem de desenho, tremor, luz) conferidas na captura: não eram a causa.
+- PISOS: a arte é das folhas do Marco (`docs/arte/chão` -> `docs/arte/bloco130/fontes/`), integrada por `prototipos/camera/arte_iso/pisos/pisos130.py` (`integra`, `cartoes`, `folha`; `ESCOLHA` = que ladrilhos entram): atlas `assets/game/iso/pisos/pisos.png`. `iso_pisos.gd` desenha em lote (MultiMesh); célula do caminho = 64/3 px (save de 20 px migra); fantasma do pincel com custo; cartões do CONSTRUIR da mesma arte.
+- Também: `social_spot._prepara` guardava lugares em (0,0) com a malha de navegação vazia (b89 falhava desde antes).
+- Nada jogado; as variações escolhidas por tipo são palpite (trocar índice em `ESCOLHA`).
+
+## Bloco 129 — ARQUIVO DO SAVE ESCOLHIDO, INTRODUÇÃO EM TODA PARTIDA NOVA E ANÁLISE DO ARSENAL (feito; commit local, sem push)
+
+Relatório `docs/BLOCO129_SAVE_ARQUIVO_INTRO.md`; teste `b129_save_arquivo_intro` (32 OK). Saves apagados (savegame + 5 backups em `%APPDATA%/Godot/app_userdata/project.godot`).
+- `SaveManager.caminho_save` (`set_caminho_save`, `load_arquivo`, `caminho_legivel`); `ui/escolhe_arquivo.gd` (FileDialog nativo). Nova partida: "Escolher onde salvar…"; menu inicial: "Carregar de um arquivo…"; pausa: "Salvar como…". Autosave/F5/ao sair/backup/Continuar usam sempre o arquivo escolhido.
+- Introdução em TODA partida nova (`intro_ligada()`; Configurações; sem o botão "Ver a introdução"). b112 ajustado.
+- Arsenal/"tudo": o b47 falhava por teste que põe prédios sem o posicionador (a migração de overlap da carga empurrava 8 px); no jogo 48 lugares aceitos pelo posicionador não se mexem. Tolerância de 10 px no teste.
 
 ## Bloco 128 — JANELAS POR PRÉDIO, RODA DO MOUSE E REQUISITOS DA FUNÇÃO (feito; commit local, sem push)
 
