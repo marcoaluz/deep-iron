@@ -1,37 +1,35 @@
 extends Node2D
-## Bloco 130: os PISOS (caminhos) com a arte do PixelLab, desenhados em LOTE.
+## Bloco 130 / 134: os PISOS (caminhos) com a arte do PixelLab, desenhados em LOTE.
 ##
-## - A arte: assets/game/iso/pisos/pisos.png (o atlas dos 3 tipos: terra, cascalho e pedra; `python pisos130.py integra`
-##   em prototipos/camera/arte_iso/pisos, a partir dos ladrilhos do PixelLab). Cada tipo tem VARIANTES colunas (variações
-##   do ladrilho, uma por hash da célula) x 4 linhas (as lajes à mostra: bit 1 = sem vizinho em +y, a da esquerda; bit 2 =
-##   sem vizinho em +x, a da direita). A peça é escolhida pelos vizinhos de cada célula: entre dois ladrilhos só o topo
-##   (a trilha lê contínua) e a laje só onde o caminho acaba. O mesmo atlas faz os cartões do CONSTRUIR e o fantasma.
-## - O desenho: UM MultiMeshInstance2D (uma instância por célula, na ordem de profundidade), refeito só quando os
-##   caminhos mudam (`versao` do caminhos.gd) e no máximo uma vez por quadro. Nada de refazer polígono por célula: uma
-##   trilha de milhares de células é um único desenho.
-## - Terraços: cada instância sobe pela altura do chão (iso_view.height_at), como o desenho antigo.
-## - Fantasma do pincel: o ladrilho de verdade (topo do tipo) na célula do mouse, verde (dá) ou vermelho (não dá), com o
-##   custo ou o que falta escrito.
+## Bloco 134: a arte é a do chão da vila (assets/game/iso/chao/chao134.png, `chao134.py integra` em
+## prototipos/camera/arte_iso/chao134): por tipo (terra, cascalho, pedra) as 16 peças de TRANSIÇÃO "terra batida x caminho"
+## pelos cantos (máscara NW<<3 | NE<<2 | SW<<1 | SE; bit = o canto é terra). Antes (Bloco 130) cada célula era um ladrilho
+## inteiro com laje na ponta, e a trilha lia como tábuas soltas; agora:
+## - cada célula pintada marca os 4 VÉRTICES dela com o tipo (pedra > cascalho > terra quando dois se encontram);
+## - toda célula com algum vértice de caminho é desenhada com a peça pelos cantos, então a borda da trilha se mistura com a
+##   terra em volta, e curva, T, cruzamento e ponta saem sozinhos (emenda automática pelos vizinhos);
+## - o mesmo atlas faz os cartões do CONSTRUIR e o fantasma do pincel (o caminho inteiro, máscara 0).
+## - O desenho: UM MultiMeshInstance2D, refeito só quando os caminhos mudam (`versao` do caminhos.gd).
+## - Terraços: cada instância sobe pela altura do chão (iso_view.height_at).
 
-const ATLAS := "res://assets/game/iso/pisos/pisos.png"
-const DADOS := "res://assets/game/iso/pisos/pisos.json"
+const ATLAS := "res://assets/game/iso/chao/chao134.png"
+const DADOS := "res://assets/game/iso/chao/chao134.json"
 const Tipo := preload("res://scripts/ui/tipografia.gd")
-
 const SHADER_CODIGO := """
 shader_type canvas_item;
-uniform vec2 grade = vec2(8.0, 9.0);
+uniform vec2 grade = vec2(16.0, 4.0);
 varying vec2 cel;
 void vertex() {
 	cel = INSTANCE_CUSTOM.xy;
 }
 void fragment() {
-	COLOR = texture(TEXTURE, (UV + cel) / grade);
+	COLOR = texture(TEXTURE, (vec2(UV.x, 1.0 - UV.y) + cel) / grade);  // (o QuadMesh no 2D vira a textura de cabeça pra baixo)
 }
 """
-
+## Quem ganha o vértice quando dois tipos se encontram.
+const PRIORIDADE := {"terra": 1, "cascalho": 2, "pedra": 3}
 static var _dados: Dictionary = {}
 static var _lido := false
-
 var _view: Node
 var _mmi: MultiMeshInstance2D
 var _mm: MultiMesh
@@ -59,7 +57,12 @@ static func dados() -> Dictionary:
 	return _dados
 
 
-## A máscara dos vizinhos da célula `c` que NÃO são caminho (bit 1 = -y, 2 = +x, 4 = +y, 8 = -x).
+## A linha do atlas do tipo de caminho (a 0 é o mato da vila).
+static func linha_do_tipo(tipo: String) -> int:
+	return maxi((dados().get("linhas", ["mato", "terra", "cascalho", "pedra"]) as Array).find(tipo), 1)
+
+
+## A máscara dos vizinhos da célula `c` que NÃO são caminho (bit 1 = -y, 2 = +x, 4 = +y, 8 = -x). (Bloco 130; diagnóstico.)
 static func mascara(celulas: Dictionary, c: Vector2i) -> int:
 	var m := 0
 	if not celulas.has(c + Vector2i(0, -1)):
@@ -73,29 +76,33 @@ static func mascara(celulas: Dictionary, c: Vector2i) -> int:
 	return m
 
 
-## A variação do ladrilho da célula (estável: o mesmo caminho nunca "muda" de desenho).
-static func variante(c: Vector2i, quantas: int) -> int:
-	return absi((c.x * 73856093) ^ (c.y * 19349663)) % maxi(quantas, 1)
+## Os vértices de caminho: vértice (x, y) = canto de cima (NW) da célula (x, y). Valor = o tipo que ganhou.
+static func vertices(celulas: Dictionary) -> Dictionary:
+	var v := {}
+	for c in celulas:
+		var t: String = celulas[c]
+		for d in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]:
+			var p: Vector2i = c + d
+			if not v.has(p) or int(PRIORIDADE.get(t, 0)) > int(PRIORIDADE.get(v[p], 0)):
+				v[p] = t
+	return v
 
 
-## Que lajes ficam à mostra na célula `c` (0 nenhuma, 1 a da esquerda: sem vizinho em +y, 2 a da direita: sem vizinho em +x).
-static func exposicao(celulas: Dictionary, c: Vector2i) -> int:
-	var e := 0
-	if not celulas.has(c + Vector2i(0, 1)):
-		e |= 1
-	if not celulas.has(c + Vector2i(1, 0)):
-		e |= 2
-	return e
-
-
-## Onde a peça está no atlas: [coluna, linha] — a coluna é a variação do ladrilho, a linha o tipo e as lajes à mostra.
-static func lugar_no_atlas(tipo: String, variante_i: int, expos: int) -> Vector2:
-	var d := dados()
-	var tipos: Array = d.get("tipos", [])
-	var i := maxi(tipos.find(tipo), 0)
-	var por_tipo: int = int(d.get("linhas_por_tipo", 4))
-	var cols: int = int(d.get("colunas", 8))
-	return Vector2(variante_i % cols, i * por_tipo + clampi(expos, 0, por_tipo - 1))
+## A peça da célula `c`: [tipo, máscara] (máscara: bit ligado = o canto é terra; tipo "" = sem caminho).
+static func peca(v: Dictionary, c: Vector2i) -> Array:
+	var cantos := [c, c + Vector2i(1, 0), c + Vector2i(0, 1), c + Vector2i(1, 1)]  # NW (cima), NE (dir.), SW (esq.), SE (baixo)
+	var tipo := ""
+	for p in cantos:
+		if v.has(p) and int(PRIORIDADE.get(v[p], 0)) > int(PRIORIDADE.get(tipo, 0)):
+			tipo = v[p]
+	if tipo == "":
+		return ["", 15]
+	var m := 0
+	var bits := [8, 4, 2, 1]
+	for k in 4:
+		if v.get(cantos[k], "") != tipo:
+			m |= bits[k]
+	return [tipo, m]
 
 
 func setup(view: Node) -> void:
@@ -107,13 +114,12 @@ func setup(view: Node) -> void:
 	shader.code = SHADER_CODIGO
 	var mat := ShaderMaterial.new()
 	mat.shader = shader
-	var linhas: int = int(d.get("linhas_por_tipo", 4)) * (d.get("tipos", []) as Array).size()
-	mat.set_shader_parameter("grade", Vector2(float(d.get("colunas", 8)), float(linhas)))
+	mat.set_shader_parameter("grade", Vector2(float(d.get("colunas", 16)), float((d.get("linhas", []) as Array).size())))
 	_mm = MultiMesh.new()
 	_mm.transform_format = MultiMesh.TRANSFORM_2D
 	_mm.use_custom_data = true
 	var q := QuadMesh.new()
-	q.size = Vector2(float(d.get("largura", 64)), float(d.get("celula_h", 64)))
+	q.size = Vector2(float(d.get("largura", 64)), float(d.get("altura", 32)))
 	_mm.mesh = q
 	_mmi = MultiMeshInstance2D.new()
 	_mmi.multimesh = _mm
@@ -147,31 +153,30 @@ func refaz(cam: Node) -> void:
 	refeitos += 1
 	var celulas: Dictionary = cam.celulas
 	_celulas = celulas.size()
-	var d := dados()
-	var vars: int = int(d.get("variantes", 3))
+	var v := vertices(celulas)
+	var desenhar := {}  # célula -> true (as pintadas e as em volta que têm algum vértice de caminho)
+	for p in v:
+		for d in [Vector2i(0, 0), Vector2i(-1, 0), Vector2i(0, -1), Vector2i(-1, -1)]:
+			desenhar[p + d] = true
 	var lista: Array = []
-	for c in celulas:
+	for c in desenhar:
+		var pc := peca(v, c)
+		if pc[0] == "":
+			continue
 		var centro: Vector2 = cam.centro_de(c)
-		var h: float = _view.height_at(centro)
-		var s: Vector2 = _view.to_screen(centro, h)
-		lista.append([s.y, s.x, c, s])
+		var s: Vector2 = _view.to_screen(centro, _view.height_at(centro))
+		lista.append([s.y, s.x, s, Vector2(float(pc[1]), float(linha_do_tipo(pc[0])))])
 	lista.sort_custom(func(a, b): return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
-	var dados_inst: Array = []  # [posição, lugar no atlas]
-	for it in lista:
-		var c: Vector2i = it[2]
-		var tipo: String = celulas[c]
-		dados_inst.append([it[3], lugar_no_atlas(tipo, variante(c, vars), exposicao(celulas, c))])
-	var n: int = dados_inst.size()
+	var n: int = lista.size()
 	_mm.instance_count = n
 	for i in n:
-		var inst: Array = dados_inst[i]
-		_mm.set_instance_transform_2d(i, Transform2D(0.0, (inst[0] as Vector2).round()))
-		var lugar: Vector2 = inst[1]
+		_mm.set_instance_transform_2d(i, Transform2D(0.0, (lista[i][2] as Vector2).round()))
+		var lugar: Vector2 = lista[i][3]
 		_mm.set_instance_custom_data(i, Color(lugar.x, lugar.y, 0.0, 0.0))
 	_instancias = n
 
 
-## Quantas instâncias estão desenhadas (pro teste: uma por célula).
+## Quantas instâncias estão desenhadas (as células pintadas e a borda em volta).
 func instancias() -> int:
 	return _instancias
 
@@ -180,21 +185,19 @@ func celulas_desenhadas() -> int:
 	return _celulas
 
 
-## O fantasma do pincel: o topo do tipo na célula `c` (verde = dá, vermelho = não), com o texto (custo / o que falta).
+## O fantasma do pincel: o caminho inteiro do tipo na célula `c` (verde = dá, vermelho = não), com o texto (custo / falta).
 func mostra_fantasma(cam: Node, c: Vector2i, tipo: String, ok: bool, texto: String) -> void:
 	var d := dados()
-	var celula_h: int = int(d.get("celula_h", 64))
 	var w: int = int(d.get("largura", 64))
-	var t := tipo if tipo in (d.get("tipos", []) as Array) else "terra"
-	var lugar := lugar_no_atlas(t, 0, 3)  # o ladrilho inteiro (com as duas lajes)
+	var h: int = int(d.get("altura", 32))
 	var at := AtlasTexture.new()
 	at.atlas = _tex
-	at.region = Rect2(lugar.x * w, lugar.y * celula_h, w, celula_h)
+	at.region = Rect2(0, linha_do_tipo(tipo if PRIORIDADE.has(tipo) else "terra") * h, w, h)
 	_fantasma.texture = at
 	var centro: Vector2 = cam.centro_de(c)
 	var s: Vector2 = _view.to_screen(centro, _view.height_at(centro))
 	_fantasma.position = s.round()
-	_fantasma.modulate = Color(0.75, 1.0, 0.7, 0.78) if ok else Color(1.0, 0.45, 0.4, 0.78)
+	_fantasma.modulate = Color(0.75, 1.0, 0.7, 0.85) if ok else Color(1.0, 0.45, 0.4, 0.85)
 	_fantasma.visible = true
 	_fantasma_texto.text = texto
 	_fantasma_texto.add_theme_color_override("font_color", Color(0.9, 1.0, 0.8) if ok else Color(1.0, 0.6, 0.5))

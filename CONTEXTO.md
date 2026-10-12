@@ -1,6 +1,10 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **133** (commits locais do 131, 132 e 133, sem push). TUDO até o Bloco 130 está enviado pro GitHub. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele vai jogar e testar os blocos 129–133 (pediu que o 133 fosse aplicado SEM rodar testes). Falta: o retorno dele do jogo, aprovar as variações dos pisos.
+Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **134** (commits locais do 131 ao 134, sem push). TUDO até o Bloco 130 está enviado pro GitHub. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele vai jogar e testar os blocos 129–133 (pediu que o 133 fosse aplicado SEM rodar testes). Falta: o retorno dele do jogo, aprovar as variações dos pisos.
+
+## Bloco 134 — O CHÃO DA VILA COM ARTE DO PIXELLAB (feito; commit local, sem push; SEM testes, a pedido)
+
+Pedido urgente do Marco ("horrível, parece algo jogado por cima"). Relatório `docs/BLOCO134_CHAO_VILA.md`. Diagnóstico: o feio estava no `terreno_fundo.png` (manchas oliva pintadas, terra repetida) e na laje dos pisos do 130, não na grade. Piloto mostrado e APROVADO ("aprovo e pode seguir"). Novo `iso/iso_chao_vila.gd` (terra batida na área da vila com borda ondulada + transição pelos cantos pro mato + praça de pedra + detalhes soltos), `iso_pisos.gd` refeito (caminhos terra/cascalho/pedra pelos cantos, sem laje), grade só em linhas finas, cartões `cam_*` refeitos. Arte em `assets/game/iso/chao/` (`chao134.py`). bench_cena C 23,9 ms / p99 26 (igual ao antes). PENDENTE: o `b130_pisos_flicker` vai falhar (atlas antigo); o Marco vai jogar e testar.
 
 ## Bloco 133 — ÁREA DA VILA MAIOR E O SOM DA NOITE REFEITO (feito; commit local, sem push; SEM testes, a pedido)
 

@@ -2,10 +2,10 @@ extends Node2D
 ## Bloco 132: a VISÃO DE CONSTRUÇÃO — a grade de células (grade.gd) desenhada em losangos no chão da área da vila.
 ##
 ## Aparece com o menu CONSTRUIR aberto ou com qualquer ferramenta de posicionar (prédio, casa, decoração, pincel de caminho),
-## se a grade estiver ligada (a tecla da Defesa, G, enquanto posiciona). Cores:
-##   - célula livre: só a linha da grade, em tom neutro;
-##   - ocupada (base de prédio, pedra, decoração): vermelho suave; a PORTA de um prédio (a fileira da frente que fica livre):
-##     amarelo bem fraco;
+## se a grade estiver ligada (a tecla da Defesa, G, enquanto posiciona). Bloco 134: só LINHAS finas e discretas, nunca
+## mancha de cor no chão:
+##   - célula livre: a linha da grade, em tom neutro;
+##   - ocupada (base de prédio, pedra, decoração): a linha em vermelho apagado (sem preencher);
 ##   - o fantasma, célula a célula: verde onde cabe, vermelho onde não (o motivo vai escrito no topo da tela, pelo
 ##     posicionador); a porta dele em verde/vermelho mais claro.
 ## Desenho barato: o losango de cada célula é calculado UMA vez (a posição na tela do chão não muda com a câmera); a camada da
@@ -16,9 +16,8 @@ const Grade := preload("res://scripts/core/grade.gd")
 const HousePlacer := preload("res://scripts/core/house_placer.gd")
 ## Teto de células desenhadas (vista muito longe: a grade some antes de virar um borrão caro).
 const MAX_CELULAS := 6000
-const COR_LINHA := Color(1.0, 0.97, 0.88, 0.16)
-const COR_OCUPADA := Color(1.0, 0.36, 0.3, 0.22)
-const COR_PORTA := Color(1.0, 0.86, 0.42, 0.12)
+const COR_LINHA := Color(1.0, 0.97, 0.88, 0.11)
+const COR_OCUPADA := Color(1.0, 0.42, 0.36, 0.30)
 const COR_CABE := Color(0.45, 1.0, 0.5, 0.42)
 const COR_NAO := Color(1.0, 0.3, 0.25, 0.55)
 const COR_PORTA_CABE := Color(0.45, 1.0, 0.5, 0.2)
@@ -119,17 +118,16 @@ func _desenha_base() -> void:
 		return
 	var hp := _hp()
 	var linhas := PackedVector2Array()
-	var pts := PackedVector2Array()
-	var cores := PackedColorArray()
+	var ocupadas := PackedVector2Array()
 	for c in Grade.lista(cs):
 		var l := _losango(c)
-		linhas.append_array([l[0], l[1], l[1], l[2], l[2], l[3], l[3], l[0]])
 		if hp.ocupadas.has(c):
-			_quad(pts, cores, l, COR_OCUPADA)
-		elif hp.portas.has(c):
-			_quad(pts, cores, l, COR_PORTA)
-	_tris(_base, pts, cores)
+			ocupadas.append_array([l[0], l[1], l[1], l[2], l[2], l[3], l[3], l[0]])
+		else:
+			linhas.append_array([l[0], l[1], l[1], l[2], l[2], l[3], l[3], l[0]])
 	_base.draw_multiline(linhas, COR_LINHA, 1.0)
+	if not ocupadas.is_empty():
+		_base.draw_multiline(ocupadas, COR_OCUPADA, 1.0)
 
 
 func _desenha_fantasma() -> void:

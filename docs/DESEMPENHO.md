@@ -155,3 +155,10 @@ draws; `docs/bench/bench_2026-10-12_b131.txt`).
 - Subida de estágio sem o padre: 30–56 ms no maior quadro (o espelho do Centro trocando de desenho e a HUD).
 - O custo CONTÍNUO que sobra (não é pico): a sincronia dos prédios parados com o espelho (`sync_static`, 1/6 das 643 fixas por
   quadro: ~6 ms; `_sync_props`/`_sync_art`). É o próximo passe, se precisar: copiar só o que mudou.
+
+## Bloco 134 — o chão da vila em lote — 2026-10-12
+
+O chão novo (`iso_chao_vila.gd`, ~2.830 células + ~670 detalhes) e os caminhos (`iso_pisos.gd`) são MultiMesh. A ordem e a
+posição das células são calculadas uma vez; refazer (só quando a vila muda: estágio, Centro, prédios) troca a peça no buffer
+de uma vez: ~9 ms. `bench_cena -Rapido`: A 10,76 / 11,11 · B 14,63 / 16,67 · C 23,92 / 26,15 (méd / p99, ms), contra
+10,62 / 12,12 · 14,61 / 16,67 · 23,75 / 29,49 no Bloco 131 (`docs/bench/bench_2026-10-12_b134.txt`).

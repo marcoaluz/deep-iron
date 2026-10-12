@@ -53,7 +53,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 | `calendario.gd` | Padre, igreja, missa de domingo, funeral, escolha do domingo à tarde e festivais por estação (Bloco 88). |
 | `items.gd` | Catálogo de itens (Bloco 82): id, nome, categoria, ícone, preço e onde fica guardado (`stock` de minério ou `itens` processados). |
 | `production_queue.gd` | Ordens de produção genéricas (Bloco 86): receita + quantidade, insumo pago quando a unidade começa, pausa sem insumo, cancelar devolve. |
-| `caminhos.gd` + `caminho_placer.gd` + `iso/iso_pisos.gd` | Caminhos pintados na grade (Bloco 89): bônus de velocidade, rota do passeio, save compacto. Bloco 130: a célula é 64/3 px do chão (o losango = 64x32 de arte; save de grade antiga migra) e o desenho é a ARTE do PixelLab (`assets/game/iso/pisos/pisos.png`, `prototipos/camera/arte_iso/pisos/pisos130.py`): variação por hash da célula + laje só onde o caminho acaba, em LOTE (um MultiMesh, refaz só quando `versao` muda); o fantasma do pincel mostra o ladrilho de verdade com custo/o que falta (`caminho_placer._fantasma`, `caminhos.motivo_celula`); os cartões do CONSTRUIR (`cam_*.png`) saem do mesmo atlas. |
+| `caminhos.gd` + `caminho_placer.gd` + `iso/iso_pisos.gd` | Caminhos pintados na grade (Bloco 89): bônus de velocidade, rota do passeio, save compacto. Bloco 130: a célula é 64/3 px do chão (o losango = 64x32 de arte; save de grade antiga migra) e o desenho é a ARTE do PixelLab (`assets/game/iso/pisos/pisos.png`, `prototipos/camera/arte_iso/pisos/pisos130.py`): variação por hash da célula + laje só onde o caminho acaba, em LOTE (um MultiMesh, refaz só quando `versao` muda); o fantasma do pincel mostra o ladrilho de verdade com custo/o que falta (`caminho_placer._fantasma`, `caminhos.motivo_celula`); os cartões do CONSTRUIR (`cam_*.png`) saem do mesmo atlas. Bloco 134: a arte virou a do CHÃO DA VILA (`assets/game/iso/chao/chao134.png`, `prototipos/camera/arte_iso/chao134/chao134.py integra`): por tipo, 16 peças "terra x caminho" pelos CANTOS (máscara NW<<3|NE<<2|SW<<1|SE, NW = ponta de cima; bit = terra), cada célula pintada marca os 4 vértices e a peça sai dos cantos (sem laje). O chão da vila é `iso/iso_chao_vila.gd` (terra batida na área da vila com borda ondulada, mato fora, praça de pedra no Centro, detalhes soltos; MultiMesh refeito só quando a vila muda). ATENÇÃO: QuadMesh em MultiMesh 2D vira a textura de cabeça pra baixo — os shaders desviram o UV. |
 | `decor.gd` + `decoracoes.gd` | Decoração do jogador (Bloco 90): catálogo, pôr/remover, luz, beleza, rebuild agrupado. |
 | `sun.gd` | Estações, ondas solares, escudo e vitória. |
 | `morale.gd` | Ânimo, greve, festa, luto, taverna. |
@@ -151,7 +151,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 1. **Português** no código, nos nomes novos e nos comentários. Indentação com **tabs** no GDScript. Seguir o
    estilo existente: comentário `##` no topo explicando o sistema e o Bloco, e comentários curtos dizendo o
    porquê.
-2. **Cada entrega é um Bloco numerado.** O último existente é o **b133**; o próximo é o **b134**. (Pedido
+2. **Cada entrega é um Bloco numerado.** O último existente é o **b134**; o próximo é o **b135**. (Pedido
    que chega com um número antigo, como "Bloco 50" ou "teste b51", vira o próximo livre, com o teste do mesmo
    número; explicar no relatório.)
    - Cada Bloco tem um teste novo em `tests/blocos/bNN_nome.gd`, no formato dos existentes:

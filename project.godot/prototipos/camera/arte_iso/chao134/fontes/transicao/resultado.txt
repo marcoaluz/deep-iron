@@ -1,0 +1,51 @@
+status: completed
+id: 3f3ce9fd-975e-4bd0-ab2f-052a4039418b
+name: packed dark brown dirt village ground to dry dark 
+description: packed dark brown dirt village ground to dry dark olive forest grass; the grass edge is ragged and organic with small tufts creeping onto the dirt, no straight lines. Grimy, dark, desaturated earthy palette: dark browns, muted olive, soot black. Low color count, clean readable pixel clusters, light from top-left, no outlines between tiles.
+type: isometric
+size: 64x64px
+kind: tileset
+variations: 16
+view: low top-down
+download: https://api.pixellab.ai/mcp/tiles-pro/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/download
+seed: 134
+
+placement_rules:
+  rule_type: corner (arity 4)
+  terrains: packed dark brown dirt village ground, dry dark olive forest grass; the grass edge is ragged and organic with small tufts creeping onto the dirt, no straight lines. Grimy, dark, desaturated earthy palette: dark browns, muted olive, soot black. Low color count, clean readable pixel clusters, light from top-left, no outlines between tiles.
+  mask: NW<<3 | NE<<2 | SW<<1 | SE; a set bit means the first terrain occupies that corner
+  tiles (16 placeable; any not listed are stamp-only):
+    tile_0: mask=0
+    tile_1: mask=1
+    tile_2: mask=2
+    tile_3: mask=3
+    tile_4: mask=4
+    tile_5: mask=5
+    tile_6: mask=6
+    tile_7: mask=7
+    tile_8: mask=8
+    tile_9: mask=9
+    tile_10: mask=10
+    tile_11: mask=11
+    tile_12: mask=12
+    tile_13: mask=13
+    tile_14: mask=14
+    tile_15: mask=15
+
+storage_urls:
+  tile_0: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_0.png
+  tile_1: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_1.png
+  tile_2: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_2.png
+  tile_3: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_3.png
+  tile_4: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_4.png
+  tile_5: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_5.png
+  tile_6: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_6.png
+  tile_7: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_7.png
+  tile_8: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_8.png
+  tile_9: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_9.png
+  tile_10: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_10.png
+  tile_11: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_11.png
+  tile_12: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_12.png
+  tile_13: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_13.png
+  tile_14: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_14.png
+  tile_15: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3f3ce9fd-975e-4bd0-ab2f-052a4039418b/tile_15.png

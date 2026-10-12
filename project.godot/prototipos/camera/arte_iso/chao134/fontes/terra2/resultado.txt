@@ -1,0 +1,29 @@
+status: completed
+id: 3db14859-d71d-4573-a012-7a6d9d82bb03
+name: 1). dark brown packed earth ground with a few smal
+description: 1). dark brown packed earth ground with a few small grey pebbles 2). dark brown packed earth ground with thin dry cracks 3). dark brown packed earth ground with one tiny dry grass tuft 4). dark brown packed earth ground, trampled 5). dark brown packed earth ground with tiny scattered stones 6). dark brown packed earth ground, plain. All the same brown so they mix seamlessly. Grimy, dark, desaturated earthy palette, low color count, clean readable pixel clusters, light from top-left, flat ground seen from above, no outlines, no borders.
+type: isometric
+size: 64x64px
+kind: tiles
+variations: 16
+view: low top-down
+download: https://api.pixellab.ai/mcp/tiles-pro/3db14859-d71d-4573-a012-7a6d9d82bb03/download
+seed: 2344
+
+storage_urls:
+  tile_0: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_0.png
+  tile_1: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_1.png
+  tile_2: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_2.png
+  tile_3: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_3.png
+  tile_4: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_4.png
+  tile_5: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_5.png
+  tile_6: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_6.png
+  tile_7: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_7.png
+  tile_8: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_8.png
+  tile_9: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_9.png
+  tile_10: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_10.png
+  tile_11: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_11.png
+  tile_12: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_12.png
+  tile_13: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_13.png
+  tile_14: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_14.png
+  tile_15: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/3db14859-d71d-4573-a012-7a6d9d82bb03/tile_15.png

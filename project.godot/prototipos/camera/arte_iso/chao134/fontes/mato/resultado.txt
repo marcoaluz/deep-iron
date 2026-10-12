@@ -1,0 +1,29 @@
+status: completed
+id: 4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47
+name: 1). dry dark olive grass meadow with short tufts 2
+description: 1). dry dark olive grass meadow with short tufts 2). dry dark olive grass with a few taller dry stalks 3). dry dark olive grass with a tiny patch of bare earth 4). dry dark olive grass, slightly yellower 5). dry dark olive grass with a small grey stone 6). dry dark olive grass, dense short tufts. All the same olive green so they mix seamlessly. Grimy, dark, desaturated earthy palette, low color count, clean readable pixel clusters, light from top-left, flat ground seen from above, no outlines, no borders.
+type: isometric
+size: 64x64px
+kind: tiles
+variations: 16
+view: low top-down
+download: https://api.pixellab.ai/mcp/tiles-pro/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/download
+seed: 2345
+
+storage_urls:
+  tile_0: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_0.png
+  tile_1: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_1.png
+  tile_2: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_2.png
+  tile_3: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_3.png
+  tile_4: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_4.png
+  tile_5: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_5.png
+  tile_6: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_6.png
+  tile_7: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_7.png
+  tile_8: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_8.png
+  tile_9: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_9.png
+  tile_10: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_10.png
+  tile_11: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_11.png
+  tile_12: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_12.png
+  tile_13: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_13.png
+  tile_14: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_14.png
+  tile_15: https://backblaze.pixellab.ai/file/pixellab-tiles/731c5e37-851f-4127-aec6-b6ac884bc069/4c36cc11-3a96-42d0-8c1e-aa42a7ce3f47/tile_15.png

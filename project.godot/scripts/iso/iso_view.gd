@@ -1315,6 +1315,7 @@ func _process(_delta: float) -> void:
 	_sync_ghost()
 	_sync_trilhos()
 	_sync_areas()  # Bloco 77
+	_sync_chao_vila()  # Bloco 134
 	_sync_caminhos()  # Bloco 89
 	_sync_grade()  # Bloco 132
 	_sync_ferrovia()  # Bloco 79
@@ -1635,6 +1636,29 @@ func _sync_caminhos() -> void:
 	if cam.versao != _caminhos_versao:
 		_caminhos_versao = cam.versao
 		_pisos.refaz(cam)
+
+
+# ------------------------------------------------------------ Bloco 134: o chão da vila (arte do PixelLab)
+const IsoChaoVila := preload("res://scripts/iso/iso_chao_vila.gd")
+var _chao_vila: Node2D
+
+
+## O chão da vila por cima do desenho antigo do terreno (acima do fundo, abaixo dos caminhos); refeito só quando a vila muda.
+func _sync_chao_vila() -> void:
+	if _chao_vila == null:
+		if not IsoChaoVila.disponivel():
+			return
+		_chao_vila = IsoChaoVila.new()
+		_chao_vila.z_as_relative = false
+		_chao_vila.z_index = Order.BASE - 49
+		_things.add_child(_chao_vila)
+		_chao_vila.setup(self)
+	if _frame % 30 == 0 or _chao_vila.refeitos == 0:
+		_chao_vila.sincroniza()
+
+
+func chao_vila() -> Node2D:
+	return _chao_vila
 
 
 # ------------------------------------------------------------ Bloco 132: a grade de construção
