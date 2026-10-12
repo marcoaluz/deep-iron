@@ -66,8 +66,35 @@ static func entry(name: String) -> Dictionary:
 
 static func texture(img: String) -> Texture2D:
 	if not _tex.has(img):
-		_tex[img] = load(DIR + img)
+		var path := DIR + img
+		# Bloco 131: já pedido em segundo plano (aquece)? pega de lá (espera só o que falta carregar)
+		if ResourceLoader.load_threaded_get_status(path) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			_tex[img] = ResourceLoader.load_threaded_get(path)
+		else:
+			_tex[img] = load(path)
 	return _tex[img]
+
+
+## Bloco 131: os desenhos de PRONTO (e de nível) de um prédio começam a carregar em segundo plano enquanto ele ainda é obra:
+## no quadro em que a obra termina a textura já está na memória (antes o quadro esperava o disco).
+static var _aquecidos := {}
+
+
+static func aquece(kind: String) -> void:
+	if kind == "" or _aquecidos.has(kind):
+		return
+	_aquecidos[kind] = true
+	var e := entry(kind)
+	for st in e.keys():
+		if not (String(st).begins_with("pronto") or String(st).begins_with("nivel")) or not (e[st] is Dictionary):
+			continue
+		for campo in ["img", "janelas"]:
+			var f := String((e[st] as Dictionary).get(campo, ""))
+			if f == "" or _tex.has(f):
+				continue
+			var path := DIR + f
+			if ResourceLoader.exists(path) and ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+				ResourceLoader.load_threaded_request(path, "Texture2D")
 
 
 ## O ambiente do mapa novo (null = mapa antigo: sem arte nova).
@@ -127,6 +154,7 @@ static func layers(node: Node) -> Array:
 		return prop_layers(node)  # natureza e objetos (parte 4)
 	var out: Array = []
 	if _is_canteiro(node):  # o prédio que vai nascer, subindo pelos desenhos de obra
+		aquece(kind)  # Bloco 131
 		if node.obra_pending():
 			out.append(_obra_layer(kind, node.obra_progress()))
 		return out.filter(func(l): return not l.is_empty())

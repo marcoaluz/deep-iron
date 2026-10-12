@@ -83,6 +83,10 @@ static func behind(a: Box, b: Box):
 
 ## Ordem de desenho correta (ordenação topológica): só compara quem se sobrepõe na tela.
 ## Empate/ciclo (caixas que se atravessam) cai na chave antiga (x + y)/2 + z.
+## Bloco 131: o lado da célula da grade da tela que acha os pares candidatos do topo_order (px da tela iso).
+const TOPO_CELULA := 160.0
+
+
 static func topo_order(boxes: Array) -> Array:
 	var n := boxes.size()
 	var rects := []
@@ -93,18 +97,45 @@ static func topo_order(boxes: Array) -> Array:
 	indeg.resize(n)
 	for i in n:
 		after.append([])
+	# Bloco 131: só os pares que se cruzam na tela importam (os outros não têm restrição). Antes eram TODOS os pares (n² = 560
+	# mil com ~750 fixas: 137 ms, o tranco de cada reordenação completa); agora os candidatos vêm de uma grade da tela e
+	# cada par é olhado uma vez, na ordem (i < j) de antes.
+	var grade := {}
 	for i in n:
-		for j in range(i + 1, n):
-			if not rects[i].intersects(rects[j]):
-				continue
-			var r = behind(boxes[i], boxes[j])
-			if r == true:
-				after[i].append(j)
-				indeg[j] += 1
-			elif r == false:
-				after[j].append(i)
-				indeg[i] += 1
+		var r: Rect2 = rects[i]
+		for cx in range(floori(r.position.x / TOPO_CELULA), floori(r.end.x / TOPO_CELULA) + 1):
+			for cy in range(floori(r.position.y / TOPO_CELULA), floori(r.end.y / TOPO_CELULA) + 1):
+				var c := Vector2i(cx, cy)
+				if not grade.has(c):
+					grade[c] = []  # (Array, não PackedInt32Array: o packed guardado no dicionário volta como cópia e o append se perde)
+				grade[c].append(i)
+	var pares := {}
+	for c in grade:
+		var lst: Array = grade[c]
+		for a in lst.size():
+			for b in range(a + 1, lst.size()):
+				var i: int = mini(lst[a], lst[b])
+				var j: int = maxi(lst[a], lst[b])
+				pares[i * n + j] = true
+	var lista := pares.keys()
+	lista.sort()  # (a mesma ordem de visita de antes: i, depois j)
+	for pk in lista:
+		var i: int = pk / n
+		var j: int = pk % n
+		if not rects[i].intersects(rects[j]):
+			continue
+		var r = behind(boxes[i], boxes[j])
+		if r == true:
+			after[i].append(j)
+			indeg[j] += 1
+		elif r == false:
+			after[j].append(i)
+			indeg[i] += 1
 	# Kahn, sempre tirando o de menor chave primeiro (estável e sem tremer)
+	var chaves := PackedFloat64Array()
+	chaves.resize(n)
+	for i in n:
+		chaves[i] = key(boxes[i])
 	var ready := []
 	for i in n:
 		if indeg[i] == 0:
@@ -117,12 +148,12 @@ static func topo_order(boxes: Array) -> Array:
 			# ciclo: pega o de menor chave entre os que sobraram
 			var best := -1
 			for i in n:
-				if not done[i] and (best < 0 or key(boxes[i]) < key(boxes[best])):
+				if not done[i] and (best < 0 or chaves[i] < chaves[best]):
 					best = i
 			ready.append(best)
 		var k := 0
 		for q in range(1, ready.size()):
-			if key(boxes[ready[q]]) < key(boxes[ready[k]]):
+			if chaves[ready[q]] < chaves[ready[k]]:
 				k = q
 		var i: int = ready[k]
 		ready.remove_at(k)

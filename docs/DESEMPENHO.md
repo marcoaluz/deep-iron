@@ -96,3 +96,62 @@ S2–S5 (poças com luz e partículas, jazidas, decoração, plataformas) somou 
 o editor do Godot e o Chrome abertos e pouca memória livre (`docs/bench/bench_2026-10-02_final_71.txt`).
 Se precisar: parar o conteúdo dos níveis fechados (como o leste trancado).
 
+
+## Bloco 131 — as TRAVADAS (obra pronta, subida de estágio) — 2026-10-12
+
+Benchmark novo de picos: `powershell -ExecutionPolicy Bypass -File tools\bench_picos.ps1 [-Saida <arquivo>]`
+(`tests/bench_picos.gd`; janela 1280x720, sem vsync, pasta de usuário isolada; vila cheia, 40 ipezinhos). Mede o tempo de
+CADA quadro, não só a média. Cenários: **N** vila cheia à noite; **S** hora social (20:00); **O** obra pronta (5 vezes, como o
+engenheiro termina: `Canteiro` → prédio → decoração e malha); **E** subida de estágio (3 vezes; padre fora); **P** chega um
+morador (o padre). Em O/E/P: o tempo da CHAMADA e o maior quadro nos 30 seguintes. Máquina: i3-8100, RX 580, com o editor
+do Godot aberto (as rodadas variam; vão as duas rodadas limpas de cada lado). O profiler do editor não foi usado: o tempo de
+cada parte vem cronometrado no próprio benchmark (`_partes`, `_tempo`).
+
+**Meta:** p99 ≤ 33 ms (30 FPS) na vila cheia (N e S) e **nenhum quadro acima de 100 ms** num evento (obra pronta, subida,
+chegada); o alvo é ≤ 60 ms.
+
+| Cenário | ANTES méd / p99 / maior (ms) | DEPOIS méd / p99 / maior (ms) |
+|---|---|---|
+| N vila cheia à noite | 22,4 / 26,0 / 28,5 · 22,3 / 25,9 / 27,7 | 22,1 / 24,1 / 25,5 · 22,7 / 26,5 / 30,3 |
+| S hora social | 21,1 / 24,4 / 25,2 · 21,2 / 29,3 / 35,4 | 20,9 / 22,5 / 23,0 · 20,7 / 22,3 / 26,1 |
+| O obra pronta: a chamada | **1266 / 1306** (méd / maior) | **1,7 / 3,1** |
+| O obra pronta: maior quadro nos 30 seguintes | 137 / **143** · 142 / **149** | 31 / **51** · 27 / **32** |
+| E subida de estágio: maior quadro | 66 / **140** · 60 / **130** | 31 / **38** · 36 / **56** |
+| P o padre chega: maior quadro | (vinha junto com a subida: os 140 ms acima) | 27 · 52 |
+| Reordenação completa da vista iso | 137 ms | 27,5 ms |
+| Bake da malha de navegação | 1265 ms **dentro do quadro** | fora do quadro (~2,5 s numa thread; a malha antiga vale até lá) |
+
+Meta cumprida nas rodadas medidas: p99 de N e S entre 22 e 27 ms; maior quadro de evento 56 ms. Os arquivos:
+`docs/bench/picos_antes.txt`, `picos_antes_1.txt`, `picos_antes_2.txt` (código do Bloco 130) e `picos_depois.txt`,
+`picos_depois_1.txt`, `picos_depois_2.txt`. Uma rodada do DEPOIS saiu ruidosa (N p99 33,6, O 143 ms numa obra, E 140 ms) com
+o editor disputando a máquina; na seguinte, igual ao resto.
+
+`bench_cena -Rapido` (cenário C = vila cheia + invasão + chuva + noite): **23,75 ms / p99 29,5 / 42 FPS** (10.052 nós, 341
+draws; `docs/bench/bench_2026-10-12_b131.txt`).
+
+### O que custava e o que mudou
+
+1. **Malha de navegação** (`environment.rebuild_navigation`, chamada a cada obra pronta, casa, armazém, cemitério...): o bake
+   síncrono custava ~1,27 s na vila cheia. Agora `bake_from_source_geometry_data_async` numa thread do NavigationServer;
+   pedidos do mesmo quadro (ou feitos enquanto um bake anda) viram UM bake (`nav_pedidos`/`nav_bakes`), a malha antiga vale
+   até a nova entrar (sinal `navigation_rebuilt`). Carregar save e fundar a vila pedem `rebuild_navigation(true)` (síncrono,
+   atrás da tela de carregamento). Em headless o padrão segue síncrono (os testes antigos); `Environment.bake_assincrono_forcado`
+   liga o caminho do jogo. A geometria dos obstáculos do mapa iso fica em cache (31 → 0,9 ms). Efeito colateral: por ~2,5 s
+   depois de uma obra pronta a malha ainda é a de antes (alguém pode cruzar o terreno do prédio novo nesse tempo).
+2. **Decoração debaixo das estruturas** (`clear_decor_under_extras`, ~13 ms): agrupada no fim do quadro e a área já limpa não é
+   varrida de novo (`_areas_limpas`): ~1 ms.
+3. **Ordem de desenho** (`IsoCore.topo_order`): comparava TODOS os pares (n² com ~750 fixas). Agora os candidatos vêm de uma
+   grade da tela (`TOPO_CELULA`), na mesma ordem de antes: o resultado é idêntico (o teste compara com o algoritmo antigo em
+   caixas sorteadas). 137 → 27,5 ms.
+4. **O padre** chegava no MESMO quadro da subida (criar o morador + carregar as tiras de animação dele: ~140 ms somados).
+   Agora chega `padre_atraso` (3 s) depois e as tiras começam a carregar quando a espera começa (`aquece_padre`).
+5. **Desenho do prédio pronto**: `IsoArt.aquece(kind)` pede em segundo plano (`ResourceLoader.load_threaded_request`) os
+   desenhos "pronto"/"nivel" enquanto o prédio ainda é obra; no quadro em que a obra termina a textura já está na memória.
+
+### Outros picos procurados
+
+- Noite e hora social (N, S): nenhum quadro acima de 31 ms nas rodadas limpas; luzes, partículas e som não aparecem como pico.
+  Som: o `Audio` não cria nada por quadro (pools fixos); os loops de prédio só nascem perto da câmera.
+- Subida de estágio sem o padre: 30–56 ms no maior quadro (o espelho do Centro trocando de desenho e a HUD).
+- O custo CONTÍNUO que sobra (não é pico): a sincronia dos prédios parados com o espelho (`sync_static`, 1/6 das 643 fixas por
+  quadro: ~6 ms; `_sync_props`/`_sync_art`). É o próximo passe, se precisar: copiar só o que mudou.

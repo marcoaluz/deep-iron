@@ -1,0 +1,15 @@
+Deep Iron — bench_picos (2026-10-12T01:46:25)
+máquina: Intel(R) Core(TM) i3-8100 CPU @ 3.60GHz, 4 núcleos | GPU: Radeon RX 580 Series | janela (1280, 720), vsync desligado
+
+cenário (quadros)                          ms méd   ms p99  ms maior     FPS
+N  vila cheia à noite (362)                 22.13    24.07     25.46      45
+S  hora social (20:00) (385)                20.86    22.46     23.04      48
+O  obra pronta, 5x                       chamada méd     1.7 / maior     3.1 ms | maior quadro nos 30 seguintes: méd    30.6 / maior    50.8 ms
+E  subida de estágio, 3x                 chamada méd     5.3 / maior     9.9 ms | maior quadro nos 30 seguintes: méd    30.9 / maior    37.8 ms
+P  chega um morador (o padre)            chamada méd     2.3 / maior     2.3 ms | maior quadro nos 30 seguintes: méd    27.4 / maior    27.4 ms
+  frio: vista iso: reordenar TODAS as fixas (_rebuild_order) #1    27.8 ms
+  frio: vista iso: reordenar TODAS as fixas (_rebuild_order) #2    27.5 ms
+  frio: vista iso: reordenar TODAS as fixas (_rebuild_order) #3    27.3 ms
+  partes: clear_decor_under_extras (pedido) 0.0 ms | 3 pedidos de malha no mesmo quadro 0.01 ms
+  referência (síncrono): geometria 0.9 ms | bake 1224.9 ms | _sem_degenerados 3.6 ms (1573 polígonos) | trocar a malha da região 0.0 ms
+  malha nova entrou 2524 ms depois do pedido (bakes feitos: 1 pros 3 pedidos)

@@ -1,6 +1,15 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **130** (commit local, sem push). TUDO até o Bloco 128 está enviado pro GitHub; o 129 e o 130 estão só locais. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele apagou os saves e vai começar do zero. Falta: ver na tela os blocos 129/130 e aprovar as variações dos pisos.
+Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **131** (commit local, sem push). TUDO até o Bloco 130 está enviado pro GitHub; o 131 está só local. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele apagou os saves e vai começar do zero. Falta: ver na tela os blocos 129/130/131, aprovar as variações dos pisos e decidir a troca da `floresta_noite`.
+
+PRÓXIMO: o prompt do Marco da GRADE DE CONSTRUÇÃO (Bloco 132: grade única, casas encostadas, ruas na grade, terreno livre na área da vila, medição de quantos prédios cabem). A regra 8 vale: mostrar um PLANO CURTO e esperar o OK antes de codar. Atenção: o prompt fala em grade de 20 px, mas a grade dos caminhos virou 64/3 px no Bloco 130 (o losango da arte dos pisos) — decidir no plano.
+
+## Bloco 131 — TRAVADAS E O SOM CHATO À NOITE (feito; commit local, sem push)
+
+Pedido do Marco (a numeração dele dizia b130; virou b131). Relatório `docs/BLOCO131_TRAVADAS_SOM_NOITE.md`; teste `b131_travadas_som` (35 OK; registrado no GUT); `docs/DESEMPENHO.md` (seção Bloco 131, tabela antes/depois e a meta); `docs/audio/DIAGNOSTICO_NOITE.md`.
+- TRAVADAS: o tranco era o bake SÍNCRONO da malha (~1,27 s a cada obra pronta). Agora assíncrono e agrupado (`environment.gd`); `topo_order` com grade (137 → 27,5 ms, mesma ordem); o padre chega `padre_atraso` (3 s) depois da subida; `IsoArt.aquece` carrega o desenho pronto durante a obra. Obra pronta 1306 → 32–51 ms; subida 140 → 38–56 ms. Benchmark novo `tools/bench_picos.ps1`.
+- SOM: F3 > Som "o que está tocando agora" (lista ao vivo, Silenciar/Voltar); bus Soltos com slider próprio; `tools/elevenlabs/analisa_noite.py`. Suspeito principal: `ambiencia/floresta_noite` (chiado contínuo em 7–7,8 kHz, -11,8 LUFS, ~10 LU acima das outras ambiências). NADA regerado: proposta no relatório (3 candidatas ~945 créditos; ou baixar o `db` do slot), esperando o Marco.
+- Testes ajustados: b88 (`padre_atraso = 0`), b115 (bus Soltos).
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".

@@ -42,6 +42,7 @@ func setup(main: Node) -> void:
 	_linha(v, "Criaturas:", [["invasão com todos os tipos", _todas_criaturas]])  # Bloco 91
 	_linha(v, "Linha de frente:", [["derrubar o portão", _derruba_portao], ["ferir prédio mais perto", _fere_predio], ["consertar tudo", _conserta_predios]])  # Bloco 127
 	_linha(v, "Vila:", [["evento agora", _evento], ["pedido novo", _pedido], ["caravana: chega/parte", _caravana]])  # Bloco 123 / 125
+	_linha(v, "Som:", [["o que está tocando agora", _sons_ativos]])  # Bloco 131: achar o som chato ouvindo
 	_linha(v, "Ir para:", [["vila", func(): _vai(Vector2(40, -260))], ["S2", func(): _vai(Vector2(-300, 3730))],
 		["S3", func(): _vai(Vector2(-460, 4110))], ["S4", func(): _vai(Vector2(-340, 4530))], ["S5", func(): _vai(Vector2(-460, 4920))],
 		["ferrovia", _vai_ferrovia]])
@@ -49,6 +50,15 @@ func setup(main: Node) -> void:
 	_info.add_theme_font_size_override("font_size", Tipo.DETALHE)
 	_info.add_theme_color_override("font_color", Color(0.75, 0.72, 0.68))
 	v.add_child(_info)
+
+
+## Bloco 131: a lista ao vivo dos sons (sons_ativos_panel.gd), com silenciar/voltar por slot.
+func _sons_ativos() -> void:
+	var p := get_tree().get_first_node_in_group("sons_ativos")
+	if p == null:
+		p = preload("res://scripts/ui/sons_ativos_panel.gd").new()
+		get_tree().root.add_child(p)
+	p.abre()
 
 
 func _linha(v: VBoxContainer, rotulo: String, botoes: Array) -> void:

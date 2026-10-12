@@ -140,7 +140,7 @@ func _ready() -> void:
 			_founding.prepara()  # (a pedreira vazia; e a vila ainda não fundada: as missões não contam isso na intro)
 			var env0 := get_tree().get_first_node_in_group("environment")
 			if env0:
-				env0.rebuild_navigation()
+				env0.rebuild_navigation(true)  # (Bloco 131: na hora, antes do cinema)
 			var cin := preload("res://scripts/ui/intro_cinema.gd").new()
 			cin.name = "IntroCinema"
 			cin.setup(self)

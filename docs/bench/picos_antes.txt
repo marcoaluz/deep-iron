@@ -1,0 +1,17 @@
+Deep Iron — bench_picos (2026-10-12T00:53:18)
+máquina: Intel(R) Core(TM) i3-8100 CPU @ 3.60GHz, 4 núcleos | GPU: Radeon RX 580 Series | janela (1280, 720), vsync desligado
+
+cenário (quadros)                          ms méd   ms p99  ms maior     FPS
+N  vila cheia à noite (344)                 23.31    33.37     45.89      43
+S  hora social (20:00) (389)                20.62    22.57     25.57      48
+O  obra pronta (casa), 5x                chamada méd  1293.2 / maior  1330.2 ms | maior quadro nos 30 seguintes: méd   135.1 / maior   138.3 ms
+  partes: clear_decor_under_extras 15.1 ms | rebuild_navigation 1271.5 ms | _bake_navigation sozinho 1294.0 ms
+  partes: clear_decor_under_extras 15.8 ms | rebuild_navigation 1276.2 ms | _bake_navigation sozinho 1298.3 ms
+  partes: clear_decor_under_extras 14.7 ms | rebuild_navigation 1264.1 ms | _bake_navigation sozinho 1253.9 ms
+  frio: Audio.stinger('estagio_novo')                      6.1 ms
+  frio: hub._stage_dust(2) (filho novo: poeira)            0.2 ms
+  frio: espelho do Centro: _sync_props com filho novo      6.3 ms
+  frio: hub._grow_to_stage(2)                              0.2 ms
+  frio: hub._update_visual()                               0.0 ms
+  frio: hud.show_banner                                    0.8 ms
+E  subida de estágio, 3x                 chamada méd     5.0 / maior     9.0 ms | maior quadro nos 30 seguintes: méd    65.7 / maior   139.0 ms

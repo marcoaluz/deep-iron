@@ -30,6 +30,9 @@ const CORPO := preload("res://scripts/props/corpo.gd")
 @export_group("Padre")
 ## Estágio da vila em que o padre chega (2 = Vilarejo).
 @export_range(1, 5) var padre_estagio: int = 2
+## Bloco 131: segundos (reais) entre a vila chegar no estágio e o padre aparecer. Chegar no MESMO quadro da subida somava o
+## custo de criar um morador novo (cena, bonecos, linha da lista: ~100 ms) ao da subida — o tranco de quando a vila cresce.
+@export var padre_atraso: float = 3.0
 ## Nome dele.
 @export var padre_nome: String = "Padre Bento"
 
@@ -69,6 +72,7 @@ const CORPO := preload("res://scripts/props/corpo.gd")
 @export var festivais: PackedStringArray = PackedStringArray(["Festa das Flores", "Festa do Sol", "Festa da Colheita", "Festa das Lanternas"])
 
 var padre_chegou := false
+var _padre_espera := 0.0  # Bloco 131: quanto já esperou depois da vila chegar no estágio dele
 ## A escolha do domingo de hoje ("festival", "livre", "trabalhar"; "" = ainda não escolheu) e o dia dela.
 var escolha := ""
 var escolha_dia := -1
@@ -116,7 +120,11 @@ func _process(_delta: float) -> void:
 	# o padre chega quando a vila cresce
 	var hub := get_tree().get_first_node_in_group("village_hub")
 	if not padre_chegou and hub and int(hub.level) >= padre_estagio and not SaveManager.pending_load:
-		chega_padre()
+		if _padre_espera <= 0.0:
+			aquece_padre()
+		_padre_espera += _delta
+		if _padre_espera >= padre_atraso:
+			chega_padre()
 	# domingo: a janela da escolha abre sozinha
 	if dn.e_domingo() and _avisou_dia != dn.day and dn.entre_horas(aviso_escolha, dn.hora_fim_expediente) and escolha_hoje() == "":
 		_avisou_dia = dn.day
@@ -154,6 +162,12 @@ func _toca_sinos(missa: bool, ig: Node, lugar_funeral: Node) -> void:
 
 
 ## O padre chega (uma vez): um ipezinho com a função "padre", no Centro da Vila.
+## Bloco 131: os desenhos do padre (as tiras de animação) começam a carregar EM SEGUNDO PLANO durante a espera; sem isso, o
+## quadro em que ele aparece esperava o disco (~140 ms medidos).
+func aquece_padre() -> void:
+	preload("res://scripts/iso/iso_bonecos.gd").warm_folder("padre")
+
+
 func chega_padre() -> Node:
 	padre_chegou = true
 	var hub: Node2D = get_tree().get_first_node_in_group("village_hub")

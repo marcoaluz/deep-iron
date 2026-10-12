@@ -694,22 +694,87 @@ func _build_navigation() -> void:
 	navigation_ready.emit()
 
 
-## Refaz a malha de navegação (ex.: casa nova posicionada pelo jogador).
-func rebuild_navigation() -> void:
+## Bloco 131: o bake da malha custava ~1,3 s na vila cheia (i3-8100) e travava o jogo a cada obra pronta. Agora o bake roda
+## FORA do quadro (bake_from_source_geometry_data_async, numa thread do NavigationServer) e os pedidos se AGRUPAM: vários
+## pedidos no mesmo quadro (ou enquanto um bake está em andamento) viram UM bake só, com a geometria de quando ele começa.
+## A malha antiga vale até a nova ficar pronta. Em headless (os testes) o padrão continua síncrono; o teste do bloco liga
+## `bake_assincrono_forcado` pra exercitar o caminho do jogo.
+static var bake_assincrono_forcado := false
+## Pedidos e bakes (o teste e o benchmark conferem o agrupamento).
+var nav_pedidos := 0
+var nav_bakes := 0
+var _nav_pedido := false
+var _nav_agendado := false
+var _nav_assando := false
+## A malha nova entrou (depois de um bake assíncrono).
+signal navigation_rebuilt
+
+
+func _nav_assincrona() -> bool:
+	return bake_assincrono_forcado or DisplayServer.get_name() != "headless"
+
+
+## Refaz a malha de navegação (ex.: casa nova posicionada pelo jogador). `imediato` = síncrono, no ato (carregar save, fundar
+## a vila: a tela de carregamento já está na frente e quem vem depois precisa da malha nova).
+func rebuild_navigation(imediato := false) -> void:
 	if not is_inside_tree():
 		return  # Bloco 105: pedido adiado que chegou com a partida já saindo da árvore (carregando outro save)
-	if navigation_region:
+	if navigation_region == null:
+		return
+	nav_pedidos += 1
+	if imediato or not _nav_assincrona():
+		_nav_pedido = false
+		nav_bakes += 1
 		navigation_region.navigation_polygon = _bake_navigation()
+		return
+	_nav_pedido = true
+	if not _nav_agendado and not _nav_assando:
+		_nav_agendado = true
+		_nav_comeca.call_deferred()  # (no fim do quadro: tudo que pedir neste quadro entra no mesmo bake)
+
+
+## A navegação está em dia (nenhum bake pendente nem em andamento)?
+func navegacao_em_dia() -> bool:
+	return not _nav_pedido and not _nav_assando and not _nav_agendado
+
+
+func _nav_comeca() -> void:
+	_nav_agendado = false
+	if _nav_assando or not _nav_pedido or not is_inside_tree() or navigation_region == null:
+		return
+	_nav_pedido = false
+	_nav_assando = true
+	nav_bakes += 1
+	var nav_poly := NavigationPolygon.new()
+	nav_poly.agent_radius = nav_agent_radius
+	NavigationServer2D.bake_from_source_geometry_data_async(nav_poly, _fonte_navegacao(), _nav_pronto.bind(nav_poly))
+
+
+func _nav_pronto(nav_poly: NavigationPolygon) -> void:
+	_nav_assando = false
+	if not is_inside_tree() or navigation_region == null:
+		return
+	navigation_region.navigation_polygon = _sem_degenerados(nav_poly)
+	navigation_rebuilt.emit()
+	if _nav_pedido and not _nav_agendado:  # pediram de novo durante o bake: mais um, com a geometria de agora
+		_nav_agendado = true
+		_nav_comeca.call_deferred()
 
 
 func _bake_navigation() -> NavigationPolygon:
 	var nav_poly := NavigationPolygon.new()
 	nav_poly.agent_radius = nav_agent_radius
+	NavigationServer2D.bake_from_source_geometry_data(nav_poly, _fonte_navegacao())
+	return _sem_degenerados(nav_poly)
+
+
+## A geometria da malha (o que anda e o que bloqueia), recolhida no quadro em que o bake começa.
+func _fonte_navegacao() -> NavigationMeshSourceGeometryData2D:
 	var source := NavigationMeshSourceGeometryData2D.new()
 	if has_iso_map():
 		# mapa novo: a superfície inteira (floresta + vila) anda; penhascos e paliçada bloqueiam
 		source.add_traversable_outline(_rect_outline(iso_ground_rect().grow(-8.0)))
-		for o in _iso_blockers():
+		for o in _iso_blockers_cache():
 			source.add_obstruction_outline(o)
 	else:
 		source.add_traversable_outline(_rect_outline(walkable_rect()))
@@ -736,8 +801,7 @@ func _bake_navigation() -> NavigationPolygon:
 				var outline: PackedVector2Array = node.get_obstacle_outline()
 				if outline.size() >= 3:
 					source.add_obstruction_outline(outline)
-	NavigationServer2D.bake_from_source_geometry_data(nav_poly, source)
-	return _sem_degenerados(nav_poly)
+	return source
 
 
 ## Bloco 76: o bake do Godot às vezes solta triângulo de ÁREA ZERO (dois vértices no mesmo ponto) na beira das
@@ -1046,6 +1110,20 @@ func tiles_connect(a: Vector2i, b: Vector2i) -> bool:
 
 ## O que a navegação vê como parede no mapa novo: a beira dos penhascos (onde dois tiles
 ## vizinhos não se ligam) e a paliçada (menos a abertura do portão).
+## Bloco 131: as beiras do terreno e a paliçada só mudam com o leste desbravado (ou o mapa trocando): guardadas, a geometria
+## da malha não refaz esse trabalho a cada obra pronta.
+var _blk_cache: Array[PackedVector2Array] = []
+var _blk_chave := ""
+
+
+func _iso_blockers_cache() -> Array[PackedVector2Array]:
+	var k := "%s|%s|%s" % [leste_aberto, map_rect, iso_ground_rect()]
+	if k != _blk_chave:
+		_blk_chave = k
+		_blk_cache = _iso_blockers()
+	return _blk_cache
+
+
 func _iso_blockers() -> Array[PackedVector2Array]:
 	var out: Array[PackedVector2Array] = []
 	var f := iso_scale()
@@ -1559,7 +1637,25 @@ func lote_perto(p: Vector2, raio: float = 56.0) -> Vector2:
 	return best
 
 
-func clear_decor_under_extras() -> void:
+## Bloco 131: ~15 ms na vila cheia, chamada junto com cada obra pronta. No jogo, os pedidos do mesmo quadro viram UMA
+## limpeza no fim do quadro (antes do bake da malha, que também é agendado no fim do quadro). Em headless (os testes) e com
+## `imediato`, na hora.
+var _decor_agendado := false
+
+
+func clear_decor_under_extras(imediato := false) -> void:
+	if imediato or not _nav_assincrona():
+		_limpa_decor_agora()
+		return
+	if not _decor_agendado:
+		_decor_agendado = true
+		_limpa_decor_agora.call_deferred()
+
+
+func _limpa_decor_agora() -> void:
+	_decor_agendado = false
+	if not is_inside_tree():
+		return
 	var groups: Array = NAV_EXTRA_GROUPS + ["elevador_abismo", "elevadores", "barricadas", "village_hub", "armazens", "comedouros", "cemiterios"]
 	if has_iso_map():  # Prompt 30: os prédios novos são maiores; toda estrutura limpa a pegada dela
 		groups = groups + ["casas", "escavadeira", "oficina", "elevador"]
@@ -1575,12 +1671,24 @@ func clear_decor_under_extras() -> void:
 						bb = bb.expand(q)
 					# a pegada do desenho novo + folga pra porta e o caminho em volta
 					area = area.merge(bb.grow(40.0 if node.is_in_group("village_hub") else 18.0))
-			_limpa_decor(area)
+			_limpa_decor_uma_vez(area)
 	for r in lotes():  # Bloco 76: o chão dos lotes livres fica limpo (terreno pronto pra construir)
-		_limpa_decor(r)
+		_limpa_decor_uma_vez(r)
 	var cam := get_tree().get_first_node_in_group("caminhos")
 	if cam:
 		cam.remover_sob_predios()  # Bloco 89: prédio por cima de caminho apaga o trecho
+
+
+## Bloco 131: a decoração escondida não volta; uma área já limpa (o mesmo retângulo) não precisa ser varrida de novo. Era a
+## maior parte dos ~15 ms: toda obra pronta varria a decoração de TODAS as estruturas da vila.
+var _areas_limpas := {}
+
+
+func _limpa_decor_uma_vez(area: Rect2) -> void:
+	if _areas_limpas.has(area):
+		return
+	_areas_limpas[area] = true
+	_limpa_decor(area)
 
 
 func _limpa_decor(area: Rect2) -> void:

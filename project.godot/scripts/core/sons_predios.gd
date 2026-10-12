@@ -108,7 +108,11 @@ func _cria(q: Dictionary) -> Dictionary:
 	p.volume_db = db_mudo
 	add_child(p)
 	p.global_position = (q.no as Node2D).global_position
+	p.set_meta("slot", String(q.slot))  # Bloco 131: o diagnóstico de som sabe quem é
 	p.play()
+	var au := get_node_or_null("/root/Audio")
+	if au and au.get("silenciados") != null and au.silenciados.has(String(q.slot)):
+		p.stream_paused = true  # silenciado no diagnóstico (F3)
 	var alvo := float(s.get("db", 0.0)) + linear_to_db(maxf(float(q.get("fator", 1.0)), 0.001))
 	_sobe(p, alvo)
 	return {"player": p, "slot": q.slot, "db": alvo, "subindo": true}

@@ -1,0 +1,10 @@
+Deep Iron — bench_picos (2026-10-12T01:31:51)
+máquina: Intel(R) Core(TM) i3-8100 CPU @ 3.60GHz, 4 núcleos | GPU: Radeon RX 580 Series | janela (1280, 720), vsync desligado
+
+cenário (quadros)                          ms méd   ms p99  ms maior     FPS
+N  vila cheia à noite (360)                 22.26    25.92     27.72      45
+S  hora social (20:00) (379)                21.16    29.26     35.36      47
+O  obra pronta, 5x                       chamada méd  1274.4 / maior  1302.0 ms | maior quadro nos 30 seguintes: méd   142.3 / maior   148.5 ms
+E  subida de estágio, 3x                 chamada méd     5.3 / maior     9.7 ms | maior quadro nos 30 seguintes: méd    60.1 / maior   129.7 ms
+P  chega um morador (o padre)            chamada méd     0.0 / maior     0.0 ms | maior quadro nos 30 seguintes: méd     0.0 / maior     0.0 ms
+  partes (código antigo): rebuild_navigation síncrono 1283.1 ms

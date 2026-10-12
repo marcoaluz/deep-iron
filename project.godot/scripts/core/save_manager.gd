@@ -841,8 +841,8 @@ func apply_pending(main: Node) -> void:
 		# canteiros carregados também são obstáculo na navegação (como quando encomendados)
 		var env := get_tree().get_first_node_in_group("environment")
 		if env:
-			env.clear_decor_under_extras()
-			env.rebuild_navigation()
+			env.clear_decor_under_extras(true)
+			env.rebuild_navigation(true)
 	_apply_group("barricadas", SaveUtil.dict(data, "barricadas"))
 	_apply_group("casas", SaveUtil.dict(data, "casas"))
 	_apply_group("armazens", SaveUtil.dict(data, "armazens"))
@@ -877,7 +877,7 @@ func apply_pending(main: Node) -> void:
 	# vai pro lugar válido mais perto (fica anotado em environment.migrated)
 	var map_env := get_tree().get_first_node_in_group("environment")
 	if map_env and map_env.has_method("migrate_positions") and map_env.migrate_positions() > 0:
-		map_env.rebuild_navigation()
+		map_env.rebuild_navigation(true)
 
 	var cat := get_tree().get_first_node_in_group("catalogo")  # Bloco 102: depois do mundo (o save antigo confere o liberado)
 	if cat:
@@ -1001,8 +1001,8 @@ func _apply_layout(layout: Dictionary) -> void:
 			hub.spawn_comedouro(pos, SaveUtil.text(cd, "name", ""), false)
 	var env := get_tree().get_first_node_in_group("environment")
 	if env:
-		env.clear_decor_under_extras()
-		env.rebuild_navigation()
+		env.clear_decor_under_extras(true)
+		env.rebuild_navigation(true)
 
 
 ## Recria as casas que o jogador posicionou (antes dos ipezinhos, pra camas baterem).
@@ -1022,7 +1022,7 @@ func _spawn_placed_houses(list: Array) -> void:
 		hub.spawn_house(pos, house_name, false)
 	var env := get_tree().get_first_node_in_group("environment")
 	if env:
-		env.rebuild_navigation()  # uma vez só, com todas as casas
+		env.rebuild_navigation(true)  # uma vez só, com todas as casas (Bloco 131: na hora: a carga precisa da malha)
 
 
 func _apply_single(group: String, d: Dictionary) -> void:

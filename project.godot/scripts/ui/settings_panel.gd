@@ -51,7 +51,8 @@ func _build_main() -> void:
 
 	_slider(left, "Volume geral", "master_volume")
 	_slider(left, "Música", "music_volume")
-	_slider(left, "Ambiente da caverna", "ambience_volume")
+	_slider(left, "Ambiência (floresta, mina, chuva)", "ambience_volume")
+	_slider(left, "Sons soltos (coruja, sapo, trovão...)", "soltos_volume")  # Bloco 131: separado da ambiência
 	_slider(left, "Efeitos", "sfx_volume")
 	_slider(left, "Interface (cliques, avisos)", "ui_volume")  # Bloco 114: o bus UI
 	var music := CheckBox.new()

@@ -86,6 +86,7 @@ func _process(delta: float) -> bool:
 		check(cal != null and cal.padre() == null and not cal.padre_chegou, "estágio 1: sem padre")
 		var n0: int = eco.worker_count()
 		hub.level = cal.padre_estagio
+		cal.padre_atraso = 0.0  # (Bloco 131: no jogo ele chega uns segundos depois da subida)
 		cal._process(0.0)
 		var pd = cal.padre()
 		check(pd != null and pd.display_name == cal.padre_nome and pd.is_priest(), "estágio %d: %s chegou" % [cal.padre_estagio, pd.display_name if pd else "?"])

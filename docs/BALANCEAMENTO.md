@@ -9,9 +9,9 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1328 valores** em 4 pastas de scripts (90 trocados por alguma cena).
+Total: **1330 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 
-## `scripts/core/audio_manager.gd` (97)
+## `scripts/core/audio_manager.gd` (98)
 
 **Volumes (0 a 1)**
 
@@ -21,6 +21,7 @@ Total: **1328 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `music_volume` | 0.35 |  |  |
 | `ambience_volume` | 0.55 |  |  |
 | `sfx_volume` | 0.8 |  |  |
+| `soltos_volume` | 0.8 |  | Bloco 131: volume dos SONS SOLTOS (coruja, sapo, lobo, pássaro, trovão, gota...): bus próprio "Soltos" (0 a 1; o slider das Configurações). Antes eles saíam no bus da ambiência e não dava pra baixar um sem o outro. |
 | `music_enabled` | true |  |  |
 | `fade_in_time` | 3.0 |  | Segundos de fade-in da música e do ambiente ao iniciar. |
 
@@ -164,13 +165,14 @@ Total: **1328 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `desc_linhas` | 3 |  | Linhas da descrição no cartão (o resto vai na dica). |
 | `imagem_area` | Vector2(180, 70) |  | Área da imagem no topo do cartão (px lógicos; a imagem é 96x64 e fica 1:1 no meio). |
 
-## `scripts/core/calendario.gd` (16)
+## `scripts/core/calendario.gd` (17)
 
 **Padre**
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
 | `padre_estagio` | 2 |  | Estágio da vila em que o padre chega (2 = Vilarejo). |
+| `padre_atraso` | 3.0 |  | Bloco 131: segundos (reais) entre a vila chegar no estágio e o padre aparecer. Chegar no MESMO quadro da subida somava o custo de criar um morador novo (cena, bonecos, linha da lista: ~100 ms) ao da subida — o tranco de quando a vila cresce. |
 | `padre_nome` | "Padre Bento" |  | Nome dele. |
 
 **Missa (domingo)**
@@ -251,7 +253,7 @@ Total: **1328 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 
 | valor | padrão | na cena | o quê |
 |---|---|---|---|
-| `tamanho` | 20.0 |  | Lado de uma célula da grade (px do chão). |
+| `tamanho` | 64.0 / 3.0 |  | Lado de uma célula da grade (px do chão). Bloco 130: 64/3 — com a escala 1,5 da vista, o losango da célula tem exatamente 64x32 px de arte: o tamanho dos ladrilhos do PixelLab (iso_pisos.gd), sem escalar o desenho. |
 | `custos` | {"terra": Vector3i(2, 0, 0), "cascalho": Vector3i(3, 1, 0), "pedra": Vector3i(5, 2, 0)} |  | Custo por célula: x = créditos, y = ferro (pedra/cascalho), z = madeira. |
 | `bonus` | {"terra": 0.12, "cascalho": 0.2, "pedra": 0.3} |  | Bônus de velocidade de quem anda sobre o caminho (0.15 = +15%), por tipo. |
 | `rota_entrada` | 140.0 |  | Rota do passeio: só usa caminho que comece/termine até esta distância (px) de quem sai e do destino. |

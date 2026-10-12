@@ -540,3 +540,7 @@ func test_b129_save_arquivo_intro() -> void:
 
 func test_b130_pisos_flicker() -> void:
 	run_bloco("b130_pisos_flicker.gd")
+
+
+func test_b131_travadas_som() -> void:
+	run_bloco("b131_travadas_som.gd")

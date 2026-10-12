@@ -11,6 +11,9 @@ extends Node
 @export_range(0.0, 1.0) var music_volume: float = 0.35
 @export_range(0.0, 1.0) var ambience_volume: float = 0.55
 @export_range(0.0, 1.0) var sfx_volume: float = 0.8
+## Bloco 131: volume dos SONS SOLTOS (coruja, sapo, lobo, pássaro, trovão, gota...): bus próprio "Soltos" (0 a 1; o slider das
+## Configurações). Antes eles saíam no bus da ambiência e não dava pra baixar um sem o outro.
+@export_range(0.0, 1.0) var soltos_volume: float = 0.8
 @export var music_enabled: bool = true
 ## Segundos de fade-in da música e do ambiente ao iniciar.
 @export var fade_in_time: float = 3.0
@@ -247,6 +250,7 @@ func _ready() -> void:
 		_ui_pool.append(u)
 	_ui_player = _ui_pool[0]
 	_garante_buses()
+	apply_volumes()  # (Bloco 131: o bus Soltos acabou de nascer)
 	# Bloco 114: o bus UI tem as 4 vozes dele (os sons de interface não disputam com os efeitos)
 	for i in 4:
 		var u := AudioStreamPlayer.new()
@@ -272,9 +276,9 @@ func _ready() -> void:
 	_danger_player = _make_loop_player(_musica_slot("musica/perigo"), &"Music")
 	_ambience_player = _make_loop_player(null, &"Ambience")
 	_amb_stream(_ambience_player, CTX_SLOT["mina"])  # a mina também vem do slot (o arquivo novo; sem ele, a reserva = o som de antes). Antes o som antigo entrava aqui e o novo nunca o trocava (já estava tocando)
-	for i in 4:  # Bloco 115: os sons soltos pelo contexto (pássaro, trovão, gota...) saem no bus Ambience
+	for i in 4:  # Bloco 115: os sons soltos pelo contexto (pássaro, trovão, gota...). Bloco 131: no bus Soltos (slider próprio)
 		var q := AudioStreamPlayer2D.new()
-		q.bus = &"Ambience"
+		q.bus = &"Soltos"
 		q.max_distance = sfx_max_distance
 		q.attenuation = 1.0
 		add_child(q)
@@ -391,6 +395,7 @@ func _amb_stream(p: AudioStreamPlayer, id: String) -> void:
 	if st != null and st != p.stream and not p.playing:
 		Slots.forca_loop(st)
 		p.stream = st
+		p.set_meta("slot", id)  # Bloco 131
 
 
 ## Volume da ambiência de um contexto: o do slot (data/audio/slots.json), ou o ambience_db antigo.
@@ -510,6 +515,7 @@ func apply_volumes() -> void:
 	_set_bus_volume(&"Ambience", ambience_volume)
 	_set_bus_volume(&"SFX", sfx_volume)
 	_set_bus_volume(&"UI", ui_volume)  # Bloco 114
+	_set_bus_volume(&"Soltos", soltos_volume)  # Bloco 131
 
 
 func _set_bus_volume(bus_name: StringName, linear: float) -> void:
@@ -541,6 +547,7 @@ func _load_settings() -> void:
 	sfx_volume = Settings.get_value("audio", "sfx_volume", sfx_volume)
 	music_enabled = Settings.get_value("audio", "music_enabled", music_enabled)
 	ui_volume = Settings.get_value("audio", "ui_volume", ui_volume)  # Bloco 114
+	soltos_volume = Settings.get_value("audio", "soltos_volume", soltos_volume)  # Bloco 131
 	voz_ligada = Settings.get_value("audio", "voz_ligada", voz_ligada)
 	musica_dinamica = Settings.get_value("audio", "musica_dinamica", musica_dinamica)  # Bloco 121
 	mix_melodia = Settings.get_value("audio", "mix_melodia", mix_melodia)
@@ -549,7 +556,7 @@ func _load_settings() -> void:
 
 
 func save_settings() -> void:
-	for key in ["master_volume", "music_volume", "ambience_volume", "sfx_volume", "music_enabled", "ui_volume", "voz_ligada", "musica_dinamica", "mix_melodia", "mix_pad", "mix_percussao"]:
+	for key in ["master_volume", "music_volume", "ambience_volume", "sfx_volume", "music_enabled", "ui_volume", "voz_ligada", "musica_dinamica", "mix_melodia", "mix_pad", "mix_percussao", "soltos_volume"]:
 		Settings.set_value("audio", key, get(key))
 
 
@@ -771,6 +778,7 @@ func play_at(key: StringName, streams: Array[AudioStream], pos: Vector2, volume_
 		return false
 	var p := _take_voice()
 	p.set_meta("key", key)
+	p.set_meta("slot", String(key))  # Bloco 131: o diagnóstico sabe quem é
 	p.stream = streams[_pick_index(key, streams.size())]
 	p.global_position = pos
 	p.volume_db = volume_db
@@ -855,11 +863,12 @@ func _reserva(r: String) -> Array[AudioStream]:
 
 ## O bus UI existe mesmo se o layout carregado não tiver (testes, builds antigos).
 func _garante_buses() -> void:
-	if AudioServer.get_bus_index(&"UI") < 0:
-		AudioServer.add_bus()
-		var i := AudioServer.bus_count - 1
-		AudioServer.set_bus_name(i, &"UI")
-		AudioServer.set_bus_send(i, &"Master")
+	for nome in [&"UI", &"Soltos"]:  # Bloco 131: + o bus dos sons soltos
+		if AudioServer.get_bus_index(nome) < 0:
+			AudioServer.add_bus()
+			var i := AudioServer.bus_count - 1
+			AudioServer.set_bus_name(i, nome)
+			AudioServer.set_bus_send(i, &"Master")
 
 
 # ------------------------------------------------------------ stingers, sino, notícias e interface
@@ -1085,6 +1094,8 @@ func eco_atual() -> float:
 ## Um efeito POSICIONAL pelo slot (sfx/..., animais/..., criaturas/...): volume, variação de tom e a reserva (o som de antes)
 ## vêm do slot. Devolve se tocou (longe da câmera ou sem som: false).
 func som(id: String, pos: Vector2) -> bool:
+	if silenciados.has(id):
+		return false  # Bloco 131: silenciado no diagnóstico (F3)
 	var arr := _slot_streams(id)
 	if arr.is_empty():
 		return false
@@ -1094,6 +1105,8 @@ func som(id: String, pos: Vector2) -> bool:
 
 ## Um som SEM posição (conquista, alarme, venda...) pelo slot, nas vozes globais do SFX; o "duck" do slot abaixa a música.
 func som_global(id: String) -> void:
+	if silenciados.has(id):
+		return
 	var st := _slot_stream(id)
 	if st == null:
 		return
@@ -1231,7 +1244,7 @@ func _pontuais_tick(delta: float) -> void:
 	var agora := Time.get_ticks_msec()
 	for id in _pont_ids:
 		var sl := Slots.slot(id)
-		if not _ctx_vale(sl.get("ctx", [])):
+		if not _ctx_vale(sl.get("ctx", [])) or silenciados.has(id):
 			continue
 		var arr := Slots.streams(id)
 		if arr.is_empty():
@@ -1251,6 +1264,7 @@ func _pontuais_tick(delta: float) -> void:
 			continue
 		q.volume_db = float(sl.get("db", -12.0)) + linear_to_db(fz)
 		q.pitch_scale = randf_range(0.95, 1.05)
+		q.set_meta("slot", id)  # Bloco 131: o diagnóstico sabe quem é
 		q.play()
 
 
@@ -1274,3 +1288,79 @@ func _pont_voz() -> AudioStreamPlayer2D:
 		if not q.playing:
 			return q
 	return _pont_pool[0]
+
+
+# ------------------------------------------------------------ Bloco 131: diagnóstico "o que está tocando agora" (F3)
+## Os slots SILENCIADOS no diagnóstico (id -> true). Não vai pro save nem pras configurações: é pra achar o culpado ouvindo.
+var silenciados := {}
+const PASTA_AUDIO := "res://assets/audio/"
+
+
+## O id do slot de quem toca: a marca que o Audio põe ao tocar ("slot"), ou o caminho do arquivo (assets/audio/<id>[_N].wav).
+## "" = sem como saber (um som sintetizado de reserva).
+static func slot_de(p: Node) -> String:
+	if p.has_meta("slot"):
+		return String(p.get_meta("slot"))
+	var st: AudioStream = p.get("stream")
+	if st == null:
+		return ""
+	var caminho := st.resource_path
+	if caminho.begins_with(PASTA_AUDIO):
+		var id := caminho.trim_prefix(PASTA_AUDIO).get_basename()
+		var partes := id.rsplit("_", true, 1)
+		if partes.size() == 2 and partes[1].is_valid_int() and Slots.existe(partes[0]):
+			return partes[0]
+		return id
+	return st.get_class()
+
+
+## Os sons tocando agora (ou pausados pelo diagnóstico), um por player: {id, bus, db (o do player + o do bus), dist (px até o
+## centro da câmera; -1 = sem posição), loop, player}. Ordem: o mais alto primeiro.
+func sons_ativos() -> Array:
+	var out: Array = []
+	var cam := get_viewport().get_camera_2d() if is_inside_tree() else null
+	var centro: Vector2 = cam.get_screen_center_position() if cam else Vector2.ZERO
+	var players: Array = get_tree().root.find_children("*", "AudioStreamPlayer", true, false)
+	players.append_array(get_tree().root.find_children("*", "AudioStreamPlayer2D", true, false))
+	for p in players:
+		if not (p.playing or p.stream_paused) or p.stream == null:
+			continue
+		var bus: StringName = p.bus
+		var bi := AudioServer.get_bus_index(bus)
+		var db: float = float(p.volume_db) + (AudioServer.get_bus_volume_db(bi) if bi >= 0 else 0.0)
+		var dist := -1.0
+		if p is AudioStreamPlayer2D and cam:
+			dist = (p as AudioStreamPlayer2D).global_position.distance_to(centro)
+		out.append({"id": slot_de(p), "bus": String(bus), "db": db, "dist": dist, "loop": _e_loop(p.stream), "player": p,
+			"pausado": p.stream_paused})
+	out.sort_custom(func(a, b): return a.db > b.db)
+	return out
+
+
+static func _e_loop(st: AudioStream) -> bool:
+	if st is AudioStreamWAV:
+		return (st as AudioStreamWAV).loop_mode != AudioStreamWAV.LOOP_DISABLED
+	if st.get("loop") != null:
+		return bool(st.get("loop"))
+	return st is AudioStreamInteractive or st is AudioStreamSynchronized
+
+
+## Silencia (ou volta) um slot: o que já toca pausa e o que ia tocar não toca (pontuais, efeitos, loops de prédio, ambiência).
+func silenciar(id: String, mudo: bool) -> void:
+	if mudo:
+		silenciados[id] = true
+	else:
+		silenciados.erase(id)
+	_aplica_mudo(id)
+	_aplica_mudo.call_deferred(id)  # (o que começou a tocar neste quadro só tem reprodução no próximo: o pause pega aí)
+
+
+func _aplica_mudo(id: String) -> void:
+	var mudo := silenciados.has(id)
+	for s in sons_ativos():
+		if s.id == id:
+			(s.player as Node).set("stream_paused", mudo)
+
+
+func silenciado(id: String) -> bool:
+	return silenciados.has(id)

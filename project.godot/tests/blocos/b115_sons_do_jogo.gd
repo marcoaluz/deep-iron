@@ -239,8 +239,8 @@ func _roda() -> void:
 	for p in audio._pont_pool:
 		if p.playing and p.stream == fp:
 			q = p
-	check(q != null and q.bus == &"Ambience" and q.global_position.distance_to(cam.get_screen_center_position()) <= 401.0 and q.global_position.distance_to(cam.get_screen_center_position()) >= 119.0,
-		"o som solto sai perto da câmera (120 a 400 px) no bus Ambience")
+	check(q != null and q.bus == &"Soltos" and q.global_position.distance_to(cam.get_screen_center_position()) <= 401.0 and q.global_position.distance_to(cam.get_screen_center_position()) >= 119.0,
+		"o som solto sai perto da câmera (120 a 400 px) no bus Soltos (Bloco 131: slider próprio; antes Ambience)")
 	Slots.limpa_falsos()
 	audio.ambience_now = "dia"
 	# a camada da onda solar
