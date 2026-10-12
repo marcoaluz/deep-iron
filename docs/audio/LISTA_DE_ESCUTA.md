@@ -2,7 +2,7 @@
 
 Gerado por `python tools/elevenlabs/docs_audio.py`. A ordem é a de prioridade (ambiência por andar, fornalha, igreja, stingers, interface, depois o resto). **Marque `[x]` o que você ouviu e aprovou.** O estado de aprovação gravado pela ferramenta está em `project.godot/data/audio/gerados.json`.
 
-**Resumo:** 203 arquivos de efeitos, 191 marcados como aprovados.
+**Resumo:** 209 arquivos de efeitos, 191 marcados como aprovados.
 
 ## Como ouvir e trocar um som
 
@@ -18,7 +18,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py`. A ordem é a de prioridade (
   - arquivo: `assets/audio/ambiencia/chuva.wav`  •  ouça: a emenda do loop (sem estalo) e se não cansa
 - [x] `ambiencia/floresta_dia` — loop 40 s — Floresta e clareira de dia: pássaros, folhas, vento leve.
   - arquivo: `assets/audio/ambiencia/floresta_dia.wav`  •  ouça: a emenda do loop (sem estalo) e se não cansa
-- [x] `ambiencia/floresta_noite` — loop 40 s — Floresta e clareira de noite: vento baixo nos pinheiros e folhas; sem insetos (Bloco 133: o de antes era um chiado de grilo contínuo em 7 kHz; a 1ª troca saiu com estática).
+- [x] `ambiencia/floresta_noite` — loop 30 s — Floresta e clareira de noite: QUASE SILÊNCIO (Bloco 137: um tom de ar muito baixo e grave, sem agudos; a atmosfera vem dos sons pontuais da noite — coruja, vento distante, galho, grilo isolado, sapo, lobo — e da tocha/fogueira perto). Bloco 133: o de antes era um chiado contínuo.
   - arquivo: `assets/audio/ambiencia/floresta_noite.wav`  •  ouça: a emenda do loop (sem estalo) e se não cansa
 - [x] `ambiencia/mina` — loop 40 s — Vila, pedreira e túneis do S1 (a câmera na área da mina). Loop contínuo, sem pico alto.
   - arquivo: `assets/audio/ambiencia/mina.wav`  •  ouça: a emenda do loop (sem estalo) e se não cansa
@@ -398,6 +398,10 @@ Gerado por `python tools/elevenlabs/docs_audio.py`. A ordem é a de prioridade (
   - arquivo: `assets/audio/pontuais/corvo_0.wav`  •  ouça: se soa natural isolado
 - [x] `pontuais/corvo_1` — 2 s cada — Floresta de dia: um corvo ao longe. *(toca a cada 20 a 45 s enquanto vale: dia)*
   - arquivo: `assets/audio/pontuais/corvo_1.wav`  •  ouça: se soa natural isolado
+- [ ] `pontuais/galho_estala_0` — 2 s cada — Floresta de noite (Bloco 137): um galho seco estalando, um pouco longe. *(toca a cada 30 a 70 s enquanto vale: noite)*
+  - arquivo: `assets/audio/pontuais/galho_estala_0.wav`  •  ouça: se soa natural isolado
+- [ ] `pontuais/galho_estala_1` — 2 s cada — Floresta de noite (Bloco 137): um galho seco estalando, um pouco longe. *(toca a cada 30 a 70 s enquanto vale: noite)*
+  - arquivo: `assets/audio/pontuais/galho_estala_1.wav`  •  ouça: se soa natural isolado
 - [x] `pontuais/gota_eco_0` — 3 s cada — S5: uma gota cai no lago. *(toca a cada 7 a 18 s enquanto vale: s5)*
   - arquivo: `assets/audio/pontuais/gota_eco_0.wav`  •  ouça: se soa natural isolado
 - [x] `pontuais/gota_eco_1` — 3 s cada — S5: uma gota cai no lago. *(toca a cada 7 a 18 s enquanto vale: s5)*
@@ -410,6 +414,10 @@ Gerado por `python tools/elevenlabs/docs_audio.py`. A ordem é a de prioridade (
   - arquivo: `assets/audio/pontuais/gotejar_1.wav`  •  ouça: se soa natural isolado
 - [x] `pontuais/gotejar_2` — 1.5 s cada — Na mina e no S2: uma gota cai. *(toca a cada 8 a 20 s enquanto vale: mina/s2)*
   - arquivo: `assets/audio/pontuais/gotejar_2.wav`  •  ouça: se soa natural isolado
+- [ ] `pontuais/grilo_isolado_0` — 2 s cada — Floresta de noite (Bloco 137): UM grilo, três cricrís curtos e longe, e silêncio (nunca contínuo). *(toca a cada 35 a 80 s enquanto vale: noite)*
+  - arquivo: `assets/audio/pontuais/grilo_isolado_0.wav`  •  ouça: se soa natural isolado
+- [ ] `pontuais/grilo_isolado_1` — 2 s cada — Floresta de noite (Bloco 137): UM grilo, três cricrís curtos e longe, e silêncio (nunca contínuo). *(toca a cada 35 a 80 s enquanto vale: noite)*
+  - arquivo: `assets/audio/pontuais/grilo_isolado_1.wav`  •  ouça: se soa natural isolado
 - [x] `pontuais/lava_estalo_0` — 1.5 s cada — S3: a rocha esfriando estala. *(toca a cada 5 a 14 s enquanto vale: s3)*
   - arquivo: `assets/audio/pontuais/lava_estalo_0.wav`  •  ouça: se soa natural isolado
 - [x] `pontuais/lava_estalo_1` — 1.5 s cada — S3: a rocha esfriando estala. *(toca a cada 5 a 14 s enquanto vale: s3)*
@@ -444,6 +452,10 @@ Gerado por `python tools/elevenlabs/docs_audio.py`. A ordem é a de prioridade (
   - arquivo: `assets/audio/pontuais/trovao_1.wav`  •  ouça: se soa natural isolado
 - [x] `pontuais/trovao_2` — 6 s cada — Quando chove: um trovão. *(toca a cada 20 a 50 s enquanto vale: chuva)*
   - arquivo: `assets/audio/pontuais/trovao_2.wav`  •  ouça: se soa natural isolado
+- [ ] `pontuais/vento_distante_0` — 5 s cada — Floresta de noite (Bloco 137): uma lufada de vento longe, grave, de vez em quando. *(toca a cada 25 a 60 s enquanto vale: noite)*
+  - arquivo: `assets/audio/pontuais/vento_distante_0.wav`  •  ouça: se soa natural isolado
+- [ ] `pontuais/vento_distante_1` — 5 s cada — Floresta de noite (Bloco 137): uma lufada de vento longe, grave, de vez em quando. *(toca a cada 25 a 60 s enquanto vale: noite)*
+  - arquivo: `assets/audio/pontuais/vento_distante_1.wav`  •  ouça: se soa natural isolado
 - [x] `pontuais/vento_rajada_0` — 4 s cada — No inverno: uma rajada de vento. *(toca a cada 10 a 25 s enquanto vale: vento)*
   - arquivo: `assets/audio/pontuais/vento_rajada_0.wav`  •  ouça: se soa natural isolado
 - [x] `pontuais/vento_rajada_1` — 4 s cada — No inverno: uma rajada de vento. *(toca a cada 10 a 25 s enquanto vale: vento)*

@@ -2,6 +2,9 @@ extends CanvasLayer
 ## Bloco 131: "Som: o que está tocando agora" (F3). Lista AO VIVO os sons ativos — id do slot, bus, volume em dB (o do player
 ## somado ao do bus), distância até o centro da câmera, se é loop — com um botão pra silenciar cada um (e voltar). É pra achar
 ## o som chato da noite ouvindo: silencia um por um até o incômodo sumir. Nada aqui vai pro save.
+## Bloco 137: as CANDIDATAS da noite (audio_candidatos/ambiencia__floresta_noite/<n>.wav, fora do git): "Ouvir" toca cada uma
+## no lugar do loop da floresta à noite (Audio.prova_ambiencia), "Voltar ao do jogo" desfaz; a escolhida entra no jogo com
+## `python tools/elevenlabs/gerar_sons.py --aprovar ambiencia/floresta_noite <n>` (o texto do painel mostra o comando).
 
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const Tipo := preload("res://scripts/ui/tipografia.gd")
@@ -13,6 +16,11 @@ var _painel: PanelContainer
 var _lista: VBoxContainer
 var _resumo: Label
 var _t := 0.0
+## Bloco 137: o slot cujas candidatas aparecem, e o contexto da ambiência onde ele toca.
+const SLOT_CANDIDATAS := "ambiencia/floresta_noite"
+const CTX_CANDIDATAS := "noite"
+var _cands: VBoxContainer
+var _cands_info: Label
 
 
 func _ready() -> void:
@@ -25,6 +33,7 @@ func _ready() -> void:
 	_painel.add_theme_stylebox_override("panel", UiSkin.painel(6) if UiSkin.ok() else StyleBoxFlat.new())
 	_painel.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
 	_painel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_painel.grow_vertical = Control.GROW_DIRECTION_BOTH  # Bloco 137: cresce pros dois lados (com as candidatas, cabia só a metade)
 	_painel.offset_right = -20.0
 	_painel.custom_minimum_size = Vector2(560, 0)
 	add_child(_painel)
@@ -48,7 +57,7 @@ func _ready() -> void:
 	_resumo.add_theme_color_override("font_color", Color(0.7, 0.66, 0.6))
 	v.add_child(_resumo)
 	var rol := ScrollContainer.new()
-	rol.custom_minimum_size = Vector2(540, 380)
+	rol.custom_minimum_size = Vector2(540, 260)
 	rol.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	v.add_child(rol)
 	_lista = VBoxContainer.new()
@@ -56,12 +65,89 @@ func _ready() -> void:
 	_lista.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_lista.add_theme_constant_override("separation", 2)
 	rol.add_child(_lista)
+	# Bloco 137: as candidatas do som da noite
+	var tc := Label.new()
+	tc.text = "CANDIDATAS: NOITE NA FLORESTA (ouvir no lugar do loop)"
+	tc.add_theme_font_size_override("font_size", Tipo.DETALHE)
+	tc.add_theme_color_override("font_color", Color(1.0, 0.8, 0.35))
+	v.add_child(tc)
+	_cands = VBoxContainer.new()
+	_cands.name = "Candidatas"
+	_cands.add_theme_constant_override("separation", 2)
+	v.add_child(_cands)
+	_cands_info = Label.new()
+	_cands_info.add_theme_font_size_override("font_size", Tipo.DETALHE)
+	_cands_info.add_theme_color_override("font_color", Color(0.7, 0.66, 0.6))
+	_cands_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_cands_info.custom_minimum_size.x = 540
+	v.add_child(_cands_info)
 	visible = false
 
 
 func abre() -> void:
 	visible = true
 	atualiza()
+	monta_candidatas()
+
+
+## Bloco 137: a pasta das candidatas de um slot (fora do projeto: <repo>/audio_candidatos/<pasta__nome>/).
+static func pasta_candidatas(slot_id: String) -> String:
+	var res := ProjectSettings.globalize_path("res://").trim_suffix("/")
+	return res.get_base_dir().path_join("audio_candidatos").path_join(slot_id.replace("/", "__"))
+
+
+## Os arquivos <n>.wav da pasta, em ordem.
+static func candidatas(slot_id: String) -> Array:
+	var out: Array = []
+	var d := DirAccess.open(pasta_candidatas(slot_id))
+	if d == null:
+		return out
+	for f in d.get_files():
+		if f.get_extension().to_lower() == "wav" and f.get_basename().is_valid_int():
+			out.append(pasta_candidatas(slot_id).path_join(f))
+	out.sort_custom(func(a, b): return int(String(a).get_file().get_basename()) < int(String(b).get_file().get_basename()))
+	return out
+
+
+func monta_candidatas() -> void:
+	for c in _cands.get_children():
+		c.queue_free()
+	var au := _audio()
+	var lista := candidatas(SLOT_CANDIDATAS)
+	var atual: String = au.em_prova(CTX_CANDIDATAS) if au and au.has_method("em_prova") else ""
+	for cam in lista:
+		var h := HBoxContainer.new()
+		var l := Label.new()
+		var n := String(cam).get_file().get_basename()
+		l.text = "Candidata #%s%s" % [n, "   ◀ tocando" if atual == cam else ""]
+		l.add_theme_font_size_override("font_size", Tipo.DETALHE)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(l)
+		var b := Button.new()
+		b.name = "Ouvir_" + n
+		b.text = "Ouvir"
+		b.add_theme_font_size_override("font_size", Tipo.DETALHE)
+		var c2 := String(cam)
+		b.pressed.connect(func():
+			if au:
+				au.prova_ambiencia(CTX_CANDIDATAS, c2)
+			monta_candidatas())
+		h.add_child(b)
+		_cands.add_child(h)
+	var volta := Button.new()
+	volta.name = "VoltarAoJogo"
+	volta.text = "Voltar ao do jogo"
+	volta.add_theme_font_size_override("font_size", Tipo.DETALHE)
+	volta.disabled = atual == ""
+	volta.pressed.connect(func():
+		if au:
+			au.prova_ambiencia(CTX_CANDIDATAS, "")
+		monta_candidatas())
+	_cands.add_child(volta)
+	if lista.is_empty():
+		_cands_info.text = "Nenhuma candidata em %s (gere com: python tools/elevenlabs/gerar_sons.py --candidatos 3 --so %s)." % [pasta_candidatas(SLOT_CANDIDATAS), SLOT_CANDIDATAS]
+	else:
+		_cands_info.text = "Toca à noite, na superfície (o contexto \"noite\"; F3: Pular dia até anoitecer). Gostou de uma? python tools/elevenlabs/gerar_sons.py --aprovar %s <n>  e depois  python tools/elevenlabs/passa_baixa.py project.godot/assets/audio/%s.wav 1500  (o jogo usa a #0 até lá)." % [SLOT_CANDIDATAS, SLOT_CANDIDATAS]
 
 
 func _process(delta: float) -> void:

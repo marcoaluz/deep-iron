@@ -1,6 +1,12 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **136** (commits locais do 131 ao 136, sem push). Fila do Marco (mesma mensagem): Bloco 137 (som da noite com sons pontuais e candidatas no F3 — ele disse "pode gastar" —, a chegada do padre ferido, refeições do padre e dos guardas). TUDO até o Bloco 130 está enviado pro GitHub. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele vai jogar e testar os blocos 129–133 (pediu que o 133 fosse aplicado SEM rodar testes). Falta: o retorno dele do jogo, aprovar as variações dos pisos.
+Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **137** (commits locais do 131 ao 137, sem push). A fila de prompts da mensagem do Marco (135, 136, 137) acabou. Pendente do Marco: ouvir as candidatas da noite no F3 > Som (o jogo usa a #0 com passa-baixa) e aprovar outra se quiser. TUDO até o Bloco 130 está enviado pro GitHub. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele vai jogar e testar os blocos 129–133 (pediu que o 133 fosse aplicado SEM rodar testes). Falta: o retorno dele do jogo, aprovar as variações dos pisos.
+
+## Bloco 137 — O SOM DA NOITE, A CHEGADA DO PADRE, AS REFEIÇÕES DO PADRE E DOS GUARDAS (feito; commit local, sem push)
+
+Relatório `docs/BLOCO137_NOITE_PADRE_REFEICOES.md`; teste `b137_noite_padre_refeicoes` (32 OK); capturas `docs/arte/bloco137/`; telemetria `docs/telemetria/bloco137/`.
+- `floresta_noite` = quase silêncio grave (−14 dB; a candidata #0 + passa-baixa 1,5 kHz; a #2 era chiado), pontuais novos `vento_distante`/`galho_estala`/`grilo_isolado`, `Audio.stinger_amanhecer = false`, F3 > Som com "Ouvir" das candidatas (`Audio.prova_ambiencia`). ElevenLabs: ~1.280 créditos (restam ~88.066).
+- O padre chega ferido por fora do portão (banner, balão, diário, enfermaria 90 s; um padre só). O padre fica dentro da igreja e sai pra comer e pra hora social; os guardas de vigia jantam em duas turmas (invasão: todos no posto).
 
 ## Bloco 136 — VENDER COM CAIXA, JANELA DA FUNÇÃO, PESQUISADOR COM FILA (feito; commit local, sem push)
 

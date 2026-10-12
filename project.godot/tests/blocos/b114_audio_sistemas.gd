@@ -311,9 +311,14 @@ func _roda() -> void:
 	check(_tocando(audio._ui_pool, fs["amanhecer"]) == 0, "o primeiro dia que o jogo vê não toca o amanhecer")
 	dn.day += 1
 	audio._update_context()
-	check(_tocando(audio._ui_pool, fs["amanhecer"]) == 1, "o dia virou: o stinger do amanhecer")
+	check(_tocando(audio._ui_pool, fs["amanhecer"]) == 0, "Bloco 137: o dia virou e o amanhecer NÃO toca (desligado)")
+	audio.stinger_amanhecer = true
+	dn.day += 1
+	audio._update_context()
+	check(_tocando(audio._ui_pool, fs["amanhecer"]) == 1, "religado (stinger_amanhecer): o dia virou, o stinger do amanhecer")
 	audio._update_context()
 	check(_tocando(audio._ui_pool, fs["amanhecer"]) == 1, "no mesmo dia não repete")
+	audio.stinger_amanhecer = false
 	Slots.limpa_falsos()
 	# o sino da igreja: só na subida (começo da missa / do funeral)
 	var cal = g("calendario")

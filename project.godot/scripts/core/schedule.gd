@@ -19,6 +19,9 @@ extends Node
 ##     medico_turno horas de cada refeição (um de cada vez, a enfermaria nunca fica sozinha);
 ##   - guardas: VIGÍLIA noturna em rodízio ("vigilia": vigilia_fracao dos guardas por noite, girando a cada
 ##     dia; na noite de invasão, todos); quem não está de vigia faz a noite normal (social, dormir);
+##     Bloco 137: os de vigia JANTAM e vão pra HORA SOCIAL em revezamento — metade na 1ª parte do período social
+##     (guarda_turno_fracao), a outra metade depois: o portão nunca fica vazio. Com a invasão ativa ou avisada, ninguém
+##     sai do posto. Um só de vigia: janta rápido se estiver com fome (como antes) e volta;
 ##   - cozinheiro: começa em cozinheiro_inicio (04:00, prepara o café) e de jantar_preparo (16:00) até o
 ##     anoitecer fica cozinhando o jantar (não tem o "voltar").
 ##
@@ -52,6 +55,8 @@ const NOMES_REFEICAO := {"cafe": "café", "almoco": "almoço", "jantar": "jantar
 @export_range(0.25, 2.0, 0.25) var medico_turno: float = 0.5
 ## Fração dos guardas de vigia numa noite comum (gira a cada dia; pelo menos 1). Noite de invasão: todos.
 @export_range(0.0, 1.0, 0.05) var vigilia_fracao: float = 0.5
+## Bloco 137: fração do período social (anoitecer..dormir) da 1ª turma dos guardas de vigia; a 2ª turma vai depois.
+@export_range(0.1, 0.9, 0.05) var guarda_turno_fracao: float = 0.5
 
 @export_group("Refeições")
 ## Unidades de comida do comedouro que uma refeição gasta (uma porção).
@@ -126,14 +131,39 @@ func periodo(w: Node) -> String:
 		if pd != "":
 			return pd
 	if w != null and w.has_method("is_guard") and w.is_guard() and dn.is_night() and de_vigia(w):
-		# o guarda de vigia janta primeiro (na hora do jantar, com fome) e depois vai pro posto
-		if periodo_geral(h) == "social" and not w.refeicoes_hoje.has("jantar") and w.hunger < w.hunger_max * refeicao_dispensa:
-			return "social"
-		return "vigilia"
+		return _periodo_guarda_vigia(w, dn, h)  # Bloco 137: revezamento no jantar e na hora social
 	if w != null and w.has_method("is_cook") and w.is_cook():
 		if dn.entre_horas(cozinheiro_inicio, dn.hora_amanhecer) or dn.entre_horas(jantar_preparo, dn.hora_anoitecer):
 			return "trabalho"
 	return periodo_geral(h)
+
+
+## Bloco 137: o guarda DE VIGIA na hora social: as duas turmas se revezam (metade janta e conversa, metade no posto, e
+## trocam no meio); com a invasão ativa ou avisada, todos no posto. Um só de vigia: janta rápido se tiver fome e volta.
+func _periodo_guarda_vigia(w: Node, dn: Node, h: float) -> String:
+	if periodo_geral(h) != "social":
+		return "vigilia"
+	var def := get_tree().get_first_node_in_group("defense")
+	if def and (bool(def.get("invasion_active")) or (def.has_method("aviso_dado") and def.aviso_dado())):
+		return "vigilia"
+	var vig: Array = _da_funcao("is_guard").filter(func(g): return de_vigia(g))
+	var i := vig.find(w)
+	if vig.size() <= 1 or i < 0:
+		if not w.refeicoes_hoje.has("jantar") and w.hunger < w.hunger_max * refeicao_dispensa:
+			return "social"
+		return "vigilia"
+	var dur := fposmod(dn.hora_dormir - dn.hora_anoitecer, 24.0)
+	var meio := fposmod(dn.hora_anoitecer + dur * guarda_turno_fracao, 24.0)
+	var primeira := _entre(h, dn.hora_anoitecer, meio)
+	return "social" if (i % 2 == 0) == primeira else "vigilia"
+
+
+## Bloco 137: a turma do guarda de vigia (0 = janta primeiro, 1 = depois; -1 = não está de vigia).
+func turma_guarda(w: Node) -> int:
+	if not de_vigia(w):
+		return -1
+	var i := _da_funcao("is_guard").filter(func(g): return de_vigia(g)).find(w)
+	return i % 2 if i >= 0 else -1
 
 
 ## O período de todo mundo (sem as exceções) numa hora.

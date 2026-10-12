@@ -5,6 +5,11 @@ extends Node
 ## - PADRE: um só, não recrutável. Chega por evento quando a vila atinge padre_estagio (banner + diário). É um
 ##   ipezinho com a função "padre", que fica na igreja aconselhando (sem igreja: na praça). Bloco 92: padre é
 ##   FUNÇÃO da barra (tecla 8): só homem, um por vila; trocar o padre = tirar a função do atual e dar a outro.
+##   Bloco 137: a CHEGADA virou uma pequena cena: ele aparece do lado de FORA do portão (padre_chegada_dist), ferido de
+##   leve (fugiu de uma criatura na estrada: `hurt("fuga", "leve")`, sem relógio de piora), entra cambaleando, com o balão
+##   e a linha do diário contando a história, e vai direto pra enfermaria, onde fica pelo menos padre_tratamento_s no
+##   leito antes de assumir a função. Se a vila já tem padre (alguém recebeu a função antes), ele chega sem função.
+##   Com a igreja pronta, o padre fica DENTRO dela (some do mapa) e sai pras refeições e pra hora social (ipezinho.gd).
 ## - IGREJA (igreja.gd): construída pelo jogador (canteiro "igreja"); é ponto social (os bancos).
 ## - MISSA de domingo (missa_inicio..missa_fim, 09:00–11:00): com padre e igreja, todos que não estão em
 ##   emergência vão (a agenda vira "missa"; o médico segue de plantão). Quem foi ganha o fator "foi à missa".
@@ -35,6 +40,10 @@ const CORPO := preload("res://scripts/props/corpo.gd")
 @export var padre_atraso: float = 3.0
 ## Nome dele.
 @export var padre_nome: String = "Padre Bento"
+## Bloco 137: px do lado de fora do portão onde ele aparece (entra cambaleando pela paliçada).
+@export var padre_chegada_dist: float = 220.0
+## Bloco 137: segundos (reais) de leito na enfermaria antes de ele assumir a igreja (sem enfermaria: descansando).
+@export var padre_tratamento_s: float = 90.0
 
 @export_group("Missa (domingo)")
 @export_range(0.0, 24.0, 0.25) var missa_inicio: float = 9.0
@@ -175,13 +184,26 @@ func chega_padre() -> Node:
 	w.name = "Padre"
 	w.set("display_name", padre_nome)
 	w.set("gender", "menino")
-	w.position = (hub.global_position if hub else Vector2.ZERO) + Vector2(randf_range(-30.0, 30.0), 60.0)
+	var portao: Node2D = get_tree().get_first_node_in_group("barricadas")
+	if portao and portao.has_method("inside_dir"):  # Bloco 137: do lado de fora do portão
+		w.position = portao.global_position - portao.inside_dir() * padre_chegada_dist + Vector2(randf_range(-12.0, 12.0), 0.0)
+	else:
+		w.position = (hub.global_position if hub else Vector2.ZERO) + Vector2(randf_range(-30.0, 30.0), 60.0)
 	(hub.get_parent() if hub else get_parent()).add_child(w)
-	w.set_job("padre")
+	var ja_tem := padre() != null and padre() != w
+	if not ja_tem:
+		w.set_job("padre")
+	# Bloco 137: ferido de leve (fugiu de uma criatura), sem piorar no caminho; o leito segura ele um tempo
+	w.hurt("fuga", "leve")
+	w.set("_care_left", 1.0e9)
+	w.set("_recovery_left", padre_tratamento_s)
+	w.set_meta("chegada_padre", true)
 	var hud := _hud()
 	if hud:
-		var onde := "Ele fica na igreja." if igreja() != null else "Construa uma IGREJA (menu CONSTRUIR, aba Culto) pra ter missa e funerais."
-		hud.show_banner("UM PADRE CHEGOU À VILA", "%s veio morar com a gente. Missa no domingo, funeral pra quem se for e um ouvido pra quem anda zangado. %s" % [padre_nome, onde])
+		var depois := "Tratado, ele assume a igreja." if igreja() != null else "Tratado, ele precisa de uma IGREJA (menu CONSTRUIR, aba Culto) pra ter missa e funerais."
+		if ja_tem:
+			depois = "A vila já tem padre: %s fica como morador (sem função)." % padre_nome
+		hud.show_banner("UM PADRE CHEGOU À VILA", "%s entrou cambaleando pelo portão, a batina rasgada: fugiu de uma criatura na estrada da floresta. Vai direto pra enfermaria. %s" % [padre_nome, depois])
 	var diary := get_tree().get_first_node_in_group("diary")
 	if diary and diary.has_method("unlock"):
 		diary.unlock("padre")

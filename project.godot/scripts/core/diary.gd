@@ -70,9 +70,10 @@ const ENTRIES := {
 	},
 	"padre": {  # Bloco 88
 		"title": "O padre",
-		"text": "Um padre chegou à vila, de batina gasta e botas de mina. Diz que veio porque soube que "
-			+ "aqui tinha gente cavando no escuro. Reza a missa no domingo, enterra quem se vai e escuta "
-			+ "quem anda zangado — a zanga sai mais leve da igreja.",
+		"text": "Um padre entrou cambaleando pelo portão, de batina rasgada e botas de mina, com um corte no braço: "
+			+ "uma criatura o perseguiu na estrada da floresta e ele só parou quando viu a paliçada. Passou pela "
+			+ "enfermaria antes de qualquer coisa. Diz que veio porque soube que aqui tinha gente cavando no escuro. "
+			+ "Reza a missa no domingo, enterra quem se vai e escuta quem anda zangado — a zanga sai mais leve da igreja.",
 	},
 	"matriarca": {
 		"title": "A Matriarca",

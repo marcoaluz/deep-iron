@@ -2,7 +2,7 @@
 
 Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/data/audio/slots.json` (campos `prompt` e `duracao`). **Não edite à mão: mude o prompt no `slots.json` e rode a ferramenta.**
 
-**132 sons (203 arquivos)**. A música da abertura e da introdução fica de fora (lista no fim).
+**135 sons (209 arquivos)**. A música da abertura e da introdução fica de fora (lista no fim).
 
 ## Como usar
 
@@ -34,10 +34,10 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 ### 3. `ambiencia/floresta_noite`
 
 - **Arquivo(s):** `ambiencia/floresta_noite`
-- **Duração:** loop 40 s  •  **Tipo:** loop
-- **Onde toca:** Floresta e clareira de noite: vento baixo nos pinheiros e folhas; sem insetos (Bloco 133: o de antes era um chiado de grilo contínuo em 7 kHz; a 1ª troca saiu com estática).
+- **Duração:** loop 30 s  •  **Tipo:** loop
+- **Onde toca:** Floresta e clareira de noite: QUASE SILÊNCIO (Bloco 137: um tom de ar muito baixo e grave, sem agudos; a atmosfera vem dos sons pontuais da noite — coruja, vento distante, galho, grilo isolado, sapo, lobo — e da tocha/fogueira perto). Bloco 133: o de antes era um chiado contínuo.
 
-> Seamless loop, calm night in a pine forest clearing, smooth gentle wind blowing steadily through tall pine trees, a soft deep whoosh slowly rising and falling, leaves rustling softly now and then, low and warm sound, clean smooth high quality recording, no static, no crackle, no hiss, no insects, no high-pitched tones, no music, no voices.
+> Seamless loop, a very quiet and deep night in the forest, almost complete silence, only a faint, very low and soft air tone, dark and deep, long pauses of near silence, no hiss, no static, no white noise, no crackle, no continuous insects, no crickets, no high frequencies, no music, no voices.
 
 ### 4. `ambiencia/vento_inverno`
 
@@ -974,7 +974,31 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A crow cawing one or two harsh caws, distant, 2 seconds.
 
-### 116. `pontuais/coruja`
+### 116. `pontuais/vento_distante`
+
+- **Arquivo(s):** `pontuais/vento_distante_0`, `pontuais/vento_distante_1`
+- **Duração:** 5 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 25 a 60 s enquanto vale: noite
+- **Onde toca:** Floresta de noite (Bloco 137): uma lufada de vento longe, grave, de vez em quando.
+
+> A single gust of wind in the distance in a quiet forest at night, clearly audible, low and deep whoosh through the trees, rising and fading, 5 seconds, no hiss, no other sounds.
+
+### 117. `pontuais/galho_estala`
+
+- **Arquivo(s):** `pontuais/galho_estala_0`, `pontuais/galho_estala_1`
+- **Duração:** 2 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 30 a 70 s enquanto vale: noite
+- **Onde toca:** Floresta de noite (Bloco 137): um galho seco estalando, um pouco longe.
+
+> A single small dry twig snapping in a quiet forest at night, a little distant, 1.5 seconds, then silence, no other sounds.
+
+### 118. `pontuais/grilo_isolado`
+
+- **Arquivo(s):** `pontuais/grilo_isolado_0`, `pontuais/grilo_isolado_1`
+- **Duração:** 2 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 35 a 80 s enquanto vale: noite
+- **Onde toca:** Floresta de noite (Bloco 137): UM grilo, três cricrís curtos e longe, e silêncio (nunca contínuo).
+
+> A single cricket chirping briefly far away, three short soft chirps, then silence, 2 seconds, no other insects, no hiss.
+
+### 119. `pontuais/coruja`
 
 - **Arquivo(s):** `pontuais/coruja_0`, `pontuais/coruja_1`
 - **Duração:** 3 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 15 a 35 s enquanto vale: noite
@@ -982,7 +1006,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > An owl hooting, deep and soft, two hoots, night forest, 3 seconds.
 
-### 117. `pontuais/lobo_uivo`
+### 120. `pontuais/lobo_uivo`
 
 - **Arquivo(s):** `pontuais/lobo_uivo_0`, `pontuais/lobo_uivo_1`
 - **Duração:** 5 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 40 a 90 s enquanto vale: noite
@@ -990,7 +1014,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A distant wolf howling at night, long and mournful, 5 seconds.
 
-### 118. `pontuais/sapo`
+### 121. `pontuais/sapo`
 
 - **Arquivo(s):** `pontuais/sapo_0`, `pontuais/sapo_1`
 - **Duração:** 3 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 12 a 30 s enquanto vale: noite
@@ -998,7 +1022,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A few frogs croaking by a pond at night, 3 seconds.
 
-### 119. `pontuais/trovao`
+### 122. `pontuais/trovao`
 
 - **Arquivo(s):** `pontuais/trovao_0`, `pontuais/trovao_1`, `pontuais/trovao_2`
 - **Duração:** 6 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 20 a 50 s enquanto vale: chuva
@@ -1006,7 +1030,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > Rolling thunder, a distant to medium rumble that builds and fades, 6 seconds, no rain.
 
-### 120. `pontuais/vento_rajada`
+### 123. `pontuais/vento_rajada`
 
 - **Arquivo(s):** `pontuais/vento_rajada_0`, `pontuais/vento_rajada_1`
 - **Duração:** 4 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 10 a 25 s enquanto vale: vento
@@ -1014,7 +1038,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A cold wind gust sweeping past, rising and fading, 4 seconds.
 
-### 121. `pontuais/pedra_cai`
+### 124. `pontuais/pedra_cai`
 
 - **Arquivo(s):** `pontuais/pedra_cai_0`, `pontuais/pedra_cai_1`, `pontuais/pedra_cai_2`
 - **Duração:** 2 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 25 a 60 s enquanto vale: mina
@@ -1022,7 +1046,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A few small stones falling and rattling down a mine wall with a dusty echo, 2 seconds.
 
-### 122. `pontuais/gotejar`
+### 125. `pontuais/gotejar`
 
 - **Arquivo(s):** `pontuais/gotejar_0`, `pontuais/gotejar_1`, `pontuais/gotejar_2`
 - **Duração:** 1.5 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 8 a 20 s enquanto vale: mina/s2
@@ -1030,7 +1054,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A single clear, loud water drip falling into a pool in a cave, a distinct plink with a short echo, close microphone, strong and clearly audible, 1.5 seconds, no other sounds.
 
-### 123. `pontuais/acido_borbulha`
+### 126. `pontuais/acido_borbulha`
 
 - **Arquivo(s):** `pontuais/acido_borbulha_0`, `pontuais/acido_borbulha_1`, `pontuais/acido_borbulha_2`
 - **Duração:** 1.5 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 6 a 15 s enquanto vale: s2
@@ -1038,7 +1062,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A large acid bubble popping with a hiss in a cavern, 1.5 seconds.
 
-### 124. `pontuais/lava_estalo`
+### 127. `pontuais/lava_estalo`
 
 - **Arquivo(s):** `pontuais/lava_estalo_0`, `pontuais/lava_estalo_1`, `pontuais/lava_estalo_2`
 - **Duração:** 1.5 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 5 a 14 s enquanto vale: s3
@@ -1046,7 +1070,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > Cooling lava rock cracking loudly with an ember pop and a hiss, 1.5 seconds.
 
-### 125. `pontuais/gota_eco`
+### 128. `pontuais/gota_eco`
 
 - **Arquivo(s):** `pontuais/gota_eco_0`, `pontuais/gota_eco_1`, `pontuais/gota_eco_2`
 - **Duração:** 3 s cada  •  **Tipo:** solto e aleatório  •  toca a cada 7 a 18 s enquanto vale: s5
@@ -1057,7 +1081,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 ## Sons da introdução
 
-### 126. `intro/explosao`
+### 129. `intro/explosao`
 
 - **Arquivo(s):** `intro/explosao`
 - **Duração:** 6 s  •  **Tipo:** toca uma vez
@@ -1065,7 +1089,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > Cinematic massive solar flare explosion over a city: a huge deep boom with a rising roar and crackling fire, then debris falling, 6 seconds.
 
-### 127. `intro/vento`
+### 130. `intro/vento`
 
 - **Arquivo(s):** `intro/vento`
 - **Duração:** 6 s  •  **Tipo:** toca uma vez
@@ -1073,7 +1097,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > Lonely wind through a ruined abandoned city, distant creaking metal and drifting dust, eerie and silent, 6 seconds.
 
-### 128. `intro/caravana`
+### 131. `intro/caravana`
 
 - **Arquivo(s):** `intro/caravana`
 - **Duração:** 6 s  •  **Tipo:** toca uma vez
@@ -1081,7 +1105,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A caravan of people and a wooden cart moving along a gravel road: footsteps, cart wheels creaking, a faint murmur (no words), 6 seconds.
 
-### 129. `intro/pedreira`
+### 132. `intro/pedreira`
 
 - **Arquivo(s):** `intro/pedreira`
 - **Duração:** 6 s  •  **Tipo:** toca uma vez
@@ -1089,7 +1113,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > Quarry atmosphere: distant hammering on stone, wind, the echo of a pickaxe and rocks shifting, 6 seconds.
 
-### 130. `intro/mina`
+### 133. `intro/mina`
 
 - **Arquivo(s):** `intro/mina`
 - **Duração:** 6 s  •  **Tipo:** toca uma vez
@@ -1097,7 +1121,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > Cinematic descent into a deep mine: a low rumble that deepens, falling rocks and metal elevator cables creaking, 6 seconds.
 
-### 131. `intro/fogo`
+### 134. `intro/fogo`
 
 - **Arquivo(s):** `intro/fogo`
 - **Duração:** 6 s  •  **Tipo:** toca uma vez
@@ -1105,7 +1129,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 > A campfire crackling warmly with a few people murmuring around it (no words) and night insects, calm, 6 seconds.
 
-### 132. `intro/titulo`
+### 135. `intro/titulo`
 
 - **Arquivo(s):** `intro/titulo`
 - **Duração:** 3 s  •  **Tipo:** toca uma vez

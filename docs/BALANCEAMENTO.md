@@ -9,9 +9,9 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1337 valores** em 4 pastas de scripts (90 trocados por alguma cena).
+Total: **1341 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 
-## `scripts/core/audio_manager.gd` (98)
+## `scripts/core/audio_manager.gd` (99)
 
 **Volumes (0 a 1)**
 
@@ -149,6 +149,7 @@ Total: **1337 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `max_voices` | 24 |  |  |
 | `max_steps_per_second` | 8.0 |  | Máximo de passos tocando por segundo somando todos os ipezinhos. |
 | `sfx_max_distance` | 900.0 |  | Distância (em pixels do mundo) além da qual efeitos posicionais não tocam. |
+| `stinger_amanhecer` | false |  | Bloco 137: o som que avisava o amanhecer saiu (pedido do Marco: incomodava todo dia). true = volta. O aviso da troca de estação (sun.gd, o toast "Começou o…") fica. |
 | `intro_db` | -6.0 |  | Bloco 112: os sons da INTRODUÇÃO por nome ("explosao", "vento", "caravana", "pedreira", "mina", "fogo", "titulo"). Gancho: toca res://assets/audio/intro/<nome>.ogg (ou .wav) se o arquivo existir; sem ele, fica em silêncio. Os arquivos vêm depois — é só pôr na pasta com o nome. |
 
 ## `scripts/core/build_menu.gd` (7)
@@ -165,7 +166,7 @@ Total: **1337 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `desc_linhas` | 3 |  | Linhas da descrição no cartão (o resto vai na dica). |
 | `imagem_area` | Vector2(180, 70) |  | Área da imagem no topo do cartão (px lógicos; a imagem é 96x64 e fica 1:1 no meio). |
 
-## `scripts/core/calendario.gd` (17)
+## `scripts/core/calendario.gd` (19)
 
 **Padre**
 
@@ -174,6 +175,8 @@ Total: **1337 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `padre_estagio` | 2 |  | Estágio da vila em que o padre chega (2 = Vilarejo). |
 | `padre_atraso` | 3.0 |  | Bloco 131: segundos (reais) entre a vila chegar no estágio e o padre aparecer. Chegar no MESMO quadro da subida somava o custo de criar um morador novo (cena, bonecos, linha da lista: ~100 ms) ao da subida — o tranco de quando a vila cresce. |
 | `padre_nome` | "Padre Bento" |  | Nome dele. |
+| `padre_chegada_dist` | 220.0 |  | Bloco 137: px do lado de fora do portão onde ele aparece (entra cambaleando pela paliçada). |
+| `padre_tratamento_s` | 90.0 |  | Bloco 137: segundos (reais) de leito na enfermaria antes de ele assumir a igreja (sem enfermaria: descansando). |
 
 **Missa (domingo)**
 
@@ -1500,7 +1503,7 @@ Total: **1337 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `save_on_quit` | true |  | Salva sozinho ao fechar a janela. |
 | `max_backups` | 5 |  | Quantos backups com data/hora manter em user://backups (o mais antigo, por data, sai). |
 
-## `scripts/core/schedule.gd` (20)
+## `scripts/core/schedule.gd` (21)
 
 **Agenda (horas do relógio; os marcos ficam no DayNight)**
 
@@ -1518,6 +1521,7 @@ Total: **1337 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `jantar_preparo` | 16.0 |  | Daqui até o anoitecer o cozinheiro prepara o jantar (sem o "voltar" das 18:00). |
 | `medico_turno` | 0.5 |  | Horas de cada turno de refeição do médico (o 2º médico come depois do 1º, e assim por diante). |
 | `vigilia_fracao` | 0.5 |  | Fração dos guardas de vigia numa noite comum (gira a cada dia; pelo menos 1). Noite de invasão: todos. |
+| `guarda_turno_fracao` | 0.5 |  | Bloco 137: fração do período social (anoitecer..dormir) da 1ª turma dos guardas de vigia; a 2ª turma vai depois. |
 
 **Refeições**
 

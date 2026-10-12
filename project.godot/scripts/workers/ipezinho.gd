@@ -1648,6 +1648,7 @@ func _decide_next_action() -> void:
 	if desired == "padre":  # Bloco 88: o padre fica na porta da igreja (sem igreja: na praça)
 		var cal := get_tree().get_first_node_in_group("calendario")
 		if cal and _padre_enterro(cal):
+			_sai_igreja()  # Bloco 137: sai pra buscar o corpo
 			return  # Bloco 93: buscando, levando ou enterrando alguém
 		if _ai_state != "padre":
 			_release_station()
@@ -1657,10 +1658,17 @@ func _decide_next_action() -> void:
 		var fl: Node = cal.funeral_lugar_agora() if cal else null
 		if fl != null and fl.has_method("portao_pos"):
 			dest = fl.portao_pos()  # Bloco 93: o funeral é no cemitério
+		var pregando: bool = cal != null and cal.pregando_agora()
+		if _na_igreja and (pregando or fl != null or ig == null):
+			_sai_igreja()  # Bloco 137: sai pra pregar (missa, funeral) ou a igreja sumiu
+		if _na_igreja:
+			return
 		if global_position.distance_to(dest) > 12.0 and (not _moving or _target.distance_to(dest) > 2.0):
 			_go_to(dest)
-		elif cal and cal.pregando_agora():
+		elif pregando:
 			_work_timer = decision_interval * 1.2  # Bloco 92: na missa e no funeral ele prega (até a próxima decisão)
+		elif ig != null and fl == null:
+			_entra_igreja()  # Bloco 137: com a igreja pronta ele fica DENTRO dela (não na porta)
 		return
 
 	if desired == "social":  # Bloco 85
@@ -2378,6 +2386,8 @@ func _set_state(new_state: String) -> void:
 		_discharge()
 	if _ai_state == "leisure":
 		_leave_taverna()
+	if _ai_state == "padre":
+		_sai_igreja()  # Bloco 137
 	if _ai_state == "doctor":
 		_end_duty()
 	if _ai_state == "building":
@@ -3167,6 +3177,29 @@ func _end_duty() -> void:
 	if is_instance_valid(_on_duty):
 		_on_duty.remove_doctor(self)
 	_on_duty = null
+	_inside = false
+	_agent.avoidance_enabled = avoidance_enabled
+	queue_redraw()
+
+
+## Bloco 137: o padre DENTRO da igreja (some do mapa como na taverna; criatura não pega quem está lá dentro).
+var _na_igreja := false
+
+
+func _entra_igreja() -> void:
+	if _na_igreja:
+		return
+	_na_igreja = true
+	_inside = true
+	_moving = false
+	_agent.avoidance_enabled = false
+	queue_redraw()
+
+
+func _sai_igreja() -> void:
+	if not _na_igreja:
+		return
+	_na_igreja = false
 	_inside = false
 	_agent.avoidance_enabled = avoidance_enabled
 	queue_redraw()
@@ -4297,7 +4330,8 @@ func hurt(cause: String = "mina", severity: String = "") -> void:
 			if hud and hud.has_method("show_banner"):
 				hud.show_banner("ACIDENTE NA MINA", "%s se machucou feio no desabamento. Precisa de leito na enfermaria." % _display())
 	var grave := injury_severity == "grave"
-	var text: String = {"galho": "Ai! Um galho!", "javali": "Ai! O javali!", "acido": "Ai! Ácido!", "lava": "Ai! Queimou!", "parto": "Complicação no parto!"}.get(cause, "Ai!")
+	var text: String = {"galho": "Ai! Um galho!", "javali": "Ai! O javali!", "acido": "Ai! Ácido!", "lava": "Ai! Queimou!", "parto": "Complicação no parto!",
+		"fuga": "Uma criatura... na estrada... graças a Deus, um portão!"}.get(cause, "Ai!")  # Bloco 137: a chegada do padre
 	_popup(text + (" (grave)" if grave else ""), Color(1.0, 0.25, 0.2) if grave else Color(1.0, 0.4, 0.35))
 	if grave and not downed and cause != "parto":  # (caído em combate e o parto têm o aviso próprio)
 		_toast("%s se machucou feio! Precisa de leito na enfermaria." % _display())
@@ -4548,7 +4582,12 @@ func _agenda_estado(food_ok: bool) -> String:
 	if is_doctor() and _has_infirmary():
 		return "doctor"  # sempre de plantão (come nos turnos dele, acima)
 	if is_priest():
-		return "padre"  # Bloco 88: na igreja (de noite também: dorme lá)
+		# Bloco 137: na hora social ele sai da igreja pras rodas (janta acima, como todo mundo) — menos com funeral pra
+		# rezar ou um corpo nas costas; no resto do tempo, na igreja (de noite também: dorme lá)
+		var cal_p := get_tree().get_first_node_in_group("calendario")
+		var funeral: bool = cal_p != null and cal_p.funeral_lugar_agora() != null
+		if not (p == "social" and not funeral and carregando_corpo.is_empty() and not overtime):
+			return "padre"
 	if p == "missa":
 		return "social"  # Bloco 88: missa de domingo — o ponto é a igreja (calendario.ponto_forcado)
 	# Bloco 84: fora do horário de trabalho, quem ainda tem carga termina a entrega antes de ir pra casa

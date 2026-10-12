@@ -560,3 +560,7 @@ func test_b135_correcoes_hud() -> void:
 
 func test_b136_venda_funcoes_pesquisa() -> void:
 	run_bloco("b136_venda_funcoes_pesquisa.gd")
+
+
+func test_b137_noite_padre_refeicoes() -> void:
+	run_bloco("b137_noite_padre_refeicoes.gd")

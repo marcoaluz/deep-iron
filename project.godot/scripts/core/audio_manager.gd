@@ -186,6 +186,9 @@ var _duck_alvo := 0.0
 var _duck_ate := 0  # (ms) segura o ducking até aqui
 var _duck_t := 0  # (ms) da última conta do ducking
 var _dia_visto := -1
+## Bloco 137: o som que avisava o amanhecer saiu (pedido do Marco: incomodava todo dia). true = volta. O aviso da troca de
+## estação (sun.gd, o toast "Começou o…") fica.
+@export var stinger_amanhecer: bool = false
 # Bloco 118
 var _zoom_px := 99.0  # pixels de tela por pixel de arte (99 = sem câmera: tudo se ouve, como nos testes)
 var _zoom_t := 0.0
@@ -356,7 +359,7 @@ func _update_context() -> void:
 		_dia_visto = -1
 	else:
 		var dia := int(dnn.day)
-		if _dia_visto >= 0 and dia != _dia_visto:
+		if _dia_visto >= 0 and dia != _dia_visto and stinger_amanhecer:
 			stinger("amanhecer")
 		_dia_visto = dia
 	dinamica.atualiza(_estacao_atual(), _e_noite(), _danger, _no_fundo(), dnn != null)  # Bloco 121
@@ -394,11 +397,44 @@ func _camada(nome: String, on: bool) -> void:
 
 ## O som do slot no player da ambiência (o arquivo pode ter chegado depois do _ready; sem arquivo vale a reserva).
 func _amb_stream(p: AudioStreamPlayer, id: String) -> void:
+	if String(p.get_meta("prova", "")) != "":
+		return  # Bloco 137: uma candidata em prova (F3 > Som) fica até o "Voltar ao do jogo"
 	var st := _slot_stream(id)
 	if st != null and st != p.stream and not p.playing:
 		Slots.forca_loop(st)
 		p.stream = st
 		p.set_meta("slot", id)  # Bloco 131
+
+
+## Bloco 137: OUVIR UMA CANDIDATA no lugar do loop de uma ambiência (F3 > Som): `caminho` = um WAV de fora do projeto
+## (audio_candidatos/, gerado por tools/elevenlabs/gerar_sons.py --candidatos); "" = volta ao arquivo do jogo. Só troca o
+## stream do player daquele contexto (nada vai pro save nem pros arquivos). true = trocou.
+func prova_ambiencia(ctx: String, caminho: String) -> bool:
+	if not _amb.has(ctx):
+		return false
+	var p: AudioStreamPlayer = _amb[ctx]
+	var st: AudioStream = null
+	if caminho != "":
+		if not FileAccess.file_exists(caminho):
+			return false
+		st = AudioStreamWAV.load_from_file(caminho)
+		if st == null:
+			return false
+	else:
+		st = _slot_stream(String(CTX_SLOT.get(ctx, "")))
+	if st != null:
+		Slots.forca_loop(st)
+	var tocava := p.playing
+	p.stream = st
+	p.set_meta("prova", caminho)
+	if tocava:
+		p.play()
+	return true
+
+
+## Bloco 137: o arquivo em prova no contexto ("" = o do jogo).
+func em_prova(ctx: String) -> String:
+	return String(_amb[ctx].get_meta("prova", "")) if _amb.has(ctx) else ""
 
 
 ## Volume da ambiência de um contexto: o do slot (data/audio/slots.json), ou o ambience_db antigo.

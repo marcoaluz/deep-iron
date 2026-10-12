@@ -4,7 +4,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 O jogo roda **sem** os arquivos: o slot sem arquivo fica mudo (ou toca o som sintetizado de antes), sem erro. Arquivo novo é só pôr em `project.godot/assets/audio/<nome>.ogg|wav|mp3` com o nome exato e rodar `godot --headless --path project.godot --import`.
 
-**Resumo:** 136 slots, 207 arquivos esperados, **207 prontos, 0 faltam**.
+**Resumo:** 139 slots, 213 arquivos esperados, **213 prontos, 0 faltam**.
 
 ## O que falta
 
@@ -20,7 +20,7 @@ A **música** (abertura e introdução) não é gerada pela ferramenta de efeito
 |---|---|---|---|---|---|---|---|---|
 | `ambiencia/mina` | loop 40 s | sim | Ambience | 0.0 | Vila, pedreira e túneis do S1 (a câmera na área da mina). Loop contínuo, sem pico alto. | deep underground quarry and mine ambience, low steady cave air tone; ambience loop | o som de antes | pronto |
 | `ambiencia/floresta_dia` | loop 40 s | sim | Ambience | -4.0 | Floresta e clareira de dia: pássaros, folhas, vento leve. | peaceful boreal forest clearing in daytime, several small birds singing and calling at dif; ambience loop | o som de antes | pronto |
-| `ambiencia/floresta_noite` | loop 40 s | sim | Ambience | -7.0 | Floresta e clareira de noite: vento baixo nos pinheiros e folhas; sem insetos (Bloco 133: o de antes era um chiado de grilo contínuo em 7 kHz; a 1ª troca saiu com estática). | calm night in a pine forest clearing, smooth gentle wind blowing steadily through tall pin; ambience loop | o som de antes | pronto |
+| `ambiencia/floresta_noite` | loop 30 s | sim | Ambience | -14.0 | Floresta e clareira de noite: QUASE SILÊNCIO (Bloco 137: um tom de ar muito baixo e grave, sem agudos; a atmosfera vem dos sons pontuais da noite — coruja, vento distante, galho, grilo isolado, sapo, lobo — e da tocha/fogueira perto). Bloco 133: o de antes era um chiado contínuo. | a very quiet and deep night in the forest, almost complete silence; ambience loop | o som de antes | pronto |
 | `ambiencia/vento_inverno` | loop 30 s | sim | Ambience | -8.0 | CAMADA por cima da floresta e da vila no inverno: vento frio e constante, sem pássaros. | cold winter wind blowing steadily across an open snowy landscape, soft whistling through b; ambience loop | mudo | pronto |
 | `ambiencia/chuva` | loop 30 s | sim | Ambience | -6.0 | CAMADA por cima da clareira quando está chovendo. | steady rain falling on dirt ground, wooden roofs and leaves; ambience loop | o som de antes | pronto |
 | `ambiencia/s2_acido` | loop 40 s | sim | Ambience | -1.0 | S2 (ácido e gás): bolhas de ácido borbulhando e gotejar. | underground cave filled with toxic acid pools, slow viscous bubbling and popping; ambience loop | o som de antes | pronto |
@@ -198,6 +198,9 @@ A **música** (abertura e introdução) não é gerada pela ferramenta de efeito
 |---|---|---|---|---|---|---|---|---|
 | `pontuais/passaro_canto_0`<br>`pontuais/passaro_canto_1`<br>`pontuais/passaro_canto_2`<br>`pontuais/passaro_canto_3` | 3 s cada | não | Ambience | -12.0 | Floresta de dia: um pássaro canta de vez em quando. *(toca a cada 5 a 12 s enquanto vale: dia)* | A single bird song phrase in a forest, clear and melodic; nature one shot | mudo | pronto |
 | `pontuais/corvo_0`<br>`pontuais/corvo_1` | 2 s cada | não | Ambience | -14.0 | Floresta de dia: um corvo ao longe. *(toca a cada 20 a 45 s enquanto vale: dia)* | A crow cawing one or two harsh caws, distant; nature one shot | mudo | pronto |
+| `pontuais/vento_distante_0`<br>`pontuais/vento_distante_1` | 5 s cada | não | Ambience | -16.0 | Floresta de noite (Bloco 137): uma lufada de vento longe, grave, de vez em quando. *(toca a cada 25 a 60 s enquanto vale: noite)* | A single gust of wind in the distance in a quiet forest at night, clearly audible; nature one shot | mudo | pronto |
+| `pontuais/galho_estala_0`<br>`pontuais/galho_estala_1` | 2 s cada | não | Ambience | -16.0 | Floresta de noite (Bloco 137): um galho seco estalando, um pouco longe. *(toca a cada 30 a 70 s enquanto vale: noite)* | A single small twig snapping in a quiet forest at night, a little distant; nature one shot | mudo | pronto |
+| `pontuais/grilo_isolado_0`<br>`pontuais/grilo_isolado_1` | 2 s cada | não | Ambience | -20.0 | Floresta de noite (Bloco 137): UM grilo, três cricrís curtos e longe, e silêncio (nunca contínuo). *(toca a cada 35 a 80 s enquanto vale: noite)* | A single cricket chirping briefly far away, three short soft chirps; nature one shot | mudo | pronto |
 | `pontuais/coruja_0`<br>`pontuais/coruja_1` | 3 s cada | não | Ambience | -14.0 | Floresta de noite: uma coruja. *(toca a cada 15 a 35 s enquanto vale: noite)* | An owl hooting, deep and soft; nature one shot | mudo | pronto |
 | `pontuais/lobo_uivo_0`<br>`pontuais/lobo_uivo_1` | 5 s cada | não | Ambience | -16.0 | Floresta de noite: um lobo uiva ao longe. *(toca a cada 40 a 90 s enquanto vale: noite)* | A distant wolf howling at night, long and mournful; nature one shot | mudo | pronto |
 | `pontuais/sapo_0`<br>`pontuais/sapo_1` | 3 s cada | não | Ambience | -14.0 | Floresta de noite: sapos num brejo. *(toca a cada 12 a 30 s enquanto vale: noite)* | A few frogs croaking by a pond at night; nature one shot | mudo | pronto |

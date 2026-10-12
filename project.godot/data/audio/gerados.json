@@ -13,7 +13,7 @@
   "ambiencia/floresta_noite": {
    "aprovado": true,
    "gerado_em": "2026-10-12",
-   "hash": "1e6cfb63589a29f6"
+   "hash": "827811c5b998abcb"
   },
   "ambiencia/mina": {
    "aprovado": true,
@@ -335,6 +335,16 @@
    "gerado_em": "2026-10-10",
    "hash": "901974992775f44f"
   },
+  "pontuais/galho_estala_0": {
+   "aprovado": false,
+   "gerado_em": "2026-10-12",
+   "hash": "10d6ab599c7b3958"
+  },
+  "pontuais/galho_estala_1": {
+   "aprovado": false,
+   "gerado_em": "2026-10-12",
+   "hash": "10d6ab599c7b3958"
+  },
   "pontuais/gota_eco_0": {
    "aprovado": true,
    "gerado_em": "2026-10-10",
@@ -364,6 +374,16 @@
    "aprovado": true,
    "gerado_em": "2026-10-10",
    "hash": "90f5a36993e465cb"
+  },
+  "pontuais/grilo_isolado_0": {
+   "aprovado": false,
+   "gerado_em": "2026-10-12",
+   "hash": "bb9c491beefaab99"
+  },
+  "pontuais/grilo_isolado_1": {
+   "aprovado": false,
+   "gerado_em": "2026-10-12",
+   "hash": "bb9c491beefaab99"
   },
   "pontuais/lava_estalo_0": {
    "aprovado": true,
@@ -449,6 +469,16 @@
    "aprovado": true,
    "gerado_em": "2026-10-10",
    "hash": "11460b6029a9a1d8"
+  },
+  "pontuais/vento_distante_0": {
+   "aprovado": false,
+   "gerado_em": "2026-10-12",
+   "hash": "3eadeeda60db3d33"
+  },
+  "pontuais/vento_distante_1": {
+   "aprovado": false,
+   "gerado_em": "2026-10-12",
+   "hash": "3eadeeda60db3d33"
   },
   "pontuais/vento_rajada_0": {
    "aprovado": true,

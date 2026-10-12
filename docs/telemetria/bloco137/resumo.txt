@@ -1,0 +1,6 @@
+Bloco 137 — uma noite com 6 guardas (vigília de 50%) e o padre
+amostras: 80 (33 na hora social)
+menor número de guardas de vigia NO POSTO durante a hora social: 1 (contando a chegada do trabalho do dia)
+menor número NO POSTO depois que a vigia assumiu (o revezamento da janta): 1
+amostras com o padre na roda/janta (hora social): 33 de 33
+amostras com o padre DENTRO da igreja no expediente: 34
