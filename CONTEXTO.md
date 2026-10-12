@@ -1,6 +1,11 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **135** (commits locais do 131 ao 135, sem push). Fila do Marco (mesma mensagem): Bloco 136 (vender no armazém com caixa, janela das funções, pesquisador com fila) e Bloco 137 (som da noite com sons pontuais e candidatas no F3 — ele disse "pode gastar" —, a chegada do padre ferido, refeições do padre e dos guardas). TUDO até o Bloco 130 está enviado pro GitHub. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele vai jogar e testar os blocos 129–133 (pediu que o 133 fosse aplicado SEM rodar testes). Falta: o retorno dele do jogo, aprovar as variações dos pisos.
+Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **136** (commits locais do 131 ao 136, sem push). Fila do Marco (mesma mensagem): Bloco 137 (som da noite com sons pontuais e candidatas no F3 — ele disse "pode gastar" —, a chegada do padre ferido, refeições do padre e dos guardas). TUDO até o Bloco 130 está enviado pro GitHub. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele vai jogar e testar os blocos 129–133 (pediu que o 133 fosse aplicado SEM rodar testes). Falta: o retorno dele do jogo, aprovar as variações dos pisos.
+
+## Bloco 136 — VENDER COM CAIXA, JANELA DA FUNÇÃO, PESQUISADOR COM FILA (feito; commit local, sem push)
+
+Relatório `docs/BLOCO136_VENDA_FUNCOES_PESQUISA.md`; teste `b136_venda_funcoes_pesquisa` (51 OK); capturas `docs/arte/bloco136/`.
+- `ui/caixa_venda.gd` (nada vende sem confirmar; categoria também); `core/funcoes_panel.gd` (botão de função sem seleção); `ui/estudos_lista.gd` na ficha do pesquisador; `research.fila` + `catalogo.fila_estudo` (estudo de campo SÓ por ordem; `estudo_sozinho` pros testes 102-104). b47 e b113 consertados (vinham falhando desde 135 e 129).
 
 ## Bloco 135 — CORREÇÕES: CONFIGURAÇÕES, JANELAS, TRAVADA AO DAR FUNÇÃO, JAZIDA, MIGRANTES, ÚNICOS (feito; commit local, sem push)
 

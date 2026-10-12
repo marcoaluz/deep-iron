@@ -13,7 +13,8 @@ extends SceneTree
 const Dificuldade := preload("res://scripts/core/dificuldade.gd")
 const Perfil := preload("res://scripts/core/perfil_dificuldade.gd")
 const Modificadores := preload("res://scripts/core/modificadores.gd")
-const Painel := preload("res://scripts/ui/nova_partida_panel.gd")
+## (Bloco 136: o painel usa o autoload SaveManager desde o Bloco 129: carregado em tempo de execução, não preload)
+const PAINEL := "res://scripts/ui/nova_partida_panel.gd"
 var main: Node
 var fails := 0
 var _t0 := 0
@@ -195,7 +196,7 @@ func _roda() -> void:
 	sm.dificuldade_nova = {}
 
 	print("== G) a tela de Nova partida")
-	var p: VBoxContainer = Painel.new()
+	var p: VBoxContainer = load(PAINEL).new()
 	root.add_child(p)
 	await _frames(2)
 	check(p.perfil_escolhido() == "normal" and (p.escolha().perfil == "normal"), "a tela abre no Normal")

@@ -70,9 +70,12 @@ func _mudou(j: Control) -> void:
 ## Uma janela só: o lugar dela (centrada, presa na tela). Duas ou mais: arruma todas. (No quadro seguinte de novo: o
 ## tamanho assenta depois que o texto quebra e a lista monta.)
 func _arruma_depois(j: Control) -> void:
+	if not is_inside_tree():  # (a partida trocou de cena: nada pra arrumar)
+		return
 	_arruma(j)
 	await get_tree().process_frame
-	_arruma(j)
+	if is_inside_tree() and is_instance_valid(j):
+		_arruma(j)
 
 
 func _arruma(j: Control) -> void:

@@ -4,6 +4,7 @@ extends PanelContainer
 ## nem casais — influencia pelo ambiente. Fora do menu Janelas (é de uma pessoa). Padrão visual das janelas do layout v2.
 const Tipo := preload("res://scripts/ui/tipografia.gd")
 const Retratos := preload("res://scripts/ui/retratos.gd")
+const EstudosLista := preload("res://scripts/ui/estudos_lista.gd")
 
 var _hud: CanvasLayer
 var _rel: Node
@@ -16,6 +17,8 @@ var _habil: Label
 var _amigos: Label
 var _parceiro: Label
 var _familia: Label  # Bloco 111
+## Bloco 136: a seção PESQUISA (só na ficha de quem é pesquisador): o que pesquisa agora, a fila e o que dá pra mandar.
+var _estudos: VBoxContainer
 
 
 func setup(hud: CanvasLayer, rel: Node, _economy: Node) -> void:
@@ -27,7 +30,7 @@ func setup(hud: CanvasLayer, rel: Node, _economy: Node) -> void:
 
 func _build() -> void:
 	add_theme_stylebox_override("panel", _hud._panel_style())
-	custom_minimum_size = Vector2(440, 0)
+	custom_minimum_size = Vector2(480, 0)
 	anchor_left = 0.5
 	anchor_right = 0.5
 	anchor_top = 0.5
@@ -58,6 +61,10 @@ func _build() -> void:
 		Audio.click()
 		visible = false)
 	header.add_child(close)
+	_estudos = EstudosLista.new()
+	vbox.add_child(_estudos)
+	_estudos.setup(_hud)
+	_estudos.visible = false
 	_tracos = _secao(vbox, "TRAÇOS")
 	_habil = _secao(vbox, "HABILIDADES (sobem com a prática)")
 	_amigos = _secao(vbox, "AMIGOS")
@@ -112,6 +119,13 @@ func refresh() -> void:
 	var p: Node = _rel.parceiro_de(_w)
 	_parceiro.text = ("%s — %s" % [_hud._worker_name(p), "casados" if _rel.casado(_w) else "namorando"]) if p != null else "Ninguém (o jogador não escolhe: a convivência decide)."
 	_familia.text = _texto_familia()
+	var pesq: bool = _w.has_method("is_researcher") and _w.is_researcher()
+	if pesq and (not _estudos.visible or _estudos._w != _w):
+		_estudos.visible = true
+		_estudos.mostra(_w)
+	elif pesq:
+		_estudos.refresh()
+	_estudos.visible = pesq
 
 
 ## Bloco 111: a fase, os pais, os filhos, a gravidez e o estudo.

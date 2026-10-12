@@ -16,6 +16,11 @@ extends Node
 ## Bloco 102: o CATÁLOGO (catalogo.gd) pode travar uma pesquisa até uma entrada ser estudada (nos dados da entrada:
 ## "libera": ["pesquisa:<id>"]), e cada estudo de campo dá uns pontos: vão pra pesquisa em andamento ou ficam
 ## GUARDADOS e entram na próxima que começar (pontos_guardados).
+## Bloco 136: a FILA DE PESQUISA (como as ordens de produção: só o jogador manda). `pede(id)` começa na hora se o
+## laboratório está livre, senão entra na fila; quando a de agora acaba, a próxima da fila começa sozinha (paga o custo
+## NESSA hora; sem o custo, espera e tenta de novo). `cancela(id)`: tira da fila, ou para a de agora e DEVOLVE o custo (o
+## progresso se perde). `tempo_restante()` = os pontos que faltam pelo ritmo dos pesquisadores no laboratório agora.
+## Save: "fila" (save antigo: vazia).
 
 signal researched(id: String)
 
@@ -106,6 +111,8 @@ const TECHS := {
 ## Segundos do pavio depois de chegar no entulho; desiste (devolve a dinamite) depois deste tempo andando.
 @export var dynamite_fuse: float = 2.5
 @export var dynamite_walk_timeout: float = 60.0
+## Bloco 136: segundos (reais) entre uma tentativa e outra de começar a próxima da fila (quando faltou o custo).
+@export var intervalo_fila: float = 2.0
 ## Rádio: o aviso de invasão vem estes segundos antes do normal; com satélite, um colono a cada N dias.
 @export var radio_warning_bonus: float = 60.0
 @export var radio_satellite_every_days: int = 1
@@ -114,6 +121,9 @@ var dynamite := 0
 var _blast := {}  # trabalho em andamento: {galeria, quem, t, fase ("andando"/"pavio")}
 
 var done: Array = []
+## Bloco 136: as pesquisas encomendadas depois da de agora (na ordem).
+var fila: Array = []
+var _fila_t := 0.0
 var current: String = ""
 var progress: float = 0.0
 ## Bloco 102: pontos dos estudos do catálogo sem pesquisa em andamento (entram na próxima).
@@ -269,6 +279,135 @@ func start(id: String) -> bool:
 	return true
 
 
+# ------------------------------------------------------------ Bloco 136: a fila
+## "" = dá pra pedir (começa já ou entra na fila); senão o motivo.
+func motivo_pedido(id: String) -> String:
+	if not TECHS.has(id):
+		return "pesquisa desconhecida"
+	if fila.has(id):
+		return "já está na fila"
+	var r := block_reason(id)
+	if current == "" or r == "pesquisado" or r == "pesquisando" or r.begins_with("caminho fechado") or r == "sem laboratório":
+		return r
+	var t: Dictionary = TECHS[id]
+	if t.excl != "" and (current == t.excl or fila.has(t.excl)):
+		return "caminho fechado (pediu %s)" % TECHS[t.excl].name
+	if t.req != "" and not has(t.req) and current != t.req and not fila.has(t.req):
+		return "precisa: %s" % TECHS[t.req].name
+	if estudo_que_falta(id) != "":
+		return "precisa estudar: %s" % estudo_que_falta(id)
+	return ""  # (o custo é pago quando ela começar)
+
+
+## O jogador pediu a pesquisa: começa já (laboratório livre) ou entra na fila. true = aceitou.
+func pede(id: String) -> bool:
+	if motivo_pedido(id) != "":
+		Audio.error()
+		return false
+	if current == "":
+		return start(id)
+	fila.append(id)
+	return true
+
+
+## Cancela: tira da fila; a de agora para e devolve o custo (o progresso se perde).
+func cancela(id: String) -> bool:
+	if fila.has(id):
+		fila.erase(id)
+		_limpa_fila()
+		return true
+	if id == "" or id != current:
+		return false
+	var t: Dictionary = TECHS[id]
+	var c: Vector3i = t.cost
+	var eco := get_tree().get_first_node_in_group("economy")
+	if eco:
+		var perto: Vector2 = (lab() as Node2D).global_position if lab() else Vector2.INF
+		if c.x > 0:
+			eco._add_credits(float(c.x))
+		if c.y > 0 and String(t.ore) != "":
+			eco.devolve(String(t.ore), float(c.y), perto)
+		if c.z > 0:
+			eco.devolve("madeira", float(c.z), perto)
+	current = ""
+	progress = 0.0
+	_limpa_fila()
+	_fila_t = 0.0
+	for w in researchers():
+		w.wake_decision()
+	return true
+
+
+## Tira da fila o que não dá mais (outra escolha fechou o caminho, o requisito saiu da fila).
+func _limpa_fila() -> void:
+	var ok: Array = []
+	for id in fila:
+		var t: Dictionary = TECHS[id]
+		if has(id) or (t.excl != "" and (has(t.excl) or current == t.excl or ok.has(t.excl))):
+			continue
+		if t.req != "" and not has(t.req) and current != t.req and not ok.has(t.req):
+			continue
+		ok.append(id)
+	fila = ok
+
+
+## A próxima da fila começa (paga o custo agora). Sem o custo, espera; com o caminho fechado, sai da fila.
+func _tenta_fila(delta: float) -> void:
+	if current != "" or fila.is_empty():
+		return
+	_fila_t -= delta
+	if _fila_t > 0.0:
+		return
+	_fila_t = intervalo_fila
+	_limpa_fila()
+	if fila.is_empty():
+		return
+	var id: String = fila[0]
+	var r := block_reason(id)
+	if r != "":
+		return  # (falta o custo, o estudo ou o laboratório: tenta de novo daqui a pouco)
+	var t: Dictionary = TECHS[id]
+	var c: Vector3i = t.cost
+	if get_tree().get_first_node_in_group("economy").spend(c.x, c.y, t.ore, c.z):
+		fila.pop_front()
+		current = id
+		progress = 0.0
+		if pontos_guardados > 0.0:
+			var usa := minf(pontos_guardados, float(t.points))
+			pontos_guardados -= usa
+			add_points(usa)
+		var hud := get_tree().get_first_node_in_group("hud")
+		if hud and hud.has_method("show_toast"):
+			hud.show_toast("Pesquisa da fila começou: %s" % t.name, Color(0.7, 0.85, 1.0))
+		for w in researchers():
+			w.wake_decision()
+
+
+## O que trava a próxima da fila agora ("" = nada / sem fila).
+func motivo_fila() -> String:
+	if current != "" or fila.is_empty():
+		return ""
+	return block_reason(String(fila[0]))
+
+
+## Pontos por segundo agora (os pesquisadores trabalhando no laboratório).
+func ritmo() -> float:
+	var n := 0
+	for w in researchers():
+		if w.has_method("get_state") and w.get_state() == "research":
+			n += 1
+	return points_per_researcher * n
+
+
+## Segundos (reais) que faltam pra pesquisa de agora, no ritmo de agora (INF = ninguém pesquisando).
+func tempo_restante() -> float:
+	if current == "":
+		return 0.0
+	var falta := maxf(float(TECHS[current].points) - progress, 0.0)
+	var r := ritmo()
+	return falta / r if r > 0.0 else INF
+
+
 ## Bloco 102: o nome da entrada do catálogo que esta pesquisa ainda espera ser estudada ("" = nenhuma).
 func estudo_que_falta(id: String) -> String:
 	var cat := get_tree().get_first_node_in_group("catalogo")
@@ -302,6 +441,7 @@ func _finish(id: String) -> void:
 	done.append(id)
 	current = ""
 	progress = 0.0
+	_fila_t = 0.0  # Bloco 136: a próxima da fila começa já
 	apply_all()
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
@@ -456,6 +596,7 @@ func blast_in_progress() -> bool:
 
 
 func _process(delta: float) -> void:
+	_tenta_fila(delta)  # Bloco 136
 	if _blast.is_empty():
 		return
 	var g = _blast.galeria
@@ -495,7 +636,7 @@ func _explode(g: Node, w: Node) -> void:
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	var d := {"done": done.duplicate(), "current": current, "progress": progress, "dynamite": dynamite,
-		"guardados": pontos_guardados}  # Bloco 102
+		"guardados": pontos_guardados, "fila": fila.duplicate()}  # Bloco 102; Bloco 136: a fila
 	var ls := []
 	for l in labs():
 		ls.append(SaveUtil.vec2_to_array(l.global_position))
@@ -514,6 +655,10 @@ func load_save_data(d: Dictionary) -> void:
 	progress = maxf(SaveUtil.num(d, "progress", 0.0), 0.0) if current != "" else 0.0
 	dynamite = clampi(SaveUtil.integer(d, "dynamite", 0), 0, dynamite_max)  # Bloco 60 (save antigo: 0)
 	pontos_guardados = maxf(SaveUtil.num(d, "guardados", 0.0), 0.0)  # Bloco 102 (save antigo: 0)
+	fila = []  # Bloco 136 (save antigo: vazia)
+	for id in SaveUtil.array(d, "fila"):
+		if id is String and TECHS.has(id) and not has(id) and id != current and not fila.has(id):
+			fila.append(id)
 	_blast = {}
 	if labs().is_empty():
 		for pos in SaveUtil.positions(d, "labs", "lab"):  # Bloco 47 (save antigo: "lab", um só)

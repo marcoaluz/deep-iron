@@ -556,3 +556,7 @@ func test_b134_chao_vila() -> void:
 
 func test_b135_correcoes_hud() -> void:
 	run_bloco("b135_correcoes_hud.gd")
+
+
+func test_b136_venda_funcoes_pesquisa() -> void:
+	run_bloco("b136_venda_funcoes_pesquisa.gd")

@@ -13,6 +13,7 @@ var _t0 := 0
 
 
 func _initialize() -> void:
+	load("res://scripts/core/catalogo.gd").estudo_sozinho = true  # Bloco 136: este teste espera a pesquisadora sair sozinha
 	if not ("fake_appdata" in ProjectSettings.globalize_path("user://")):
 		print("ABORTADO: pasta de save não isolada")
 		quit()

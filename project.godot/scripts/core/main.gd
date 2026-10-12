@@ -578,6 +578,10 @@ func toggle_overtime() -> void:
 func toggle_job(job: String, label: String, color: Color) -> void:
 	_prune_selection()
 	if selection.is_empty():
+		if _hud.has_method("abre_funcao"):  # Bloco 136: sem ninguém selecionado, a lista de quem tem e de quem não tem
+			Audio.click()
+			_hud.abre_funcao(job)
+			return
 		Audio.error()
 		_hud.show_toast("Selecione ipezinhos pra virar %s" % label.to_lower(), Color(1.0, 0.6, 0.45))
 		return

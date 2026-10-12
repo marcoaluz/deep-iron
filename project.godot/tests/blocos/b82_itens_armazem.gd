@@ -125,6 +125,7 @@ func _process(delta: float) -> bool:
 		g("armazens").stock["ferro"] = 40.0
 		g("armazens")._recount()
 		c0 = eco.credits
+		cf.button.pressed.emit()  # (Bloco 136: a caixa fecha depois de vender; abre de novo)
 		p._sel_tudo.pressed.emit()
 		p.vender_selecionado()
 		var ganho: float = eco.credits - c0
@@ -138,6 +139,7 @@ func _process(delta: float) -> bool:
 		check(eco.credits - c0 == 80.0 and eco.quantidade("barra_cobre") == 5.0 and eco.quantidade("prego") == 30.0, "'Vender tudo' continua sendo só o minério (+80 cr)")
 		c0 = eco.credits
 		p._secoes["metal"].button.pressed.emit()
+		p._caixa.confirmar()  # (Bloco 136: a categoria também pede confirmação)
 		check(eco.credits - c0 == 100.0 and eco.quantidade("barra_cobre") == 0.0 and eco.quantidade("prego") == 30.0, "vender a categoria metal: +100 cr, prego fica")
 		check(eco.sell("madeira") == 0.0 and eco.quantidade("madeira") == 25.0, "madeira não se vende")
 		eco.precos_itens = {}

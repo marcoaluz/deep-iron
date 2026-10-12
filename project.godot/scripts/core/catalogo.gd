@@ -23,6 +23,14 @@ extends Node
 ##   exceção, pra fazer o reconhecimento — com risco de ferimento); a ordem à mão, a área de trabalho e a patrulha dos
 ##   guardas pedem confirmação (libera_descida) e aí os acidentes lá são x acidente_sem_reconhecimento até o
 ##   reconhecimento. O reconhecimento revela os perigos, as criaturas e o equipamento do andar (as regras não mudam).
+##
+## Bloco 136: o ESTUDO SÓ POR ORDEM. A pesquisadora não sai mais sozinha: o jogador manda (botão Pesquisar na ficha do
+## pesquisador) e o pedido entra na FILA DE ESTUDOS (`fila_estudo`, na ordem; `pede_estudo` / `cancela_estudo`). Ela só
+## escolhe alvos da fila (o primeiro que dá pra alcançar). O que pode ser pedido: o que a vila AVISTOU e ainda não estudou;
+## criatura só com o corpo no chão (ou a amostra, pro plano B). `situacao(id)` diz se está pronta ("pronta para estudar:
+## o corpo some em 5 h") e `tempo_texto(id)` quanto leva. Ao concluir, a ficha sai no Catálogo e o cartão traz o "por que
+## veio". Save: "fila_estudo" (save antigo: vazia). Testes de antes (Blocos 102-104) que esperam a saída sozinha:
+## `estudo_sozinho = true`.
 
 signal mudou
 signal entrada_avistada(id: String)
@@ -48,6 +56,8 @@ const ESTUDADO := 2
 
 ## Testes de antes do Bloco 102 (mineram cobre, caçam, pesquisam explosivos...): tudo conta como estudado.
 static var tudo_estudado := false
+## Bloco 136: testes de antes (102-104) em que a pesquisadora sai catalogar sozinha, sem a ordem do jogador.
+static var estudo_sozinho := false
 
 @export_group("Avistar")
 ## Distância (px da lógica) de um morador até a jazida/toca pra ela virar Avistada.
@@ -97,6 +107,8 @@ var bruto := {}
 var amostras := {}
 ## Plano B em andamento: {id, pontos} ({} = nenhum).
 var estudo_lab := {}
+## Bloco 136: os estudos que o jogador mandou fazer, na ordem (ids de entrada).
+var fila_estudo: Array = []
 ## Bloco 103: andares que o jogador mandou descer sem reconhecimento: {id: true}.
 var descida_liberada := {}
 ## Bloco 103: o ânimo que os corpos tiram da vila agora (o morale.gd lê; conferido a cada segundo).
@@ -239,6 +251,7 @@ func estuda(id: String, quem: Node = null) -> bool:
 		return false
 	estados[id] = ESTUDADO
 	_reservas.erase(id)
+	fila_estudo.erase(id)  # Bloco 136
 	if estudo_lab.get("id", "") == id:
 		estudo_lab = {}
 	var cat := String(e.categoria)
@@ -289,6 +302,8 @@ func _cartao(id: String, quem: Node) -> void:
 	var hist := texto(id, "historia")
 	if hist != "":
 		linhas.append(hist)
+	if cat == "criatura" and texto(id, "porque") != "":
+		linhas.append("Por que veio: " + texto(id, "porque"))  # Bloco 136
 	if texto(id, "dica") != "":
 		linhas.append("Dica: " + texto(id, "dica"))
 	elif cat == "local":
@@ -296,6 +311,7 @@ func _cartao(id: String, quem: Node) -> void:
 		for k in ["Perigos", "Equipamento"]:
 			if f.has(k):
 				linhas.append("%s: %s" % [k, f[k]])
+	linhas.append("A ficha está no Catálogo (R).")  # Bloco 136
 	hud.show_banner(titulo, "\n".join(linhas))
 
 
@@ -715,7 +731,12 @@ func alvo_para(w: Node) -> Dictionary:
 	for g in get_tree().get_nodes_in_group("ipezinhos"):
 		if g != w and String(g.get("nota_campo")) != "":
 			anotadas[String(g.nota_campo)] = true
-	for e in entradas():
+	var lista: Array = entradas() if estudo_sozinho else fila_estudo.map(func(i): return entrada(String(i)))
+	var pos_fila := 0
+	for e in lista:
+		pos_fila += 1
+		if e.is_empty():
+			continue
 		var id := String(e.id)
 		if estado(id) != AVISTADO or String(estudo_lab.get("id", "")) == id or anotadas.has(id):
 			continue
@@ -726,6 +747,8 @@ func alvo_para(w: Node) -> Dictionary:
 		if a.is_empty():
 			continue
 		var nota: float = PRIORIDADE.get(String(e.categoria), 9) * 100000.0 + de.distance_to(a.pos)
+		if not estudo_sozinho:
+			nota = pos_fila * 100000.0 + de.distance_to(a.pos)  # Bloco 136: a ordem do jogador manda
 		if nota < melhor_nota:
 			melhor_nota = nota
 			melhor = a
@@ -774,6 +797,98 @@ func entrega(id: String, w: Node) -> void:
 	_reservas.erase(id)
 	if estado(id) == AVISTADO:
 		estuda(id, w)
+
+
+# ------------------------------------------------------------ Bloco 136: a fila de estudos (só por ordem)
+## "" = dá pra pedir o estudo; senão o motivo.
+func motivo_estudo(id: String) -> String:
+	if entrada(id).is_empty():
+		return "entrada desconhecida"
+	if estado(id) == ESTUDADO:
+		return "já estudado"
+	if estado(id) == DESCONHECIDO:
+		return "ainda não avistado"
+	if fila_estudo.has(id):
+		return "já está na fila"
+	if String(estudo_lab.get("id", "")) == id:
+		return "o laboratório já está estudando"
+	if String(entrada(id).categoria) == "criatura" and _corpos_de(id).is_empty():
+		return "precisa de um corpo (abata um)"
+	return ""
+
+
+## O jogador mandou estudar: entra na fila (a pesquisadora vai quando puder). true = aceitou.
+func pede_estudo(id: String) -> bool:
+	if motivo_estudo(id) != "":
+		return false
+	fila_estudo.append(id)
+	for w in get_tree().get_nodes_in_group("ipezinhos"):
+		if w.has_method("is_researcher") and w.is_researcher() and w.has_method("wake_decision"):
+			w.wake_decision()
+	mudou.emit()
+	return true
+
+
+## Tira da fila (a pesquisadora que ia lá desiste; a anotação já feita ainda é entregue).
+func cancela_estudo(id: String) -> bool:
+	if not fila_estudo.has(id):
+		return false
+	fila_estudo.erase(id)
+	var w = _reservas.get(id)
+	if w != null and is_instance_valid(w) and String(w.get("nota_campo")) != id:
+		_reservas.erase(id)
+		if w.has_method("wake_decision"):
+			w.wake_decision()
+	mudou.emit()
+	return true
+
+
+## O que pode ser estudado agora (avistado, não estudado, fora da fila), na ordem do catálogo.
+func estudaveis() -> Array:
+	var out: Array = []
+	for e in entradas():
+		var id := String(e.id)
+		if estado(id) == AVISTADO and not fila_estudo.has(id):
+			out.append(id)
+	return out
+
+
+func _corpos_de(id: String) -> Array:
+	return get_tree().get_nodes_in_group("corpos_criatura").filter(func(c): return is_instance_valid(c) and not c.is_queued_for_deletion() and String(c.especie) == id)
+
+
+## A situação da entrada pra quem vai pedir: "pronta para estudar: o corpo some em 5 h", "precisa de um corpo"...
+func situacao(id: String) -> String:
+	var m := motivo_estudo(id)
+	if m != "" and m != "já está na fila":
+		return m
+	if String(entrada(id).categoria) == "criatura":
+		var dn := get_tree().get_first_node_in_group("day_night")
+		var horas := INF
+		for c in _corpos_de(id):
+			if dn:
+				var falta: float = (int(c.prazo_dia) - int(dn.day)) * 24.0 * float(dn.segundos_por_hora()) + float(c.prazo_t) - float(dn.time)
+				horas = minf(horas, falta / maxf(float(dn.segundos_por_hora()), 0.001))
+		if horas < INF:
+			return "pronta para estudar: o corpo some em %d h" % maxi(int(ceil(horas)), 1)
+		return "pronta para estudar: o corpo está à espera"
+	match String(entrada(id).categoria):
+		"minerio":
+			return "pronta para estudar: a pesquisadora vai até a jazida"
+		"animal":
+			return "pronta para estudar: a pesquisadora vai até a toca"
+		"local":
+			return "pronta para estudar: reconhecimento do lugar (perigoso)"
+	return "pronta para estudar"
+
+
+## Quanto leva, em horas de jogo (a anotação; a caminhada soma).
+func tempo_texto(_id: String) -> String:
+	var dn := get_tree().get_first_node_in_group("day_night")
+	var h := segundos_estudo / maxf(float(dn.segundos_por_hora()), 0.001) if dn else 1.0
+	if h < 1.0:
+		return "leva menos de 1 h de anotação (mais a caminhada)"
+	return "leva ~%d h de anotação (mais a caminhada)" % roundi(h)
 
 
 # ------------------------------------------------------------ plano B (o laboratório sozinho)
@@ -974,7 +1089,8 @@ static func _receitas_padrao(proto: Script) -> Array:
 # ------------------------------------------------------------ save/load (SaveManager)
 func get_save_data() -> Dictionary:
 	return {"estados": estados.duplicate(), "bruto": bruto.duplicate(), "amostras": amostras.duplicate(),
-		"estudo_lab": estudo_lab.duplicate(), "descida_liberada": descida_liberada.keys()}  # Bloco 103
+		"estudo_lab": estudo_lab.duplicate(), "descida_liberada": descida_liberada.keys(),  # Bloco 103
+		"fila_estudo": fila_estudo.duplicate()}  # Bloco 136
 
 
 func load_save_data(d: Dictionary) -> void:
@@ -998,6 +1114,10 @@ func load_save_data(d: Dictionary) -> void:
 	estudo_lab = {}
 	if not entrada(SaveUtil.text(el, "id", "")).is_empty():
 		estudo_lab = {"id": SaveUtil.text(el, "id", ""), "pontos": maxf(SaveUtil.num(el, "pontos", 0.0), 0.0)}
+	fila_estudo = []  # Bloco 136 (save antigo: vazia)
+	for id in SaveUtil.array(d, "fila_estudo"):
+		if id is String and not entrada(id).is_empty() and not fila_estudo.has(id) and int(estados.get(id, DESCONHECIDO)) == AVISTADO:
+			fila_estudo.append(id)
 	descida_liberada.clear()  # Bloco 103 (save antigo: nenhuma)
 	for a in SaveUtil.array(d, "descida_liberada"):
 		if not entrada(String(a)).is_empty():

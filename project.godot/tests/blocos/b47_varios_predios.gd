@@ -239,7 +239,8 @@ func _process(delta: float) -> bool:
 		eq.finish_build("vestiario", free_spot(LIVRE))
 		check(eq.vestiario() != null and eq.vestiario_block_reason() == "construído", "Vestiário: um por vila")
 		var vc := menu_card(menu, "Defesa e equipamento", "Vestiário")
-		check(vc.tag.text == "um por vila" and vc.button.disabled, "cartão do Vestiário: 'um por vila'")
+		# (Bloco 135: o único pronto mostra "✔ Construído" com o botão Abrir, que abre a janela; nunca pede outro)
+		check(vc.tag.text == "✔ Construído" and vc.button.text == "Abrir" and eq.vestiario_block_reason() != "", "cartão do Vestiário: '✔ Construído' + Abrir (e não pede outro)")
 		var ex := menu_card(menu, "Vila", "Expandir a vila")
 		check(ex.tag.text.contains("um só"), "Centro da Vila: um só ('%s')" % ex.tag.text)
 		menu.visible = false

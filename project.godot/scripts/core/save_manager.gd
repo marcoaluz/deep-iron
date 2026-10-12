@@ -151,6 +151,8 @@ extends Node
 ##     condicao, funcao, prazo}]}. Acabou o "Recrutar": "economy" ainda guarda max_workers e recruited_count (o save
 ##     antigo carrega), mas eles não mandam em nada — a capacidade são as camas. Save antigo: ninguém no portão, o
 ##     primeiro grupo no prazo de uma partida nova, a população que tinha.
+##   Bloco 136: "research" + fila (as pesquisas encomendadas depois da de agora) e "catalogo" + fila_estudo (os estudos de
+##     campo que o jogador mandou, na ordem). Save antigo: filas vazias.
 ##   Bloco 135: "migrantes" + grupo_n e, em cada um que espera, "grupo" (a família: quem chegou junto). Save antigo: cada um
 ##     no seu grupo (sem família no cartão).
 ##   Bloco 123: "pedidos" {abertos [{n, tipo, autor, dia, prazo_dia, meta}], historico, proximo_dia, dias_sem_fome, n, festival_gratis, festival_dobro, inverno_ameno, efeitos, ligado} e

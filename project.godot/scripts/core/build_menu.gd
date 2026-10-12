@@ -6,7 +6,8 @@ extends PanelContainer
 ##
 ## Bloco 47: o que pode ter vários mostra "pode ter vários • tem N" e, se o próximo custa
 ## mais (Economy.extra_building_cost_growth), o custo do cartão já é o do PRÓXIMO. O que
-## continua único (Vestiário, Oficina, Centro da Vila, Escudo) mostra "um por vila";
+## continua único (Vestiário, Oficina, Centro da Vila, Escudo) mostra "um por vila"
+## (Bloco 135: pronto = "✔ Construído" + Abrir; em obra = "Em obra" com a barra);
 ## melhorias mostram "melhoria". Itens do futuro aparecem como "em breve".
 ##
 ## Bloco 95 (layout v2, partes B e D): a janela tem TAMANHO E LUGAR FIXOS (iguais em todas as abas, centrada

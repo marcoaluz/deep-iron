@@ -488,7 +488,7 @@ func _order_button(row: HBoxContainer, title: String, key: String, icon_tex: Tex
 	b.custom_minimum_size = Vector2(BOTAO_FUNCAO.x * (2.0 if com_nome else 1.0), BOTAO_FUNCAO.y)
 	if UiSkin.ok():
 		UiSkin.aplica_botao(b, true)  # Prompt 20: placa de ferro com rebites; aceso = borda âmbar
-	b.tooltip_text = "%s  (tecla %s)\n%s\nCom ipezinhos selecionados: aplica. Se todos já forem, tira." % [title, key, tip]
+	b.tooltip_text = "%s  (tecla %s)\n%s\nCom ipezinhos selecionados: aplica. Se todos já forem, tira.\nSem ninguém selecionado: abre a lista de quem tem e de quem não tem." % [title, key, tip]
 	if not UiSkin.ok():
 		var on := StyleBoxFlat.new()
 		on.bg_color = Color(0.42, 0.3, 0.12)
@@ -780,6 +780,8 @@ func _build_janelas() -> void:
 	var pol := get_tree().get_first_node_in_group("politicas")
 	if pol:  # Bloco 108: as políticas da vila (tecla F6; libera no Vilarejo)
 		_add_panel("politicas", preload("res://scripts/core/politicas_panel.gd"), pol)
+	# Bloco 136: a janela da função (botão da barra sem ninguém selecionado): quem tem e quem não tem
+	_add_panel("funcoes", preload("res://scripts/core/funcoes_panel.gd"), null)
 	# Bloco 56: janela da casa (fora do menu: clique na casa ou o cartão do menu)
 	var casa_panel: PanelContainer = preload("res://scripts/core/casa_panel.gd").new()
 	add_child(casa_panel)
@@ -890,12 +892,27 @@ func _porcao_real(sched: Node) -> float:
 	return float(c._porcao()) if c and c.has_method("_porcao") else float(sched.porcao)
 
 
+## Bloco 136: abre a janela da função `job` (quem tem e quem não tem; dar, tirar e trocar sem selecionar no mapa).
+func abre_funcao(job: String) -> void:
+	if not _panels.has("funcoes"):
+		return
+	var p: PanelContainer = _panels["funcoes"]
+	var ja := p.visible and String(p.job) == job
+	open_panel("funcoes")
+	if not ja:
+		p.mostra(job)
+		_fit_panel.call_deferred(p)
+
+
 ## Bloco 135: o gerente das janelas flutuantes (gerente_janelas.gd): dentro da tela, sem cobrir outra, X, Esc fecha a de cima.
 var gerente: Node
 
 
 ## Bloco 135: o Esc fecha a janela de CIMA primeiro; sem janela flutuante aberta, o resto (menu, gavetas...).
 func fecha_janela_de_cima() -> bool:
+	for n in get_tree().get_nodes_in_group("fecha_com_esc"):  # Bloco 136: uma caixa de confirmação fecha antes de tudo
+		if n is CanvasItem and (n as CanvasItem).visible and n.has_method("fecha_esc") and n.fecha_esc():
+			return true
 	if gerente and gerente.fecha_de_cima():
 		Audio.ui_close()
 		_foco_mapa(null)
@@ -1945,6 +1962,9 @@ func _update_portrait(sel: Array) -> void:
 	_portrait_req.visible = false
 	_portrait_sec.visible = um
 	_portrait_ficha.visible = um and _panels.has("ficha")
+	if um:  # Bloco 136: a ficha do pesquisador tem a seção PESQUISA (o que pesquisa, a fila, mandar pesquisar)
+		var pq: bool = w.has_method("is_researcher") and w.is_researcher()
+		_set_text(_portrait_ficha, "Ficha e pesquisa" if pq else "Ficha")
 	_selection_caption.visible = not um
 	if not um:
 		return

@@ -9,7 +9,7 @@ resumo com `python tools/resumo_telemetria.py`).
 
 A coluna **na cena** aparece quando uma cena `.tscn` troca o padrão do script: no jogo vale o da cena.
 
-Total: **1336 valores** em 4 pastas de scripts (90 trocados por alguma cena).
+Total: **1337 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 
 ## `scripts/core/audio_manager.gd` (98)
 
@@ -1445,7 +1445,7 @@ Total: **1336 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `casamento_tempo` | 540.0 |  |  |
 | `casamento_noivos` | 8.0 |  | Ânimo dos noivos (some devagar, como a festa). |
 
-## `scripts/core/research.gd` (27)
+## `scripts/core/research.gd` (28)
 
 **Laboratório**
 
@@ -1486,6 +1486,7 @@ Total: **1336 valores** em 4 pastas de scripts (90 trocados por alguma cena).
 | `dynamite_risk_untrained` | 0.2 |  |  |
 | `dynamite_fuse` | 2.5 |  | Segundos do pavio depois de chegar no entulho; desiste (devolve a dinamite) depois deste tempo andando. |
 | `dynamite_walk_timeout` | 60.0 |  |  |
+| `intervalo_fila` | 2.0 |  | Bloco 136: segundos (reais) entre uma tentativa e outra de começar a próxima da fila (quando faltou o custo). |
 | `radio_warning_bonus` | 60.0 |  | Rádio: o aviso de invasão vem estes segundos antes do normal; com satélite, um colono a cada N dias. |
 | `radio_satellite_every_days` | 1 |  |  |
 
