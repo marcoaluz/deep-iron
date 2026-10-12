@@ -154,14 +154,25 @@ func _prepara() -> void:
 	_lugares.clear()
 	_ocupante.clear()
 	var mapa: RID = get_world_2d().navigation_map if is_inside_tree() else RID()
+	var mapa_pronto := false  # Bloco 129: a malha de navegação está valida (sem estar sendo refeita)?
+	var incompleto := false
 	for r in rodas:
 		var c := centro() + Vector2((r - (rodas - 1) * 0.5) * espaco_rodas, 0.0)
 		for k in por_roda:
 			var a := TAU * (float(k) / por_roda) + PI * 0.5
 			var p := c + Vector2(cos(a), sin(a) * 0.6) * raio_roda
 			if mapa.is_valid() and NavigationServer2D.map_get_iteration_id(mapa) > 0:
-				p = NavigationServer2D.map_get_closest_point(mapa, p)
+				var q := NavigationServer2D.map_get_closest_point(mapa, p)
+				# Bloco 129: com a malha vazia (acabou de ser refeita: construiu um prédio) o servidor devolve (0, 0) e o
+				# lugar ia pra origem do mapa — e FICAVA lá (a origem do ponto não muda, então nunca recalculava)
+				if q == Vector2.ZERO and p.length() > 8.0:
+					incompleto = true
+				else:
+					p = q
+					mapa_pronto = true
 			_lugares.append(p)
 			_ocupante.append(null)
+	if incompleto and not mapa_pronto:
+		_origem = Vector2.INF  # tenta de novo no próximo pedido (os lugares de agora ficam sem o ajuste da malha)
 	for i in mini(antigos.size(), _ocupante.size()):
 		_ocupante[i] = antigos[i]

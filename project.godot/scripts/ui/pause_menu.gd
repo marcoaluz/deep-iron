@@ -6,6 +6,7 @@ extends CanvasLayer
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const SettingsPanel := preload("res://scripts/ui/settings_panel.gd")
 const Tipo := preload("res://scripts/ui/tipografia.gd")
+const EscolheArquivo := preload("res://scripts/ui/escolhe_arquivo.gd")  # Bloco 129
 const START_MENU := "res://scenes/ui/start_menu.tscn"
 const COLOR_TITLE := Color(1.0, 0.8, 0.35)
 const COLOR_PANEL := Color(0.09, 0.075, 0.07, 0.95)
@@ -14,6 +15,7 @@ const COLOR_BORDER := Color(0.55, 0.38, 0.18)
 var _main_page: VBoxContainer
 var _settings_page: VBoxContainer
 var _panel: PanelContainer
+var _arquivo_label: Label  # Bloco 129: o arquivo onde a partida salva
 
 
 func _ready() -> void:
@@ -52,10 +54,18 @@ func _ready() -> void:
 	title.add_theme_font_size_override("font_size", Tipo.FAIXA)
 	title.add_theme_color_override("font_color", COLOR_TITLE)
 	_main_page.add_child(title)
+	_arquivo_label = Label.new()  # Bloco 129
+	_arquivo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_arquivo_label.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+	_arquivo_label.custom_minimum_size = Vector2(300, 0)
+	_arquivo_label.add_theme_font_size_override("font_size", Tipo.DETALHE)
+	_arquivo_label.add_theme_color_override("font_color", Color(0.65, 0.6, 0.55))
+	_main_page.add_child(_arquivo_label)
 	_button("Continuar  (Esc)", close)
 	_button("Configurações", _show_settings)
 	_button("Salvar jogo  (F5)", func():
 		SaveManager.save_game("manual"))
+	_button("Salvar como… (escolher o arquivo)", _salvar_como)  # Bloco 129
 	_button("Salvar e voltar ao menu inicial", _to_start_menu)
 	_button("Salvar e sair do jogo", _quit)
 
@@ -74,6 +84,7 @@ func open() -> void:
 	if visible:
 		return
 	visible = true
+	_atualiza_arquivo()  # Bloco 129
 	_show_main()
 	get_tree().paused = true
 	Audio.click()
@@ -97,6 +108,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			_show_main()
 		else:
 			close()
+
+
+## Bloco 129: escolhe um arquivo (do sistema) e passa a salvar NELE: salva já, e o autosave também vai pra lá.
+func _salvar_como() -> void:
+	EscolheArquivo.salvar(get_tree(), func(p: String):
+		if SaveManager.set_caminho_save(p):
+			SaveManager.save_game("salvar como")
+		else:
+			SaveManager.save_failed.emit("pasta inválida: " + p)
+		_atualiza_arquivo(), "deep_iron.json")
+
+
+func _atualiza_arquivo() -> void:
+	_arquivo_label.text = "Salvando em: " + SaveManager.caminho_legivel()
 
 
 func _show_settings() -> void:

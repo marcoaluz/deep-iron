@@ -326,12 +326,20 @@ func _process(delta: float) -> bool:
 			sm.start_new_game()
 			proximo()
 		24:
+			if not espera(0.5):
+				return false
+			var c = cena()
+			# Bloco 129: a introdução é parte de TODA partida nova (mesmo com ela já vista); Esc pula
+			check(c != null and c.scene_file_path == "res://scenes/ui/intro.tscn" and sm.cinema == "novo", "intro já vista: a partida nova passa pela introdução de novo (%s)" % (c.scene_file_path if c else "?"))
+			c.pula()
+			proximo()
+		25:
 			if not espera(1.0):
 				return false
 			var c = cena()
-			check(c != null and c.scene_file_path == "res://scenes/game/main.tscn" and sm.cinema == "", "intro já vista: partida nova direto (%s)" % (c.scene_file_path if c else "?"))
+			check(c != null and c.scene_file_path == "res://scenes/game/main.tscn" and sm.cinema == "", "pulou a introdução: a partida (%s)" % (c.scene_file_path if c else "?"))
 			proximo()
-		25:
+		26:
 			if not espera(2.0):
 				return false
 			check(cena().get_node_or_null("IntroCinema") == null and g("house_placer").active, "sem cinema: a Fundação começa já")

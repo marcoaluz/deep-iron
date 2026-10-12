@@ -149,6 +149,13 @@ func _build_main() -> void:
 		Ipe.baloes_motivo = on
 		Ipe._baloes_lido = true)
 	right.add_child(motivo)
+	var intro_box := CheckBox.new()  # Bloco 129: a introdução roda em toda partida nova (Esc pula)
+	intro_box.text = "Introdução em toda partida nova"
+	intro_box.button_pressed = Settings.get_value("jogo", "intro_ligada", true)
+	intro_box.toggled.connect(func(on: bool):
+		Audio.click()
+		Settings.set_value("jogo", "intro_ligada", on))
+	right.add_child(intro_box)
 	var guia := CheckBox.new()  # Bloco 112: o capataz e as setas do primeiro dia (a missão continua valendo sem eles)
 	guia.text = "Primeiro dia guiado (capataz e setas)"
 	guia.button_pressed = Settings.get_value("jogo", "guia_primeiro_dia", true)

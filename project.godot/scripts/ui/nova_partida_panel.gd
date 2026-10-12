@@ -10,6 +10,7 @@ signal voltar
 const Dificuldade := preload("res://scripts/core/dificuldade.gd")
 const Perfil := preload("res://scripts/core/perfil_dificuldade.gd")
 const Tipo := preload("res://scripts/ui/tipografia.gd")
+const EscolheArquivo := preload("res://scripts/ui/escolhe_arquivo.gd")  # Bloco 129
 const COLOR_TITLE := Color(1.0, 0.8, 0.35)
 const COLOR_TEXT := Color(0.92, 0.88, 0.8)
 const COLOR_DIM := Color(0.7, 0.66, 0.6)
@@ -43,6 +44,9 @@ var _valores := {}  # chave -> Label
 var _descricao: Label
 var _extra: Label
 var _montando := false
+## Bloco 129: o arquivo onde a partida salva (o do SaveManager até o jogador escolher outro).
+var _arquivo := ""
+var _arquivo_label: Label
 
 
 func _ready() -> void:
@@ -119,6 +123,29 @@ func _ready() -> void:
 	_extra.custom_minimum_size = Vector2(540, 0)
 	add_child(_extra)
 
+	# Bloco 129: onde esta partida salva (o autosave também fica nesse mesmo arquivo)
+	var arq := HBoxContainer.new()
+	arq.add_theme_constant_override("separation", 8)
+	add_child(arq)
+	var onde := _label("Salvar em:", Tipo.CORPO, COLOR_TEXT)
+	arq.add_child(onde)
+	_arquivo = SaveManager.caminho_legivel()
+	_arquivo_label = _label(_arquivo, Tipo.DETALHE, COLOR_DIM)
+	_arquivo_label.clip_text = true
+	_arquivo_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_arquivo_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_arquivo_label.tooltip_text = "O arquivo da partida. O jogo salva nele sozinho (autosave) e quando você salva."
+	_arquivo_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	arq.add_child(_arquivo_label)
+	var escolhe := Button.new()
+	escolhe.text = "Escolher onde salvar…"
+	escolhe.add_theme_font_size_override("font_size", Tipo.DETALHE)
+	escolhe.pressed.connect(func():
+		Audio.click()
+		EscolheArquivo.salvar(get_tree(), define_arquivo, "deep_iron.json"))
+	arq.add_child(escolhe)
+	set_meta("escolhe_arquivo_button", escolhe)
+
 	var rodape := HBoxContainer.new()
 	rodape.add_theme_constant_override("separation", 10)
 	add_child(rodape)
@@ -151,7 +178,17 @@ func seleciona(id: String) -> void:
 
 ## O que o "Começar" entrega: {perfil, custom} (custom só vale no Personalizado).
 func escolha() -> Dictionary:
-	return {"perfil": _id, "custom": _custom.duplicate() if _id == "personalizado" else {}}
+	return {"perfil": _id, "custom": _custom.duplicate() if _id == "personalizado" else {}, "arquivo": _arquivo}
+
+
+## Bloco 129: o seletor de arquivo devolveu o caminho. A pasta tem que existir (o SaveManager confere ao começar).
+func define_arquivo(caminho: String) -> void:
+	var c := caminho.strip_edges()
+	if c.get_extension().to_lower() != "json":
+		c += ".json"
+	_arquivo = c
+	if _arquivo_label:
+		_arquivo_label.text = c
 
 
 func perfil_escolhido() -> String:

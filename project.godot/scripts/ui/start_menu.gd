@@ -6,7 +6,9 @@ extends Control
 ##     Continuar  -> carrega o save.
 ##     Novo jogo  -> pede confirmação; o save atual NÃO é apagado: vira um backup
 ##                   com data/hora em user://backups e a partida nova passa a
-##                   salvar em user://savegame.json.
+##                   salvar no arquivo que o jogador escolher (Bloco 129).
+## - Bloco 129: "Carregar de um arquivo…" abre o seletor do sistema; a partida passa a salvar (e a fazer autosave) NESSE arquivo.
+##   A introdução não é mais um botão: ela roda em toda partida nova.
 ## - Save ilegível (JSON quebrado): avisa, move o arquivo pra
 ##   user://savegame_corrompido.json e deixa começar um jogo novo.
 ## - Backups (N): lista os backups (data/hora + resumo) e carrega qualquer um.
@@ -14,6 +16,7 @@ extends Control
 
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const Tipo := preload("res://scripts/ui/tipografia.gd")
+const EscolheArquivo := preload("res://scripts/ui/escolhe_arquivo.gd")  # Bloco 129
 const BG := Color(0.05, 0.045, 0.06)
 const COLOR_TITLE := Color(1.0, 0.8, 0.35)
 const COLOR_TEXT := Color(0.92, 0.88, 0.8)
@@ -22,6 +25,7 @@ const COLOR_DIM := Color(0.65, 0.6, 0.55)
 var _confirm: ConfirmationDialog
 var _confirm_backup: ConfirmationDialog
 var _chosen_backup: String = ""
+var _aviso: Label  # Bloco 129: "Carregar de um arquivo" que não deu
 ## Bloco 113: a tela de Nova partida (a dificuldade) e a coluna do menu que ela esconde.
 var _nova: VBoxContainer
 var _box: VBoxContainer
@@ -107,7 +111,7 @@ dificuldade: " + str(s.dificuldade)
 		box.add_child(new_game)
 		_confirm = ConfirmationDialog.new()
 		_confirm.title = "Novo jogo"
-		_confirm.dialog_text = "Começar uma partida nova?\n\nO save atual NÃO é apagado: ele vira um backup com data/hora\n(em Backups, aqui na tela inicial) e a partida nova passa a salvar no lugar dele."
+		_confirm.dialog_text = "Começar uma partida nova?\n\nO save atual NÃO é apagado: ele vira um backup com data/hora\n(em Backups, aqui na tela inicial). Na próxima tela você escolhe onde a partida nova salva."
 		_confirm.ok_button_text = "Começar do zero"
 		_confirm.cancel_button_text = "Voltar"
 		_confirm.confirmed.connect(_abre_nova)  # Bloco 113: depois de confirmar, escolhe a dificuldade
@@ -127,12 +131,18 @@ dificuldade: " + str(s.dificuldade)
 		box.add_child(new_game)
 		new_game.grab_focus.call_deferred()
 
-	# Bloco 112: ver a introdução de novo (não mexe no save: os quadros no mapa rodam numa partida que não salva)
-	var intro := _button("Ver a introdução")
-	intro.pressed.connect(func():
+	# Bloco 129: carregar uma partida de qualquer arquivo (a partida passa a salvar nele)
+	var abre := _button("Carregar de um arquivo…")
+	abre.pressed.connect(func():
 		Audio.click()
-		SaveManager.ver_introducao())
-	box.add_child(intro)
+		EscolheArquivo.abrir(get_tree(), func(p: String):
+			if not SaveManager.load_arquivo(p):
+				_aviso.text = "Não deu pra ler esse arquivo como um save do DEEP IRON."
+				_aviso.visible = true))
+	box.add_child(abre)
+	_aviso = _label("", Tipo.DETALHE, Color(1.0, 0.55, 0.45))
+	_aviso.visible = false
+	box.add_child(_aviso)
 
 	var backups: Array[Dictionary] = SaveManager.list_backups_with_summary()
 	if not backups.is_empty():
@@ -165,7 +175,7 @@ dificuldade: " + str(s.dificuldade)
 	var quit := _button("Sair")
 	quit.pressed.connect(func(): get_tree().quit())
 	box.add_child(quit)
-	box.add_child(_label("pasta do save: %s" % ProjectSettings.globalize_path("user://"), Tipo.DETALHE, COLOR_DIM))
+	box.add_child(_label("arquivo do save: %s" % SaveManager.caminho_legivel(), Tipo.DETALHE, COLOR_DIM))
 
 
 ## Bloco 113: a tela de Nova partida no lugar do menu.

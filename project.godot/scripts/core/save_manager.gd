@@ -1,5 +1,8 @@
 extends Node
-## Autoload "SaveManager": salvar/carregar o progresso em JSON (user://savegame.json).
+## Autoload "SaveManager": salvar/carregar o progresso em JSON (por padrão user://savegame.json).
+## Bloco 129: o jogador ESCOLHE o arquivo do save (`caminho_save`; o selecionador de arquivo do sistema, na tela de Nova partida,
+## em "Carregar de um arquivo" e em "Salvar como" no menu de pausa). O autosave, o F5, o salvar-ao-sair e o Continuar usam
+## SEMPRE esse arquivo (a escolha fica nas configurações: jogo/caminho_save). Os backups seguem em user://backups.
 ##
 ## Cada sistema expõe get_save_data() -> Dictionary e load_save_data(data) -> void;
 ## aqui só se junta tudo, escreve/lê o arquivo e decide QUANDO salvar:
@@ -271,7 +274,6 @@ signal save_failed(message: String)
 
 const Carregando := preload("res://scripts/ui/carregando.gd")
 const SAVE_PATH := "user://savegame.json"
-const TEMP_PATH := "user://savegame.tmp"
 ## Backups rotativos: "partida nova" com save existente (Novo Jogo no menu, ou main.tscn
 ## aberta direto no editor) move o save pra cá com data/hora no nome, em vez de
 ## sobrescrever um backup único. Ficam só os `max_backups` mais recentes.
@@ -311,6 +313,9 @@ var pending_load: bool = false
 var _pending_data: Dictionary = {}
 var _game: Node = null  # nó Main da partida em andamento
 var _autosave_timer: float = 0.0
+## Bloco 129: o arquivo onde ESTA partida salva (autosave, F5, ao sair) e de onde o Continuar lê.
+var caminho_save: String = SAVE_PATH
+signal caminho_mudou(caminho: String)
 ## Já garantimos o backup do save antigo nesta partida nova?
 var _backup_checked: bool = false
 ## Partida perdida (expulso pela greve): não salva mais nada até sair dela.
@@ -325,6 +330,9 @@ var dificuldade_nova: Dictionary = {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	var guardado := String(Settings.get_value("jogo", "caminho_save", SAVE_PATH))  # Bloco 129
+	if guardado != SAVE_PATH and DirAccess.dir_exists_absolute(guardado.get_base_dir()):
+		caminho_save = guardado
 	get_tree().set_auto_accept_quit(false)  # quem fecha é o _notification abaixo
 	_adopt_legacy_backup()
 	print("DEEP IRON: SAVE_VERSION=%d" % SAVE_VERSION)  # Bloco 50: aparece no log do build
@@ -350,7 +358,33 @@ func _notification(what: int) -> void:
 
 # ------------------------------------------------------------ estado do arquivo
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return FileAccess.file_exists(caminho_save)
+
+
+## Bloco 129: o arquivo do save é este (a escolha do jogador; guardada nas configurações). Aceita caminho do sistema
+## ("C:/Users/.../meu_jogo.json") ou "user://...". Sem a pasta: false; sem a extensão .json: acrescenta.
+func set_caminho_save(path: String) -> bool:
+	var p := path.strip_edges().replace(char(92), "/")
+	if p == "":
+		return false
+	if p.get_extension().to_lower() != "json":
+		p += ".json"
+	var pasta := p.get_base_dir()
+	if pasta == "" or not DirAccess.dir_exists_absolute(pasta):
+		return false
+	caminho_save = p
+	Settings.set_value("jogo", "caminho_save", p)
+	caminho_mudou.emit(p)
+	return true
+
+
+## O caminho do save em texto do sistema (pra mostrar ao jogador).
+func caminho_legivel() -> String:
+	return ProjectSettings.globalize_path(caminho_save) if caminho_save.begins_with("user://") else caminho_save
+
+
+func _caminho_tmp() -> String:
+	return caminho_save + ".tmp"
 
 
 ## "none" (não existe), "ok" ou "corrupt" (existe mas não é um JSON de save).
@@ -362,7 +396,7 @@ func save_status() -> String:
 
 ## Lê e valida o save principal. Retorna o Dictionary ou null se estiver ilegível.
 func read_save() -> Variant:
-	return read_save_file(SAVE_PATH)
+	return read_save_file(caminho_save)
 
 
 ## Lê e valida qualquer arquivo de save (principal ou backup), já migrado pra versão atual.
@@ -405,13 +439,24 @@ func is_game_running() -> bool:
 
 ## Menu: começa do zero. Se havia save, ele vira um backup com data/hora (user://backups).
 func start_new_game(dificuldade: Dictionary = {}) -> void:
-	dificuldade_nova = dificuldade  # Bloco 113 ({} = Normal: testes, --smoke e a primeira partida sem tela)
-	# Bloco 112: a primeira partida nova passa pela introdução (depois só pelo "Ver a introdução" do menu)
-	if not Settings.get_value("jogo", "intro_vista", false) and not "--smoke" in OS.get_cmdline_user_args():
+	dificuldade_nova = dificuldade.duplicate()  # Bloco 113 ({} = Normal: testes, --smoke e a primeira partida sem tela)
+	# Bloco 129: o arquivo escolhido na tela de Nova partida (a partida salva ali, e o autosave também)
+	if dificuldade_nova.has("arquivo"):
+		var escolhido := String(dificuldade_nova.get("arquivo", ""))
+		dificuldade_nova.erase("arquivo")
+		if escolhido != "" and escolhido != caminho_save and escolhido != caminho_legivel():
+			set_caminho_save(escolhido)
+	# Bloco 129: a introdução faz parte de TODA partida nova (Esc pula); some só se o jogador desligar nas Configurações
+	if intro_ligada() and not "--smoke" in OS.get_cmdline_user_args():
 		cinema = "novo"
 		get_tree().change_scene_to_file(INTRO_SCENE)
 		return
 	_comeca_partida_nova()
+
+
+## Bloco 129: a introdução roda em toda partida nova? (Configurações > "Introdução em toda partida nova"; padrão: sim)
+static func intro_ligada() -> bool:
+	return bool(Settings.get_value("jogo", "intro_ligada", true))
 
 
 ## Bloco 112: o menu "Ver a introdução": os quadros e o mapa sem salvar nada.
@@ -473,6 +518,21 @@ func load_game() -> bool:
 	return true
 
 
+## Bloco 129: "Carregar de um arquivo": lê o save escolhido, passa a salvar NELE (autosave incluso) e começa a partida.
+## O arquivo que estava em uso não é mexido (cada arquivo é uma partida).
+func load_arquivo(path: String) -> bool:
+	var data = read_save_file(path)
+	if data == null:
+		save_failed.emit("arquivo ilegível")
+		Audio.error()
+		return false
+	if not set_caminho_save(path):
+		save_failed.emit("pasta do arquivo não existe")
+		return false
+	_start_loaded(data)
+	return true
+
+
 ## Tela inicial: carrega um backup. Antes, o save principal atual (se houver) também
 ## vira backup — "voltar no tempo" não apaga o presente. A partida carregada volta a
 ## salvar no savegame.json normal.
@@ -511,6 +571,9 @@ func backup_existing_save(protect: String = "") -> String:
 		return ""
 	if not dir.dir_exists(BACKUP_DIR.get_file()):
 		dir.make_dir(BACKUP_DIR.get_file())
+	var origem_dir := DirAccess.open(caminho_save.get_base_dir())
+	if origem_dir == null:
+		return ""
 	var stamp := Time.get_datetime_string_from_system(false, true).replace(":", "-").replace(" ", "_")
 	var target := "%s/%s%s.json" % [BACKUP_DIR, BACKUP_PREFIX, stamp]
 	var n := 2
@@ -519,10 +582,10 @@ func backup_existing_save(protect: String = "") -> String:
 		n += 1
 	# copia (a cópia nasce com a data de AGORA: a poda ordena pela data do backup,
 	# não pela de quando o jogo foi salvo) e só depois tira o original
-	if dir.copy(SAVE_PATH, target) != OK:
+	if origem_dir.copy(caminho_save, target) != OK:
 		push_warning("SaveManager: não deu pra criar o backup %s; o save fica onde está" % target)
 		return ""
-	dir.remove(SAVE_PATH.get_file())
+	origem_dir.remove(caminho_save.get_file())
 	print("SaveManager: save anterior guardado em %s" % ProjectSettings.globalize_path(target))
 	_prune_backups(protect)
 	return target
@@ -596,11 +659,13 @@ func _local_time_label(unix_time: int) -> String:
 ## Move um save ilegível pra savegame_corrompido.json.
 func quarantine_corrupt_save() -> void:
 	var dir := DirAccess.open("user://")
-	if dir == null or not has_save():
+	var origem_dir := DirAccess.open(caminho_save.get_base_dir())
+	if dir == null or origem_dir == null or not has_save():
 		return
 	if dir.file_exists(CORRUPT_PATH.get_file()):
 		dir.remove(CORRUPT_PATH.get_file())
-	dir.rename(SAVE_PATH.get_file(), CORRUPT_PATH.get_file())
+	if origem_dir.copy(caminho_save, CORRUPT_PATH) == OK:  # (copia e tira: o arquivo escolhido pode estar noutra pasta)
+		origem_dir.remove(caminho_save.get_file())
 
 
 # ------------------------------------------------------------ salvar
@@ -610,20 +675,24 @@ func save_game(reason: String = "manual") -> bool:
 	var data := _collect()
 	var json := JSON.stringify(data, "\t")
 	# escreve num temporário e troca: se o jogo cair no meio, o save antigo fica inteiro
-	var f := FileAccess.open(TEMP_PATH, FileAccess.WRITE)
+	var tmp := _caminho_tmp()
+	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
-		var msg := "não deu pra escrever %s (erro %d)" % [TEMP_PATH, FileAccess.get_open_error()]
+		var msg := "não deu pra escrever %s (erro %d)" % [tmp, FileAccess.get_open_error()]
 		push_warning("SaveManager: " + msg)
 		save_failed.emit(msg)
 		return false
 	f.store_string(json)
 	f.close()
-	var dir := DirAccess.open("user://")
-	if dir.file_exists(SAVE_PATH.get_file()):
-		dir.remove(SAVE_PATH.get_file())
-	dir.rename(TEMP_PATH.get_file(), SAVE_PATH.get_file())
+	var dir := DirAccess.open(caminho_save.get_base_dir())
+	if dir == null:
+		save_failed.emit("a pasta do save sumiu: " + caminho_save.get_base_dir())
+		return false
+	if dir.file_exists(caminho_save.get_file()):
+		dir.remove(caminho_save.get_file())
+	dir.rename(tmp.get_file(), caminho_save.get_file())
 	_autosave_timer = 0.0
-	print("SaveManager: jogo salvo (%s) em %s" % [reason, ProjectSettings.globalize_path(SAVE_PATH)])
+	print("SaveManager: jogo salvo (%s) em %s" % [reason, caminho_legivel()])
 	saved.emit(reason)
 	return true
 
