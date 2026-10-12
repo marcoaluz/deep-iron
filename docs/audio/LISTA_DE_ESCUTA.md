@@ -18,7 +18,7 @@ Gerado por `python tools/elevenlabs/docs_audio.py`. A ordem é a de prioridade (
   - arquivo: `assets/audio/ambiencia/chuva.wav`  •  ouça: a emenda do loop (sem estalo) e se não cansa
 - [x] `ambiencia/floresta_dia` — loop 40 s — Floresta e clareira de dia: pássaros, folhas, vento leve.
   - arquivo: `assets/audio/ambiencia/floresta_dia.wav`  •  ouça: a emenda do loop (sem estalo) e se não cansa
-- [x] `ambiencia/floresta_noite` — loop 40 s — Floresta e clareira de noite: grilos e uma coruja distante.
+- [x] `ambiencia/floresta_noite` — loop 40 s — Floresta e clareira de noite: vento baixo nos pinheiros e folhas; sem insetos (Bloco 133: o de antes era um chiado de grilo contínuo em 7 kHz; a 1ª troca saiu com estática).
   - arquivo: `assets/audio/ambiencia/floresta_noite.wav`  •  ouça: a emenda do loop (sem estalo) e se não cansa
 - [x] `ambiencia/mina` — loop 40 s — Vila, pedreira e túneis do S1 (a câmera na área da mina). Loop contínuo, sem pico alto.
   - arquivo: `assets/audio/ambiencia/mina.wav`  •  ouça: a emenda do loop (sem estalo) e se não cansa

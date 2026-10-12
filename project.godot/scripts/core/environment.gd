@@ -1715,8 +1715,9 @@ const GradeConstrucao := preload("res://scripts/core/grade.gd")
 ## A ÁREA DA VILA: um retângulo em volta do Centro da Vila que cresce com o estágio (meia largura x meia altura, px do chão,
 ## um por estágio). Dentro dela a decoração REMOVÍVEL (pedra solta, mato, entulho, escoras soltas) sai quando o mapa é
 ## montado, ao carregar e quando a vila cresce; a grade de construção é desenhada nela. Fica sempre do lado de dentro da
-## paliçada e antes da vila antiga do leste.
-@export var area_vila_meia: Array[Vector2] = [Vector2(260, 260), Vector2(320, 320), Vector2(380, 380), Vector2(440, 440), Vector2(500, 500)]
+## paliçada e antes da vila antiga do leste. Bloco 133: os estágios 4 e 5 maiores (eram 440x440 e 500x500), pra área cobrir
+## o norte da vila até a paliçada e caber a vila cheia (medição do Bloco 132: ~24 prédios + 8 a 10 casas).
+@export var area_vila_meia: Array[Vector2] = [Vector2(260, 260), Vector2(320, 320), Vector2(380, 380), Vector2(460, 560), Vector2(520, 680)]
 ## Raio (px) em volta das ENTRADAS (portão, boca da mina, escada em espiral, elevadores) onde nada é tirado sozinho.
 @export var area_vila_raio_entradas: float = 70.0
 ## Créditos pra LIMPAR uma peça que atrapalha a construção (clique nela no modo de construção; não devolve nada).

@@ -7,7 +7,7 @@ Limiares: agudo contínuo >= 25% com CV < 0.35; tonal com planura < 0.25; repete
 | slot | por que toca à noite | arquivo | dur (s) | LUFS | db do slot | pico dBFS | >4 kHz | >8 kHz | CV | planura | estalo | vezes/min | SUSPEITO |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | `ambiencia/mina` | ambiência (à noite na floresta: floresta_noite; nos andares, a do andar) | `assets/audio/ambiencia/mina.wav` | 29.6 | -22.2 | 0.0 | -6.2 | 0% | 0% | 1.35 | 0.86 | 0.7 | — |  |
-| `ambiencia/floresta_noite` | ambiência (à noite na floresta: floresta_noite; nos andares, a do andar) | `assets/audio/ambiencia/floresta_noite.wav` | 30.0 | -11.8 | -5.0 | -2.1 | 100% | 34% | 0.00 | 0.05 | 0.3 | — | **AGUDO CONTÍNUO (100% acima de 4 kHz, varia pouco); TONAL nos agudos (planura 0.05: um apito/grilo afinado)** |
+| `ambiencia/floresta_noite` | ambiência (à noite na floresta: floresta_noite; nos andares, a do andar) | `assets/audio/ambiencia/floresta_noite.wav` | 30.0 | -16.7 | -7.0 | -2.4 | 6% | 1% | 0.51 | 0.50 | 1.3 | — |  |
 | `ambiencia/vento_inverno` | ambiência (à noite na floresta: floresta_noite; nos andares, a do andar) | `assets/audio/ambiencia/vento_inverno.wav` | 30.0 | -18.2 | -8.0 | -4.4 | 0% | 0% | 0.53 | 0.28 | 0.1 | — |  |
 | `ambiencia/chuva` | ambiência (à noite na floresta: floresta_noite; nos andares, a do andar) | `assets/audio/ambiencia/chuva.wav` | 30.0 | -26.4 | -6.0 | -2.3 | 19% | 3% | 0.08 | 0.44 | 0.7 | — |  |
 | `ambiencia/s2_acido` | ambiência (à noite na floresta: floresta_noite; nos andares, a do andar) | `assets/audio/ambiencia/s2_acido.wav` | 30.0 | -12.6 | -1.0 | -3.5 | 97% | 55% | 0.01 | 0.24 | 0.1 | — | **AGUDO CONTÍNUO (97% acima de 4 kHz, varia pouco); TONAL nos agudos (planura 0.24: um apito/grilo afinado)** |
@@ -71,7 +71,6 @@ Limiares: agudo contínuo >= 25% com CV < 0.35; tonal com planura < 0.25; repete
 
 ## Suspeitos
 
-- `ambiencia/floresta_noite` (`assets/audio/ambiencia/floresta_noite.wav`): AGUDO CONTÍNUO (100% acima de 4 kHz, varia pouco); TONAL nos agudos (planura 0.05: um apito/grilo afinado)
 - `ambiencia/s2_acido` (`assets/audio/ambiencia/s2_acido.wav`): AGUDO CONTÍNUO (97% acima de 4 kHz, varia pouco); TONAL nos agudos (planura 0.24: um apito/grilo afinado)
 - `predios/coletor_madeira` (`assets/audio/predios/coletor_madeira.wav`): AGUDO CONTÍNUO (28% acima de 4 kHz, varia pouco)
 - `predios/coletor_minerio` (`assets/audio/predios/coletor_minerio.wav`): AGUDO CONTÍNUO (43% acima de 4 kHz, varia pouco)

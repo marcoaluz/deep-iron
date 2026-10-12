@@ -35,9 +35,9 @@ Gerado por `python tools/elevenlabs/docs_audio.py` a partir de `project.godot/da
 
 - **Arquivo(s):** `ambiencia/floresta_noite`
 - **Duração:** loop 40 s  •  **Tipo:** loop
-- **Onde toca:** Floresta e clareira de noite: grilos e uma coruja distante.
+- **Onde toca:** Floresta e clareira de noite: vento baixo nos pinheiros e folhas; sem insetos (Bloco 133: o de antes era um chiado de grilo contínuo em 7 kHz; a 1ª troca saiu com estática).
 
-> Seamless loop, forest clearing at night, many crickets chirping steadily, a very light breeze through trees, calm and slightly eerie, no music, no voices.
+> Seamless loop, calm night in a pine forest clearing, smooth gentle wind blowing steadily through tall pine trees, a soft deep whoosh slowly rising and falling, leaves rustling softly now and then, low and warm sound, clean smooth high quality recording, no static, no crackle, no hiss, no insects, no high-pitched tones, no music, no voices.
 
 ### 4. `ambiencia/vento_inverno`
 

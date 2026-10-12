@@ -1,6 +1,10 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **132** (commits locais do 131 e do 132, sem push). TUDO até o Bloco 130 está enviado pro GitHub. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele apagou os saves e vai começar do zero. Falta: ver na tela os blocos 129–132, aprovar as variações dos pisos, decidir a troca da `floresta_noite` (Bloco 131) e decidir a proposta de área da vila maior nos estágios 4–5 (Bloco 132, NÃO aplicada).
+Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **133** (commits locais do 131, 132 e 133, sem push). TUDO até o Bloco 130 está enviado pro GitHub. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele vai jogar e testar os blocos 129–133 (pediu que o 133 fosse aplicado SEM rodar testes). Falta: o retorno dele do jogo, aprovar as variações dos pisos.
+
+## Bloco 133 — ÁREA DA VILA MAIOR E O SOM DA NOITE REFEITO (feito; commit local, sem push; SEM testes, a pedido)
+
+Relatório `docs/BLOCO133_AREA_VILA_SOM_NOITE.md`. `environment.area_vila_meia` estágio 4 = (460, 560), 5 = (520, 680). `ambiencia/floresta_noite` regerada (2 rodadas, ~1.890 créditos; a 1ª saiu com ESTÁTICA — o Marco ouviu "radiação com interferência" —, a 2ª com prompt de vento limpo, candidata #0 + passa-baixa em 2,5 kHz): estática 1.165 → 1,3 saltos/s, agudos >4 kHz 6%, sem tom; slot `db` -5 → -7. Ferramentas novas `tools/elevenlabs/passa_baixa.py` e `estalos.py`. Ninguém ouviu: só números.
 
 ## Bloco 132 — A GRADE DE CONSTRUÇÃO (feito; commit local, sem push)
 
