@@ -1,8 +1,9 @@
 extends PanelContainer
-## Janela de Defesa (tecla G, ou clique numa barricada / no campo de treino):
-## próxima invasão, portões (ampliar/consertar), guardas, campo de treino e armas.
-## Bloco 35: Arsenal (construir, cavalete, fila da forja), forjar/consertar cada arma e a
-## arma + durabilidade de cada guarda (desarmado em destaque).
+## Janela de Defesa (tecla G, ou clique numa barricada): a VISÃO GERAL — próxima invasão e previsão, tier das criaturas,
+## portão (estado e melhorias), postos dos guardas e patrulhas do fundo.
+## Bloco 35: a arma + durabilidade de cada guarda (desarmado em destaque).
+## Bloco 128: o Arsenal (forja, cavalete, armas) e o campo de treino ganharam a janela de cada um (arsenal_panel.gd,
+## campo_panel.gd): aqui só os links. Construir campo/Arsenal é só no menu CONSTRUIR (Espaço).
 ## Bloco 103: o BESTIÁRIO (as espécies que já apareceram: "???" sem estudo, a ficha curta com o estudo), a PREVISÃO da
 ## próxima invasão (tipos e quantidades; espécie sem estudo vira "???") e a PATRULHA do fundo (quantos guardas descem
 ## caçar os moradores de cada andar, de dia).
@@ -15,12 +16,9 @@ var _status: Label
 var _gate_rows: Dictionary = {}  # gate_id -> {label, up, fix}
 var _poco_label: Label
 var _guards_label: Label
-var _campo_button: Button
-var _weapon_rows: Dictionary = {}  # id -> {status, button, fix}
-var _forge_bar: ProgressBar
-var _arsenal_label: Label
-var _arsenal_button: Button
-var _forge_label: Label
+var _links: HBoxContainer  # Bloco 128: abrir a janela do Arsenal / do campo de treino
+var _arsenal_link: Button
+var _campo_link: Button
 var _cri_box: VBoxContainer
 var _tier_label: Label  # Bloco 113: o tier das criaturas e o que o faz subir
 var _dif_label: Label  # Bloco 113: a dificuldade da partida
@@ -130,71 +128,29 @@ func _build() -> void:
 	vbox.add_child(_poco_label)
 
 	vbox.add_child(HSeparator.new())
+	vbox.add_child(_hud._label("POSTOS — quem está onde", Tipo.DETALHE, _hud.COLOR_DIM))
 	_guards_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	_guards_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_guards_label)
-	_campo_button = _hud._button("")
-	_campo_button.pressed.connect(func():
+	# Bloco 128: o que o Arsenal e o campo fazem tem janela própria (aqui só o atalho)
+	_links = HBoxContainer.new()
+	_links.add_theme_constant_override("separation", 4)
+	vbox.add_child(_links)
+	_arsenal_link = _hud._button("")
+	_arsenal_link.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_arsenal_link.add_theme_font_size_override("font_size", Tipo.DETALHE)
+	_arsenal_link.pressed.connect(func():
 		Audio.click()
-		_def.build_campo()
-		refresh())
-	vbox.add_child(_campo_button)
-
-	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("ARSENAL — armas se gastam na luta; quebrou, o guarda vem aqui buscar outra", Tipo.DETALHE, _hud.COLOR_DIM))
-	_arsenal_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
-	_arsenal_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(_arsenal_label)
-	_arsenal_button = _hud._button("")
-	_arsenal_button.pressed.connect(func():
+		_hud.open_panel("arsenal", _def.arsenal()))
+	_links.add_child(_arsenal_link)
+	_campo_link = _hud._button("")
+	_campo_link.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_campo_link.add_theme_font_size_override("font_size", Tipo.DETALHE)
+	_campo_link.pressed.connect(func():
 		Audio.click()
-		_def.build_arsenal()
-		refresh())
-	vbox.add_child(_arsenal_button)
-	_forge_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
-	_forge_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(_forge_label)
-	_forge_bar = _hud._bar(_hud.COLOR_TITLE)
-	_forge_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_forge_bar.max_value = 1.0
-	vbox.add_child(_forge_bar)
-	for id in _def.WEAPON_IDS:
-		if id == "porrete":
-			continue
-		var row := HBoxContainer.new()
-		vbox.add_child(row)
-		var info := VBoxContainer.new()
-		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(info)
-		var i: int = _def.WEAPON_IDS.find(id)
-		info.tooltip_text = _def.WEAPON_DESCRIPTIONS[id]
-		info.mouse_filter = Control.MOUSE_FILTER_PASS
-		info.add_child(_hud._label("%s — dano %d%s  •  aguenta %d golpes" % [_def.WEAPON_NAMES[id], roundi(_def.weapon_damage[i]),
-			(", de longe" if _def.weapon_range[i] > 40.0 else (", forte contra Ferrugentos" if _def.weapon_vs_ferrugento[i] > 1.0 else "")),
-			roundi(_def.weapon_max_durability(id))], Tipo.CORPO, _hud.COLOR_TEXT))
-		var status: Label = _hud._label("", Tipo.DETALHE, _hud.COLOR_DIM)
-		status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		info.add_child(status)
-		var buttons := VBoxContainer.new()
-		buttons.add_theme_constant_override("separation", 2)
-		row.add_child(buttons)
-		var b: Button = _hud._button("Forjar")
-		b.custom_minimum_size.x = 150
-		b.add_theme_font_size_override("font_size", Tipo.DETALHE)
-		b.pressed.connect(func():
-			Audio.click()
-			_def.start_forge(id)
-			refresh())
-		buttons.add_child(b)
-		var fix: Button = _hud._button("Consertar")
-		fix.custom_minimum_size.x = 150
-		fix.add_theme_font_size_override("font_size", Tipo.DETALHE)
-		fix.pressed.connect(func():
-			Audio.click()
-			_def.start_repair(id)
-			refresh())
-		buttons.add_child(fix)
-		_weapon_rows[id] = {"status": status, "button": b, "fix": fix}
+		var cs := get_tree().get_nodes_in_group("campos")
+		_hud.open_panel("campo", cs[0] if not cs.is_empty() else null))
+	_links.add_child(_campo_link)
 
 
 ## Bloco 103: mais ou menos guardas na patrulha de um andar (andar não reconhecido: pergunta antes).
@@ -335,9 +291,10 @@ func refresh() -> void:
 	var gs: Array = _def.guards()
 	var ready_n := gs.filter(func(w): return w.combat_skill >= 1.0).size()
 	var unarmed: Array = _def.unarmed_guards()
-	var lines: Array[String] = ["Guardas: %d (%d treinados)%s  •  X faz guarda. De dia treinam no campo; à noite vão pro portão (e pro poço, com o nível 2 aberto)." % [
+	var lines: Array[String] = ["Guardas: %d (%d treinados)%s  •  X faz guarda. De dia treinam no campo; à noite ficam fora do portão (e no poço, com o nível 2 aberto)." % [
 		gs.size(), ready_n, ("  •  %d DESARMADO%s" % [unarmed.size(), "S" if unarmed.size() > 1 else ""]) if not unarmed.is_empty() else ""]]
 	for w in gs:
+		var onde: String = _onde_esta(w)
 		if w.downed:  # Bloco 36
 			lines.append("  • %s: CAÍDO no %s — %s" % [w.display_name, _def.gate_label(w.downed_gate),
 				"sendo levado pra enfermaria" if w._carried_by != null else "só o médico resgata (morre em %ds)" % ceili(w._care_left)])
@@ -345,56 +302,33 @@ func refresh() -> void:
 			lines.append("  • %s: DESARMADO — %s" % [w.display_name,
 				"indo ao Arsenal" if w.get_state() == "rearming" else ("sem Arsenal, luta no soco" if _def.arsenal() == null else "vai ao Arsenal")])
 		else:
-			lines.append("  • %s: %s%s" % [w.display_name, w.weapon_label(), "  (gasta!)" if w.weapon_condition() < 0.25 else ""])
+			lines.append("  • %s: %s%s  —  %s" % [w.display_name, w.weapon_label(), "  (gasta!)" if w.weapon_condition() < 0.25 else "", onde])
 	_guards_label.text = "\n".join(lines)
 	_guards_label.add_theme_color_override("font_color", _hud.COLOR_HUNGER_BAD if not unarmed.is_empty() or not _def.downed_guards().is_empty() else _hud.COLOR_TEXT)
-	# Bloco 47: pode ter vários (cada um a mais custa mais)
-	var campo_reason: String = _def.campo_block_reason()
-	var n_campos: int = _def.campos().size()
-	var campo_what := "campo de treino" if n_campos == 0 else "outro campo de treino (tem %d)" % n_campos
-	_campo_button.text = ("Construir %s — escolher lugar (%s)" % [campo_what, _def.campo_cost_text()]) if campo_reason == "" \
-		else "Construir %s: %s" % [campo_what, campo_reason]
-	_campo_button.disabled = campo_reason != ""
-
-	# Arsenal
+	# Bloco 128: os atalhos (as janelas do Arsenal e do campo existem só com o prédio construído)
 	var ars: Node = _def.arsenal()
-	var ars_reason: String = _def.arsenal_block_reason()
-	var n_ars: int = _def.arsenais().size()
-	var ars_what := "Arsenal" if n_ars == 0 else "outro Arsenal — posto de armas (tem %d)" % n_ars
-	_arsenal_button.text = ("Construir %s — escolher lugar (%s)" % [ars_what, _def.arsenal_cost_text()]) \
-		if ars_reason == "" else "Construir %s: %s" % [ars_what, ars_reason]
-	_arsenal_button.disabled = ars_reason != ""
-	if ars == null:
-		_arsenal_label.text = "Sem Arsenal: não dá pra forjar nem trocar arma quebrada (o guarda luta no soco)."
-	else:
-		var bits: Array[String] = []
-		for id in _def.WEAPON_IDS:
-			if _def.rack_count(id) > 0:
-				bits.append("%d %s" % [_def.rack_count(id), _def.WEAPON_NAMES[id].to_lower()])
-		_arsenal_label.text = "Cavalete: %s  •  pra consertar: %d  •  porrete sempre tem (de graça)." % [
-			", ".join(bits) if not bits.is_empty() else "vazio", _def.broken_total()]
-	_forge_bar.visible = not _def.queue.is_empty()
-	_forge_bar.value = _def.forge_progress()
-	_forge_label.visible = not _def.queue.is_empty()
-	if not _def.queue.is_empty():
-		var eng: bool = ars != null and not ars.obra_workers().is_empty()
-		_forge_label.text = "Na forja: %s — %d%%%s%s" % [_def.forge_title(), roundi(_def.forge_progress() * 100.0),
-			"" if eng else "  (esperando engenheiro — tecla 4)" if ars != null else "  (construa o Arsenal)",
-			"  •  +%d na fila" % (_def.queue.size() - 1) if _def.queue.size() > 1 else ""]
-	for id in _weapon_rows:
-		var row: Dictionary = _weapon_rows[id]
-		var reason: String = _def.weapon_block_reason(id)
-		var fix_reason: String = _def.repair_block_reason(id)
-		var i: int = _def.WEAPON_IDS.find(id)
-		var st := "no cavalete: %d  •  quebradas: %d" % [_def.rack_count(id), _def.broken_count(id)]
-		if reason != "" and not reason.begins_with("falta"):
-			st += "  (" + reason + ")"
-		row.status.text = st
-		row.button.text = ("Forjar  (%s)" % _cost_text(_def.weapon_costs[i], _def.weapon_ore[i], _def.weapon_item_cost(id))) if not reason.begins_with("falta") else reason.substr(0, 1).to_upper() + reason.substr(1)
-		row.button.disabled = reason != ""
-		row.fix.text = "Consertar  (%s)" % _cost_text(_def.repair_cost(id), _def.weapon_ore[i], _def.weapon_item_cost(id, true)) if fix_reason == "" or fix_reason.begins_with("fila") \
-			else ("Consertar: " + fix_reason)
-		row.fix.disabled = fix_reason != ""
+	var n_campos: int = _def.campos().size()
+	_arsenal_link.visible = ars != null
+	_arsenal_link.text = "Arsenal: forja e armas (%d no cavalete)" % _def.rack_total()
+	_campo_link.visible = n_campos > 0
+	_campo_link.text = "Campo de treino: %d treinando" % gs.filter(func(w): return w.get_state() == "training").size()
+	_links.visible = ars != null or n_campos > 0
+
+
+## Bloco 128: onde o guarda está agora, em palavras (o posto dele).
+func _onde_esta(w: Node) -> String:
+	match String(w.get_state()):
+		"guard":
+			return "de vigia fora do portão" if _def.has_method("guard_post_ativo") else "de vigia no portão"
+		"training":
+			return "treinando no campo"
+		"patrulha":
+			return "patrulha do fundo"
+		"rearming":
+			return "buscando arma no Arsenal"
+		"home":
+			return "descansando"
+	return w.get_state_label()
 
 
 ## Bloco 87: o metal sai em barra a partir do estágio da fornalha (Economy.custo_metal_texto).

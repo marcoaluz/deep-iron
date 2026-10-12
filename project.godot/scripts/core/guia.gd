@@ -16,6 +16,7 @@ const UiSkin := preload("res://scripts/ui/ui_skin.gd")
 const Settings := preload("res://scripts/core/settings.gd")
 const SaveUtil := preload("res://scripts/core/save_util.gd")
 const Canteiro := preload("res://scripts/props/canteiro.gd")
+const Req := preload("res://scripts/core/requisitos_funcao.gd")  # Bloco 128: o que cada função precisa
 const RETRATO := "res://assets/game/ui/retratos/minerador/%s__parda.png"
 const NOME := "Capataz Bastião"
 const COR_SETA := Color(1.0, 0.8, 0.35)
@@ -219,6 +220,16 @@ func _atualiza() -> void:
 		_fala.text = FALA_FIM
 		return
 	_fala.text = FALAS[_passo] if _passo < FALAS.size() else ""
+	var dica_req := ""
+	match _passo:
+		2:
+			dica_req = _dica_requisito(["minerador", "lenhador", "caçador"])
+		4:
+			dica_req = _dica_requisito(["guarda"])
+		5:
+			dica_req = _dica_requisito(["cozinheiro"])
+	if dica_req != "":
+		_fala.text += "\n" + dica_req
 	match _passo:
 		0:  # fundar: a seta no lugar do acampamento (o fantasma do Centro anda com o mouse)
 			var fog := get_tree().current_scene.get_node_or_null("World/FogueiraIntro") if get_tree().current_scene else null
@@ -252,6 +263,23 @@ func _atualiza() -> void:
 func _tex_retrato(expr: String) -> Texture2D:
 	var p := RETRATO % expr
 	return load(p) if ResourceLoader.exists(p) else null
+
+
+## Bloco 128: a função que o jogador JÁ deu e que não tem trabalho: o capataz diz o que falta (o mesmo ✗ do cartão de
+## requisitos). Só a primeira que falta, curta; "" se todas as funções dadas têm trabalho (ou ninguém tem a função).
+func _dica_requisito(jobs: Array) -> String:
+	for job in jobs:
+		var dono: Node = null
+		for w in get_tree().get_nodes_in_group("ipezinhos"):
+			if w.get("job") == job:
+				dono = w
+				break
+		if dono == null:
+			continue
+		var av := Req.avalia(get_tree(), String(job), dono)
+		if not bool(av.pode):
+			return "Atenção, %s sem trabalho. %s." % [String(job), String(av.primeiro)]
+	return ""
 
 
 func _alvo_funcao(job: String) -> void:

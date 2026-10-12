@@ -148,14 +148,51 @@ func set_target_zoom(z: float) -> void:
 	_target_zoom = snap_zoom(clampf(z, zoom_min, zoom_max))
 
 
+## Bloco 128: a RODA do mouse é da interface quando o mouse está sobre um controle dela (janela, menu, lista, barra) ou
+## há uma janela modal aberta: ela só rola o conteúdo e NUNCA dá zoom no mapa. Controle do mundo (um Label do prédio, que
+## não está numa camada de interface) não conta.
+const GRUPOS_MODAIS := ["evento_cartao", "pause_menu", "victory_screen", "game_over", "janela_modal"]
+
+
+func roda_e_da_interface(pos := Vector2(-1.0, -1.0)) -> bool:
+	var c: Control = get_viewport().gui_get_hovered_control()
+	if c != null and c.is_visible_in_tree() and c.get_canvas_layer_node() != null:
+		return true
+	# o que o mouse está de fato sobre (não depende do "hover" do motor): um controle opaco (STOP) ou uma lista (rolagem) da
+	# interface, visível, com o ponto dentro dele
+	if pos.x >= 0.0:
+		for layer in get_tree().get_nodes_in_group("hud"):
+			if _sobre(layer, pos):
+				return true
+	for g in GRUPOS_MODAIS:
+		for n in get_tree().get_nodes_in_group(g):
+			if n is CanvasLayer and n.visible:
+				return true
+			if n is CanvasItem and n.is_visible_in_tree():
+				return true
+	return false
+
+
+func _sobre(no: Node, pos: Vector2) -> bool:
+	for ch in no.get_children():
+		if not (ch is Control) or not (ch as Control).visible:
+			continue
+		var ct := ch as Control
+		if (ct.mouse_filter == Control.MOUSE_FILTER_STOP or ct is ScrollContainer) and ct.get_global_rect().has_point(pos):
+			return true
+		if _sobre(ct, pos):
+			return true
+	return false
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		match event.button_index:
 			MOUSE_BUTTON_WHEEL_UP:
-				if event.pressed:
+				if event.pressed and not roda_e_da_interface(event.position):
 					_zoom_by(zoom_step, event.position)
 			MOUSE_BUTTON_WHEEL_DOWN:
-				if event.pressed:
+				if event.pressed and not roda_e_da_interface(event.position):
 					_zoom_by(1.0 / zoom_step, event.position)
 			MOUSE_BUTTON_MIDDLE:
 				_panning = event.pressed

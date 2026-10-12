@@ -63,11 +63,7 @@ func _build() -> void:
 		_sun.mostra_vitoria())
 	vbox.add_child(_epilogo_button)
 	vbox.add_child(_hud._label("ESCUDO SOLAR (vitória)", Tipo.CORPO, _hud.COLOR_TITLE))
-	_place_button = _hud._button("")
-	_place_button.pressed.connect(func():
-		Audio.click()
-		_sun.place_shield()
-		refresh())
+	_place_button = _hud.botao_construir("Vila", "Gerador do escudo: abrir o CONSTRUIR (Vila)")  # Bloco 128
 	vbox.add_child(_place_button)
 	_bar = _hud._bar(_hud.COLOR_TITLE)
 	_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -107,10 +103,7 @@ func refresh() -> void:
 	_forecast.text = _sun.forecast_text()
 	_forecast.add_theme_color_override("font_color", _hud.COLOR_HUNGER_BAD if _sun.wave_active() or _sun.time_to_wave() >= 0.0 and _sun.warned else _hud.COLOR_TEXT)
 	var s: Node = _sun.shield()
-	var reason: String = _sun.shield_block_reason()
 	_place_button.visible = s == null
-	_place_button.text = "Marcar o lugar do gerador do escudo" if reason == "" else "Gerador do escudo: " + reason
-	_place_button.disabled = reason != ""
 	_stages_box.visible = s != null
 	_bar.visible = s != null and s.building != ""
 	if s == null:

@@ -52,11 +52,7 @@ func _build() -> void:
 	_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_bar.max_value = 1.0
 	vbox.add_child(_bar)
-	_lab_button = _hud._button("")
-	_lab_button.pressed.connect(func():
-		Audio.click()
-		_res.build_lab()
-		refresh())
+	_lab_button = _hud.botao_construir("Pesquisa", "Construir laboratório: abrir o CONSTRUIR (Pesquisa)")  # Bloco 128
 	vbox.add_child(_lab_button)
 
 	var cols := HBoxContainer.new()
@@ -117,14 +113,9 @@ func refresh() -> void:
 	if not visible:
 		return
 	var n: int = _res.researchers().size()
-	var lab: Node = _res.lab()
-	var lab_reason: String = _res.lab_block_reason()
-	# Bloco 47: pode ter vários (somam na mesma pesquisa; o próximo custa mais)
-	var n_labs: int = _res.labs().size()
-	var lab_what := "laboratório" if lab == null else "outro laboratório (tem %d: mais vagas pra pesquisador)" % n_labs
-	_lab_button.text = ("Construir %s — escolher lugar (%s)" % [lab_what, _res.lab_cost_text()]) \
-		if lab_reason == "" else "Laboratório: " + lab_reason
-	_lab_button.disabled = lab_reason != ""
+	# Bloco 47: pode ter vários (somam na mesma pesquisa). Bloco 128: construir outro é no CONSTRUIR (o botão só aponta)
+	_lab_button.text = "Construir laboratório: abrir o CONSTRUIR (Pesquisa)" if _res.lab() == null \
+		else "Outro laboratório (tem %d): abrir o CONSTRUIR (Pesquisa)" % _res.labs().size()
 	if _res.current != "":
 		_status.text = "Pesquisando: %s — %d%%  •  %d pesquisador%s (tecla Z faz pesquisador)" % [
 			_res.TECHS[_res.current].name, roundi(_res.current_progress() * 100.0), n, "es" if n != 1 else ""]

@@ -19,7 +19,7 @@ var _title: Label
 var _status: Label
 var _receitas_box: VBoxContainer
 var _fila_box: VBoxContainer
-var _build_button: Button
+var _construir_link: Button  # Bloco 128: aponta pro menu CONSTRUIR (construir é só lá)
 var _focus: Node = null
 var _qtd: Dictionary = {}  # receita -> quantidade escolhida
 var _linhas: Dictionary = {}  # receita -> {qtd: Label, botao: Button, info: Label}
@@ -79,12 +79,8 @@ func _build() -> void:
 	_fila_box.add_theme_constant_override("separation", 3)
 	vbox.add_child(_fila_box)
 	vbox.add_child(HSeparator.new())
-	_build_button = _hud._button("")
-	_build_button.pressed.connect(func():
-		Audio.click()
-		_construir()
-		refresh())
-	vbox.add_child(_build_button)
+	_construir_link = _hud.botao_construir("Produção", "Construir outra %s: abrir o CONSTRUIR (Produção)" % nome_predio.to_lower())
+	vbox.add_child(_construir_link)
 
 
 ## O HUD avisa qual fornalha foi clicada (null = abriu pelo botão: a primeira).
@@ -96,19 +92,6 @@ func _current() -> Node:
 	if _focus != null and is_instance_valid(_focus) and _focus.is_inside_tree():
 		return _focus
 	return get_tree().get_first_node_in_group(grupo)
-
-
-# Bloco 94: as chamadas ao Centro da Vila (a carpintaria troca)
-func _construir() -> void:
-	_hub.build_fornalha()
-
-
-func _motivo_construir() -> String:
-	return _hub.fornalha_block_reason()
-
-
-func _custo_construir() -> String:
-	return _hub.fornalha_cost_text()
 
 
 func _estagio() -> int:
@@ -179,15 +162,11 @@ func refresh() -> void:
 		return
 	var f := _current()
 	var todas := get_tree().get_nodes_in_group(grupo)
-	var reason: String = _motivo_construir()
-	var what := ("Construir a %s" if todas.is_empty() else "Construir outra %s") % nome_predio
-	_build_button.text = ("%s — escolher lugar  (%s)" % [what, _custo_construir()]) if reason == "" else "%s: %s" % [what, reason]
-	_build_button.disabled = reason != ""
 	_title.text = titulo if todas.size() <= 1 or f == null else "%s %d de %d" % [titulo, todas.find(f) + 1, todas.size()]
 	if f != _receitas_de:
 		_monta_receitas(f)
 	if f == null:
-		_status.text = "Ainda não construída."
+		_status.text = "Ainda não construída: CONSTRUIR > Produção."
 		for c in _fila_box.get_children():
 			_fila_box.remove_child(c)
 			c.queue_free()

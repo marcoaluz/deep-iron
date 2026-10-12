@@ -1,9 +1,18 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-11. Branch `isometrico`. Último Bloco: **127** (commit local, sem push). TUDO até o Bloco 126 está enviado pro GitHub. Push só com o OK do Marco. Fila de prompts vazia; o que falta é o Marco VALIDAR jogando/ouvindo os blocos 114–126 (nada deles foi jogado nem ouvido) e conferir a licença da Eleven Music.
+Atualizado em 2026-10-11. Branch `isometrico`. Último Bloco: **128** (commit local, sem push). TUDO até o Bloco 126 está enviado pro GitHub; o 127 e o 128 estão só locais. Push só com o OK do Marco. Fila de prompts vazia; o que falta é o Marco VALIDAR jogando/ouvindo os blocos 114–128 (nada deles foi jogado nem ouvido) e conferir a licença da Eleven Music.
 Ele disse "pode executar todos os prompts que depois eu valido". No meio do 105 ele mandou o prompt URGENTE do balanceamento
 da coleta (Bloco 106) dizendo "após terminar tudo aplicar ... se achar algo que deixe melhor pode aplicar e depois so me
 documenta".
+
+## Bloco 128 — JANELAS POR PRÉDIO, RODA DO MOUSE E REQUISITOS DA FUNÇÃO (feito; commit local, sem push)
+
+Pedido do Marco (3 correções de interface). Relatório `docs/BLOCO128_PAINEIS_RODA_REQUISITOS.md` (com a auditoria de todos os `*_panel.gd`); teste `b128_paineis_roda_requisitos` (0 falhas; registrado no GUT).
+- JANELAS: Arsenal (`arsenal_panel.gd`), Campo de treino (`campo_panel.gd`) e Taverna (`taverna_panel.gd`) abrem a SUA janela (`panel_id` `arsenal`/`campo`/`taverna`); a Defesa (G) é a visão geral. Nenhuma janela de prédio escolhe lugar: só `hud.botao_construir(aba)` / `abre_construir(aba)` apontando pro CONSTRUIR. Cartão novo "Muro e portão" (melhoria) com imagem reaproveitada do sprite do portão.
+- RODA: `camera_controller.roda_e_da_interface(pos)` (controle opaco/lista da interface sob o mouse, hover do motor, ou grupo `janela_modal`). Sem a trava vazava no Armazém, na Oficina, no CONSTRUIR, na lista de pessoas e na modal.
+- REQUISITOS: `data/funcoes/requisitos.json` + `textos.txt` + `requisitos_funcao.gd`; cartão ✓/✗ ao dar a função (`ui/requisitos_cartao.gd`), cartão do selecionado, dica do botão, `ipezinho.motivo_texto()` (balão) e a fala do capataz do primeiro dia.
+- Testes antigos ajustados: b41, b44, b45, b58, b81. Regressão verde; `b47_varios_predios` falha DESDE ANTES (Arsenal 8 px deslocado depois do load; falha também no HEAD do Bloco 127; não investigada).
+- Nada jogado nem visto na tela. Ainda sem janela própria: Vestiário (abre a Oficina), Cemitério (abre o Calendário), Escola, Parque (abre Bem-estar).
 
 ## Bloco 127 — LINHA DE FRENTE, PORTÃO COMO 2ª DEFESA E INVASÃO DENTRO DA VILA (feito; commit local, sem push)
 

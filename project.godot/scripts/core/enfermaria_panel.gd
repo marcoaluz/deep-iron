@@ -66,13 +66,7 @@ func _build() -> void:
 			hub.buy_upgrade("enfermaria")
 		refresh())
 	vbox.add_child(_upgrade_button)
-	_new_button = _hud._button("")
-	_new_button.pressed.connect(func():
-		Audio.click()
-		var hub := get_tree().get_first_node_in_group("village_hub")
-		if hub:
-			hub.build_enfermaria()
-		refresh())
+	_new_button = _hud.botao_construir("Saúde", "Construir outra enfermaria: abrir o CONSTRUIR (Saúde)")  # Bloco 128
 	vbox.add_child(_new_button)
 
 	vbox.add_child(HSeparator.new())
@@ -112,12 +106,6 @@ func refresh() -> void:
 			p += w.patients().size()
 			b += w.beds_total()
 		_beds_label.text += "\nNa vila: %d enfermarias, %d / %d leitos (a ampliação vale pra todas)." % [wards.size(), p, b]
-	if hub:
-		var n_extra: int = hub.extra_enfermarias().size()
-		var new_reason: String = hub.enfermaria_block_reason()
-		var what := "Construir outra enfermaria" + (" (tem %d extra%s)" % [n_extra, "s" if n_extra > 1 else ""] if n_extra > 0 else "")
-		_new_button.text = ("%s — escolher lugar  (%s)" % [what, hub.enfermaria_cost_text()]) if new_reason == "" else "%s: %s" % [what, new_reason]
-		_new_button.disabled = new_reason != ""
 	if hub:
 		var reason: String = hub.upgrade_block_reason("enfermaria")
 		var cost: Vector2i = hub.upgrade_cost("enfermaria")

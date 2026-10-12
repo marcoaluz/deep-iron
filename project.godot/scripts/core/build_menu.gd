@@ -335,6 +335,13 @@ func _defs(tab: String) -> Array:
 					"cost": func(): return def.campo_cost_text(),
 					"reason": func(): return def.campo_block_reason(),
 					"act": func(): def.build_campo()})
+			var portao: Node = def.gate("tunel") if def else null  # Bloco 128: a melhoria do muro/portão (a janela da Defesa também lista)
+			if portao != null:
+				out.append({"name": "Muro e portão", "img": _cartao("portao_ampliar"), "tag": "melhoria (nível %d de 3)" % portao.level,
+					"desc": "Paliçada de madeira, muro de pedra e portão de ferro: o que vem da floresta precisa derrubar pra entrar. Obra de engenheiro com material.",
+					"cost": func(): return _portao_custo_texto(portao),
+					"reason": func(): return portao.upgrade_block_reason(),
+					"act": func(): portao.upgrade(), "label": "Ampliar"})
 			var fundo := _g("fundo")
 			if fundo:
 				out.append({"name": "Ventilador (nível 2)", "img": _predio("ventilador"), "many": true,
@@ -512,6 +519,17 @@ func _defs(tab: String) -> Array:
 					"reason": func(): return sun.shield_block_reason(),
 					"act": func(): sun.place_shield()})
 	return out
+
+
+## Bloco 128: o custo do próximo nível do muro/portão (créditos + minério/pedra + madeira, com o metal em barra do estágio).
+func _portao_custo_texto(g: Node) -> String:
+	if g.level + 1 >= g.upgrade_costs.size():
+		return ""
+	var c: Vector3i = g.upgrade_costs[g.level + 1]
+	var eco := _g("economy")
+	if eco:
+		return eco.custo_metal_texto(c.x, c.y, g.upgrade_ore[g.level + 1], c.z, g.upgrade_item_cost())
+	return "%d cr" % c.x
 
 
 func _count(group: String) -> int:

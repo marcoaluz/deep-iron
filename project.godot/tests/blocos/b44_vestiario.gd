@@ -82,9 +82,14 @@ func _process(delta: float) -> bool:
 		var hud = main.get_node("HUD")
 		hud.open_panel("oficina")
 		hud._panels["oficina"].refresh()
-		var btn: String = hud._panels["oficina"]._vest_button.text
-		print("  botão: ", btn)
-		check(hud._panels["oficina"]._vest_button.visible and "120 cr" in btn, "Vestiário aparece como construção com custo")
+		var card_vest := {}
+		for d in hud._build_menu._defs("Defesa e equipamento"):
+			if d.name == "Vestiário":
+				card_vest = d
+		var btn: String = String(card_vest.cost.call()) if not card_vest.is_empty() else ""
+		print("  cartão: ", btn)
+		check(not card_vest.is_empty() and "120 cr" in btn, "Vestiário aparece como construção no CONSTRUIR, com custo")  # Bloco 128
+		check(hud._panels["oficina"]._vest_button.visible and "CONSTRUIR" in hud._panels["oficina"]._vest_button.text, "a janela da Oficina só aponta pro CONSTRUIR")
 		check(eq.build_vestiario(), "escolher lugar")
 		var q := spot_near(g("village_hub").global_position, 120.0, 400.0)
 		var placer = g("house_placer")

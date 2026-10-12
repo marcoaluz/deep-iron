@@ -12,7 +12,7 @@ var _hub: Node
 var _economy: Node
 var _title: Label
 var _status: Label
-var _build_button: Button
+var _construir_link: Button  # Bloco 128: aponta pro menu CONSTRUIR (construir é só lá)
 var _designate_button: Button
 var _release_button: Button
 var _etapa_button: Button
@@ -81,12 +81,8 @@ func _build() -> void:
 			c.pedir_etapa()
 		refresh())
 	vbox.add_child(_etapa_button)
-	_build_button = _hud._button("")
-	_build_button.pressed.connect(func():
-		Audio.click()
-		_hub.build_coletor()
-		refresh())
-	vbox.add_child(_build_button)
+	_construir_link = _hud.botao_construir("Coleta automática", "Construir outro coletor: abrir o CONSTRUIR (Coleta automática)")
+	vbox.add_child(_construir_link)
 
 
 ## Bloco 47: o HUD avisa qual máquina foi clicada (null = abriu pelo botão/tecla: a primeira).
@@ -130,11 +126,7 @@ func refresh() -> void:
 		return
 	var c: Node = _current()
 	var all: Array = _hub.coletores()
-	var reason: String = _hub.coletor_block_reason()
-	var what := "Construir" if all.is_empty() else "Construir outro coletor"
-	_build_button.text = ("%s — escolher lugar na clareira  (%s)" % [what, _hub.coletor_cost_text()]) if reason == "" else "%s: %s" % [what, reason]
-	_build_button.disabled = reason != ""
-	_build_button.visible = _hub.coletor_restaurado()  # Bloco 81: extras só depois da ruína restaurada
+	_construir_link.visible = _hub.coletor_restaurado()  # Bloco 81: extras só depois da ruína restaurada
 	var ruina: bool = c != null and c.has_method("restaurado") and not c.restaurado()
 	_etapa_button.visible = ruina
 	_designate_button.visible = c != null and not ruina

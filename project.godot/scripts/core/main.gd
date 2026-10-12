@@ -565,6 +565,8 @@ func toggle_job(job: String, label: String, color: Color) -> void:
 	_hud.show_toast("%s: %d ipezinho%s" % [
 		label if make else "Sem função", selection.size(), "s" if selection.size() > 1 else ""],
 		color if make else Color(0.75, 0.75, 0.8))
+	if make and _hud.has_method("mostra_requisitos"):
+		_hud.mostra_requisitos(job, label, color, selection[0])  # Bloco 128: o que a função precisa (✓/✗)
 
 
 ## 1 / botão do HUD: minerador (ou tira, se todos já forem).
@@ -673,6 +675,8 @@ func toggle_priest() -> void:
 	w.set_job(Worker.ROLE_PRIEST)
 	Audio.click()
 	_hud.show_toast("%s agora é o padre da vila" % String(w.get("display_name")), Color(0.78, 0.7, 0.95))
+	if _hud.has_method("mostra_requisitos"):
+		_hud.mostra_requisitos(Worker.ROLE_PRIEST, "Padre", Color(0.78, 0.7, 0.95), w)  # Bloco 128
 
 
 ## 0 / botão do HUD: tira a função dos selecionados (voltam a ficar ociosos).

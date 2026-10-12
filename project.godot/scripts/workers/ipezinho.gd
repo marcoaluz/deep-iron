@@ -70,6 +70,7 @@ const Barricada := preload("res://scripts/props/barricada.gd")  # Bloco 127: a c
 const Settings := preload("res://scripts/core/settings.gd")  # Bloco 95: liga/desliga o balão de motivo
 const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 96: o material da obra
 const BALAO := preload("res://assets/game/ui/balao.png")
+const Requisitos := preload("res://scripts/core/requisitos_funcao.gd")  # Bloco 128: o que a função precisa (o texto do balão)
 ## Bloco 95: onde fica o balão (conversa e motivo), px da lógica acima do pé. A vista iso sobe junto com a
 ## altura da arte nova (iso_billboard: lift); -66 deixava o balão longe da cabeça.
 const BALAO_POS := Vector2(12, -50)
@@ -4903,10 +4904,28 @@ func _motivo_tick(delta: float) -> void:
 		ic.position = Vector2(0, -2)
 		ic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		_motivo_balao.add_child(ic)
+		var tx := Label.new()  # Bloco 128: o texto específico (aparece com ele selecionado)
+		tx.name = "Texto"
+		tx.position = Vector2(12, -16)
+		tx.custom_minimum_size = Vector2(190, 0)
+		tx.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		tx.add_theme_font_size_override("font_size", Tipo.MAPA)
+		tx.add_theme_color_override("font_color", Color(1.0, 0.9, 0.7))
+		tx.add_theme_color_override("font_outline_color", Color(0.05, 0.03, 0.02))
+		tx.add_theme_constant_override("outline_size", 3)
+		tx.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tx.z_index = 22
+		tx.visible = false
+		_motivo_balao.add_child(tx)
 		add_child(_motivo_balao)
 	if _motivo_balao:
 		if mostra:
 			(_motivo_balao.get_node("Icone") as Sprite2D).texture = Icones.tex(MOTIVO_ICONE.get(_motivo, ""))
+		var texto_no := _motivo_balao.get_node_or_null("Texto") as Label
+		if texto_no:
+			texto_no.visible = mostra and selected
+			if texto_no.visible:
+				texto_no.text = motivo_texto()
 		if _motivo_balao.visible != mostra:
 			_motivo_balao.visible = mostra
 
@@ -4914,6 +4933,26 @@ func _motivo_tick(delta: float) -> void:
 ## O motivo que o balão está mostrando agora ("" = nenhum).
 func motivo_no_balao() -> String:
 	return _motivo if _motivo_balao != null and _motivo_balao.visible else ""
+
+
+## Bloco 128: o TEXTO do motivo (o balão e o cartão do selecionado): pra quem tem função, o requisito específico que
+## falta ("Falta o arco: a Oficina faz") em vez de só "sem trabalho". "" = não está parado.
+const MOTIVO_TEXTO := {"sem_trabalho": "Sem função: dê uma na barra de baixo", "sem_ferramenta": "Falta a ferramenta: a Oficina faz",
+	"armazem_cheio": "Armazém cheio: venda, amplie ou construa outro", "caminho_bloqueado": "Caminho bloqueado: preso, procurando saída",
+	"sem_comida": "Sem comida: a cozinha está vazia", "sem_material": "Sem material: a ordem espera insumo no armazém"}
+
+
+func motivo_texto() -> String:
+	var m := motivo_parado()
+	if m == "":
+		return ""
+	if m in ["sem_trabalho", "sem_ferramenta"] and not has_no_job() and Requisitos.tem(job):
+		if m == "sem_ferramenta" and is_guard():
+			return Requisitos.texto(job, "arsenal.falta", String(MOTIVO_TEXTO[m]))
+		var t := Requisitos.motivo(get_tree(), job, self)
+		if t != "":
+			return t
+	return String(MOTIVO_TEXTO.get(m, ""))
 
 
 # ------------------------------------------------------------ material da obra (Bloco 96)

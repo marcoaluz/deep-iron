@@ -35,6 +35,7 @@ static func aberta() -> CanvasLayer:
 
 func _monta(p: Array) -> void:
 	_aberta = self
+	add_to_group("janela_modal")  # Bloco 128: a roda do mouse não dá zoom no mapa com ela aberta
 	UiSkin.tema_na_camada(self)  # Bloco 95: o tema (escala e fonte) chega nos Controls da camada
 	layer = 20
 	process_mode = Node.PROCESS_MODE_ALWAYS

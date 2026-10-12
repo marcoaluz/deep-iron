@@ -1,7 +1,7 @@
 extends "res://scripts/props/station.gd"
 ## Taverna (grupo "tavernas"): onde ipezinho triste vai se animar.
 ##
-## - O jogador escolhe onde construir (Bem-estar, tecla B), como as casas.
+## - O jogador escolhe onde construir (menu CONSTRUIR), como as casas.
 ## - Cada slot é um LUGAR no balcão. Quem entra some lá dentro e ganha felicidade
 ##   (fun_per_level por segundo) até se animar (leisure_until, no ipezinho.gd).
 ## - Ter taverna na vila já anima um pouco todo mundo (taverna_bonus, no morale.gd).
@@ -21,7 +21,7 @@ const NOTE := preload("res://assets/game/note.png")
 @export var cheers_interval: float = 7.0
 
 ## Pro HUD saber qual janela abrir quando clicam aqui.
-var panel_id := "moral"
+var panel_id := "taverna"  # Bloco 128: a janela da taverna (frequentadores), não a de Bem-estar
 var level: int = 1
 
 var _inside: Array[Node] = []

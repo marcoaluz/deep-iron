@@ -86,11 +86,7 @@ func _build() -> void:
 		_vest_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 		_vest_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vbox.add_child(_vest_label)
-		_vest_button = _hud._button("")
-		_vest_button.pressed.connect(func():
-			Audio.click()
-			eq.build_vestiario()
-			refresh())
+		_vest_button = _hud.botao_construir("Defesa e equipamento", "Sem vestiário: abrir o CONSTRUIR (Defesa e equipamento)")  # Bloco 128
 		vbox.add_child(_vest_button)
 		_eq_queue = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 		_eq_queue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -298,14 +294,7 @@ func _ensure_build_box() -> void:
 	_build_info = _hud._label("", Tipo.CORPO, _hud.COLOR_TEXT)
 	_build_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_build_box.add_child(_build_info)
-	_build_button = _hud._button("")
-	_build_button.pressed.connect(func():
-		Audio.click()
-		var hub := get_tree().get_first_node_in_group("village_hub")
-		if hub and hub.build_oficina():
-			visible = false
-		else:
-			Audio.error())
+	_build_button = _hud.botao_construir("Defesa e equipamento", "Abrir o CONSTRUIR (Defesa e equipamento) pra construir a Oficina")  # Bloco 128
 	_build_box.add_child(_build_button)
 
 
@@ -321,11 +310,7 @@ func refresh() -> void:
 			continue  # cabeçalho
 		ch.visible = (ch == _build_box) != built
 	if not built:
-		var hub := get_tree().get_first_node_in_group("village_hub")
-		var r: String = hub.oficina_block_reason() if hub else "sem Centro da Vila"
-		_build_info.text = "A vila ainda não tem Oficina. Construa uma (o engenheiro ergue) pra forjar ferramentas e equipamento."
-		_build_button.text = ("Construir a Oficina — escolher o lugar  (%s)" % hub.oficina_cost_text()) if r == "" else "Construir a Oficina: %s" % r
-		_build_button.disabled = r != ""
+		_build_info.text = "A vila ainda não tem Oficina. Construa uma no menu CONSTRUIR (o engenheiro ergue) pra forjar ferramentas e equipamento."
 		return
 	var busy: String = _oficina.crafting
 	_craft_label.visible = busy != ""
@@ -370,14 +355,10 @@ func _refresh_equipment() -> void:
 	if eq == null or _eq_queue == null:
 		return
 	var has_vest: bool = eq.vestiario() != null
-	var vr: String = eq.vestiario_block_reason()
 	_vest_label.text = "Vestiário: construído — casacos e trajes ficam lá." if has_vest else \
 		"SEM VESTIÁRIO: não dá pra fazer nem pegar casaco/traje (não tem onde guardar)."
 	_vest_label.add_theme_color_override("font_color", _hud.COLOR_TEXT if has_vest else _hud.COLOR_HUNGER_BAD)
 	_vest_button.visible = not has_vest
-	_vest_button.text = ("Construir Vestiário — escolher lugar  (%d cr + %d ferro + %d madeira)" % [eq.vestiario_credits, eq.vestiario_ore, eq.vestiario_wood]) \
-		if vr == "" else "Vestiário: " + vr
-	_vest_button.disabled = vr != ""
 	_eq_queue.visible = eq.pending()
 	if eq.pending():
 		var eng: bool = not _oficina.obra_workers().is_empty()

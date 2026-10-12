@@ -1,5 +1,7 @@
 extends PanelContainer
 ## Janela do Centro da Vila: progresso, expandir a vila e comprar melhorias.
+## Bloco 128: nada de "escolher lugar" aqui — construir casa/cozinha/coletor é só no menu CONSTRUIR (Espaço); a janela
+## guarda o progresso do estágio e as MELHORIAS (Moradias, Enfermaria, Trilhas, Posto), que o CONSTRUIR também lista.
 ## Criada pelo HUD (setup) e montada por código; usa os helpers de estilo do HUD.
 ## Abre clicando no prédio, pela tecla U ou pelo botão no painel do HUD.
 const Tipo := preload("res://scripts/ui/tipografia.gd")
@@ -14,10 +16,7 @@ var _next_bar: ProgressBar
 var _next_label: Label
 var _level_button: Button
 var _rows: Dictionary = {}  # id -> {level, effect, button}
-var _starter_button: Button  # Bloco 37: casas iniciais
-var _comedouro_button: Button
 var _radius_label: Label
-var _coletor_button: Button  # Bloco 45
 
 
 func setup(hud: CanvasLayer, hub: Node, economy: Node) -> void:
@@ -78,30 +77,12 @@ func _build() -> void:
 		refresh())
 	vbox.add_child(_level_button)
 
-	# Bloco 37: construções da vila (casas iniciais da fundação e comedouro)
+	# Bloco 37: onde as casas podem ficar (Bloco 128: o construir em si é no menu CONSTRUIR)
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_hud._label("CONSTRUIR (o engenheiro ergue)", Tipo.DETALHE, _hud.COLOR_DIM))
 	_radius_label = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	_radius_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_radius_label)
-	_starter_button = _hud._button("")
-	_starter_button.pressed.connect(func():
-		Audio.click()
-		_hub.build_starter_house()
-		refresh())
-	vbox.add_child(_starter_button)
-	_comedouro_button = _hud._button("")
-	_comedouro_button.pressed.connect(func():
-		Audio.click()
-		_hub.build_comedouro()
-		refresh())
-	vbox.add_child(_comedouro_button)
-	_coletor_button = _hud._button("")
-	_coletor_button.pressed.connect(func():
-		Audio.click()
-		_hub.build_coletor()
-		refresh())
-	vbox.add_child(_coletor_button)
+	vbox.add_child(_hud.botao_construir("Moradia", "Construir casas, cozinha, coletores…: abrir o CONSTRUIR"))
 
 	vbox.add_child(HSeparator.new())
 	var up_header := HBoxContainer.new()
@@ -112,6 +93,8 @@ func _build() -> void:
 	up_header.add_child(_hud._label("cada uma vai até o nível da vila", Tipo.DETALHE, _hud.COLOR_DIM))
 
 	for id in _hub.UPGRADE_IDS:
+		if id == "moradias":
+			continue  # Bloco 128: "Construir casa" escolhe lugar — é só no menu CONSTRUIR (Moradia)
 		_rows[id] = _make_upgrade_row(vbox, id)
 
 
@@ -195,20 +178,6 @@ func refresh() -> void:
 	var r: float = _hub.house_radius()
 	_radius_label.text = ("Casas só em volta do Centro da Vila: até %d px (cresce %d a cada estágio)." % [roundi(r), roundi(_hub.house_radius_per_stage)]) \
 		if r > 0.0 else "Casas em qualquer lugar livre da mina."
-	_starter_button.visible = _hub.starter_houses_left > 0
-	var sr: String = _hub.starter_block_reason()
-	_starter_button.text = ("Casa inicial (%d restante%s) — escolher lugar  (%s)" % [_hub.starter_houses_left, "s" if _hub.starter_houses_left > 1 else "", _hub.starter_cost_text()]) \
-		if sr == "" else "Casa inicial: " + sr
-	_starter_button.disabled = sr != ""
-	var cr: String = _hub.comedouro_block_reason()
-	_comedouro_button.text = ("Cozinha — escolher lugar  (%s)" % _hub.comedouro_cost_text()) if cr == "" else "Cozinha: " + cr
-	_comedouro_button.disabled = cr != ""
-	var colr: String = _hub.coletor_block_reason()
-	_coletor_button.text = ("Outro coletor de madeira — escolher lugar na clareira  (%s)" % _hub.coletor_cost_text()) if colr == "" \
-		else "Outro coletor de madeira: " + colr
-	_coletor_button.disabled = colr != ""
-	_coletor_button.visible = _hub.coletor_restaurado()  # Bloco 81: o primeiro é a ruína da floresta
-
 	for id in _rows:
 		var row: Dictionary = _rows[id]
 		var cur: int = _hub.upgrades[id]

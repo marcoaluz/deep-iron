@@ -44,6 +44,8 @@ const Icones := preload("res://scripts/ui/icones.gd")
 const Retratos := preload("res://scripts/ui/retratos.gd")
 const ObraSite := preload("res://scripts/core/obra_site.gd")  # Bloco 96
 const Tipo := preload("res://scripts/ui/tipografia.gd")
+const Req := preload("res://scripts/core/requisitos_funcao.gd")  # Bloco 128: o que cada função precisa
+const RequisitosCartao := preload("res://scripts/ui/requisitos_cartao.gd")
 const STATE_COLORS := {
 	"idle": Color(0.65, 0.6, 0.55),
 	"eating": Color(0.5, 0.85, 0.4),
@@ -263,6 +265,7 @@ func _build() -> void:
 	_build_janelas()
 	_build_hints()
 	_build_avisos()
+	_build_requisitos()  # Bloco 128
 	set_hints_visible(Settings.get_value("hud", "show_hints", false))
 	set_collapsed.call_deferred(Settings.get_value("hud", "collapsed", false), false)
 	_reposiciona.call_deferred()
@@ -718,6 +721,7 @@ func _build_janelas() -> void:
 		_add_panel("enfermaria", preload("res://scripts/core/enfermaria_panel.gd"), _inf)
 	if _morale:
 		_add_panel("moral", preload("res://scripts/core/moral_panel.gd"), _morale)
+		_add_panel("taverna", preload("res://scripts/core/taverna_panel.gd"), _morale)  # Bloco 128
 	if _finds:
 		_add_panel("robo", preload("res://scripts/core/robo_panel.gd"), _finds)
 	var migr := get_tree().get_first_node_in_group("migrantes")
@@ -743,6 +747,8 @@ func _build_janelas() -> void:
 		_add_panel("abismo", preload("res://scripts/core/abyss_panel.gd"), _abyss)
 	if _defense:
 		_add_panel("defesa", preload("res://scripts/core/defense_panel.gd"), _defense)
+		_add_panel("arsenal", preload("res://scripts/core/arsenal_panel.gd"), _defense)  # Bloco 128: a janela de cada prédio
+		_add_panel("campo", preload("res://scripts/core/campo_panel.gd"), _defense)
 	if _research:
 		_add_panel("lab", preload("res://scripts/core/lab_panel.gd"), _research)
 	if _sun:
@@ -931,6 +937,26 @@ func _fit_panel(panel: Control) -> void:
 		panel.offset_bottom = panel.size.y * 0.5
 
 
+## Bloco 128: abre o menu CONSTRUIR já na aba `aba` (o único lugar onde se constrói prédio novo). As janelas dos prédios
+## só apontam pra cá.
+func abre_construir(aba: String = "") -> void:
+	if not _build_menu.visible:
+		toggle_build_menu()
+	var k: int = _build_menu.TAB_NAMES.find(aba)
+	if k >= 0:
+		_build_menu._show_tab(k)
+
+
+## Bloco 128: o botão "Abrir o CONSTRUIR" das janelas (quando o prédio da janela ainda não existe).
+func botao_construir(aba: String, texto: String = "") -> Button:
+	var b := _button(texto if texto != "" else "Abrir o CONSTRUIR  (%s)" % aba)
+	b.add_theme_font_size_override("font_size", Tipo.DETALHE)
+	b.pressed.connect(func():
+		Audio.click()
+		abre_construir(aba))
+	return b
+
+
 ## Bloco 46: abre/fecha o menu de construção.
 func toggle_build_menu() -> void:
 	if not _build_menu.visible:
@@ -990,6 +1016,9 @@ func close_panels() -> bool:
 		closed = true
 	if _build_menu and _build_menu.visible:
 		_build_menu.visible = false
+		closed = true
+	if _req_card and _req_card.visible:  # Bloco 128
+		_req_card.visible = false
 		closed = true
 	if _left_panel and (_left_panel.visible or _obras_panel.visible):  # Bloco 95: as gavetas da aba fina
 		_fecha_gavetas()
@@ -1068,6 +1097,31 @@ func _atualiza_rastreador() -> void:
 
 
 ## Bloco 95: a pilha de avisos e o espaço do rastreador de missões (canto de baixo à direita).
+## Bloco 128: o CARTÃO DE REQUISITOS da função (aparece ao dar uma função; requisitos_cartao.gd).
+var _req_card: PanelContainer
+var _req_dica_t := 99.0
+
+
+func _build_requisitos() -> void:
+	_req_card = RequisitosCartao.new()
+	add_child(_req_card)
+	_req_card.setup(self)
+
+
+## Abre o cartão com o que a função `job` precisa (✓/✗). `w` = o ipezinho que recebeu (a conferência é a da IA dele).
+func mostra_requisitos(job: String, nome: String, cor: Color, w: Node = null) -> void:
+	if _req_card != null:
+		_req_card.mostra(job, nome, cor, w)
+
+
+## A dica do botão da função: a de sempre + a lista de requisitos de agora (✓/✗).
+func _dica_funcao(job: String, base: String) -> String:
+	if not Req.tem(job):
+		return base
+	var av := Req.avalia(get_tree(), job, null)
+	return "%s\n\nO que ela precisa:\n%s" % [base, "\n".join(Req.linhas(av))]
+
+
 func _build_avisos() -> void:
 	_missoes = preload("res://scripts/ui/rastreador_missoes.gd").new()
 	_missoes.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -1533,11 +1587,20 @@ func _refresh_order_bar(workers: Array) -> void:
 			counts[w.job] = counts.get(w.job, 0) + 1
 	var sel: Array = _main.selection.filter(func(u): return is_instance_valid(u))
 	var grupos_vivos := {}
+	_req_dica_t += 1.0 / maxf(refresh_rate, 1.0)
+	var dicas := _req_dica_t >= 1.0  # Bloco 128: a lista de requisitos na dica, conferida uma vez por segundo
+	if dicas:
+		_req_dica_t = 0.0
 	for job in _job_buttons:
 		var info: Dictionary = _job_buttons[job]
 		var n: int = counts.get(job, 0)
 		_set_text(info.count, str(n) if n > 0 else "")
 		info.button.set_pressed_no_signal(not sel.is_empty() and sel.all(func(u): return u.job == job))
+		if dicas:
+			var b0: Button = info.button
+			if not b0.has_meta("dica_base"):
+				b0.set_meta("dica_base", b0.tooltip_text)
+			b0.tooltip_text = _dica_funcao(job, String(b0.get_meta("dica_base")))
 		var liberada := n > 0 or funcao_liberada(job)  # Bloco 95: só as funções já liberadas aparecem
 		if info.button.visible != liberada:
 			info.button.visible = liberada
@@ -1749,6 +1812,7 @@ var _portrait_card: PanelContainer
 var _portrait_img: TextureRect
 var _portrait_name: Label
 var _portrait_info: Label
+var _portrait_req: Label  # Bloco 128: o que falta pra função dele (✓/✗) e por que está parado
 ## Bloco 109: a função secundária do selecionado (botão que troca: automática, nenhuma, minerador, lenhador...).
 var _portrait_sec: Button
 var _portrait_sec_w: Node = null
@@ -1793,6 +1857,10 @@ func _monta_cartao_selecionado() -> void:
 	v.add_child(_portrait_doing)
 	_portrait_info = _label("", Tipo.DETALHE, COLOR_DIM)
 	v.add_child(_portrait_info)
+	_portrait_req = _label("", Tipo.DETALHE, COLOR_DIM)
+	_portrait_req.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_portrait_req.custom_minimum_size.x = 210
+	v.add_child(_portrait_req)
 	_portrait_sec = _button("")
 	_portrait_sec.add_theme_font_size_override("font_size", Tipo.DETALHE)
 	_portrait_sec.tooltip_text = "Função SECUNDÁRIA: o que ele faz no expediente quando a função dele não tem trabalho
@@ -1836,6 +1904,7 @@ func _update_portrait(sel: Array) -> void:
 	_portrait_job.visible = um
 	_portrait_doing.visible = um
 	_portrait_info.visible = um
+	_portrait_req.visible = false
 	_portrait_sec.visible = um
 	_portrait_ficha.visible = um and _panels.has("ficha")
 	_selection_caption.visible = not um
@@ -1860,6 +1929,18 @@ func _update_portrait(sel: Array) -> void:
 	_set_text(_portrait_doing, w.get_state_label() if w.hunger > 0.0 else "FAMINTO!")
 	_set_text(_portrait_info, "%s  •  ânimo %d" % [{"ferido": "machucado", "bravo": "zangado",
 		"cansado": "cansado", "contente": "contente", "neutro": "tranquilo"}.get(Retratos.expressao(w), ""), roundi(w.happiness)])
+	# Bloco 128: parado, o motivo específico; com função, a lista de requisitos (só o que falta + o ✓ do resto)
+	var req_txt := ""
+	var req_ruim := false
+	if not w.has_no_job() and Req.tem(w.job):
+		var av := Req.avalia(get_tree(), w.job, w)
+		var linhas := Req.linhas(av)
+		req_ruim = not bool(av.pode)
+		var parado: String = w.motivo_texto() if w.has_method("motivo_texto") else ""
+		req_txt = ("Parado: %s\n" % parado if parado != "" else "") + "\n".join(linhas)
+	_portrait_req.visible = req_txt != ""
+	_set_text(_portrait_req, req_txt)
+	_set_font_color(_portrait_req, COLOR_HUNGER_BAD if req_ruim else COLOR_DIM)
 
 
 ## Bloco 109: o botão da secundária: automática -> nenhuma -> minerador -> lenhador -> caçador -> agricultor -> automática.

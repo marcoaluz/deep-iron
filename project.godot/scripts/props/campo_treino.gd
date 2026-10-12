@@ -1,6 +1,6 @@
 extends "res://scripts/props/station.gd"
 ## Campo de treino (grupo "campos"): onde os GUARDAS treinam de dia.
-## O jogador escolhe onde construir (janela de Defesa, tecla G), como as casas.
+## O jogador escolhe onde construir (menu CONSTRUIR), como as casas.
 ## Cada guarda treinando aqui ganha habilidade de combate (0 -> 100%) até ficar pronto;
 ## habilidade dá mais dano e mais vida na luta (ipezinho.gd).
 
@@ -9,7 +9,7 @@ extends "res://scripts/props/station.gd"
 
 const Modificadores := preload("res://scripts/core/modificadores.gd")
 
-var panel_id := "defesa"
+var panel_id := "campo"  # Bloco 128: a janela do campo (guardas em treino), não a da Defesa
 
 @onready var _label: Label = $StatusLabel
 

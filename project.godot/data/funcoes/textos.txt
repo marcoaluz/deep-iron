@@ -1,0 +1,143 @@
+# REQUISITOS DAS FUNÇÕES — textos (Bloco 128). Edite à vontade: o jogo lê este arquivo quando abre.
+#
+# Formato (o mesmo do catálogo e das missões):
+#   [função]            começa a seção (o nome da função, com acento: caçador, médico, mecânico)
+#   chave = valor       uma linha com um texto; as linhas seguintes (com recuo) continuam o texto
+#   # linha de comentário (não aparece no jogo)
+#
+# Chaves: resumo (o que a função faz), sem_trabalho (quando tudo está certo e mesmo assim não há o que fazer),
+#   <id>.ok (o requisito passa), <id>.falta (não passa) e <id>.falta.<variante> (um jeito específico de faltar; o teste
+#   escolhe a variante e {d} vira o detalhe que ele trouxe). Os ids e os testes ficam em data/funcoes/requisitos.json.
+# O jogo põe o "✓" e o "✗" na frente.
+
+[minerador]
+resumo = Cava as jazidas liberadas e leva o minério pro armazém.
+sem_trabalho = Nada pra minerar agora: as jazidas estão ocupadas ou esgotadas.
+jazida.ok = Tem jazida livre pra minerar
+jazida.falta = Nenhuma jazida livre: todas ocupadas, esgotadas ou trancadas
+jazida.falta.ferramenta = Só sobrou jazida que pede ferramenta nova: a Oficina faz
+espaco.ok = O armazém tem espaço pro minério
+espaco.falta = Armazém cheio de minério: venda, amplie ou construa outro (CONSTRUIR > Vila)
+
+[lenhador]
+resumo = Corta madeira e leva pro armazém. Com ordem na Carvoaria, opera ela.
+sem_trabalho = Nada pra cortar agora: as árvores estão ocupadas ou já cortadas.
+arvore.ok = Tem árvore pra cortar
+arvore.falta = Nenhuma árvore livre: todas ocupadas ou cortadas
+espaco.ok = O armazém tem espaço pra madeira
+espaco.falta = Armazém cheio de madeira: venda, amplie ou construa outro (CONSTRUIR > Vila)
+
+[caçador]
+resumo = Caça com arco nas tocas já estudadas e colhe a horta quando não há agricultor.
+sem_trabalho = Nada pra caçar nem colher agora: as tocas descansam e a horta está vazia.
+arco.ok = Tem arco
+arco.falta = Falta o arco: a Oficina faz
+arco.falta.sem_oficina = Falta o arco: construa a Oficina (CONSTRUIR > Defesa e equipamento) e fabrique
+toca.ok = Tem toca já estudada
+toca.falta = Nenhuma toca estudada: o pesquisador precisa catalogar
+toca.falta.sem_toca = Nenhuma toca na clareira ainda: o batedor rastreia (K)
+horta.ok = Tem horta pra colher
+horta.falta = Construa a horta: CONSTRUIR > Alimentação
+horta.falta.agricultor = A horta é do agricultor: com ele na vila, o caçador só caça
+horta.falta.descansando = A horta está descansando: volta a dar fruta com o tempo
+
+[agricultor]
+resumo = Colhe a horta e a estufa (dentro da vila) e leva a fruta pro armazém.
+sem_trabalho = Nada pra colher agora: a horta está descansando.
+horta.ok = Tem horta ou estufa pra colher
+horta.falta = Construa a horta: CONSTRUIR > Alimentação
+horta.falta.descansando = A horta está descansando: volta a dar fruta com o tempo
+espaco.ok = O armazém tem espaço pra comida
+espaco.falta = Armazém cheio de comida: amplie ou construa outro (CONSTRUIR > Vila)
+
+[cozinheiro]
+resumo = Busca matéria-prima no armazém e prepara a comida na cozinha.
+sem_trabalho = Nada pra cozinhar agora: a cozinha está abastecida.
+cozinha.ok = A cozinha está pronta
+cozinha.falta = Construa a Cozinha: CONSTRUIR > Alimentação
+materia_prima.ok = Tem matéria-prima no armazém
+materia_prima.falta = Sem matéria-prima no armazém: o caçador e o agricultor trazem a comida crua
+
+[fundidor]
+resumo = Opera a Fornalha: funde as barras encomendadas. Sem ordem, não faz nada.
+sem_trabalho = Nenhuma ordem pra tocar agora.
+fornalha.ok = A Fornalha está pronta
+fornalha.falta = Construa a Fornalha: CONSTRUIR > Produção
+ordem.ok = Tem ordem na fila
+ordem.falta = Nenhuma ordem: clique na Fornalha e encomende
+ordem.falta.pausada = Ordem pausada: falta {d}
+
+[ferreiro]
+resumo = Opera a Oficina e o Arsenal: ferramentas, equipamento e armas, só o que foi encomendado.
+sem_trabalho = Nenhuma encomenda pra forjar agora.
+oficina.ok = A Oficina (ou o Arsenal) está pronta
+oficina.falta = Construa a Oficina: CONSTRUIR > Defesa e equipamento
+encomenda.ok = Tem encomenda na fila
+encomenda.falta = Nenhuma encomenda: fabrique uma ferramenta na Oficina (O) ou uma arma no Arsenal (G)
+
+[carpinteiro]
+resumo = Opera a Carpintaria: tábuas e camas de tábua, só o que foi encomendado. Monta as camas novas.
+sem_trabalho = Nenhuma ordem nem cama pra montar agora.
+carpintaria.ok = A Carpintaria está pronta
+carpintaria.falta = Construa a Carpintaria: CONSTRUIR > Produção
+ordem.ok = Tem ordem (ou cama pra montar)
+ordem.falta = Nenhuma ordem: clique na Carpintaria e encomende, ou mande trocar uma cama (janela da casa)
+ordem.falta.pausada = Ordem pausada: falta {d}
+
+[engenheiro]
+resumo = Vai às obras encomendadas e constrói. Sem engenheiro, nada sai do lugar.
+sem_trabalho = Nenhuma obra pra tocar agora.
+obra.ok = Tem obra esperando
+obra.falta = Nenhuma obra pra tocar: encomende uma construção em CONSTRUIR (Espaço)
+
+[carregador]
+resumo = Leva o material do armazém pras obras, pra Fornalha e pra cozinha.
+sem_trabalho = Nada pra levar agora.
+entrega.ok = Tem entrega pra levar
+entrega.falta = Nada pra levar: as obras, a Fornalha, a Carpintaria e a cozinha ainda não pediram material
+
+[mecânico]
+resumo = Conserta as máquinas quebradas e faz a manutenção das gastas.
+sem_trabalho = Nenhuma máquina gasta ou quebrada agora.
+maquina.ok = Tem máquina pra cuidar
+maquina.falta = Nenhuma máquina gasta ou quebrada: ele cuida de cabines, trilhos, escavadeira e coletores quando desgastam
+
+[médico]
+resumo = Plantão na Enfermaria: socorre os caídos e cura os internados mais rápido.
+sem_trabalho = Ninguém precisa de cuidado agora: ele espera de plantão.
+enfermaria.ok = A Enfermaria está pronta
+enfermaria.falta = Construa a Enfermaria: CONSTRUIR > Saúde
+
+[pesquisador]
+resumo = Pesquisa no Laboratório e cataloga o que a vila avistou (jazidas, tocas, criaturas).
+sem_trabalho = Nada pra pesquisar nem catalogar agora.
+laboratorio.ok = O Laboratório está pronto
+laboratorio.falta = Construa o Laboratório: CONSTRUIR > Pesquisa
+pesquisa.ok = Tem pesquisa em andamento
+pesquisa.falta = Nenhuma pesquisa em andamento: escolha uma na janela do Laboratório (Q)
+catalogo.ok = Tem o que catalogar
+catalogo.falta = Nada avistado pra catalogar: os mineiros e o batedor avistam jazidas e tocas
+
+[padre]
+resumo = Missa de domingo, funeral e aconselhamento; enterra os mortos no cemitério.
+sem_trabalho = Sem missa nem funeral agora.
+igreja.ok = A Igreja está pronta
+igreja.falta = Construa a Igreja: CONSTRUIR > Culto
+cemiterio.ok = Tem cemitério
+cemiterio.falta = Sem cemitério: o padre não tem onde enterrar (CONSTRUIR > Culto)
+
+[batedor]
+resumo = Bate o mato: avista bichos e lugares de longe, rastreia as tocas e lidera as expedições.
+sem_trabalho = Nada a avistar agora.
+toca.ok = Tem toca pra rastrear
+toca.falta = Nenhuma toca na clareira ainda: ele avista de longe
+
+[guarda]
+resumo = Treina de dia no campo e defende o portão à noite.
+sem_trabalho = Treinado e sem posto agora: descansa.
+muro.ok = Tem muro e portão
+muro.falta = Sem muro: melhore o portão (janela da Defesa, G, ou CONSTRUIR > Defesa e equipamento)
+arsenal.ok = Tem Arsenal (armas melhores que o porrete)
+arsenal.falta = Sem Arsenal: só luta de porrete (CONSTRUIR > Defesa e equipamento)
+campo.ok = Tem campo de treino
+campo.falta = Sem campo de treino: não ganha habilidade (CONSTRUIR > Defesa e equipamento)

@@ -2,7 +2,7 @@ extends "res://scripts/props/station.gd"
 ## Arsenal (grupo "arsenais") — Bloco 35: onde as armas dos guardas são forjadas e
 ## consertadas, e onde o guarda desarmado vem buscar outra.
 ##
-## O jogador escolhe o lugar (janela de Defesa, tecla G) e o engenheiro ergue (canteiro).
+## O jogador escolhe o lugar (menu CONSTRUIR) e o engenheiro ergue (canteiro).
 ## Pronto, ele é uma OBRA como a Oficina: a fila da forja (defense.gd: queue) só anda com
 ## um engenheiro trabalhando aqui. Os dados (cavalete, pilha de conserto, fila) ficam no
 ## Defense; este nó é o lugar no mapa: visual, obra e os slots onde os guardas trocam de arma.
@@ -19,7 +19,7 @@ const ObraSite := preload("res://scripts/core/obra_site.gd")
 ## Pro HUD saber qual janela abrir quando clicam aqui.
 ## Bloco 87: a obra daqui (a forja) é do FERREIRO.
 var oficio := "ferreiro"
-var panel_id := "defesa"
+var panel_id := "arsenal"  # Bloco 128: a janela do Arsenal (forja, cavalete, armas), não a da Defesa
 var _obra := ObraSite.new()
 var _sound_timer := 0.0
 

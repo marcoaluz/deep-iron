@@ -68,13 +68,7 @@ func _build() -> void:
 	_padre = _hud._label("", Tipo.DETALHE, _hud.COLOR_TEXT)
 	_padre.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_padre)
-	_igreja_button = _hud._button("")
-	_igreja_button.pressed.connect(func():
-		Audio.click()
-		var hub := get_tree().get_first_node_in_group("village_hub")
-		if hub:
-			hub.build_igreja()
-		refresh())
+	_igreja_button = _hud.botao_construir("Culto", "Sem igreja: abrir o CONSTRUIR (Culto) pra construir a Igreja")  # Bloco 128
 	vbox.add_child(_igreja_button)
 
 
@@ -115,10 +109,7 @@ func refresh() -> void:
 		_padre.text = "%s: %s.%s" % [pd.display_name, pd.get_state_label(), "" if ig else " Sem igreja: sem missa nem funeral."]
 	else:
 		_padre.text = "O padre chega quando a vila for %s." % (hub.STAGE_NAMES[clampi(_cal.padre_estagio, 1, 5) - 1] if hub else "maior")
-	var reason: String = hub.igreja_block_reason() if hub else "sem Centro da Vila"
 	_igreja_button.visible = ig == null
-	_igreja_button.text = ("Construir a Igreja — escolher lugar  (%s)" % hub.igreja_cost_text()) if reason == "" else "Igreja: " + reason
-	_igreja_button.disabled = reason != ""
 
 
 func button_text() -> String:

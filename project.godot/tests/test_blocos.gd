@@ -528,3 +528,7 @@ func test_b126_epilogo_estatisticas() -> void:
 
 func test_b127_linha_de_frente() -> void:
 	run_bloco("b127_linha_de_frente.gd")
+
+
+func test_b128_paineis_roda_requisitos() -> void:
+	run_bloco("b128_paineis_roda_requisitos.gd")

@@ -9,7 +9,7 @@ var _hub: Node
 var _economy: Node
 var _title: Label
 var _status: Label
-var _build_button: Button
+var _construir_link: Button  # Bloco 128: aponta pro menu CONSTRUIR (construir é só lá)
 var _designate_button: Button
 var _release_button: Button
 var _jazida_button: Button
@@ -79,12 +79,8 @@ func _build() -> void:
 			c.choose_next()
 		refresh())
 	vbox.add_child(_jazida_button)
-	_build_button = _hud._button("")
-	_build_button.pressed.connect(func():
-		Audio.click()
-		_hub.build_coletor_minerio()
-		refresh())
-	vbox.add_child(_build_button)
+	_construir_link = _hud.botao_construir("Coleta automática", "Construir outro coletor: abrir o CONSTRUIR (Coleta automática)")
+	vbox.add_child(_construir_link)
 
 
 func focus(node: Node) -> void:
@@ -127,10 +123,6 @@ func refresh() -> void:
 		return
 	var c: Node = _current()
 	var all: Array = _hub.coletores_minerio()
-	var reason: String = _hub.coletor_minerio_block_reason()
-	var what := "Construir" if all.is_empty() else "Construir outro coletor"
-	_build_button.text = ("%s — escolher lugar perto de uma jazida  (%s)" % [what, _hub.coletor_minerio_cost_text()]) if reason == "" else "%s: %s" % [what, reason]
-	_build_button.disabled = reason != ""
 	_designate_button.visible = c != null
 	_release_button.visible = c != null and c.has_operator()
 	_jazida_button.visible = c != null and c.jazidas_no_alcance().size() > 1

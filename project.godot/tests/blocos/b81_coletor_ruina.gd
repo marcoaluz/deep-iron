@@ -114,8 +114,8 @@ func _process(delta: float) -> bool:
 		panel.refresh()
 		print("  janela: ", panel._status.text.replace("\n", " | "))
 		print("  botão: ", panel._etapa_button.text)
-		check(panel._etapa_button.visible and not panel._designate_button.visible and not panel._build_button.visible,
-			"janela: botão de pedir etapa, sem designar nem construir")
+		check(panel._etapa_button.visible and not panel._designate_button.visible and not panel._construir_link.visible,
+			"janela: botão de pedir etapa, sem designar nem apontar pro construir")  # Bloco 128
 		check("Limpar folhas e entulho" in panel._status.text and "Desenferrujar" in panel._status.text and "30 madeira" in panel._status.text,
 			"janela lista as etapas com o custo")
 		eco.credits = 5000.0

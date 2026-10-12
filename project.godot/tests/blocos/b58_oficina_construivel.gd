@@ -103,7 +103,7 @@ func _nao_construida() -> void:
 	hud.open_panel("oficina")
 	var pn = hud._panels["oficina"]
 	pn.refresh()
-	check(pn._build_box.visible and pn._build_button.text.begins_with("Construir a Oficina"), "janela (O): só o construir (%s)" % pn._build_button.text)
+	check(pn._build_box.visible and "CONSTRUIR" in pn._build_button.text, "janela (O): só aponta pro CONSTRUIR (%s)" % pn._build_button.text)  # Bloco 128
 	check(pn.button_text().begins_with("Oficina: construir"), "botão da coluna: %s" % pn.button_text())
 	hud.close_panels()
 	var card: Dictionary = {}

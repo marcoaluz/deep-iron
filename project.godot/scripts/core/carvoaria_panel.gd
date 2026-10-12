@@ -12,17 +12,5 @@ func _init() -> void:
 	intro_texto = "Madeira vira CARVÃO VEGETAL — só por ORDEM: escolha a quantidade e encomende. Um LENHADOR larga o machado, busca a madeira no armazém (cada unidade gasta a dela só quando começa), carvoeja aqui e leva o carvão pronto pro armazém. Faltou madeira: a ordem pausa. A Fornalha gasta o carvão vegetal ANTES do carvão de mina."
 
 
-func _construir() -> void:
-	_hub.build_carvoaria()
-
-
-func _motivo_construir() -> String:
-	return _hub.carvoaria_block_reason()
-
-
-func _custo_construir() -> String:
-	return _hub.carvoaria_cost_text()
-
-
 func _estagio() -> int:
 	return int(_hub.carvoaria_estagio)

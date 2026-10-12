@@ -87,8 +87,13 @@ func _process(delta: float) -> bool:
 		fx.restaura_tudo()
 		hud.open_panel("coletor")
 		hud._panels["coletor"].refresh()
-		print("  botão: ", hud._panels["coletor"]._build_button.text)
-		check(hub.coletor_cost_text() in hud._panels["coletor"]._build_button.text, "coletor aparece como construção com custo")
+		var card_col := {}
+		for d in hud._build_menu._defs("Coleta automática"):
+			if d.name == "Coletor de madeira":
+				card_col = d
+		print("  cartão: ", card_col.cost.call() if not card_col.is_empty() else "-")
+		check(not card_col.is_empty() and hub.coletor_cost_text() in String(card_col.cost.call()), "coletor aparece como construção no CONSTRUIR, com custo")  # Bloco 128
+		check(hud._panels["coletor"]._construir_link.visible and "CONSTRUIR" in hud._panels["coletor"]._construir_link.text, "a janela do coletor só aponta pro CONSTRUIR")
 		check(hub.build_coletor(), "escolher lugar")
 		var placer = g("house_placer")
 		placer.move_to(hub.global_position)

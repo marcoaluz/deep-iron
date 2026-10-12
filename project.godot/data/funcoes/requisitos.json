@@ -1,0 +1,102 @@
+{
+	"_leia_me": "Bloco 128: o que cada FUNÇÃO precisa pra ter trabalho. 'requisitos' = [{id, teste}] (o teste é um nome de scripts/core/requisitos_funcao.gd); 'caminhos' = listas de ids: a função tem trabalho se TODOS os ids de PELO MENOS UM caminho passam (sem 'caminhos': todos os requisitos juntos; [[]]: sempre). Requisito fora de todo caminho só informa. Os textos (resumo, ok, falta, falta.<variante>, sem_trabalho) ficam em data/funcoes/textos.txt, na seção [<função>], chave <id>.ok / <id>.falta.",
+	"minerador": {
+		"requisitos": [
+			{"id": "jazida", "teste": "jazida"},
+			{"id": "espaco", "teste": "espaco_minerios"}
+		]
+	},
+	"lenhador": {
+		"requisitos": [
+			{"id": "arvore", "teste": "arvore"},
+			{"id": "espaco", "teste": "espaco_madeira"}
+		]
+	},
+	"caçador": {
+		"requisitos": [
+			{"id": "arco", "teste": "arco"},
+			{"id": "toca", "teste": "toca_estudada"},
+			{"id": "horta", "teste": "horta_do_cacador"}
+		],
+		"caminhos": [["arco", "toca"], ["horta"]]
+	},
+	"agricultor": {
+		"requisitos": [
+			{"id": "horta", "teste": "horta"},
+			{"id": "espaco", "teste": "espaco_alimentos"}
+		]
+	},
+	"cozinheiro": {
+		"requisitos": [
+			{"id": "cozinha", "teste": "cozinha"},
+			{"id": "materia_prima", "teste": "materia_prima"}
+		]
+	},
+	"fundidor": {
+		"requisitos": [
+			{"id": "fornalha", "teste": "fornalha"},
+			{"id": "ordem", "teste": "ordem_fornalha"}
+		]
+	},
+	"ferreiro": {
+		"requisitos": [
+			{"id": "oficina", "teste": "oficina_ou_arsenal"},
+			{"id": "encomenda", "teste": "encomenda_ferreiro"}
+		]
+	},
+	"carpinteiro": {
+		"requisitos": [
+			{"id": "carpintaria", "teste": "carpintaria"},
+			{"id": "ordem", "teste": "ordem_carpintaria"}
+		]
+	},
+	"engenheiro": {
+		"requisitos": [
+			{"id": "obra", "teste": "obra_pendente"}
+		]
+	},
+	"carregador": {
+		"requisitos": [
+			{"id": "entrega", "teste": "entrega"}
+		]
+	},
+	"mecânico": {
+		"requisitos": [
+			{"id": "maquina", "teste": "maquina_gasta"}
+		]
+	},
+	"médico": {
+		"requisitos": [
+			{"id": "enfermaria", "teste": "enfermaria"}
+		]
+	},
+	"pesquisador": {
+		"requisitos": [
+			{"id": "laboratorio", "teste": "laboratorio"},
+			{"id": "pesquisa", "teste": "pesquisa_andando"},
+			{"id": "catalogo", "teste": "alvo_catalogo"}
+		],
+		"caminhos": [["laboratorio", "pesquisa"], ["catalogo"]]
+	},
+	"padre": {
+		"requisitos": [
+			{"id": "igreja", "teste": "igreja"},
+			{"id": "cemiterio", "teste": "cemiterio"}
+		],
+		"caminhos": [["igreja"]]
+	},
+	"batedor": {
+		"requisitos": [
+			{"id": "toca", "teste": "toca_a_rastrear"}
+		],
+		"caminhos": [[]]
+	},
+	"guarda": {
+		"requisitos": [
+			{"id": "muro", "teste": "muro"},
+			{"id": "arsenal", "teste": "arsenal"},
+			{"id": "campo", "teste": "campo_treino"}
+		],
+		"caminhos": [["muro"], ["campo"]]
+	}
+}

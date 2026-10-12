@@ -78,8 +78,14 @@ func _process(delta: float) -> bool:
 		var hud = main.get_node("HUD")
 		hud.open_panel("moral")
 		hud._panels["moral"].refresh()
-		print("  botão: ", hud._panels["moral"]._park_button.text)
-		check("Construir parque" in hud._panels["moral"]._park_button.text and "100 cr" in hud._panels["moral"]._park_button.text, "parque aparece como construção, com custo")
+		# Bloco 128: construir é só no menu CONSTRUIR (a janela de Bem-estar não tem mais o botão)
+		var card_parque := {}
+		for d in hud._build_menu._defs("Lazer"):
+			if d.name == "Parque":
+				card_parque = d
+		print("  cartão: ", card_parque.get("name", "-"), " ", card_parque.cost.call() if not card_parque.is_empty() else "")
+		check(not card_parque.is_empty() and "100 cr" in String(card_parque.cost.call()), "parque aparece como construção no CONSTRUIR, com custo")
+		check(not hud._panels["moral"].has_method("_park_button") and hud._panels["moral"].get("_park_button") == null, "a janela de Bem-estar não constrói parque")
 		check(mor.build_park(), "escolher lugar do parque")
 		var placer = g("house_placer")
 		# (Prompt 29: o raio das casas está desligado — parque em qualquer lugar da pedreira também)

@@ -62,6 +62,7 @@ func setup(main: Node) -> void:
 	layer = 15
 	visible = false
 	name = "CorteDaMina"
+	add_to_group("janela_modal")  # Bloco 128: aberto, a roda do mouse não dá zoom no mapa
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_STOP
