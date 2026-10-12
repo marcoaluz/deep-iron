@@ -548,3 +548,7 @@ func test_b131_travadas_som() -> void:
 
 func test_b132_grade_construcao() -> void:
 	run_bloco("b132_grade_construcao.gd")
+
+
+func test_b134_chao_vila() -> void:
+	run_bloco("b134_chao_vila.gd")

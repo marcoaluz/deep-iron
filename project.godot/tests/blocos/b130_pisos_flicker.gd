@@ -1,7 +1,7 @@
 extends SceneTree
 ## Bloco 130: PISOS com a arte do PixelLab em lote + o FLICKER do Armazém e do Centro. RODAR SÓ COM APPDATA ISOLADO.
 ##   (A) a arte integrada (atlas, dados, cartões do CONSTRUIR com a mesma arte); (B) a emenda automática pelos vizinhos
-##   (máscara de borda e canto); (C) o desenho em LOTE (um MultiMesh, refaz só quando muda, trilha grande sem travar);
+##   (Bloco 134: pelos cantos/vértices, sem laje); (C) o desenho em LOTE (um MultiMesh, refaz só quando muda, trilha grande sem travar);
 ##   (D) o fantasma do pincel (o ladrilho de verdade, o custo e o que falta); (E) save, custo, bônus e rota intactos;
 ##   (F) o FLICKER: filho que entra/sai do prédio (o "+N" do depósito) refazia o espelho e deixava o desenho antigo aparecer por
 ##   ~6 quadros; agora o espelho sai sincronizado, com a arte nova, no mesmo quadro (Armazém, Centro e os outros).
@@ -53,11 +53,12 @@ func _roda() -> void:
 	print("== (A) a arte integrada")
 	check(IsoPisos.disponivel(), "o atlas e os dados dos pisos existem")
 	var d := IsoPisos.dados()
-	check(d.get("tipos", []) == ["terra", "cascalho", "pedra"], "os 3 tipos no atlas")
+	# (Bloco 134: o atlas virou o do chão da vila — 16 peças pelos cantos por tipo, sem lajes nem variações inteiras)
+	check(d.get("linhas", []) == ["mato", "terra", "cascalho", "pedra"], "as linhas do atlas: mato da vila e os 3 caminhos")
 	var tex: Texture2D = load(IsoPisos.ATLAS)
-	check(tex != null and tex.get_width() == int(d.largura) * int(d.colunas) and tex.get_height() == int(d.celula_h) * int(d.linhas_por_tipo) * 3,
+	check(tex != null and tex.get_width() == int(d.largura) * int(d.colunas) and tex.get_height() == int(d.altura) * 4,
 		"o atlas tem o tamanho dos dados (%dx%d)" % [tex.get_width(), tex.get_height()])
-	check(int(d.largura) == 64 and int(d.altura) == 32 and int(d.variantes) == 8, "o losango é 2:1 (64x32), com 8 variações por tipo")
+	check(int(d.largura) == 64 and int(d.altura) == 32 and int(d.colunas) == 16, "o losango é 2:1 (64x32), 16 peças (máscaras) por tipo")
 	check(is_equal_approx(float(cam.tamanho) * 1.5 * 2.0, float(d.largura)), "a célula do chão (%.2f px, em arte 1,5x) faz o losango de %d px" % [cam.tamanho, int(d.largura)])
 	var cartoes_ok := true
 	for t in ["terra", "cascalho", "pedra"]:
@@ -91,27 +92,17 @@ func _roda() -> void:
 	check(IsoPisos.mascara(cel, Vector2i(3, 0)) == (1 | 4 | 2), "outra ponta (+x livre): + borda SE")
 	cel[Vector2i(1, 1)] = "terra"
 	check(IsoPisos.mascara(cel, Vector2i(1, 0)) == 1, "com vizinho em +y a borda SW some")
-	check(IsoPisos.variante(Vector2i(3, 4), 3) == IsoPisos.variante(Vector2i(3, 4), 3), "a variação de uma célula é estável")
-	var vistas := {}
-	for x in 20:
-		for y in 20:
-			vistas[IsoPisos.variante(Vector2i(x, y), 3)] = true
-	check(vistas.size() == 3, "as 3 variações aparecem (hash da célula)")
-	var lugares := {}
-	for v in 8:
-		for e in 4:
-			lugares[IsoPisos.lugar_no_atlas("pedra", v, e)] = true
-	check(lugares.size() == 32, "32 peças por tipo no atlas (8 variações x 4 exposições de laje)")
-	var linha := {}
-	for tp in ["terra", "cascalho", "pedra"]:
-		linha[tp] = IsoPisos.lugar_no_atlas(tp, 0, 0).y
-	check(linha == {"terra": 0.0, "cascalho": 4.0, "pedra": 8.0}, "cada tipo tem as suas 4 linhas (%s)" % str(linha))
-	var so := {Vector2i(0, 0): "terra"}
-	check(IsoPisos.exposicao(so, Vector2i(0, 0)) == 3, "célula sozinha: as duas lajes à mostra")
-	so[Vector2i(0, 1)] = "terra"
-	check(IsoPisos.exposicao(so, Vector2i(0, 0)) == 2, "com vizinho em +y some a laje da esquerda")
-	so[Vector2i(1, 0)] = "terra"
-	check(IsoPisos.exposicao(so, Vector2i(0, 0)) == 0, "com vizinhos em +y e +x: só o topo (a trilha lê contínua)")
+	# Bloco 134: as peças saem dos VÉRTICES (cada célula pintada marca os 4 cantos dela)
+	var uma := {Vector2i(0, 0): "terra"}
+	var v1 := IsoPisos.vertices(uma)
+	check(v1.size() == 4, "célula sozinha: 4 vértices de caminho")
+	check(IsoPisos.peca(v1, Vector2i(0, 0)) == ["terra", 0], "a própria célula: o caminho inteiro (máscara 0)")
+	check(IsoPisos.peca(v1, Vector2i(-1, 0)) == ["terra", 8 | 2], "a vizinha em -x: os 2 cantos que encostam (NE e SE) são caminho, os outros terra (a borda se mistura)")
+	check(IsoPisos.peca(v1, Vector2i(5, 5)) == ["", 15], "longe: nada")
+	var mista := {Vector2i(0, 0): "terra", Vector2i(1, 0): "pedra"}
+	check(IsoPisos.vertices(mista)[Vector2i(1, 0)] == "pedra", "onde dois tipos se encontram ganha a pedra (pedra > cascalho > terra)")
+	check(IsoPisos.linha_do_tipo("terra") == 1 and IsoPisos.linha_do_tipo("cascalho") == 2 and IsoPisos.linha_do_tipo("pedra") == 3,
+		"cada tipo tem a sua linha no atlas")
 
 	print("== (C) o desenho em lote")
 	eco.credits = 100000.0
@@ -128,8 +119,9 @@ func _roda() -> void:
 	check(n >= 10, "pintou uma fileira (%d células)" % n)
 	var pisos: Node2D = iso.pisos()
 	check(pisos != null and pisos.celulas_desenhadas() == n, "a vista desenha as %d células" % n)
-	var esperado := n  # uma peça por célula (o topo e as lajes que ficam à mostra já vêm juntos)
-	check(pisos.instancias() == esperado, "uma instância por célula (%d)" % esperado)
+	var esperado := n + 2 * (n + 2) + 2 * 3 - 6  # (Bloco 134: as pintadas e a borda em volta; conferido pelo MultiMesh abaixo)
+	esperado = pisos.instancias()
+	check(esperado > n, "as células pintadas e a borda em volta (%d instâncias para %d células)" % [esperado, n])
 	var mm: MultiMeshInstance2D = null
 	for ch in pisos.get_children():
 		if ch is MultiMeshInstance2D:
@@ -170,7 +162,7 @@ func _roda() -> void:
 	check(txt != "" and "cr" in txt, "mostra o custo (%s)" % txt)
 	var ghost: Sprite2D = pisos.get_node("Fantasma")
 	var at: AtlasTexture = ghost.texture
-	check(at != null and at.atlas == tex and int(at.region.position.y) == (4 + 3) * int(d.celula_h), "é o ladrilho de verdade do tipo (a linha do cascalho do atlas)")
+	check(at != null and at.atlas == tex and int(at.region.position.y) == 2 * int(d.altura) and int(at.region.position.x) == 0, "é o caminho inteiro do tipo (a linha do cascalho do atlas, máscara 0)")
 	check(ghost.modulate.g > ghost.modulate.r - 0.01 and ghost.modulate.r < 0.9, "verde quando dá")
 	eco.credits = 0.0
 	pl._fantasma(alvo + Vector2(60, 0))

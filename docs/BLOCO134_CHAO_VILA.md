@@ -94,9 +94,8 @@ As capturas pintam os mesmos caminhos no antes e no depois: uma rua de terra, um
 
 ## Não verificado / pendente
 
-- **Testes:** nenhum rodado (pedido do Marco). Os que mexem nesta área são o `b130_pisos_flicker`, que confere o atlas
-  antigo e as lajes e **vai falhar** (o atlas e a regra mudaram), o `b132_grade_construcao` (a grade) e os `p28`/`p29`.
-  Precisam de ajuste quando o Marco quiser rodar.
+- **Testes** (rodados depois, a pedido do Marco): teste novo `b134_chao_vila` (20 OK); `b130_pisos_flicker` ajustado
+  pros caminhos pelos cantos (51 OK); `b132_grade_construcao` (49 OK), `b89_caminhos`, `p28_iso` e `p29_predios` verdes.
 - **A borda segue a escada das células** (21 px), suavizada pela franja de capim da transição. Se incomodar, o próximo
   passo é uma transição mais larga (`transition_size`) ou uma 2ª camada de capim solto na borda.
 - **O mato novo é um verde-oliva** um pouco diferente do capim amarelo da floresta além da paliçada. A paliçada separa os
