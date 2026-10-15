@@ -564,6 +564,8 @@ def exporta(pasta, itens, regiao, alt, esc_tiles, sub_de, subidas, bocas, longe)
     meta["bocas"] = [[i, j, h] for i, j, h in bocas]
     json.dump(meta, open(os.path.join(pasta, "mapa.json"), "w"), indent=1)
     print("mapa.json:", NI, "x", NJ, "tiles;", len(meta["escadas"]), "subidas;", len(bocas), "bocas")
+    import blocos  # Bloco 138: os blocos não vazios do terreno (a vista iso não lê a textura de volta da placa)
+    blocos.main(pasta)
 
 
 if __name__ == "__main__":

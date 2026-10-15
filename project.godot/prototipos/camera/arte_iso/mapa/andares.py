@@ -849,6 +849,8 @@ def main(pasta):
         return tela_jogo(0, y)[1] if y is not None else -1e9
     meta["terra"] = {"coluna": contorno_terra(desenhos, topo_de), "faixa": faixa_terra(topo_de)}
     json.dump(meta, open(os.path.join(pasta, "andares.json"), "w"), indent=1)
+    import blocos  # Bloco 138: os blocos não vazios do terreno (a vista iso não lê a textura de volta da placa)
+    blocos.main(pasta)
     print("andares.json  (gaiolas na tela: %s)" % ", ".join("(%.0f, %.0f)" % g for g in gaiolas))
 
 

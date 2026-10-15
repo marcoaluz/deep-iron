@@ -857,18 +857,44 @@ const TERRAIN_BLOCK := 256
 var _blocados: Array = []  # [pedaço, [blocos]]: o tom (self_modulate) do pedaço vai pros blocos
 
 
+## Bloco 138: os índices (bx + by * colunas) dos blocos com desenho de uma textura do terreno, do blocos.json ao lado
+## dela; {} se a lista não tem a textura ou ela mudou de tamanho (aí o _em_blocos lê a imagem).
+static var _blocos_json: Dictionary = {}
+
+
+static func blocos_guardados(caminho: String, w: int, h: int) -> Dictionary:
+	var arq := caminho.get_base_dir().path_join("blocos.json")
+	if not _blocos_json.has(arq):
+		var d = JSON.parse_string(FileAccess.get_file_as_string(arq)) if FileAccess.file_exists(arq) else null
+		_blocos_json[arq] = d if d is Dictionary and int(d.get("bloco", 0)) == TERRAIN_BLOCK else {}
+	var e = _blocos_json[arq].get("imagens", {}).get(caminho.get_file())
+	if not (e is Array) or e.size() < 3 or int(e[0]) != w or int(e[1]) != h:
+		return {}
+	var usados := {}
+	for i in e[2]:
+		usados[int(i)] = true
+	return usados
+
+
 func _em_blocos(sp: Sprite2D) -> void:
 	var tex := sp.texture
 	if tex == null:
 		return
-	var img := tex.get_image()
 	var blocos: Array = []
 	var w := tex.get_width()
 	var h := tex.get_height()
+	# Bloco 138: os blocos com desenho vêm do blocos.json (prototipos/.../mapa/blocos.py). Sem a lista (ou de outro
+	# tamanho) cai no jeito antigo: ler a textura de volta da placa de vídeo, ~0,75 s a cada abertura da partida.
+	var usados := blocos_guardados(tex.resource_path, w, h)
+	var img: Image = tex.get_image() if usados.is_empty() else null
+	var cols := ceili(w / float(TERRAIN_BLOCK))
 	for y in range(0, h, TERRAIN_BLOCK):
 		for x in range(0, w, TERRAIN_BLOCK):
 			var r := Rect2i(x, y, mini(TERRAIN_BLOCK, w - x), mini(TERRAIN_BLOCK, h - y))
-			if img and img.get_region(r).get_used_rect().size == Vector2i.ZERO:
+			if not usados.is_empty():
+				if not usados.has(floori(x / float(TERRAIN_BLOCK)) + floori(y / float(TERRAIN_BLOCK)) * cols):
+					continue  # bloco vazio
+			elif img and img.get_region(r).get_used_rect().size == Vector2i.ZERO:
 				continue  # bloco vazio
 			var b := Sprite2D.new()
 			b.texture = tex
