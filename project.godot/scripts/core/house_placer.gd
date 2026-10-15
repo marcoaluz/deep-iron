@@ -130,6 +130,15 @@ func _ready() -> void:
 ## Liga o modo. on_confirm(pos: Vector2) -> bool constrói de fato (e paga).
 ## texture/hframes/what trocam o fantasma e o texto (padrão: casa).
 func begin(on_confirm: Callable, texture: Texture2D = CASA_TEXTURE, hframes: int = 3, what: String = "a casa nova", opts: Dictionary = {}) -> void:
+	# Bloco 138: guarda — um cartão sem desenho ou sem ação vira aviso no log, nunca erro de script (no editor o debugger
+	# PARA o jogo no erro, e a janela embutida some: parecia que o jogo tinha fechado)
+	if texture == null:
+		push_warning("house_placer.begin: '%s' sem textura; usando a da casa" % what)
+		texture = CASA_TEXTURE
+	if not on_confirm.is_valid():
+		push_warning("house_placer.begin: '%s' sem ação de confirmar; nada a posicionar" % what)
+		return
+	hframes = maxi(1, hframes)
 	_on_confirm = on_confirm
 	_ghost.texture = texture
 	_ghost.hframes = hframes

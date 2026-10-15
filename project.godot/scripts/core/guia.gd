@@ -334,9 +334,10 @@ func _ponta(a) -> Vector2:
 
 func _desenha_setas() -> void:
 	var pulso := sin(Time.get_ticks_msec() / 1000.0 * TAU * seta_pulso_hz) * seta_pulso_px
+	# Bloco 138: o alvo pode ter sido liberado entre duas conferências (o CONSTRUIR troca de aba e solta os cartões).
+	# `is` num objeto liberado é erro de script (e no editor o debugger PARA o jogo): confere a validade antes, pelo typeof.
+	_alvos = _alvos.filter(func(x): return typeof(x) != TYPE_OBJECT or is_instance_valid(x))
 	for a in _alvos:
-		if a is Control and not is_instance_valid(a):
-			continue
 		if a is Control:  # o contorno do botão
 			var r: Rect2 = (a as Control).get_global_rect().grow(3.0)
 			_setas.draw_rect(r, COR_SETA_BORDA, false, 4.0)

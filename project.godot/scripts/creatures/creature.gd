@@ -207,7 +207,9 @@ func anim_atual() -> Array:
 ## Bloco 80: escolhe o quadro da folha pela animação de agora.
 func _atualiza_visual() -> void:
 	if visual_textura == null:
-		_visual.frame = int(_anim * (9.0 if kind == "lumivoro" else 5.0)) % 2
+		# Bloco 138: criatura de folha com um quadro só (a arte nova, sem visual_textura) pisca entre 0 e 1 só se a folha
+		# tiver os dois; antes era um erro de set_frame por quadro (9484 no log de uma sessão, enchendo o debugger)
+		_visual.frame = int(_anim * (9.0 if kind == "lumivoro" else 5.0)) % mini(2, _visual.hframes * _visual.vframes)
 		return
 	var a := anim_atual()
 	var linha := visual_anims.find(String(a[0]))
