@@ -91,16 +91,32 @@ static func arquivos(id: String) -> Array[String]:
 	var out: Array[String] = []
 	var base := pasta_atual + id
 	for ext in EXTENSOES:
-		if ResourceLoader.exists("%s.%s" % [base, ext]):
+		if _existe("%s.%s" % [base, ext]):
 			out.append("%s.%s" % [base, ext])
 			break
 	for i in MAX_VARIACOES:
 		for ext in EXTENSOES:
 			var p := "%s_%d.%s" % [base, i, ext]
-			if ResourceLoader.exists(p):
+			if _existe(p):
 				out.append(p)
 				break
 	return out
+
+
+## Bloco 138: o que existe em cada pasta, listado UMA vez (ResourceLoader.list_directory já devolve os nomes de recurso,
+## também no jogo exportado). Antes eram até 27 ResourceLoader.exists por slot: ~0,4 s na abertura do jogo.
+static var _pastas: Dictionary = {}  # pasta -> {nome do arquivo: true}
+
+
+static func _existe(p: String) -> bool:
+	var pasta := p.get_base_dir()
+	if not _pastas.has(pasta):
+		var nomes := {}
+		if DirAccess.dir_exists_absolute(pasta):
+			for n in ResourceLoader.list_directory(pasta):
+				nomes[n] = true
+		_pastas[pasta] = nomes
+	return _pastas[pasta].has(p.get_file())
 
 
 ## Os sons do slot: os falsos dos testes, senão os arquivos (carregados uma vez; o loop é forçado nos de loop).
@@ -143,6 +159,7 @@ static func aquece(ids: Array) -> void:
 ## Esquece o que já foi carregado (os testes de carga trocam a pasta ou ligam o "ignora arquivos").
 static func limpa_cache() -> void:
 	_cache = {}
+	_pastas = {}
 
 
 ## Tem arquivo de verdade (ou som falso de teste) neste slot?
