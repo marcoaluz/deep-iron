@@ -457,6 +457,7 @@ func start_new_game(dificuldade: Dictionary = {}) -> void:
 	if intro_ligada() and not "--smoke" in OS.get_cmdline_user_args():
 		cinema = "novo"
 		get_tree().change_scene_to_file(INTRO_SCENE)
+		pre_carrega_partida()  # Bloco 138: a partida carrega enquanto a intro passa (o Esc já acha quase tudo pronto)
 		return
 	_comeca_partida_nova()
 
@@ -470,6 +471,40 @@ static func intro_ligada() -> bool:
 func ver_introducao() -> void:
 	cinema = "ver"
 	get_tree().change_scene_to_file(INTRO_SCENE)
+	pre_carrega_partida()
+
+
+## Bloco 138: a partida (main.tscn) carrega em SEGUNDO PLANO, com a tela de carregamento e a barra; antes o
+## change_scene_to_file carregava tudo no mesmo quadro e a janela congelava (5,7 s; 20,8 s na 1ª abertura, com o HDD
+## frio) — era a trava do "pular" da intro. Em headless (os testes) continua síncrono; o teste do bloco liga
+## `carregamento_assincrono_forcado` pra exercitar o caminho do jogo.
+static var carregamento_assincrono_forcado := false
+
+
+func _carrega_assincrono() -> bool:
+	return carregamento_assincrono_forcado or DisplayServer.get_name() != "headless"
+
+
+## Bloco 138: pede em segundo plano a cena da partida e as texturas grandes do terreno (o blocos.json lista todas).
+func pre_carrega_partida() -> void:
+	if not _carrega_assincrono():
+		return
+	Carregando.pede(MAIN_SCENE, "PackedScene")
+	var dir := "res://assets/game/iso/mapa/"
+	var d = JSON.parse_string(FileAccess.get_file_as_string(dir + "blocos.json")) if FileAccess.file_exists(dir + "blocos.json") else null
+	if d is Dictionary:
+		for nome in d.get("imagens", {}):
+			Carregando.pede(dir + String(nome), "Texture2D")
+
+
+## Bloco 138: a troca pra partida (nova, carregada, a intro no mapa): na hora em headless, em segundo plano no jogo.
+func _vai_pra_partida() -> void:
+	if not _carrega_assincrono():
+		Carregando.mostra(get_tree())
+		get_tree().change_scene_to_file(MAIN_SCENE)
+		return
+	pre_carrega_partida()
+	Carregando.troca_quando_pronto(get_tree(), MAIN_SCENE)
 
 
 ## Bloco 112: a intro acabou (ou foi pulada): a marca "intro vista" e a partida (ou de volta ao menu).
@@ -485,8 +520,7 @@ func intro_terminou(com_mapa: bool) -> void:
 	if cinema == "ver":
 		pending_load = false
 		_pending_data = {}
-		Carregando.mostra(get_tree())
-		get_tree().change_scene_to_file(MAIN_SCENE)
+		_vai_pra_partida()
 		return
 	_comeca_partida_nova()
 
@@ -510,8 +544,7 @@ func _comeca_partida_nova() -> void:
 	_backup_checked = true
 	pending_load = false
 	_pending_data = {}
-	Carregando.mostra(get_tree())  # Prompt 26: a tela de carregamento com dica
-	get_tree().change_scene_to_file(MAIN_SCENE)
+	_vai_pra_partida()  # Prompt 26: a tela de carregamento com dica
 
 
 ## Menu (Continuar) ou F9: recarrega a partida a partir do arquivo.
@@ -562,8 +595,7 @@ func _start_loaded(data: Dictionary) -> void:
 	pending_load = true
 	_backup_checked = true
 	get_tree().paused = false
-	Carregando.mostra(get_tree())  # Prompt 26: a tela de carregamento com dica
-	get_tree().change_scene_to_file(MAIN_SCENE)
+	_vai_pra_partida()  # Prompt 26: a tela de carregamento com dica
 
 
 # ------------------------------------------------------------ backups rotativos

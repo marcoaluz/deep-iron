@@ -3,6 +3,9 @@ extends CanvasLayer
 ## pedreira ou uma das cenas dos eventos, o logo e uma DICA do jogo. Some sozinha quando a partida
 ## nova termina de abrir.
 ##   Carregando.mostra(get_tree())
+## Bloco 138: a partida carrega em SEGUNDO PLANO (ResourceLoader.load_threaded_request): a tela aparece na hora, com a
+## barra do carregamento, e a janela segue respondendo; a cena troca quando main.tscn e as texturas grandes do terreno
+## estão prontas (troca_quando_pronto). Some só quando a partida ASSENTA (quadros curtos seguidos), não por tempo fixo.
 
 const DIR := "res://assets/game/ui/titulo/"
 const UiSkin := preload("res://scripts/ui/ui_skin.gd")
@@ -21,6 +24,23 @@ const DICAS := [
 ]
 
 static var _atual: CanvasLayer = null
+## Bloco 138: os caminhos pedidos em segundo plano (pede) e o que já chegou (seguro até a partida abrir: a cena nova
+## acha tudo no cache do ResourceLoader).
+static var _pedidos: Array[String] = []
+static var _prontos: Dictionary = {}
+
+## Quantos quadros curtos seguidos contam como "a partida assentou" (e o que é curto, em ms).
+@export var quadros_estaveis: int = 8
+@export var quadro_curto_ms: float = 60.0
+## O máximo de segundos esperando a partida assentar (depois disso a tela some de qualquer jeito).
+@export var espera_max_s: float = 12.0
+
+var _cena_alvo := ""
+var _barra: ProgressBar
+var _assentando := false
+var _estaveis := 0
+var _t_assenta := 0
+var _t_quadro := 0
 
 
 static func mostra(tree: SceneTree) -> void:
@@ -29,6 +49,73 @@ static func mostra(tree: SceneTree) -> void:
 	var c = load("res://scripts/ui/carregando.gd").new()
 	tree.root.add_child(c)
 	_atual = c
+
+
+## Bloco 138: pede `caminho` em segundo plano (se ainda não está pedido nem no cache).
+static func pede(caminho: String, tipo: String = "") -> void:
+	if caminho in _pedidos or ResourceLoader.has_cached(caminho):
+		return
+	if ResourceLoader.load_threaded_get_status(caminho) == ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+		if ResourceLoader.load_threaded_request(caminho, tipo) != OK:
+			push_warning("Carregando: não deu pra pedir %s em segundo plano" % caminho)
+			return
+	_pedidos.append(caminho)
+
+
+## Bloco 138: mostra a tela e troca pra `cena` quando ela (e o resto pedido) terminar de carregar.
+static func troca_quando_pronto(tree: SceneTree, cena: String) -> void:
+	mostra(tree)
+	pede(cena, "PackedScene")
+	_atual.set("_cena_alvo", cena)
+
+
+## Bloco 138: de 0 a 1, o quanto do que foi pedido já carregou.
+static func progresso() -> float:
+	if _pedidos.is_empty():
+		return 1.0
+	var soma := 0.0
+	for p in _pedidos:
+		var pr := []
+		var st := ResourceLoader.load_threaded_get_status(p, pr)
+		soma += 1.0 if st != ResourceLoader.THREAD_LOAD_IN_PROGRESS else (float(pr[0]) if not pr.is_empty() else 0.0)
+	return soma / _pedidos.size()
+
+
+## Bloco 138: recolhe o que terminou (o que falhou só sai da lista: a cena carrega do jeito normal). true = tudo pronto.
+static func _recolhe() -> bool:
+	for p in _pedidos.duplicate():
+		var st := ResourceLoader.load_threaded_get_status(p)
+		if st == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			continue
+		if st == ResourceLoader.THREAD_LOAD_LOADED:
+			_prontos[p] = ResourceLoader.load_threaded_get(p)
+		else:
+			push_warning("Carregando: %s falhou em segundo plano (status %d)" % [p, st])
+		_pedidos.erase(p)
+	return _pedidos.is_empty()
+
+
+func _process(_delta: float) -> void:
+	if _barra:
+		_barra.value = progresso() * 100.0 if _cena_alvo != "" else _barra.value
+	if _cena_alvo != "":
+		if not _recolhe():
+			return
+		var cena: String = _cena_alvo
+		_cena_alvo = ""
+		var ps = _prontos.get(cena)
+		if ps is PackedScene:
+			get_tree().change_scene_to_packed(ps)
+		else:
+			get_tree().change_scene_to_file(cena)  # (falhou em segundo plano: do jeito de antes, síncrono)
+		return
+	if _assentando:
+		var agora := Time.get_ticks_msec()
+		_estaveis = _estaveis + 1 if agora - _t_quadro <= quadro_curto_ms else 0
+		_t_quadro = agora
+		if _estaveis >= quadros_estaveis or agora - _t_assenta > espera_max_s * 1000.0:
+			_assentando = false
+			_esconde()
 
 
 func _ready() -> void:
@@ -80,15 +167,31 @@ func _ready() -> void:
 	d.add_theme_font_size_override("font_size", Tipo.TITULO)
 	d.add_theme_color_override("font_color", UiSkin.COLOR_TEXT)
 	v.add_child(d)
+	_barra = ProgressBar.new()  # Bloco 138: o carregamento em segundo plano
+	_barra.custom_minimum_size = Vector2(640, 10)
+	_barra.show_percentage = false
+	_barra.value = 0.0
+	v.add_child(_barra)
 	get_tree().scene_changed.connect(_some, CONNECT_ONE_SHOT)
 
 
 func _some() -> void:
+	# Bloco 138: os primeiros quadros da partida montam o mundo (vista iso, HUD): a tela fica até eles assentarem
+	if _barra:
+		_barra.value = 100.0
+	_assentando = true
+	_estaveis = 0
+	_t_assenta = Time.get_ticks_msec()
+	_t_quadro = _t_assenta
+
+
+func _esconde() -> void:
 	var tw := create_tween()
-	tw.tween_interval(1.0)  # (a partida nova termina de montar: ninguém vê o mapa piscando)
+	tw.tween_interval(0.2)  # (ninguém vê o mapa piscando)
 	for c in get_children():
 		if c is CanvasItem:
-			tw.parallel().tween_property(c, "modulate:a", 0.0, 0.5).set_delay(1.0)
+			tw.parallel().tween_property(c, "modulate:a", 0.0, 0.5).set_delay(0.2)
 	tw.tween_callback(func():
 		_atual = null
+		_prontos.clear()  # (a partida já segura o que usa)
 		queue_free())
