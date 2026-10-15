@@ -564,3 +564,7 @@ func test_b136_venda_funcoes_pesquisa() -> void:
 
 func test_b137_noite_padre_refeicoes() -> void:
 	run_bloco("b137_noite_padre_refeicoes.gd")
+
+
+func test_b138_perf_abertura() -> void:
+	run_bloco("b138_perf_abertura.gd")

@@ -1,6 +1,13 @@
 # Contexto do projeto (pra retomar em outra sessão/conta)
 
-Atualizado em 2026-10-12. Branch `isometrico`. Último Bloco: **137** (commits locais do 131 ao 137, sem push). A fila de prompts da mensagem do Marco (135, 136, 137) acabou. Pendente do Marco: ouvir as candidatas da noite no F3 > Som (o jogo usa a #0 com passa-baixa) e aprovar outra se quiser. TUDO até o Bloco 130 está enviado pro GitHub. Push só com o OK do Marco. O Marco já validou os blocos 114–128 e está polindo; ele vai jogar e testar os blocos 129–133 (pediu que o 133 fosse aplicado SEM rodar testes). Falta: o retorno dele do jogo, aprovar as variações dos pisos.
+Atualizado em 2026-10-14. Branch **`perf-abertura`** (criado a partir do `isometrico` pro Bloco 138, um commit por correção). Último Bloco: **138** (commits locais do 131 ao 138, sem push). Push só com o OK do Marco. TUDO até o Bloco 130 está enviado pro GitHub. Pendente do Marco: jogar pelo editor e confirmar que o "fechou ao construir" sumiu; decidir a compressão das texturas do mapa na VRAM (326 MB, item 4 do relatório do 138, não aprovado); ouvir as candidatas da noite no F3 > Som (Bloco 137).
+
+## Bloco 138 — PERFORMANCE DE ABERTURA, TRAVA DO "PULAR", "FECHOU AO CONSTRUIR" (feito; branch `perf-abertura`, sem push)
+
+O pedido chegou como "Bloco 73" e virou o 138. Relatório `docs/BLOCO138_PERF_ABERTURA.md` (diagnóstico, tabela antes/depois); teste `b138_perf_abertura` (28 OK; registrado no GUT).
+- O "fechou" era o erro de script do `guia.gd:338` (`is` num cartão do CONSTRUIR já liberado), que no editor PAUSA o jogo no debugger. Corrigido, mais guardas no `house_placer.begin` e o `set_frame` da criatura de um quadro só (9484 erros por sessão). O crash nativo de 12/10 (heap corruption, sem dump) não foi reproduzido; o estresse do CONSTRUIR com janela não derrubou o jogo.
+- A partida carrega em SEGUNDO PLANO (`SaveManager._vai_pra_partida` + `ui/carregando.gd`: barra, a intro já pede a partida e o terreno, a tela some quando a partida assenta): o "pular" foi de 5,7 s (20,8 s frio) de janela congelada pra 7 ms. A 1ª malha pelo pedido agrupado (−1,2 s); `assets/game/iso/mapa/blocos.json` (`blocos.py`: a vista iso não lê o terreno de volta da VRAM, −0,75 s); índice de pastas no `audio_slots` (−0,4 s no boot).
+- `bench_picos` vila cheia 44/48 FPS (o base mediu 44/47); build exportado com o teste de fumaça OK (o `build_windows.ps1` para no stderr do Godot no PowerShell 5.1; a fumaça foi rodada à mão). A suíte GUT INTEIRA não foi conferida (derrubada por falta de memória); rodaram 20 testes um por um (b112, b114–118, b121, b124, b129–132, b134, b138, p28_iso, p28_save), todos com 0 falhas.
 
 ## Bloco 137 — O SOM DA NOITE, A CHEGADA DO PADRE, AS REFEIÇÕES DO PADRE E DOS GUARDAS (feito; commit local, sem push)
 
