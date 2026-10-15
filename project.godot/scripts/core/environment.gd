@@ -689,8 +689,12 @@ func _cull_offscreen_lights() -> void:
 func _build_navigation() -> void:
 	navigation_region = NavigationRegion2D.new()
 	navigation_region.name = "NavigationRegion"
-	navigation_region.navigation_polygon = _bake_navigation()
 	add_child(navigation_region)
+	# Bloco 138: a 1ª malha vai pelo pedido agrupado (no jogo, FORA do quadro: ~1,2 s a menos no 2º quadro da partida).
+	# Logo depois do navigation_ready a fundação (partida nova) ou o save (rebuild_navigation(true)) refazem a malha, e o
+	# pedido deste quadro se junta ao deles. Em headless continua síncrono (a malha já vale no sinal, como antes).
+	navigation_region.navigation_polygon = NavigationPolygon.new()
+	rebuild_navigation()
 	navigation_ready.emit()
 
 
