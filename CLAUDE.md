@@ -32,7 +32,7 @@ O projeto Godot fica em **`project.godot/`**. A cena inicial é `scenes/ui/start
 | `project.godot/data/niveis` | Os níveis da mina por dados (`*.tres`, recurso `nivel_mina.gd`). |
 | `project.godot/scenes` | Cenas: `game/main.tscn`, `props/`, `creatures/`, `characters/Ipezinho.tscn`, `ui/`. |
 | `project.godot/assets/game` | Arte integrada (`iso/` prédios, bonecos, props, mapa; `ui/`). |
-| `project.godot/prototipos/camera/arte_iso` | Pipeline de arte em Python (PixelLab → `integra.py` → `assets/game/iso`). Não é código do jogo. |
+| `project.godot/prototipos/camera/arte_iso` | Pipeline de arte em Python (PixelLab → `integra.py` → `assets/game/iso`). Não é código do jogo. Tem `.gdignore` (o editor do Godot não importa as ~15 mil imagens; quem lê de lá usa `FileAccess`). |
 | `project.godot/tests` | `blocos/` (um teste por Bloco), `test_blocos.gd` (registro GUT), `test_iso*.gd` (GUT), `capturas_*.gd` (fotos, não são testes). |
 | `docs/` | Um relatório por Bloco (`BLOCONN_*.md`), arte de conferência (`docs/arte/blocoNN/`), balanceamento. |
 | `tools/` | `run_tests.sh` / `run_tests.ps1`, build do Windows, scripts do PixelLab, telemetria. |
